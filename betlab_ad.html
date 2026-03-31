@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BetLab AI — 10s Motion Ad</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+    }
+
+    #stage {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      background: #03040d;
+      overflow: hidden;
+    }
+
+    /* ── Canvas particle layer ── */
+    #particles {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    /* ── Grid overlay ── */
+    #grid {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      background-image:
+        linear-gradient(rgba(0,224,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,224,255,0.04) 1px, transparent 1px);
+      background-size: 80px 80px;
+      opacity: 0;
+      animation: gridFade 10s linear forwards;
+    }
+
+    @keyframes gridFade {
+      0%   { opacity: 0; }
+      10%  { opacity: 1; }
+      80%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* ── Scan line ── */
+    .scanline {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #00e5ff88, transparent);
+      z-index: 3;
+      animation: scan 2.2s ease-in-out 0.3s 4;
+    }
+
+    @keyframes scan {
+      0%   { top: -2px; opacity: 0.8; }
+      100% { top: 100%; opacity: 0; }
+    }
+
+    /* ── Glow vignette ── */
+    .vignette {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      background: radial-gradient(ellipse at center,
+        transparent 40%,
+        rgba(3,4,13,0.85) 100%);
+      pointer-events: none;
+    }
+
+    /* ── Scene wrapper ── */
+    .scene {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ══════════════════════════════════════
+       SCENE 1  (0 – 2.5s): Hook question
+    ══════════════════════════════════════ */
+    #s1 {
+      animation: s1Life 2.5s ease forwards;
+    }
+
+    @keyframes s1Life {
+      0%   { opacity: 0; }
+      15%  { opacity: 1; }
+      75%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    #s1 .hook {
+      font-size: 72px;
+      font-weight: 800;
+      letter-spacing: -2px;
+      text-align: center;
+      line-height: 1.1;
+      color: #fff;
+      text-shadow: 0 0 40px rgba(0,229,255,0.3);
+    }
+
+    #s1 .hook span {
+      color: #00e5ff;
+    }
+
+    #s1 .sub {
+      margin-top: 18px;
+      font-size: 22px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      animation: fadeUp 0.6s ease 0.4s both;
+    }
+
+    /* ══════════════════════════════════════
+       SCENE 2  (2.5 – 5.5s): Three pillars
+    ══════════════════════════════════════ */
+    #s2 {
+      animation: s2Life 3s ease 2.5s forwards;
+      opacity: 0;
+      gap: 36px;
+    }
+
+    @keyframes s2Life {
+      0%   { opacity: 0; }
+      12%  { opacity: 1; }
+      80%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .pillar-row {
+      display: flex;
+      gap: 28px;
+    }
+
+    .pillar {
+      width: 320px;
+      background: rgba(0,229,255,0.04);
+      border: 1px solid rgba(0,229,255,0.18);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      backdrop-filter: blur(6px);
+      transform: translateY(30px);
+      opacity: 0;
+    }
+
+    .pillar:nth-child(1) { animation: pillarIn 0.5s ease 2.75s forwards; }
+    .pillar:nth-child(2) { animation: pillarIn 0.5s ease 3.05s forwards; }
+    .pillar:nth-child(3) { animation: pillarIn 0.5s ease 3.35s forwards; }
+
+    @keyframes pillarIn {
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .pillar-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 0 12px #00e5ff);
+    }
+
+    .pillar-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #00e5ff;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .pillar-desc {
+      font-size: 14px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.5;
+    }
+
+    /* ══════════════════════════════════════
+       SCENE 3  (5.5 – 7.5s): Big stat
+    ══════════════════════════════════════ */
+    #s3 {
+      animation: s3Life 2s ease 5.5s forwards;
+      opacity: 0;
+      text-align: center;
+    }
+
+    @keyframes s3Life {
+      0%   { opacity: 0; transform: scale(0.85); }
+      20%  { opacity: 1; transform: scale(1); }
+      75%  { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.04); }
+    }
+
+    #s3 .eyebrow {
+      font-size: 14px;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 12px;
+    }
+
+    #s3 .big-stat {
+      font-size: 130px;
+      font-weight: 900;
+      letter-spacing: -6px;
+      line-height: 1;
+      background: linear-gradient(135deg, #00e5ff 0%, #7c3aed 50%, #00ff88 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 30px rgba(0,229,255,0.4));
+    }
+
+    #s3 .stat-label {
+      font-size: 20px;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 10px;
+    }
+
+    /* ══════════════════════════════════════
+       SCENE 4  (7.5 – 10s): Logo + CTA
+    ══════════════════════════════════════ */
+    #s4 {
+      animation: s4Life 2.5s ease 7.5s forwards;
+      opacity: 0;
+      text-align: center;
+    }
+
+    @keyframes s4Life {
+      0%   { opacity: 0; }
+      15%  { opacity: 1; }
+      85%  { opacity: 1; }
+      100% { opacity: 1; }
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .logo-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #00e5ff, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 40px rgba(0,229,255,0.5), 0 0 80px rgba(124,58,237,0.3);
+      animation: iconPulse 1s ease 7.6s infinite alternate;
+    }
+
+    @keyframes iconPulse {
+      from { box-shadow: 0 0 40px rgba(0,229,255,0.5), 0 0 80px rgba(124,58,237,0.3); }
+      to   { box-shadow: 0 0 60px rgba(0,229,255,0.8), 0 0 120px rgba(124,58,237,0.5); }
+    }
+
+    .logo-icon svg {
+      width: 36px;
+      height: 36px;
+      fill: #fff;
+    }
+
+    .logo-text {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: #fff;
+      text-shadow: 0 0 30px rgba(0,229,255,0.4);
+    }
+
+    .logo-text span {
+      color: #00e5ff;
+    }
+
+    .tagline {
+      font-size: 16px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 32px;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      padding: 16px 52px;
+      background: linear-gradient(135deg, #00e5ff, #7c3aed);
+      border-radius: 50px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      box-shadow: 0 0 40px rgba(0,229,255,0.4);
+      animation: ctaPulse 0.8s ease 8.2s both;
+    }
+
+    @keyframes ctaPulse {
+      0%   { transform: scale(0.8); opacity: 0; }
+      60%  { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .url-tag {
+      margin-top: 14px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 3px;
+    }
+
+    /* ── Shared helpers ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Corner accents ── */
+    .corner {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      z-index: 20;
+      opacity: 0.6;
+    }
+    .corner-tl { top: 20px; left: 20px; border-top: 2px solid #00e5ff; border-left: 2px solid #00e5ff; }
+    .corner-tr { top: 20px; right: 20px; border-top: 2px solid #00e5ff; border-right: 2px solid #00e5ff; }
+    .corner-bl { bottom: 20px; left: 20px; border-bottom: 2px solid #00e5ff; border-left: 2px solid #00e5ff; }
+    .corner-br { bottom: 20px; right: 20px; border-bottom: 2px solid #00e5ff; border-right: 2px solid #00e5ff; }
+
+    /* ── Progress bar ── */
+    #progress {
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00e5ff, #7c3aed, #00ff88);
+      z-index: 30;
+      width: 0%;
+      animation: progressBar 10s linear forwards;
+    }
+
+    @keyframes progressBar {
+      from { width: 0%; }
+      to   { width: 100%; }
+    }
+
+    /* ── Replay button (shown after) ── */
+    #replay {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      z-index: 40;
+      padding: 8px 20px;
+      background: rgba(0,229,255,0.15);
+      border: 1px solid rgba(0,229,255,0.4);
+      border-radius: 24px;
+      color: #00e5ff;
+      font-size: 13px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      opacity: 0;
+      animation: showReplay 0.5s ease 10s forwards;
+    }
+    #replay:hover { background: rgba(0,229,255,0.3); }
+
+    @keyframes showReplay {
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <!-- Layers -->
+    <canvas id="particles"></canvas>
+    <div id="grid"></div>
+    <div class="scanline"></div>
+    <div class="vignette"></div>
+
+    <!-- Corner accents -->
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <!-- Progress bar -->
+    <div id="progress"></div>
+
+    <!-- SCENE 1: Hook -->
+    <div class="scene" id="s1">
+      <div class="hook">Still betting on <span>gut feeling?</span></div>
+      <div class="sub">There's a smarter way</div>
+    </div>
+
+    <!-- SCENE 2: Pillars -->
+    <div class="scene" id="s2">
+      <div class="pillar-row">
+        <div class="pillar">
+          <div class="pillar-icon">🧠</div>
+          <div class="pillar-title">AI Predictions</div>
+          <div class="pillar-desc">Autonomous models analyze every game, line, and edge in real time.</div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">⚡</div>
+          <div class="pillar-title">Live Intelligence</div>
+          <div class="pillar-desc">Instant insights as odds shift — never miss a value play again.</div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">📈</div>
+          <div class="pillar-title">Edge Detection</div>
+          <div class="pillar-desc">Spot sharp lines and arbitrage opportunities before the market corrects.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENE 3: Big stat -->
+    <div class="scene" id="s3">
+      <div class="eyebrow">BetLab AI users gain</div>
+      <div class="big-stat" id="counter">0%</div>
+      <div class="stat-label">data-driven edge over the market</div>
+    </div>
+
+    <!-- SCENE 4: Logo + CTA -->
+    <div class="scene" id="s4">
+      <div class="logo-wrap">
+        <div class="logo-icon">
+          <!-- Flask / beaker icon -->
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 3v8.5L4.5 18A2 2 0 0 0 6.28 21h11.44a2 2 0 0 0 1.78-2.9L15 11.5V3H9zm1.5 1.5h3V12l4 6.5H6.5L10.5 12V4.5z"/>
+          </svg>
+        </div>
+        <div class="logo-text">Bet<span>Lab</span> AI</div>
+      </div>
+      <div class="tagline">Autonomous Sports Betting Intelligence</div>
+      <div class="cta-btn">Get the Edge</div>
+      <div class="url-tag">betlabai.app</div>
+    </div>
+
+    <!-- Replay -->
+    <button id="replay" onclick="location.reload()">↺ REPLAY</button>
+  </div>
+
+  <script>
+    // ── Particle canvas ──────────────────────────────────────────
+    const canvas = document.getElementById('particles');
+    const ctx    = canvas.getContext('2d');
+    canvas.width  = 1280;
+    canvas.height = 720;
+
+    const COLORS = ['#00e5ff', '#7c3aed', '#00ff88', '#ffffff'];
+
+    class Particle {
+      constructor() { this.reset(true); }
+      reset(initial) {
+        this.x     = Math.random() * canvas.width;
+        this.y     = initial ? Math.random() * canvas.height : canvas.height + 10;
+        this.r     = Math.random() * 1.8 + 0.4;
+        this.speed = Math.random() * 0.4 + 0.15;
+        this.alpha = Math.random() * 0.6 + 0.1;
+        this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+        this.drift = (Math.random() - 0.5) * 0.3;
+      }
+      update() {
+        this.y -= this.speed;
+        this.x += this.drift;
+        if (this.y < -10) this.reset(false);
+      }
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle   = this.color;
+        ctx.shadowBlur  = 6;
+        ctx.shadowColor = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // Data stream lines
+    class DataLine {
+      constructor() { this.reset(); }
+      reset() {
+        this.x     = Math.random() * canvas.width;
+        this.y     = -20;
+        this.len   = Math.random() * 120 + 40;
+        this.speed = Math.random() * 3 + 1.5;
+        this.alpha = Math.random() * 0.25 + 0.05;
+        this.color = Math.random() > 0.5 ? '#00e5ff' : '#7c3aed';
+      }
+      update() {
+        this.y += this.speed;
+        if (this.y > canvas.height + this.len) this.reset();
+      }
+      draw() {
+        ctx.save();
+        const grad = ctx.createLinearGradient(this.x, this.y - this.len, this.x, this.y);
+        grad.addColorStop(0, 'transparent');
+        grad.addColorStop(1, this.color);
+        ctx.globalAlpha  = this.alpha;
+        ctx.strokeStyle  = grad;
+        ctx.lineWidth    = 1;
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y - this.len);
+        ctx.lineTo(this.x, this.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    const particles = Array.from({ length: 220 }, () => new Particle());
+    const lines     = Array.from({ length: 30  }, () => new DataLine());
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      lines.forEach(l => { l.update(); l.draw(); });
+      particles.forEach(p => { p.update(); p.draw(); });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // ── Animated counter (scene 3, starts at 5.5s) ───────────────
+    setTimeout(() => {
+      let val = 0;
+      const target = 87;
+      const el = document.getElementById('counter');
+      const step = () => {
+        val += 3;
+        if (val >= target) { el.textContent = target + '%'; return; }
+        el.textContent = val + '%';
+        setTimeout(step, 28);
+      };
+      step();
+    }, 5700);
+  </script>
+</body>
+</html>
