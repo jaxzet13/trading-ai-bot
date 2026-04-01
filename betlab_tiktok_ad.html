@@ -66,9 +66,9 @@
         linear-gradient(90deg, rgba(201,162,39,0.035) 1px, transparent 1px);
       background-size: 48px 48px;
       opacity: 0;
-      animation: gFade 14s linear forwards;
+      animation: gFade 18s linear forwards;
     }
-    @keyframes gFade { 5%{opacity:1} 85%{opacity:1} 100%{opacity:0} }
+    @keyframes gFade { 4%{opacity:1} 88%{opacity:1} 100%{opacity:0} }
 
     /* ── Vignette ── */
     .vignette {
@@ -109,49 +109,49 @@
 
     /* ════════════════════════════════
        SCENE 1 — PATTERN INTERRUPT
-       0 → 2.2s
+       0 → 3.5s
     ════════════════════════════════ */
-    #s1 { animation: s1life 2.2s ease forwards; gap:12px; }
+    #s1 { animation: s1life 3.5s ease forwards; gap:12px; }
     @keyframes s1life {
-      0%{opacity:0} 8%{opacity:1} 75%{opacity:1} 100%{opacity:0}
+      0%{opacity:0} 6%{opacity:1} 82%{opacity:1} 96%{opacity:0} 100%{opacity:0}
     }
 
     .s1-eyebrow {
       font-family:var(--font-data); font-size:11px; letter-spacing:4px;
       color:rgba(255,255,255,0.4); text-transform:uppercase;
-      opacity:0; animation: fadeUp 0.4s ease 0.1s forwards;
+      opacity:0; animation: fadeUp 0.5s ease 0.15s forwards;
     }
     .s1-hook {
       font-family:var(--font-d); font-weight:800; font-size:72px;
       line-height:0.95; letter-spacing:-1px; text-transform:uppercase;
       text-align:center; color:var(--white);
-      opacity:0; animation: smashIn 0.35s cubic-bezier(0.2,0,0,1.4) 0.2s forwards;
+      opacity:0; animation: smashIn 0.5s cubic-bezier(0.2,0,0,1.3) 0.35s forwards;
     }
     .s1-hook .r { color:var(--loss); }
     .s1-under {
       font-family:var(--font-ui); font-weight:300; font-size:16px;
       color:rgba(255,255,255,0.45); letter-spacing:1px;
-      opacity:0; animation: fadeUp 0.4s ease 0.65s forwards;
+      opacity:0; animation: fadeUp 0.6s ease 1.1s forwards;
     }
 
     @keyframes smashIn {
-      0%{opacity:0;transform:scale(1.4)}
+      0%{opacity:0;transform:scale(1.35)}
       100%{opacity:1;transform:scale(1)}
     }
 
     /* ════════════════════════════════
        SCENE 2 — THE PROBLEM
-       2.2 → 4.6s
+       3.5 → 6.8s
     ════════════════════════════════ */
-    #s2 { animation: s2life 2.4s ease 2.2s forwards; gap:18px; }
+    #s2 { animation: s2life 3.3s ease 3.5s forwards; gap:18px; }
     @keyframes s2life {
-      0%{opacity:0} 10%{opacity:1} 78%{opacity:1} 100%{opacity:0}
+      0%{opacity:0} 8%{opacity:1} 80%{opacity:1} 100%{opacity:0}
     }
 
     .s2-label {
       font-family:var(--font-data); font-size:10px; letter-spacing:5px;
       color:var(--loss); text-transform:uppercase;
-      opacity:0; animation: fadeUp 0.4s ease 2.35s forwards;
+      opacity:0; animation: fadeUp 0.5s ease 3.65s forwards;
     }
     .s2-stat-row {
       display:flex; flex-direction:column; gap:10px; width:100%;
@@ -164,9 +164,9 @@
       border-radius: 10px;
       opacity:0; transform:translateX(-20px);
     }
-    .s2-stat:nth-child(1){ animation: slideIn 0.4s ease 2.5s  forwards; }
-    .s2-stat:nth-child(2){ animation: slideIn 0.4s ease 2.72s forwards; }
-    .s2-stat:nth-child(3){ animation: slideIn 0.4s ease 2.94s forwards; }
+    .s2-stat:nth-child(1){ animation: slideIn 0.45s ease 3.9s  forwards; }
+    .s2-stat:nth-child(2){ animation: slideIn 0.45s ease 4.25s forwards; }
+    .s2-stat:nth-child(3){ animation: slideIn 0.45s ease 4.6s  forwards; }
     @keyframes slideIn { to{opacity:1;transform:translateX(0)} }
 
     .s2-stat-label {
@@ -180,21 +180,21 @@
 
     /* ════════════════════════════════
        SCENE 3 — LOGO REVEAL
-       4.6 → 7.0s
+       6.8 → 10.2s
     ════════════════════════════════ */
-    #s3 { animation: s3life 2.4s ease 4.6s forwards; gap:14px; justify-content:center; }
+    #s3 { animation: s3life 3.4s ease 6.8s forwards; gap:14px; justify-content:center; }
     @keyframes s3life {
-      0%{opacity:0} 12%{opacity:1} 78%{opacity:1} 100%{opacity:0}
+      0%{opacity:0} 10%{opacity:1} 80%{opacity:1} 100%{opacity:0}
     }
 
     .s3-intro {
       font-family:var(--font-ui); font-size:13px; letter-spacing:4px;
       text-transform:uppercase; color:rgba(255,255,255,0.35);
-      opacity:0; animation: fadeUp 0.4s ease 4.75s forwards;
+      opacity:0; animation: fadeUp 0.5s ease 6.95s forwards;
     }
     .logo-wrap-ad {
       position:relative; width:90px; height:90px;
-      opacity:0; animation: logoPop 0.5s cubic-bezier(0.2,0,0,1.4) 5.0s forwards;
+      opacity:0; animation: logoPop 0.6s cubic-bezier(0.2,0,0,1.3) 7.25s forwards;
     }
     @keyframes logoPop {
       0%{opacity:0;transform:scale(0.5)}
@@ -206,7 +206,7 @@
       position:absolute; inset:-30%;
       border-radius:50%;
       background:radial-gradient(circle,rgba(201,162,39,0.4) 0%,transparent 70%);
-      animation: logoGlow 1.2s ease 5.3s infinite alternate;
+      animation: logoGlow 1.4s ease 7.65s infinite alternate;
     }
     @keyframes logoGlow {
       from{opacity:0.5;transform:scale(0.9)}
@@ -216,40 +216,40 @@
 
     .diamond-draw {
       stroke-dasharray:340; stroke-dashoffset:340;
-      animation: drawPath 0.7s cubic-bezier(0.4,0,0.2,1) 4.75s forwards;
+      animation: drawPath 0.85s cubic-bezier(0.4,0,0.2,1) 6.95s forwards;
     }
     @keyframes drawPath { to{stroke-dashoffset:0} }
-    .diamond-fill-ad { opacity:0; animation: fillFade 0.4s ease 5.35s forwards; }
+    .diamond-fill-ad { opacity:0; animation: fillFade 0.5s ease 7.65s forwards; }
     @keyframes fillFade { to{opacity:1} }
-    .diamond-shine-ad { opacity:0; animation: fillFade 0.3s ease 5.55s forwards; }
+    .diamond-shine-ad { opacity:0; animation: fillFade 0.4s ease 7.9s forwards; }
 
     .s3-brand {
       font-family:var(--font-d); font-weight:800; font-size:58px;
       letter-spacing:0.04em; text-transform:uppercase;
       color:var(--white); line-height:1;
-      opacity:0; animation: fadeUp 0.45s ease 5.45s forwards;
+      opacity:0; animation: fadeUp 0.55s ease 7.75s forwards;
     }
     .s3-brand .gld { color:var(--gold-light); }
 
     .s3-tag {
       font-family:var(--font-ui); font-size:11px; letter-spacing:4px;
       text-transform:uppercase; color:rgba(255,255,255,0.35);
-      opacity:0; animation: fadeUp 0.4s ease 5.8s forwards;
+      opacity:0; animation: fadeUp 0.5s ease 8.2s forwards;
     }
 
     /* ════════════════════════════════
        SCENE 4 — FEATURES / PROOF
-       7.0 → 10.5s
+       10.2 → 14.5s
     ════════════════════════════════ */
-    #s4 { animation: s4life 3.5s ease 7.0s forwards; gap:14px; justify-content:center; }
+    #s4 { animation: s4life 4.3s ease 10.2s forwards; gap:14px; justify-content:center; }
     @keyframes s4life {
-      0%{opacity:0} 8%{opacity:1} 85%{opacity:1} 100%{opacity:0}
+      0%{opacity:0} 7%{opacity:1} 86%{opacity:1} 100%{opacity:0}
     }
 
     .s4-label {
       font-family:var(--font-data); font-size:10px; letter-spacing:5px;
       color:var(--gold); text-transform:uppercase;
-      opacity:0; animation: fadeUp 0.4s ease 7.15s forwards;
+      opacity:0; animation: fadeUp 0.5s ease 10.35s forwards;
     }
 
     .feat-card {
@@ -261,9 +261,9 @@
       border-radius:10px;
       opacity:0; transform:translateX(24px);
     }
-    .feat-card:nth-child(2){animation:slideInR 0.4s ease 7.3s  forwards;}
-    .feat-card:nth-child(3){animation:slideInR 0.4s ease 7.55s forwards;}
-    .feat-card:nth-child(4){animation:slideInR 0.4s ease 7.8s  forwards;}
+    .feat-card:nth-child(2){animation:slideInR 0.5s ease 10.65s forwards;}
+    .feat-card:nth-child(3){animation:slideInR 0.5s ease 11.1s  forwards;}
+    .feat-card:nth-child(4){animation:slideInR 0.5s ease 11.55s forwards;}
     @keyframes slideInR{to{opacity:1;transform:translateX(0)}}
 
     .feat-icon{
@@ -287,9 +287,9 @@
 
     /* ════════════════════════════════
        SCENE 5 — BIG NUMBER + CTA
-       10.5 → 14s
+       14.5 → 18s
     ════════════════════════════════ */
-    #s5 { animation: s5life 3.5s ease 10.5s forwards; gap:10px; }
+    #s5 { animation: s5life 3.5s ease 14.5s forwards; gap:10px; }
     @keyframes s5life {
       0%{opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{opacity:1}
     }
@@ -297,7 +297,7 @@
     .s5-eyebrow{
       font-family:var(--font-data); font-size:10px; letter-spacing:5px;
       text-transform:uppercase; color:rgba(255,255,255,0.35);
-      opacity:0; animation:fadeUp 0.4s ease 10.65s forwards;
+      opacity:0; animation:fadeUp 0.5s ease 14.65s forwards;
     }
     .s5-number{
       font-family:var(--font-d); font-weight:800; font-size:108px;
@@ -306,25 +306,25 @@
       -webkit-background-clip:text; -webkit-text-fill-color:transparent;
       background-clip:text;
       filter:drop-shadow(0 0 20px rgba(201,162,39,0.5));
-      opacity:0; animation:numPop 0.5s cubic-bezier(0.2,0,0,1.3) 10.9s forwards;
+      opacity:0; animation:numPop 0.55s cubic-bezier(0.2,0,0,1.3) 15.0s forwards;
     }
     @keyframes numPop{0%{opacity:0;transform:scale(0.7)}80%{transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
     .s5-sub{
       font-family:var(--font-ui); font-size:14px; letter-spacing:2px;
       text-transform:uppercase; color:rgba(255,255,255,0.4);
-      opacity:0; animation:fadeUp 0.4s ease 11.3s forwards;
+      opacity:0; animation:fadeUp 0.5s ease 15.5s forwards;
     }
 
     .s5-divider{
       width:48px; height:1px;
       background:linear-gradient(90deg,transparent,var(--gold),transparent);
-      opacity:0; animation:fadeUp 0.4s ease 11.5s forwards;
+      opacity:0; animation:fadeUp 0.5s ease 15.8s forwards;
       margin:6px 0;
     }
 
     .cta-wrap{
       display:flex; flex-direction:column; align-items:center; gap:10px;
-      opacity:0; animation:ctaIn 0.5s cubic-bezier(0.2,0,0,1.2) 11.8s forwards;
+      opacity:0; animation:ctaIn 0.55s cubic-bezier(0.2,0,0,1.2) 16.1s forwards;
     }
     @keyframes ctaIn{0%{opacity:0;transform:scale(0.85)}100%{opacity:1;transform:scale(1)}}
 
@@ -336,7 +336,7 @@
       letter-spacing:2px; text-transform:uppercase;
       color:#060a10;
       box-shadow: 0 0 30px rgba(201,162,39,0.5), 0 4px 20px rgba(0,0,0,0.4);
-      animation:btnPulse 1.2s ease 12.2s infinite alternate;
+      animation:btnPulse 1.4s ease 16.5s infinite alternate;
     }
     @keyframes btnPulse{
       from{box-shadow:0 0 30px rgba(201,162,39,0.5),0 4px 20px rgba(0,0,0,0.4)}
@@ -356,7 +356,7 @@
       height:100%; width:0%;
       background:linear-gradient(90deg,var(--gold-dark),var(--gold),var(--gold-light));
       box-shadow:0 0 6px var(--gold);
-      animation:adProg 14s linear forwards;
+      animation:adProg 18s linear forwards;
     }
     @keyframes adProg{to{width:100%}}
 
@@ -368,7 +368,7 @@
       border-radius:20px; cursor:pointer;
       font-family:var(--font-data); font-size:10px; letter-spacing:2px;
       color:var(--gold); text-transform:uppercase;
-      opacity:0; animation:fadeIn 0.4s ease 14s forwards;
+      opacity:0; animation:fadeIn 0.4s ease 18s forwards;
     }
     #ad-replay:hover{ background:rgba(201,162,39,0.25); }
 
@@ -569,21 +569,21 @@
 
   // ── Glow bar fade logic ───────────────────────────────────────
   const glowBar = document.getElementById('glow-bar');
-  setTimeout(()=>{ glowBar.style.transition='opacity 0.6s'; glowBar.style.opacity='1'; }, 4600);
-  setTimeout(()=>{ glowBar.style.opacity='0'; }, 7000);
-  setTimeout(()=>{ glowBar.style.opacity='1'; }, 10500);
+  setTimeout(()=>{ glowBar.style.transition='opacity 0.7s'; glowBar.style.opacity='1'; }, 6800);
+  setTimeout(()=>{ glowBar.style.opacity='0'; }, 10200);
+  setTimeout(()=>{ glowBar.style.opacity='1'; }, 14500);
 
-  // ── Win-rate counter (scene 5, starts at 10.9s) ─────────────
+  // ── Win-rate counter (scene 5, starts at 15.0s) ─────────────
   setTimeout(()=>{
     const el = document.getElementById('big-num');
     let v=0; const target=68;
     const tick=()=>{
       v+=2; if(v>=target){el.textContent='+'+target+'%';return;}
       el.textContent='+'+v+'%';
-      setTimeout(tick, 30);
+      setTimeout(tick, 35);
     };
     tick();
-  }, 10900);
+  }, 15000);
 
 })();
 </script>
