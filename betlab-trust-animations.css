@@ -1,0 +1,395 @@
+/*
+ * BetLab AI — Trust-Building Animation Library
+ * ─────────────────────────────────────────────
+ * All keyframes and utility classes are prefixed `blt-` (BetLab Trust)
+ * to avoid conflicts with the app's existing `bl-` namespace.
+ *
+ * Import once in your app root:
+ *   import './betlab-trust-animations.css';
+ *
+ * Uses CSS vars already defined in the BetLab app:
+ *   --gold, --gold-light, --gold-dark, --win, --loss, --bg
+ * Falls back to literal values if vars aren't loaded yet.
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   KEYFRAMES — must be at root level (not inside @layer)
+═══════════════════════════════════════════════════════════ */
+
+/* 1. Counter Land — gold glow flash when Live Pick Counter settles */
+@keyframes blt-counter-land {
+  0%   { text-shadow: 0 0 0 transparent; }
+  30%  { text-shadow: 0 0 20px var(--gold-light, #f0c040),
+                      0 0 40px var(--gold, #c9a227); }
+  100% { text-shadow: 0 0 6px rgba(201, 162, 39, 0.25); }
+}
+
+/* 2. Card Enter — pick card slide-up entrance */
+@keyframes blt-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 3. Badge Shimmer — gold sweep across premium badge */
+@keyframes blt-badge-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* 4a. Win Pulse — scale bounce on WIN result */
+@keyframes blt-win-pulse {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.15); }
+  70%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+/* 4b. Win Ring — radial green ring expands and fades */
+@keyframes blt-win-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* 4c. Loss Shake — horizontal oscillation */
+@keyframes blt-loss-shake {
+  0%, 100% { transform: translateX(0); }
+  15%      { transform: translateX(-4px); }
+  35%      { transform: translateX(4px); }
+  55%      { transform: translateX(-4px); }
+  75%      { transform: translateX(3px); }
+  90%      { transform: translateX(-2px); }
+}
+
+/* 4d. Loss Flash — red tint overlay */
+@keyframes blt-loss-flash {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 5. Stat Overshoot — subtle scale "land" at count end */
+@keyframes blt-stat-overshoot {
+  0%   { transform: scale(1.04); }
+  60%  { transform: scale(0.99); }
+  100% { transform: scale(1); }
+}
+
+/* 6. AI Dot — single dot pulse (stagger via --blt-dot-i) */
+@keyframes blt-ai-dot {
+  0%, 100% {
+    transform: scale(0.55);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 7. Bar Glow End — pulsing gold glow at the fill tip for high confidence */
+@keyframes blt-bar-glow-end {
+  0%, 100% {
+    box-shadow: 0 0 6px  var(--gold, #c9a227),
+                0 0 12px rgba(201, 162, 39, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 14px var(--gold-light, #f0c040),
+                0 0 28px rgba(240, 192, 64, 0.55);
+  }
+}
+
+/* 8. Hero Scan — full-height line sweep, one pass */
+@keyframes blt-hero-scan {
+  from { transform: translateY(0); }
+  to   { transform: translateY(var(--blt-scan-height, 100%)); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITY CLASSES
+═══════════════════════════════════════════════════════════ */
+
+@layer utilities {
+
+  /* ── 1. Live Pick Counter ──────────────────────────────── */
+
+  .blt-counter-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .blt-counter-number {
+    font-family: 'DM Mono', monospace;
+    color: var(--gold, #c9a227);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .blt-counter-label {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* Applied via JS when count completes */
+  .blt-counter-landed {
+    animation: blt-counter-land 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  /* ── 2. Pick Card Stagger ──────────────────────────────── */
+
+  .blt-card-enter {
+    animation: blt-card-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--blt-stagger-i, 0) * 80ms);
+  }
+
+  /* Premium gold badge — shimmer delay set by JS */
+  .blt-badge-premium {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #060a10;
+    background: linear-gradient(
+      90deg,
+      var(--gold-dark,  #a07810)  0%,
+      var(--gold,       #c9a227) 25%,
+      var(--gold-light, #f0c040) 50%,
+      var(--gold,       #c9a227) 75%,
+      var(--gold-dark,  #a07810) 100%
+    );
+    background-size: 200% auto;
+    /* animation-delay injected via JS: (i * 80 + 700)ms */
+    animation: blt-badge-shimmer 0.65s ease both;
+  }
+
+  /* ── 3. Win / Loss Result Badge ───────────────────────── */
+
+  .blt-result-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* WIN — scale bounce */
+  .blt-result-win {
+    animation: blt-win-pulse 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* WIN ring — sibling <div> inside .blt-result-badge */
+  .blt-result-win-ring {
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    border: 2px solid var(--win, #00d68f);
+    animation: blt-win-ring 0.65s ease-out both;
+    pointer-events: none;
+  }
+
+  /* LOSS — shake */
+  .blt-result-loss {
+    animation: blt-loss-shake 0.3s ease both;
+  }
+
+  /* LOSS flash overlay — inner <div> with position absolute */
+  .blt-result-loss-flash {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--loss, #ff4d6d);
+    pointer-events: none;
+    animation: blt-loss-flash 0.3s ease both;
+  }
+
+  /* ── 4. Animated Stats / Count-Up ────────────────────── */
+
+  .blt-animated-stat {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .blt-stat-number {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .blt-stat-label {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* Applied by JS at count completion, then removed after 200ms */
+  .blt-stat-overshoot {
+    animation: blt-stat-overshoot 0.2s ease-out both;
+  }
+
+  /* ── 5. AI Thinking Indicator ─────────────────────────── */
+
+  .blt-ai-thinking {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  /* Particle canvas sits behind content */
+  .blt-ai-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .blt-ai-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .blt-ai-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold, #c9a227);
+    box-shadow: 0 0 6px var(--gold, #c9a227);
+    animation: blt-ai-dot 0.9s ease-in-out infinite;
+    animation-delay: calc(var(--blt-dot-i, 0) * 200ms);
+    flex-shrink: 0;
+  }
+
+  .blt-ai-label {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* ── 6. Confidence Bar ───────────────────────────────── */
+
+  .blt-bar-track {
+    position: relative;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+  }
+
+  .blt-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transform-origin: left center;
+    background: linear-gradient(
+      90deg,
+      var(--gold-dark,  #a07810),
+      var(--gold,       #c9a227),
+      var(--gold-light, #f0c040)
+    );
+    /* Width driven by inline style from React (0 → real value) */
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+
+  /* >75% confidence — gold glow pulse */
+  .blt-bar-fill--glow {
+    animation: blt-bar-glow-end 1.5s ease 0.85s infinite;
+  }
+
+  /* <50% confidence — muted blue tint, no glow */
+  .blt-bar-fill--muted {
+    background: #6ba3ff;
+    box-shadow: none;
+  }
+
+  /* Label row above bar */
+  .blt-bar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+
+  .blt-bar-title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .blt-bar-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gold, #c9a227);
+  }
+
+  .blt-bar-value--muted {
+    color: #6ba3ff;
+  }
+
+  /* ── 7. Hero Scan Line ───────────────────────────────── */
+
+  /*
+   * IMPORTANT: The parent element must have `position: relative`
+   * and `overflow: hidden` for the scan line to clip correctly.
+   */
+  .blt-hero-scan-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--gold, #c9a227) 20%,
+      var(--gold-light, #f0c040) 50%,
+      var(--gold, #c9a227) 80%,
+      transparent 100%
+    );
+    box-shadow: 0 0 8px var(--gold, #c9a227),
+                0 0 16px rgba(201, 162, 39, 0.4);
+    opacity: 0.7;
+    pointer-events: none;
+    z-index: 10;
+    animation: blt-hero-scan var(--blt-scan-duration, 1800ms) linear forwards;
+  }
+
+}
+/* end @layer utilities */
