@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BetLab AI — Daily PnL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Chakra+Petch:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #c9a227;
+    --gold-light: #f0c040;
+    --gold-glow: rgba(201,162,39,0.35);
+    --win: #00e5a0;
+    --win-glow: rgba(0,229,160,0.3);
+    --loss: #ff4060;
+    --loss-glow: rgba(255,64,96,0.3);
+    --bg-deep: #050810;
+    --bg-card: #0a0f1a;
+    --bg-pick: #0d1525;
+    --border: rgba(255,255,255,0.06);
+    --text-dim: rgba(255,255,255,0.45);
+    --text-mid: rgba(255,255,255,0.7);
+  }
+
+  body {
+    background: #020408;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Chakra Petch', monospace;
+    padding: 24px;
+  }
+
+  /* ── CARD SHELL ── */
+  .card {
+    width: 420px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 1px rgba(201,162,39,0.18),
+      0 0 60px rgba(201,162,39,0.08),
+      0 32px 80px rgba(0,0,0,0.8);
+  }
+
+  /* animated corner accents */
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(201,162,39,0.5) 0%, transparent 40%, transparent 60%, rgba(201,162,39,0.2) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* top glow bar */
+  .card-top-glow {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold-light), var(--gold), transparent);
+    opacity: 0.9;
+  }
+
+  /* subtle grid overlay */
+  .card-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 28px 28px;
+    border-radius: 20px;
+    pointer-events: none;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 20px 22px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .brand-logo {
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 14px;
+    color: #050810;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+    box-shadow: 0 0 12px var(--gold-glow);
+  }
+
+  .brand-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: 1.5px;
+    color: #fff;
+    text-transform: uppercase;
+  }
+
+  .badge-paper {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    background: rgba(201,162,39,0.12);
+    border: 1px solid rgba(201,162,39,0.3);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .header-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  /* date row */
+  .date-row {
+    padding: 6px 22px 18px;
+    font-family: 'Chakra Petch', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .date-row::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 6px var(--gold);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  /* ── STATS BANNER ── */
+  .stats-banner {
+    margin: 0 16px 16px;
+    background: linear-gradient(135deg, rgba(201,162,39,0.08) 0%, rgba(0,0,0,0) 60%);
+    border: 1px solid rgba(201,162,39,0.15);
+    border-radius: 14px;
+    padding: 16px 6px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stats-banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,162,39,0.5), transparent);
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 0;
+    position: relative;
+  }
+
+  .stat-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 10%;
+    height: 80%;
+    width: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+
+  .stat-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 32px;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+
+  .stat-value.record { color: #fff; }
+  .stat-value.units  { color: var(--win); text-shadow: 0 0 20px var(--win-glow); }
+  .stat-value.winrate { color: var(--gold-light); text-shadow: 0 0 16px var(--gold-glow); }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* ── DIVIDER ── */
+  .section-divider {
+    margin: 0 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-divider span {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .section-divider::before,
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.07);
+  }
+
+  /* ── PICKS LIST ── */
+  .picks-list {
+    padding: 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .pick-card {
+    background: var(--bg-pick);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+  }
+
+  .pick-card.win {
+    border-color: rgba(0,229,160,0.15);
+    background: linear-gradient(135deg, rgba(0,229,160,0.05) 0%, var(--bg-pick) 50%);
+  }
+
+  .pick-card.win::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--win);
+    box-shadow: 0 0 10px var(--win-glow);
+    border-radius: 3px 0 0 3px;
+  }
+
+  .pick-card.loss {
+    border-color: rgba(255,64,96,0.12);
+    background: linear-gradient(135deg, rgba(255,64,96,0.04) 0%, var(--bg-pick) 50%);
+  }
+
+  .pick-card.loss::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--loss);
+    box-shadow: 0 0 10px var(--loss-glow);
+    border-radius: 3px 0 0 3px;
+  }
+
+  /* result icon */
+  .result-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .result-icon.win {
+    background: rgba(0,229,160,0.15);
+    color: var(--win);
+    border: 1px solid rgba(0,229,160,0.3);
+    box-shadow: 0 0 12px rgba(0,229,160,0.2);
+  }
+
+  .result-icon.loss {
+    background: rgba(255,64,96,0.15);
+    color: var(--loss);
+    border: 1px solid rgba(255,64,96,0.3);
+    box-shadow: 0 0 12px rgba(255,64,96,0.15);
+  }
+
+  /* sport badge */
+  .sport-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .sport-badge.ncaab { color: #ff9f43; background: rgba(255,159,67,0.12); border: 1px solid rgba(255,159,67,0.2); }
+  .sport-badge.nba   { color: #4ecdc4; background: rgba(78,205,196,0.12); border: 1px solid rgba(78,205,196,0.2); }
+  .sport-badge.nhl   { color: #a29bfe; background: rgba(162,155,254,0.12); border: 1px solid rgba(162,155,254,0.2); }
+
+  /* pick info */
+  .pick-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pick-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 3px;
+  }
+
+  .pick-name {
+    font-family: 'Chakra Petch', monospace;
+    font-weight: 600;
+    font-size: 13px;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pick-odds {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .pick-game {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* units badge */
+  .units-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .units-badge.win  { color: var(--win);  text-shadow: 0 0 12px var(--win-glow); }
+  .units-badge.loss { color: var(--loss); text-shadow: 0 0 12px var(--loss-glow); }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 16px 20px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+  }
+
+  .footer-brand {
+    font-family: 'Chakra Petch', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.8;
+  }
+
+  .footer-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  /* scan line animation */
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(201,162,39,0.15) 40%, rgba(201,162,39,0.4) 50%, rgba(201,162,39,0.15) 60%, transparent 100%);
+    animation: scan 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes scan {
+    0%   { top: 0%; opacity: 0; }
+    5%   { opacity: 1; }
+    95%  { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  /* entrance animations */
+  .card { animation: card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .pick-card { animation: pick-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .pick-card:nth-child(1) { animation-delay: 0.15s; }
+  .pick-card:nth-child(2) { animation-delay: 0.23s; }
+  .pick-card:nth-child(3) { animation-delay: 0.31s; }
+  .pick-card:nth-child(4) { animation-delay: 0.39s; }
+  .pick-card:nth-child(5) { animation-delay: 0.47s; }
+  .pick-card:nth-child(6) { animation-delay: 0.55s; }
+  @keyframes pick-in {
+    from { opacity: 0; transform: translateX(-12px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .stats-banner { animation: stat-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+  @keyframes stat-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── WIN GROUP HEADER ── */
+  .group-header {
+    padding: 0 14px 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .group-header.wins  { color: rgba(0,229,160,0.5); }
+  .group-header.losses { color: rgba(255,64,96,0.5); }
+
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-top-glow"></div>
+  <div class="card-grid"></div>
+  <div class="scan-line"></div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-logo">BL</div>
+      <div class="brand-name">BetLab AI</div>
+    </div>
+    <div class="badge-paper">Paper</div>
+  </div>
+
+  <div class="date-row">Thursday, March 19, 2026</div>
+
+  <!-- Stats Banner -->
+  <div class="stats-banner">
+    <div class="stat-item">
+      <div class="stat-value record">3–3</div>
+      <div class="stat-label">Record</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value units">+0.5u</div>
+      <div class="stat-label">Units</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value winrate">50%</div>
+      <div class="stat-label">Win Rate</div>
+    </div>
+  </div>
+
+  <!-- Section label -->
+  <div class="section-divider">
+    <span>Today's Picks</span>
+  </div>
+
+  <!-- Picks -->
+  <div class="picks-list">
+
+    <!-- WINS -->
+    <div class="pick-card win">
+      <div class="result-icon win">✓</div>
+      <div class="sport-badge ncaab">NCAAB</div>
+      <div class="pick-info">
+        <div class="pick-top">
+          <div class="pick-name">TCU Horned Frogs +2.5</div>
+          <div class="pick-odds">-110</div>
+        </div>
+        <div class="pick-game">TCU Horned Frogs vs Ohio State</div>
+      </div>
+      <div class="units-badge win">+1.5u</div>
+    </div>
+
+    <div class="pick-card win">
+      <div class="result-icon win">✓</div>
+      <div class="sport-badge nba">NBA</div>
+      <div class="pick-info">
+        <div class="pick-top">
+          <div class="pick-name">Over 241.5</div>
+          <div class="pick-odds">-110</div>
+        </div>
+        <div class="pick-game">Los Angeles Lakers vs Miami Heat</div>
+      </div>
+      <div class="units-badge win">+1.0u</div>
+    </div>
+
+    <div class="pick-card win">
+      <div class="result-icon win">✓</div>
+      <div class="sport-badge nhl">NHL</div>
+      <div class="pick-info">
+        <div class="pick-top">
+          <div class="pick-name">Under 6.5</div>
+          <div class="pick-odds">+110</div>
+        </div>
+        <div class="pick-game">Montréal Canadiens vs Detroit R.</div>
+      </div>
+      <div class="units-badge win">+1.5u</div>
+    </div>
+
+    <!-- LOSSES -->
+    <div class="pick-card loss">
+      <div class="result-icon loss">✕</div>
+      <div class="sport-badge ncaab">NCAAB</div>
+      <div class="pick-info">
+        <div class="pick-top">
+          <div class="pick-name">North Carolina Tar Heels -2.5</div>
+          <div class="pick-odds">-102</div>
+        </div>
+        <div class="pick-game">VCU Rams vs North Carolina Tar</div>
+      </div>
+      <div class="units-badge loss">-1.0u</div>
+    </div>
+
+    <div class="pick-card loss">
+      <div class="result-icon loss">✕</div>
+      <div class="sport-badge nba">NBA</div>
+      <div class="pick-info">
+        <div class="pick-top">
+          <div class="pick-name">Orlando Magic +5.5</div>
+          <div class="pick-odds">-115</div>
+        </div>
+        <div class="pick-game">Orlando Magic vs Charlotte Horn.</div>
+      </div>
+      <div class="units-badge loss">-1.0u</div>
+    </div>
+
+    <div class="pick-card loss">
+      <div class="result-icon loss">✕</div>
+      <div class="sport-badge nhl">NHL</div>
+      <div class="pick-info">
+        <div class="pick-top">
+          <div class="pick-name">Under 5.5</div>
+          <div class="pick-odds">-130</div>
+        </div>
+        <div class="pick-game">Winnipeg Jets vs Boston Bruins</div>
+      </div>
+      <div class="units-badge loss">-1.5u</div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-brand">betlab.ai</div>
+    <div class="footer-tag">AI PICKS · PAPER MODE</div>
+  </div>
+</div>
+
+</body>
+</html>

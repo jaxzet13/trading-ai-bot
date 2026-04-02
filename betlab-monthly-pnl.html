@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BetLab AI — Monthly PnL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Chakra+Petch:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #c9a227;
+    --gold-light: #f0c040;
+    --gold-glow: rgba(201,162,39,0.35);
+    --win: #00e5a0;
+    --win-glow: rgba(0,229,160,0.3);
+    --loss: #ff4060;
+    --loss-glow: rgba(255,64,96,0.25);
+    --bg-deep: #050810;
+    --bg-card: #080d18;
+    --bg-inner: #0b1120;
+    --border: rgba(255,255,255,0.06);
+    --text-dim: rgba(255,255,255,0.4);
+    --text-mid: rgba(255,255,255,0.65);
+  }
+
+  body {
+    background: #020408;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Chakra Petch', monospace;
+    padding: 24px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    width: 520px;
+    background: var(--bg-card);
+    border-radius: 22px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 1px rgba(201,162,39,0.15),
+      0 0 80px rgba(201,162,39,0.06),
+      0 40px 100px rgba(0,0,0,0.9);
+    animation: card-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(24px) scale(0.96); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 22px;
+    padding: 1px;
+    background: linear-gradient(140deg, rgba(201,162,39,0.45) 0%, transparent 45%, transparent 55%, rgba(0,229,160,0.15) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .top-glow {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, var(--gold) 30%, var(--gold-light) 50%, var(--gold) 70%, transparent 100%);
+    opacity: 0.85;
+    z-index: 2;
+  }
+
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.013) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.013) 1px, transparent 1px);
+    background-size: 32px 32px;
+    border-radius: 22px;
+    pointer-events: none;
+  }
+
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,162,39,0.12) 30%, rgba(201,162,39,0.35) 50%, rgba(201,162,39,0.12) 70%, transparent);
+    animation: scan 5s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  @keyframes scan {
+    0%   { top: 0%; opacity: 0; }
+    4%   { opacity: 1; }
+    96%  { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 22px 24px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .brand-logo {
+    width: 34px;
+    height: 34px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 15px;
+    color: #050810;
+    box-shadow: 0 0 16px var(--gold-glow);
+    flex-shrink: 0;
+  }
+
+  .brand-text { display: flex; flex-direction: column; gap: 1px; }
+
+  .brand-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 21px;
+    letter-spacing: 1.5px;
+    color: #fff;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .brand-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .badge-paper {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    background: rgba(201,162,39,0.1);
+    border: 1px solid rgba(201,162,39,0.25);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .month-label {
+    font-family: 'Chakra Petch', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── HERO STATS ── */
+  .hero-stats {
+    padding: 20px 20px 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .hero-stat {
+    background: var(--bg-inner);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-stat.main {
+    border-color: rgba(0,229,160,0.2);
+    background: linear-gradient(135deg, rgba(0,229,160,0.06) 0%, var(--bg-inner) 60%);
+  }
+
+  .hero-stat.main::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,160,0.4), transparent);
+  }
+
+  .hero-stat .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .hero-stat .value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 38px;
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+
+  .hero-stat .value.green { color: var(--win); text-shadow: 0 0 24px rgba(0,229,160,0.4); }
+  .hero-stat .value.gold  { color: var(--gold-light); text-shadow: 0 0 18px var(--gold-glow); }
+  .hero-stat .value.white { color: #fff; }
+
+  .hero-stat .sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-mid);
+    margin-top: 3px;
+  }
+
+  .secondary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .sec-stat {
+    background: var(--bg-inner);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sec-stat .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .sec-stat .value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .sec-stat .value.gold { color: var(--gold-light); }
+
+  /* ── CHART AREA ── */
+  .chart-section {
+    padding: 20px 20px 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .chart-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .legend-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .legend-dot.green { background: var(--win); box-shadow: 0 0 6px var(--win); }
+  .legend-dot.gold  { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+
+  .chart-wrap {
+    background: var(--bg-inner);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #pnl-canvas {
+    display: block;
+    width: 100%;
+    height: 200px;
+  }
+
+  /* ── SPORT BREAKDOWN ── */
+  .breakdown-section {
+    padding: 16px 20px 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+  }
+
+  .sport-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sport-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg-inner);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    animation: pick-in 0.5s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  .sport-row:nth-child(1) { animation-delay: 0.2s; }
+  .sport-row:nth-child(2) { animation-delay: 0.3s; }
+  .sport-row:nth-child(3) { animation-delay: 0.4s; }
+  .sport-row:nth-child(4) { animation-delay: 0.5s; }
+
+  @keyframes pick-in {
+    from { opacity: 0; transform: translateX(-10px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .sport-icon {
+    font-size: 16px;
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .sport-name {
+    font-family: 'Chakra Petch', monospace;
+    font-weight: 600;
+    font-size: 12px;
+    color: #fff;
+    width: 50px;
+    flex-shrink: 0;
+  }
+
+  .sport-record {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-mid);
+    width: 36px;
+    flex-shrink: 0;
+  }
+
+  .sport-bar-wrap {
+    flex: 1;
+    height: 5px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .sport-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transform-origin: left;
+    animation: bar-grow 1s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  @keyframes bar-grow {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  .sport-bar-fill.green { background: linear-gradient(90deg, rgba(0,229,160,0.6), var(--win)); box-shadow: 0 0 6px var(--win-glow); }
+  .sport-bar-fill.gold  { background: linear-gradient(90deg, rgba(201,162,39,0.6), var(--gold-light)); box-shadow: 0 0 6px var(--gold-glow); }
+  .sport-bar-fill.purple{ background: linear-gradient(90deg, rgba(162,155,254,0.6), #a29bfe); }
+  .sport-bar-fill.blue  { background: linear-gradient(90deg, rgba(78,205,196,0.6), #4ecdc4); }
+
+  .sport-units {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    width: 44px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .sport-units.pos { color: var(--win); }
+  .sport-units.neg { color: var(--loss); }
+
+  /* ── STREAK + BEST DAY ── */
+  .highlights {
+    padding: 14px 20px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .highlight-card {
+    background: var(--bg-inner);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+
+  .highlight-card .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .highlight-card .big {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    color: var(--gold-light);
+    text-shadow: 0 0 16px var(--gold-glow);
+    line-height: 1;
+  }
+
+  .highlight-card .detail {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-mid);
+    margin-top: 3px;
+  }
+
+  /* fire emoji for streak */
+  .streak-fire {
+    display: inline-block;
+    animation: bounce 0.8s ease-in-out infinite alternate;
+  }
+  @keyframes bounce {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-3px); }
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 16px 24px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    position: relative;
+    z-index: 2;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .footer-brand {
+    font-family: 'Chakra Petch', monospace;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.85;
+  }
+
+  .footer-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .footer-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="top-glow"></div>
+  <div class="grid-bg"></div>
+  <div class="scan-line"></div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-logo">BL</div>
+      <div class="brand-text">
+        <div class="brand-name">BetLab AI</div>
+        <div class="brand-sub">Monthly Report</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="badge-paper">Paper</div>
+      <div class="month-label">March 2026</div>
+    </div>
+  </div>
+
+  <!-- Hero Stats -->
+  <div class="hero-stats">
+    <div class="hero-grid">
+      <div class="hero-stat main">
+        <div class="label">Total Units</div>
+        <div class="value green">+18.5u</div>
+        <div class="sub">↑ Best month of 2026</div>
+      </div>
+      <div class="hero-stat">
+        <div class="label">Win Rate</div>
+        <div class="value gold">62.1%</div>
+        <div class="sub">Above breakeven threshold</div>
+      </div>
+    </div>
+    <div class="secondary-grid">
+      <div class="sec-stat">
+        <div class="label">Record</div>
+        <div class="value">23–14</div>
+      </div>
+      <div class="sec-stat">
+        <div class="label">Total Picks</div>
+        <div class="value">37</div>
+      </div>
+      <div class="sec-stat">
+        <div class="label">ROI</div>
+        <div class="value gold">+24.7%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cumulative PnL Chart -->
+  <div class="chart-section">
+    <div class="chart-header">
+      <div class="chart-title">Cumulative Units — March</div>
+      <div class="chart-legend">
+        <div class="legend-item">
+          <div class="legend-dot green"></div>
+          <span>Cum. PnL</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot gold"></div>
+          <span>Daily</span>
+        </div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="pnl-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- Sport Breakdown -->
+  <div class="breakdown-section">
+    <div class="section-label">Sport Breakdown</div>
+    <div class="sport-rows">
+      <div class="sport-row">
+        <div class="sport-icon">🏀</div>
+        <div class="sport-name">NBA</div>
+        <div class="sport-record">9–5</div>
+        <div class="sport-bar-wrap">
+          <div class="sport-bar-fill green" style="width:78%"></div>
+        </div>
+        <div class="sport-units pos">+8.2u</div>
+      </div>
+      <div class="sport-row">
+        <div class="sport-icon">🏒</div>
+        <div class="sport-name">NHL</div>
+        <div class="sport-record">7–4</div>
+        <div class="sport-bar-wrap">
+          <div class="sport-bar-fill blue" style="width:62%"></div>
+        </div>
+        <div class="sport-units pos">+5.7u</div>
+      </div>
+      <div class="sport-row">
+        <div class="sport-icon">🏈</div>
+        <div class="sport-name">NCAAB</div>
+        <div class="sport-record">5–3</div>
+        <div class="sport-bar-wrap">
+          <div class="sport-bar-fill gold" style="width:50%"></div>
+        </div>
+        <div class="sport-units pos">+3.5u</div>
+      </div>
+      <div class="sport-row">
+        <div class="sport-icon">⚾</div>
+        <div class="sport-name">MLB</div>
+        <div class="sport-record">2–2</div>
+        <div class="sport-bar-wrap">
+          <div class="sport-bar-fill purple" style="width:18%"></div>
+        </div>
+        <div class="sport-units pos">+1.1u</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Highlights -->
+  <div class="highlights">
+    <div class="highlight-card">
+      <div class="label">Current Streak</div>
+      <div class="big"><span class="streak-fire">🔥</span> W5</div>
+      <div class="detail">5 consecutive wins</div>
+    </div>
+    <div class="highlight-card">
+      <div class="label">Best Day</div>
+      <div class="big">+5.5u</div>
+      <div class="detail">March 14 — 4 picks, 4 wins</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-brand">betlab.ai</div>
+    <div class="footer-meta">
+      <div class="footer-tag">AI PICKS · PAPER MODE</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CHART DRAWING ──
+(function() {
+  const canvas = document.getElementById('pnl-canvas');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.offsetWidth;
+  const H = 200;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // Daily P&L data for March (31 days, realistic noisy performance)
+  const daily = [
+    0, +1.5, -1.0, +2.0, +0.5, -1.5, +2.5, +1.0, -0.5, +1.5,
+    -1.0, +2.0, +1.5, +5.5, -1.0, +2.0, -0.5, +1.5, +0.5,
+    -1.5, +2.0, +1.0, -1.0, +1.5, +1.0, +0.5, +1.5, -0.5,
+    +1.0, +1.5, +0.5
+  ];
+
+  // Build cumulative
+  const cum = [];
+  let running = 0;
+  for (const d of daily) { running += d; cum.push(running); }
+
+  const PAD = { top: 24, right: 20, bottom: 32, left: 44 };
+  const CW = W - PAD.left - PAD.right;
+  const CH = H - PAD.top - PAD.bottom;
+
+  const maxVal = Math.max(...cum, ...daily.filter(v=>v>0)) + 1;
+  const minVal = Math.min(...cum, 0) - 1;
+  const range  = maxVal - minVal;
+
+  function xPos(i, arr) { return PAD.left + (i / (arr.length - 1)) * CW; }
+  function yPos(v)       { return PAD.top + (1 - (v - minVal) / range) * CH; }
+
+  // ── ZERO LINE ──
+  const y0 = yPos(0);
+  ctx.beginPath();
+  ctx.setLineDash([4, 6]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1;
+  ctx.moveTo(PAD.left, y0);
+  ctx.lineTo(W - PAD.right, y0);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── Y GRID LINES ──
+  const gridVals = [0, 5, 10, 15, 20];
+  for (const g of gridVals) {
+    if (g < minVal || g > maxVal) continue;
+    const gy = yPos(g);
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 1;
+    ctx.moveTo(PAD.left, gy);
+    ctx.lineTo(W - PAD.right, gy);
+    ctx.stroke();
+
+    // y-axis labels
+    ctx.font = "300 9px 'DM Mono', monospace";
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText((g > 0 ? '+' : '') + g + 'u', PAD.left - 6, gy);
+  }
+
+  // ── DAILY BAR CHART ──
+  const barW = CW / daily.length * 0.45;
+  for (let i = 0; i < daily.length; i++) {
+    const x = xPos(i, daily);
+    const v = daily[i];
+    if (v === 0) continue;
+    const y1 = yPos(Math.max(v, 0));
+    const y2 = yPos(Math.min(v, 0));
+    const bh = Math.abs(y2 - y1);
+    const isWin = v > 0;
+    ctx.fillStyle = isWin
+      ? 'rgba(0,229,160,0.2)'
+      : 'rgba(255,64,96,0.18)';
+    ctx.beginPath();
+    ctx.roundRect(x - barW/2, Math.min(y1, y2), barW, Math.max(bh, 2), 2);
+    ctx.fill();
+  }
+
+  // ── CUMULATIVE LINE: area fill ──
+  const grad = ctx.createLinearGradient(0, PAD.top, 0, H - PAD.bottom);
+  grad.addColorStop(0,   'rgba(0,229,160,0.22)');
+  grad.addColorStop(0.6, 'rgba(0,229,160,0.06)');
+  grad.addColorStop(1,   'rgba(0,229,160,0)');
+
+  ctx.beginPath();
+  ctx.moveTo(xPos(0, cum), yPos(cum[0]));
+  for (let i = 1; i < cum.length; i++) {
+    const x0 = xPos(i-1, cum), y_0 = yPos(cum[i-1]);
+    const x1 = xPos(i, cum),   y_1 = yPos(cum[i]);
+    const cx = (x0 + x1) / 2;
+    ctx.bezierCurveTo(cx, y_0, cx, y_1, x1, y_1);
+  }
+  ctx.lineTo(xPos(cum.length-1, cum), H - PAD.bottom);
+  ctx.lineTo(xPos(0, cum), H - PAD.bottom);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // ── CUMULATIVE LINE: stroke ──
+  ctx.beginPath();
+  ctx.moveTo(xPos(0, cum), yPos(cum[0]));
+  for (let i = 1; i < cum.length; i++) {
+    const x0 = xPos(i-1, cum), y_0 = yPos(cum[i-1]);
+    const x1 = xPos(i, cum),   y_1 = yPos(cum[i]);
+    const cx = (x0 + x1) / 2;
+    ctx.bezierCurveTo(cx, y_0, cx, y_1, x1, y_1);
+  }
+  const lineGrad = ctx.createLinearGradient(PAD.left, 0, W - PAD.right, 0);
+  lineGrad.addColorStop(0,   'rgba(0,229,160,0.4)');
+  lineGrad.addColorStop(0.5, 'rgba(0,229,160,0.9)');
+  lineGrad.addColorStop(1,   'rgba(0,229,160,1)');
+  ctx.strokeStyle = lineGrad;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // ── END DOT ──
+  const ex = xPos(cum.length-1, cum);
+  const ey = yPos(cum[cum.length-1]);
+  ctx.beginPath();
+  ctx.arc(ex, ey, 5, 0, Math.PI*2);
+  ctx.fillStyle = '#00e5a0';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(ex, ey, 9, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(0,229,160,0.3)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // glow
+  const glowGrad = ctx.createRadialGradient(ex, ey, 0, ex, ey, 18);
+  glowGrad.addColorStop(0, 'rgba(0,229,160,0.3)');
+  glowGrad.addColorStop(1, 'transparent');
+  ctx.beginPath();
+  ctx.arc(ex, ey, 18, 0, Math.PI*2);
+  ctx.fillStyle = glowGrad;
+  ctx.fill();
+
+  // end label
+  ctx.font = "700 11px 'Barlow Condensed', sans-serif";
+  ctx.fillStyle = '#00e5a0';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('+18.5u', ex + 10, ey);
+
+  // ── X AXIS LABELS (every 5 days) ──
+  ctx.font = "300 9px 'DM Mono', monospace";
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  for (let i = 0; i < daily.length; i += 5) {
+    ctx.fillText('Mar ' + (i+1), xPos(i, daily), H - PAD.bottom + 8);
+  }
+  ctx.fillText('Mar 31', xPos(daily.length-1, daily), H - PAD.bottom + 8);
+})();
+</script>
+
+</body>
+</html>
