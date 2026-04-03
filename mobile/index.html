@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1"/>
+<title>BetLab AI — Autonomous Sports Betting Intelligence</title>
+<meta name="description" content="AI-powered sports betting picks that never stop learning. Verified results, bankroll management, and daily picks delivered by BetLab AI."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Chakra+Petch:wght@300;400;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#090909;
+  --card:#111;
+  --border:#1e1e1e;
+  --green:#00ff88;
+  --green-dim:#00cc6a;
+  --red:#ff4444;
+  --text:#f0f0f0;
+  --muted:#888;
+  --faint:#333;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Chakra Petch',sans-serif;font-size:15px;line-height:1.6;max-width:430px;margin:0 auto;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(9,9,9,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
+.nav-logo{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:1px}
+.nav-logo span{color:var(--green)}
+.btn{display:inline-flex;align-items:center;justify-content:center;border:none;cursor:pointer;font-family:'Chakra Petch',sans-serif;font-weight:600;border-radius:8px;transition:all .2s}
+.btn-green{background:var(--green);color:#000;padding:9px 18px;font-size:13px}
+.btn-green:hover{background:var(--green-dim)}
+.btn-outline{background:transparent;color:var(--green);border:1px solid var(--green);padding:9px 18px;font-size:13px}
+.btn-lg{padding:16px 28px;font-size:16px;border-radius:10px;width:100%}
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:6px;background:#0d2218;border:1px solid #1a4a2e;color:var(--green);font-family:'DM Mono',monospace;font-size:11px;padding:6px 12px;border-radius:20px}
+.dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* HERO */
+.hero{padding:36px 18px 40px;text-align:center}
+.hero h1{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:52px;line-height:1.05;margin:16px 0 10px}
+.hero h1 em{color:var(--green);font-style:normal}
+.hero-sub{color:var(--muted);font-size:15px;margin-bottom:24px}
+.hero-btns{display:flex;gap:10px;margin-bottom:28px}
+.hero-btns .btn{flex:1}
+.stats-row{display:flex;justify-content:space-around;border-top:1px solid var(--border);padding-top:22px}
+.stat-item{text-align:center}
+.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--green)}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+/* SECTIONS */
+section{padding:44px 18px}
+.section-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.section-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;line-height:1.1;margin-bottom:10px}
+.section-sub{color:var(--muted);font-size:14px;margin-bottom:28px}
+/* HOW IT WORKS */
+.steps{display:flex;flex-direction:column;gap:16px}
+.step{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+.step-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--green);margin-bottom:8px}
+.step-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;margin-bottom:6px}
+.step-desc{color:var(--muted);font-size:14px;line-height:1.6}
+/* PICK CARD */
+.pick-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.pick-header{background:#0d1a10;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.pick-sport{font-family:'DM Mono',monospace;font-size:11px;color:var(--green)}
+.pick-badge{background:#00ff8820;border:1px solid #00ff8840;color:var(--green);font-size:10px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:4px}
+.pick-body{padding:18px}
+.pick-game{font-size:13px;color:var(--muted);margin-bottom:4px}
+.pick-selection{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;margin-bottom:14px}
+.pick-prob{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.prob-label{font-size:12px;color:var(--muted)}
+.prob-val{font-family:'DM Mono',monospace;font-size:18px;color:var(--green);font-weight:500}
+.prob-bar{height:4px;background:var(--faint);border-radius:2px;margin-bottom:14px}
+.prob-fill{height:100%;background:var(--green);border-radius:2px;width:82%}
+.pick-reasoning{background:#0a0a0a;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px}
+.pick-result{background:#0d1f14;border:1px solid #1a4a2e;border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between}
+.pick-result-label{font-size:13px;color:var(--muted)}
+.pick-result-val{font-family:'DM Mono',monospace;font-size:15px;color:var(--green);font-weight:500}
+/* VS */
+.vs-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vs-col{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.vs-col-bad{border-color:#3a1a1a}
+.vs-col-good{border-color:#1a3a28}
+.vs-col-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;margin-bottom:12px}
+.vs-col-bad .vs-col-title{color:#ff6666}
+.vs-col-good .vs-col-title{color:var(--green)}
+.vs-item{display:flex;gap:8px;margin-bottom:10px;font-size:12px;line-height:1.5;color:var(--muted)}
+.vs-icon{flex-shrink:0;margin-top:2px;font-size:13px}
+/* TRACK RECORD */
+.record-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.record-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center}
+.record-val{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:800}
+.record-val.green{color:var(--green)}
+.record-val.red{color:var(--red)}
+.record-lbl{font-size:12px;color:var(--muted);margin-top:4px}
+.cta-link{text-align:center;color:var(--green);font-size:14px;margin-top:6px}
+/* PRICING */
+.pricing-note{background:#0d1a10;border:1px solid #1a3a28;border-radius:10px;padding:14px 16px;font-size:13px;color:var(--muted);margin-bottom:24px;text-align:center}
+.pricing-note strong{color:var(--green)}
+.plans{display:flex;flex-direction:column;gap:14px}
+.plan{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;position:relative}
+.plan-sharp{border-color:var(--green);box-shadow:0 0 24px #00ff8818}
+.plan-popular{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;font-size:11px;font-weight:700;font-family:'Chakra Petch',sans-serif;padding:4px 12px;border-radius:20px;white-space:nowrap}
+.plan-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px}
+.plan-tagline{font-size:13px;color:var(--muted);margin-bottom:14px}
+.plan-price{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+.plan-amount{font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:800}
+.plan-per{font-size:13px;color:var(--muted)}
+.plan-original{font-size:14px;color:var(--muted);text-decoration:line-through}
+.plan-save{font-size:12px;color:var(--green);background:#0d2218;padding:2px 8px;border-radius:4px}
+.plan-trial{font-size:12px;color:var(--muted);margin-bottom:18px}
+.plan-trial strong{color:var(--green)}
+.plan-features{list-style:none;margin-bottom:20px}
+.plan-features li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--muted);padding:5px 0;border-bottom:1px solid #1a1a1a}
+.plan-features li:last-child{border:none}
+.plan-features li .chk{color:var(--green);flex-shrink:0}
+/* REVIEWS */
+.rating-row{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.stars{color:#ffd700;font-size:20px;letter-spacing:2px}
+.rating-num{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:800}
+.rating-count{font-size:12px;color:var(--muted)}
+.reviews{display:flex;flex-direction:column;gap:12px}
+.review{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.review-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.reviewer{font-weight:600;font-size:14px}
+.review-stars{color:#ffd700;font-size:13px}
+.review-text{font-size:13px;color:var(--muted);line-height:1.6}
+.verified-badge{font-size:10px;color:var(--green);font-family:'DM Mono',monospace;margin-top:6px}
+/* FAQ */
+.faq{display:flex;flex-direction:column;gap:10px}
+.faq-item{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:16px;cursor:pointer;font-size:14px;font-weight:600;gap:12px}
+.faq-icon{flex-shrink:0;color:var(--green);font-size:18px;transition:transform .2s;font-family:'DM Mono',monospace}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s}
+.faq-a-inner{padding:0 16px 16px;font-size:13px;color:var(--muted);line-height:1.7}
+.faq-item.open .faq-icon{transform:rotate(45deg)}
+.faq-item.open .faq-a{max-height:200px}
+/* FINAL CTA */
+.cta-section{background:linear-gradient(180deg,#0d1f14 0%,var(--bg) 100%);border-top:1px solid #1a3a28;padding:48px 18px;text-align:center}
+.cta-section .section-title{font-size:40px}
+.cta-section p{color:var(--muted);font-size:14px;margin-bottom:24px;margin-top:8px}
+.cta-disclaimer{font-size:11px;color:var(--faint);margin-top:12px}
+/* FOOTER */
+footer{background:#050505;border-top:1px solid var(--border);padding:24px 18px;text-align:center}
+.footer-links{display:flex;justify-content:center;gap:18px;margin-bottom:12px;flex-wrap:wrap}
+.footer-links a{font-size:12px;color:var(--muted)}
+footer p{font-size:11px;color:var(--faint);line-height:1.6}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Bet<span>Lab</span> AI</div>
+  <a href="#pricing" class="btn btn-green">Start Free</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="badge"><span class="dot"></span>Live · Picks drop nightly at 1:30 AM ET</div>
+  <h1>Your Edge.<br/><em>Powered by AI.</em></h1>
+  <p class="hero-sub">Join 800+ members winning daily — zero sports knowledge needed.</p>
+  <div class="hero-btns">
+    <a href="#pricing" class="btn btn-green btn-lg">Start Free</a>
+    <a href="#record" class="btn btn-outline btn-lg">See Results</a>
+  </div>
+  <div class="stats-row">
+    <div class="stat-item">
+      <div class="stat-val">800+</div>
+      <div class="stat-lbl">Members</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">1:30AM</div>
+      <div class="stat-lbl">Daily ET</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">Any Book</div>
+      <div class="stat-lbl">Sportsbook</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section>
+  <div class="section-label">How It Works</div>
+  <div class="section-title">Dead Simple.<br/>Real Money.</div>
+  <p class="section-sub">No sports knowledge. No research. No guesswork. Just copy the AI's pick and collect.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01 — WHILE YOU SLEEP</div>
+      <div class="step-title">AI Scans Everything</div>
+      <p class="step-desc">Our AI scans thousands of stats, injuries, line movement, and sharp money across every major game — and locks in picks before you wake up.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02 — 30 SECONDS</div>
+      <div class="step-title">Copy The Pick</div>
+      <p class="step-desc">See the game, spread, odds, and units. Open FanDuel or DraftKings. Place the bet. Takes under 30 seconds. Zero research needed.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03 — COLLECT</div>
+      <div class="step-title">Watch It Land</div>
+      <p class="step-desc">The game plays out. AI wins. Your sportsbook credits the profit. BetLab tracks everything automatically — bankroll, record, and ROI in real time.</p>
+    </div>
+  </div>
+</section>
+
+<!-- EXAMPLE PICK -->
+<section>
+  <div class="section-label">Example Pick</div>
+  <div class="section-title">The Pick Is Waiting.</div>
+  <p class="section-sub">This is what you wake up to every morning.</p>
+  <div class="pick-card">
+    <div class="pick-header">
+      <span class="pick-sport">◆ PREMIUM · NBA</span>
+      <span class="pick-badge">AI VERIFIED</span>
+    </div>
+    <div class="pick-body">
+      <div class="pick-game">Celtics vs Lakers · Tonight</div>
+      <div class="pick-selection">Celtics -4.5</div>
+      <div class="pick-prob">
+        <span class="prob-label">Win Probability</span>
+        <span class="prob-val">82%</span>
+      </div>
+      <div class="prob-bar"><div class="prob-fill"></div></div>
+      <div class="pick-reasoning">Boston 8-2 in last 10 home games. LA missing key rotation player. Sharp money moved the line from -3 to -4.5 overnight.</div>
+      <div class="pick-result">
+        <span class="pick-result-label">$100 bet → WIN</span>
+        <span class="pick-result-val">+$91 profit</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VS THE INDUSTRY -->
+<section>
+  <div class="section-label">The Problem</div>
+  <div class="section-title">We Built Something Different.</div>
+  <p class="section-sub">The industry is broken. Here's what actually changes.</p>
+  <div class="vs-grid">
+    <div class="vs-col vs-col-bad">
+      <div class="vs-col-title">The Industry</div>
+      <div class="vs-item"><span class="vs-icon">✗</span>Touts vanish when picks go cold</div>
+      <div class="vs-item"><span class="vs-icon">✗</span>No verified results — ever</div>
+      <div class="vs-item"><span class="vs-icon">✗</span>$200/mo for picks that expire</div>
+      <div class="vs-item"><span class="vs-icon">✗</span>Static software, no learning</div>
+    </div>
+    <div class="vs-col vs-col-good">
+      <div class="vs-col-title">BetLab AI</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span>Every pick logged forever</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span>Full AI reasoning on every pick</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span>Numbers always live — no hiding</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span>Model rewrites rules after every bet</div>
+    </div>
+  </div>
+</section>
+
+<!-- TRACK RECORD -->
+<section id="record">
+  <div class="section-label">Track Record</div>
+  <div class="section-title">Verified. Real Proof.</div>
+  <p class="section-sub">Every pick tracked and verified against final scores. Nothing hidden.</p>
+  <div class="record-grid">
+    <div class="record-card">
+      <div class="record-val green">247</div>
+      <div class="record-lbl">Wins</div>
+    </div>
+    <div class="record-card">
+      <div class="record-val red">89</div>
+      <div class="record-lbl">Losses</div>
+    </div>
+    <div class="record-card">
+      <div class="record-val green">73%</div>
+      <div class="record-lbl">Win Rate</div>
+    </div>
+    <div class="record-card">
+      <div class="record-val green">+84u</div>
+      <div class="record-lbl">Units P/L</div>
+    </div>
+  </div>
+  <a href="#pricing" class="cta-link">Join to see full pick details →</a>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-label">Pricing</div>
+  <div class="section-title">3-Day Free Trial<br/>on Pro &amp; Sharp.</div>
+  <div class="pricing-note"><strong>Enter your card, get full access instantly.</strong> Cancel before day 4 and pay nothing. No risk.</div>
+  <div class="plans">
+
+    <div class="plan">
+      <div class="plan-name">Free</div>
+      <div class="plan-tagline">Start tracking. Zero commitment.</div>
+      <div class="plan-price">
+        <span class="plan-amount">$0</span>
+        <span class="plan-per">/mo</span>
+      </div>
+      <div class="plan-trial">No card required · Forever free</div>
+      <ul class="plan-features">
+        <li><span class="chk">✓</span>All learning picks (unlimited)</li>
+        <li><span class="chk">✓</span>Bankroll tracker</li>
+        <li><span class="chk">✓</span>Pick history</li>
+        <li><span class="chk">✓</span>Basic analytics</li>
+      </ul>
+      <a href="#" class="btn btn-outline btn-lg">Create Free Account</a>
+    </div>
+
+    <div class="plan">
+      <div class="plan-name">Pro</div>
+      <div class="plan-tagline">Good start — daily AI picks included.</div>
+      <div class="plan-price">
+        <span class="plan-amount">$30</span>
+        <span class="plan-per">/mo</span>
+      </div>
+      <div class="plan-trial"><strong>3 days free</strong> · then $30/mo · cancel anytime</div>
+      <ul class="plan-features">
+        <li><span class="chk">✓</span>Everything in Free</li>
+        <li><span class="chk">✓</span>Daily AI picks with full reasoning</li>
+        <li><span class="chk">✓</span>AI Parlays</li>
+        <li><span class="chk">✓</span>Win/loss analytics dashboard</li>
+      </ul>
+      <a href="#" class="btn btn-outline btn-lg">Try 3 Days Free</a>
+    </div>
+
+    <div class="plan plan-sharp">
+      <div class="plan-popular">⭐ MOST POPULAR</div>
+      <div class="plan-name" style="color:var(--green)">Sharp</div>
+      <div class="plan-tagline">The full arsenal. Every edge. Every angle. First.</div>
+      <div class="plan-price">
+        <span class="plan-amount" style="color:var(--green)">$50</span>
+        <span class="plan-per">/mo</span>
+        <span class="plan-original">$75</span>
+        <span class="plan-save">Save 33%</span>
+      </div>
+      <div class="plan-trial"><strong>3 days free</strong> · then $50/mo · only $1.67/day</div>
+      <ul class="plan-features">
+        <li><span class="chk">✓</span>Everything in Pro</li>
+        <li><span class="chk">✓</span>Premium AI picks (highest conviction)</li>
+        <li><span class="chk">✓</span>Player props + CLV/EV data</li>
+        <li><span class="chk">✓</span>Priority pick delivery</li>
+        <li><span class="chk">✓</span>Strategy dashboard (ranked by net units)</li>
+        <li><span class="chk">✓</span>Early access to every new feature</li>
+      </ul>
+      <a href="#" class="btn btn-green btn-lg">Try 3 Days Free</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section>
+  <div class="section-label">Members</div>
+  <div class="section-title">What Real Members Are Saying.</div>
+  <div class="rating-row">
+    <span class="rating-num">4.9</span>
+    <div>
+      <div class="stars">★★★★★</div>
+      <div class="rating-count">47 verified members</div>
+    </div>
+  </div>
+  <div class="reviews">
+    <div class="review">
+      <div class="review-top">
+        <span class="reviewer">Marcus T.</span>
+        <span class="review-stars">★★★★★</span>
+      </div>
+      <p class="review-text">Been using BetLab for 6 weeks. Up 22 units. The AI reasoning alone is worth the price — I actually understand every pick before I place it.</p>
+      <div class="verified-badge">✓ Verified member</div>
+    </div>
+    <div class="review">
+      <div class="review-top">
+        <span class="reviewer">Jordan K.</span>
+        <span class="review-stars">★★★★★</span>
+      </div>
+      <p class="review-text">Started on the free plan, upgraded to Sharp after a week. The premium picks hit at a different rate. CLV data is a game changer if you know how to use it.</p>
+      <div class="verified-badge">✓ Verified member</div>
+    </div>
+    <div class="review">
+      <div class="review-top">
+        <span class="reviewer">Priya S.</span>
+        <span class="review-stars">★★★★★</span>
+      </div>
+      <p class="review-text">Zero sports knowledge before BetLab. Now I'm consistently profitable. The AI does literally 100% of the work. I just copy and paste the pick every morning.</p>
+      <div class="verified-badge">✓ Verified member</div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section>
+  <div class="section-label">FAQ</div>
+  <div class="section-title">Everything Answered.</div>
+  <p class="section-sub">No fluff.</p>
+  <div class="faq">
+    <div class="faq-item">
+      <div class="faq-q">What exactly is BetLab AI?<span class="faq-icon">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">BetLab AI is a fully autonomous AI sports betting system. It analyzes every major game every day — scanning injuries, line movement, team trends — then outputs highest-confidence picks. You copy the pick to your sportsbook and keep the profit. No sports knowledge needed.</div></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">How does the AI find winning bets?<span class="faq-icon">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">The model runs thousands of data points through a constantly self-improving strategy engine. After every settled bet, it reviews the outcome and tightens its rules. Strategies that win get scaled up. Strategies that lose get paused or revised. It gets smarter every single day.</div></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Do I need to risk real money?<span class="faq-icon">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">Absolutely not. Every member starts with a simulated $500 paper bankroll. Watch the AI pick winners in real-time — no money on the line — until you're confident. You control when you go live.</div></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What sports does BetLab cover?<span class="faq-icon">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">NFL, NBA, MLB, NHL, and college basketball and football. Spreads, moneylines, totals, and player props — every day they play.</div></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can I use any sportsbook?<span class="faq-icon">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">Yes. BetLab AI works with every major sportsbook — FanDuel, DraftKings, BetMGM, Caesars, PointsBet, and more. Copy the pick and place it wherever you have an account. Takes about 30 seconds.</div></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Is this financial or legal advice?<span class="faq-icon">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">No. BetLab AI is a sports analytics and entertainment platform. Always bet responsibly, within your means, and in accordance with local laws. Must be 18+ to participate.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<div class="cta-section">
+  <div class="section-label" style="text-align:center">Get Started</div>
+  <div class="section-title" style="text-align:center;font-size:40px">Start Today.</div>
+  <p>AI-generated picks with full reasoning. Track everything. Upgrade when you're ready.</p>
+  <a href="#pricing" class="btn btn-green btn-lg">Create Free Account</a>
+  <p class="cta-disclaimer">Free plan available · No credit card required · Cancel anytime</p>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-links">
+    <a href="#">Terms of Service</a>
+    <a href="#">Privacy Policy</a>
+    <a href="#">Responsible Gambling</a>
+  </div>
+  <p>Sports analytics platform · Not financial advice · 18+ · Bet responsibly<br/>© 2026 BetLab AI · Proprietary AI Technology</p>
+</footer>
+
+<script>
+document.querySelectorAll('.faq-q').forEach(q=>{
+  q.addEventListener('click',()=>{
+    const item=q.parentElement;
+    const isOpen=item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));
+    if(!isOpen)item.classList.add('open');
+  });
+});
+</script>
+</body>
+</html>
