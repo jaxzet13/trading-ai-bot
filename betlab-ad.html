@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BetLab AI – Motion Ad (9:16)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=DM+Mono:wght@400;500&family=Chakra+Petch:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Reset ─────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Chakra Petch', sans-serif;
+    }
+
+    /* ─── Ad Container – 9:16 ────────────────────────────────────────────── */
+    #ad {
+      position: relative;
+      width: 390px;
+      height: 693px;
+      background: #060a10;
+      overflow: hidden;
+      border-radius: 18px;
+      box-shadow: 0 0 80px rgba(0,0,0,0.9);
+    }
+
+    /* ─── Scene Base ─────────────────────────────────────────────────────── */
+    .scene {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.45s ease;
+      padding: 28px 24px;
+    }
+    .scene.active { opacity: 1; }
+
+    /* ─── Brand Colors ───────────────────────────────────────────────────── */
+    :root {
+      --bg:      #060a10;
+      --gold:    #C9A227;
+      --blue:    #1A73E8;
+      --green:   #00D68F;
+      --text:    #E8EEF8;
+      --muted:   #7A8BA8;
+      --red:     #E84040;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       SCENE 1 – TERMINAL HOOK
+    ══════════════════════════════════════════════════════════════════════ */
+    #s1 {
+      justify-content: center;
+      align-items: flex-start;
+      padding: 60px 36px;
+    }
+
+    .terminal {
+      width: 100%;
+    }
+
+    .t-line {
+      font-family: 'DM Mono', monospace;
+      font-size: 18px;
+      color: #00D68F;
+      line-height: 1.7;
+      display: block;
+      overflow: hidden;
+      white-space: nowrap;
+      width: 0;
+      letter-spacing: 0.02em;
+    }
+    .t-line.typed { width: 100%; transition: width 0s; }
+
+    .t-cursor {
+      display: inline-block;
+      width: 10px;
+      height: 20px;
+      background: #00D68F;
+      vertical-align: middle;
+      margin-left: 3px;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .t-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 28px;
+      opacity: 0;
+      transition: opacity 0.6s;
+      letter-spacing: 0.1em;
+    }
+    .t-sub.show { opacity: 1; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       SCENE 2 – PROBLEM / COMPARISON
+    ══════════════════════════════════════════════════════════════════════ */
+    #s2 { padding: 36px 22px; justify-content: center; }
+
+    .cmp-wrap {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .cmp-col {
+      width: 100%;
+      border-radius: 12px;
+      padding: 18px 20px;
+      position: relative;
+    }
+    .cmp-col.bad  { background: rgba(232,64,64,0.08); border: 1px solid rgba(232,64,64,0.2); }
+    .cmp-col.good { background: rgba(201,162,39,0.08); border: 1px solid rgba(201,162,39,0.25); }
+
+    .cmp-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .cmp-col.bad  .cmp-label { color: var(--red); }
+    .cmp-col.good .cmp-label { color: var(--gold); }
+
+    .cmp-item {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 13.5px;
+      color: var(--text);
+      line-height: 1.55;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateX(-12px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .cmp-item.show { opacity: 1; transform: translateX(0); }
+
+    .cmp-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+    .cmp-col.bad  .cmp-icon { color: var(--red); }
+    .cmp-col.good .cmp-icon { color: var(--green); }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       SCENE 3 – RECORD / PROOF
+    ══════════════════════════════════════════════════════════════════════ */
+    #s3 { padding: 32px 20px; justify-content: center; gap: 20px; }
+
+    .record-card {
+      width: 100%;
+      background: #0c1420;
+      border: 1px solid rgba(201,162,39,0.3);
+      border-radius: 14px;
+      padding: 22px 24px 20px;
+      transform: translateY(40px);
+      opacity: 0;
+      transition: transform 0.6s cubic-bezier(0.22,1,0.36,1), opacity 0.6s ease;
+    }
+    .record-card.show { transform: translateY(0); opacity: 1; }
+
+    .rc-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: var(--gold);
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(201,162,39,0.2);
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+
+    .rc-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 20px;
+      margin-bottom: 14px;
+    }
+
+    .rc-stat {}
+    .rc-stat-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 32px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1;
+    }
+    .rc-stat-val.green { color: var(--green); }
+    .rc-stat-val.gold  { color: var(--gold); }
+    .rc-stat-lbl {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .rc-note {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 12px;
+    }
+
+    /* Equity curve */
+    .equity-wrap {
+      width: 100%;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s 0.4s ease, transform 0.5s 0.4s ease;
+    }
+    .equity-wrap.show { opacity: 1; transform: translateY(0); }
+
+    .equity-label {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 10.5px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 8px;
+      letter-spacing: 0.06em;
+    }
+    .equity-label span { color: var(--text); }
+
+    svg.curve {
+      width: 100%;
+      height: 90px;
+    }
+
+    #curve-path {
+      stroke: var(--green);
+      stroke-width: 2.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 900;
+      stroke-dashoffset: 900;
+      transition: stroke-dashoffset 2.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    #curve-path.draw { stroke-dashoffset: 0; }
+
+    #curve-fill {
+      fill: url(#curveGrad);
+      opacity: 0.18;
+      stroke: none;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       SCENE 4 – HOW IT WORKS
+    ══════════════════════════════════════════════════════════════════════ */
+    #s4 { padding: 36px 22px; justify-content: center; gap: 0; }
+
+    .hiw-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 15px;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 22px;
+      opacity: 0;
+      transition: opacity 0.4s;
+      width: 100%;
+    }
+    .hiw-title.show { opacity: 1; }
+
+    .hiw-steps { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+
+    .hiw-step {
+      background: #0c1420;
+      border: 1px solid rgba(26,115,232,0.2);
+      border-left: 3px solid var(--blue);
+      border-radius: 10px;
+      padding: 16px 18px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      opacity: 0;
+      transform: translateX(28px);
+      transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1);
+    }
+    .hiw-step.show { opacity: 1; transform: translateX(0); }
+
+    .hiw-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 22px;
+      color: var(--blue);
+      line-height: 1;
+      flex-shrink: 0;
+      width: 28px;
+      padding-top: 2px;
+    }
+
+    .hiw-body {}
+    .hiw-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .hiw-desc {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       SCENE 5 – CTA
+    ══════════════════════════════════════════════════════════════════════ */
+    #s5 { padding: 40px 28px; justify-content: center; gap: 0; }
+
+    /* Logo */
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+      opacity: 0;
+      transform: scale(0.88);
+      transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22,1,0.36,1);
+    }
+    .logo-wrap.show { opacity: 1; transform: scale(1); }
+
+    .logo-sq {
+      width: 48px;
+      height: 48px;
+      background: var(--gold);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 20px;
+      color: #060a10;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text { line-height: 1; }
+    .logo-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 30px;
+      letter-spacing: 0.04em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+    .logo-name span {
+      font-weight: 400;
+      opacity: 0.7;
+      color: var(--text);
+    }
+
+    .cta-tagline {
+      text-align: center;
+      margin-bottom: 36px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.5s 0.25s ease, transform 0.5s 0.25s ease;
+    }
+    .cta-tagline.show { opacity: 1; transform: translateY(0); }
+
+    .cta-line1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--text);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .cta-line2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 19px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .cta-url-wrap {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.5s 0.5s ease, transform 0.5s 0.5s ease;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .cta-url-wrap.show { opacity: 1; transform: translateY(0); }
+
+    .cta-url {
+      font-family: 'DM Mono', monospace;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+      animation: pulse-url 2s ease-in-out infinite;
+    }
+    @keyframes pulse-url {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.65; }
+    }
+
+    .cta-stats-row {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 36px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.5s 0.7s ease, transform 0.5s 0.7s ease;
+    }
+    .cta-stats-row.show { opacity: 1; transform: translateY(0); }
+
+    .cta-stat {
+      text-align: center;
+    }
+    .cta-stat-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 26px;
+      color: var(--green);
+      font-weight: 500;
+    }
+    .cta-stat-lbl {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .cta-stat-divider {
+      width: 1px;
+      background: rgba(255,255,255,0.08);
+      align-self: stretch;
+    }
+
+    .cta-badge {
+      background: rgba(0,214,143,0.1);
+      border: 1px solid rgba(0,214,143,0.25);
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 12px;
+      color: var(--green);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      opacity: 0;
+      transition: opacity 0.4s 0.9s ease;
+    }
+    .cta-badge.show { opacity: 1; }
+
+    .cta-disclaimer {
+      font-family: 'DM Mono', monospace;
+      font-size: 8.5px;
+      color: rgba(122,139,168,0.5);
+      text-align: center;
+      line-height: 1.5;
+      position: absolute;
+      bottom: 18px;
+      left: 24px;
+      right: 24px;
+      opacity: 0;
+      transition: opacity 0.5s 1.1s ease;
+    }
+    .cta-disclaimer.show { opacity: 1; }
+
+    /* ─── Progress Bar ───────────────────────────────────────────────────── */
+    #progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      background: var(--gold);
+      width: 0%;
+      transition: width linear;
+      z-index: 99;
+      opacity: 0.6;
+    }
+
+    /* ─── Scanlines overlay ──────────────────────────────────────────────── */
+    #scanlines {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.04) 2px,
+        rgba(0,0,0,0.04) 4px
+      );
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    /* ─── Noise / vignette overlay ───────────────────────────────────────── */
+    #vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%);
+      pointer-events: none;
+      z-index: 51;
+    }
+
+    /* ─── Replay button ──────────────────────────────────────────────────── */
+    #replay-btn {
+      display: none;
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      background: rgba(201,162,39,0.15);
+      border: 1px solid rgba(201,162,39,0.4);
+      color: var(--gold);
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 8px 20px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    #replay-btn:hover { background: rgba(201,162,39,0.28); }
+  </style>
+</head>
+<body>
+
+<div id="ad">
+  <!-- ═══ SCENE 1: TERMINAL HOOK ═══════════════════════════════════════ -->
+  <div class="scene" id="s1">
+    <div class="terminal">
+      <span class="t-line" id="tl1"></span>
+      <span class="t-line" id="tl2"></span>
+      <span class="t-cursor" id="tcursor"></span>
+      <p class="t-sub" id="tsub">BETLAB AI · SPORTS INTELLIGENCE ENGINE v3.1</p>
+    </div>
+  </div>
+
+  <!-- ═══ SCENE 2: PROBLEM ═════════════════════════════════════════════ -->
+  <div class="scene" id="s2">
+    <div class="cmp-wrap">
+      <div class="cmp-col bad">
+        <div class="cmp-label">Every other pick service</div>
+        <div class="cmp-item" data-idx="0"><span class="cmp-icon">✗</span> Fake records &amp; cherry-picked wins</div>
+        <div class="cmp-item" data-idx="1"><span class="cmp-icon">✗</span> No reasoning behind picks</div>
+        <div class="cmp-item" data-idx="2"><span class="cmp-icon">✗</span> Disappears when cold</div>
+        <div class="cmp-item" data-idx="3"><span class="cmp-icon">✗</span> Pays someone to hype it</div>
+      </div>
+      <div class="cmp-col good">
+        <div class="cmp-label">BetLab AI</div>
+        <div class="cmp-item" data-idx="4"><span class="cmp-icon">✓</span> Every win &amp; loss publicly logged</div>
+        <div class="cmp-item" data-idx="5"><span class="cmp-icon">✓</span> Full AI reasoning on every pick</div>
+        <div class="cmp-item" data-idx="6"><span class="cmp-icon">✓</span> Self-improves from every result</div>
+        <div class="cmp-item" data-idx="7"><span class="cmp-icon">✓</span> Zero hype. Just data.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SCENE 3: RECORD / PROOF ══════════════════════════════════════ -->
+  <div class="scene" id="s3">
+    <div class="record-card" id="rc">
+      <div class="rc-title">BETLAB AI · ALL-TIME RECORD</div>
+      <div class="rc-stats">
+        <div class="rc-stat">
+          <div class="rc-stat-val" id="cnt-record">0-0</div>
+          <div class="rc-stat-lbl">Record</div>
+        </div>
+        <div class="rc-stat">
+          <div class="rc-stat-val green" id="cnt-profit">+0u</div>
+          <div class="rc-stat-lbl">Units profit</div>
+        </div>
+        <div class="rc-stat">
+          <div class="rc-stat-val gold" id="cnt-winrate">0%</div>
+          <div class="rc-stat-lbl">Win rate</div>
+        </div>
+        <div class="rc-stat">
+          <div class="rc-stat-val" id="cnt-picks">0</div>
+          <div class="rc-stat-lbl">Picks settled</div>
+        </div>
+      </div>
+      <div class="rc-note">178 picks settled · fully public · nothing hidden</div>
+    </div>
+
+    <div class="equity-wrap" id="eq-wrap">
+      <svg class="curve" viewBox="0 0 350 90" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#00D68F" stop-opacity="0.7"/>
+            <stop offset="100%" stop-color="#00D68F" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <!-- Fill area under the curve -->
+        <path id="curve-fill"
+          d="M0,82 C20,80 35,76 55,72 C70,68 80,74 98,70 C115,66 125,60 145,54
+             C160,50 170,56 188,50 C205,44 215,38 235,32 C250,26 262,30 278,22
+             C292,16 305,20 320,12 C332,6 342,8 350,4 L350,90 L0,90 Z"
+        />
+        <!-- The equity line itself -->
+        <path id="curve-path"
+          d="M0,82 C20,80 35,76 55,72 C70,68 80,74 98,70 C115,66 125,60 145,54
+             C160,50 170,56 188,50 C205,44 215,38 235,32 C250,26 262,30 278,22
+             C292,16 305,20 320,12 C332,6 342,8 350,4"
+        />
+      </svg>
+      <div class="equity-label"><span>Every pick. Every result. Nothing hidden.</span></div>
+    </div>
+  </div>
+
+  <!-- ═══ SCENE 4: HOW IT WORKS ══════════════════════════════════════════ -->
+  <div class="scene" id="s4">
+    <div class="hiw-title" id="hiw-t">HOW IT WORKS</div>
+    <div class="hiw-steps">
+      <div class="hiw-step" id="step1">
+        <div class="hiw-num">01</div>
+        <div class="hiw-body">
+          <div class="hiw-name">AI scans every game</div>
+          <div class="hiw-desc">Injuries · line movement · sharp money · historical trends</div>
+        </div>
+      </div>
+      <div class="hiw-step" id="step2">
+        <div class="hiw-num">02</div>
+        <div class="hiw-body">
+          <div class="hiw-name">Strategies vote</div>
+          <div class="hiw-desc">3+ must agree before a pick is flagged as high-confidence</div>
+        </div>
+      </div>
+      <div class="hiw-step" id="step3">
+        <div class="hiw-num">03</div>
+        <div class="hiw-body">
+          <div class="hiw-name">You place the bet</div>
+          <div class="hiw-desc">Full AI reasoning included. Takes 30 seconds.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SCENE 5: CTA ══════════════════════════════════════════════════ -->
+  <div class="scene" id="s5">
+    <div class="logo-wrap" id="cta-logo">
+      <div class="logo-sq">BL</div>
+      <div class="logo-text">
+        <div class="logo-name">BetLab <span>AI</span></div>
+      </div>
+    </div>
+
+    <div class="cta-stats-row" id="cta-stats">
+      <div class="cta-stat">
+        <div class="cta-stat-num">132-60</div>
+        <div class="cta-stat-lbl">All-time record</div>
+      </div>
+      <div class="cta-stat-divider"></div>
+      <div class="cta-stat">
+        <div class="cta-stat-num">69%</div>
+        <div class="cta-stat-lbl">Win rate</div>
+      </div>
+      <div class="cta-stat-divider"></div>
+      <div class="cta-stat">
+        <div class="cta-stat-num">+100u</div>
+        <div class="cta-stat-lbl">Profit</div>
+      </div>
+    </div>
+
+    <div class="cta-tagline" id="cta-tag">
+      <div class="cta-line1">Start free. No credit card.</div>
+      <div class="cta-line2">Follow the AI. Keep the profit.</div>
+    </div>
+
+    <div class="cta-badge" id="cta-badge">Free · AI-powered · Updated daily</div>
+
+    <div class="cta-url-wrap" id="cta-url">
+      <div class="cta-url">betlabai.app</div>
+    </div>
+
+    <div class="cta-disclaimer" id="cta-disc">
+      Past performance does not guarantee future results.<br/>
+      Please bet responsibly. 21+ only. Check local regulations.
+    </div>
+  </div>
+
+  <!-- Overlays -->
+  <div id="scanlines"></div>
+  <div id="vignette"></div>
+  <div id="progress-bar"></div>
+</div>
+
+<script>
+  /* ─── Helpers ──────────────────────────────────────────────────────── */
+  const $ = id => document.getElementById(id);
+  const show  = el => el && el.classList.add('show');
+  const hide  = el => el && el.classList.remove('show');
+  const after = (ms, fn) => setTimeout(fn, ms);
+
+  /* ─── Progress bar ─────────────────────────────────────────────────── */
+  const TOTAL_MS = 27000;
+  const pb = $('progress-bar');
+  let pbStart = null;
+
+  function tickPB(ts) {
+    if (!pbStart) pbStart = ts;
+    const pct = Math.min(100, ((ts - pbStart) / TOTAL_MS) * 100);
+    pb.style.width = pct + '%';
+    if (pct < 100) requestAnimationFrame(tickPB);
+  }
+
+  /* ─── Scene manager ────────────────────────────────────────────────── */
+  function activateScene(id) {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+  }
+
+  /* ─── Typewriter ───────────────────────────────────────────────────── */
+  function typeText(el, text, speed, done) {
+    let i = 0;
+    el.textContent = '';
+    const iv = setInterval(() => {
+      el.textContent += text[i++];
+      if (i >= text.length) { clearInterval(iv); if (done) done(); }
+    }, speed);
+  }
+
+  /* ─── Counter animation ─────────────────────────────────────────────── */
+  function countUp(el, from, to, duration, format) {
+    const start = performance.now();
+    function frame(ts) {
+      const progress = Math.min((ts - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const val = Math.round(from + (to - from) * ease);
+      el.textContent = format(val);
+      if (progress < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ─── Scene 1: Terminal ─────────────────────────────────────────────── */
+  function runScene1() {
+    activateScene('s1');
+    const l1 = $('tl1'), l2 = $('tl2'), cur = $('tcursor'), sub = $('tsub');
+    // Reset
+    l1.textContent = ''; l2.textContent = '';
+    hide(sub);
+
+    after(300, () => {
+      typeText(l1, '> Scanning tonight\'s slate...', 52, () => {
+        after(600, () => {
+          typeText(l2, '> 3 high-confidence picks identified.', 44, () => {
+            after(400, () => { show(sub); });
+          });
+        });
+      });
+    });
+  }
+
+  /* ─── Scene 2: Problem ──────────────────────────────────────────────── */
+  function runScene2() {
+    activateScene('s2');
+    const items = document.querySelectorAll('#s2 .cmp-item');
+    items.forEach(el => hide(el));
+
+    items.forEach((el, i) => {
+      after(i * 220, () => show(el));
+    });
+  }
+
+  /* ─── Scene 3: Record/Proof ─────────────────────────────────────────── */
+  function runScene3() {
+    activateScene('s3');
+    const rc = $('rc'), eq = $('eq-wrap'), path = $('curve-path');
+    hide(rc); hide(eq); path.classList.remove('draw');
+
+    after(200, () => {
+      show(rc);
+      // Count up numbers
+      after(500, () => {
+        countUp($('cnt-record'), 0, 132, 1600,
+          v => v + '-' + Math.round(60 * v / 132));
+        countUp($('cnt-profit'), 0, 100, 1600,
+          v => '+' + v + 'u');
+        countUp($('cnt-winrate'), 0, 69, 1600,
+          v => v + '%');
+        countUp($('cnt-picks'), 0, 178, 1600,
+          v => v);
+      });
+    });
+
+    after(1600, () => {
+      show(eq);
+      after(400, () => { path.classList.add('draw'); });
+    });
+  }
+
+  /* ─── Scene 4: How it works ─────────────────────────────────────────── */
+  function runScene4() {
+    activateScene('s4');
+    const title = $('hiw-t');
+    const steps = ['step1','step2','step3'].map($);
+    hide(title); steps.forEach(hide);
+
+    after(150, () => {
+      show(title);
+      steps.forEach((s, i) => { after(300 + i * 360, () => show(s)); });
+    });
+  }
+
+  /* ─── Scene 5: CTA ──────────────────────────────────────────────────── */
+  function runScene5() {
+    activateScene('s5');
+    const els = ['cta-logo','cta-stats','cta-tag','cta-badge','cta-url','cta-disc'].map($);
+    els.forEach(hide);
+
+    after(200,  () => show($('cta-logo')));
+    after(500,  () => show($('cta-stats')));
+    after(900,  () => show($('cta-tag')));
+    after(1200, () => show($('cta-badge')));
+    after(1500, () => show($('cta-url')));
+    after(2100, () => show($('cta-disc')));
+  }
+
+  /* ─── Master timeline ───────────────────────────────────────────────── */
+  function run() {
+    pbStart = null;
+    requestAnimationFrame(tickPB);
+    pb.style.transition = 'none';
+    pb.style.width = '0%';
+
+    runScene1();                          //  0:00 –  4:00
+    after(4000, runScene2);              //  4:00 –  8:00
+    after(8000, runScene3);              //  8:00 – 16:00
+    after(16000, runScene4);             // 16:00 – 22:00
+    after(22000, runScene5);             // 22:00 – 28:00
+  }
+
+  /* Start immediately */
+  run();
+</script>
+</body>
+</html>
