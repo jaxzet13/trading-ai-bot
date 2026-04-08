@@ -71,26 +71,23 @@
 
     .t-line {
       font-family: 'DM Mono', monospace;
-      font-size: 18px;
+      font-size: 19px;
       color: #00D68F;
-      line-height: 1.7;
+      line-height: 1.9;
       display: block;
-      overflow: hidden;
-      white-space: nowrap;
-      width: 0;
-      letter-spacing: 0.02em;
+      white-space: pre-wrap;
+      letter-spacing: 0.01em;
+      min-height: 1.9em;
     }
-    .t-line.typed { width: 100%; transition: width 0s; }
 
-    .t-cursor {
-      display: inline-block;
-      width: 10px;
-      height: 20px;
-      background: #00D68F;
-      vertical-align: middle;
-      margin-left: 3px;
-      animation: blink 1s step-end infinite;
+    /* Blinking block cursor appended via ::after on the active line */
+    .t-line.typing::after {
+      content: '█';
+      animation: blink 0.75s step-end infinite;
+      margin-left: 1px;
+      font-size: 17px;
     }
+
     @keyframes blink { 50% { opacity: 0; } }
 
     .t-sub {
@@ -546,9 +543,8 @@
   <!-- ═══ SCENE 1: TERMINAL HOOK ═══════════════════════════════════════ -->
   <div class="scene" id="s1">
     <div class="terminal">
-      <span class="t-line" id="tl1"></span>
-      <span class="t-line" id="tl2"></span>
-      <span class="t-cursor" id="tcursor"></span>
+      <div class="t-line" id="tl1"></div>
+      <div class="t-line" id="tl2"></div>
       <p class="t-sub" id="tsub">BETLAB AI · SPORTS INTELLIGENCE ENGINE v3.1</p>
     </div>
   </div>
@@ -729,9 +725,14 @@
   function typeText(el, text, speed, done) {
     let i = 0;
     el.textContent = '';
+    el.classList.add('typing');
     const iv = setInterval(() => {
       el.textContent += text[i++];
-      if (i >= text.length) { clearInterval(iv); if (done) done(); }
+      if (i >= text.length) {
+        clearInterval(iv);
+        el.classList.remove('typing');
+        if (done) done();
+      }
     }, speed);
   }
 
@@ -751,9 +752,10 @@
   /* ─── Scene 1: Terminal ─────────────────────────────────────────────── */
   function runScene1() {
     activateScene('s1');
-    const l1 = $('tl1'), l2 = $('tl2'), cur = $('tcursor'), sub = $('tsub');
+    const l1 = $('tl1'), l2 = $('tl2'), sub = $('tsub');
     // Reset
     l1.textContent = ''; l2.textContent = '';
+    l1.classList.remove('typing'); l2.classList.remove('typing');
     hide(sub);
 
     after(300, () => {
