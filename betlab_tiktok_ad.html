@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BetLab AI — TikTok/Instagram Ad</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;1,800&family=Chakra+Petch:wght@300;400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    :root {
+      --bg:          #060a10;
+      --gold:        #c9a227;
+      --gold-light:  #f0c040;
+      --gold-dark:   #a07810;
+      --win:         #00d68f;
+      --loss:        #ff4d6d;
+      --white:       #ffffff;
+      --font-d:      'Barlow Condensed', sans-serif;
+      --font-ui:     'Chakra Petch', sans-serif;
+      --font-data:   'DM Mono', monospace;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-d);
+      overflow: hidden;
+    }
+
+    /* ── Phone frame ── */
+    #phone {
+      position: relative;
+      width:  393px;
+      height: 852px;
+      background: var(--bg);
+      overflow: hidden;
+      border-radius: 44px;
+      box-shadow:
+        0 0 0 2px #1a1a1a,
+        0 0 0 6px #0a0a0a,
+        0 40px 120px rgba(0,0,0,0.8),
+        0 0 80px rgba(201,162,39,0.08);
+    }
+
+    /* ── Canvas ── */
+    #ad-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+    }
+
+    /* ── Grid ── */
+    .grid {
+      position: absolute; inset: 0; z-index: 2;
+      background-image:
+        linear-gradient(rgba(201,162,39,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,162,39,0.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0;
+      animation: gFade 18s linear forwards;
+    }
+    @keyframes gFade { 4%{opacity:1} 88%{opacity:1} 100%{opacity:0} }
+
+    /* ── Vignette ── */
+    .vignette {
+      position: absolute; inset: 0; z-index: 3; pointer-events: none;
+      background: radial-gradient(ellipse 80% 60% at 50% 50%,
+        transparent 30%, rgba(6,10,16,0.75) 100%);
+    }
+
+    /* ── Scanline ── */
+    .scan {
+      position: absolute; left:0; right:0; height:1px; z-index:4;
+      background: linear-gradient(90deg,transparent,rgba(201,162,39,0.6),transparent);
+      animation: scanDrop 1.6s linear 0.1s 1 forwards; opacity:0;
+    }
+    @keyframes scanDrop { 0%{top:0;opacity:0.9} 100%{top:100%;opacity:0} }
+
+    /* ── Horizontal glow bar (background accent) ── */
+    .glow-bar {
+      position: absolute; left:0; right:0; z-index:2;
+      height: 280px;
+      background: radial-gradient(ellipse 80% 100% at 50% 50%,
+        rgba(201,162,39,0.12) 0%, transparent 70%);
+      top: 50%; transform: translateY(-50%);
+      opacity: 0; pointer-events:none;
+    }
+
+    /* ════════════════════════════════
+       SCENE WRAPPER
+    ════════════════════════════════ */
+    .scene {
+      position: absolute; inset:0; z-index:10;
+      display: flex; flex-direction:column;
+      align-items: center; justify-content: center;
+      padding: 48px 28px;
+      opacity: 0; pointer-events:none;
+    }
+    .scene.active { pointer-events:auto; }
+
+    /* ════════════════════════════════
+       SCENE 1 — PATTERN INTERRUPT
+       0 → 3.5s
+    ════════════════════════════════ */
+    #s1 { animation: s1life 3.5s ease forwards; gap:12px; }
+    @keyframes s1life {
+      0%{opacity:0} 6%{opacity:1} 82%{opacity:1} 96%{opacity:0} 100%{opacity:0}
+    }
+
+    .s1-eyebrow {
+      font-family:var(--font-data); font-size:11px; letter-spacing:4px;
+      color:rgba(255,255,255,0.4); text-transform:uppercase;
+      opacity:0; animation: fadeUp 0.5s ease 0.15s forwards;
+    }
+    .s1-hook {
+      font-family:var(--font-d); font-weight:800; font-size:72px;
+      line-height:0.95; letter-spacing:-1px; text-transform:uppercase;
+      text-align:center; color:var(--white);
+      opacity:0; animation: smashIn 0.5s cubic-bezier(0.2,0,0,1.3) 0.35s forwards;
+    }
+    .s1-hook .r { color:var(--loss); }
+    .s1-under {
+      font-family:var(--font-ui); font-weight:300; font-size:16px;
+      color:rgba(255,255,255,0.45); letter-spacing:1px;
+      opacity:0; animation: fadeUp 0.6s ease 1.1s forwards;
+    }
+
+    @keyframes smashIn {
+      0%{opacity:0;transform:scale(1.35)}
+      100%{opacity:1;transform:scale(1)}
+    }
+
+    /* ════════════════════════════════
+       SCENE 2 — THE PROBLEM
+       3.5 → 6.8s
+    ════════════════════════════════ */
+    #s2 { animation: s2life 3.3s ease 3.5s forwards; gap:18px; }
+    @keyframes s2life {
+      0%{opacity:0} 8%{opacity:1} 80%{opacity:1} 100%{opacity:0}
+    }
+
+    .s2-label {
+      font-family:var(--font-data); font-size:10px; letter-spacing:5px;
+      color:var(--loss); text-transform:uppercase;
+      opacity:0; animation: fadeUp 0.5s ease 3.65s forwards;
+    }
+    .s2-stat-row {
+      display:flex; flex-direction:column; gap:10px; width:100%;
+    }
+    .s2-stat {
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 14px 18px;
+      background: rgba(255,77,109,0.06);
+      border: 1px solid rgba(255,77,109,0.2);
+      border-radius: 10px;
+      opacity:0; transform:translateX(-20px);
+    }
+    .s2-stat:nth-child(1){ animation: slideIn 0.45s ease 3.9s  forwards; }
+    .s2-stat:nth-child(2){ animation: slideIn 0.45s ease 4.25s forwards; }
+    .s2-stat:nth-child(3){ animation: slideIn 0.45s ease 4.6s  forwards; }
+    @keyframes slideIn { to{opacity:1;transform:translateX(0)} }
+
+    .s2-stat-label {
+      font-family:var(--font-ui); font-size:13px; font-weight:400;
+      color:rgba(255,255,255,0.6);
+    }
+    .s2-stat-val {
+      font-family:var(--font-d); font-weight:800; font-size:22px;
+      color:var(--loss); letter-spacing:1px;
+    }
+
+    /* ════════════════════════════════
+       SCENE 3 — LOGO REVEAL
+       6.8 → 10.2s
+    ════════════════════════════════ */
+    #s3 { animation: s3life 3.4s ease 6.8s forwards; gap:14px; justify-content:center; }
+    @keyframes s3life {
+      0%{opacity:0} 10%{opacity:1} 80%{opacity:1} 100%{opacity:0}
+    }
+
+    .s3-intro {
+      font-family:var(--font-ui); font-size:13px; letter-spacing:4px;
+      text-transform:uppercase; color:rgba(255,255,255,0.35);
+      opacity:0; animation: fadeUp 0.5s ease 6.95s forwards;
+    }
+    .logo-wrap-ad {
+      position:relative; width:90px; height:90px;
+      opacity:0; animation: logoPop 0.6s cubic-bezier(0.2,0,0,1.3) 7.25s forwards;
+    }
+    @keyframes logoPop {
+      0%{opacity:0;transform:scale(0.5)}
+      80%{transform:scale(1.05)}
+      100%{opacity:1;transform:scale(1)}
+    }
+    .logo-wrap-ad::after {
+      content:'';
+      position:absolute; inset:-30%;
+      border-radius:50%;
+      background:radial-gradient(circle,rgba(201,162,39,0.4) 0%,transparent 70%);
+      animation: logoGlow 1.4s ease 7.65s infinite alternate;
+    }
+    @keyframes logoGlow {
+      from{opacity:0.5;transform:scale(0.9)}
+      to{opacity:1;transform:scale(1.1)}
+    }
+    .logo-svg-ad { width:100%; height:100%; overflow:visible; }
+
+    .diamond-draw {
+      stroke-dasharray:340; stroke-dashoffset:340;
+      animation: drawPath 0.85s cubic-bezier(0.4,0,0.2,1) 6.95s forwards;
+    }
+    @keyframes drawPath { to{stroke-dashoffset:0} }
+    .diamond-fill-ad { opacity:0; animation: fillFade 0.5s ease 7.65s forwards; }
+    @keyframes fillFade { to{opacity:1} }
+    .diamond-shine-ad { opacity:0; animation: fillFade 0.4s ease 7.9s forwards; }
+
+    .s3-brand {
+      font-family:var(--font-d); font-weight:800; font-size:58px;
+      letter-spacing:0.04em; text-transform:uppercase;
+      color:var(--white); line-height:1;
+      opacity:0; animation: fadeUp 0.55s ease 7.75s forwards;
+    }
+    .s3-brand .gld { color:var(--gold-light); }
+
+    .s3-tag {
+      font-family:var(--font-ui); font-size:11px; letter-spacing:4px;
+      text-transform:uppercase; color:rgba(255,255,255,0.35);
+      opacity:0; animation: fadeUp 0.5s ease 8.2s forwards;
+    }
+
+    /* ════════════════════════════════
+       SCENE 4 — FEATURES / PROOF
+       10.2 → 14.5s
+    ════════════════════════════════ */
+    #s4 { animation: s4life 4.3s ease 10.2s forwards; gap:14px; justify-content:center; }
+    @keyframes s4life {
+      0%{opacity:0} 7%{opacity:1} 86%{opacity:1} 100%{opacity:0}
+    }
+
+    .s4-label {
+      font-family:var(--font-data); font-size:10px; letter-spacing:5px;
+      color:var(--gold); text-transform:uppercase;
+      opacity:0; animation: fadeUp 0.5s ease 10.35s forwards;
+    }
+
+    .feat-card {
+      width:100%; display:flex; align-items:center; gap:14px;
+      padding:16px 18px;
+      background: rgba(201,162,39,0.05);
+      border:1px solid rgba(201,162,39,0.15);
+      border-left:3px solid var(--gold);
+      border-radius:10px;
+      opacity:0; transform:translateX(24px);
+    }
+    .feat-card:nth-child(2){animation:slideInR 0.5s ease 10.65s forwards;}
+    .feat-card:nth-child(3){animation:slideInR 0.5s ease 11.1s  forwards;}
+    .feat-card:nth-child(4){animation:slideInR 0.5s ease 11.55s forwards;}
+    @keyframes slideInR{to{opacity:1;transform:translateX(0)}}
+
+    .feat-icon{
+      font-size:26px; flex-shrink:0;
+      filter:drop-shadow(0 0 8px rgba(201,162,39,0.6));
+    }
+    .feat-text{ display:flex; flex-direction:column; gap:2px; }
+    .feat-title{
+      font-family:var(--font-d); font-weight:700; font-size:18px;
+      letter-spacing:0.5px; text-transform:uppercase; color:var(--white);
+    }
+    .feat-sub{
+      font-family:var(--font-ui); font-size:12px; font-weight:300;
+      color:rgba(255,255,255,0.45); letter-spacing:0.3px;
+    }
+    .feat-badge{
+      margin-left:auto; flex-shrink:0;
+      font-family:var(--font-data); font-size:13px; font-weight:500;
+      color:var(--win); letter-spacing:1px;
+    }
+
+    /* ════════════════════════════════
+       SCENE 5 — BIG NUMBER + CTA
+       14.5 → 18s
+    ════════════════════════════════ */
+    #s5 { animation: s5life 3.5s ease 14.5s forwards; gap:10px; }
+    @keyframes s5life {
+      0%{opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{opacity:1}
+    }
+
+    .s5-eyebrow{
+      font-family:var(--font-data); font-size:10px; letter-spacing:5px;
+      text-transform:uppercase; color:rgba(255,255,255,0.35);
+      opacity:0; animation:fadeUp 0.5s ease 14.65s forwards;
+    }
+    .s5-number{
+      font-family:var(--font-d); font-weight:800; font-size:108px;
+      line-height:1; letter-spacing:-3px;
+      background:linear-gradient(135deg,var(--gold-light),var(--gold),var(--gold-dark));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+      filter:drop-shadow(0 0 20px rgba(201,162,39,0.5));
+      opacity:0; animation:numPop 0.55s cubic-bezier(0.2,0,0,1.3) 15.0s forwards;
+    }
+    @keyframes numPop{0%{opacity:0;transform:scale(0.7)}80%{transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+    .s5-sub{
+      font-family:var(--font-ui); font-size:14px; letter-spacing:2px;
+      text-transform:uppercase; color:rgba(255,255,255,0.4);
+      opacity:0; animation:fadeUp 0.5s ease 15.5s forwards;
+    }
+
+    .s5-divider{
+      width:48px; height:1px;
+      background:linear-gradient(90deg,transparent,var(--gold),transparent);
+      opacity:0; animation:fadeUp 0.5s ease 15.8s forwards;
+      margin:6px 0;
+    }
+
+    .cta-wrap{
+      display:flex; flex-direction:column; align-items:center; gap:10px;
+      opacity:0; animation:ctaIn 0.55s cubic-bezier(0.2,0,0,1.2) 16.1s forwards;
+    }
+    @keyframes ctaIn{0%{opacity:0;transform:scale(0.85)}100%{opacity:1;transform:scale(1)}}
+
+    .cta-btn{
+      padding:17px 52px;
+      background:linear-gradient(135deg,var(--gold-light),var(--gold),var(--gold-dark));
+      border-radius:100px;
+      font-family:var(--font-d); font-weight:800; font-size:22px;
+      letter-spacing:2px; text-transform:uppercase;
+      color:#060a10;
+      box-shadow: 0 0 30px rgba(201,162,39,0.5), 0 4px 20px rgba(0,0,0,0.4);
+      animation:btnPulse 1.4s ease 16.5s infinite alternate;
+    }
+    @keyframes btnPulse{
+      from{box-shadow:0 0 30px rgba(201,162,39,0.5),0 4px 20px rgba(0,0,0,0.4)}
+      to  {box-shadow:0 0 55px rgba(201,162,39,0.8),0 4px 30px rgba(0,0,0,0.5)}
+    }
+    .cta-url{
+      font-family:var(--font-data); font-size:12px; letter-spacing:3px;
+      color:rgba(255,255,255,0.3);
+    }
+
+    /* ── Progress bar ── */
+    #ad-progress{
+      position:absolute; bottom:0; left:0; right:0; height:2px; z-index:30;
+      background:rgba(255,255,255,0.05);
+    }
+    #ad-progress-bar{
+      height:100%; width:0%;
+      background:linear-gradient(90deg,var(--gold-dark),var(--gold),var(--gold-light));
+      box-shadow:0 0 6px var(--gold);
+      animation:adProg 18s linear forwards;
+    }
+    @keyframes adProg{to{width:100%}}
+
+    /* ── Replay ── */
+    #ad-replay{
+      position:absolute; bottom:18px; right:18px; z-index:40;
+      padding:7px 16px;
+      background:rgba(201,162,39,0.12); border:1px solid rgba(201,162,39,0.3);
+      border-radius:20px; cursor:pointer;
+      font-family:var(--font-data); font-size:10px; letter-spacing:2px;
+      color:var(--gold); text-transform:uppercase;
+      opacity:0; animation:fadeIn 0.4s ease 18s forwards;
+    }
+    #ad-replay:hover{ background:rgba(201,162,39,0.25); }
+
+    /* ── Shared ── */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{to{opacity:1}}
+  </style>
+</head>
+<body>
+
+<div id="phone">
+
+  <canvas id="ad-canvas"></canvas>
+  <div class="grid"></div>
+  <div class="scan"></div>
+  <div class="vignette"></div>
+  <div class="glow-bar" id="glow-bar"></div>
+
+  <!-- SCENE 1: Pattern interrupt -->
+  <div class="scene" id="s1">
+    <div class="s1-eyebrow">The truth about your bets</div>
+    <div class="s1-hook">STOP<br><span class="r">LOSING</span><br>MONEY</div>
+    <div class="s1-under">There's a reason the house always wins</div>
+  </div>
+
+  <!-- SCENE 2: Problem stats -->
+  <div class="scene" id="s2">
+    <div class="s2-label">Without AI — the average bettor</div>
+    <div class="s2-stat-row">
+      <div class="s2-stat">
+        <span class="s2-stat-label">Win rate (gut picks)</span>
+        <span class="s2-stat-val">43%</span>
+      </div>
+      <div class="s2-stat">
+        <span class="s2-stat-label">ROI after 100 bets</span>
+        <span class="s2-stat-val">−18%</span>
+      </div>
+      <div class="s2-stat">
+        <span class="s2-stat-label">Bankroll after 1 year</span>
+        <span class="s2-stat-val">−$840</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 3: Logo reveal -->
+  <div class="scene" id="s3">
+    <div class="s3-intro">Introducing</div>
+
+    <div class="logo-wrap-ad">
+      <svg class="logo-svg-ad" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="#f0c040"/>
+            <stop offset="50%"  stop-color="#c9a227"/>
+            <stop offset="100%" stop-color="#a07810"/>
+          </linearGradient>
+          <linearGradient id="sh2" x1="0%" y1="0%" x2="50%" y2="50%">
+            <stop offset="0%"   stop-color="rgba(255,255,255,0.45)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </linearGradient>
+          <filter id="gf2" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="2.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <rect width="100" height="100" rx="20" fill="#060a10"/>
+        <polygon class="diamond-fill-ad" points="50,8 92,50 50,92 8,50" fill="url(#lg2)" filter="url(#gf2)"/>
+        <polygon class="diamond-draw"    points="50,8 92,50 50,92 8,50" fill="none" stroke="url(#lg2)" stroke-width="2" stroke-linejoin="round"/>
+        <line class="diamond-shine-ad" x1="50" y1="8"  x2="50" y2="92" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+        <line class="diamond-shine-ad" x1="8"  y1="50" x2="92" y2="50" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+        <polygon class="diamond-shine-ad" points="50,15 85,50 50,85 15,50" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+        <polygon class="diamond-shine-ad" points="50,8 92,50 50,50" fill="url(#sh2)" opacity="0.3"/>
+      </svg>
+    </div>
+
+    <div class="s3-brand">Bet<span class="gld">Lab</span> AI</div>
+    <div class="s3-tag">Autonomous Sports Betting Intelligence</div>
+  </div>
+
+  <!-- SCENE 4: Features -->
+  <div class="scene" id="s4">
+    <div class="s4-label">Your unfair advantage</div>
+    <div class="feat-card">
+      <div class="feat-icon">🧠</div>
+      <div class="feat-text">
+        <div class="feat-title">AI-Powered Picks</div>
+        <div class="feat-sub">Self-learning model, every game</div>
+      </div>
+      <div class="feat-badge">DAILY</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📊</div>
+      <div class="feat-text">
+        <div class="feat-title">Verified Win Rates</div>
+        <div class="feat-sub">Real results, full transparency</div>
+      </div>
+      <div class="feat-badge" style="color:var(--gold)">PROOF</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">💰</div>
+      <div class="feat-text">
+        <div class="feat-title">Bankroll Manager</div>
+        <div class="feat-sub">Never blow your stack again</div>
+      </div>
+      <div class="feat-badge">AUTO</div>
+    </div>
+  </div>
+
+  <!-- SCENE 5: CTA -->
+  <div class="scene" id="s5">
+    <div class="s5-eyebrow">BetLab AI members average</div>
+    <div class="s5-number" id="big-num">0%</div>
+    <div class="s5-sub">win rate improvement</div>
+    <div class="s5-divider"></div>
+    <div class="cta-wrap">
+      <div class="cta-btn">Get Your Edge</div>
+      <div class="cta-url">betlabai.app</div>
+    </div>
+  </div>
+
+  <!-- Progress & Replay -->
+  <div id="ad-progress"><div id="ad-progress-bar"></div></div>
+  <button id="ad-replay" onclick="location.reload()">↺ Replay</button>
+</div>
+
+<script>
+(function(){
+
+  // ── Canvas setup ─────────────────────────────────────────────
+  const canvas = document.getElementById('ad-canvas');
+  const ctx    = canvas.getContext('2d');
+  const phone  = document.getElementById('phone');
+
+  function resize(){
+    canvas.width  = phone.offsetWidth;
+    canvas.height = phone.offsetHeight;
+  }
+  resize();
+
+  const GOLDS = [
+    'rgba(201,162,39,',
+    'rgba(240,192,64,',
+    'rgba(160,120,16,',
+    'rgba(245,158,11,',
+    'rgba(255,255,255,',
+  ];
+
+  class Particle {
+    constructor(init){ this.reset(init ?? true); }
+    reset(init){
+      this.x  = Math.random()*canvas.width;
+      this.y  = init ? Math.random()*canvas.height : canvas.height+4;
+      this.r  = Math.random()*1.3+0.25;
+      this.vy = -(Math.random()*0.45+0.15);
+      this.vx = (Math.random()-0.5)*0.15;
+      this.a  = Math.random()*0.45+0.06;
+      this.c  = GOLDS[Math.floor(Math.random()*GOLDS.length)];
+    }
+    step(){ this.y+=this.vy; this.x+=this.vx; if(this.y<-6) this.reset(false); }
+    draw(){
+      ctx.save(); ctx.globalAlpha=this.a;
+      ctx.fillStyle=this.c+'1)';
+      ctx.shadowBlur=5; ctx.shadowColor=this.c+'0.7)';
+      ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  class Stream {
+    constructor(){ this.reset(); }
+    reset(){
+      this.x   = Math.random()*canvas.width;
+      this.y   = -Math.random()*120-10;
+      this.len = Math.random()*70+25;
+      this.spd = Math.random()*2+1;
+      this.a   = Math.random()*0.15+0.03;
+      this.col = Math.random()>0.5?'#f0c040':'#c9a227';
+    }
+    step(){ this.y+=this.spd; if(this.y>canvas.height+this.len) this.reset(); }
+    draw(){
+      const g=ctx.createLinearGradient(this.x,this.y-this.len,this.x,this.y);
+      g.addColorStop(0,'transparent'); g.addColorStop(1,this.col);
+      ctx.save(); ctx.globalAlpha=this.a; ctx.strokeStyle=g; ctx.lineWidth=0.7;
+      ctx.beginPath(); ctx.moveTo(this.x,this.y-this.len); ctx.lineTo(this.x,this.y);
+      ctx.stroke(); ctx.restore();
+    }
+  }
+
+  const particles = Array.from({length:130},()=>new Particle(true));
+  const streams   = Array.from({length:18},()=>new Stream());
+
+  (function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    streams.forEach(s=>{s.step();s.draw();});
+    particles.forEach(p=>{p.step();p.draw();});
+    requestAnimationFrame(loop);
+  })();
+
+  // ── Glow bar fade logic ───────────────────────────────────────
+  const glowBar = document.getElementById('glow-bar');
+  setTimeout(()=>{ glowBar.style.transition='opacity 0.7s'; glowBar.style.opacity='1'; }, 6800);
+  setTimeout(()=>{ glowBar.style.opacity='0'; }, 10200);
+  setTimeout(()=>{ glowBar.style.opacity='1'; }, 14500);
+
+  // ── Win-rate counter (scene 5, starts at 15.0s) ─────────────
+  setTimeout(()=>{
+    const el = document.getElementById('big-num');
+    let v=0; const target=68;
+    const tick=()=>{
+      v+=2; if(v>=target){el.textContent='+'+target+'%';return;}
+      el.textContent='+'+v+'%';
+      setTimeout(tick, 35);
+    };
+    tick();
+  }, 15000);
+
+})();
+</script>
+</body>
+</html>

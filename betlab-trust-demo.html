@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BetLab AI — Trust Animation Library Demo</title>
+
+  <!-- Same fonts as betlabai.app -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Chakra+Petch:wght@300;400;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── CSS vars matching the real BetLab app ── */
+    :root {
+      --bg:           #060a10;
+      --gold:         #c9a227;
+      --gold-light:   #f0c040;
+      --gold-dark:    #a07810;
+      --win:          #00d68f;
+      --loss:         #ff4d6d;
+      --border:       rgba(201,162,39,0.18);
+      --card-bg:      rgba(255,255,255,0.03);
+      --font-display: 'Barlow Condensed', sans-serif;
+      --font-ui:      'Chakra Petch', sans-serif;
+      --font-data:    'DM Mono', monospace;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: var(--bg);
+      color: #fff;
+      font-family: var(--font-ui);
+      min-height: 100vh;
+      padding: 40px 20px 80px;
+    }
+
+    /* ── Layout ── */
+    .demo-wrap {
+      max-width: 560px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    .demo-header {
+      text-align: center;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .demo-header h1 {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 36px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .demo-header h1 span { color: var(--gold-light); }
+    .demo-header p {
+      margin-top: 6px;
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+    }
+
+    /* ── Section card ── */
+    .section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label .num {
+      font-family: var(--font-data);
+      font-size: 10px;
+      color: var(--gold);
+      letter-spacing: 2px;
+      background: rgba(201,162,39,0.1);
+      border: 1px solid rgba(201,162,39,0.25);
+      border-radius: 4px;
+      padding: 2px 7px;
+    }
+    .section-label h2 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .demo-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .replay-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 16px;
+      padding: 6px 14px;
+      background: rgba(201,162,39,0.08);
+      border: 1px solid rgba(201,162,39,0.22);
+      border-radius: 20px;
+      font-family: var(--font-data);
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--gold);
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .replay-btn:hover { background: rgba(201,162,39,0.18); }
+
+    /* ── Section 1: Live Pick Counter ── */
+    .counter-display {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+    }
+    .counter-number {
+      font-family: var(--font-data);
+      font-size: 52px;
+      font-weight: 500;
+      color: var(--gold);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      transition: text-shadow 0.1s;
+    }
+    .counter-suffix {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+
+    /* ── Section 2: Pick Card Stagger ── */
+    .pick-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(201,162,39,0.12);
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    .pick-card:last-child { margin-bottom: 0; }
+    .pick-card-left { display: flex; flex-direction: column; gap: 3px; }
+    .pick-card-game {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .pick-card-sport {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 1px;
+    }
+
+    /* ── Section 3: Win/Loss Badge ── */
+    .badge-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .result-base {
+      padding: 6px 18px;
+      border-radius: 6px;
+      font-family: var(--font-data);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .win-base  { background: rgba(0,214,143,0.12); color: var(--win);  border: 1px solid rgba(0,214,143,0.3); }
+    .loss-base { background: rgba(255,77,109,0.12); color: var(--loss); border: 1px solid rgba(255,77,109,0.3); }
+
+    /* ── Section 4: Stats Strip ── */
+    .stats-row {
+      display: flex;
+      justify-content: space-around;
+      gap: 12px;
+    }
+    .stat-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .stat-value {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 36px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      transition: transform 0.1s;
+    }
+    .stat-label {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+    .gold { color: var(--gold); }
+
+    /* ── Section 5: AI Thinking ── */
+    .ai-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+      min-height: 36px;
+    }
+    #ai-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .ai-dots-wrap {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .ai-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 6px var(--gold);
+      display: inline-block;
+    }
+    .ai-text {
+      position: relative;
+      z-index: 1;
+      font-family: var(--font-ui);
+      font-size: 12px;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* ── Section 6: Confidence Bar ── */
+    .conf-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+    .conf-title {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+    .conf-pct {
+      font-family: var(--font-data);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gold);
+    }
+    .conf-pct.muted { color: #6ba3ff; }
+    .bar-track {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      width: 0%;
+      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    }
+    .bar-fill.gold-fill {
+      background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light));
+    }
+    .bar-fill.blue-fill { background: #6ba3ff; }
+
+    /* ── Section 7: Hero Scan Line ── */
+    .hero-section {
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      padding: 28px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+    }
+    .hero-eyebrow {
+      font-family: var(--font-data);
+      font-size: 10px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 8px;
+    }
+    .hero-headline {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 42px;
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 24px;
+    }
+    .hero-headline span { color: var(--gold-light); }
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+    }
+    .h-stat { display: flex; flex-direction: column; gap: 2px; }
+    .h-stat-val {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 28px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .h-stat-lbl {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+
+    /* ══════════════════════════════
+       IMPORTED ANIMATION KEYFRAMES
+       (identical to betlab-trust-animations.css)
+    ══════════════════════════════ */
+    @keyframes blt-counter-land {
+      0%   { text-shadow: 0 0 0 transparent; }
+      30%  { text-shadow: 0 0 20px #f0c040, 0 0 40px #c9a227; }
+      100% { text-shadow: 0 0 6px rgba(201,162,39,0.25); }
+    }
+    @keyframes blt-card-enter {
+      from { opacity:0; transform:translateY(12px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    @keyframes blt-badge-shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position:  200% center; }
+    }
+    @keyframes blt-win-pulse {
+      0%  { transform:scale(1); }
+      45% { transform:scale(1.15); }
+      70% { transform:scale(0.97); }
+      100%{ transform:scale(1); }
+    }
+    @keyframes blt-win-ring {
+      0%   { transform:scale(0.85); opacity:0.9; }
+      100% { transform:scale(2.4);  opacity:0; }
+    }
+    @keyframes blt-loss-shake {
+      0%,100%{ transform:translateX(0); }
+      15%    { transform:translateX(-4px); }
+      35%    { transform:translateX(4px); }
+      55%    { transform:translateX(-4px); }
+      75%    { transform:translateX(3px); }
+      90%    { transform:translateX(-2px); }
+    }
+    @keyframes blt-loss-flash {
+      0%  { opacity:0; }
+      20% { opacity:1; }
+      100%{ opacity:0; }
+    }
+    @keyframes blt-stat-overshoot {
+      0%  { transform:scale(1.04); }
+      60% { transform:scale(0.99); }
+      100%{ transform:scale(1); }
+    }
+    @keyframes blt-ai-dot {
+      0%,100%{ transform:scale(0.55); opacity:0.35; }
+      50%    { transform:scale(1);    opacity:1; }
+    }
+    @keyframes blt-bar-glow-end {
+      0%,100%{ box-shadow:0 0 6px #c9a227, 0 0 12px rgba(201,162,39,0.35); }
+      50%    { box-shadow:0 0 14px #f0c040, 0 0 28px rgba(240,192,64,0.55); }
+    }
+    @keyframes blt-hero-scan {
+      from { transform:translateY(0); }
+      to   { transform:translateY(var(--blt-scan-height,100%)); }
+    }
+
+    /* Demo-specific animation classes */
+    .blt-card-enter {
+      animation: blt-card-enter 0.4s cubic-bezier(.16,1,.3,1) both;
+      animation-delay: calc(var(--blt-stagger-i,0) * 80ms);
+    }
+    .blt-badge-premium {
+      display:inline-flex; align-items:center;
+      padding: 2px 8px; border-radius:4px;
+      font-family: var(--font-data); font-size:10px; font-weight:500;
+      letter-spacing:2px; text-transform:uppercase; color:#060a10;
+      background: linear-gradient(90deg, #a07810 0%, #c9a227 25%, #f0c040 50%, #c9a227 75%, #a07810 100%);
+      background-size: 200% auto;
+      animation: blt-badge-shimmer 0.65s ease both;
+    }
+    .blt-result-badge { position:relative; display:inline-flex; align-items:center; justify-content:center; }
+    .blt-result-win   { animation: blt-win-pulse 0.6s cubic-bezier(.16,1,.3,1) both; }
+    .blt-result-win-ring {
+      position:absolute; inset:-4px; border-radius:inherit;
+      border:2px solid var(--win,#00d68f);
+      animation: blt-win-ring 0.65s ease-out both;
+      pointer-events:none;
+    }
+    .blt-result-loss { animation: blt-loss-shake 0.3s ease both; }
+    .blt-result-loss-flash {
+      position:absolute; inset:0; border-radius:inherit;
+      background: var(--loss,#ff4d6d); pointer-events:none;
+      animation: blt-loss-flash 0.3s ease both;
+    }
+    .blt-stat-overshoot { animation: blt-stat-overshoot 0.2s ease-out both; }
+    .blt-ai-dot {
+      display:inline-block; width:6px; height:6px; border-radius:50%;
+      background:var(--gold); box-shadow:0 0 6px var(--gold);
+      animation: blt-ai-dot 0.9s ease-in-out infinite;
+      animation-delay: calc(var(--blt-dot-i,0) * 200ms);
+    }
+    .bar-fill.glow { animation: blt-bar-glow-end 1.5s ease 0.85s infinite; }
+    .blt-hero-scan-line {
+      position:absolute; left:0; right:0; top:0; height:1px;
+      background: linear-gradient(90deg, transparent 0%, #c9a227 20%, #f0c040 50%, #c9a227 80%, transparent 100%);
+      box-shadow: 0 0 8px #c9a227, 0 0 16px rgba(201,162,39,0.4);
+      opacity:0.7; pointer-events:none; z-index:10;
+      animation: blt-hero-scan var(--blt-scan-duration,1800ms) linear forwards;
+    }
+  </style>
+</head>
+<body>
+<div class="demo-wrap">
+
+  <!-- Header -->
+  <div class="demo-header">
+    <h1>Bet<span>Lab</span> AI</h1>
+    <p>Trust Animation Library — Visual QA Demo</p>
+  </div>
+
+  <!-- ── 1. Live Pick Counter ──────────────────────────── -->
+  <div class="section">
+    <div class="section-label">
+      <span class="num">01</span>
+      <h2>Live Pick Counter</h2>
+    </div>
+    <div class="demo-card">
+      <div class="counter-display">
+        <span class="counter-number" id="counter-num">0</span>
+        <span class="counter-suffix">picks analyzed today</span>
+      </div>
+      <button class="replay-btn" onclick="replayCounter()">↺ Replay</button>
+    </div>
+  </div>
+
+  <!-- ── 2. Pick Card Stagger ──────────────────────────── -->
+  <div class="section">
+    <div class="section-label">
+      <span class="num">02</span>
+      <h2>Pick Card Stagger</h2>
+    </div>
+    <div class="demo-card" id="cards-wrap">
+      <!-- Injected by JS -->
+    </div>
+    <button class="replay-btn" onclick="replayCards()" style="align-self:flex-start;margin-top:-8px">↺ Replay</button>
+  </div>
+
+  <!-- ── 3. Win / Loss Result Badge ───────────────────── -->
+  <div class="section">
+    <div class="section-label">
+      <span class="num">03</span>
+      <h2>Win / Loss Result Badge</h2>
+    </div>
+    <div class="demo-card">
+      <div class="badge-row" id="badge-row">
+        <!-- Injected by JS -->
+      </div>
+      <button class="replay-btn" onclick="replayBadges()">↺ Replay</button>
+    </div>
+  </div>
+
+  <!-- ── 4. Stats Strip Count-Up ──────────────────────── -->
+  <div class="section">
+    <div class="section-label">
+      <span class="num">04</span>
+      <h2>Stats Strip — Count-Up</h2>
+    </div>
+    <div class="demo-card">
+      <div class="stats-row" id="stats-row">
+        <div class="stat-cell">
+          <span class="stat-value gold" id="stat-w">0W</span>
+          <span class="stat-label">Wins</span>
+        </div>
+        <div class="stat-cell">
+          <span class="stat-value" style="color:rgba(255,255,255,0.7)" id="stat-l">0L</span>
+          <span class="stat-label">Losses</span>
+        </div>
+        <div class="stat-cell">
+          <span class="stat-value gold" id="stat-wr">0%</span>
+          <span class="stat-label">Win Rate</span>
+        </div>
+        <div class="stat-cell">
+          <span class="stat-value" style="color:var(--win)" id="stat-u">+0u</span>
+          <span class="stat-label">Units</span>
+        </div>
+      </div>
+      <button class="replay-btn" onclick="replayStats()">↺ Replay</button>
+    </div>
+  </div>
+
+  <!-- ── 5. AI Thinking Indicator ─────────────────────── -->
+  <div class="section">
+    <div class="section-label">
+      <span class="num">05</span>
+      <h2>AI Thinking Indicator</h2>
+    </div>
+    <div class="demo-card">
+      <div class="ai-row" id="ai-row">
+        <canvas id="ai-canvas"></canvas>
+        <div class="ai-dots-wrap">
+          <span class="ai-dot" style="--blt-dot-i:0"></span>
+          <span class="ai-dot" style="--blt-dot-i:1"></span>
+          <span class="ai-dot" style="--blt-dot-i:2"></span>
+        </div>
+        <span class="ai-text">AI is generating picks</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 6. Confidence Bar ─────────────────────────────── -->
+  <div class="section">
+    <div class="section-label">
+      <span class="num">06</span>
+      <h2>Confidence Bar — Animated Fill</h2>
+    </div>
+    <div class="demo-card" id="bars-wrap">
+      <!-- Injected by JS -->
+    </div>
+    <button class="replay-btn" onclick="replayBars()" style="align-self:flex-start;margin-top:-8px">↺ Replay</button>
+  </div>
+
+  <!-- ── 7. Hero Scan Line ──────────────────────────────── -->
+  <div class="section">
+    <div class="section-label">
+      <span class="num">07</span>
+      <h2>Hero Scan Line</h2>
+    </div>
+    <div class="hero-section" id="hero-section">
+      <div class="hero-eyebrow">Autonomous Sports Betting Intelligence</div>
+      <div class="hero-headline">Your <span>Edge.</span><br>Powered by AI.</div>
+      <div class="hero-stats">
+        <div class="h-stat">
+          <span class="h-stat-val gold" id="hs-w">0W</span>
+          <span class="h-stat-lbl">All-Time Wins</span>
+        </div>
+        <div class="h-stat">
+          <span class="h-stat-val gold" id="hs-wr">0%</span>
+          <span class="h-stat-lbl">Win Rate</span>
+        </div>
+        <div class="h-stat">
+          <span class="h-stat-val" style="color:var(--win)" id="hs-u">+0u</span>
+          <span class="h-stat-lbl">Units Profit</span>
+        </div>
+      </div>
+    </div>
+    <button class="replay-btn" onclick="replayHero()" style="align-self:flex-start;margin-top:-8px">↺ Replay</button>
+  </div>
+
+</div><!-- /demo-wrap -->
+
+<script>
+/* ── Helpers ──────────────────────────────────────────────── */
+function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+function countUp(el, target, duration, format, onComplete) {
+  const start  = performance.now();
+  const isNeg  = target < 0;
+  const absT   = Math.abs(target);
+  function tick(now) {
+    const prog    = Math.min((now - start) / duration, 1);
+    const eased   = easeOut(prog);
+    const current = isNeg ? -(eased * absT) : eased * absT;
+    el.textContent = format(current);
+    if (prog < 1) requestAnimationFrame(tick);
+    else { el.textContent = format(target); onComplete?.(); }
+  }
+  requestAnimationFrame(tick);
+}
+
+function overshoot(el) {
+  el.classList.add('blt-stat-overshoot');
+  setTimeout(() => el.classList.remove('blt-stat-overshoot'), 220);
+}
+
+/* ═══════════════════════════════════════════════════════
+   1. Live Pick Counter
+═══════════════════════════════════════════════════════ */
+function replayCounter() {
+  const el = document.getElementById('counter-num');
+  el.classList.remove('blt-counter-land');
+  el.textContent = '0';
+  setTimeout(() => {
+    countUp(el, 12847, 1200, v => Math.round(Math.abs(v)).toLocaleString('en-US'), () => {
+      el.style.animation = '';
+      el.offsetWidth; // reflow
+      el.style.animation = 'blt-counter-land 0.8s cubic-bezier(0.4,0,0.2,1) both';
+      setTimeout(() => { el.style.animation = ''; }, 900);
+    });
+  }, 50);
+}
+replayCounter();
+
+/* ═══════════════════════════════════════════════════════
+   2. Pick Card Stagger
+═══════════════════════════════════════════════════════ */
+const PICKS = [
+  { game: 'Lakers vs Celtics', sport: 'NBA • Moneyline' },
+  { game: 'Chiefs -3.5',       sport: 'NFL • Spread'    },
+  { game: 'Over 221.5',        sport: 'NBA • Total'     },
+];
+
+function replayCards() {
+  const wrap = document.getElementById('cards-wrap');
+  wrap.innerHTML = '';
+  PICKS.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'pick-card blt-card-enter';
+    card.style.setProperty('--blt-stagger-i', i);
+    card.innerHTML = `
+      <div class="pick-card-left">
+        <div class="pick-card-game">${p.game}</div>
+        <div class="pick-card-sport">${p.sport}</div>
+      </div>
+      <span class="blt-badge-premium" style="animation-delay:${i*80+700}ms">PREMIUM</span>
+    `;
+    wrap.appendChild(card);
+  });
+}
+replayCards();
+
+/* ═══════════════════════════════════════════════════════
+   3. Win / Loss Badges
+═══════════════════════════════════════════════════════ */
+function replayBadges() {
+  const row = document.getElementById('badge-row');
+  row.innerHTML = '';
+
+  // WIN badge
+  const win = document.createElement('div');
+  win.className = 'blt-result-badge result-base win-base blt-result-win';
+  const winRing = document.createElement('div');
+  winRing.className = 'blt-result-win-ring';
+  win.appendChild(winRing);
+  win.appendChild(document.createTextNode('WIN'));
+  row.appendChild(win);
+
+  // LOSS badge
+  const loss = document.createElement('div');
+  loss.className = 'blt-result-badge result-base loss-base blt-result-loss';
+  const lossFlash = document.createElement('div');
+  lossFlash.className = 'blt-result-loss-flash';
+  loss.appendChild(lossFlash);
+  loss.appendChild(document.createTextNode('LOSS'));
+  row.appendChild(loss);
+}
+replayBadges();
+
+/* ═══════════════════════════════════════════════════════
+   4. Stats Strip Count-Up
+═══════════════════════════════════════════════════════ */
+function replayStats() {
+  const wEl  = document.getElementById('stat-w');
+  const lEl  = document.getElementById('stat-l');
+  const wrEl = document.getElementById('stat-wr');
+  const uEl  = document.getElementById('stat-u');
+
+  [wEl, lEl, wrEl, uEl].forEach(el => {
+    el.classList.remove('blt-stat-overshoot');
+    el.textContent = '0';
+  });
+
+  setTimeout(() => {
+    countUp(wEl,  27,  1200, v => Math.round(v) + 'W', () => overshoot(wEl));
+    countUp(lEl,  16,  1200, v => Math.round(v) + 'L', () => overshoot(lEl));
+    countUp(wrEl, 62.8, 1200, v => v.toFixed(1) + '%', () => overshoot(wrEl));
+    countUp(uEl,  18.4, 1200, v => '+' + v.toFixed(1) + 'u', () => overshoot(uEl));
+  }, 80);
+}
+replayStats();
+
+/* ═══════════════════════════════════════════════════════
+   5. AI Thinking Particles
+═══════════════════════════════════════════════════════ */
+(function initAiParticles() {
+  const canvas  = document.getElementById('ai-canvas');
+  const ctx     = canvas.getContext('2d');
+  const row     = document.getElementById('ai-row');
+
+  function resize() {
+    canvas.width  = row.offsetWidth;
+    canvas.height = row.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const GOLDS = ['rgba(201,162,39,', 'rgba(240,192,64,', 'rgba(160,120,16,'];
+  const particles = Array.from({ length: 35 }, () => {
+    const c = GOLDS[Math.floor(Math.random() * GOLDS.length)];
+    return {
+      x:  Math.random() * canvas.width,
+      y:  Math.random() * canvas.height,
+      r:  Math.random() * 1.2 + 0.3,
+      vy: -(Math.random() * 0.3 + 0.1),
+      vx: (Math.random() - 0.5) * 0.1,
+      a:  Math.random() * 0.35 + 0.05,
+      c,
+    };
+  });
+
+  (function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.y += p.vy; p.x += p.vx;
+      if (p.y < -5) { p.y = canvas.height + 4; p.x = Math.random() * canvas.width; }
+      ctx.save();
+      ctx.globalAlpha = p.a;
+      ctx.fillStyle   = p.c + '1)';
+      ctx.shadowBlur  = 4;
+      ctx.shadowColor = p.c + '0.8)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    requestAnimationFrame(loop);
+  })();
+})();
+
+/* ═══════════════════════════════════════════════════════
+   6. Confidence Bars
+═══════════════════════════════════════════════════════ */
+const BARS = [
+  { title: 'Model Confidence', value: 82 },
+  { title: 'Edge Rating',      value: 61 },
+  { title: 'Sharp Consensus',  value: 38 },
+];
+
+function replayBars() {
+  const wrap = document.getElementById('bars-wrap');
+  wrap.innerHTML = '';
+  BARS.forEach(b => {
+    const isHigh = b.value > 75;
+    const isLow  = b.value < 50;
+    const fillClass = 'bar-fill ' + (isLow ? 'blue-fill' : 'gold-fill') + (isHigh ? ' glow' : '');
+    const pctClass  = 'conf-pct' + (isLow ? ' muted' : '');
+
+    const el = document.createElement('div');
+    el.innerHTML = `
+      <div class="conf-header">
+        <span class="conf-title">${b.title}</span>
+        <span class="${pctClass}">${b.value}%</span>
+      </div>
+      <div class="bar-track">
+        <div class="${fillClass}" data-target="${b.value}" style="width:0%"></div>
+      </div>
+    `;
+    wrap.appendChild(el);
+  });
+
+  // Trigger fill animation after first paint
+  requestAnimationFrame(() => {
+    wrap.querySelectorAll('.bar-fill[data-target]').forEach(fill => {
+      fill.style.width = fill.dataset.target + '%';
+    });
+  });
+}
+replayBars();
+
+/* ═══════════════════════════════════════════════════════
+   7. Hero Scan Line
+═══════════════════════════════════════════════════════ */
+function replayHero() {
+  const hero = document.getElementById('hero-section');
+  const wEl  = document.getElementById('hs-w');
+  const wrEl = document.getElementById('hs-wr');
+  const uEl  = document.getElementById('hs-u');
+
+  // Reset stats
+  [wEl, wrEl, uEl].forEach(el => el.textContent = el.id === 'hs-u' ? '+0u' : '0');
+
+  // Remove old scan line
+  const old = hero.querySelector('.blt-hero-scan-line');
+  if (old) old.remove();
+
+  // Inject new scan line
+  const line = document.createElement('div');
+  line.className = 'blt-hero-scan-line';
+  line.style.setProperty('--blt-scan-duration', '1800ms');
+  hero.appendChild(line);
+
+  const DURATION = 1800;
+  // Stat positions as fraction of hero height
+  const triggers = [
+    { frac: 0.5, fn: () => countUp(wEl,  27,   800, v => Math.round(v) + 'W',       () => overshoot(wEl))  },
+    { frac: 0.7, fn: () => countUp(wrEl, 62.8, 800, v => v.toFixed(1) + '%',         () => overshoot(wrEl)) },
+    { frac: 0.85,fn: () => countUp(uEl, 18.4,  800, v => '+' + v.toFixed(1) + 'u',  () => overshoot(uEl))  },
+  ];
+  triggers.forEach(t => setTimeout(t.fn, t.frac * DURATION));
+
+  // Remove line after done
+  setTimeout(() => line.remove(), DURATION + 150);
+}
+replayHero();
+</script>
+</body>
+</html>
