@@ -62,36 +62,45 @@
     #s1 {
       justify-content: center;
       align-items: flex-start;
-      padding: 60px 36px;
+      padding: 56px 36px;
     }
 
     .terminal {
       width: 100%;
     }
 
-    .t-line {
-      font-family: 'DM Mono', monospace;
-      font-size: 19px;
-      color: #00D68F;
-      line-height: 1.9;
-      display: block;
-      white-space: pre-wrap;
-      letter-spacing: 0.01em;
-      min-height: 1.9em;
+    /* Each line is a flex row: text span + cursor block */
+    .t-row {
+      display: flex;
+      align-items: center;
+      min-height: 40px;
+      margin-bottom: 6px;
     }
 
-    /* Blinking block cursor appended via ::after on the active line */
-    .t-line.typing::after {
-      content: '█';
-      animation: blink 0.75s step-end infinite;
-      margin-left: 1px;
-      font-size: 17px;
+    .t-text {
+      font-family: 'DM Mono', 'Courier New', Courier, monospace;
+      font-size: 20px;
+      color: #00D68F;
+      letter-spacing: 0.02em;
+      line-height: 1;
     }
+
+    /* Cursor is a solid CSS block — zero font dependency */
+    .t-cur {
+      display: inline-block;
+      width: 11px;
+      height: 22px;
+      background: #00D68F;
+      margin-left: 3px;
+      flex-shrink: 0;
+      animation: blink 0.75s step-end infinite;
+    }
+    .t-cur.off { opacity: 0; animation: none; }
 
     @keyframes blink { 50% { opacity: 0; } }
 
     .t-sub {
-      font-family: 'DM Mono', monospace;
+      font-family: 'DM Mono', 'Courier New', Courier, monospace;
       font-size: 11px;
       color: var(--muted);
       margin-top: 28px;
@@ -543,8 +552,16 @@
   <!-- ═══ SCENE 1: TERMINAL HOOK ═══════════════════════════════════════ -->
   <div class="scene" id="s1">
     <div class="terminal">
-      <div class="t-line" id="tl1"></div>
-      <div class="t-line" id="tl2"></div>
+      <!-- Line 1: text + blinking cursor (visible immediately) -->
+      <div class="t-row">
+        <span class="t-text" id="tl1"></span>
+        <span class="t-cur" id="cur1"></span>
+      </div>
+      <!-- Line 2: cursor hidden until line 2 starts typing -->
+      <div class="t-row">
+        <span class="t-text" id="tl2"></span>
+        <span class="t-cur off" id="cur2"></span>
+      </div>
       <p class="t-sub" id="tsub">BETLAB AI · SPORTS INTELLIGENCE ENGINE v3.1</p>
     </div>
   </div>
@@ -721,16 +738,16 @@
     $(id).classList.add('active');
   }
 
-  /* ─── Typewriter ───────────────────────────────────────────────────── */
-  function typeText(el, text, speed, done) {
+  /* ─── Typewriter (textEl = text span, curEl = cursor block) ─────────── */
+  function typeRow(textEl, curEl, text, speed, done) {
     let i = 0;
-    el.textContent = '';
-    el.classList.add('typing');
+    textEl.textContent = '';
+    curEl.classList.remove('off'); // show cursor
     const iv = setInterval(() => {
-      el.textContent += text[i++];
+      textEl.textContent += text[i++];
       if (i >= text.length) {
         clearInterval(iv);
-        el.classList.remove('typing');
+        curEl.classList.add('off'); // hide cursor when done
         if (done) done();
       }
     }, speed);
@@ -752,18 +769,21 @@
   /* ─── Scene 1: Terminal ─────────────────────────────────────────────── */
   function runScene1() {
     activateScene('s1');
-    const l1 = $('tl1'), l2 = $('tl2'), sub = $('tsub');
+    const t1 = $('tl1'), t2 = $('tl2');
+    const c1 = $('cur1'), c2 = $('cur2');
+    const sub = $('tsub');
+
     // Reset
-    l1.textContent = ''; l2.textContent = '';
-    l1.classList.remove('typing'); l2.classList.remove('typing');
+    t1.textContent = ''; t2.textContent = '';
+    c1.classList.remove('off');   // cursor 1 visible immediately
+    c2.classList.add('off');      // cursor 2 hidden until line 2
     hide(sub);
 
-    after(300, () => {
-      typeText(l1, '> Scanning tonight\'s slate...', 52, () => {
-        after(600, () => {
-          typeText(l2, '> 3 high-confidence picks identified.', 44, () => {
-            after(400, () => { show(sub); });
-          });
+    // Start typing line 1 with no delay — cursor is already blinking
+    typeRow(t1, c1, '> Scanning tonight\'s slate...', 52, () => {
+      after(550, () => {
+        typeRow(t2, c2, '> 3 high-confidence picks identified.', 44, () => {
+          after(400, () => show(sub));
         });
       });
     });
@@ -848,8 +868,12 @@
     after(22000, runScene5);             // 22:00 – 28:00
   }
 
-  /* Start immediately */
-  run();
+  /* Wait for fonts, then start — falls back to run() if fonts fail */
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(run).catch(run);
+  } else {
+    run();
+  }
 </script>
 </body>
 </html>
