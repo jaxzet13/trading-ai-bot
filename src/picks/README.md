@@ -13,6 +13,17 @@ export ODDS_API_KEY=your_key_here   # free tier at the-odds-api.com
 
 ## Usage
 
+### Web UI (recommended)
+
+```bash
+ODDS_API_KEY=your_key python -m src.picks.web
+# then open http://localhost:5050 in a browser
+```
+
+Filters (sports, min-edge, today-only, props) are controls on the page itself. Results are cached for 90 s so refreshing doesn't burn API quota.
+
+### CLI
+
 ```bash
 # Top 15 +EV picks across every sport
 python -m src.picks
