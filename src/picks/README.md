@@ -13,7 +13,21 @@ export ODDS_API_KEY=your_key_here   # free tier at the-odds-api.com
 
 ## Usage
 
-### Web UI (recommended)
+### Hosted (open from any browser, no local install)
+
+Deploy free to [Render](https://render.com) — the repo includes a `render.yaml` blueprint:
+
+1. Sign up at https://render.com (GitHub login is fastest).
+2. Click **New +** → **Blueprint** → connect this repo.
+3. Render reads `render.yaml` and creates the web service automatically.
+4. In the service's **Environment** tab, set `ODDS_API_KEY` to your Odds API key.
+5. Wait ~2 minutes for the build. You get a URL like `https://sports-picks-xxxx.onrender.com` you can bookmark on phone or laptop.
+
+> Free-tier Render spins the service down after ~15 min of inactivity, so the *first* request after idle takes ~30 s to wake up. Subsequent loads are instant.
+
+Other hosts that work the same way: Fly.io, Railway, PythonAnywhere. Any host that runs Python + a `requirements.txt` will work — start command is `gunicorn -b 0.0.0.0:$PORT src.picks.web:app`.
+
+### Web UI (local)
 
 ```bash
 ODDS_API_KEY=your_key python -m src.picks.web
