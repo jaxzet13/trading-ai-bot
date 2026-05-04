@@ -107,9 +107,17 @@ PAGE = """
           border-radius:10px; font-size:11px; margin-right:4px; }
   .empty { color:#8b949e; padding:14px; text-align:center; }
   .footer { margin-top:24px; color:#8b949e; font-size:11px; }
+  .qr { float:right; margin-left:14px; background:#161b22; border:1px solid #30363d;
+        border-radius:8px; padding:10px; text-align:center; font-size:11px; color:#8b949e; }
+  .qr img { display:block; width:130px; height:130px; background:#fff; border-radius:4px; }
+  @media (max-width: 700px) { .qr { display:none; } }
 </style>
 </head>
 <body>
+  <div class="qr">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data={{ this_url|urlencode }}" alt="Scan to open on phone">
+    Scan to open<br>on your phone
+  </div>
   <h1>Today's Top Picks</h1>
   <div class="sub">+EV scanner across all in-season sports. Cached for {{ ttl }}s.</div>
 
@@ -221,6 +229,7 @@ def index():
     return render_template_string(
         PAGE,
         ttl=_CACHE_TTL_SEC,
+        this_url=request.url_root.rstrip("/"),
         sports_str=raw_sports,
         min_edge_pct=min_edge_pct,
         min_books=min_books,
