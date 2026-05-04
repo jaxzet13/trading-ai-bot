@@ -1,13 +1,18 @@
 FROM python:3.12-slim
 
+# HF Spaces requires the container to run as a non-root user.
+RUN useradd -m -u 1000 user
+USER user
+ENV PATH="/home/user/.local/bin:$PATH"
+
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY --chown=user requirements.txt .
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-COPY src ./src
+COPY --chown=user src ./src
 
-# Hugging Face Spaces routes traffic to port 7860 by default.
+# HF routes traffic to port 7860 by default.
 ENV PORT=7860
 EXPOSE 7860
 
