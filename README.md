@@ -2,6 +2,14 @@
 
 A Python paper-trading system using Alpaca's paper API with momentum and mean-reversion strategies.
 
+## Easiest setup (Windows, no terminal)
+
+1. Download the project as a ZIP: https://github.com/jaxzet13/trading-ai-bot/archive/refs/heads/claude/tradelab-paper-trading-g5kyl8.zip
+2. Right-click the ZIP → **Extract All**
+3. Open the extracted folder and double-click **`Start-Dashboard.bat`**
+
+It sets up everything automatically and opens the dashboard in your browser. (Requires Python from https://python.org — tick "Add Python to PATH" when installing.)
+
 ## Setup (9 steps)
 
 The database defaults to a zero-setup SQLite file (`tradelab.db`) — no Postgres needed to get started.
