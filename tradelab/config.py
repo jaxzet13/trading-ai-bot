@@ -15,7 +15,21 @@ UNIVERSE: list[str] = [
     "CVX", "ABBV", "MRK", "COST", "AVGO",
 ]
 
+CRYPTO_UNIVERSE: list[str] = [
+    "BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD", "AVAX-USD",
+    "ADA-USD", "DOT-USD", "LINK-USD", "LTC-USD", "XRP-USD",
+]
+
+# High-beta stocks: 3-10% daily swings — ideal for mean reversion
+HIGH_VOL_UNIVERSE: list[str] = [
+    "TSLA", "NVDA", "AMD", "MSTR", "COIN",
+    "SMCI", "PLTR", "RKLB", "IONQ", "HOOD",
+    "SOFI", "RIVN", "LCID", "SOUN", "UPST",
+    "MARA", "RIOT", "CLSK", "APP", "DKNG",
+]
+
 BENCHMARK: str = "SPY"
+CRYPTO_BENCHMARK: str = "BTC-USD"
 
 # ---------------------------------------------------------------------------
 # Strategy params
@@ -49,8 +63,8 @@ BACKTEST_LEVERAGE: float = float(os.getenv("BACKTEST_LEVERAGE", "1.0"))
 # ---------------------------------------------------------------------------
 # Backtest params
 # ---------------------------------------------------------------------------
-BACKTEST_YEARS: int = 2
-SLIPPAGE_PCT: float = 0.0005     # 0.05% per side
+BACKTEST_YEARS: int = 3          # 3 years captures both bull and bear cycles
+SLIPPAGE_PCT: float = 0.001      # 0.1% per side (crypto spreads are wider)
 COMMISSION: float = 0.0          # Alpaca is $0 commission
 SHARPE_PASS_THRESHOLD: float = 1.0
 

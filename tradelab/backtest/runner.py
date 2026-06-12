@@ -88,16 +88,20 @@ def _simulate_portfolio(
     slippage: float = SLIPPAGE_PCT,
     commission: float = COMMISSION,
     initial_capital: float = 100_000.0,
+    kelly_fraction: float = 1.0,
 ) -> tuple[pd.Series, list[dict]]:
     """
-    Simple vectorised simulation that doesn't depend on vectorbt.
-    Handles fractional shares, slippage, and commission.
+    Portfolio simulator with Kelly compounding.
+    targets contains weight per symbol (0-1). kelly_fraction scales the
+    total deployment: 1.0 = deploy 100% of equity across active positions,
+    0.5 = half-Kelly (deploy 50%). Because position size is always a
+    fraction of CURRENT equity, gains compound exponentially.
     Returns (equity_series, trade_records).
     """
     dates = close.index
     equity = pd.Series(index=dates, dtype=float)
     cash = initial_capital
-    positions: dict[str, float] = {}   # symbol -> shares held
+    positions: dict[str, float] = {}
     entry_prices: dict[str, float] = {}
     entry_dates: dict[str, pd.Timestamp] = {}
     trades: list[dict] = []
@@ -114,17 +118,16 @@ def _simulate_portfolio(
         if i == len(dates) - 1:
             break
 
-        # Get today's target weights
         if date not in targets.index:
             continue
         target_row = targets.loc[date]
 
-        # Desired notional per symbol
+        # Desired notional per symbol — scaled by kelly_fraction of current equity
         desired: dict[str, float] = {}
         for sym in close.columns:
             w = float(target_row.get(sym, 0.0))
             if not pd.isna(w) and w > 0:
-                desired[sym] = w * port_value
+                desired[sym] = w * port_value * kelly_fraction
 
         # Determine exits
         for sym in list(positions.keys()):
@@ -177,15 +180,19 @@ def run_backtest(
     strategy: Strategy,
     years: int = BACKTEST_YEARS,
     output_dir: Optional[Path] = None,
+    crypto: bool = False,
+    kelly_fraction: float = 1.0,
 ) -> BacktestResult:
-    from tradelab.data.fetcher import fetch_universe
-    bars = fetch_universe(years=years)
+    from tradelab.data.fetcher import fetch_bars
+    from tradelab.config import UNIVERSE, CRYPTO_UNIVERSE
+    universe = CRYPTO_UNIVERSE if crypto else UNIVERSE
+    bars = fetch_bars(universe, years=years)
     targets = strategy.generate_signals(bars)
 
     close = pd.DataFrame({sym: df["close"] for sym, df in bars.items()}).sort_index()
     targets = targets.reindex(close.index).fillna(0.0)
 
-    equity, trade_records = _simulate_portfolio(close, targets)
+    equity, trade_records = _simulate_portfolio(close, targets, kelly_fraction=kelly_fraction)
     equity = equity.dropna()
 
     daily_returns = equity.pct_change().dropna()
@@ -217,16 +224,21 @@ def run_backtest(
     return result
 
 
-def run_benchmark(years: int = BACKTEST_YEARS) -> BacktestResult:
-    spy = fetch_benchmark(years=years)
+def run_benchmark(years: int = BACKTEST_YEARS, crypto: bool = False) -> BacktestResult:
+    from tradelab.config import CRYPTO_BENCHMARK
+    ticker = CRYPTO_BENCHMARK if crypto else BENCHMARK
+    from tradelab.data.fetcher import fetch_bars
+    data = fetch_bars([ticker], years=years)
+    spy = data.get(ticker, pd.DataFrame())
     if spy.empty:
-        raise RuntimeError("No SPY data returned")
+        raise RuntimeError(f"No data returned for {ticker}")
 
     equity = spy["close"] / spy["close"].iloc[0] * 100_000
     daily_returns = equity.pct_change().dropna()
 
+    label = f"{ticker} Buy & Hold"
     return BacktestResult(
-        strategy_name="SPY Buy & Hold",
+        strategy_name=label,
         total_return=float((equity.iloc[-1] / equity.iloc[0]) - 1),
         cagr=_cagr(equity),
         sharpe=_sharpe(daily_returns),
