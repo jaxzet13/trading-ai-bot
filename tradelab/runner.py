@@ -20,7 +20,10 @@ from tradelab.strategies.momentum import MomentumStrategy
 
 logger = logging.getLogger(__name__)
 
-STRATEGIES = [MomentumStrategy(), MeanReversionStrategy()]
+from tradelab.strategies.top_intraday import ATRImpulseBreakoutStrategy
+
+# ATR Impulse Breakout is the 152-config sweep winner: CAGR +48%, Sharpe 1.51
+STRATEGIES = [ATRImpulseBreakoutStrategy(), MeanReversionStrategy()]
 
 
 def _is_halted(session: Session) -> bool:
@@ -83,7 +86,8 @@ def run_daily_cycle(session: Session) -> None:
         return
 
     # Fetch bars
-    bars = fetch_bars(UNIVERSE, years=1)
+    from tradelab.config import HIGH_VOL_UNIVERSE
+    bars = fetch_bars(list(set(UNIVERSE + HIGH_VOL_UNIVERSE)), years=1)
 
     # Current open positions for risk tracking
     try:

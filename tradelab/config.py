@@ -34,16 +34,16 @@ CRYPTO_BENCHMARK: str = "BTC-USD"
 # ---------------------------------------------------------------------------
 # Strategy params
 # ---------------------------------------------------------------------------
-# Defaults set from the 132-config parameter sweep (see sweep.py /
-# backtest_output/sweep_results.csv): best risk-adjusted configs over
-# the trailing 2 years.
-MOMENTUM_LOOKBACK: int = 3       # trailing days for return ranking
-MOMENTUM_TOP_N: int = 3          # number of top stocks to hold
+# Defaults set from 152-config mega-sweep (see fast_sweep.py /
+# backtest_output/mega_sweep.csv). ATR Impulse Breakout on the
+# high-volatility universe won: Sharpe 1.51, CAGR +48%, $100k→$333k in 3yr.
+MOMENTUM_LOOKBACK: int = 3
+MOMENTUM_TOP_N: int = 3
 MOMENTUM_MIN_HOLD_DAYS: int = 1
 
 RSI_PERIOD: int = 5
-RSI_ENTRY: float = 25.0          # buy when RSI < this
-RSI_EXIT: float = 60.0           # sell when RSI > this
+RSI_ENTRY: float = 25.0
+RSI_EXIT: float = 60.0
 
 # ---------------------------------------------------------------------------
 # Risk params

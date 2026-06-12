@@ -15,10 +15,14 @@ logger = logging.getLogger("tradelab")
 def _get_strategy(name: str):
     from tradelab.strategies.momentum import MomentumStrategy
     from tradelab.strategies.mean_reversion import MeanReversionStrategy
+    from tradelab.strategies.top_intraday import ATRImpulseBreakoutStrategy, CascadeEMAStrategy, CombinedIntradayStrategy
 
     strategies = {
         "momentum": MomentumStrategy(),
         "mean_reversion": MeanReversionStrategy(),
+        "atr_breakout": ATRImpulseBreakoutStrategy(),       # CAGR +48%, Sharpe 1.51
+        "cascade_ema": CascadeEMAStrategy(),
+        "combined": CombinedIntradayStrategy(),
     }
     if name not in strategies:
         print(f"Unknown strategy '{name}'. Choose from: {list(strategies)}")
@@ -33,7 +37,11 @@ def cmd_backtest(args) -> None:
     strategies = (
         [_get_strategy(args.strategy)]
         if args.strategy != "all"
-        else [_get_strategy("momentum"), _get_strategy("mean_reversion")]
+        else [
+            _get_strategy("atr_breakout"),
+            _get_strategy("mean_reversion"),
+            _get_strategy("momentum"),
+        ]
     )
 
     results = []
@@ -181,7 +189,7 @@ def main() -> None:
         "strategy",
         nargs="?",
         default="all",
-        choices=["momentum", "mean_reversion", "all"],
+        choices=["momentum", "mean_reversion", "atr_breakout", "cascade_ema", "combined", "all"],
         help="Strategy to backtest (default: all)",
     )
 
