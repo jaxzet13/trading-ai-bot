@@ -92,6 +92,19 @@ def cmd_dashboard(args) -> None:
         run_dashboard(session)
 
 
+def cmd_web(args) -> None:
+    import subprocess
+    from pathlib import Path
+
+    app_path = Path(__file__).resolve().parent / "webapp.py"
+    print("Starting TradeLab web dashboard — it will open in your browser...")
+    subprocess.run(
+        [sys.executable, "-m", "streamlit", "run", str(app_path),
+         "--theme.base", "dark"],
+        check=False,
+    )
+
+
 def cmd_resume(args) -> None:
     from tradelab.db.models import init_db, get_engine, get_session_factory, SystemState
 
@@ -174,6 +187,7 @@ def main() -> None:
 
     sub.add_parser("run", help="Start the daily scheduler")
     sub.add_parser("dashboard", help="Launch the live terminal dashboard")
+    sub.add_parser("web", help="Launch the visual web dashboard (browser)")
     sub.add_parser("resume", help="Clear a risk halt and resume trading")
     sub.add_parser("report", help="Print monthly trade summary")
 
@@ -183,6 +197,7 @@ def main() -> None:
         "backtest": cmd_backtest,
         "run": cmd_run,
         "dashboard": cmd_dashboard,
+        "web": cmd_web,
         "resume": cmd_resume,
         "report": cmd_report,
     }
