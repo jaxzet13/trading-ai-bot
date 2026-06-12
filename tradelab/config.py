@@ -66,9 +66,9 @@ ALPACA_PAPER_BASE_URL: str = os.getenv(
 # ---------------------------------------------------------------------------
 # Database
 # ---------------------------------------------------------------------------
-DATABASE_URL: str = os.getenv(
-    "DATABASE_URL", "postgresql://tradelab:tradelab@localhost:5432/tradelab"
-)
+# Defaults to a zero-setup SQLite file in the repo. Point DATABASE_URL at
+# Postgres in .env for production use (e.g. postgresql://user:pw@host/db).
+DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///tradelab.db")
 
 # ---------------------------------------------------------------------------
 # Scheduler
