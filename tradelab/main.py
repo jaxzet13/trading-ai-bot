@@ -139,6 +139,60 @@ def cmd_web(args) -> None:
     )
 
 
+def cmd_challenge(args) -> None:
+    """Print prop-firm challenge progress vs all limits."""
+    from tradelab.db.models import init_db, get_engine, get_session_factory, EquitySnapshot
+    from tradelab.execution.broker import PaperBroker
+    from tradelab.config import (
+        PROFIT_TARGET_PCT, DRAWDOWN_HALT_PCT,
+        DAILY_LOSS_LIMIT_PCT, SYMBOL_LOSS_LIMIT_PCT,
+    )
+    from datetime import datetime, timezone
+
+    engine = get_engine()
+    init_db(engine)
+    SessionFactory = get_session_factory(engine)
+
+    broker = PaperBroker()
+    acct = broker.get_account()
+    equity = acct["equity"]
+
+    with SessionFactory() as session:
+        first = session.query(EquitySnapshot).order_by(EquitySnapshot.ts).first()
+        start_eq = float(first.equity) if first else equity
+
+        today = datetime.now(timezone.utc).date()
+        today_start_dt = datetime(today.year, today.month, today.day)
+        today_row = (
+            session.query(EquitySnapshot)
+            .filter(EquitySnapshot.ts >= today_start_dt)
+            .order_by(EquitySnapshot.ts)
+            .first()
+        )
+        daily_start = float(today_row.equity) if today_row else equity
+
+    challenge_pct = (equity - start_eq) / start_eq * 100
+    daily_pct = (equity - daily_start) / daily_start * 100
+    target_pct = PROFIT_TARGET_PCT * 100
+    max_loss_pct = DRAWDOWN_HALT_PCT * 100
+    daily_limit_pct = DAILY_LOSS_LIMIT_PCT * 100
+
+    print(f"\n{'='*52}")
+    print("  PROP FIRM CHALLENGE TRACKER")
+    print(f"{'='*52}")
+    print(f"  Starting equity : ${start_eq:>12,.2f}")
+    print(f"  Current equity  : ${equity:>12,.2f}")
+    print(f"{'─'*52}")
+    pbar = min(challenge_pct / target_pct, 1.0)
+    filled = int(pbar * 30)
+    bar = "█" * filled + "░" * (30 - filled)
+    status = "✓ TARGET HIT!" if challenge_pct >= target_pct else f"need +{target_pct - challenge_pct:.2f}% more"
+    print(f"  Profit target   : [{bar}] {challenge_pct:+.2f}% / +{target_pct:.0f}%  {status}")
+    print(f"  Daily P&L today : {daily_pct:+.2f}%  (limit: -{daily_limit_pct:.0f}%)")
+    print(f"  Max loss used   : {(equity-start_eq)/start_eq*100:.2f}%  (limit: -{max_loss_pct:.1f}%)")
+    print(f"{'='*52}\n")
+
+
 def cmd_resume(args) -> None:
     from tradelab.db.models import init_db, get_engine, get_session_factory, SystemState
 
@@ -220,6 +274,7 @@ def main() -> None:
     )
 
     sub.add_parser("now", help="Run one trading cycle immediately (for testing / manual trigger)")
+    sub.add_parser("challenge", help="Show prop-firm challenge progress vs all limits")
     sub.add_parser("run", help="Start the daily scheduler (9:31 AM + 1:00 PM ET, weekdays)")
     sub.add_parser("dashboard", help="Launch the live terminal dashboard")
     sub.add_parser("web", help="Launch the visual web dashboard (browser)")
@@ -230,6 +285,7 @@ def main() -> None:
 
     dispatch = {
         "now": cmd_now,
+        "challenge": cmd_challenge,
         "backtest": cmd_backtest,
         "run": cmd_run,
         "dashboard": cmd_dashboard,

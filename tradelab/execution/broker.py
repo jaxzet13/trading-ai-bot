@@ -80,8 +80,14 @@ class PaperBroker:
         open_positions: list[str],
         peak_equity: float,
         halted: bool,
+        daily_start_equity: float = 0.0,
+        position_losses: Optional[dict] = None,
     ) -> tuple[Optional[str], RiskDecision]:
-        decision = self._risk.check(intent, equity, open_positions, peak_equity, halted)
+        decision = self._risk.check(
+            intent, equity, open_positions, peak_equity, halted,
+            daily_start_equity=daily_start_equity,
+            position_losses=position_losses or {},
+        )
         if not decision.approved:
             return None, decision
 

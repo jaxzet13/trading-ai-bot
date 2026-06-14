@@ -52,9 +52,18 @@ RSI_EXIT: float = 60.0
 # conservative 2%/position cap. Set AGGRESSIVE_MODE=false in .env to revert.
 AGGRESSIVE_MODE: bool = os.getenv("AGGRESSIVE_MODE", "true").lower() == "true"
 
-MAX_POSITION_PCT: float = 0.34 if AGGRESSIVE_MODE else 0.02
+MAX_POSITION_PCT: float = 0.20 if AGGRESSIVE_MODE else 0.02  # 20% max per position
 MAX_OPEN_POSITIONS: int = 10   # supports combined multi-strategy portfolio
-DRAWDOWN_HALT_PCT: float = 0.10  # halt if drawdown >= 10% (kept in both modes)
+
+# ---------------------------------------------------------------------------
+# Prop-firm / funded-account challenge rules
+# ---------------------------------------------------------------------------
+# These match common prop firm challenges (FTMO-style). Adjust in .env to
+# match your specific firm's rules.
+DRAWDOWN_HALT_PCT: float = float(os.getenv("MAX_TOTAL_LOSS_PCT", "0.075"))   # 7.5% → buffer before 8% limit
+DAILY_LOSS_LIMIT_PCT: float = float(os.getenv("DAILY_LOSS_LIMIT_PCT", "0.04"))  # 4% max daily loss
+SYMBOL_LOSS_LIMIT_PCT: float = float(os.getenv("SYMBOL_LOSS_LIMIT_PCT", "0.03"))  # 3% of account per symbol
+PROFIT_TARGET_PCT: float = float(os.getenv("PROFIT_TARGET_PCT", "0.07"))     # 7% to pass challenge
 
 # Simulated leverage for backtests (1.0 = none). Alpaca paper accounts allow
 # up to 2x intraday margin on equities.

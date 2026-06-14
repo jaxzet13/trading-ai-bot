@@ -11,7 +11,10 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from tradelab.config import UNIVERSE, HIGH_VOL_UNIVERSE, MAX_POSITION_PCT
+from tradelab.config import (
+    UNIVERSE, HIGH_VOL_UNIVERSE, MAX_POSITION_PCT,
+    DAILY_LOSS_LIMIT_PCT, PROFIT_TARGET_PCT,
+)
 from tradelab.data.fetcher import fetch_bars
 from tradelab.db.models import EquitySnapshot, Signal, SystemState, Trade
 from tradelab.execution.broker import PaperBroker
@@ -63,6 +66,31 @@ def _get_peak_equity(session: Session) -> float:
     return float(result) if result else 0.0
 
 
+def _get_daily_start_equity(session: Session) -> float:
+    """Equity at the start of today (first snapshot of calendar day)."""
+    from sqlalchemy import func
+    today = datetime.now(timezone.utc).date()
+    today_start = datetime(today.year, today.month, today.day)
+    row = (
+        session.query(EquitySnapshot)
+        .filter(EquitySnapshot.ts >= today_start)
+        .order_by(EquitySnapshot.ts)
+        .first()
+    )
+    return float(row.equity) if row else 0.0
+
+
+def _get_starting_equity(session: Session) -> float:
+    """Very first equity snapshot — used to track challenge progress."""
+    row = session.query(EquitySnapshot).order_by(EquitySnapshot.ts).first()
+    return float(row.equity) if row else 0.0
+
+
+def _get_position_losses(positions: list[dict]) -> dict[str, float]:
+    """Return unrealized P&L per symbol (negative = loss)."""
+    return {p["symbol"]: p["unrealized_pl"] for p in positions}
+
+
 def run_daily_cycle(session: Session) -> None:
     broker = PaperBroker()
     risk = RiskGate()
@@ -79,12 +107,17 @@ def run_daily_cycle(session: Session) -> None:
     peak = _get_peak_equity(session)
     peak = max(peak, equity)
     halted = _is_halted(session)
+    daily_start = _get_daily_start_equity(session)
+    starting_equity = _get_starting_equity(session) or equity
 
     if risk.should_halt(equity, peak):
         _set_halted(session)
         halted = True
 
     drawdown_pct = (equity - peak) / peak if peak > 0 else 0.0
+    daily_pnl_pct = (equity - daily_start) / daily_start * 100 if daily_start > 0 else 0.0
+    challenge_pct = (equity - starting_equity) / starting_equity * 100 if starting_equity > 0 else 0.0
+
     session.add(
         EquitySnapshot(
             ts=datetime.now(timezone.utc).replace(tzinfo=None),
@@ -95,7 +128,25 @@ def run_daily_cycle(session: Session) -> None:
         )
     )
     session.commit()
-    logger.info("Account: equity=$%.2f  cash=$%.2f  drawdown=%.2f%%", equity, cash, drawdown_pct * 100)
+    logger.info(
+        "Account: equity=$%.2f  daily=%+.2f%%  challenge=%+.2f%%  drawdown=%.2f%%",
+        equity, daily_pnl_pct, challenge_pct, drawdown_pct * 100,
+    )
+
+    # ── Prop-firm challenge status ─────────────────────────────────────────
+    if risk.profit_target_reached(equity, starting_equity):
+        logger.info(
+            "CHALLENGE TARGET REACHED! Up %.2f%% from $%.0f start. "
+            "Step 1 (7%%) complete — move to Step 2.",
+            challenge_pct, starting_equity,
+        )
+
+    if risk.daily_loss_breached(equity, daily_start):
+        logger.warning(
+            "Daily loss limit %.0f%% hit (today: %+.2f%%). No more trades today.",
+            DAILY_LOSS_LIMIT_PCT * 100, daily_pnl_pct,
+        )
+        return
 
     if halted:
         logger.warning("System halted — skipping signal generation. Run `tradelab resume` to unlock.")
@@ -114,6 +165,7 @@ def run_daily_cycle(session: Session) -> None:
     try:
         current_positions = broker.get_positions()
         open_symbols = [p["symbol"] for p in current_positions]
+        position_losses = _get_position_losses(current_positions)
         logger.info("Open positions: %s", open_symbols or "none")
     except Exception as exc:
         logger.error("Could not fetch positions: %s", exc)
@@ -210,7 +262,9 @@ def run_daily_cycle(session: Session) -> None:
             signal_value=signal_val,
         )
         order_id, decision = broker.place_order(
-            intent, equity, open_symbols, peak, halted
+            intent, equity, open_symbols, peak, halted,
+            daily_start_equity=daily_start,
+            position_losses=position_losses,
         )
         if order_id:
             orders_placed += 1
