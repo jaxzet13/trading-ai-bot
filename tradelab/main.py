@@ -54,6 +54,21 @@ def cmd_backtest(args) -> None:
     compare_with_benchmark(results)
 
 
+def cmd_now(args) -> None:
+    """Run one trading cycle immediately — useful for testing or a manual trigger."""
+    from tradelab.db.models import init_db, get_engine, get_session_factory
+    from tradelab.runner import run_daily_cycle
+
+    engine = get_engine()
+    init_db(engine)
+    SessionFactory = get_session_factory(engine)
+
+    print("Running one trading cycle NOW...")
+    with SessionFactory() as session:
+        run_daily_cycle(session)
+    print("Done.")
+
+
 def cmd_run(args) -> None:
     from apscheduler.schedulers.blocking import BlockingScheduler
     from tradelab.config import MARKET_OPEN_HOUR, MARKET_OPEN_MINUTE, TIMEZONE
@@ -69,15 +84,26 @@ def cmd_run(args) -> None:
             run_daily_cycle(session)
 
     scheduler = BlockingScheduler(timezone=TIMEZONE)
+    # Morning run: signals fresh at market open
     scheduler.add_job(
         daily_job,
         "cron",
         hour=MARKET_OPEN_HOUR,
         minute=MARKET_OPEN_MINUTE,
         day_of_week="mon-fri",
+        id="morning",
+    )
+    # Midday run: rebalance / catch new entries that emerged since open
+    scheduler.add_job(
+        daily_job,
+        "cron",
+        hour=13,
+        minute=0,
+        day_of_week="mon-fri",
+        id="midday",
     )
     logger.info(
-        "Scheduler started — daily job at %02d:%02d %s on weekdays",
+        "Scheduler started — runs at %02d:%02d and 13:00 %s on weekdays",
         MARKET_OPEN_HOUR,
         MARKET_OPEN_MINUTE,
         TIMEZONE,
@@ -193,7 +219,8 @@ def main() -> None:
         help="Strategy to backtest (default: all)",
     )
 
-    sub.add_parser("run", help="Start the daily scheduler")
+    sub.add_parser("now", help="Run one trading cycle immediately (for testing / manual trigger)")
+    sub.add_parser("run", help="Start the daily scheduler (9:31 AM + 1:00 PM ET, weekdays)")
     sub.add_parser("dashboard", help="Launch the live terminal dashboard")
     sub.add_parser("web", help="Launch the visual web dashboard (browser)")
     sub.add_parser("resume", help="Clear a risk halt and resume trading")
@@ -202,6 +229,7 @@ def main() -> None:
     args = parser.parse_args()
 
     dispatch = {
+        "now": cmd_now,
         "backtest": cmd_backtest,
         "run": cmd_run,
         "dashboard": cmd_dashboard,

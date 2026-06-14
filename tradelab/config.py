@@ -53,7 +53,7 @@ RSI_EXIT: float = 60.0
 AGGRESSIVE_MODE: bool = os.getenv("AGGRESSIVE_MODE", "true").lower() == "true"
 
 MAX_POSITION_PCT: float = 0.34 if AGGRESSIVE_MODE else 0.02
-MAX_OPEN_POSITIONS: int = 3
+MAX_OPEN_POSITIONS: int = 10   # supports combined multi-strategy portfolio
 DRAWDOWN_HALT_PCT: float = 0.10  # halt if drawdown >= 10% (kept in both modes)
 
 # Simulated leverage for backtests (1.0 = none). Alpaca paper accounts allow
