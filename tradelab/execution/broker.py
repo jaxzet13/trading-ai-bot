@@ -158,8 +158,41 @@ class PaperBroker:
             logger.error("Order failed for %s: %s", intent.symbol, exc)
             return None, RiskDecision(False, str(exc))
 
+    def _raw_qty(self, symbol: str) -> float:
+        """Held quantity for a yfinance symbol, reading raw Alpaca positions."""
+        for p in self.client.get_all_positions():
+            if _from_alpaca_symbol(p.symbol) == symbol:
+                return abs(float(p.qty))
+        return 0.0
+
+    def _sell_crypto(self, symbol: str, fraction: float) -> Optional[str]:
+        """Sell `fraction` (0-1) of a crypto position via a market SELL order.
+
+        Alpaca's close_position endpoint 404s on crypto because the '/' in
+        'DOGE/USD' breaks the URL path, so we route crypto exits through an
+        ordinary sell order (the same path the buys use, which works)."""
+        import math
+        from alpaca.trading.requests import MarketOrderRequest
+        from alpaca.trading.enums import OrderSide, TimeInForce
+
+        held = self._raw_qty(symbol)
+        qty = math.floor(held * fraction * 1e6) / 1e6  # round DOWN to avoid oversell
+        if qty <= 0:
+            logger.info("Crypto sell skipped %s — nothing to sell (held=%g)", symbol, held)
+            return None
+        alpaca_sym = _to_alpaca_symbol(symbol)
+        req = MarketOrderRequest(
+            symbol=alpaca_sym, qty=qty, side=OrderSide.SELL, time_in_force=TimeInForce.GTC,
+        )
+        order = self.client.submit_order(req)
+        logger.info("CRYPTO SELL %s qty=%g (%.0f%%) order_id=%s",
+                    alpaca_sym, qty, fraction * 100, order.id)
+        return str(order.id)
+
     def close_position(self, symbol: str) -> Optional[str]:
         try:
+            if _is_crypto(symbol):
+                return self._sell_crypto(symbol, 1.0)
             alpaca_sym = _to_alpaca_symbol(symbol)
             order = self.client.close_position(alpaca_sym)
             logger.info("CLOSED position: %s order_id=%s", symbol, order.id)
@@ -171,6 +204,8 @@ class PaperBroker:
     def trim_position(self, symbol: str, percentage: float) -> Optional[str]:
         """Sell `percentage`% of an overweight position back toward target."""
         try:
+            if _is_crypto(symbol):
+                return self._sell_crypto(symbol, percentage / 100.0)
             from alpaca.trading.requests import ClosePositionRequest
 
             alpaca_sym = _to_alpaca_symbol(symbol)

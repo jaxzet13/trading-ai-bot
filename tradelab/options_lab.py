@@ -154,6 +154,7 @@ def run_options_cycle(broker) -> dict:
     """
     acct = broker.get_account()
     equity = acct["equity"]
+    cash = acct.get("cash", 0.0)
     budget = equity * OPTIONS_BUDGET_PCT
 
     mgmt = manage_option_positions(broker)
@@ -161,21 +162,26 @@ def run_options_cycle(broker) -> dict:
     existing = broker.get_option_positions()
     held_underlyings = {p["symbol"][:_underlying_len(p["symbol"])] for p in existing}
     options_value = sum(p["market_value"] for p in existing)
-    available = budget - options_value
+    # Options must be paid for in full (no margin), so the real ceiling on new
+    # buys is the SMALLER of the remaining budget and the available cash (less a
+    # small buffer for slippage). This is what stops the engine over-buying.
+    cash_room = max(cash * 0.97, 0.0)
+    available = min(budget - options_value, cash_room)
     slots = OPTIONS_MAX_POSITIONS - len(existing)
 
     bought = []
-    if available < 100 or slots <= 0:
-        logger.info("Options: no room (available $%.0f, slots %d)", available, slots)
+    if available < 100:
+        logger.info("Options: no cash/budget room (available $%.0f, slots %d)", available, slots)
         return {"bought": bought, **mgmt, "options_value": options_value,
                 "budget": budget, "equity": equity}
 
     # Catalyst-driven scoring (his method): favour beaten-down names with an
-    # upcoming earnings catalyst, priced reasonably (low breakeven move).
+    # upcoming earnings catalyst, priced reasonably (low breakeven move). We
+    # score ALL underlyings (even held ones) so the leftover-cash top-up pass
+    # can add contracts to existing high-conviction names too.
     candidates = []
     for u in OPTIONS_UNDERLYINGS:
-        if u in held_underlyings:
-            continue
+        held = u in held_underlyings
         leap = broker.find_leaps(u, OPTIONS_TARGET_OTM_PCT, OPTIONS_MIN_DTE)
         if not leap:
             continue
@@ -191,33 +197,62 @@ def run_options_cycle(broker) -> dict:
         candidates.append({**leap, "ask": ask, "be_move": be_move,
                            "cost": ask * 100, "beaten_down": bd,
                            "catalyst": cat > 0, "dte_earn": dte_earn,
-                           "score": score})
+                           "score": score, "held": held})
     candidates.sort(key=lambda c: c["score"], reverse=True)
-    candidates = candidates[:slots]
-    if not candidates:
-        return {"bought": bought, **mgmt, "options_value": options_value,
-                "budget": budget, "equity": equity}
+    new_names = [c for c in candidates if not c["held"]][:max(slots, 0)]
 
-    # Conviction-weighted allocation (concentrate into the best names)
-    floor = min(c["score"] for c in candidates)
-    weights = [c["score"] - floor + 1.0 for c in candidates]
-    wsum = sum(weights) or 1.0
-    for c, w in zip(candidates, weights):
-        name_budget = available * (w / wsum)
-        qty = int(name_budget // c["cost"])
-        if qty < 1:
-            # Buy at least 1 if the single contract fits the remaining budget
-            qty = 1 if c["cost"] <= available else 0
-        if qty < 1:
-            logger.info("Options: skip %s — 1 contract ($%.0f) over budget", c["symbol"], c["cost"])
-            continue
-        order_id = broker.buy_option(c["symbol"], qty)
-        if order_id:
-            spent = qty * c["cost"]
-            available -= spent
-            bought.append({"symbol": c["symbol"], "qty": qty, "cost": spent,
-                           "be_move": c["be_move"], "beaten_down": c["beaten_down"],
-                           "catalyst": c["catalyst"]})
+    bought_by_symbol: dict[str, dict] = {}
+
+    def _record_buy(c: dict, qty: int) -> None:
+        spent = qty * c["cost"]
+        rec = bought_by_symbol.get(c["symbol"])
+        if rec:
+            rec["qty"] += qty
+            rec["cost"] += spent
+        else:
+            bought_by_symbol[c["symbol"]] = {
+                "symbol": c["symbol"], "qty": qty, "cost": spent,
+                "be_move": c["be_move"], "beaten_down": c["beaten_down"],
+                "catalyst": c["catalyst"],
+            }
+
+    # Pass 1 — conviction-weighted allocation across fresh names (fills slots).
+    if new_names and slots > 0:
+        floor = min(c["score"] for c in new_names)
+        weights = [c["score"] - floor + 1.0 for c in new_names]
+        wsum = sum(weights) or 1.0
+        for c, w in zip(new_names, weights):
+            name_budget = available * (w / wsum)
+            qty = int(name_budget // c["cost"])
+            if qty < 1:
+                qty = 1 if c["cost"] <= available else 0
+            if qty < 1:
+                continue
+            if broker.buy_option(c["symbol"], qty):
+                available -= qty * c["cost"]
+                _record_buy(c, qty)
+
+    # Pass 2 — greedily spend leftover cash/budget so we actually hit ~85%.
+    # Contract rounding in pass 1 always leaves a remainder; here we add one
+    # contract at a time to the highest-conviction names (new OR already held)
+    # until the budget/cash is exhausted. Cheapest-eligible breaks ties so we
+    # don't get stuck unable to afford the next contract.
+    toppable = sorted(
+        [c for c in candidates if c["cost"] <= available],
+        key=lambda c: (-c["score"], c["cost"]),
+    )
+    progress = True
+    while available >= 50 and toppable and progress:
+        progress = False
+        for c in toppable:
+            if c["cost"] <= available:
+                if broker.buy_option(c["symbol"], 1):
+                    available -= c["cost"]
+                    _record_buy(c, 1)
+                    progress = True
+        toppable = [c for c in toppable if c["cost"] <= available]
+
+    bought = list(bought_by_symbol.values())
     return {"bought": bought, **mgmt, "options_value": options_value,
             "budget": budget, "equity": equity}
 
