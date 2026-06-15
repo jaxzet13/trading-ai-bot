@@ -161,6 +161,26 @@ def cmd_brief(args) -> None:
     print_briefing(brief)
 
 
+def cmd_journal(args) -> None:
+    """Show the recent trade journal — what the system did and why."""
+    from tradelab.journal import show_journal
+    show_journal()
+
+
+def cmd_review(args) -> None:
+    """Run this week's self-review: performance vs S&P, win rate, grade."""
+    from tradelab.db.models import init_db, get_engine, get_session_factory
+    from tradelab.execution.broker import PaperBroker
+    from tradelab.journal import weekly_review
+
+    engine = get_engine()
+    init_db(engine)
+    SessionFactory = get_session_factory(engine)
+    broker = PaperBroker()
+    with SessionFactory() as session:
+        print(weekly_review(session, broker))
+
+
 def cmd_leaps(args) -> None:
     """LEAPS options screener — analysis only, separate from the challenge."""
     from tradelab.options_lab import screen_leaps, print_leaps
@@ -305,6 +325,8 @@ def main() -> None:
 
     sub.add_parser("now", help="Run one trading cycle immediately (for testing / manual trigger)")
     sub.add_parser("brief", help="Daily analyst briefing: price action + news + flags on holdings")
+    sub.add_parser("journal", help="Show the recent trade journal (what the system did)")
+    sub.add_parser("review", help="Run this week's self-review vs the S&P, with a grade")
     sub.add_parser("leaps", help="LEAPS options screener (analysis only, separate experiment)")
     sub.add_parser("challenge", help="Show prop-firm challenge progress vs all limits")
     sub.add_parser("run", help="Start the daily scheduler (9:31 AM + 1:00 PM ET, weekdays)")
@@ -318,6 +340,8 @@ def main() -> None:
     dispatch = {
         "now": cmd_now,
         "brief": cmd_brief,
+        "journal": cmd_journal,
+        "review": cmd_review,
         "leaps": cmd_leaps,
         "challenge": cmd_challenge,
         "backtest": cmd_backtest,
