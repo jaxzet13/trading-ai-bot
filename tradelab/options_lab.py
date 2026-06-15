@@ -408,19 +408,49 @@ def _score_candidate(underlying: str, leap: dict, ask: float) -> dict:
 # ── live options execution on Alpaca paper ──────────────────────────────────
 
 def manage_option_positions(broker) -> dict:
-    """Take-profit / stop-loss on existing option positions."""
-    closed_tp, closed_sl = [], []
+    """
+    Manage existing option positions:
+    - Take-profit at OPTIONS_PROFIT_TARGET
+    - Stop-loss at OPTIONS_STOP_LOSS
+    - Exit any position where AI now rates the underlying as "skip"
+      (fundamentals or news changed since we bought)
+    """
+    closed_tp, closed_sl, closed_ai = [], [], []
     for p in broker.get_option_positions():
         plpc = p["unrealized_plpc"]
         if plpc >= OPTIONS_PROFIT_TARGET:
             if broker.close_option(p["symbol"]):
                 closed_tp.append(p["symbol"])
                 logger.info("OPTION TP  %s +%.0f%% -> closed", p["symbol"], plpc * 100)
-        elif plpc <= -OPTIONS_STOP_LOSS:
+            continue
+        if plpc <= -OPTIONS_STOP_LOSS:
             if broker.close_option(p["symbol"]):
                 closed_sl.append(p["symbol"])
                 logger.info("OPTION SL  %s %.0f%% -> closed", p["symbol"], plpc * 100)
-    return {"tp": closed_tp, "sl": closed_sl}
+            continue
+        # Re-evaluate: if AI now says "skip" on the underlying, exit the position
+        underlying = p["symbol"][:_underlying_len(p["symbol"])]
+        if underlying:
+            try:
+                bd, cat, dte_earn = _catalyst_signals(underlying)
+                fund_score, fund_info = _fundamental_score(underlying)
+                news_score, headlines = _news_sentiment(underlying)
+                verdict = _ai_verdict(underlying, {
+                    "beaten_down": bd, "dte_earn": dte_earn,
+                    "fundamental_score": fund_score, "fund_info": fund_info,
+                    "news_score": news_score, "headlines": headlines,
+                    "be_move": 0, "spot": 0,
+                })
+                if verdict.get("verdict") == "skip":
+                    reason = verdict.get("reason", "AI: fundamentals deteriorated")
+                    logger.info("OPTION EXIT %s — AI skip: %s (pl=%.1f%%)",
+                                p["symbol"], reason, plpc * 100)
+                    if broker.close_option(p["symbol"]):
+                        closed_ai.append({"symbol": p["symbol"], "reason": reason,
+                                          "pl_pct": plpc * 100})
+            except Exception as exc:
+                logger.debug("Re-eval failed for %s: %s", underlying, exc)
+    return {"tp": closed_tp, "sl": closed_sl, "ai_exit": closed_ai}
 
 
 def run_options_cycle(broker) -> dict:
@@ -553,6 +583,10 @@ def print_options_run(summary: dict) -> None:
         print(f"  TOOK PROFIT: {', '.join(summary['tp'])}")
     if summary.get("sl"):
         print(f"  STOPPED OUT: {', '.join(summary['sl'])}")
+    if summary.get("ai_exit"):
+        print(f"  AI EXITED (fundamentals changed):")
+        for x in summary["ai_exit"]:
+            print(f"    x {x['symbol']:<24} {x['pl_pct']:+.1f}%  reason: {x['reason']}")
 
     if summary.get("skipped"):
         print(f"\n  SKIPPED (AI ruled out):")
