@@ -53,7 +53,12 @@ RSI_EXIT: float = 60.0
 AGGRESSIVE_MODE: bool = os.getenv("AGGRESSIVE_MODE", "true").lower() == "true"
 
 MAX_POSITION_PCT: float = 0.20 if AGGRESSIVE_MODE else 0.02  # 20% max per position
-MAX_OPEN_POSITIONS: int = 10   # supports combined multi-strategy portfolio
+MAX_OPEN_POSITIONS: int = 12   # supports combined multi-strategy portfolio
+
+# Fraction of equity to actually deploy into positions each cycle. 0.95 keeps a
+# small cash buffer for fees/slippage while putting the rest to work. The old
+# behaviour left ~half the account idle, which capped returns.
+TARGET_DEPLOYMENT: float = float(os.getenv("TARGET_DEPLOYMENT", "0.95"))
 
 # ---------------------------------------------------------------------------
 # Prop-firm / funded-account challenge rules

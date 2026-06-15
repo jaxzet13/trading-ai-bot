@@ -12,8 +12,8 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from tradelab.config import (
-    UNIVERSE, HIGH_VOL_UNIVERSE, MAX_POSITION_PCT,
-    DAILY_LOSS_LIMIT_PCT, PROFIT_TARGET_PCT,
+    UNIVERSE, HIGH_VOL_UNIVERSE, MAX_POSITION_PCT, MAX_OPEN_POSITIONS,
+    DAILY_LOSS_LIMIT_PCT, PROFIT_TARGET_PCT, TARGET_DEPLOYMENT,
 )
 from tradelab.data.fetcher import fetch_bars
 from tradelab.db.models import EquitySnapshot, Signal, SystemState, Trade
@@ -166,6 +166,7 @@ def run_daily_cycle(session: Session) -> None:
         current_positions = broker.get_positions()
         open_symbols = [p["symbol"] for p in current_positions]
         position_losses = _get_position_losses(current_positions)
+        current_value = {p["symbol"]: p["market_value"] for p in current_positions}
         logger.info("Open positions: %s", open_symbols or "none")
     except Exception as exc:
         logger.error("Could not fetch positions: %s", exc)
@@ -208,30 +209,35 @@ def run_daily_cycle(session: Session) -> None:
 
     session.commit()
 
-    # ── Combine signals: average weight across ALL strategies ─────────────
-    # Dividing by N_STRATEGIES keeps total portfolio allocation ≤ 1.0.
-    # Symbols agreed on by multiple strategies receive proportionally larger
-    # slices (each contributing strategy adds its share of the 1/N_STRATEGIES
-    # budget), while single-strategy signals are small but still tradeable.
-    desired_positions: dict[str, tuple[str, float, float]] = {}
+    # ── Combine signals into a near-fully-deployed portfolio ──────────────
+    # Conviction score = number of strategies agreeing (whole points) plus the
+    # summed raw weight (fractional tiebreaker). Symbols multiple strategies
+    # agree on rank highest. We then take the top MAX_OPEN_POSITIONS names and
+    # split TARGET_DEPLOYMENT of equity across them in proportion to conviction,
+    # capping any single name at MAX_POSITION_PCT. This puts the previously
+    # idle cash to work instead of leaving half the account unused.
+    conviction: dict[str, float] = {}
     for sym, sigs in sym_signals.items():
-        combined_weight = sum(w for _, w in sigs) / N_STRATEGIES
-        if combined_weight < 0.01:
+        conviction[sym] = len(sigs) + sum(w for _, w in sigs)
+
+    ranked = sorted(conviction.items(), key=lambda x: x[1], reverse=True)
+    ranked = ranked[:MAX_OPEN_POSITIONS]
+    total_score = sum(score for _, score in ranked) or 1.0
+
+    desired_positions: dict[str, tuple[str, float, float]] = {}
+    for sym, score in ranked:
+        weight = (score / total_score) * TARGET_DEPLOYMENT
+        weight = min(weight, MAX_POSITION_PCT)
+        if weight < 0.01:
             continue
-        # Cap each position at MAX_POSITION_PCT (e.g. 34%) before the risk gate sees it
-        combined_weight = min(combined_weight, MAX_POSITION_PCT)
-        label = "+".join(sorted(set(n for n, _ in sigs)))
-        desired_positions[sym] = (label, combined_weight, combined_weight)
+        label = "+".join(sorted(set(n for n, _ in sym_signals[sym])))
+        desired_positions[sym] = (label, weight, weight)
 
-    # Strongest signals first so the risk gate fills the best ones
-    desired_positions = dict(
-        sorted(desired_positions.items(), key=lambda x: x[1][1], reverse=True)
-    )
-
+    deployed = sum(w for _, w, _ in desired_positions.values())
     n_agree_2plus = sum(1 for sigs in sym_signals.values() if len(sigs) >= 2)
     logger.info(
-        "Combined: %d symbols wanted (%d with 2+ strategies agreeing)",
-        len(desired_positions), n_agree_2plus,
+        "Combined: %d positions, %.0f%% of equity deployed (%d with 2+ strategies agreeing)",
+        len(desired_positions), deployed * 100, n_agree_2plus,
     )
 
     # ── Close positions no longer signalled ───────────────────────────────
@@ -250,10 +256,40 @@ def run_daily_cycle(session: Session) -> None:
                     trade.alpaca_order_id = order_id
                     session.commit()
 
+    # ── Trim overweight positions back toward target ──────────────────────
+    # Sell the excess on any held name that has drifted >15% above its target
+    # weight. This frees cash and prevents deployment creeping over 100%.
+    for sym, (_, weight, _) in desired_positions.items():
+        held = current_value.get(sym, 0.0)
+        target = equity * weight
+        if held > target * 1.15 and (held - target) > 25.0:
+            pct = (held - target) / held * 100.0
+            broker.trim_position(sym, pct)
+
     # ── Place / rebalance orders ──────────────────────────────────────────
+    # For names we already hold, only buy the *difference* up to target so we
+    # don't stack a full new slice on top of the existing position. A running
+    # cash budget guarantees buys never exceed available cash — i.e. NO margin
+    # / leverage, which keeps the simulation clean for a funded-account
+    # challenge. Sell proceeds from this cycle's closes aren't counted until
+    # they settle, so the system simply tops up deployment on the next run.
+    MIN_ORDER = 25.0   # skip dust orders below $25
+    cash_budget = max(cash, 0.0)
     orders_placed = 0
     for sym, (strat_name, weight, signal_val) in desired_positions.items():
-        notional = equity * weight * 0.95
+        target_notional = equity * weight
+        held = current_value.get(sym, 0.0)
+        notional = target_notional - held
+        if notional < MIN_ORDER:
+            logger.info("SKIP %-6s already at target ($%.0f held, $%.0f target)",
+                        sym, held, target_notional)
+            continue
+        # Never spend more than the cash we actually have on hand
+        notional = min(notional, cash_budget)
+        if notional < MIN_ORDER:
+            logger.info("SKIP %-6s — cash budget exhausted ($%.0f left)", sym, cash_budget)
+            continue
+        cash_budget -= notional
         intent = OrderIntent(
             symbol=sym,
             strategy=strat_name,

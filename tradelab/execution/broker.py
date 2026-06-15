@@ -124,3 +124,17 @@ class PaperBroker:
         except Exception as exc:
             logger.error("Failed to close %s: %s", symbol, exc)
             return None
+
+    def trim_position(self, symbol: str, percentage: float) -> Optional[str]:
+        """Sell `percentage`% of an overweight position to bring it to target."""
+        try:
+            from alpaca.trading.requests import ClosePositionRequest
+
+            pct = max(1.0, min(99.0, round(percentage, 2)))
+            req = ClosePositionRequest(percentage=str(pct))
+            order = self.client.close_position(symbol, close_options=req)
+            logger.info("TRIMMED %s by %.1f%% order_id=%s", symbol, pct, order.id)
+            return str(order.id)
+        except Exception as exc:
+            logger.error("Failed to trim %s: %s", symbol, exc)
+            return None
