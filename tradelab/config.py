@@ -96,13 +96,18 @@ TRAILING_STOP_PCT: float = float(os.getenv("TRAILING_STOP_PCT", "0.03"))  # clos
 # It is high-variance: LEAPS can go to ZERO. The total options allocation is
 # capped at OPTIONS_BUDGET_PCT of equity so a full wipeout only costs that
 # slice. The systematic stock/crypto engine ignores option positions entirely.
+# His method's universe: beaten-down growth + catalyst names that are
+# optionable, plus high-beta movers. The scorer favours sold-off names with
+# an upcoming earnings catalyst priced reasonably (low breakeven move).
 OPTIONS_UNDERLYINGS: list[str] = [
     "NVDA", "TSLA", "AMD", "PLTR", "COIN", "MSTR", "AAPL", "AMZN", "GOOGL",
+    "HIMS", "SOFI", "RIVN", "UPST", "DKNG", "RKLB", "SMCI", "MU", "SNOW", "CRWD", "MRVL",
 ]
 OPTIONS_BUDGET_PCT: float = float(os.getenv("OPTIONS_BUDGET_PCT", "0.20"))     # 20% of equity into options
 OPTIONS_MAX_POSITIONS: int = int(os.getenv("OPTIONS_MAX_POSITIONS", "5"))
 OPTIONS_TARGET_OTM_PCT: float = float(os.getenv("OPTIONS_TARGET_OTM_PCT", "0.10"))  # ~10% OTM calls
 OPTIONS_MIN_DTE: int = int(os.getenv("OPTIONS_MIN_DTE", "200"))                # long-dated only
+OPTIONS_CATALYST_WINDOW: int = int(os.getenv("OPTIONS_CATALYST_WINDOW", "120"))  # earnings within N days = catalyst
 OPTIONS_PROFIT_TARGET: float = float(os.getenv("OPTIONS_PROFIT_TARGET", "1.0"))    # +100% take-profit
 OPTIONS_STOP_LOSS: float = float(os.getenv("OPTIONS_STOP_LOSS", "0.5"))        # -50% stop
 

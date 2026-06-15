@@ -25,7 +25,7 @@ from datetime import date, datetime
 
 from tradelab.config import (
     OPTIONS_UNDERLYINGS, OPTIONS_BUDGET_PCT, OPTIONS_MAX_POSITIONS,
-    OPTIONS_TARGET_OTM_PCT, OPTIONS_MIN_DTE,
+    OPTIONS_TARGET_OTM_PCT, OPTIONS_MIN_DTE, OPTIONS_CATALYST_WINDOW,
     OPTIONS_PROFIT_TARGET, OPTIONS_STOP_LOSS,
 )
 
@@ -170,7 +170,8 @@ def run_options_cycle(broker) -> dict:
         return {"bought": bought, **mgmt, "options_value": options_value,
                 "budget": budget, "equity": equity}
 
-    # Screen candidates we don't already hold, rank by lowest breakeven move
+    # Catalyst-driven scoring (his method): favour beaten-down names with an
+    # upcoming earnings catalyst, priced reasonably (low breakeven move).
     candidates = []
     for u in OPTIONS_UNDERLYINGS:
         if u in held_underlyings:
@@ -183,27 +184,73 @@ def run_options_cycle(broker) -> dict:
             continue
         breakeven = leap["strike"] + ask
         be_move = (breakeven / leap["spot"] - 1) * 100
+        bd, cat, dte_earn = _catalyst_signals(u)
+        # Conviction: reward sold-off names (bd) + a near catalyst, penalise
+        # how far the option must move to pay off (be_move).
+        score = bd + cat - be_move
         candidates.append({**leap, "ask": ask, "be_move": be_move,
-                           "cost": ask * 100})
-    candidates.sort(key=lambda c: c["be_move"])
+                           "cost": ask * 100, "beaten_down": bd,
+                           "catalyst": cat > 0, "dte_earn": dte_earn,
+                           "score": score})
+    candidates.sort(key=lambda c: c["score"], reverse=True)
     candidates = candidates[:slots]
     if not candidates:
         return {"bought": bought, **mgmt, "options_value": options_value,
                 "budget": budget, "equity": equity}
 
-    per_name = available / len(candidates)
-    for c in candidates:
-        qty = int(per_name // c["cost"])
+    # Conviction-weighted allocation (concentrate into the best names)
+    floor = min(c["score"] for c in candidates)
+    weights = [c["score"] - floor + 1.0 for c in candidates]
+    wsum = sum(weights) or 1.0
+    for c, w in zip(candidates, weights):
+        name_budget = available * (w / wsum)
+        qty = int(name_budget // c["cost"])
         if qty < 1:
-            logger.info("Options: skip %s — 1 contract ($%.0f) exceeds per-name budget ($%.0f)",
-                        c["symbol"], c["cost"], per_name)
+            # Buy at least 1 if the single contract fits the remaining budget
+            qty = 1 if c["cost"] <= available else 0
+        if qty < 1:
+            logger.info("Options: skip %s — 1 contract ($%.0f) over budget", c["symbol"], c["cost"])
             continue
         order_id = broker.buy_option(c["symbol"], qty)
         if order_id:
-            bought.append({"symbol": c["symbol"], "qty": qty,
-                           "cost": qty * c["cost"], "be_move": c["be_move"]})
+            spent = qty * c["cost"]
+            available -= spent
+            bought.append({"symbol": c["symbol"], "qty": qty, "cost": spent,
+                           "be_move": c["be_move"], "beaten_down": c["beaten_down"],
+                           "catalyst": c["catalyst"]})
     return {"bought": bought, **mgmt, "options_value": options_value,
             "budget": budget, "equity": equity}
+
+
+def _catalyst_signals(underlying: str) -> tuple[float, float, int]:
+    """
+    Return (beaten_down_score, catalyst_bonus, days_to_earnings).
+      beaten_down_score: 0..60 — how far below the 52-week high (his "sold off")
+      catalyst_bonus:    20 if earnings within OPTIONS_CATALYST_WINDOW else 0
+    """
+    bd, cat, dte = 0.0, 0.0, -1
+    try:
+        import yfinance as yf
+        import pandas as pd
+        tk = yf.Ticker(underlying)
+        h = tk.history(period="1y")["Close"].dropna()
+        if len(h):
+            off_high = (float(h.iloc[-1]) / float(h.max()) - 1) * 100  # negative
+            bd = max(0.0, min(60.0, -off_high))
+        try:
+            ed = tk.get_earnings_dates(limit=12)
+            if ed is not None and len(ed):
+                future = ed[ed.index > pd.Timestamp.now(tz=ed.index.tz)]
+                if len(future):
+                    nxt = future.index.min()
+                    dte = (nxt - pd.Timestamp.now(tz=nxt.tz)).days
+                    if 0 <= dte <= OPTIONS_CATALYST_WINDOW:
+                        cat = 20.0
+        except Exception:
+            pass
+    except Exception:
+        pass
+    return bd, cat, dte
 
 
 def _underlying_len(occ: str) -> int:
@@ -225,10 +272,11 @@ def print_options_run(summary: dict) -> None:
     if summary.get("sl"):
         print(f"  🛑 Stopped out: {', '.join(summary['sl'])}")
     if summary["bought"]:
-        print("\n  🟢 BOUGHT:")
+        print("\n  🟢 BOUGHT (catalyst-driven LEAPS):")
         for b in summary["bought"]:
+            cat = "📅 catalyst" if b.get("catalyst") else "no catalyst"
             print(f"    {b['symbol']:<22} x{b['qty']:<3} ${b['cost']:>8,.0f}  "
-                  f"(needs {b['be_move']:+.1f}% to break even)")
+                  f"B/E {b['be_move']:+.1f}%  {b.get('beaten_down', 0):.0f}% off high  {cat}")
     else:
         print("\n  No new option positions opened this run.")
     print(f"{'='*64}\n")
