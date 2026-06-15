@@ -7,22 +7,30 @@ from tradelab.config import (
     ALPACA_API_KEY,
     ALPACA_PAPER_BASE_URL,
     ALPACA_SECRET_KEY,
+    CRYPTO_TRADING_UNIVERSE,
 )
 from tradelab.execution.risk import OrderIntent, RiskDecision, RiskGate
 
 logger = logging.getLogger(__name__)
 
-# Crypto symbols that Alpaca paper trading supports.
-# yfinance uses "BTC-USD"; Alpaca trading API uses "BTC/USD".
+# yfinance uses "BTC-USD"; Alpaca uses "BTC/USD" for ORDERS but "BTCUSD"
+# (concatenated, no separator) for POSITIONS. Build a robust reverse map from
+# our known crypto universe so all three forms normalise to the yfinance form.
 _CRYPTO_SUFFIXES = ("-USD", "-USDT", "-BTC")
+_ALPACA_TO_YF: dict[str, str] = {}
+for _c in CRYPTO_TRADING_UNIVERSE:
+    if "-" in _c:
+        _base, _quote = _c.split("-", 1)
+        _ALPACA_TO_YF[f"{_base}/{_quote}"] = _c   # ETH/USD  (order form)
+        _ALPACA_TO_YF[f"{_base}{_quote}"] = _c    # ETHUSD   (position form)
 
 
 def _is_crypto(sym: str) -> bool:
-    return any(sym.endswith(s) for s in _CRYPTO_SUFFIXES) or "/" in sym
+    return any(sym.endswith(s) for s in _CRYPTO_SUFFIXES) or "/" in sym or sym in _ALPACA_TO_YF
 
 
 def _to_alpaca_symbol(sym: str) -> str:
-    """Convert yfinance ticker (BTC-USD) → Alpaca trading symbol (BTC/USD)."""
+    """Convert yfinance ticker (BTC-USD) → Alpaca order symbol (BTC/USD)."""
     for suffix in _CRYPTO_SUFFIXES:
         if sym.endswith(suffix):
             base = sym[: -len(suffix)]
@@ -32,7 +40,9 @@ def _to_alpaca_symbol(sym: str) -> str:
 
 
 def _from_alpaca_symbol(sym: str) -> str:
-    """Convert Alpaca symbol (BTC/USD) → yfinance ticker (BTC-USD)."""
+    """Convert any Alpaca symbol form (BTC/USD or BTCUSD) → yfinance (BTC-USD)."""
+    if sym in _ALPACA_TO_YF:
+        return _ALPACA_TO_YF[sym]
     if "/" in sym:
         return sym.replace("/", "-")
     return sym

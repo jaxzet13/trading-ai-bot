@@ -139,6 +139,36 @@ def cmd_web(args) -> None:
     )
 
 
+def cmd_brief(args) -> None:
+    """Daily analyst briefing: price action + news + flags on your holdings."""
+    from tradelab.db.models import init_db, get_engine, get_session_factory
+    from tradelab.execution.broker import PaperBroker
+    from tradelab.data.fetcher import fetch_bars
+    from tradelab.analyst import build_briefing, print_briefing
+
+    engine = get_engine()
+    init_db(engine)
+
+    broker = PaperBroker()
+    positions = broker.get_positions()
+    if not positions:
+        print("No open positions to brief on. Run `tradelab now` first.")
+        return
+    symbols = [p["symbol"] for p in positions]
+    print(f"Gathering briefing for {len(symbols)} holdings...")
+    bars = fetch_bars(symbols, years=1)
+    brief = build_briefing(broker, bars)
+    print_briefing(brief)
+
+
+def cmd_leaps(args) -> None:
+    """LEAPS options screener — analysis only, separate from the challenge."""
+    from tradelab.options_lab import screen_leaps, print_leaps
+    print("Screening long-dated calls (LEAPS) on high-conviction names...")
+    rows = screen_leaps()
+    print_leaps(rows)
+
+
 def cmd_challenge(args) -> None:
     """Print prop-firm challenge progress vs all limits."""
     from tradelab.db.models import init_db, get_engine, get_session_factory, EquitySnapshot
@@ -274,6 +304,8 @@ def main() -> None:
     )
 
     sub.add_parser("now", help="Run one trading cycle immediately (for testing / manual trigger)")
+    sub.add_parser("brief", help="Daily analyst briefing: price action + news + flags on holdings")
+    sub.add_parser("leaps", help="LEAPS options screener (analysis only, separate experiment)")
     sub.add_parser("challenge", help="Show prop-firm challenge progress vs all limits")
     sub.add_parser("run", help="Start the daily scheduler (9:31 AM + 1:00 PM ET, weekdays)")
     sub.add_parser("dashboard", help="Launch the live terminal dashboard")
@@ -285,6 +317,8 @@ def main() -> None:
 
     dispatch = {
         "now": cmd_now,
+        "brief": cmd_brief,
+        "leaps": cmd_leaps,
         "challenge": cmd_challenge,
         "backtest": cmd_backtest,
         "run": cmd_run,
