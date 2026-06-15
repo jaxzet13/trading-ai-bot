@@ -176,7 +176,13 @@ class PaperBroker:
         from alpaca.trading.enums import OrderSide, TimeInForce
 
         held = self._raw_qty(symbol)
-        qty = math.floor(held * fraction * 1e6) / 1e6  # round DOWN to avoid oversell
+        # When selling the full position (fraction=1.0), pass qty=held exactly
+        # so Alpaca can settle any remaining dust itself instead of leaving a
+        # sub-microcoin leftover. For partial sells, round DOWN to avoid oversell.
+        if fraction >= 1.0:
+            qty = held
+        else:
+            qty = math.floor(held * fraction * 1e6) / 1e6
         if qty <= 0:
             logger.info("Crypto sell skipped %s — nothing to sell (held=%g)", symbol, held)
             return None
