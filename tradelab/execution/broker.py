@@ -12,14 +12,37 @@ from tradelab.execution.risk import OrderIntent, RiskDecision, RiskGate
 
 logger = logging.getLogger(__name__)
 
+# Crypto symbols that Alpaca paper trading supports.
+# yfinance uses "BTC-USD"; Alpaca trading API uses "BTC/USD".
+_CRYPTO_SUFFIXES = ("-USD", "-USDT", "-BTC")
+
+
+def _is_crypto(sym: str) -> bool:
+    return any(sym.endswith(s) for s in _CRYPTO_SUFFIXES) or "/" in sym
+
+
+def _to_alpaca_symbol(sym: str) -> str:
+    """Convert yfinance ticker (BTC-USD) → Alpaca trading symbol (BTC/USD)."""
+    for suffix in _CRYPTO_SUFFIXES:
+        if sym.endswith(suffix):
+            base = sym[: -len(suffix)]
+            quote = suffix.lstrip("-")
+            return f"{base}/{quote}"
+    return sym
+
+
+def _from_alpaca_symbol(sym: str) -> str:
+    """Convert Alpaca symbol (BTC/USD) → yfinance ticker (BTC-USD)."""
+    if "/" in sym:
+        return sym.replace("/", "-")
+    return sym
+
 
 def _assert_paper_endpoint() -> None:
-    """Crash at startup if the configured URL is not the paper endpoint."""
     if "paper" not in ALPACA_PAPER_BASE_URL.lower():
         raise RuntimeError(
             f"SAFETY: ALPACA_PAPER_BASE_URL='{ALPACA_PAPER_BASE_URL}' does not contain 'paper'. "
-            "TradeLab will only connect to Alpaca's paper-trading endpoint. "
-            "Set ALPACA_PAPER_BASE_URL to https://paper-api.alpaca.markets in your .env"
+            "TradeLab will only connect to Alpaca's paper-trading endpoint."
         )
 
 
@@ -36,7 +59,6 @@ def _get_alpaca_client():
         raise ValueError(
             "ALPACA_API_KEY and ALPACA_SECRET_KEY must be set in .env for live paper trading."
         )
-    # paper=True forces the paper endpoint regardless of base_url
     return TradingClient(ALPACA_API_KEY, ALPACA_SECRET_KEY, paper=True)
 
 
@@ -63,7 +85,8 @@ class PaperBroker:
         positions = self.client.get_all_positions()
         return [
             {
-                "symbol": p.symbol,
+                # Normalise to yfinance format so the rest of the system is symbol-format-agnostic
+                "symbol": _from_alpaca_symbol(p.symbol),
                 "qty": float(p.qty),
                 "avg_entry_price": float(p.avg_entry_price),
                 "current_price": float(p.current_price),
@@ -96,20 +119,20 @@ class PaperBroker:
             from alpaca.trading.enums import OrderSide, TimeInForce
 
             side = OrderSide.BUY if intent.side == "buy" else OrderSide.SELL
-            # Use notional for buys (fractional), qty for sells
+            alpaca_sym = _to_alpaca_symbol(intent.symbol)
+            # Crypto trades 24/7 — DAY orders expire at 4 PM; use GTC instead.
+            tif = TimeInForce.GTC if _is_crypto(intent.symbol) else TimeInForce.DAY
+
             req = MarketOrderRequest(
-                symbol=intent.symbol,
+                symbol=alpaca_sym,
                 notional=round(intent.notional, 2),
                 side=side,
-                time_in_force=TimeInForce.DAY,
+                time_in_force=tif,
             )
             order = self.client.submit_order(req)
             logger.info(
                 "ORDER PLACED: %s %s $%.2f order_id=%s",
-                intent.side.upper(),
-                intent.symbol,
-                intent.notional,
-                order.id,
+                intent.side.upper(), alpaca_sym, intent.notional, order.id,
             )
             return str(order.id), decision
         except Exception as exc:
@@ -118,7 +141,8 @@ class PaperBroker:
 
     def close_position(self, symbol: str) -> Optional[str]:
         try:
-            order = self.client.close_position(symbol)
+            alpaca_sym = _to_alpaca_symbol(symbol)
+            order = self.client.close_position(alpaca_sym)
             logger.info("CLOSED position: %s order_id=%s", symbol, order.id)
             return str(order.id)
         except Exception as exc:
@@ -126,13 +150,14 @@ class PaperBroker:
             return None
 
     def trim_position(self, symbol: str, percentage: float) -> Optional[str]:
-        """Sell `percentage`% of an overweight position to bring it to target."""
+        """Sell `percentage`% of an overweight position back toward target."""
         try:
             from alpaca.trading.requests import ClosePositionRequest
 
+            alpaca_sym = _to_alpaca_symbol(symbol)
             pct = max(1.0, min(99.0, round(percentage, 2)))
             req = ClosePositionRequest(percentage=str(pct))
-            order = self.client.close_position(symbol, close_options=req)
+            order = self.client.close_position(alpaca_sym, close_options=req)
             logger.info("TRIMMED %s by %.1f%% order_id=%s", symbol, pct, order.id)
             return str(order.id)
         except Exception as exc:

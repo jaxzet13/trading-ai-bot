@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from tradelab.config import (
+    CRYPTO_MAX_POSITION_PCT,
     DAILY_LOSS_LIMIT_PCT,
     DRAWDOWN_HALT_PCT,
     MAX_OPEN_POSITIONS,
@@ -86,8 +87,10 @@ class RiskGate:
                 logger.warning("RISK REJECT [%s %s]: %s", intent.side, intent.symbol, msg)
                 return RiskDecision(False, msg)
 
-        # ── Max position size ──────────────────────────────────────────────
-        max_notional = equity * MAX_POSITION_PCT
+        # ── Max position size (tighter cap for crypto) ────────────────────
+        from tradelab.execution.broker import _is_crypto
+        cap = CRYPTO_MAX_POSITION_PCT if _is_crypto(intent.symbol) else MAX_POSITION_PCT
+        max_notional = equity * cap
         if intent.notional > max_notional and intent.side == "buy":
             msg = (
                 f"Order notional ${intent.notional:.2f} exceeds max "

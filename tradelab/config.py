@@ -28,6 +28,13 @@ HIGH_VOL_UNIVERSE: list[str] = [
     "MARA", "RIOT", "CLSK", "APP", "DKNG",
 ]
 
+# Crypto traded live via Alpaca paper (24/7, higher volatility than stocks).
+# Smaller position cap applied to account for 5-15% daily swings.
+CRYPTO_TRADING_UNIVERSE: list[str] = [
+    "BTC-USD", "ETH-USD", "SOL-USD", "DOGE-USD",
+]
+CRYPTO_MAX_POSITION_PCT: float = float(os.getenv("CRYPTO_MAX_POSITION_PCT", "0.08"))  # 8% per crypto name
+
 BENCHMARK: str = "SPY"
 CRYPTO_BENCHMARK: str = "BTC-USD"
 
@@ -53,7 +60,7 @@ RSI_EXIT: float = 60.0
 AGGRESSIVE_MODE: bool = os.getenv("AGGRESSIVE_MODE", "true").lower() == "true"
 
 MAX_POSITION_PCT: float = 0.20 if AGGRESSIVE_MODE else 0.02  # 20% max per position
-MAX_OPEN_POSITIONS: int = 12   # supports combined multi-strategy portfolio
+MAX_OPEN_POSITIONS: int = 15   # 12 stock slots + 3 crypto slots
 
 # Fraction of equity to actually deploy into positions each cycle. 0.95 keeps a
 # small cash buffer for fees/slippage while putting the rest to work. The old

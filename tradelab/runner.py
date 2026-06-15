@@ -12,9 +12,11 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from tradelab.config import (
-    UNIVERSE, HIGH_VOL_UNIVERSE, MAX_POSITION_PCT, MAX_OPEN_POSITIONS,
+    UNIVERSE, HIGH_VOL_UNIVERSE, CRYPTO_TRADING_UNIVERSE,
+    MAX_POSITION_PCT, CRYPTO_MAX_POSITION_PCT, MAX_OPEN_POSITIONS,
     DAILY_LOSS_LIMIT_PCT, PROFIT_TARGET_PCT, TARGET_DEPLOYMENT,
 )
+from tradelab.execution.broker import _is_crypto
 from tradelab.data.fetcher import fetch_bars
 from tradelab.db.models import EquitySnapshot, Signal, SystemState, Trade
 from tradelab.execution.broker import PaperBroker
@@ -152,9 +154,9 @@ def run_daily_cycle(session: Session) -> None:
         logger.warning("System halted — skipping signal generation. Run `tradelab resume` to unlock.")
         return
 
-    # ── Fetch bars ────────────────────────────────────────────────────────
-    all_symbols = list(set(UNIVERSE + HIGH_VOL_UNIVERSE))
-    logger.info("Fetching %d symbols (1 year daily bars)...", len(all_symbols))
+    # ── Fetch bars (stocks + crypto) ─────────────────────────────────────
+    all_symbols = list(set(UNIVERSE + HIGH_VOL_UNIVERSE + CRYPTO_TRADING_UNIVERSE))
+    logger.info("Fetching %d symbols incl. crypto (1 year daily bars)...", len(all_symbols))
     bars = fetch_bars(all_symbols, years=1)
     if not bars:
         logger.error("No bars fetched — aborting cycle.")
@@ -227,7 +229,8 @@ def run_daily_cycle(session: Session) -> None:
     desired_positions: dict[str, tuple[str, float, float]] = {}
     for sym, score in ranked:
         weight = (score / total_score) * TARGET_DEPLOYMENT
-        weight = min(weight, MAX_POSITION_PCT)
+        cap = CRYPTO_MAX_POSITION_PCT if _is_crypto(sym) else MAX_POSITION_PCT
+        weight = min(weight, cap)
         if weight < 0.01:
             continue
         label = "+".join(sorted(set(n for n, _ in sym_signals[sym])))
