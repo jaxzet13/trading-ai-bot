@@ -83,6 +83,16 @@ def cmd_run(args) -> None:
         with SessionFactory() as session:
             run_daily_cycle(session)
 
+    def options_job():
+        from tradelab.execution.broker import PaperBroker
+        from tradelab.options_lab import run_options_cycle, print_options_run
+        try:
+            broker = PaperBroker()
+            summary = run_options_cycle(broker)
+            print_options_run(summary)
+        except Exception as exc:
+            logger.error("Options cycle failed: %s", exc)
+
     scheduler = BlockingScheduler(timezone=TIMEZONE)
     # Morning run: signals fresh at market open
     scheduler.add_job(
@@ -93,6 +103,15 @@ def cmd_run(args) -> None:
         day_of_week="mon-fri",
         id="morning",
     )
+    # Morning options run: manage LEAPS positions + buy new ones
+    scheduler.add_job(
+        options_job,
+        "cron",
+        hour=MARKET_OPEN_HOUR,
+        minute=MARKET_OPEN_MINUTE + 5,
+        day_of_week="mon-fri",
+        id="morning_options",
+    )
     # Midday run: rebalance / catch new entries that emerged since open
     scheduler.add_job(
         daily_job,
@@ -102,11 +121,21 @@ def cmd_run(args) -> None:
         day_of_week="mon-fri",
         id="midday",
     )
+    # Midday options check: manage TP/SL on open option positions
+    scheduler.add_job(
+        options_job,
+        "cron",
+        hour=13,
+        minute=5,
+        day_of_week="mon-fri",
+        id="midday_options",
+    )
     logger.info(
-        "Scheduler started — runs at %02d:%02d and 13:00 %s on weekdays",
+        "Scheduler started — systematic: %02d:%02d & 13:00 ET | options: %02d:%02d & 13:05 ET | weekdays only",
         MARKET_OPEN_HOUR,
         MARKET_OPEN_MINUTE,
-        TIMEZONE,
+        MARKET_OPEN_HOUR,
+        MARKET_OPEN_MINUTE + 5,
     )
     try:
         scheduler.start()
