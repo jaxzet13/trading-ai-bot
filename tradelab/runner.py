@@ -15,6 +15,7 @@ from tradelab.config import (
     UNIVERSE, HIGH_VOL_UNIVERSE, CRYPTO_TRADING_UNIVERSE,
     MAX_POSITION_PCT, CRYPTO_MAX_POSITION_PCT, MAX_OPEN_POSITIONS,
     DAILY_LOSS_LIMIT_PCT, PROFIT_TARGET_PCT, TARGET_DEPLOYMENT,
+    PARTIAL_TP_PCT, PARTIAL_TP_FRACTION, TRAILING_STOP_PCT,
 )
 from tradelab.execution.broker import _is_crypto
 from tradelab.data.fetcher import fetch_bars
@@ -93,6 +94,84 @@ def _get_position_losses(positions: list[dict]) -> dict[str, float]:
     return {p["symbol"]: p["unrealized_pl"] for p in positions}
 
 
+# ── per-symbol state (partial-TP flag + trailing-stop high-water mark) ──────
+def _state_get(session: Session, key: str) -> str | None:
+    row = session.query(SystemState).filter_by(key=key).first()
+    return row.value if row else None
+
+
+def _state_set(session: Session, key: str, value: str) -> None:
+    row = session.query(SystemState).filter_by(key=key).first()
+    if row:
+        row.value = value
+    else:
+        session.add(SystemState(key=key, value=value))
+    session.commit()
+
+
+def _state_del(session: Session, key: str) -> None:
+    session.query(SystemState).filter_by(key=key).delete()
+    session.commit()
+
+
+def _clear_symbol_state(session: Session, sym: str) -> None:
+    _state_del(session, f"ptp:{sym}")
+    _state_del(session, f"peak:{sym}")
+
+
+def manage_open_positions(session: Session, broker: PaperBroker,
+                          positions: list[dict]) -> set[str]:
+    """
+    Partial take-profit + trailing stop. Returns the set of symbols now in
+    "riding" mode (partial profit banked, remainder trailing) so the
+    rebalancer leaves them alone instead of buying them back up.
+
+    Rule:
+      • Position up >= PARTIAL_TP_PCT and not yet banked → sell PARTIAL_TP_FRACTION,
+        mark as riding, record the high-water price.
+      • Riding position → update high-water mark; if price falls TRAILING_STOP_PCT
+        from the peak, close the remainder and free the capital.
+    """
+    riding: set[str] = set()
+    for p in positions:
+        sym = p["symbol"]
+        ep = p["avg_entry_price"]
+        cp = p["current_price"]
+        if ep <= 0 or cp <= 0:
+            continue
+        gain = (cp - ep) / ep
+        banked = _state_get(session, f"ptp:{sym}") == "1"
+
+        if not banked:
+            if gain >= PARTIAL_TP_PCT:
+                order_id = broker.trim_position(sym, PARTIAL_TP_FRACTION * 100)
+                if order_id:
+                    _state_set(session, f"ptp:{sym}", "1")
+                    _state_set(session, f"peak:{sym}", str(cp))
+                    riding.add(sym)
+                    logger.info(
+                        "PARTIAL TP  %-6s +%.2f%% → banked %.0f%%, rest trailing",
+                        sym, gain * 100, PARTIAL_TP_FRACTION * 100,
+                    )
+        else:
+            peak = float(_state_get(session, f"peak:{sym}") or cp)
+            if cp > peak:
+                peak = cp
+                _state_set(session, f"peak:{sym}", str(peak))
+            drop = (cp - peak) / peak if peak > 0 else 0.0
+            if drop <= -TRAILING_STOP_PCT:
+                order_id = broker.close_position(sym)
+                if order_id:
+                    _clear_symbol_state(session, sym)
+                    logger.info(
+                        "TRAIL STOP  %-6s -%.2f%% from peak → closed remainder",
+                        sym, abs(drop) * 100,
+                    )
+            else:
+                riding.add(sym)
+    return riding
+
+
 def run_daily_cycle(session: Session) -> None:
     broker = PaperBroker()
     risk = RiskGate()
@@ -166,13 +245,26 @@ def run_daily_cycle(session: Session) -> None:
     # ── Open positions ────────────────────────────────────────────────────
     try:
         current_positions = broker.get_positions()
-        open_symbols = [p["symbol"] for p in current_positions]
-        position_losses = _get_position_losses(current_positions)
-        current_value = {p["symbol"]: p["market_value"] for p in current_positions}
-        logger.info("Open positions: %s", open_symbols or "none")
+        logger.info("Open positions: %s",
+                    [p["symbol"] for p in current_positions] or "none")
     except Exception as exc:
         logger.error("Could not fetch positions: %s", exc)
         return
+
+    # ── Partial take-profit + trailing stop (bank gains, let winners run) ──
+    riding = manage_open_positions(session, broker, current_positions)
+    if riding:
+        logger.info("Riding (profit banked, trailing): %s", sorted(riding))
+
+    # Re-read positions after any partial sells / trail stops fired
+    try:
+        current_positions = broker.get_positions()
+    except Exception as exc:
+        logger.error("Could not re-fetch positions: %s", exc)
+        return
+    open_symbols = [p["symbol"] for p in current_positions]
+    position_losses = _get_position_losses(current_positions)
+    current_value = {p["symbol"]: p["market_value"] for p in current_positions}
 
     # ── Run every strategy, collect per-symbol signals ────────────────────
     # sym -> list of (strategy_name, weight) for strategies that want it
@@ -244,10 +336,13 @@ def run_daily_cycle(session: Session) -> None:
     )
 
     # ── Close positions no longer signalled ───────────────────────────────
+    # Riding positions (profit banked, trailing) are exempt — their exit is
+    # owned by the trailing stop, not the signal.
     for sym in open_symbols:
-        if sym not in desired_positions:
+        if sym not in desired_positions and sym not in riding:
             order_id = broker.close_position(sym)
             if order_id:
+                _clear_symbol_state(session, sym)
                 trade = (
                     session.query(Trade)
                     .filter_by(symbol=sym, is_open=True)
@@ -261,8 +356,10 @@ def run_daily_cycle(session: Session) -> None:
 
     # ── Trim overweight positions back toward target ──────────────────────
     # Sell the excess on any held name that has drifted >15% above its target
-    # weight. This frees cash and prevents deployment creeping over 100%.
+    # weight. Riding positions are left alone — we want the winner to run.
     for sym, (_, weight, _) in desired_positions.items():
+        if sym in riding:
+            continue
         held = current_value.get(sym, 0.0)
         target = equity * weight
         if held > target * 1.15 and (held - target) > 25.0:
@@ -280,6 +377,10 @@ def run_daily_cycle(session: Session) -> None:
     cash_budget = max(cash, 0.0)
     orders_placed = 0
     for sym, (strat_name, weight, signal_val) in desired_positions.items():
+        if sym in riding:
+            # Profit already banked — don't buy it back up, let the rest run.
+            logger.info("SKIP %-6s riding (trailing stop active)", sym)
+            continue
         target_notional = equity * weight
         held = current_value.get(sym, 0.0)
         notional = target_notional - held

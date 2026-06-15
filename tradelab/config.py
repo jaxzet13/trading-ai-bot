@@ -77,6 +77,18 @@ DAILY_LOSS_LIMIT_PCT: float = float(os.getenv("DAILY_LOSS_LIMIT_PCT", "0.04"))  
 SYMBOL_LOSS_LIMIT_PCT: float = float(os.getenv("SYMBOL_LOSS_LIMIT_PCT", "0.03"))  # 3% of account per symbol
 PROFIT_TARGET_PCT: float = float(os.getenv("PROFIT_TARGET_PCT", "0.07"))     # 7% to pass challenge
 
+# ---------------------------------------------------------------------------
+# Partial take-profit + trailing stop
+# ---------------------------------------------------------------------------
+# When a position is up PARTIAL_TP_PCT, sell PARTIAL_TP_FRACTION of it to bank
+# the gain, then let the rest ride protected by a trailing stop. The freed cash
+# is redeployed into fresh signals on the next cycle. Backtest showed selling
+# the WHOLE position at +1.5% cuts profit ~85% (kills the big winners), so we
+# only take half and let the remainder run.
+PARTIAL_TP_PCT: float = float(os.getenv("PARTIAL_TP_PCT", "0.015"))       # +1.5% triggers it
+PARTIAL_TP_FRACTION: float = float(os.getenv("PARTIAL_TP_FRACTION", "0.5"))  # sell half
+TRAILING_STOP_PCT: float = float(os.getenv("TRAILING_STOP_PCT", "0.03"))  # close remainder if it falls 3% from peak
+
 # Simulated leverage for backtests (1.0 = none). Alpaca paper accounts allow
 # up to 2x intraday margin on equities.
 BACKTEST_LEVERAGE: float = float(os.getenv("BACKTEST_LEVERAGE", "1.0"))
