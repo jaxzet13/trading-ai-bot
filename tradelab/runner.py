@@ -17,7 +17,7 @@ from tradelab.config import (
     DAILY_LOSS_LIMIT_PCT, PROFIT_TARGET_PCT, TARGET_DEPLOYMENT,
     PARTIAL_TP_PCT, PARTIAL_TP_FRACTION, TRAILING_STOP_PCT,
 )
-from tradelab.execution.broker import _is_crypto
+from tradelab.execution.broker import _is_crypto, _is_option
 from tradelab.data.fetcher import fetch_bars
 from tradelab.db.models import EquitySnapshot, Signal, SystemState, Trade
 from tradelab.execution.broker import PaperBroker
@@ -248,8 +248,11 @@ def run_daily_cycle(session: Session) -> None:
     logger.info("Bars ready for %d symbols.", len(bars))
 
     # ── Open positions ────────────────────────────────────────────────────
+    # Options are managed by the separate options engine — exclude them here so
+    # the systematic stock/crypto engine never touches leveraged contracts.
     try:
-        current_positions = broker.get_positions()
+        current_positions = [p for p in broker.get_positions()
+                             if not _is_option(p["symbol"])]
         logger.info("Open positions: %s",
                     [p["symbol"] for p in current_positions] or "none")
     except Exception as exc:
@@ -264,7 +267,8 @@ def run_daily_cycle(session: Session) -> None:
 
     # Re-read positions after any partial sells / trail stops fired
     try:
-        current_positions = broker.get_positions()
+        current_positions = [p for p in broker.get_positions()
+                             if not _is_option(p["symbol"])]
     except Exception as exc:
         logger.error("Could not re-fetch positions: %s", exc)
         return

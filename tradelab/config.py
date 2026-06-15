@@ -89,6 +89,23 @@ PARTIAL_TP_PCT: float = float(os.getenv("PARTIAL_TP_PCT", "0.015"))       # +1.5
 PARTIAL_TP_FRACTION: float = float(os.getenv("PARTIAL_TP_FRACTION", "0.5"))  # sell half
 TRAILING_STOP_PCT: float = float(os.getenv("TRAILING_STOP_PCT", "0.03"))  # close remainder if it falls 3% from peak
 
+# ---------------------------------------------------------------------------
+# Options / LEAPS experiment  (SEPARATE from the systematic engine)
+# ---------------------------------------------------------------------------
+# Real leveraged options on Alpaca paper. This is the "155% in a month" test.
+# It is high-variance: LEAPS can go to ZERO. The total options allocation is
+# capped at OPTIONS_BUDGET_PCT of equity so a full wipeout only costs that
+# slice. The systematic stock/crypto engine ignores option positions entirely.
+OPTIONS_UNDERLYINGS: list[str] = [
+    "NVDA", "TSLA", "AMD", "PLTR", "COIN", "MSTR", "AAPL", "AMZN", "GOOGL",
+]
+OPTIONS_BUDGET_PCT: float = float(os.getenv("OPTIONS_BUDGET_PCT", "0.20"))     # 20% of equity into options
+OPTIONS_MAX_POSITIONS: int = int(os.getenv("OPTIONS_MAX_POSITIONS", "5"))
+OPTIONS_TARGET_OTM_PCT: float = float(os.getenv("OPTIONS_TARGET_OTM_PCT", "0.10"))  # ~10% OTM calls
+OPTIONS_MIN_DTE: int = int(os.getenv("OPTIONS_MIN_DTE", "200"))                # long-dated only
+OPTIONS_PROFIT_TARGET: float = float(os.getenv("OPTIONS_PROFIT_TARGET", "1.0"))    # +100% take-profit
+OPTIONS_STOP_LOSS: float = float(os.getenv("OPTIONS_STOP_LOSS", "0.5"))        # -50% stop
+
 # Simulated leverage for backtests (1.0 = none). Alpaca paper accounts allow
 # up to 2x intraday margin on equities.
 BACKTEST_LEVERAGE: float = float(os.getenv("BACKTEST_LEVERAGE", "1.0"))

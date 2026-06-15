@@ -189,6 +189,16 @@ def cmd_leaps(args) -> None:
     print_leaps(rows)
 
 
+def cmd_options(args) -> None:
+    """Run the LIVE options/LEAPS cycle on Alpaca paper (separate experiment)."""
+    from tradelab.execution.broker import PaperBroker
+    from tradelab.options_lab import run_options_cycle, print_options_run
+    print("Running LIVE options/LEAPS cycle on Alpaca paper...")
+    broker = PaperBroker()
+    summary = run_options_cycle(broker)
+    print_options_run(summary)
+
+
 def cmd_challenge(args) -> None:
     """Print prop-firm challenge progress vs all limits."""
     from tradelab.db.models import init_db, get_engine, get_session_factory, EquitySnapshot
@@ -327,7 +337,8 @@ def main() -> None:
     sub.add_parser("brief", help="Daily analyst briefing: price action + news + flags on holdings")
     sub.add_parser("journal", help="Show the recent trade journal (what the system did)")
     sub.add_parser("review", help="Run this week's self-review vs the S&P, with a grade")
-    sub.add_parser("leaps", help="LEAPS options screener (analysis only, separate experiment)")
+    sub.add_parser("leaps", help="LEAPS options screener (analysis only)")
+    sub.add_parser("options", help="Run the LIVE options/LEAPS cycle on Alpaca paper")
     sub.add_parser("challenge", help="Show prop-firm challenge progress vs all limits")
     sub.add_parser("run", help="Start the daily scheduler (9:31 AM + 1:00 PM ET, weekdays)")
     sub.add_parser("dashboard", help="Launch the live terminal dashboard")
@@ -343,6 +354,7 @@ def main() -> None:
         "journal": cmd_journal,
         "review": cmd_review,
         "leaps": cmd_leaps,
+        "options": cmd_options,
         "challenge": cmd_challenge,
         "backtest": cmd_backtest,
         "run": cmd_run,

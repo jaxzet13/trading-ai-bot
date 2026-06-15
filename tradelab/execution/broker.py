@@ -29,6 +29,15 @@ def _is_crypto(sym: str) -> bool:
     return any(sym.endswith(s) for s in _CRYPTO_SUFFIXES) or "/" in sym or sym in _ALPACA_TO_YF
 
 
+import re as _re
+_OCC_RE = _re.compile(r"^[A-Z]{1,6}\d{6}[CP]\d{8}$")
+
+
+def _is_option(sym: str) -> bool:
+    """True for OCC option symbols like AAPL270115C00325000."""
+    return bool(_OCC_RE.match(sym))
+
+
 def _to_alpaca_symbol(sym: str) -> str:
     """Convert yfinance ticker (BTC-USD) → Alpaca order symbol (BTC/USD)."""
     for suffix in _CRYPTO_SUFFIXES:
@@ -172,4 +181,99 @@ class PaperBroker:
             return str(order.id)
         except Exception as exc:
             logger.error("Failed to trim %s: %s", symbol, exc)
+            return None
+
+    # ── Options ────────────────────────────────────────────────────────────
+    def find_leaps(self, underlying: str, otm_pct: float, min_dte: int) -> Optional[dict]:
+        """Find the nearest-to-target OTM long-dated CALL contract for `underlying`."""
+        try:
+            from alpaca.trading.requests import GetOptionContractsRequest
+            from alpaca.trading.enums import ContractType, AssetStatus
+            from datetime import date, timedelta
+
+            spot = self._spot_price(underlying)
+            if not spot:
+                return None
+            target_strike = spot * (1 + otm_pct)
+            req = GetOptionContractsRequest(
+                underlying_symbols=[underlying],
+                type=ContractType.CALL,
+                status=AssetStatus.ACTIVE,
+                expiration_date_gte=(date.today() + timedelta(days=min_dte)).isoformat(),
+                strike_price_gte=str(round(spot)),
+                limit=200,
+            )
+            contracts = self.client.get_option_contracts(req).option_contracts
+            if not contracts:
+                return None
+            # nearest expiry that qualifies, then strike closest to target
+            min_exp = min(c.expiration_date for c in contracts)
+            same_exp = [c for c in contracts if c.expiration_date == min_exp]
+            best = min(same_exp, key=lambda c: abs(float(c.strike_price) - target_strike))
+            return {"symbol": best.symbol, "strike": float(best.strike_price),
+                    "expiry": str(best.expiration_date), "spot": spot}
+        except Exception as exc:
+            logger.warning("find_leaps failed for %s: %s", underlying, exc)
+            return None
+
+    def _spot_price(self, underlying: str) -> Optional[float]:
+        try:
+            import yfinance as yf
+            px = yf.Ticker(underlying).history(period="1d")["Close"]
+            return float(px.iloc[-1]) if len(px) else None
+        except Exception:
+            return None
+
+    def option_quote(self, symbol: str) -> Optional[float]:
+        """Latest ask price for an option contract (per share; ×100 = contract cost)."""
+        try:
+            from alpaca.data.historical.option import OptionHistoricalDataClient
+            from alpaca.data.requests import OptionLatestQuoteRequest
+
+            dc = OptionHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY)
+            q = dc.get_option_latest_quote(OptionLatestQuoteRequest(symbol_or_symbols=[symbol]))
+            quote = q.get(symbol)
+            if quote and quote.ask_price:
+                return float(quote.ask_price)
+            return None
+        except Exception as exc:
+            logger.warning("option_quote failed for %s: %s", symbol, exc)
+            return None
+
+    def buy_option(self, symbol: str, qty: int) -> Optional[str]:
+        try:
+            from alpaca.trading.requests import MarketOrderRequest
+            from alpaca.trading.enums import OrderSide, TimeInForce
+
+            req = MarketOrderRequest(
+                symbol=symbol, qty=qty, side=OrderSide.BUY, time_in_force=TimeInForce.DAY,
+            )
+            order = self.client.submit_order(req)
+            logger.info("OPTION BUY %s x%d order_id=%s", symbol, qty, order.id)
+            return str(order.id)
+        except Exception as exc:
+            logger.error("Option buy failed %s: %s", symbol, exc)
+            return None
+
+    def get_option_positions(self) -> list[dict]:
+        out = []
+        for p in self.client.get_all_positions():
+            if _is_option(p.symbol):
+                out.append({
+                    "symbol": p.symbol, "qty": float(p.qty),
+                    "avg_entry_price": float(p.avg_entry_price),
+                    "current_price": float(p.current_price),
+                    "unrealized_pl": float(p.unrealized_pl),
+                    "unrealized_plpc": float(p.unrealized_plpc),
+                    "market_value": float(p.market_value),
+                })
+        return out
+
+    def close_option(self, symbol: str) -> Optional[str]:
+        try:
+            order = self.client.close_position(symbol)
+            logger.info("OPTION CLOSED %s order_id=%s", symbol, order.id)
+            return str(order.id)
+        except Exception as exc:
+            logger.error("Failed to close option %s: %s", symbol, exc)
             return None

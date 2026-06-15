@@ -23,6 +23,12 @@ WHY ANALYSIS-ONLY:
 import logging
 from datetime import date, datetime
 
+from tradelab.config import (
+    OPTIONS_UNDERLYINGS, OPTIONS_BUDGET_PCT, OPTIONS_MAX_POSITIONS,
+    OPTIONS_TARGET_OTM_PCT, OPTIONS_MIN_DTE,
+    OPTIONS_PROFIT_TARGET, OPTIONS_STOP_LOSS,
+)
+
 logger = logging.getLogger(__name__)
 
 # Names to screen for LEAPS (liquid, optionable, high-conviction)
@@ -120,3 +126,109 @@ def print_leaps(rows: list[dict]) -> None:
     print("     Trade these ONLY on a separate paper account, never the FT+ challenge,")
     print("     and size each one as a small % you can afford to lose entirely.")
     print(f"{'='*80}\n")
+
+
+# ── live options execution on Alpaca paper ──────────────────────────────────
+
+def manage_option_positions(broker) -> dict:
+    """Take-profit / stop-loss on existing option positions."""
+    closed_tp, closed_sl = [], []
+    for p in broker.get_option_positions():
+        plpc = p["unrealized_plpc"]   # fraction, e.g. +1.0 = +100%
+        if plpc >= OPTIONS_PROFIT_TARGET:
+            if broker.close_option(p["symbol"]):
+                closed_tp.append(p["symbol"])
+                logger.info("OPTION TP  %s +%.0f%% → closed", p["symbol"], plpc * 100)
+        elif plpc <= -OPTIONS_STOP_LOSS:
+            if broker.close_option(p["symbol"]):
+                closed_sl.append(p["symbol"])
+                logger.info("OPTION SL  %s %.0f%% → closed", p["symbol"], plpc * 100)
+    return {"tp": closed_tp, "sl": closed_sl}
+
+
+def run_options_cycle(broker) -> dict:
+    """
+    Buy LEAPS calls up to OPTIONS_BUDGET_PCT of equity, capped at
+    OPTIONS_MAX_POSITIONS. Take-profit/stop-loss handled first.
+    Returns a summary dict.
+    """
+    acct = broker.get_account()
+    equity = acct["equity"]
+    budget = equity * OPTIONS_BUDGET_PCT
+
+    mgmt = manage_option_positions(broker)
+
+    existing = broker.get_option_positions()
+    held_underlyings = {p["symbol"][:_underlying_len(p["symbol"])] for p in existing}
+    options_value = sum(p["market_value"] for p in existing)
+    available = budget - options_value
+    slots = OPTIONS_MAX_POSITIONS - len(existing)
+
+    bought = []
+    if available < 100 or slots <= 0:
+        logger.info("Options: no room (available $%.0f, slots %d)", available, slots)
+        return {"bought": bought, **mgmt, "options_value": options_value,
+                "budget": budget, "equity": equity}
+
+    # Screen candidates we don't already hold, rank by lowest breakeven move
+    candidates = []
+    for u in OPTIONS_UNDERLYINGS:
+        if u in held_underlyings:
+            continue
+        leap = broker.find_leaps(u, OPTIONS_TARGET_OTM_PCT, OPTIONS_MIN_DTE)
+        if not leap:
+            continue
+        ask = broker.option_quote(leap["symbol"])
+        if not ask or ask <= 0:
+            continue
+        breakeven = leap["strike"] + ask
+        be_move = (breakeven / leap["spot"] - 1) * 100
+        candidates.append({**leap, "ask": ask, "be_move": be_move,
+                           "cost": ask * 100})
+    candidates.sort(key=lambda c: c["be_move"])
+    candidates = candidates[:slots]
+    if not candidates:
+        return {"bought": bought, **mgmt, "options_value": options_value,
+                "budget": budget, "equity": equity}
+
+    per_name = available / len(candidates)
+    for c in candidates:
+        qty = int(per_name // c["cost"])
+        if qty < 1:
+            logger.info("Options: skip %s — 1 contract ($%.0f) exceeds per-name budget ($%.0f)",
+                        c["symbol"], c["cost"], per_name)
+            continue
+        order_id = broker.buy_option(c["symbol"], qty)
+        if order_id:
+            bought.append({"symbol": c["symbol"], "qty": qty,
+                           "cost": qty * c["cost"], "be_move": c["be_move"]})
+    return {"bought": bought, **mgmt, "options_value": options_value,
+            "budget": budget, "equity": equity}
+
+
+def _underlying_len(occ: str) -> int:
+    """Length of the underlying portion of an OCC symbol (before the 6-digit date)."""
+    import re
+    m = re.match(r"^([A-Z]{1,6})\d{6}[CP]\d{8}$", occ)
+    return len(m.group(1)) if m else 0
+
+
+def print_options_run(summary: dict) -> None:
+    print(f"\n{'='*64}")
+    print("  🧪 OPTIONS / LEAPS RUN — live on Alpaca paper")
+    print(f"{'='*64}")
+    print(f"  Equity ${summary['equity']:,.0f}   "
+          f"Options budget ${summary['budget']:,.0f} ({OPTIONS_BUDGET_PCT*100:.0f}%)   "
+          f"Currently in options ${summary['options_value']:,.0f}")
+    if summary.get("tp"):
+        print(f"  🎯 Took profit: {', '.join(summary['tp'])}")
+    if summary.get("sl"):
+        print(f"  🛑 Stopped out: {', '.join(summary['sl'])}")
+    if summary["bought"]:
+        print("\n  🟢 BOUGHT:")
+        for b in summary["bought"]:
+            print(f"    {b['symbol']:<22} x{b['qty']:<3} ${b['cost']:>8,.0f}  "
+                  f"(needs {b['be_move']:+.1f}% to break even)")
+    else:
+        print("\n  No new option positions opened this run.")
+    print(f"{'='*64}\n")
