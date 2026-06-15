@@ -218,6 +218,15 @@ def cmd_leaps(args) -> None:
     print_leaps(rows)
 
 
+def cmd_options_backtest(args) -> None:
+    """Backtest the LEAPS options strategy using Black-Scholes pricing on historical data."""
+    from tradelab.backtest.options_backtest import run_all_options_backtest, print_options_backtest
+    hold = getattr(args, "hold_days", 60)
+    print(f"Running options backtest ({hold}-day hold period)...")
+    results = run_all_options_backtest(hold_days=hold)
+    print_options_backtest(results, hold_days=hold)
+
+
 def cmd_options(args) -> None:
     """Run the LIVE options/LEAPS cycle on Alpaca paper (separate experiment)."""
     from tradelab.execution.broker import PaperBroker
@@ -368,6 +377,8 @@ def main() -> None:
     sub.add_parser("review", help="Run this week's self-review vs the S&P, with a grade")
     sub.add_parser("leaps", help="LEAPS options screener (analysis only)")
     sub.add_parser("options", help="Run the LIVE options/LEAPS cycle on Alpaca paper")
+    p_ob = sub.add_parser("options-backtest", help="Backtest LEAPS strategy via Black-Scholes on historical data")
+    p_ob.add_argument("--hold-days", type=int, default=60, help="Days to hold each simulated position (default: 60)")
     sub.add_parser("challenge", help="Show prop-firm challenge progress vs all limits")
     sub.add_parser("run", help="Start the daily scheduler (9:31 AM + 1:00 PM ET, weekdays)")
     sub.add_parser("dashboard", help="Launch the live terminal dashboard")
@@ -384,6 +395,7 @@ def main() -> None:
         "review": cmd_review,
         "leaps": cmd_leaps,
         "options": cmd_options,
+        "options-backtest": cmd_options_backtest,
         "challenge": cmd_challenge,
         "backtest": cmd_backtest,
         "run": cmd_run,
