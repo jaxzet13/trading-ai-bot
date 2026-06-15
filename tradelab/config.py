@@ -62,10 +62,11 @@ AGGRESSIVE_MODE: bool = os.getenv("AGGRESSIVE_MODE", "true").lower() == "true"
 MAX_POSITION_PCT: float = 0.20 if AGGRESSIVE_MODE else 0.02  # 20% max per position
 MAX_OPEN_POSITIONS: int = 15   # 12 stock slots + 3 crypto slots
 
-# Fraction of equity to actually deploy into positions each cycle. 0.95 keeps a
-# small cash buffer for fees/slippage while putting the rest to work. The old
-# behaviour left ~half the account idle, which capped returns.
-TARGET_DEPLOYMENT: float = float(os.getenv("TARGET_DEPLOYMENT", "0.95"))
+# Fraction of equity the SYSTEMATIC stock/crypto engine deploys each cycle.
+# The options engine is now the primary driver (see OPTIONS_BUDGET_PCT below),
+# so stocks take only the remaining slice — roughly 15% of the account — while
+# LEAPS get ~85%. Options + stocks deployment should sum to ≲1.0 to avoid margin.
+TARGET_DEPLOYMENT: float = float(os.getenv("TARGET_DEPLOYMENT", "0.15"))
 
 # ---------------------------------------------------------------------------
 # Prop-firm / funded-account challenge rules
@@ -103,8 +104,14 @@ OPTIONS_UNDERLYINGS: list[str] = [
     "NVDA", "TSLA", "AMD", "PLTR", "COIN", "MSTR", "AAPL", "AMZN", "GOOGL",
     "HIMS", "SOFI", "RIVN", "UPST", "DKNG", "RKLB", "SMCI", "MU", "SNOW", "CRWD", "MRVL",
 ]
-OPTIONS_BUDGET_PCT: float = float(os.getenv("OPTIONS_BUDGET_PCT", "0.20"))     # 20% of equity into options
-OPTIONS_MAX_POSITIONS: int = int(os.getenv("OPTIONS_MAX_POSITIONS", "5"))
+# Options are now the PRIMARY engine (~85% of the account); the systematic
+# stock/crypto engine takes the rest (TARGET_DEPLOYMENT above). This mirrors the
+# "155% in a month" video's heavy-leverage approach. ⚠️ High variance: a flat or
+# down month in LEAPS can cut the account roughly in half. More slots are used
+# so this large budget spreads across multiple catalyst names instead of betting
+# it all on a handful of contracts.
+OPTIONS_BUDGET_PCT: float = float(os.getenv("OPTIONS_BUDGET_PCT", "0.85"))     # 85% of equity into options
+OPTIONS_MAX_POSITIONS: int = int(os.getenv("OPTIONS_MAX_POSITIONS", "10"))
 OPTIONS_TARGET_OTM_PCT: float = float(os.getenv("OPTIONS_TARGET_OTM_PCT", "0.10"))  # ~10% OTM calls
 OPTIONS_MIN_DTE: int = int(os.getenv("OPTIONS_MIN_DTE", "200"))                # long-dated only
 OPTIONS_CATALYST_WINDOW: int = int(os.getenv("OPTIONS_CATALYST_WINDOW", "120"))  # earnings within N days = catalyst
