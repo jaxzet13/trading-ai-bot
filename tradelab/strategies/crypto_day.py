@@ -147,7 +147,7 @@ def generate_signals(symbol: str, bars: pd.DataFrame) -> list[dict]:
     ema0 = _f(ema20)
     vol0 = _f(volume)
     vavg = _f(vol_avg)
-    vol_ratio = vol0 / vavg if vavg > 0 else 0.0
+    vol_ratio = vol0 / vavg if vavg > 1 else 0.0  # guard against near-zero avg
     bar_chg = (c0 - c1) / c1 * 100 if c1 > 0 else 0.0
 
     signals: list[dict] = []

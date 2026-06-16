@@ -202,16 +202,10 @@ def run_crypto_day_cycle(session, broker) -> dict:
     3. Scan for new signals
     4. Execute highest-conviction signals within budget
     """
-    from tradelab.strategies.crypto_day import scan_crypto, in_trading_window
+    from tradelab.strategies.crypto_day import scan_crypto
 
-    # Step 1: Manage open positions
+    # Step 1: Manage open positions (runs 24/7 — always check stops/TP/time exits)
     mgmt = manage_crypto_day_positions(session, broker)
-
-    # Step 2: Trading window check
-    if not in_trading_window():
-        utc_h = datetime.now(timezone.utc).hour
-        logger.info("Crypto day: outside trading window (UTC %02d:00, window 12-22)", utc_h)
-        return {"mgmt": mgmt, "bought": [], "skipped": "outside_window"}
 
     # Step 3: Check capacity
     open_positions = _load_positions(session)
@@ -319,15 +313,11 @@ def scan_only() -> list[dict]:
 # ── Print helpers ─────────────────────────────────────────────────────────────
 
 def print_crypto_scan(signals: list[dict]) -> None:
-    from datetime import datetime, timezone
-    from tradelab.strategies.crypto_day import WINDOW_START_UTC, WINDOW_END_UTC
-    utc_h = datetime.now(timezone.utc).hour
-    window = WINDOW_START_UTC <= utc_h < WINDOW_END_UTC
-
+    utc_now = datetime.now(timezone.utc).strftime("%H:%M UTC")
     print(f"\n{'='*70}")
-    print("  CRYPTO DAY SCAN — 1h signal scanner")
+    print("  CRYPTO DAY SCAN — 1h signal scanner (24/7)")
     print(f"{'='*70}")
-    print(f"  UTC time: {utc_h:02d}:xx  |  Trading window: {'OPEN 12-22 UTC' if window else 'CLOSED (12-22 UTC only)'}")
+    print(f"  Scanned at {utc_now}")
     if not signals:
         print("\n  No signals right now.")
     else:
