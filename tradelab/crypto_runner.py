@@ -24,10 +24,29 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 # ── Config ───────────────────────────────────────────────────────────────────
-CRYPTO_DAY_SYMBOLS = ["BTC-USD", "ETH-USD", "SOL-USD"]
+# ── Config ───────────────────────────────────────────────────────────────────
+# Full universe of independently-acting cryptos available on Alpaca paper.
+# Deliberately avoids BTC-only proxies — includes DeFi (AAVE, LINK), L1s
+# (AVAX, ADA, DOT, LTC, XRP), AI narrative (RENDER), memes (DOGE, WIF),
+# and the majors (BTC, ETH, SOL). Each has distinct catalysts and momentum cycles.
+CRYPTO_DAY_SYMBOLS = [
+    "BTC-USD",     # digital gold, macro/ETF driven
+    "ETH-USD",     # smart contracts, staking/L2 driven
+    "SOL-USD",     # high-speed L1, NFT/DeFi ecosystem
+    "XRP-USD",     # payments/banking, Ripple legal catalysts
+    "AVAX-USD",    # L1 subnet ecosystem, independent cycles
+    "LINK-USD",    # oracle network, partnership-driven
+    "AAVE-USD",    # DeFi lending protocol
+    "LTC-USD",     # payments L1, halving cycles
+    "ADA-USD",     # Cardano L1, own roadmap
+    "DOT-USD",     # Polkadot parachain ecosystem
+    "DOGE-USD",    # meme/payments, high beta
+    "RENDER-USD",  # AI/GPU rendering narrative
+    "WIF-USD",     # meme, very high beta
+]
 CRYPTO_DAY_BUDGET = 12_000   # total $ allocated to this engine
-MAX_POSITIONS = 3
-MAX_PER_TRADE = 4_000        # max notional per trade
+MAX_POSITIONS = 5            # up to 5 simultaneous day trades across 13 coins
+MAX_PER_TRADE = 3_000        # max notional per trade ($3k keeps positions diversified)
 MIN_TRADE = 200              # minimum order size (Alpaca minimum)
 MAX_HOLD_HOURS = 2.0
 TRAIL_ACTIVATE_PCT = 0.015   # activate trailing stop once up 1.5%

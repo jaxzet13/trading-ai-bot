@@ -239,7 +239,8 @@ def cmd_leaps(args) -> None:
 def cmd_crypto_scan(args) -> None:
     """Scan crypto for 1-2h day trade signals without placing orders."""
     from tradelab.crypto_runner import scan_only, print_crypto_scan
-    print("Scanning BTC, ETH, SOL for 1h day trade signals...")
+    from tradelab.crypto_runner import CRYPTO_DAY_SYMBOLS
+    print(f"Scanning {len(CRYPTO_DAY_SYMBOLS)} crypto symbols for 1h day trade signals...")
     signals = scan_only()
     print_crypto_scan(signals)
 
