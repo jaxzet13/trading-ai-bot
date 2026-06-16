@@ -104,6 +104,17 @@ def cmd_run(args) -> None:
         except Exception as exc:
             logger.error("Crypto day cycle failed: %s", exc)
 
+    def intraday_job():
+        from tradelab.execution.broker import PaperBroker
+        from tradelab.intraday_runner import run_intraday_cycle, print_intraday_cycle
+        try:
+            broker = PaperBroker()
+            with SessionFactory() as session:
+                result = run_intraday_cycle(session, broker)
+            print_intraday_cycle(result)
+        except Exception as exc:
+            logger.error("Intraday 5m cycle failed: %s", exc)
+
     scheduler = BlockingScheduler(timezone=TIMEZONE)
     # Morning run: signals fresh at market open
     scheduler.add_job(
@@ -141,15 +152,22 @@ def cmd_run(args) -> None:
         day_of_week="mon-fri",
         id="midday_options",
     )
-    # Crypto day trading: runs every 30 min, 24/7 (built-in window guard 12-22 UTC)
+    # Crypto day trading: runs every 30 min, 24/7
     scheduler.add_job(
         crypto_day_job,
         "interval",
         minutes=30,
         id="crypto_day",
     )
+    # 5m intraday: runs every 7 minutes (stocks during market hours + crypto 24/7)
+    scheduler.add_job(
+        intraday_job,
+        "interval",
+        minutes=7,
+        id="intraday_5m",
+    )
     logger.info(
-        "Scheduler started — systematic: %02d:%02d & 13:00 ET | options: %02d:%02d & 13:05 ET | crypto-day: every 30min (12-22 UTC)",
+        "Scheduler started — systematic: %02d:%02d & 13:00 ET | options: %02d:%02d & 13:05 ET | crypto-day: every 30min | intraday-5m: every 7min",
         MARKET_OPEN_HOUR,
         MARKET_OPEN_MINUTE,
         MARKET_OPEN_HOUR,
@@ -272,6 +290,46 @@ def cmd_crypto_status(args) -> None:
     with SessionFactory() as session:
         print_crypto_status(session)
 
+
+
+def cmd_intraday_scan(args) -> None:
+    """Scan stocks + crypto on 5m bars for long/short signals (no orders)."""
+    from tradelab.intraday_runner import scan_only, print_intraday_scan
+    from tradelab.intraday_runner import INTRADAY_STOCK_SYMBOLS, INTRADAY_CRYPTO_SYMBOLS
+    from tradelab.strategies.intraday_5m import is_market_open
+    mkt = is_market_open()
+    total = (len(INTRADAY_STOCK_SYMBOLS) if mkt else 0) + len(INTRADAY_CRYPTO_SYMBOLS)
+    print(f"Scanning {total} symbols on 5m bars (market {'OPEN' if mkt else 'CLOSED'})...")
+    signals = scan_only()
+    print_intraday_scan(signals)
+
+
+def cmd_intraday_now(args) -> None:
+    """Run one 5m intraday cycle immediately (manages exits + enters new positions)."""
+    from tradelab.db.models import init_db, get_engine, get_session_factory
+    from tradelab.execution.broker import PaperBroker
+    from tradelab.intraday_runner import run_intraday_cycle, print_intraday_cycle
+
+    engine = get_engine()
+    init_db(engine)
+    SessionFactory = get_session_factory(engine)
+    broker = PaperBroker()
+    print("Running 5m intraday cycle NOW...")
+    with SessionFactory() as session:
+        result = run_intraday_cycle(session, broker)
+    print_intraday_cycle(result)
+
+
+def cmd_intraday_status(args) -> None:
+    """Show open 5m intraday positions with live P&L."""
+    from tradelab.db.models import init_db, get_engine, get_session_factory
+    from tradelab.intraday_runner import print_intraday_status
+
+    engine = get_engine()
+    init_db(engine)
+    SessionFactory = get_session_factory(engine)
+    with SessionFactory() as session:
+        print_intraday_status(session)
 
 
 def cmd_options_backtest(args) -> None:
@@ -434,6 +492,9 @@ def main() -> None:
     sub.add_parser("crypto-scan", help="Scan BTC/ETH/SOL for 1-2h day trade signals (no orders)")
     sub.add_parser("crypto-now", help="Run one crypto day trading cycle immediately")
     sub.add_parser("crypto-status", help="Show open crypto day trade positions with live P&L")
+    sub.add_parser("intraday-scan", help="Scan stocks+crypto on 5m bars for long/short signals (no orders)")
+    sub.add_parser("intraday-now", help="Run one 5m intraday cycle immediately (enters + manages positions)")
+    sub.add_parser("intraday-status", help="Show open 5m intraday positions with live P&L")
     sub.add_parser("leaps", help="LEAPS options screener (analysis only)")
     sub.add_parser("options", help="Run the LIVE options/LEAPS cycle on Alpaca paper")
     p_ob = sub.add_parser("options-backtest", help="Backtest LEAPS strategy via Black-Scholes on historical data")
@@ -455,6 +516,9 @@ def main() -> None:
         "crypto-scan": cmd_crypto_scan,
         "crypto-now": cmd_crypto_now,
         "crypto-status": cmd_crypto_status,
+        "intraday-scan": cmd_intraday_scan,
+        "intraday-now": cmd_intraday_now,
+        "intraday-status": cmd_intraday_status,
         "leaps": cmd_leaps,
         "options": cmd_options,
         "options-backtest": cmd_options_backtest,
