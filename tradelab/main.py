@@ -93,6 +93,17 @@ def cmd_run(args) -> None:
         except Exception as exc:
             logger.error("Options cycle failed: %s", exc)
 
+    def crypto_day_job():
+        from tradelab.execution.broker import PaperBroker
+        from tradelab.crypto_runner import run_crypto_day_cycle, print_crypto_cycle
+        try:
+            broker = PaperBroker()
+            with SessionFactory() as session:
+                result = run_crypto_day_cycle(session, broker)
+            print_crypto_cycle(result)
+        except Exception as exc:
+            logger.error("Crypto day cycle failed: %s", exc)
+
     scheduler = BlockingScheduler(timezone=TIMEZONE)
     # Morning run: signals fresh at market open
     scheduler.add_job(
@@ -130,8 +141,15 @@ def cmd_run(args) -> None:
         day_of_week="mon-fri",
         id="midday_options",
     )
+    # Crypto day trading: runs every 30 min, 24/7 (built-in window guard 12-22 UTC)
+    scheduler.add_job(
+        crypto_day_job,
+        "interval",
+        minutes=30,
+        id="crypto_day",
+    )
     logger.info(
-        "Scheduler started — systematic: %02d:%02d & 13:00 ET | options: %02d:%02d & 13:05 ET | weekdays only",
+        "Scheduler started — systematic: %02d:%02d & 13:00 ET | options: %02d:%02d & 13:05 ET | crypto-day: every 30min (12-22 UTC)",
         MARKET_OPEN_HOUR,
         MARKET_OPEN_MINUTE,
         MARKET_OPEN_HOUR,
@@ -216,6 +234,43 @@ def cmd_leaps(args) -> None:
     print("Screening long-dated calls (LEAPS) on high-conviction names...")
     rows = screen_leaps()
     print_leaps(rows)
+
+
+def cmd_crypto_scan(args) -> None:
+    """Scan crypto for 1-2h day trade signals without placing orders."""
+    from tradelab.crypto_runner import scan_only, print_crypto_scan
+    print("Scanning BTC, ETH, SOL for 1h day trade signals...")
+    signals = scan_only()
+    print_crypto_scan(signals)
+
+
+def cmd_crypto_now(args) -> None:
+    """Run one crypto day trading cycle immediately."""
+    from tradelab.db.models import init_db, get_engine, get_session_factory
+    from tradelab.execution.broker import PaperBroker
+    from tradelab.crypto_runner import run_crypto_day_cycle, print_crypto_cycle
+
+    engine = get_engine()
+    init_db(engine)
+    SessionFactory = get_session_factory(engine)
+    broker = PaperBroker()
+    print("Running crypto day cycle NOW...")
+    with SessionFactory() as session:
+        result = run_crypto_day_cycle(session, broker)
+    print_crypto_cycle(result)
+
+
+def cmd_crypto_status(args) -> None:
+    """Show open crypto day trade positions with live P&L."""
+    from tradelab.db.models import init_db, get_engine, get_session_factory
+    from tradelab.crypto_runner import print_crypto_status
+
+    engine = get_engine()
+    init_db(engine)
+    SessionFactory = get_session_factory(engine)
+    with SessionFactory() as session:
+        print_crypto_status(session)
+
 
 
 def cmd_options_backtest(args) -> None:
@@ -375,6 +430,9 @@ def main() -> None:
     sub.add_parser("brief", help="Daily analyst briefing: price action + news + flags on holdings")
     sub.add_parser("journal", help="Show the recent trade journal (what the system did)")
     sub.add_parser("review", help="Run this week's self-review vs the S&P, with a grade")
+    sub.add_parser("crypto-scan", help="Scan BTC/ETH/SOL for 1-2h day trade signals (no orders)")
+    sub.add_parser("crypto-now", help="Run one crypto day trading cycle immediately")
+    sub.add_parser("crypto-status", help="Show open crypto day trade positions with live P&L")
     sub.add_parser("leaps", help="LEAPS options screener (analysis only)")
     sub.add_parser("options", help="Run the LIVE options/LEAPS cycle on Alpaca paper")
     p_ob = sub.add_parser("options-backtest", help="Backtest LEAPS strategy via Black-Scholes on historical data")
@@ -393,6 +451,9 @@ def main() -> None:
         "brief": cmd_brief,
         "journal": cmd_journal,
         "review": cmd_review,
+        "crypto-scan": cmd_crypto_scan,
+        "crypto-now": cmd_crypto_now,
+        "crypto-status": cmd_crypto_status,
         "leaps": cmd_leaps,
         "options": cmd_options,
         "options-backtest": cmd_options_backtest,
