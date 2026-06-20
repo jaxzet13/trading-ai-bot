@@ -115,8 +115,8 @@ OPTIONS_MAX_POSITIONS: int = int(os.getenv("OPTIONS_MAX_POSITIONS", "10"))
 OPTIONS_TARGET_OTM_PCT: float = float(os.getenv("OPTIONS_TARGET_OTM_PCT", "0.10"))  # ~10% OTM calls
 OPTIONS_MIN_DTE: int = int(os.getenv("OPTIONS_MIN_DTE", "200"))                # long-dated only
 OPTIONS_CATALYST_WINDOW: int = int(os.getenv("OPTIONS_CATALYST_WINDOW", "120"))  # earnings within N days = catalyst
-OPTIONS_PROFIT_TARGET: float = float(os.getenv("OPTIONS_PROFIT_TARGET", "1.0"))    # +100% take-profit
-OPTIONS_STOP_LOSS: float = float(os.getenv("OPTIONS_STOP_LOSS", "0.5"))        # -50% stop
+OPTIONS_PROFIT_TARGET: float = float(os.getenv("OPTIONS_PROFIT_TARGET", "0.40"))    # +40% take-profit (lock gains)
+OPTIONS_STOP_LOSS: float = float(os.getenv("OPTIONS_STOP_LOSS", "0.20"))        # -20% stop (cut losers fast)
 
 # Simulated leverage for backtests (1.0 = none). Alpaca paper accounts allow
 # up to 2x intraday margin on equities.

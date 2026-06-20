@@ -292,6 +292,65 @@ def cmd_crypto_status(args) -> None:
 
 
 
+def cmd_manage(args) -> None:
+    """One-shot full management sweep: cut losers / take profits across ALL engines.
+
+    Runs option TP/SL, crypto day stops, and intraday 5m stops in a single pass.
+    Safe to run anytime — this is the manual lever for 'cut my losers now'.
+    """
+    from tradelab.db.models import init_db, get_engine, get_session_factory
+    from tradelab.execution.broker import PaperBroker
+
+    engine = get_engine()
+    init_db(engine)
+    SessionFactory = get_session_factory(engine)
+    broker = PaperBroker()
+
+    print(f"\n{'='*60}\n  FULL MANAGEMENT SWEEP — cutting losers / taking profits\n{'='*60}")
+
+    # Options (only act during market hours; Alpaca rejects option orders when closed)
+    try:
+        clk = broker.client.get_clock()
+        if clk.is_open:
+            from tradelab.options_lab import manage_option_positions
+            r = manage_option_positions(broker)
+            tp, sl, ai = r.get("tp", []), r.get("sl", []), r.get("ai_exit", [])
+            print(f"\n  OPTIONS: TP={len(tp)} SL={len(sl)} AI-exit={len(ai)}")
+            for s in tp: print(f"    took profit: {s}")
+            for s in sl: print(f"    stopped out: {s}")
+            for x in ai: print(f"    AI exit: {x['symbol']} ({x['pl_pct']:+.0f}%) — {x['reason']}")
+        else:
+            print(f"\n  OPTIONS: market CLOSED — next open {clk.next_open}. Skipped.")
+    except Exception as exc:
+        print(f"\n  OPTIONS: error — {exc}")
+
+    # Crypto day (24/7)
+    try:
+        from tradelab.crypto_runner import manage_crypto_day_positions
+        with SessionFactory() as session:
+            r = manage_crypto_day_positions(session, broker)
+        closed = r.get("closed", [])
+        print(f"\n  CRYPTO DAY: closed {len(closed)}")
+        for c in closed:
+            print(f"    {c['symbol']}: {c['reason']}  P&L ${c['pnl_dollars']:+.2f}")
+    except Exception as exc:
+        print(f"\n  CRYPTO DAY: error — {exc}")
+
+    # Intraday 5m (crypto 24/7, stocks only when open)
+    try:
+        from tradelab.intraday_runner import manage_intraday_positions
+        with SessionFactory() as session:
+            r = manage_intraday_positions(session, broker)
+        closed = r.get("closed", [])
+        print(f"\n  INTRADAY 5m: closed {len(closed)}")
+        for c in closed:
+            print(f"    {c['symbol']} ({c['side']}): {c['reason']}  P&L ${c['pnl_dollars']:+.2f}")
+    except Exception as exc:
+        print(f"\n  INTRADAY 5m: error — {exc}")
+
+    print(f"\n{'='*60}\n")
+
+
 def cmd_intraday_scan(args) -> None:
     """Scan stocks + crypto on 5m bars for long/short signals (no orders)."""
     from tradelab.intraday_runner import scan_only, print_intraday_scan
@@ -492,6 +551,7 @@ def main() -> None:
     sub.add_parser("crypto-scan", help="Scan BTC/ETH/SOL for 1-2h day trade signals (no orders)")
     sub.add_parser("crypto-now", help="Run one crypto day trading cycle immediately")
     sub.add_parser("crypto-status", help="Show open crypto day trade positions with live P&L")
+    sub.add_parser("manage", help="One-shot sweep: cut losers / take profits across ALL engines now")
     sub.add_parser("intraday-scan", help="Scan stocks+crypto on 5m bars for long/short signals (no orders)")
     sub.add_parser("intraday-now", help="Run one 5m intraday cycle immediately (enters + manages positions)")
     sub.add_parser("intraday-status", help="Show open 5m intraday positions with live P&L")
@@ -516,6 +576,7 @@ def main() -> None:
         "crypto-scan": cmd_crypto_scan,
         "crypto-now": cmd_crypto_now,
         "crypto-status": cmd_crypto_status,
+        "manage": cmd_manage,
         "intraday-scan": cmd_intraday_scan,
         "intraday-now": cmd_intraday_now,
         "intraday-status": cmd_intraday_status,
