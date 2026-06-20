@@ -292,6 +292,40 @@ def cmd_crypto_status(args) -> None:
 
 
 
+def cmd_liquidate_losers(args) -> None:
+    """One-time cleanup: sell every option position down more than --threshold (default 15%).
+
+    Run this once after market open to clear out the backlog of LEAPS that
+    were never managed (no scheduler was running). Ongoing positions are
+    protected by the regular -20%/+40% stop in `manage`/`options` going forward.
+    """
+    from tradelab.execution.broker import PaperBroker
+
+    threshold = getattr(args, "threshold", 0.15)
+    broker = PaperBroker()
+    clk = broker.client.get_clock()
+    if not clk.is_open:
+        print(f"Market is CLOSED (next open {clk.next_open}). Option orders will be rejected — try again after open.")
+        return
+
+    positions = broker.get_option_positions()
+    losers = [p for p in positions if p["unrealized_plpc"] <= -threshold]
+
+    print(f"\n{'='*60}\n  LIQUIDATE LOSERS (threshold: -{threshold*100:.0f}%)\n{'='*60}")
+    if not losers:
+        print(f"  No option positions down more than {threshold*100:.0f}%.")
+        print(f"{'='*60}\n")
+        return
+
+    for p in losers:
+        oid = broker.close_option(p["symbol"])
+        print(f"  SOLD {p['symbol']:<24} {p['unrealized_plpc']*100:+.1f}%  "
+              f"mv=${p['market_value']:,.0f}  order={oid}")
+    total_freed = sum(p["market_value"] for p in losers)
+    print(f"\n  Closed {len(losers)} position(s), freed ~${total_freed:,.0f} cash.")
+    print(f"{'='*60}\n")
+
+
 def cmd_manage(args) -> None:
     """One-shot full management sweep: cut losers / take profits across ALL engines.
 
@@ -552,6 +586,8 @@ def main() -> None:
     sub.add_parser("crypto-now", help="Run one crypto day trading cycle immediately")
     sub.add_parser("crypto-status", help="Show open crypto day trade positions with live P&L")
     sub.add_parser("manage", help="One-shot sweep: cut losers / take profits across ALL engines now")
+    p_liq = sub.add_parser("liquidate-losers", help="One-time cleanup: sell option positions down more than --threshold")
+    p_liq.add_argument("--threshold", type=float, default=0.15, help="Loss threshold as a fraction (default 0.15 = -15%%)")
     sub.add_parser("intraday-scan", help="Scan stocks+crypto on 5m bars for long/short signals (no orders)")
     sub.add_parser("intraday-now", help="Run one 5m intraday cycle immediately (enters + manages positions)")
     sub.add_parser("intraday-status", help="Show open 5m intraday positions with live P&L")
@@ -577,6 +613,7 @@ def main() -> None:
         "crypto-now": cmd_crypto_now,
         "crypto-status": cmd_crypto_status,
         "manage": cmd_manage,
+        "liquidate-losers": cmd_liquidate_losers,
         "intraday-scan": cmd_intraday_scan,
         "intraday-now": cmd_intraday_now,
         "intraday-status": cmd_intraday_status,
