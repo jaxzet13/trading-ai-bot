@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tradelab.run</string>
+
+    <!-- install_launchd.sh fills these two in with your actual paths -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>__PYTHON__</string>
+        <string>-m</string>
+        <string>tradelab.main</string>
+        <string>run</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__REPO_DIR__</string>
+
+    <!-- start on login, and immediately when loaded -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- restart automatically if it crashes or the Mac reboots -->
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>__REPO_DIR__/tradelab_run.log</string>
+    <key>StandardErrorPath</key>
+    <string>__REPO_DIR__/tradelab_run.err.log</string>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>
