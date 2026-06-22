@@ -38,6 +38,8 @@ class Trade(Base):
     is_open = Column(Boolean, default=True, nullable=False)
     alpaca_order_id = Column(String(64), nullable=True)
 
+    agent = Column(String(32), nullable=True)   # which persona placed this trade
+
 
 class EquitySnapshot(Base):
     __tablename__ = "equity_snapshots"
@@ -67,6 +69,28 @@ class SystemState(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     key = Column(String(64), unique=True, nullable=False)
     value = Column(Text, nullable=False)
+
+
+class AgentConfig(Base):
+    """Live, dashboard-editable per-agent settings. Roster defaults in
+    tradelab/agents.py are used until a row exists here, then this row
+    wins — lets the user tune agents from the web UI with no code edit."""
+    __tablename__ = "agent_configs"
+
+    name = Column(String(32), primary_key=True)
+    enabled = Column(Boolean, default=True, nullable=False)
+
+    conviction_min = Column(Float, nullable=False)
+    size_multiplier = Column(Float, nullable=False)
+    max_positions = Column(Integer, nullable=False)
+    allocation_pct = Column(Float, nullable=False)   # share of equity this agent can deploy
+
+    allow_long = Column(Boolean, default=True, nullable=False)
+    allow_short = Column(Boolean, default=True, nullable=False)
+    trade_stocks = Column(Boolean, default=True, nullable=False)
+    trade_crypto = Column(Boolean, default=True, nullable=False)
+
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
 
 # ---------------------------------------------------------------------------

@@ -14,6 +14,15 @@ this is meant to be buying and selling all day/night, not parking capital.
 
 Stocks: long AND short via MarketOrderRequest.
 Crypto: long only (Alpaca paper cannot short crypto).
+
+Multi-agent: there is ONE real Alpaca paper account, but multiple named
+"agent" personas (see tradelab/agents.py) each run a filtered slice of the
+signal engine — different strategies, conviction bar, sizing, and a
+notional bankroll slice of total equity. Every order placed is tagged with
+the agent that placed it (Trade.agent + the "agent" field in the SystemState
+position blob), and a symbol is only ever held by one agent at a time
+(global lock) so two agents can't fight over the same position. See
+run_agents_cycle() and compute_leaderboard().
 """
 
 import json
@@ -43,7 +52,7 @@ INTRADAY_CRYPTO_SYMBOLS = [
 
 # ── Risk config ───────────────────────────────────────────────────────────────
 # Now the ONLY engine running — budget is a fraction of total equity, not a
-# fixed dollar pool, computed live in run_intraday_cycle().
+# fixed dollar pool, computed live in run_agents_cycle().
 INTRADAY_BUDGET_PCT  = 0.90    # up to 90% of equity deployed across small trades
 MAX_POSITIONS        = 12      # many small concurrent positions, not a few big ones
 MAX_PER_TRADE        = 3_000   # cap per position — keeps trades small & diversified
@@ -219,6 +228,47 @@ def _close_short(broker, symbol: str, qty: float, reason: str) -> Optional[str]:
         return None
 
 
+# ── Trade ledger (per-agent attribution) ────────────────────────────────────
+
+def _record_trade_open(session, pos: dict, sig: dict, order_id: Optional[str]) -> None:
+    """Write the Trade row for a freshly opened position, tagged by agent."""
+    from tradelab.db.models import Trade
+    qty = pos["qty"]
+    position_size = qty if pos["side"] == "buy" else -qty  # negative qty = short
+    session.add(Trade(
+        strategy=sig["strategy"],
+        symbol=pos["symbol"],
+        entry_time=datetime.fromisoformat(pos["entry_time"]).replace(tzinfo=None),
+        entry_price=pos["entry_price"],
+        signal_value=sig.get("conviction"),
+        position_size=position_size,
+        notional=pos["notional"],
+        is_open=True,
+        alpaca_order_id=order_id,
+        agent=pos.get("agent"),
+    ))
+    session.commit()
+
+
+def _record_trade_close(session, pos: dict, exit_price: float, pnl_dollars: float, pnl_pct_points: float) -> None:
+    """Close out the matching open Trade row (same symbol + agent)."""
+    from tradelab.db.models import Trade
+    t = (
+        session.query(Trade)
+        .filter_by(symbol=pos["symbol"], agent=pos.get("agent"), is_open=True)
+        .order_by(Trade.entry_time.desc())
+        .first()
+    )
+    if t is None:
+        return
+    t.exit_time = datetime.now(timezone.utc).replace(tzinfo=None)
+    t.exit_price = exit_price
+    t.pnl_dollars = round(pnl_dollars, 2)
+    t.pnl_pct = round(pnl_pct_points, 2)
+    t.is_open = False
+    session.commit()
+
+
 # ── Position management ───────────────────────────────────────────────────────
 
 def manage_intraday_positions(session, broker) -> dict:
@@ -289,12 +339,14 @@ def manage_intraday_positions(session, broker) -> dict:
             else:
                 oid = _close_short(broker, sym, qty, reason)
 
-            _delete_position(session, sym)
             notional = pos.get("notional", qty * entry)
+            pnl_dollars = round(notional * pnl_pct, 2)
+            _record_trade_close(session, pos, current, pnl_dollars, pnl_pct * 100)
+            _delete_position(session, sym)
             closed.append({
-                "symbol": sym, "side": side, "reason": reason,
+                "symbol": sym, "agent": pos.get("agent"), "side": side, "reason": reason,
                 "pnl_pct": round(pnl_pct * 100, 2),
-                "pnl_dollars": round(notional * pnl_pct, 2),
+                "pnl_dollars": pnl_dollars,
                 "order_id": oid,
                 "elapsed_min": round(elapsed_min, 1),
             })
@@ -302,156 +354,196 @@ def manage_intraday_positions(session, broker) -> dict:
     return {"closed": closed}
 
 
-# ── Main cycle ────────────────────────────────────────────────────────────────
+# ── Main cycle (multi-agent) ─────────────────────────────────────────────────
 
-def run_intraday_cycle(session, broker) -> dict:
+def run_agents_cycle(session, broker) -> dict:
     """
-    Full 5-minute intraday cycle:
-    1. Manage open positions (stops / TP / time / trailing)
-    2. Check capacity and available cash
-    3. Scan stocks + crypto for 5m signals
-    4. Execute highest-conviction signals within budget
+    Full 5-minute intraday cycle, agent-aware:
+    1. Manage open positions (stops / TP / time / trailing) — records Trade closes
+    2. Scan stocks + crypto once for 5m signals (shared across agents)
+    3. Let each enabled agent (highest allocation first) claim signals that
+       match its strategy/side/universe/conviction filters, within its own
+       budget slice — a symbol already taken by one agent is off-limits to
+       the rest (global lock, since there's only one real position per symbol)
+    4. Record every fill as a Trade row tagged with the agent that placed it
     """
     from tradelab.strategies.intraday_5m import (
         generate_5m_signals, fetch_5m_bars, is_market_open,
     )
+    from tradelab.agents import load_agents
 
     mgmt = manage_intraday_positions(session, broker)
 
+    agents = load_agents(session)
+    if not agents:
+        return {"mgmt": mgmt, "bought": [], "by_agent": {}, "signals_found": 0}
+
     acct = broker.get_account()
-    budget = acct["equity"] * INTRADAY_BUDGET_PCT
+    equity = acct["equity"]
     cash_room = max(acct.get("cash", 0.0) * 0.97, 0.0)
 
     open_positions = _load_positions(session)
-    slots = MAX_POSITIONS - len(open_positions)
-    deployed = sum(p.get("notional", 0) for p in open_positions.values())
-    available = max(0.0, min(budget - deployed, cash_room))
+    taken_symbols = set(open_positions.keys())
 
-    if slots <= 0 or available < MIN_TRADE:
-        logger.info(
-            "Intraday: %d/%d slots used, $%.0f available — no new entries",
-            len(open_positions), MAX_POSITIONS, available,
-        )
-        return {"mgmt": mgmt, "bought": [], "open_count": len(open_positions)}
+    if cash_room < MIN_TRADE:
+        logger.info("Intraday: $%.0f cash room — no new entries", cash_room)
+        return {"mgmt": mgmt, "bought": [], "by_agent": {}, "open_count": len(open_positions)}
 
-    # ── Scan stocks (only during market hours) ───────────────────────────
+    # ── Scan once, shared across all agents ──────────────────────────────
     all_signals: list[dict] = []
 
     if is_market_open():
-        scan_stocks = [s for s in INTRADAY_STOCK_SYMBOLS if s not in open_positions]
-        for sym in scan_stocks:
+        for sym in INTRADAY_STOCK_SYMBOLS:
+            if sym in taken_symbols:
+                continue
             bars = fetch_5m_bars(sym, days=3)
-            sigs = generate_5m_signals(sym, bars, is_crypto=False)
-            all_signals.extend(sigs)
-            for s in sigs:
+            for s in generate_5m_signals(sym, bars, is_crypto=False):
+                s["is_crypto"] = False
+                all_signals.append(s)
                 logger.info("5m SIGNAL %s %s %s conv=%.2f  %s",
                             sym, s["side"].upper(), s["strategy"],
                             s["conviction"], s["reason"])
     else:
         logger.info("Intraday stocks: market closed — crypto only")
 
-    # ── Scan crypto (24/7, long only) ────────────────────────────────────
-    scan_crypto = [s for s in INTRADAY_CRYPTO_SYMBOLS if s not in open_positions]
-    for sym in scan_crypto:
+    for sym in INTRADAY_CRYPTO_SYMBOLS:
+        if sym in taken_symbols:
+            continue
         bars = fetch_5m_bars(sym, days=3)
-        sigs = generate_5m_signals(sym, bars, is_crypto=True)
-        all_signals.extend(sigs)
-        for s in sigs:
+        for s in generate_5m_signals(sym, bars, is_crypto=True):
+            s["is_crypto"] = True
+            all_signals.append(s)
             logger.info("5m SIGNAL %s %s %s conv=%.2f  %s",
                         sym, s["side"].upper(), s["strategy"],
                         s["conviction"], s["reason"])
 
     if not all_signals:
         logger.info("Intraday: no 5m signals found")
-        return {"mgmt": mgmt, "bought": [], "signals_found": 0}
+        return {"mgmt": mgmt, "bought": [], "by_agent": {}, "signals_found": 0}
 
-    # Sort by conviction descending
     all_signals.sort(key=lambda s: s["conviction"], reverse=True)
 
-    # ── Execute signals ───────────────────────────────────────────────────
-    bought = []
-    per_trade = min(MAX_PER_TRADE, available / max(slots, 1))
+    # ── Let each agent claim its share, biggest allocation first ─────────
+    bought: list[dict] = []
+    by_agent: dict[str, list[dict]] = {}
 
-    for sig in all_signals:
-        if len(bought) >= slots:
+    for agent in sorted(agents, key=lambda a: a.allocation_pct, reverse=True):
+        if cash_room < MIN_TRADE:
             break
 
-        sym = sig["symbol"]
-        side = sig["side"]          # "buy" or "sell"
-        if sym in open_positions:
+        agent_open = [p for p in open_positions.values() if p.get("agent") == agent.name]
+        slots = agent.max_positions - len(agent_open)
+        if slots <= 0:
             continue
 
-        notional = round(min(per_trade, available), 2)
-        if notional < MIN_TRADE:
-            break
+        agent_budget = equity * agent.allocation_pct
+        deployed = sum(p.get("notional", 0) for p in agent_open)
+        available = max(0.0, min(agent_budget - deployed, cash_room))
+        if available < MIN_TRADE:
+            continue
 
-        is_crypto = sym in INTRADAY_CRYPTO_SYMBOLS
-        entry_time = datetime.now(timezone.utc).isoformat()
+        candidates = [
+            s for s in all_signals
+            if s["symbol"] not in taken_symbols
+            and s["strategy"] in agent.strategies
+            and s["conviction"] >= agent.conviction_min
+            and (agent.trade_crypto if s["is_crypto"] else agent.trade_stocks)
+            and ((s["side"] == "buy" and agent.allow_long) or (s["side"] == "sell" and agent.allow_short))
+        ]
+        if not candidates:
+            continue
 
-        if side == "buy":
-            oid = _open_long(broker, sym, notional, is_crypto)
-            if oid is None:
+        per_trade = min(MAX_PER_TRADE, available / max(slots, 1)) * agent.size_multiplier
+        agent_bought: list[dict] = []
+
+        for sig in candidates:
+            if len(agent_bought) >= slots:
+                break
+
+            sym = sig["symbol"]
+            side = sig["side"]
+            if sym in taken_symbols:
                 continue
-            time.sleep(1)  # let fill settle
-            entry_price = _spot(sym) or (notional / 1.0)
-            qty = notional / entry_price if not is_crypto else notional / entry_price
-            # refine qty from actual position if available
-            try:
-                for p in broker.get_positions():
-                    if p["symbol"].replace("/", "-") == sym or p["symbol"] == sym:
-                        entry_price = float(p["current_price"])
-                        qty = notional / entry_price
-                        break
-            except Exception:
-                pass
-        else:
-            # Short: need qty upfront
-            price_now = _spot(sym) or 1.0
-            qty_to_short = math.floor(notional / price_now)
-            if qty_to_short < 1:
-                continue
-            oid, qty_filled = _open_short(broker, sym, notional)
-            if oid is None:
-                continue
-            time.sleep(1)
-            entry_price = _spot(sym) or price_now
-            qty = float(qty_to_short)
 
-        _save_position(session, sym, {
-            "symbol": sym,
-            "side": side,
-            "entry_price": entry_price,
-            "entry_time": entry_time,
-            "qty": qty,
-            "notional": notional,
-            "strategy": sig["strategy"],
-            "stop_pct": sig["stop_pct"],
-            "target_pct": sig["target_pct"],
-            "best_price": entry_price,
-            "is_crypto": is_crypto,
-        })
+            notional = round(min(per_trade, available, cash_room), 2)
+            if notional < MIN_TRADE:
+                break
 
-        open_positions[sym] = {}
-        available -= notional
+            is_crypto = sig["is_crypto"]
+            now_utc = datetime.now(timezone.utc)
 
-        bought.append({
-            "symbol": sym, "side": side,
-            "notional": notional,
-            "qty": round(qty, 6 if is_crypto else 2),
-            "entry_price": entry_price,
-            "strategy": sig["strategy"],
-            "conviction": sig["conviction"],
-            "reason": sig["reason"],
-            "stop_pct": sig["stop_pct"],
-            "target_pct": sig["target_pct"],
-            "is_crypto": is_crypto,
-        })
-        logger.info(
-            "Intraday %s %s $%.0f %s conv=%.2f order=%s",
-            side.upper(), sym, notional, sig["strategy"], sig["conviction"], oid,
-        )
+            if side == "buy":
+                oid = _open_long(broker, sym, notional, is_crypto)
+                if oid is None:
+                    continue
+                time.sleep(1)  # let fill settle
+                entry_price = _spot(sym) or notional
+                qty = notional / entry_price
+                try:
+                    for p in broker.get_positions():
+                        if p["symbol"].replace("/", "-") == sym or p["symbol"] == sym:
+                            entry_price = float(p["current_price"])
+                            qty = notional / entry_price
+                            break
+                except Exception:
+                    pass
+            else:
+                price_now = _spot(sym) or 1.0
+                qty_to_short = math.floor(notional / price_now)
+                if qty_to_short < 1:
+                    continue
+                oid, qty_filled = _open_short(broker, sym, notional)
+                if oid is None:
+                    continue
+                time.sleep(1)
+                entry_price = _spot(sym) or price_now
+                qty = float(qty_to_short)
 
-    return {"mgmt": mgmt, "bought": bought, "signals_found": len(all_signals)}
+            pos = {
+                "symbol": sym,
+                "agent": agent.name,
+                "side": side,
+                "entry_price": entry_price,
+                "entry_time": now_utc.isoformat(),
+                "qty": qty,
+                "notional": notional,
+                "strategy": sig["strategy"],
+                "stop_pct": sig["stop_pct"],
+                "target_pct": sig["target_pct"],
+                "best_price": entry_price,
+                "is_crypto": is_crypto,
+            }
+            _save_position(session, sym, pos)
+            _record_trade_open(session, pos, sig, oid)
+
+            taken_symbols.add(sym)
+            open_positions[sym] = pos
+            available -= notional
+            cash_room -= notional
+
+            rec = {
+                "agent": agent.name, "symbol": sym, "side": side,
+                "notional": notional,
+                "qty": round(qty, 6 if is_crypto else 2),
+                "entry_price": entry_price,
+                "strategy": sig["strategy"],
+                "conviction": sig["conviction"],
+                "reason": sig["reason"],
+                "stop_pct": sig["stop_pct"],
+                "target_pct": sig["target_pct"],
+                "is_crypto": is_crypto,
+            }
+            agent_bought.append(rec)
+            bought.append(rec)
+            logger.info(
+                "[%s] Intraday %s %s $%.0f %s conv=%.2f order=%s",
+                agent.name, side.upper(), sym, notional, sig["strategy"], sig["conviction"], oid,
+            )
+
+        if agent_bought:
+            by_agent[agent.name] = agent_bought
+
+    return {"mgmt": mgmt, "bought": bought, "by_agent": by_agent, "signals_found": len(all_signals)}
 
 
 # ── Scan-only ─────────────────────────────────────────────────────────────────
@@ -513,8 +605,9 @@ def print_intraday_cycle(result: dict) -> None:
         print(f"\n  Closed {len(closed)} position(s):")
         for c in closed:
             tag = "L" if c["side"] == "buy" else "S"
+            agent_tag = f"[{c['agent']}] " if c.get("agent") else ""
             print(
-                f"    [{tag}] {c['symbol']:<8}  {c['reason']:<40}"
+                f"    {agent_tag}[{tag}] {c['symbol']:<8}  {c['reason']:<40}"
                 f"  P&L ${c['pnl_dollars']:+.2f} ({c['pnl_pct']:+.1f}%)"
                 f"  held {c['elapsed_min']:.0f}min"
             )
@@ -524,8 +617,9 @@ def print_intraday_cycle(result: dict) -> None:
         print(f"\n  Opened {len(bought)} position(s):")
         for b in bought:
             tag = "LONG " if b["side"] == "buy" else "SHORT"
+            agent_tag = f"[{b['agent']}] " if b.get("agent") else ""
             print(
-                f"    {tag} {b['symbol']:<8}  ${b['notional']:,.0f}  "
+                f"    {agent_tag}{tag} {b['symbol']:<8}  ${b['notional']:,.0f}  "
                 f"entry=${b['entry_price']:.4f}  {b['strategy']}  conv={b['conviction']:.2f}"
             )
             print(
@@ -562,8 +656,9 @@ def print_intraday_status(session) -> None:
                 - datetime.fromisoformat(pos["entry_time"]).replace(tzinfo=timezone.utc)
             ).total_seconds() / 60
             tag = "LONG " if side == "buy" else "SHORT"
+            agent_tag = f"[{pos.get('agent','?')}] " if pos.get("agent") else ""
             print(
-                f"  {tag} {sym:<8}  ${pos.get('notional',0):,.0f}  "
+                f"  {agent_tag}{tag} {sym:<8}  ${pos.get('notional',0):,.0f}  "
                 f"entry=${entry:.4f}  now=${current:.4f}  "
                 f"P&L {pnl_pct:+.1f}%  held {elapsed_min:.0f}min  "
                 f"[{pos.get('strategy','?')}]"
@@ -571,3 +666,115 @@ def print_intraday_status(session) -> None:
     time_left = MAX_HOLD_MINUTES
     print(f"  (max hold: {time_left}min)")
     print(f"{'='*70}\n")
+
+
+# ── Agent leaderboard ─────────────────────────────────────────────────────────
+
+BASELINE_KEY = "agent_baselines"
+
+
+def _get_or_init_baselines(session, agents: list, equity: float) -> dict[str, float]:
+    """
+    Each agent's "bankroll" is a notional slice of total equity, captured the
+    first time the agent appears (and persisted in SystemState so it doesn't
+    drift every cycle). Return % is measured against this fixed baseline —
+    that's what makes the leaderboard a fair race between personas sharing
+    one real account.
+    """
+    from tradelab.db.models import SystemState
+    row = session.query(SystemState).filter_by(key=BASELINE_KEY).first()
+    baselines: dict[str, float] = json.loads(row.value) if row else {}
+
+    changed = False
+    for a in agents:
+        if a.name not in baselines:
+            baselines[a.name] = round(equity * a.allocation_pct, 2)
+            changed = True
+
+    if changed:
+        if row:
+            row.value = json.dumps(baselines)
+        else:
+            session.add(SystemState(key=BASELINE_KEY, value=json.dumps(baselines)))
+        session.commit()
+
+    return baselines
+
+
+def compute_leaderboard(session, broker) -> list[dict]:
+    """
+    Rank agents by return % against their starting bankroll. Realized P&L
+    comes from closed Trade rows tagged with the agent; unrealized P&L comes
+    from currently open SystemState positions tagged with the agent.
+    """
+    from tradelab.db.models import Trade
+    from tradelab.agents import load_agents
+
+    agents = load_agents(session)
+    acct = broker.get_account()
+    equity = acct["equity"]
+    baselines = _get_or_init_baselines(session, agents, equity)
+
+    open_positions = _load_positions(session)
+
+    rows: list[dict] = []
+    for a in agents:
+        baseline = baselines.get(a.name) or round(equity * a.allocation_pct, 2)
+
+        closed_trades = (
+            session.query(Trade).filter_by(agent=a.name, is_open=False).all()
+        )
+        realized_pnl = sum(t.pnl_dollars or 0.0 for t in closed_trades)
+        wins = sum(1 for t in closed_trades if (t.pnl_dollars or 0.0) > 0)
+
+        unrealized_pnl = 0.0
+        open_count = 0
+        for sym, pos in open_positions.items():
+            if pos.get("agent") != a.name:
+                continue
+            open_count += 1
+            current = _spot(sym)
+            if current is None:
+                continue
+            entry = pos["entry_price"]
+            notional = pos.get("notional", 0.0)
+            if pos.get("side", "buy") == "buy":
+                unrealized_pnl += notional * (current - entry) / entry
+            else:
+                unrealized_pnl += notional * (entry - current) / entry
+
+        bankroll_now = baseline + realized_pnl + unrealized_pnl
+        return_pct = (bankroll_now / baseline - 1) * 100 if baseline else 0.0
+
+        rows.append({
+            "agent": a.name,
+            "label": a.label,
+            "personality": a.personality,
+            "baseline": round(baseline, 2),
+            "bankroll_now": round(bankroll_now, 2),
+            "realized_pnl": round(realized_pnl, 2),
+            "unrealized_pnl": round(unrealized_pnl, 2),
+            "return_pct": round(return_pct, 2),
+            "trades": len(closed_trades),
+            "wins": wins,
+            "win_rate": round(wins / len(closed_trades) * 100, 1) if closed_trades else 0.0,
+            "open_positions": open_count,
+        })
+
+    rows.sort(key=lambda r: r["return_pct"], reverse=True)
+    return rows
+
+
+def print_leaderboard(rows: list[dict]) -> None:
+    print(f"\n{'='*78}")
+    print("  🏆 AGENT LEADERBOARD")
+    print(f"{'='*78}")
+    if not rows:
+        print("  No agents enabled.")
+    for i, r in enumerate(rows, 1):
+        print(
+            f"  #{i}  {r['label']:<18} return {r['return_pct']:+7.2f}%   "
+            f"bankroll ${r['bankroll_now']:,.0f} (start ${r['baseline']:,.0f})   "
+            f"trades={r['trades']:<3} win%={r['win_rate']:>5.1f}   open={r['open_positions']}"
+        )
+    print(f"{'='*78}\n")

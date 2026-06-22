@@ -19,7 +19,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+from tradelab.agents import ROSTER, ensure_agent_configs
 from tradelab.db.models import (
+    AgentConfig,
     EquitySnapshot,
     SystemState,
     Trade,
@@ -94,6 +96,48 @@ def load_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, bool, bool]:
         ]
     )
     return equity_df, open_df, closed_df, halted, False
+
+
+def load_leaderboard() -> tuple[list[dict], bool]:
+    """Returns (rows, is_demo). Talks to the live Alpaca paper account for
+    current equity/positions — falls back to demo rows if that's not
+    reachable (no keys configured, or no agents have traded yet)."""
+    Session = _session_factory()
+    try:
+        from tradelab.execution.broker import PaperBroker
+        from tradelab.intraday_runner import compute_leaderboard
+        broker = PaperBroker()
+        with Session() as s:
+            ensure_agent_configs(s)
+            rows = compute_leaderboard(s, broker)
+        if rows:
+            return rows, False
+    except Exception:
+        pass
+    return _demo_leaderboard(), True
+
+
+def _demo_leaderboard() -> list[dict]:
+    import random
+    random.seed(13)
+    rows = []
+    for a in ROSTER:
+        ret = random.gauss(2.0, 4.0)
+        baseline = round(80_000 * a.allocation_pct, 2)
+        rows.append({
+            "agent": a.name, "label": a.label, "personality": a.personality,
+            "baseline": baseline,
+            "bankroll_now": round(baseline * (1 + ret / 100), 2),
+            "realized_pnl": round(baseline * ret / 100 * 0.7, 2),
+            "unrealized_pnl": round(baseline * ret / 100 * 0.3, 2),
+            "return_pct": round(ret, 2),
+            "trades": random.randint(5, 40),
+            "wins": 0,
+            "win_rate": round(random.uniform(40, 65), 1),
+            "open_positions": random.randint(0, 3),
+        })
+    rows.sort(key=lambda r: r["return_pct"], reverse=True)
+    return rows
 
 
 def _demo_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -274,6 +318,84 @@ def render():
             fig_bar.update_layout(height=300, margin=dict(l=10, r=10, t=40, b=10),
                                   coloraxis_showscale=False)
             st.plotly_chart(fig_bar, width='stretch')
+
+    # ---- agent leaderboard ----
+    st.subheader("🏆 Agent Leaderboard")
+    lb_rows, lb_demo = load_leaderboard()
+    if lb_demo:
+        st.caption(
+            "Demo leaderboard — connect Alpaca paper keys and let `tradelab run` "
+            "place a few trades to see agents compete for real."
+        )
+    if lb_rows:
+        lb_df = pd.DataFrame(lb_rows)
+        col_lb, col_lb_bar = st.columns([1, 1])
+        with col_lb:
+            st.dataframe(
+                lb_df[["label", "return_pct", "bankroll_now", "baseline",
+                       "trades", "win_rate", "open_positions"]]
+                .rename(columns={
+                    "label": "Agent", "return_pct": "Return %",
+                    "bankroll_now": "Bankroll $", "baseline": "Start $",
+                    "trades": "Trades", "win_rate": "Win %", "open_positions": "Open",
+                })
+                .style.map(
+                    lambda v: f"color: {ACCENT_GREEN}" if isinstance(v, (int, float)) and v >= 0
+                    else f"color: {ACCENT_RED}",
+                    subset=["Return %"],
+                ).format({"Return %": "{:+.2f}%", "Bankroll $": "${:,.0f}",
+                          "Start $": "${:,.0f}", "Win %": "{:.1f}%"}),
+                width='stretch', hide_index=True,
+            )
+        with col_lb_bar:
+            fig_lb = px.bar(
+                lb_df.sort_values("return_pct"), x="return_pct", y="label", orientation="h",
+                color="return_pct", color_continuous_scale=[ACCENT_RED, "#888888", ACCENT_GREEN],
+                title="Return % by Agent",
+            )
+            fig_lb.update_layout(height=300, margin=dict(l=10, r=10, t=40, b=10),
+                                  coloraxis_showscale=False, xaxis_title="", yaxis_title="")
+            st.plotly_chart(fig_lb, width='stretch')
+
+    # ---- agent controls ----
+    with st.expander("⚙️ Agent Controls — tune each persona live, no code needed"):
+        Session = _session_factory()
+        with Session() as s:
+            ensure_agent_configs(s)
+            configs = {c.name: c for c in s.query(AgentConfig).all()}
+
+        for a in ROSTER:
+            cfg = configs.get(a.name)
+            if cfg is None:
+                continue
+            with st.form(key=f"agent_form_{a.name}"):
+                st.markdown(f"**{a.label}** — {a.personality}")
+                c1, c2, c3, c4 = st.columns(4)
+                enabled = c1.toggle("Enabled", value=cfg.enabled, key=f"en_{a.name}")
+                conviction_min = c2.slider("Min conviction", 0.5, 2.5, float(cfg.conviction_min), 0.05, key=f"cv_{a.name}")
+                size_multiplier = c3.slider("Size multiplier", 0.3, 2.0, float(cfg.size_multiplier), 0.05, key=f"sz_{a.name}")
+                max_positions = c4.slider("Max positions", 1, 10, int(cfg.max_positions), 1, key=f"mp_{a.name}")
+                c5, c6, c7, c8 = st.columns(4)
+                allocation_pct = c5.slider("Allocation %", 0.0, 0.5, float(cfg.allocation_pct), 0.01, key=f"al_{a.name}")
+                allow_long = c6.toggle("Long", value=cfg.allow_long, key=f"lo_{a.name}")
+                allow_short = c7.toggle("Short", value=cfg.allow_short, key=f"sh_{a.name}")
+                trade_stocks = c8.toggle("Stocks", value=cfg.trade_stocks, key=f"st_{a.name}")
+                trade_crypto = st.toggle("Crypto", value=cfg.trade_crypto, key=f"cr_{a.name}")
+                if st.form_submit_button(f"Save {a.name}"):
+                    with Session() as s2:
+                        row = s2.query(AgentConfig).filter_by(name=a.name).first()
+                        row.enabled = enabled
+                        row.conviction_min = conviction_min
+                        row.size_multiplier = size_multiplier
+                        row.max_positions = max_positions
+                        row.allocation_pct = allocation_pct
+                        row.allow_long = allow_long
+                        row.allow_short = allow_short
+                        row.trade_stocks = trade_stocks
+                        row.trade_crypto = trade_crypto
+                        s2.commit()
+                    st.success(f"Saved {a.name}.")
+                    st.rerun()
 
     st.caption(
         f"Auto-refreshes every 30s · last update {datetime.now().strftime('%H:%M:%S')}"

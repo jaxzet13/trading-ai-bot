@@ -81,25 +81,28 @@ def cmd_run(args) -> None:
     from apscheduler.schedulers.blocking import BlockingScheduler
     from tradelab.config import TIMEZONE
     from tradelab.db.models import init_db, get_engine, get_session_factory
+    from tradelab.agents import ensure_agent_configs
 
     engine = get_engine()
     init_db(engine)
     SessionFactory = get_session_factory(engine)
+    with SessionFactory() as session:
+        ensure_agent_configs(session)
 
     def intraday_job():
         from tradelab.execution.broker import PaperBroker
-        from tradelab.intraday_runner import run_intraday_cycle, print_intraday_cycle
+        from tradelab.intraday_runner import run_agents_cycle, print_intraday_cycle
         try:
             broker = PaperBroker()
             with SessionFactory() as session:
-                result = run_intraday_cycle(session, broker)
+                result = run_agents_cycle(session, broker)
             print_intraday_cycle(result)
         except Exception as exc:
             logger.error("Intraday cycle failed: %s", exc)
 
     scheduler = BlockingScheduler(timezone=TIMEZONE)
     # Only job: intraday engine, every 7 minutes, 24/7 (crypto always-on,
-    # stocks auto-skip outside market hours inside run_intraday_cycle).
+    # stocks auto-skip outside market hours inside run_agents_cycle).
     scheduler.add_job(
         intraday_job,
         "interval",
@@ -335,15 +338,15 @@ def cmd_intraday_now(args) -> None:
     """Run one 5m intraday cycle immediately (manages exits + enters new positions)."""
     from tradelab.db.models import init_db, get_engine, get_session_factory
     from tradelab.execution.broker import PaperBroker
-    from tradelab.intraday_runner import run_intraday_cycle, print_intraday_cycle
+    from tradelab.intraday_runner import run_agents_cycle, print_intraday_cycle
 
     engine = get_engine()
     init_db(engine)
     SessionFactory = get_session_factory(engine)
     broker = PaperBroker()
-    print("Running 5m intraday cycle NOW...")
+    print("Running 5m intraday cycle NOW (multi-agent)...")
     with SessionFactory() as session:
-        result = run_intraday_cycle(session, broker)
+        result = run_agents_cycle(session, broker)
     print_intraday_cycle(result)
 
 
@@ -357,6 +360,23 @@ def cmd_intraday_status(args) -> None:
     SessionFactory = get_session_factory(engine)
     with SessionFactory() as session:
         print_intraday_status(session)
+
+
+def cmd_leaderboard(args) -> None:
+    """Show the agent leaderboard — return % per persona, ranked."""
+    from tradelab.db.models import init_db, get_engine, get_session_factory
+    from tradelab.execution.broker import PaperBroker
+    from tradelab.agents import ensure_agent_configs
+    from tradelab.intraday_runner import compute_leaderboard, print_leaderboard
+
+    engine = get_engine()
+    init_db(engine)
+    SessionFactory = get_session_factory(engine)
+    broker = PaperBroker()
+    with SessionFactory() as session:
+        ensure_agent_configs(session)
+        rows = compute_leaderboard(session, broker)
+    print_leaderboard(rows)
 
 
 def cmd_options_backtest(args) -> None:
@@ -525,6 +545,7 @@ def main() -> None:
     sub.add_parser("intraday-scan", help="Scan stocks+crypto on 5m bars for long/short signals (no orders)")
     sub.add_parser("intraday-now", help="Run one 5m intraday cycle immediately (enters + manages positions)")
     sub.add_parser("intraday-status", help="Show open 5m intraday positions with live P&L")
+    sub.add_parser("leaderboard", help="Show the agent leaderboard — return %% per persona, ranked")
     sub.add_parser("leaps", help="LEAPS options screener (analysis only)")
     sub.add_parser("options", help="Run the LIVE options/LEAPS cycle on Alpaca paper")
     p_ob = sub.add_parser("options-backtest", help="Backtest LEAPS strategy via Black-Scholes on historical data")
@@ -551,6 +572,7 @@ def main() -> None:
         "intraday-scan": cmd_intraday_scan,
         "intraday-now": cmd_intraday_now,
         "intraday-status": cmd_intraday_status,
+        "leaderboard": cmd_leaderboard,
         "leaps": cmd_leaps,
         "options": cmd_options,
         "options-backtest": cmd_options_backtest,
