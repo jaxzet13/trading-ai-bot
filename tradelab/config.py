@@ -104,13 +104,11 @@ OPTIONS_UNDERLYINGS: list[str] = [
     "NVDA", "TSLA", "AMD", "PLTR", "COIN", "MSTR", "AAPL", "AMZN", "GOOGL",
     "HIMS", "SOFI", "RIVN", "UPST", "DKNG", "RKLB", "SMCI", "MU", "SNOW", "CRWD", "MRVL",
 ]
-# Options are now the PRIMARY engine (~85% of the account); the systematic
-# stock/crypto engine takes the rest (TARGET_DEPLOYMENT above). This mirrors the
-# "155% in a month" video's heavy-leverage approach. ⚠️ High variance: a flat or
-# down month in LEAPS can cut the account roughly in half. More slots are used
-# so this large budget spreads across multiple catalyst names instead of betting
-# it all on a handful of contracts.
-OPTIONS_BUDGET_PCT: float = float(os.getenv("OPTIONS_BUDGET_PCT", "0.85"))     # 85% of equity into options
+# Options/LEAPS engine DISABLED — 200+ DTE contracts sat for a week+ and lost
+# money with no fast exit path. The account now runs entirely on 1-2 hour
+# round-trip trades (see intraday_runner.py). Budget forced to 0 so no new
+# LEAPS get bought even if `tradelab options` is run by mistake.
+OPTIONS_BUDGET_PCT: float = float(os.getenv("OPTIONS_BUDGET_PCT", "0.0"))
 OPTIONS_MAX_POSITIONS: int = int(os.getenv("OPTIONS_MAX_POSITIONS", "10"))
 OPTIONS_TARGET_OTM_PCT: float = float(os.getenv("OPTIONS_TARGET_OTM_PCT", "0.10"))  # ~10% OTM calls
 OPTIONS_MIN_DTE: int = int(os.getenv("OPTIONS_MIN_DTE", "200"))                # long-dated only

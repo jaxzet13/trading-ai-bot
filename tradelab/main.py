@@ -70,39 +70,21 @@ def cmd_now(args) -> None:
 
 
 def cmd_run(args) -> None:
+    """
+    Scheduler — runs ONLY the intraday 1-2h engine, every 7 minutes, 24/7.
+
+    The LEAPS options engine and the daily/multi-day systematic engine are
+    NOT scheduled here: both held positions for a week+ with no fast exit,
+    which is the opposite of what this account is for. All capital now
+    rotates through small, short-hold (1-2h max) trades on stocks + crypto.
+    """
     from apscheduler.schedulers.blocking import BlockingScheduler
-    from tradelab.config import MARKET_OPEN_HOUR, MARKET_OPEN_MINUTE, TIMEZONE
+    from tradelab.config import TIMEZONE
     from tradelab.db.models import init_db, get_engine, get_session_factory
 
     engine = get_engine()
     init_db(engine)
     SessionFactory = get_session_factory(engine)
-
-    def daily_job():
-        from tradelab.runner import run_daily_cycle
-        with SessionFactory() as session:
-            run_daily_cycle(session)
-
-    def options_job():
-        from tradelab.execution.broker import PaperBroker
-        from tradelab.options_lab import run_options_cycle, print_options_run
-        try:
-            broker = PaperBroker()
-            summary = run_options_cycle(broker)
-            print_options_run(summary)
-        except Exception as exc:
-            logger.error("Options cycle failed: %s", exc)
-
-    def crypto_day_job():
-        from tradelab.execution.broker import PaperBroker
-        from tradelab.crypto_runner import run_crypto_day_cycle, print_crypto_cycle
-        try:
-            broker = PaperBroker()
-            with SessionFactory() as session:
-                result = run_crypto_day_cycle(session, broker)
-            print_crypto_cycle(result)
-        except Exception as exc:
-            logger.error("Crypto day cycle failed: %s", exc)
 
     def intraday_job():
         from tradelab.execution.broker import PaperBroker
@@ -113,66 +95,18 @@ def cmd_run(args) -> None:
                 result = run_intraday_cycle(session, broker)
             print_intraday_cycle(result)
         except Exception as exc:
-            logger.error("Intraday 5m cycle failed: %s", exc)
+            logger.error("Intraday cycle failed: %s", exc)
 
     scheduler = BlockingScheduler(timezone=TIMEZONE)
-    # Morning run: signals fresh at market open
-    scheduler.add_job(
-        daily_job,
-        "cron",
-        hour=MARKET_OPEN_HOUR,
-        minute=MARKET_OPEN_MINUTE,
-        day_of_week="mon-fri",
-        id="morning",
-    )
-    # Morning options run: manage LEAPS positions + buy new ones
-    scheduler.add_job(
-        options_job,
-        "cron",
-        hour=MARKET_OPEN_HOUR,
-        minute=MARKET_OPEN_MINUTE + 5,
-        day_of_week="mon-fri",
-        id="morning_options",
-    )
-    # Midday run: rebalance / catch new entries that emerged since open
-    scheduler.add_job(
-        daily_job,
-        "cron",
-        hour=13,
-        minute=0,
-        day_of_week="mon-fri",
-        id="midday",
-    )
-    # Midday options check: manage TP/SL on open option positions
-    scheduler.add_job(
-        options_job,
-        "cron",
-        hour=13,
-        minute=5,
-        day_of_week="mon-fri",
-        id="midday_options",
-    )
-    # Crypto day trading: runs every 30 min, 24/7
-    scheduler.add_job(
-        crypto_day_job,
-        "interval",
-        minutes=30,
-        id="crypto_day",
-    )
-    # 5m intraday: runs every 7 minutes (stocks during market hours + crypto 24/7)
+    # Only job: intraday engine, every 7 minutes, 24/7 (crypto always-on,
+    # stocks auto-skip outside market hours inside run_intraday_cycle).
     scheduler.add_job(
         intraday_job,
         "interval",
         minutes=7,
-        id="intraday_5m",
+        id="intraday",
     )
-    logger.info(
-        "Scheduler started — systematic: %02d:%02d & 13:00 ET | options: %02d:%02d & 13:05 ET | crypto-day: every 30min | intraday-5m: every 7min",
-        MARKET_OPEN_HOUR,
-        MARKET_OPEN_MINUTE,
-        MARKET_OPEN_HOUR,
-        MARKET_OPEN_MINUTE + 5,
-    )
+    logger.info("Scheduler started — intraday engine only, every 7min, 24/7 (1-2h round trips)")
     try:
         scheduler.start()
     except KeyboardInterrupt:

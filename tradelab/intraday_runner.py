@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 """
-5-minute intraday trading engine — stocks (long+short) and crypto (long only).
+Intraday trading engine — stocks (long+short) and crypto (long only).
+THE primary and only trading engine (LEAPS options engine is disabled).
 
 Strategy: scan a high-volatility stock universe + 13 crypto symbols on 5m bars
-every 5-10 minutes. Enter on pattern signals (EMA cross, VWAP cross, 3-bar
-momentum, engulfing candle). Exit via stop/TP or hard time limit (30 min).
+every 5-10 minutes for entries. Enter on pattern signals (EMA cross, VWAP
+cross, 3-bar momentum, engulfing candle). Each position is a quick round
+trip — exit via stop/TP or a hard 2-hour time limit, never longer.
+
+Small size per trade, many concurrent positions, constant rotation —
+this is meant to be buying and selling all day/night, not parking capital.
 
 Stocks: long AND short via MarketOrderRequest.
 Crypto: long only (Alpaca paper cannot short crypto).
@@ -37,13 +42,15 @@ INTRADAY_CRYPTO_SYMBOLS = [
 ]
 
 # ── Risk config ───────────────────────────────────────────────────────────────
-INTRADAY_BUDGET      = 8_000   # total $ pool for this engine
-MAX_POSITIONS        = 4       # max simultaneous positions
-MAX_PER_TRADE        = 2_500   # cap per position ($2.5k keeps us diversified)
+# Now the ONLY engine running — budget is a fraction of total equity, not a
+# fixed dollar pool, computed live in run_intraday_cycle().
+INTRADAY_BUDGET_PCT  = 0.90    # up to 90% of equity deployed across small trades
+MAX_POSITIONS        = 12      # many small concurrent positions, not a few big ones
+MAX_PER_TRADE        = 3_000   # cap per position — keeps trades small & diversified
 MIN_TRADE            = 200     # Alpaca minimum
-MAX_HOLD_MINUTES     = 30      # hard time exit regardless of P&L
+MAX_HOLD_MINUTES     = 120     # hard time exit at 2h — every trade is a 1-2h round trip
 TRAIL_ACTIVATE_PCT   = 0.010   # arm trailing stop once up 1%
-TRAIL_STOP_FROM_PEAK = 0.005   # trail 0.5% below/above peak (tight for 5m)
+TRAIL_STOP_FROM_PEAK = 0.006   # trail 0.6% below/above peak
 
 
 # ── DB state helpers ─────────────────────────────────────────────────────────
@@ -311,10 +318,14 @@ def run_intraday_cycle(session, broker) -> dict:
 
     mgmt = manage_intraday_positions(session, broker)
 
+    acct = broker.get_account()
+    budget = acct["equity"] * INTRADAY_BUDGET_PCT
+    cash_room = max(acct.get("cash", 0.0) * 0.97, 0.0)
+
     open_positions = _load_positions(session)
     slots = MAX_POSITIONS - len(open_positions)
     deployed = sum(p.get("notional", 0) for p in open_positions.values())
-    available = max(0.0, INTRADAY_BUDGET - deployed)
+    available = max(0.0, min(budget - deployed, cash_room))
 
     if slots <= 0 or available < MIN_TRADE:
         logger.info(

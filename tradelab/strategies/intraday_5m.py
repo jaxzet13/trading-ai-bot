@@ -26,6 +26,10 @@ Patterns (evidence-based for intraday 5m day trading):
 
 Crypto: LONG signals only (Alpaca paper cannot short crypto).
 Stocks: LONG + SHORT signals.
+
+Entries are timed off 5m bars but each position is held 1-2 hours
+(see intraday_runner.py) — stop/target widened accordingly so normal
+5m noise doesn't stop out a trade that's barely begun.
 """
 
 import logging
@@ -155,7 +159,7 @@ def generate_5m_signals(
             "symbol": symbol, "side": "buy", "strategy": "ema_cross",
             "conviction": round(conv, 2),
             "reason": f"EMA 9/21 golden cross, RSI={rsi:.0f}, vol={vol_ratio:.1f}x",
-            "stop_pct": 0.008, "target_pct": 0.015,
+            "stop_pct": 0.014, "target_pct": 0.025,
         })
 
     if not is_crypto and ema_bearish_cross and rsi > RSI_SHORT_MIN and vol_ok:
@@ -165,7 +169,7 @@ def generate_5m_signals(
             "symbol": symbol, "side": "sell", "strategy": "ema_cross",
             "conviction": round(conv, 2),
             "reason": f"EMA 9/21 death cross, RSI={rsi:.0f}, vol={vol_ratio:.1f}x",
-            "stop_pct": 0.008, "target_pct": 0.015,
+            "stop_pct": 0.014, "target_pct": 0.025,
         })
 
     # ── 2. VWAP Cross + Momentum ─────────────────────────────────
@@ -182,7 +186,7 @@ def generate_5m_signals(
             "symbol": symbol, "side": "buy", "strategy": "vwap_cross",
             "conviction": round(conv, 2),
             "reason": f"Price crossed above VWAP, EMA uptrend, RSI={rsi:.0f} rising, vol={vol_ratio:.1f}x",
-            "stop_pct": 0.007, "target_pct": 0.014,
+            "stop_pct": 0.012, "target_pct": 0.022,
         })
 
     if not is_crypto and vwap_cross_dn and ema_dntrend and rsi_falling and rsi > RSI_SHORT_MIN and vol_ok:
@@ -191,7 +195,7 @@ def generate_5m_signals(
             "symbol": symbol, "side": "sell", "strategy": "vwap_cross",
             "conviction": round(conv, 2),
             "reason": f"Price crossed below VWAP, EMA downtrend, RSI={rsi:.0f} falling, vol={vol_ratio:.1f}x",
-            "stop_pct": 0.007, "target_pct": 0.014,
+            "stop_pct": 0.012, "target_pct": 0.022,
         })
 
     # ── 3. 3-Bar Momentum Continuation ───────────────────────────
@@ -205,7 +209,7 @@ def generate_5m_signals(
             "symbol": symbol, "side": "buy", "strategy": "momentum_3bar",
             "conviction": round(conv, 2),
             "reason": f"3 bullish bars, EMA uptrend, vol={vol_ratio:.1f}x surge, RSI={rsi:.0f}",
-            "stop_pct": 0.010, "target_pct": 0.018,
+            "stop_pct": 0.017, "target_pct": 0.030,
         })
 
     if not is_crypto and three_bear and ema_dntrend and big_vol and rsi > RSI_SHORT_MIN:
@@ -214,7 +218,7 @@ def generate_5m_signals(
             "symbol": symbol, "side": "sell", "strategy": "momentum_3bar",
             "conviction": round(conv, 2),
             "reason": f"3 bearish bars, EMA downtrend, vol={vol_ratio:.1f}x surge, RSI={rsi:.0f}",
-            "stop_pct": 0.010, "target_pct": 0.018,
+            "stop_pct": 0.017, "target_pct": 0.030,
         })
 
     # ── 4. Engulfing Candle Reversal ─────────────────────────────
@@ -238,7 +242,7 @@ def generate_5m_signals(
             "symbol": symbol, "side": "buy", "strategy": "engulfing",
             "conviction": round(conv, 2),
             "reason": f"Bullish engulfing at RSI={rsi:.0f} (oversold), vol={vol_ratio:.1f}x",
-            "stop_pct": 0.009, "target_pct": 0.016,
+            "stop_pct": 0.015, "target_pct": 0.027,
         })
 
     if not is_crypto and bear_engulf and rsi > 58 and big_vol:
@@ -247,7 +251,7 @@ def generate_5m_signals(
             "symbol": symbol, "side": "sell", "strategy": "engulfing",
             "conviction": round(conv, 2),
             "reason": f"Bearish engulfing at RSI={rsi:.0f} (overbought), vol={vol_ratio:.1f}x",
-            "stop_pct": 0.009, "target_pct": 0.016,
+            "stop_pct": 0.015, "target_pct": 0.027,
         })
 
     return signals
