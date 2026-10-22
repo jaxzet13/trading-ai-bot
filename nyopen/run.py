@@ -51,7 +51,7 @@ def main() -> None:
         if not a.no_export:
             export_dashboard(res, rec["id"])
     elif a.cmd == "sweep":
-        space = {"ema_len": [8, 12, 20], "trail_mode": ["ema", "swing", "atr"], "exit_time": ["12:00", "15:55"]}
+        space = {"ema_len": [8, 12, 20], "trail_mode": ["ema", "swing", "atr"], "exit_time": ["12:00", "15:55"], "min_risk_points": [0, 5]}
         df = sweep(Params(), space, name=a.name)
         print(df.sort_values("oos_score", ascending=False).to_string())
     elif a.cmd == "export":

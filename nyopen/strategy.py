@@ -38,6 +38,8 @@ class Params:
     allow_long: bool = True
     allow_short: bool = True
     risk_pct: float = 1.0           # % of equity risked per trade (position sizing)
+    max_leverage: float = 20.0      # cap on notional / equity so a 1-point stop cannot imply absurd size (0 = off)
+    min_risk_points: float = 5.0    # skip signal candles narrower than this (flat holiday sessions produce 0.1-point "candles")
     cost_points: float = 1.0        # round-trip spread + slippage in index points
     start_equity: float = 10_000.0
 
@@ -69,7 +71,7 @@ def add_indicators(bars: pd.DataFrame, p: Params) -> pd.DataFrame:
     out["swing_high"] = out["high"].rolling(p.swing_len).max()
     t = out["time"]
     out["date"] = t.dt.date
-    out["hhmm"] = t.dt.strftime("%H:%M")
+    out["hhmm"] = (t.dt.hour * 100 + t.dt.minute).astype("int32")  # 09:35 -> 935
     return out
 
 
@@ -94,88 +96,103 @@ class Trade:
     signal_close: float
 
 
-def trail_level(row: pd.Series, direction: int, p: Params) -> float | None:
+def trail_level(mode: str, direction: int, p: Params, ema_v: float, swing_v: float, close_v: float, atr_v: float) -> float | None:
     """Candidate trailing stop derived from the just-closed bar. None = no trail."""
-    if p.trail_mode == "ema":
-        return float(row["ema"])
-    if p.trail_mode == "swing":
-        return float(row["swing_low"] if direction > 0 else row["swing_high"])
-    if p.trail_mode == "atr":
-        return float(row["close"] - direction * p.atr_mult * row["atr"])
+    if mode == "ema":
+        return ema_v
+    if mode == "swing":
+        return swing_v
+    if mode == "atr":
+        return close_v - direction * p.atr_mult * atr_v
     return None
+
+
+def _hhmm(s: str) -> int:
+    hh, mm = s.split(":")
+    return int(hh) * 100 + int(mm)
+
+
+def _fmt(v: int) -> str:
+    return f"{v // 100:02d}:{v % 100:02d}"
 
 
 def run_day(day: pd.DataFrame, p: Params, equity: float) -> Trade | None:
     """Simulate one trading day. `day` holds that day's bars (with indicators), sorted by time."""
-    day = day.reset_index(drop=True)
-    sig_idx = day.index[day["hhmm"] == p.signal_time]
-    if len(sig_idx) == 0:
+    hhmm = day["hhmm"].to_numpy()
+    hits = np.flatnonzero(hhmm == _hhmm(p.signal_time))
+    if len(hits) == 0:
         return None
-    i0 = int(sig_idx[0])
-    sig = day.loc[i0]
-    if np.isnan(sig["ema"]):
+    i0 = int(hits[0])
+    o, h, l, c = (day[k].to_numpy(dtype=float) for k in ("open", "high", "low", "close"))
+    ema_a, atr_a = day["ema"].to_numpy(dtype=float), day["atr"].to_numpy(dtype=float)
+    if np.isnan(ema_a[i0]):
         return None
 
-    if sig["close"] > sig["ema"] and p.allow_long:
+    if c[i0] > ema_a[i0] and p.allow_long:
         direction = 1
-    elif sig["close"] < sig["ema"] and p.allow_short:
+    elif c[i0] < ema_a[i0] and p.allow_short:
         direction = -1
     else:
         return None
+    swing_a = day["swing_low" if direction > 0 else "swing_high"].to_numpy(dtype=float)
 
-    entry = float(sig["close"])
-    stop = float(sig["low"] if direction > 0 else sig["high"])
+    entry = float(c[i0])
+    stop0 = float(l[i0] if direction > 0 else h[i0])
+    stop = stop0
     risk = abs(entry - stop)
     if risk <= 0:
         return None
     if p.max_risk_points and risk > p.max_risk_points:
         return None
-    if p.min_body_r and abs(entry - sig["ema"]) / risk < p.min_body_r:
+    if p.min_risk_points and risk < p.min_risk_points:
+        return None
+    if p.min_body_r and abs(entry - ema_a[i0]) / risk < p.min_body_r:
         return None
 
     size = equity * (p.risk_pct / 100.0) / risk      # units of index per point
+    if p.max_leverage:
+        size = min(size, equity * p.max_leverage / entry)
     exit_price, exit_reason, exit_time, bars_held = None, "", "", 0
     best, worst = 0.0, 0.0  # in R
-    exit_hhmm = p.exit_time
+    n = len(day)
+    exit_hhmm = _hhmm(p.exit_time)
 
-    for j in range(i0 + 1, len(day)):
-        bar = day.loc[j]
+    for j in range(i0 + 1, n):
         bars_held += 1
         # 1) time exit at the open of the exit bar
-        if bar["hhmm"] >= exit_hhmm:
-            exit_price, exit_reason, exit_time = float(bar["open"]), "time", bar["hhmm"]
+        if hhmm[j] >= exit_hhmm:
+            exit_price, exit_reason, exit_time = float(o[j]), "time", _fmt(hhmm[j])
             break
         # 2) stop hit inside the bar (gap through the stop fills at the open)
-        if direction > 0 and bar["low"] <= stop:
-            exit_price = min(stop, float(bar["open"]))
-            exit_reason, exit_time = "stop" if stop < entry else "trail", bar["hhmm"]
+        if direction > 0 and l[j] <= stop:
+            exit_price = min(stop, float(o[j]))
+            exit_reason, exit_time = "stop" if stop < entry else "trail", _fmt(hhmm[j])
             break
-        if direction < 0 and bar["high"] >= stop:
-            exit_price = max(stop, float(bar["open"]))
-            exit_reason, exit_time = "stop" if stop > entry else "trail", bar["hhmm"]
+        if direction < 0 and h[j] >= stop:
+            exit_price = max(stop, float(o[j]))
+            exit_reason, exit_time = "stop" if stop > entry else "trail", _fmt(hhmm[j])
             break
         # excursion bookkeeping
-        fav = (bar["high"] - entry) if direction > 0 else (entry - bar["low"])
-        adv = (entry - bar["low"]) if direction > 0 else (bar["high"] - entry)
+        fav = (h[j] - entry) if direction > 0 else (entry - l[j])
+        adv = (entry - l[j]) if direction > 0 else (h[j] - entry)
         best, worst = max(best, fav / risk), max(worst, adv / risk)
         # 3) update the trail at bar close (only ever tightens)
-        open_r = (bar["close"] - entry) * direction / risk
+        open_r = (c[j] - entry) * direction / risk
         if p.breakeven_at_r and open_r >= p.breakeven_at_r:
             stop = max(stop, entry) if direction > 0 else min(stop, entry)
         if open_r >= p.trail_after_r:
-            lvl = trail_level(bar, direction, p)
+            lvl = trail_level(p.trail_mode, direction, p, ema_a[j], swing_a[j], c[j], atr_a[j])
             if lvl is not None and not np.isnan(lvl):
                 stop = max(stop, lvl) if direction > 0 else min(stop, lvl)
     if exit_price is None:  # data ended mid-trade
-        last = day.iloc[-1]
-        exit_price, exit_reason, exit_time = float(last["close"]), "eod", last["hhmm"]
+        exit_price, exit_reason, exit_time = float(c[-1]), "eod", _fmt(hhmm[-1])
 
     pnl_points = (exit_price - entry) * direction - p.cost_points
     pnl = pnl_points * size
     return Trade(
-        date=str(sig["date"]), direction="long" if direction > 0 else "short",
-        entry_time=str(sig["time"]), exit_time=exit_time, entry=entry,
-        stop=float(sig["low"] if direction > 0 else sig["high"]), exit=exit_price, risk_points=risk,
+        date=str(day["date"].iloc[i0]), direction="long" if direction > 0 else "short",
+        entry_time=str(day["time"].iloc[i0]), exit_time=exit_time, entry=entry,
+        stop=stop0, exit=exit_price, risk_points=risk,
         r_multiple=pnl_points / risk, pnl=pnl, equity_after=equity + pnl, bars_held=bars_held,
-        exit_reason=exit_reason, mfe_r=best, mae_r=worst, ema_at_entry=float(sig["ema"]), signal_close=float(sig["close"]),
+        exit_reason=exit_reason, mfe_r=best, mae_r=worst, ema_at_entry=float(ema_a[i0]), signal_close=float(c[i0]),
     )
