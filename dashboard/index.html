@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NY Open Candle Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a terminal-style research console. Summary first (KPI strip + equity), then breakdowns, then the trade ledger and the experiment log. */
+:root {
+  --bg: #0d0e12; --panel: #15171d; --panel-2: #1b1e26; --line: #262a35; --line-2: #333847;
+  --fg: #eef0f5; --fg-2: #b7bcc9; --fg-3: #7d8496;
+  --accent: #5598e7; --accent-soft: rgba(85,152,231,.16);
+  --up: #1baf7a; --down: #e66767; --warn: #c98500; --violet: #9085e9;
+  --font-ui: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+  --radius: 10px;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f5f6f8; --panel: #ffffff; --panel-2: #f0f2f6; --line: #e1e4ea; --line-2: #c9ced9;
+    --fg: #14161c; --fg-2: #4a505e; --fg-3: #7a8092;
+    --accent: #2a78d6; --accent-soft: rgba(42,120,214,.12);
+    --up: #0f9a68; --down: #d64545; --warn: #b87400; --violet: #6250d6;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f5f6f8; --panel: #ffffff; --panel-2: #f0f2f6; --line: #e1e4ea; --line-2: #c9ced9;
+  --fg: #14161c; --fg-2: #4a505e; --fg-3: #7a8092;
+  --accent: #2a78d6; --accent-soft: rgba(42,120,214,.12);
+  --up: #0f9a68; --down: #d64545; --warn: #b87400; --violet: #6250d6;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+a { color: var(--accent); }
+.wrap { max-width: 1320px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; padding-block: 28px 4px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; flex-direction: column; gap: 4px; }
+.eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-3); font-weight: 700; }
+h1 { margin: 0; font-size: clamp(22px, 3vw, 30px); font-weight: 800; letter-spacing: -.02em; text-wrap: balance; }
+.meta { font-family: var(--font-mono); font-size: 12px; color: var(--fg-2); display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.meta b { color: var(--fg); font-weight: 500; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-family: var(--font-mono); font-size: 11.5px; padding: 4px 8px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--fg-2); background: var(--panel); }
+.chip b { color: var(--fg); font-weight: 500; }
+.rule-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 10px 20px; align-items: center; }
+.rule-card p { margin: 0; color: var(--fg-2); max-width: 70ch; }
+.rule-card p strong { color: var(--fg); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.kpi .label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-3); font-weight: 700; }
+.kpi .value { font-family: var(--font-mono); font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.kpi .sub { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-3); }
+.kpi .sub b { color: var(--fg-2); font-weight: 500; }
+.pos { color: var(--up); } .neg { color: var(--down); }
+.grid { display: grid; gap: 14px; }
+.grid.two { grid-template-columns: 1fr 1fr; }
+.grid.three { grid-template-columns: repeat(3, 1fr); }
+.grid.wide { grid-template-columns: 2fr 1fr; }
+@media (max-width: 900px) { .grid.two, .grid.three, .grid.wide { grid-template-columns: 1fr; } .rule-card { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px 12px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.panel-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; }
+.panel h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.panel .hint { font-size: 12px; color: var(--fg-3); }
+.chart { width: 100%; height: 300px; }
+.chart.tall { height: 380px; } .chart.short { height: 220px; }
+.toggle { display: inline-flex; border: 1px solid var(--line-2); border-radius: 999px; overflow: hidden; }
+.toggle button { background: transparent; color: var(--fg-2); border: 0; padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+.toggle button[aria-pressed="true"] { background: var(--accent-soft); color: var(--fg); }
+.toggle button:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { color: var(--fg-3); font-weight: 500; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; position: sticky; top: 0; background: var(--panel); }
+th:first-child, td:first-child { text-align: left; }
+th.sortable { cursor: pointer; } th.sortable:hover { color: var(--fg); }
+tr.hl td { background: var(--accent-soft); }
+.pill { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; font-family: var(--font-ui); }
+.pill.long { background: rgba(27,175,122,.16); color: var(--up); } .pill.short { background: rgba(230,103,103,.16); color: var(--down); }
+.pill.trail { background: var(--accent-soft); color: var(--accent); } .pill.stop { background: rgba(230,103,103,.16); color: var(--down); } .pill.time { background: rgba(144,133,233,.18); color: var(--violet); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.controls input, .controls select { background: var(--panel-2); color: var(--fg); border: 1px solid var(--line-2); border-radius: 6px; padding: 5px 8px; font: inherit; font-size: 12.5px; }
+.pager { display: flex; gap: 6px; align-items: center; font-family: var(--font-mono); font-size: 12px; color: var(--fg-3); }
+.pager button { background: var(--panel-2); color: var(--fg); border: 1px solid var(--line-2); border-radius: 6px; padding: 3px 9px; font: inherit; cursor: pointer; }
+.pager button:disabled { opacity: .4; cursor: default; }
+.claims { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.claim { background: var(--panel-2); border-radius: 8px; padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; font-family: var(--font-mono); font-size: 12px; }
+.claim .k { grid-column: 1 / -1; font-family: var(--font-ui); font-size: 11px; color: var(--fg-3); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+.claim .lbl { color: var(--fg-3); } .claim .v { text-align: right; font-weight: 600; }
+.howto { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 900px) { .howto { grid-template-columns: 1fr; } }
+.howto ol { margin: 0; padding-left: 20px; color: var(--fg-2); display: flex; flex-direction: column; gap: 6px; }
+pre { margin: 0; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-family: var(--font-mono); font-size: 12px; color: var(--fg); overflow-x: auto; }
+.empty { color: var(--fg-3); padding: 20px; text-align: center; font-size: 13px; }
+footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 10px; }
+@media (prefers-reduced-motion: no-preference) { .kpi, .panel { transition: border-color .15s; } .kpi:hover, .panel:hover { border-color: var(--line-2); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="eyebrow">NAS100 · 5-minute · New York open</div>
+      <h1>NY Open Candle Lab</h1>
+      <div class="meta" id="meta"></div>
+    </div>
+    <div class="chips" id="paramchips"></div>
+  </header>
+
+  <section class="rule-card">
+    <p><strong>The rule.</strong> At 09:30 New York, take the first 5-minute candle. Close above the 12 EMA: go long at the close. Close below: go short.
+      Initial stop at the signal candle's low or high, so that distance is 1R. From there the stop trails the 12 EMA and only ever tightens. Flat by 15:55. One trade a day, every day.</p>
+    <div class="chips" id="datachips"></div>
+  </section>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Backtest versus the video's claims</h2><span class="hint">The video quoted these numbers for 1,448 trades, 2019 to 2026. Our run uses the same rule on Dukascopy NAS100 CFD data with costs included.</span></div>
+    <div class="claims" id="claims"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Equity curve</h2>
+      <div class="controls">
+        <span class="hint">Compounding at the configured risk per trade. Shaded region is held out of optimisation.</span>
+        <div class="toggle" role="group" aria-label="Scale"><button id="scale-lin" aria-pressed="true">Linear</button><button id="scale-log" aria-pressed="false">Log</button><button id="scale-r" aria-pressed="false">Cumulative R</button></div>
+      </div>
+    </div>
+    <div class="chart tall" id="equity"></div>
+    <div class="chart short" id="drawdown"></div>
+  </section>
+
+  <div class="grid wide">
+    <section class="panel">
+      <div class="panel-head"><h2>Year by year</h2><span class="hint">Return is on the compounding equity; sum R is size-independent.</span></div>
+      <div class="tablewrap"><table id="yearly"></table></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Monthly returns</h2><span class="hint">% change in equity each month</span></div>
+      <div class="chart tall" id="monthly"></div>
+    </section>
+  </div>
+
+  <div class="grid three">
+    <section class="panel"><div class="panel-head"><h2>R-multiple distribution</h2><span class="hint">Every trade, in units of initial risk</span></div><div class="chart" id="rhist"></div></section>
+    <section class="panel"><div class="panel-head"><h2>Rolling edge</h2><span class="hint">Average R over the last 100 trades</span></div><div class="chart" id="rolling"></div></section>
+    <section class="panel"><div class="panel-head"><h2>Where the R comes from</h2><span class="hint">Sum of R by direction, exit type and weekday</span></div><div class="chart" id="breakdown"></div></section>
+  </div>
+
+  <div class="grid two">
+    <section class="panel"><div class="panel-head"><h2>Latest trade</h2><span class="hint" id="latest-hint"></span></div><div class="chart" id="latest"></div></section>
+    <section class="panel"><div class="panel-head"><h2>Best trade</h2><span class="hint" id="best-hint"></span></div><div class="chart" id="best"></div></section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Trade ledger</h2>
+      <div class="controls">
+        <input id="f-search" type="search" placeholder="Filter by date (2024-03)" aria-label="Filter by date">
+        <select id="f-dir" aria-label="Direction"><option value="">Both directions</option><option value="long">Long</option><option value="short">Short</option></select>
+        <select id="f-exit" aria-label="Exit"><option value="">All exits</option><option value="trail">Trail</option><option value="stop">Stop</option><option value="time">Time</option></select>
+        <select id="f-year" aria-label="Year"><option value="">All years</option></select>
+        <div class="pager"><button id="pg-prev">‹</button><span id="pg-info"></span><button id="pg-next">›</button></div>
+      </div>
+    </div>
+    <div class="tablewrap"><table id="trades"></table></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Experiment log</h2><span class="hint">Every backtest run is appended here. In-sample is before the hold-out date; out-of-sample is after it. Ranked by out-of-sample profit factor.</span></div>
+    <div class="grid wide">
+      <div class="tablewrap" id="expwrap"><table id="experiments"></table></div>
+      <div class="chart tall" id="expscatter"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>How the AI keeps improving this</h2><span class="hint">The loop an agent (or you) runs. Every run lands in the experiment log above.</span></div>
+    <div class="howto">
+      <ol>
+        <li>Change a parameter, or edit the rule in <code>nyopen/strategy.py</code>.</li>
+        <li>Run a backtest. It logs params and metrics, then rebuilds this dashboard.</li>
+        <li>Judge it on the out-of-sample columns, not the in-sample ones.</li>
+        <li>Keep what holds up out of sample. Promote it to the defaults in <code>Params</code>.</li>
+        <li>Refresh the data periodically so the hold-out keeps growing.</li>
+      </ol>
+      <pre>python -m nyopen.run download                 # refresh NAS100 1-minute history
+python -m nyopen.run backtest --name base     # run + log + export dashboard
+python -m nyopen.run backtest --name tight \
+  --set trail_mode=swing swing_len=2 exit_time=12:00
+python -m nyopen.run sweep --name grid1       # IS / OOS grid, every row logged
+open dashboard/index.html</pre>
+    </div>
+  </section>
+  <footer id="foot"></footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.6.0/echarts.min.js"></script>
+<script src="data.js"></script>
+<script>
+(function () {
+  const D = window.DASHBOARD_DATA;
+  if (!D) { document.querySelector('.wrap').innerHTML = '<p class="empty">No data.js found. Run <code>python -m nyopen.run backtest</code> first.</p>'; return; }
+  const $ = (id) => document.getElementById(id);
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const fmt = {
+    pct: (v, d = 1) => v == null ? '–' : (v >= 0 ? '+' : '') + v.toFixed(d) + '%',
+    pct0: (v, d = 1) => v == null ? '–' : v.toFixed(d) + '%',
+    num: (v, d = 2) => v == null ? '–' : v.toFixed(d),
+    r: (v) => v == null ? '–' : (v >= 0 ? '+' : '') + v.toFixed(2) + 'R',
+    money: (v) => v == null ? '–' : '$' + Math.round(v).toLocaleString(),
+    int: (v) => v == null ? '–' : v.toLocaleString(),
+  };
+  const M = D.metrics, P = D.params;
+
+  // ---------- header ----------
+  $('meta').innerHTML = `<span>Data <b>${D.data_range.start.slice(0, 10)}</b> to <b>${D.data_range.end.slice(0, 10)}</b></span><span><b>${fmt.int(D.data_range.days)}</b> sessions</span><span><b>${fmt.int(D.data_range.bars)}</b> five-minute bars</span><span>run <b>${D.run_id}</b></span>`;
+  const chipKeys = ['ema_len', 'trail_mode', 'exit_time', 'risk_pct', 'cost_points', 'breakeven_at_r', 'trail_after_r'];
+  $('paramchips').innerHTML = chipKeys.map(k => `<span class="chip">${k} <b>${P[k]}</b></span>`).join('');
+  $('datachips').innerHTML = `<span class="chip">source <b>Dukascopy NAS100 CFD</b></span><span class="chip">hold-out from <b>${D.oos_start}</b></span><span class="chip">generated <b>${D.generated_at.slice(0, 16).replace('T', ' ')}Z</b></span>`;
+  $('foot').textContent = 'Historical simulation on CFD bid candles with a fixed cost per trade. Not financial advice. Past performance proves nothing about the future; that is why the hold-out period exists.';
+
+  // ---------- KPIs ----------
+  const sign = (v) => v >= 0 ? 'pos' : 'neg';
+  const kpis = [
+    ['Total return', fmt.pct(M.total_return_pct, 0), sign(M.total_return_pct), `${fmt.money(M.start_equity)} → <b>${fmt.money(M.final_equity)}</b>`],
+    ['CAGR', fmt.pct(M.cagr_pct), sign(M.cagr_pct), `over <b>${fmt.num(M.years, 1)}</b> years`],
+    ['Win rate', fmt.pct0(M.win_rate_pct), '', `long <b>${fmt.pct0(M.long_win_rate_pct, 0)}</b> · short <b>${fmt.pct0(M.short_win_rate_pct, 0)}</b>`],
+    ['Profit factor', fmt.num(M.profit_factor), M.profit_factor >= 1 ? 'pos' : 'neg', `avg win <b>${fmt.r(M.avg_win_r)}</b> · avg loss <b>${fmt.r(M.avg_loss_r)}</b>`],
+    ['Max drawdown', fmt.pct0(M.max_drawdown_pct), 'neg', `longest losing run <b>${M.longest_loss_streak}</b>`],
+    ['Trades', fmt.int(M.trades), '', `<b>${M.long_trades}</b> long · <b>${M.short_trades}</b> short`],
+    ['Expectancy', fmt.r(M.avg_r), sign(M.avg_r), `per trade, in units of risk`],
+    ['Sharpe', fmt.num(M.sharpe), sign(M.sharpe), `Sortino <b>${fmt.num(M.sortino)}</b>`],
+  ];
+  $('kpis').innerHTML = kpis.map(([l, v, c, s]) => `<div class="kpi"><span class="label">${l}</span><span class="value ${c}">${v}</span><span class="sub">${s}</span></div>`).join('');
+
+  // ---------- claims ----------
+  const claims = [
+    ['Total return', '+982%', fmt.pct(M.total_return_pct, 0)],
+    ['Win rate', '57%', fmt.pct0(M.win_rate_pct, 0)],
+    ['Profit factor', '1.29', fmt.num(M.profit_factor)],
+    ['Max drawdown', '19.7%', fmt.pct0(M.max_drawdown_pct)],
+    ['Trades', '1,448', fmt.int(M.trades)],
+  ];
+  $('claims').innerHTML = claims.map(([k, a, b]) => `<div class="claim"><span class="k">${k}</span><span class="lbl">video</span><span class="v">${a}</span><span class="lbl">this backtest</span><span class="v">${b}</span></div>`).join('');
+
+  // ---------- charts ----------
+  const charts = [];
+  const mk = (id) => { const c = echarts.init($(id), null, { renderer: 'canvas' }); charts.push(c); return c; };
+  const base = () => ({
+    textStyle: { fontFamily: css('--font-mono'), color: css('--fg-2') },
+    grid: { left: 52, right: 16, top: 24, bottom: 28, containLabel: false },
+    tooltip: { trigger: 'axis', backgroundColor: css('--panel-2'), borderColor: css('--line-2'), textStyle: { color: css('--fg'), fontFamily: css('--font-mono'), fontSize: 12 }, axisPointer: { type: 'cross', lineStyle: { color: css('--fg-3') }, label: { backgroundColor: css('--panel-2'), color: css('--fg') } } },
+    animation: false,
+  });
+  const axisX = (data, extra = {}) => ({ type: 'category', data, boundaryGap: false, axisLine: { lineStyle: { color: css('--line-2') } }, axisTick: { show: false }, axisLabel: { color: css('--fg-3'), fontSize: 11, hideOverlap: true }, ...extra });
+  const axisY = (extra = {}) => ({ type: 'value', scale: true, splitLine: { lineStyle: { color: css('--line') } }, axisLabel: { color: css('--fg-3'), fontSize: 11 }, axisLine: { show: false }, ...extra });
+
+  // equity
+  const eq = D.equity;
+  const oosIdx = Math.max(0, eq.dates.findIndex(d => d >= D.oos_start));
+  let scaleMode = 'lin';
+  const eqChart = mk('equity');
+  function renderEquity() {
+    const isR = scaleMode === 'r';
+    const series = isR ? eq.cum_r : eq.equity;
+    eqChart.setOption({
+      ...base(),
+      xAxis: axisX(eq.dates),
+      yAxis: axisY({ type: scaleMode === 'log' ? 'log' : 'value', min: scaleMode === 'log' ? undefined : undefined, axisLabel: { color: css('--fg-3'), fontSize: 11, formatter: v => isR ? v + 'R' : '$' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v) } }),
+      series: [{
+        type: 'line', data: series, showSymbol: false, lineStyle: { width: 2, color: css('--accent') },
+        areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: css('--accent-soft') }, { offset: 1, color: 'rgba(0,0,0,0)' }] } },
+        markArea: oosIdx > 0 ? { silent: true, itemStyle: { color: css('--accent-soft'), opacity: .35 }, label: { show: true, position: 'insideTop', color: css('--fg-3'), fontSize: 11 }, data: [[{ name: 'out-of-sample', xAxis: eq.dates[oosIdx] }, { xAxis: eq.dates[eq.dates.length - 1] }]] } : undefined,
+        markPoint: { symbol: 'circle', symbolSize: 8, itemStyle: { color: css('--accent'), borderColor: css('--panel'), borderWidth: 2 }, label: { show: false }, data: [{ coord: [eq.dates.length - 1, series[series.length - 1]] }] },
+        name: isR ? 'Cumulative R' : 'Equity',
+      }],
+      tooltip: { ...base().tooltip, formatter: (ps) => { const i = ps[0].dataIndex; return `${eq.dates[i]}<br>${isR ? fmt.r(eq.cum_r[i]) : fmt.money(eq.equity[i])}<br>drawdown ${fmt.pct0(-eq.drawdown_pct[i])}`; } },
+    }, true);
+  }
+  renderEquity();
+  ['lin', 'log', 'r'].forEach(m => $('scale-' + m).addEventListener('click', () => { scaleMode = m; ['lin', 'log', 'r'].forEach(x => $('scale-' + x).setAttribute('aria-pressed', x === m)); renderEquity(); }));
+  const ddChart = mk('drawdown');
+  ddChart.setOption({ ...base(), grid: { left: 52, right: 16, top: 10, bottom: 28 }, xAxis: axisX(eq.dates), yAxis: axisY({ max: 0, axisLabel: { color: css('--fg-3'), fontSize: 11, formatter: v => v + '%' } }),
+    series: [{ type: 'line', name: 'Drawdown', data: eq.drawdown_pct, showSymbol: false, lineStyle: { width: 1.5, color: css('--down') }, areaStyle: { color: css('--down'), opacity: .18 } }] });
+
+  // yearly table
+  const yrRows = D.yearly.map(y => `<tr><td>${y.year}</td><td>${y.trades}</td><td class="${sign(y.return_pct)}">${fmt.pct(y.return_pct)}</td><td>${fmt.pct0(y.win_rate_pct, 0)}</td><td>${fmt.num(y.profit_factor)}</td><td class="${sign(y.avg_r)}">${fmt.r(y.avg_r)}</td><td class="${sign(y.sum_r)}">${fmt.r(y.sum_r)}</td><td>${(D.walk_forward.find(w => w.start.startsWith(String(y.year))) || {}).max_drawdown_pct?.toFixed(1) ?? '–'}%</td></tr>`).join('');
+  $('yearly').innerHTML = `<thead><tr><th>Year</th><th>Trades</th><th>Return</th><th>Win</th><th>PF</th><th>Avg R</th><th>Sum R</th><th>Max DD</th></tr></thead><tbody>${yrRows}</tbody>`;
+
+  // monthly heatmap
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const years = [...new Set(D.monthly.map(m => m.year))];
+  const mmax = Math.max(5, ...D.monthly.map(m => Math.abs(m.return_pct)));
+  mk('monthly').setOption({ ...base(), grid: { left: 44, right: 16, top: 10, bottom: 50 }, tooltip: { ...base().tooltip, trigger: 'item', formatter: p => `${months[p.value[0]]} ${years[p.value[1]]}<br>${fmt.pct(p.value[2])} · ${p.value[3]} trades` },
+    xAxis: { type: 'category', data: months, axisLabel: { color: css('--fg-3'), fontSize: 11 }, axisLine: { show: false }, axisTick: { show: false }, splitArea: { show: false } },
+    yAxis: { type: 'category', data: years, inverse: true, axisLabel: { color: css('--fg-3'), fontSize: 11 }, axisLine: { show: false }, axisTick: { show: false } },
+    visualMap: { dimension: 2, min: -mmax, max: mmax, calculable: false, orient: 'horizontal', left: 'center', bottom: 0, textStyle: { color: css('--fg-3'), fontSize: 11 }, inRange: { color: [css('--down'), css('--panel-2'), css('--up')] }, itemWidth: 10, itemHeight: 120, text: ['gain', 'loss'] },
+    series: [{ type: 'heatmap', data: D.monthly.map(m => [m.month - 1, years.indexOf(m.year), m.return_pct, m.trades]), label: { show: true, fontSize: 10, fontFamily: css('--font-mono'), color: css('--fg'), formatter: p => p.value[2].toFixed(0) }, itemStyle: { borderColor: css('--panel'), borderWidth: 2, borderRadius: 3 }, emphasis: { itemStyle: { borderColor: css('--fg') } } }] });
+
+  // R histogram
+  mk('rhist').setOption({ ...base(), grid: { left: 40, right: 12, top: 16, bottom: 28 }, xAxis: { type: 'category', data: D.r_hist.map(b => b.bin.toFixed(2)), axisLabel: { color: css('--fg-3'), fontSize: 10, interval: 3, formatter: v => (+v).toFixed(1) + 'R' }, axisLine: { lineStyle: { color: css('--line-2') } }, axisTick: { show: false } },
+    yAxis: axisY({ scale: false }), tooltip: { ...base().tooltip, formatter: ps => `${(+ps[0].name).toFixed(2)}R to ${(+ps[0].name + .25).toFixed(2)}R<br>${ps[0].value} trades` },
+    series: [{ type: 'bar', name: 'Trades', data: D.r_hist.map(b => ({ value: b.count, itemStyle: { color: b.bin < 0 ? css('--down') : css('--up'), borderRadius: [3, 3, 0, 0] } })), barCategoryGap: '15%' }] });
+
+  // rolling
+  mk('rolling').setOption({ ...base(), grid: { left: 44, right: 12, top: 16, bottom: 28 }, xAxis: axisX(D.rolling.map(r => r.date)), yAxis: axisY({ axisLabel: { color: css('--fg-3'), fontSize: 11, formatter: v => v.toFixed(2) + 'R' } }),
+    series: [{ type: 'line', name: 'Avg R (100 trades)', data: D.rolling.map(r => r.avg_r), showSymbol: false, lineStyle: { width: 2, color: css('--violet') }, markLine: { silent: true, symbol: 'none', lineStyle: { color: css('--fg-3'), type: 'dashed' }, label: { show: false }, data: [{ yAxis: 0 }] } }] });
+
+  // breakdown bars
+  const bd = [...D.by_direction.map(d => ['dir: ' + d.direction, d.sum_r]), ...D.by_exit.map(d => ['exit: ' + d.reason, d.sum_r]), ...D.by_weekday.map(d => [d.weekday.slice(0, 3), d.sum_r])];
+  mk('breakdown').setOption({ ...base(), grid: { left: 80, right: 24, top: 8, bottom: 24 }, tooltip: { ...base().tooltip, formatter: ps => `${ps[0].name}<br>${fmt.r(ps[0].value)} total` },
+    xAxis: axisY({ axisLabel: { color: css('--fg-3'), fontSize: 11, formatter: v => v + 'R' } }), yAxis: { type: 'category', data: bd.map(b => b[0]), inverse: true, axisLabel: { color: css('--fg-2'), fontSize: 11 }, axisLine: { show: false }, axisTick: { show: false } },
+    series: [{ type: 'bar', name: 'Sum R', data: bd.map(b => ({ value: b[1], itemStyle: { color: b[1] >= 0 ? css('--up') : css('--down'), borderRadius: 3 } })), barWidth: 12 }] });
+
+  // trade candle charts
+  function tradeChart(id, hintId, T) {
+    const t = T.trade;
+    $(hintId).innerHTML = `${t.date} · <span class="pill ${t.direction}">${t.direction}</span> ${fmt.r(t.r_multiple)} · signal ${t.entry_time.slice(11, 16)} · out ${t.exit_time} (${t.exit_reason})`;
+    const x = T.candles.map(c => c[0].slice(11));
+    mk(id).setOption({ ...base(), grid: { left: 58, right: 12, top: 16, bottom: 28 }, xAxis: { type: 'category', data: x, axisLabel: { color: css('--fg-3'), fontSize: 10, hideOverlap: true }, axisLine: { lineStyle: { color: css('--line-2') } }, axisTick: { show: false } },
+      yAxis: axisY({ axisLabel: { color: css('--fg-3'), fontSize: 11, formatter: v => v.toLocaleString() } }),
+      tooltip: { ...base().tooltip, formatter: ps => { const c = T.candles[ps[0].dataIndex]; return `${c[0]}<br>O ${c[1]} H ${c[4]} L ${c[3]} C ${c[2]}<br>EMA ${T.ema[ps[0].dataIndex]}`; } },
+      series: [
+        { type: 'candlestick', name: 'NAS100', data: T.candles.map(c => [c[1], c[2], c[3], c[4]]), itemStyle: { color: css('--up'), color0: css('--down'), borderColor: css('--up'), borderColor0: css('--down') },
+          markLine: { silent: true, symbol: 'none', label: { color: css('--fg-2'), fontSize: 10, position: 'insideEndTop' }, data: [
+            { yAxis: t.entry, name: 'entry', lineStyle: { color: css('--accent'), type: 'solid', width: 1.5 } },
+            { yAxis: t.stop, name: 'stop', lineStyle: { color: css('--down'), type: 'dashed' } },
+            { yAxis: t.exit, name: 'exit ' + fmt.r(t.r_multiple), lineStyle: { color: css('--warn'), type: 'dashed' } },
+            { xAxis: T.entry_index, name: 'signal', lineStyle: { color: css('--fg-3'), type: 'dotted' } }] } },
+        { type: 'line', name: 'EMA ' + P.ema_len, data: T.ema, showSymbol: false, lineStyle: { width: 1.5, color: css('--violet') } },
+      ] });
+  }
+  tradeChart('latest', 'latest-hint', D.latest_trade);
+  tradeChart('best', 'best-hint', D.best_trade);
+
+  // trades table
+  const allTrades = D.trades.slice().reverse();
+  const yrs = [...new Set(allTrades.map(t => t.date.slice(0, 4)))];
+  $('f-year').innerHTML += yrs.map(y => `<option value="${y}">${y}</option>`).join('');
+  let page = 0, sortKey = 'date', sortDir = -1; const PAGE = 25;
+  const cols = [['date', 'Date'], ['direction', 'Dir'], ['entry', 'Entry'], ['stop', 'Stop'], ['exit', 'Exit'], ['exit_time', 'Out'], ['risk_points', 'Risk pts'], ['r_multiple', 'R'], ['pnl', 'P&L'], ['equity_after', 'Equity'], ['bars_held', 'Bars'], ['mfe_r', 'MFE'], ['mae_r', 'MAE'], ['exit_reason', 'Exit type']];
+  function filtered() {
+    const q = $('f-search').value.trim(), dir = $('f-dir').value, ex = $('f-exit').value, yr = $('f-year').value;
+    let rows = allTrades.filter(t => (!q || t.date.includes(q)) && (!dir || t.direction === dir) && (!ex || t.exit_reason === ex) && (!yr || t.date.startsWith(yr)));
+    rows.sort((a, b) => (a[sortKey] > b[sortKey] ? 1 : a[sortKey] < b[sortKey] ? -1 : 0) * sortDir);
+    return rows;
+  }
+  function renderTrades() {
+    const rows = filtered(); const pages = Math.max(1, Math.ceil(rows.length / PAGE)); page = Math.min(page, pages - 1);
+    const slice = rows.slice(page * PAGE, page * PAGE + PAGE);
+    const head = cols.map(([k, l]) => `<th class="sortable" data-k="${k}">${l}${sortKey === k ? (sortDir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('');
+    const body = slice.map(t => `<tr><td>${t.date}</td><td><span class="pill ${t.direction}">${t.direction}</span></td><td>${fmt.num(t.entry, 1)}</td><td>${fmt.num(t.stop, 1)}</td><td>${fmt.num(t.exit, 1)}</td><td>${t.exit_time}</td><td>${fmt.num(t.risk_points, 1)}</td><td class="${sign(t.r_multiple)}">${fmt.r(t.r_multiple)}</td><td class="${sign(t.pnl)}">${fmt.money(t.pnl)}</td><td>${fmt.money(t.equity_after)}</td><td>${t.bars_held}</td><td>${fmt.num(t.mfe_r)}</td><td>${fmt.num(t.mae_r)}</td><td><span class="pill ${t.exit_reason}">${t.exit_reason}</span></td></tr>`).join('');
+    $('trades').innerHTML = `<thead><tr>${head}</tr></thead><tbody>${body || '<tr><td colspan="14" class="empty">No trades match.</td></tr>'}</tbody>`;
+    const sumR = rows.reduce((s, t) => s + t.r_multiple, 0), wins = rows.filter(t => t.pnl > 0).length;
+    $('pg-info').textContent = `${rows.length} trades · ${rows.length ? (wins / rows.length * 100).toFixed(0) : 0}% win · ${fmt.r(sumR)} · page ${page + 1}/${pages}`;
+    $('pg-prev').disabled = page === 0; $('pg-next').disabled = page >= pages - 1;
+    $('trades').querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => { const k = th.dataset.k; if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = -1; } renderTrades(); }));
+  }
+  ['f-search', 'f-dir', 'f-exit', 'f-year'].forEach(id => $(id).addEventListener('input', () => { page = 0; renderTrades(); }));
+  $('pg-prev').addEventListener('click', () => { page--; renderTrades(); }); $('pg-next').addEventListener('click', () => { page++; renderTrades(); });
+  renderTrades();
+
+  // experiments
+  const exps = (D.experiments || []).filter(e => e.metrics && e.metrics.trades);
+  if (!exps.length) { $('expwrap').innerHTML = '<p class="empty">No experiments logged yet.</p>'; }
+  else {
+    const g = (e, side, k) => e[side] && e[side][k] != null ? e[side][k] : null;
+    const ranked = exps.slice().sort((a, b) => ((g(b, 'oos', 'profit_factor') ?? b.metrics.profit_factor) - (g(a, 'oos', 'profit_factor') ?? a.metrics.profit_factor)));
+    const diffs = (e) => Object.entries(e.params || {}).filter(([k, v]) => String(v) !== String(P[k])).map(([k, v]) => `${k}=${v}`).join(' ') || 'defaults';
+    $('experiments').innerHTML = `<thead><tr><th>Run</th><th>Params (vs current)</th><th>Trades</th><th>Return</th><th>PF</th><th>Max DD</th><th>IS PF</th><th>OOS PF</th><th>OOS avg R</th></tr></thead><tbody>` +
+      ranked.slice(0, 40).map(e => `<tr class="${e.id === D.run_id ? 'hl' : ''}"><td>${e.name}<br><span style="color:var(--fg-3)">${e.ts.slice(0, 16).replace('T', ' ')}</span></td><td style="white-space:normal;max-width:260px">${diffs(e)}</td><td>${e.metrics.trades}</td><td class="${sign(e.metrics.total_return_pct)}">${fmt.pct(e.metrics.total_return_pct, 0)}</td><td>${fmt.num(e.metrics.profit_factor)}</td><td>${fmt.pct0(e.metrics.max_drawdown_pct)}</td><td>${fmt.num(g(e, 'is', 'profit_factor'))}</td><td>${fmt.num(g(e, 'oos', 'profit_factor'))}</td><td>${fmt.r(g(e, 'oos', 'avg_r'))}</td></tr>`).join('') + '</tbody>';
+    const pts = exps.filter(e => g(e, 'is', 'profit_factor') != null && g(e, 'oos', 'profit_factor') != null).map(e => ({ value: [g(e, 'is', 'profit_factor'), g(e, 'oos', 'profit_factor')], name: e.name }));
+    mk('expscatter').setOption({ ...base(), grid: { left: 48, right: 16, top: 24, bottom: 36 }, tooltip: { ...base().tooltip, trigger: 'item', formatter: p => `${p.name}<br>IS PF ${p.value[0].toFixed(2)} · OOS PF ${p.value[1].toFixed(2)}` },
+      xAxis: axisY({ name: 'in-sample profit factor', nameLocation: 'middle', nameGap: 24, nameTextStyle: { color: css('--fg-3'), fontSize: 11 } }), yAxis: axisY({ name: 'out-of-sample PF', nameTextStyle: { color: css('--fg-3'), fontSize: 11, align: 'left' } }),
+      series: [{ type: 'scatter', name: 'Experiments', data: pts.length ? pts : [], symbolSize: 10, itemStyle: { color: css('--accent'), borderColor: css('--panel'), borderWidth: 1 }, markLine: { silent: true, symbol: 'none', lineStyle: { color: css('--fg-3'), type: 'dashed' }, label: { show: false }, data: [{ yAxis: 1 }, { xAxis: 1 }] } }] });
+    if (!pts.length) $('expscatter').innerHTML = '<p class="empty">Run a sweep to populate the in-sample versus out-of-sample view.</p>';
+  }
+
+  window.addEventListener('resize', () => charts.forEach(c => c.resize()));
+  if (window.matchMedia) { try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => location.reload()); } catch (e) {} }
+})();
+</script>
+</body>
+</html>
