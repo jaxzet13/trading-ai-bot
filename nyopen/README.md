@@ -29,7 +29,7 @@ Each search also wanted to skip a weekday (v3: Wednesday, v4: Thursday). Differe
 Result on 2019-01 to 2026-10 (1% risk, 1 point cost): video rule +275%, profit factor 1.13, max drawdown 35%. Current defaults +1,085%, profit factor 1.31, max drawdown 24%, every calendar year positive. Out of sample (2024 on) the profit factor goes from 1.10 to 1.27.
 
 ## Prop-firm simulation
-`propfirm.py` replays the trade stream against typical challenge rules (two-step 10/5 with 10% max loss, one-step 10/6, 30-day-limited phases, futures-style trailing drawdown), starting an evaluation on every historical day and at several fixed risk sizes. The dashboard shows pass rate, blow-up rate, days to pass, and the odds of still being funded a year later. Read it before deciding on risk per trade.
+`propfirm.py` replays the trade stream against typical challenge rules (two-step 10/5 with 10% max loss, one-step 10/6, 30-day-limited phases, futures-style trailing drawdown), starting an evaluation on every historical day and at several fixed risk sizes. The dashboard shows pass rate, blow-up rate, days to pass, and the odds of still being funded a year later. Read it before deciding on risk per trade. The sizing policy "cut risk in drawdown" (halve at 30% of the max-loss allowance used, quarter at 60%) is what turns a 60% pass rate into one where every historical start passed at 0.75% risk.
 
 ## Layout
 | File | Purpose |

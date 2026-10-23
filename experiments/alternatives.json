@@ -1,0 +1,156 @@
+[
+ {
+  "family": "intraday candidates",
+  "name": "orb",
+  "description": "15-minute opening-range breakout, stop at the range midpoint, fixed R target",
+  "config": {
+   "target_r": 3.0,
+   "trend": "both",
+   "end": 1430,
+   "be_at_r": 1.0
+  },
+  "trades": 2266,
+  "win_rate_pct": 27.140335392762577,
+  "profit_factor": 1.0720682265456505,
+  "is_pf": 1.0434033261003912,
+  "oos_pf": 1.1087382052671566,
+  "max_drawdown_pct": 18.546759012317814,
+  "verdict": "no edge after costs"
+ },
+ {
+  "family": "intraday candidates",
+  "name": "vwap_pullback",
+  "description": "trend pullback to session VWAP, bullish/bearish close, fixed R target",
+  "config": {
+   "target_r": 3.0,
+   "trend": "slow_ema",
+   "end": 1430,
+   "be_at_r": 0.0
+  },
+  "trades": 2043,
+  "win_rate_pct": 29.71120900636319,
+  "profit_factor": 1.0596954269584524,
+  "is_pf": 1.0293677658220215,
+  "oos_pf": 1.1071750019020108,
+  "max_drawdown_pct": 22.468088965379106,
+  "verdict": "no edge after costs"
+ },
+ {
+  "family": "intraday candidates",
+  "name": "ema_pullback",
+  "description": "trend pullback to the 20 EMA, fixed R target",
+  "config": {
+   "target_r": 3.0,
+   "trend": "both",
+   "end": 1130,
+   "be_at_r": 0.0
+  },
+  "trades": 1538,
+  "win_rate_pct": 29.388816644993497,
+  "profit_factor": 1.0136314533831399,
+  "is_pf": 0.9690967664671358,
+  "oos_pf": 1.09602856943776,
+  "max_drawdown_pct": 32.02489002034999,
+  "verdict": "no edge after costs"
+ },
+ {
+  "family": "intraday candidates",
+  "name": "or_fade",
+  "description": "fade a stretch beyond the opening range once price closes back inside",
+  "config": {
+   "target_r": 3.0,
+   "trend": "none",
+   "end": 1130,
+   "be_at_r": 1.0
+  },
+  "trades": 1022,
+  "win_rate_pct": 28.669275929549904,
+  "profit_factor": 1.000912657240375,
+  "is_pf": 1.072969532889123,
+  "oos_pf": 0.8750815037249683,
+  "max_drawdown_pct": 23.333080482307654,
+  "verdict": "no edge after costs"
+ },
+ {
+  "family": "intraday candidates",
+  "name": "prev_day_break",
+  "description": "break of the previous session high/low in the trend direction",
+  "config": {
+   "target_r": 2.0,
+   "trend": "none",
+   "end": 1130,
+   "be_at_r": 1.0
+  },
+  "trades": 922,
+  "win_rate_pct": 30.260303687635577,
+  "profit_factor": 0.9400905269155735,
+  "is_pf": 0.9619037396518666,
+  "oos_pf": 0.9018229212970789,
+  "max_drawdown_pct": 20.761715580537842,
+  "verdict": "no edge after costs"
+ },
+ {
+  "family": "open-candle rule at other opens",
+  "name": "London open 03:00",
+  "description": "same rule and exits as the NY open strategy, signal candle at 03:00",
+  "config": {
+   "signal_time": "03:00",
+   "exit_time": "09:25"
+  },
+  "trades": 794,
+  "win_rate_pct": 22.040302267002517,
+  "profit_factor": 0.9017159140607549,
+  "is_pf": 1.1211006513282171,
+  "oos_pf": 0.5164056258748251,
+  "max_drawdown_pct": 61.303186558936076,
+  "verdict": "no edge"
+ },
+ {
+  "family": "open-candle rule at other opens",
+  "name": "Frankfurt open 02:00",
+  "description": "same rule and exits as the NY open strategy, signal candle at 02:00",
+  "config": {
+   "signal_time": "02:00",
+   "exit_time": "08:25"
+  },
+  "trades": 642,
+  "win_rate_pct": 21.651090342679126,
+  "profit_factor": 0.9775040093563658,
+  "is_pf": 1.1249911684602736,
+  "oos_pf": 0.7455987574034523,
+  "max_drawdown_pct": 39.401308322174486,
+  "verdict": "no edge"
+ },
+ {
+  "family": "open-candle rule at other opens",
+  "name": "US data 08:30",
+  "description": "same rule and exits as the NY open strategy, signal candle at 08:30",
+  "config": {
+   "signal_time": "08:30",
+   "exit_time": "09:25"
+  },
+  "trades": 904,
+  "win_rate_pct": 33.07522123893805,
+  "profit_factor": 1.0128330661872191,
+  "is_pf": 1.036839877066499,
+  "oos_pf": 0.9846690647680904,
+  "max_drawdown_pct": 26.88475617577355,
+  "verdict": "no edge"
+ },
+ {
+  "family": "open-candle rule at other opens",
+  "name": "10:00 candle",
+  "description": "same rule and exits as the NY open strategy, signal candle at 10:00",
+  "config": {
+   "signal_time": "10:00",
+   "exit_time": "15:30"
+  },
+  "trades": 1217,
+  "win_rate_pct": 19.80279375513558,
+  "profit_factor": 0.9515994116312949,
+  "is_pf": 1.0485409717615035,
+  "oos_pf": 0.7727564508172041,
+  "max_drawdown_pct": 62.012318223343144,
+  "verdict": "no edge"
+ }
+]

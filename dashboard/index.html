@@ -163,12 +163,17 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 1
   </div>
 
   <section class="panel">
-    <div class="panel-head"><h2>Could this pass a prop-firm challenge?</h2><span class="hint">An evaluation is started on every historical day and replayed trade by trade with fixed risk per trade. Pass rate is over the evaluations that resolved.</span></div>
+    <div class="panel-head"><h2>Could this pass a prop-firm challenge?</h2><span class="hint">An evaluation is started on every historical day and replayed trade by trade. "Cut risk in drawdown" halves the risk once 30% of the max-loss allowance is used and quarters it at 60%. Pass rate is over the evaluations that resolved.</span></div>
     <div class="grid wide">
       <div class="tablewrap"><table id="prop"></table></div>
-      <div><div class="controls" style="margin-bottom:6px"><select id="prop-rules" aria-label="Rule set"></select></div><div class="chart" id="propchart"></div><p class="hint" id="prop-desc"></p></div>
+      <div><div class="controls" style="margin-bottom:6px"><select id="prop-rules" aria-label="Rule set"></select><select id="prop-scaling" aria-label="Sizing"><option value="fixed">Fixed risk per trade</option><option value="drawdown" selected>Cut risk in drawdown</option></select></div><div class="chart" id="propchart"></div><p class="hint" id="prop-desc"></p></div>
     </div>
     <div class="claims" id="prop-take"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>What else was tested for the prop-firm bot</h2><span class="hint">Each candidate's best in-sample configuration. A candidate needs a profit factor above 1.08 both in and out of sample to be worth trading; none of these do.</span></div>
+    <div class="tablewrap"><table id="alts"></table></div>
   </section>
 
   <div class="grid two">
@@ -392,10 +397,12 @@ open dashboard/index.html</pre>
     const risks = PF.risks;
     const rsNames = PF.rulesets.map(r => r.name);
     $('prop-rules').innerHTML = rsNames.map((n, i) => `<option value="${i}">${n}</option>`).join('');
-    const row = (rs, rk) => PF.rows.find(r => r.ruleset === rs && r.risk_pct === rk) || {};
+    const scalingOf = () => $('prop-scaling').value;
+    const row = (rs, rk, sc) => PF.rows.find(r => r.ruleset === rs && r.risk_pct === rk && (r.scaling || 'fixed') === (sc || scalingOf())) || {};
     const tone = v => v == null ? '' : v >= 75 ? 'pos' : v < 50 ? 'neg' : '';
-    $('prop').innerHTML = `<thead><tr><th>Rule set</th><th>Risk</th><th>Pass</th><th>Blow up</th><th>Days (median)</th><th>Days (90th)</th><th>Funded 12 mo</th><th>12-mo P&amp;L</th></tr></thead><tbody>` +
-      rsNames.map(rs => risks.map((rk, i) => { const r = row(rs, rk); return `<tr><td>${i === 0 ? rs : ''}</td><td>${rk}%</td><td class="${tone(r.pass_rate_pct)}">${fmt.pct0(r.pass_rate_pct, 0)}</td><td class="${r.fail_rate_pct > 25 ? 'neg' : ''}">${fmt.pct0(r.fail_rate_pct, 0)}</td><td>${r.median_days_to_pass == null ? '–' : Math.round(r.median_days_to_pass)}</td><td>${r.p90_days_to_pass == null ? '–' : Math.round(r.p90_days_to_pass)}</td><td class="${tone(r.funded_survival_12m_pct)}">${fmt.pct0(r.funded_survival_12m_pct, 0)}</td><td class="${sign(r.funded_pnl_12m_pct || 0)}">${fmt.pct(r.funded_pnl_12m_pct)}</td></tr>`; }).join('')).join('') + '</tbody>';
+    function renderPropTable() { $('prop').innerHTML = `<thead><tr><th>Rule set</th><th>Risk</th><th>Pass</th><th>Blow up</th><th>Days (median)</th><th>Days (90th)</th><th>Funded 12 mo</th><th>12-mo P&amp;L</th></tr></thead><tbody>` +
+      rsNames.map(rs => risks.map((rk, i) => { const r = row(rs, rk); return `<tr><td>${i === 0 ? rs : ''}</td><td>${rk}%</td><td class="${tone(r.pass_rate_pct)}">${fmt.pct0(r.pass_rate_pct, 0)}</td><td class="${r.fail_rate_pct > 25 ? 'neg' : ''}">${fmt.pct0(r.fail_rate_pct, 0)}</td><td>${r.median_days_to_pass == null ? '–' : Math.round(r.median_days_to_pass)}</td><td>${r.p90_days_to_pass == null ? '–' : Math.round(r.p90_days_to_pass)}</td><td class="${tone(r.funded_survival_12m_pct)}">${fmt.pct0(r.funded_survival_12m_pct, 0)}</td><td class="${sign(r.funded_pnl_12m_pct || 0)}">${fmt.pct(r.funded_pnl_12m_pct)}</td></tr>`; }).join('')).join('') + '</tbody>'; }
+    renderPropTable();
     const pc = mk('propchart');
     function renderProp() {
       const rs = rsNames[+$('prop-rules').value];
@@ -407,15 +414,33 @@ open dashboard/index.html</pre>
         series: [{ type: 'line', name: 'Pass the challenge', data: risks.map(rk => row(rs, rk).pass_rate_pct), lineStyle: { width: 2, color: css('--up') }, itemStyle: { color: css('--up') }, symbolSize: 8 },
                  { type: 'line', name: 'Still funded after 12 months', data: risks.map(rk => row(rs, rk).funded_survival_12m_pct), lineStyle: { width: 2, color: css('--accent') }, itemStyle: { color: css('--accent') }, symbolSize: 8 }] }, true);
     }
-    $('prop-rules').addEventListener('change', renderProp); renderProp();
-    // sweet spot: the largest risk that still passes and survives at least 75% of the time
-    const ok = PF.rows.filter(r => r.ruleset === rsNames[0] && r.pass_rate_pct >= 75 && (r.funded_survival_12m_pct || 0) >= 75).sort((a, b) => b.risk_pct - a.risk_pct);
-    const best = ok[0] || PF.rows.find(r => r.ruleset === rsNames[0] && r.risk_pct === 0.5);
+    function renderTake() {
+      // sweet spot: the largest risk that still passes and survives at least 90% of the time under the chosen sizing
+      const ok = PF.rows.filter(r => r.ruleset === rsNames[0] && (r.scaling || 'fixed') === scalingOf() && r.pass_rate_pct >= 90 && (r.funded_survival_12m_pct || 0) >= 90).sort((a, b) => b.risk_pct - a.risk_pct);
+      const best = ok[0] || row(rsNames[0], 0.5);
+      const longest = M.longest_loss_streak;
+      $('prop-take').innerHTML = `<div class="claim"><span class="k">Worst losing run</span><span class="lbl">trades</span><span class="v">${longest}</span><span class="lbl">at 1% fixed risk</span><span class="v neg">about -${longest}%</span></div>
+        <div class="claim"><span class="k">Largest risk with 90%+ odds, two-step</span><span class="lbl">risk</span><span class="v">${best.risk_pct ? best.risk_pct + '%' : '–'}</span><span class="lbl">pass</span><span class="v">${fmt.pct0(best.pass_rate_pct, 0)}</span></div>
+        <div class="claim"><span class="k">Time at that risk</span><span class="lbl">median</span><span class="v">${best.median_days_to_pass != null ? Math.round(best.median_days_to_pass) + ' d' : '–'}</span><span class="lbl">90th pct</span><span class="v">${best.p90_days_to_pass != null ? Math.round(best.p90_days_to_pass) + ' d' : '–'}</span></div>`;
+    }
+    $('prop-rules').addEventListener('change', renderProp);
+    $('prop-scaling').addEventListener('change', () => { renderPropTable(); renderProp(); renderTake(); });
+    renderProp(); renderTake();
+    if (false) {
+    const best = null;
     const longest = M.longest_loss_streak;
     $('prop-take').innerHTML = `<div class="claim"><span class="k">Worst losing run</span><span class="lbl">trades</span><span class="v">${longest}</span><span class="lbl">at 1% risk</span><span class="v neg">about -${longest}%</span></div>
       <div class="claim"><span class="k">Largest risk with 75%+ odds, two-step</span><span class="lbl">risk</span><span class="v">${best ? best.risk_pct + '%' : '–'}</span><span class="lbl">pass</span><span class="v">${best ? fmt.pct0(best.pass_rate_pct, 0) : '–'}</span></div>
       <div class="claim"><span class="k">Time at that risk</span><span class="lbl">median</span><span class="v">${best ? Math.round(best.median_days_to_pass) + ' d' : '–'}</span><span class="lbl">90th pct</span><span class="v">${best ? Math.round(best.p90_days_to_pass) + ' d' : '–'}</span></div>`;
+    }
   }
+
+  // alternatives
+  const ALT = D.alternatives || [];
+  if (ALT.length) {
+    $('alts').innerHTML = `<thead><tr><th>Family</th><th>Candidate</th><th>What it does</th><th>Trades</th><th>Win</th><th>PF</th><th>IS PF</th><th>OOS PF</th><th>Max DD</th><th>Verdict</th></tr></thead><tbody>` +
+      ALT.map(a => `<tr><td>${a.family}</td><td>${a.name}</td><td style="white-space:normal;min-width:260px">${a.description}</td><td>${a.trades}</td><td>${fmt.pct0(a.win_rate_pct, 0)}</td><td>${fmt.num(a.profit_factor)}</td><td>${fmt.num(a.is_pf)}</td><td>${fmt.num(a.oos_pf)}</td><td>${fmt.pct0(a.max_drawdown_pct)}</td><td><span class="pill ${a.verdict.startsWith('no') ? 'stop' : 'long'}">${a.verdict}</span></td></tr>`).join('') + '</tbody>';
+  } else { $('alts').innerHTML = '<tr><td class="empty">No alternatives logged. Run <code>python -m propbot.run --export</code>.</td></tr>'; }
 
   // trade candle charts
   function tradeChart(id, hintId, T) {

@@ -139,6 +139,7 @@ def export_dashboard(res: dict, run_id: str) -> Path:
         "is": is_m, "oos": oos_m,
         "monte_carlo": mc, "mfe_mae": mfe_mae, "prop_firm": prop,
         "improve_runs": load_improve_runs(),
+        "alternatives": json.loads((ROOT / "experiments" / "alternatives.json").read_text()) if (ROOT / "experiments" / "alternatives.json").exists() else [],
         "yearly": res.get("yearly", []),
         "monthly": res.get("monthly", []),
         "by_weekday": by_weekday, "by_exit": by_exit, "by_direction": by_dir, "by_exit_hour": by_exit_hour,
