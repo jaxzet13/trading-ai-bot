@@ -162,6 +162,15 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 1
     <section class="panel"><div class="panel-head"><h2>Improvement path</h2><span class="hint" id="path-hint">Each staged search: in-sample score and out-of-sample profit factor after every stage.</span></div><div class="chart" id="path"></div></section>
   </div>
 
+  <section class="panel">
+    <div class="panel-head"><h2>Could this pass a prop-firm challenge?</h2><span class="hint">An evaluation is started on every historical day and replayed trade by trade with fixed risk per trade. Pass rate is over the evaluations that resolved.</span></div>
+    <div class="grid wide">
+      <div class="tablewrap"><table id="prop"></table></div>
+      <div><div class="controls" style="margin-bottom:6px"><select id="prop-rules" aria-label="Rule set"></select></div><div class="chart" id="propchart"></div><p class="hint" id="prop-desc"></p></div>
+    </div>
+    <div class="claims" id="prop-take"></div>
+  </section>
+
   <div class="grid two">
     <section class="panel"><div class="panel-head"><h2>Latest trade</h2><span class="hint" id="latest-hint"></span></div><div class="chart" id="latest"></div></section>
     <section class="panel"><div class="panel-head"><h2>Best trade</h2><span class="hint" id="best-hint"></span></div><div class="chart" id="best"></div></section>
@@ -376,6 +385,37 @@ open dashboard/index.html</pre>
       series: [{ type: 'line', name: 'In-sample PF', data: steps.map(st => ({ value: st.is.profit_factor, symbol: sym(st) })), lineStyle: { width: 2, color: css('--accent') }, itemStyle: { color: css('--accent'), borderColor: css('--accent'), borderWidth: 2 }, symbolSize: 8 },
                { type: 'line', name: 'Out-of-sample PF', data: steps.map(st => ({ value: st.oos.profit_factor, symbol: sym(st) })), lineStyle: { width: 2, color: css('--warn') }, itemStyle: { color: css('--warn'), borderColor: css('--warn'), borderWidth: 2 }, symbolSize: 8 }] });
   } else { $('path').innerHTML = '<p class="empty">Run <code>python -m nyopen.run improve</code> to see a search path here.</p>'; }
+
+  // prop firm
+  const PF = D.prop_firm;
+  if (PF) {
+    const risks = PF.risks;
+    const rsNames = PF.rulesets.map(r => r.name);
+    $('prop-rules').innerHTML = rsNames.map((n, i) => `<option value="${i}">${n}</option>`).join('');
+    const row = (rs, rk) => PF.rows.find(r => r.ruleset === rs && r.risk_pct === rk) || {};
+    const tone = v => v == null ? '' : v >= 75 ? 'pos' : v < 50 ? 'neg' : '';
+    $('prop').innerHTML = `<thead><tr><th>Rule set</th><th>Risk</th><th>Pass</th><th>Blow up</th><th>Days (median)</th><th>Days (90th)</th><th>Funded 12 mo</th><th>12-mo P&amp;L</th></tr></thead><tbody>` +
+      rsNames.map(rs => risks.map((rk, i) => { const r = row(rs, rk); return `<tr><td>${i === 0 ? rs : ''}</td><td>${rk}%</td><td class="${tone(r.pass_rate_pct)}">${fmt.pct0(r.pass_rate_pct, 0)}</td><td class="${r.fail_rate_pct > 25 ? 'neg' : ''}">${fmt.pct0(r.fail_rate_pct, 0)}</td><td>${r.median_days_to_pass == null ? '–' : Math.round(r.median_days_to_pass)}</td><td>${r.p90_days_to_pass == null ? '–' : Math.round(r.p90_days_to_pass)}</td><td class="${tone(r.funded_survival_12m_pct)}">${fmt.pct0(r.funded_survival_12m_pct, 0)}</td><td class="${sign(r.funded_pnl_12m_pct || 0)}">${fmt.pct(r.funded_pnl_12m_pct)}</td></tr>`; }).join('')).join('') + '</tbody>';
+    const pc = mk('propchart');
+    function renderProp() {
+      const rs = rsNames[+$('prop-rules').value];
+      $('prop-desc').textContent = PF.rulesets[+$('prop-rules').value].description;
+      pc.setOption({ ...base(), grid: { left: 44, right: 16, top: 28, bottom: 36 }, legend: { top: 0, right: 8, textStyle: { color: css('--fg-3'), fontSize: 11 }, itemWidth: 14 },
+        tooltip: { ...base().tooltip, formatter: ps => `${ps[0].axisValue}% risk per trade<br>` + ps.map(p => `${p.seriesName}: ${p.value == null ? '–' : p.value.toFixed(0) + '%'}`).join('<br>') },
+        xAxis: { type: 'category', data: risks, axisLabel: { color: css('--fg-3'), fontSize: 11, formatter: v => v + '%' }, name: 'risk per trade', nameLocation: 'middle', nameGap: 22, nameTextStyle: { color: css('--fg-3'), fontSize: 11 }, axisLine: { lineStyle: { color: css('--line-2') } }, axisTick: { show: false } },
+        yAxis: axisY({ min: 0, max: 100, scale: false, axisLabel: { color: css('--fg-3'), fontSize: 11, formatter: v => v + '%' } }),
+        series: [{ type: 'line', name: 'Pass the challenge', data: risks.map(rk => row(rs, rk).pass_rate_pct), lineStyle: { width: 2, color: css('--up') }, itemStyle: { color: css('--up') }, symbolSize: 8 },
+                 { type: 'line', name: 'Still funded after 12 months', data: risks.map(rk => row(rs, rk).funded_survival_12m_pct), lineStyle: { width: 2, color: css('--accent') }, itemStyle: { color: css('--accent') }, symbolSize: 8 }] }, true);
+    }
+    $('prop-rules').addEventListener('change', renderProp); renderProp();
+    // sweet spot: the largest risk that still passes and survives at least 75% of the time
+    const ok = PF.rows.filter(r => r.ruleset === rsNames[0] && r.pass_rate_pct >= 75 && (r.funded_survival_12m_pct || 0) >= 75).sort((a, b) => b.risk_pct - a.risk_pct);
+    const best = ok[0] || PF.rows.find(r => r.ruleset === rsNames[0] && r.risk_pct === 0.5);
+    const longest = M.longest_loss_streak;
+    $('prop-take').innerHTML = `<div class="claim"><span class="k">Worst losing run</span><span class="lbl">trades</span><span class="v">${longest}</span><span class="lbl">at 1% risk</span><span class="v neg">about -${longest}%</span></div>
+      <div class="claim"><span class="k">Largest risk with 75%+ odds, two-step</span><span class="lbl">risk</span><span class="v">${best ? best.risk_pct + '%' : '–'}</span><span class="lbl">pass</span><span class="v">${best ? fmt.pct0(best.pass_rate_pct, 0) : '–'}</span></div>
+      <div class="claim"><span class="k">Time at that risk</span><span class="lbl">median</span><span class="v">${best ? Math.round(best.median_days_to_pass) + ' d' : '–'}</span><span class="lbl">90th pct</span><span class="v">${best ? Math.round(best.p90_days_to_pass) + ' d' : '–'}</span></div>`;
+  }
 
   // trade candle charts
   function tradeChart(id, hintId, T) {

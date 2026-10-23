@@ -34,13 +34,13 @@ class Params:
     entry_mode: EntryMode = "close" # close: enter at the signal close. breakout: stop order at the signal high/low
     breakout_wait_bars: int = 3     # breakout mode: cancel if not triggered within this many bars
     # --- exits ------------------------------------------------------------------------------------
-    exit_time: str = "15:55"        # flatten if still open at this bar's open
+    exit_time: str = "15:30"        # flatten if still open at this bar's open (video: 15:55; 15:30 avoids the closing-auction chop)
     trail_mode: TrailMode = "chandelier"  # ema | swing | atr | chandelier | none (video: ema)
     swing_len: int = 3              # bars for the swing-low/high trail
     atr_len: int = 14               # ATR length (bars) used by the atr/chandelier trails and the filters
-    atr_mult: float = 3.0           # ATR multiple for the atr / chandelier trails
-    trail_after_r: float = 0.0      # only start trailing once the trade is this many R in profit
-    breakeven_at_r: float = 0.0     # move stop to entry once this many R in profit (0 = off)
+    atr_mult: float = 3.5           # ATR multiple for the atr / chandelier trails
+    trail_after_r: float = 1.0      # only start trailing once the trade is this many R in profit (video: 0)
+    breakeven_at_r: float = 1.0     # move stop to entry once this many R in profit (0 = off; video: 0)
     tp_r: float = 0.0               # fixed take-profit in R for the whole position (0 = off)
     partial_tp_r: float = 0.0       # scale out `partial_frac` of the position at this many R (0 = off)
     partial_frac: float = 0.5
@@ -52,7 +52,7 @@ class Params:
     max_risk_atr: float = 0.0       # skip if risk > this many ATRs (0 = off)
     max_gap_atr: float = 0.0        # skip if |open - previous session close| > this many ATRs (0 = off)
     trend_filter: TrendFilter = "slow_ema"  # slow_ema: trade only with price vs slow EMA; prev_day: only with yesterday's direction (video: none)
-    slow_ema_len: int = 200         # for trend_filter = slow_ema
+    slow_ema_len: int = 300         # for trend_filter = slow_ema
     skip_weekdays: str = ""         # e.g. "Mon,Fri"
     allow_long: bool = True
     allow_short: bool = True

@@ -20,6 +20,7 @@ from .strategy import Params
 ROOT = Path(__file__).resolve().parent.parent
 
 STAGES: list[tuple[str, list[dict]]] = [
+    ("signal candle", [dict(signal_time="09:30"), dict(signal_time="09:35"), dict(signal_time="09:40")]),
     ("direction bias", [dict(trend_filter="none"), dict(trend_filter="slow_ema", slow_ema_len=30), dict(trend_filter="slow_ema", slow_ema_len=50),
                         dict(trend_filter="slow_ema", slow_ema_len=100), dict(trend_filter="slow_ema", slow_ema_len=200), dict(trend_filter="prev_day")]),
     ("trailing stop", [dict(trail_mode="ema"), dict(trail_mode="atr", atr_mult=1.5), dict(trail_mode="atr", atr_mult=2.0), dict(trail_mode="atr", atr_mult=3.0),
@@ -31,6 +32,12 @@ STAGES: list[tuple[str, list[dict]]] = [
     ("candle size", [dict(min_risk_atr=a, max_risk_atr=b) for a in (0.0, 0.5, 0.75) for b in (0.0, 2.0, 3.0)]),
     ("weekday", [dict(skip_weekdays="")] + [dict(skip_weekdays=d) for d in ("Mon", "Tue", "Wed", "Thu", "Fri")]),
     ("side", [dict(allow_long=True, allow_short=True), dict(allow_long=True, allow_short=False), dict(allow_long=False, allow_short=True)]),
+    # second pass over the levers that matter most, with finer grids around the incumbent
+    ("trend length", [dict(slow_ema_len=v) for v in (100, 150, 200, 300, 400)]),
+    ("trail width", [dict(atr_mult=v) for v in (2.0, 2.5, 3.0, 3.5, 4.0, 5.0)]),
+    ("profit taking", [dict(tp_r=0.0, partial_tp_r=0.0), dict(tp_r=3.0), dict(tp_r=5.0), dict(tp_r=8.0), dict(partial_tp_r=2.0, partial_frac=0.3), dict(partial_tp_r=3.0, partial_frac=0.5)]),
+    ("signal quality 2", [dict(min_body_r=v) for v in (0.05, 0.1, 0.15, 0.2, 0.3)]),
+    ("time exit 2", [dict(exit_time=v) for v in ("13:00", "14:00", "15:00", "15:30", "15:55")]),
 ]
 
 

@@ -10,6 +10,7 @@ import pandas as pd
 
 from .backtest import backtest, get_bars, load_experiments
 from .optimize import OOS_START, split_metrics, walk_forward
+from .propfirm import prop_firm_report
 from .strategy import Params, VIDEO_RULE, add_indicators
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -122,6 +123,7 @@ def export_dashboard(res: dict, run_id: str) -> Path:
     is_m, oos_m = split_metrics(res, p.start_equity)
     b_is, b_oos = split_metrics(base, p.start_equity)
     mc = monte_carlo(tr, p.start_equity, p.risk_pct)
+    prop = prop_firm_report(tr)
     mfe_mae = [[round(float(t.mfe_r), 2), round(float(t.mae_r), 2), round(float(t.r_multiple), 2), t.direction] for t in tr.itertuples()]
     data = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -135,7 +137,7 @@ def export_dashboard(res: dict, run_id: str) -> Path:
                    "baseline": [round(float(p.start_equity), 2)] + [round(float(x), 2) for x in aligned]},
         "baseline": {"params": base_p.to_dict(), "metrics": base["metrics"], "is": b_is, "oos": b_oos},
         "is": is_m, "oos": oos_m,
-        "monte_carlo": mc, "mfe_mae": mfe_mae,
+        "monte_carlo": mc, "mfe_mae": mfe_mae, "prop_firm": prop,
         "improve_runs": load_improve_runs(),
         "yearly": res.get("yearly", []),
         "monthly": res.get("monthly", []),
