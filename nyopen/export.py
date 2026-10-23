@@ -8,9 +8,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from .backtest import get_bars, load_experiments
-from .optimize import OOS_START, walk_forward
-from .strategy import Params, add_indicators
+from .backtest import backtest, get_bars, load_experiments
+from .optimize import OOS_START, split_metrics, walk_forward
+from .strategy import Params, VIDEO_RULE, add_indicators
 
 ROOT = Path(__file__).resolve().parent.parent
 DASH = ROOT / "dashboard"
@@ -43,6 +43,36 @@ def trade_chart(trades: pd.DataFrame, p: Params, which: int = -1, before: int = 
         "ema": [round(float(x), 2) for x in win.ema],
         "entry_index": int(i - win.index[0]),
     }
+
+
+def monte_carlo(trades: pd.DataFrame, start_equity: float, risk_pct: float, n: int = 2000, seed: int = 7) -> dict:
+    """Bootstrap the trade sequence: draw len(trades) R-multiples with replacement, compound at risk_pct, and
+    look at the spread of outcomes. Answers 'how different could the equity path have been with the same edge?'
+    (A plain shuffle would leave the final return unchanged, since compounding is order-independent.)"""
+    rng = np.random.default_rng(seed)
+    r = trades.r_multiple.to_numpy()
+    f = risk_pct / 100.0
+    finals, maxdds = np.empty(n), np.empty(n)
+    for i in range(n):
+        path = np.cumprod(1 + f * rng.choice(r, size=len(r), replace=True))
+        peak = np.maximum.accumulate(np.concatenate([[1.0], path]))
+        maxdds[i] = (1 - np.concatenate([[1.0], path]) / peak).max() * 100
+        finals[i] = (path[-1] - 1) * 100
+    q = lambda a, p: float(np.percentile(a, p))
+    return {"runs": n, "return_pct": {"p5": q(finals, 5), "p25": q(finals, 25), "p50": q(finals, 50), "p75": q(finals, 75), "p95": q(finals, 95)},
+            "max_dd_pct": {"p5": q(maxdds, 5), "p25": q(maxdds, 25), "p50": q(maxdds, 50), "p75": q(maxdds, 75), "p95": q(maxdds, 95)},
+            "dd_hist": [{"bin": float(b), "count": int(c)} for c, b in zip(*np.histogram(maxdds, bins=np.arange(0, min(100, maxdds.max() + 5), 2.5)))],
+            "prob_dd_over_30": float((maxdds > 30).mean() * 100), "prob_loss": float((finals < 0).mean() * 100)}
+
+
+def load_improve_runs() -> list[dict]:
+    out = []
+    for p in sorted((ROOT / "experiments").glob("improve_*.json")):
+        try:
+            out.append(json.loads(p.read_text()))
+        except json.JSONDecodeError:
+            pass
+    return out
 
 
 def export_dashboard(res: dict, run_id: str) -> Path:
@@ -80,6 +110,19 @@ def export_dashboard(res: dict, run_id: str) -> Path:
 
     exps = load_experiments()
     bars = get_bars(p.bar_minutes)
+
+    # baseline: the plain video rule, for the overlay
+    base_p = Params.from_dict({**p.to_dict(), **VIDEO_RULE})
+    base = backtest(base_p, bars)
+    bt = base["trades"]
+    base_eq = pd.concat([pd.Series([p.start_equity]), bt.equity_after], ignore_index=True)
+    base_series = pd.Series(base_eq.values[1:], index=bt.date.values)
+    # align baseline equity to this run's trade dates (forward fill)
+    aligned = base_series.reindex(sorted(set(base_series.index) | set(tr.date))).ffill().reindex(tr.date).fillna(p.start_equity)
+    is_m, oos_m = split_metrics(res, p.start_equity)
+    b_is, b_oos = split_metrics(base, p.start_equity)
+    mc = monte_carlo(tr, p.start_equity, p.risk_pct)
+    mfe_mae = [[round(float(t.mfe_r), 2), round(float(t.mae_r), 2), round(float(t.r_multiple), 2), t.direction] for t in tr.itertuples()]
     data = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "run_id": run_id,
@@ -88,7 +131,12 @@ def export_dashboard(res: dict, run_id: str) -> Path:
         "oos_start": OOS_START,
         "params": p.to_dict(),
         "metrics": m,
-        "equity": {"dates": dates, "equity": [round(float(x), 2) for x in eq], "drawdown_pct": [round(float(x), 2) for x in dd], "cum_r": [0.0] + [round(float(x), 2) for x in cum_r]},
+        "equity": {"dates": dates, "equity": [round(float(x), 2) for x in eq], "drawdown_pct": [round(float(x), 2) for x in dd], "cum_r": [0.0] + [round(float(x), 2) for x in cum_r],
+                   "baseline": [round(float(p.start_equity), 2)] + [round(float(x), 2) for x in aligned]},
+        "baseline": {"params": base_p.to_dict(), "metrics": base["metrics"], "is": b_is, "oos": b_oos},
+        "is": is_m, "oos": oos_m,
+        "monte_carlo": mc, "mfe_mae": mfe_mae,
+        "improve_runs": load_improve_runs(),
         "yearly": res.get("yearly", []),
         "monthly": res.get("monthly", []),
         "by_weekday": by_weekday, "by_exit": by_exit, "by_direction": by_dir, "by_exit_hour": by_exit_hour,

@@ -11,6 +11,20 @@ Reproduction and research harness for the "first 5-minute candle after the New Y
 6. Position size risks `risk_pct` of equity per trade; `cost_points` of spread and slippage is charged on every trade.
 
 Everything in steps 1 to 6 is a field on `Params` in `strategy.py`, so a change is one flag away.
+`VIDEO_RULE` in `strategy.py` holds the overrides that reproduce the plain video rule.
+
+## Current defaults (promoted from the `improve v3` search, October 2026)
+| Lever | Video | Now | Why |
+|---|---|---|---|
+| Trend filter | none | price vs 200 EMA (5-min) | only take the open candle in the direction of the wider trend; biggest single gain in and out of sample |
+| Trailing stop | 12 EMA | chandelier, 3 x ATR(14) from the trade's extreme | gives winners room; lower drawdown than the EMA trail |
+| Signal EMA | 12 | 8 | small, consistent improvement in both halves |
+| Weak-signal filter | off | skip if the close is within 0.1R of the EMA | removes coin-flip candles sitting on the EMA |
+| Flat-candle filter | off | skip signal candles under 5 points | holiday sessions print 0.1-point candles that are not tradeable |
+
+The search also wanted to skip Wednesdays. That was rejected: it lifts the numbers but has no rationale and is the kind of thing that only works in the past.
+
+Result on 2019-01 to 2026-10 (1% risk, 1 point cost): video rule +275%, profit factor 1.13, max drawdown 35%. Current defaults +734%, profit factor 1.26, max drawdown 24%, every calendar year positive. Out of sample (2024 on) the profit factor goes from 1.12 to 1.20.
 
 ## Layout
 | File | Purpose |
@@ -19,7 +33,8 @@ Everything in steps 1 to 6 is a field on `Params` in `strategy.py`, so a change 
 | `strategy.py` | `Params` and `run_day()`: the simulation of a single session. |
 | `backtest.py` | Runs every session, computes metrics, appends the run to `experiments/experiments.jsonl`. |
 | `metrics.py` | Return, CAGR, win rate, profit factor, drawdown, Sharpe, Sortino, streaks, yearly and monthly tables. |
-| `optimize.py` | Grid sweeps scored in-sample (before `OOS_START`) and out-of-sample, plus walk-forward by year. |
+| `optimize.py` | `evaluate()` runs once and splits the trades at `OOS_START` into in-sample / out-of-sample metrics; grid sweeps; walk-forward by year. |
+| `improve.py` | Staged search over lever groups. Selects in-sample, refuses any stage that lowers the out-of-sample profit factor, logs everything, writes `experiments/improve_<name>.json` for the dashboard. |
 | `export.py` | Writes `dashboard/data.js` and `dashboard/data.json` for the dashboard. |
 | `run.py` | CLI. |
 
@@ -30,6 +45,8 @@ python -m nyopen.run download                    # first run takes a while: Duka
 python -m nyopen.run backtest --name base        # backtest with the defaults, log it, rebuild dashboard/data.js
 python -m nyopen.run backtest --name test --set trail_mode=swing swing_len=2 exit_time=12:00
 python -m nyopen.run sweep --name grid1          # IS/OOS grid; every row is logged
+python -m nyopen.run improve --name v4           # staged search from the current defaults
+python -m nyopen.run improve --name v4 --from-video-rule   # ... or from the plain video rule
 ```
 Then open `dashboard/index.html` in a browser.
 
