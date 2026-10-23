@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Funded Account Playbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a step-by-step operating manual. Budget picker at the top drives the route; then the timeline, the strategy procedure, the sizing calculator, the firm picks, and the rules that get payouts denied. */
+:root {
+  --bg: #0d0e12; --panel: #15171d; --panel-2: #1b1e26; --line: #262a35; --line-2: #333847;
+  --fg: #eef0f5; --fg-2: #b7bcc9; --fg-3: #7d8496;
+  --accent: #5598e7; --accent-soft: rgba(85,152,231,.16);
+  --up: #1baf7a; --down: #e66767; --warn: #c98500; --violet: #9085e9;
+  --font-ui: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+  --radius: 10px;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f5f6f8; --panel: #ffffff; --panel-2: #f0f2f6; --line: #e1e4ea; --line-2: #c9ced9;
+    --fg: #14161c; --fg-2: #4a505e; --fg-3: #7a8092;
+    --accent: #2a78d6; --accent-soft: rgba(42,120,214,.12);
+    --up: #0f9a68; --down: #d64545; --warn: #b87400; --violet: #6250d6;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f5f6f8; --panel: #ffffff; --panel-2: #f0f2f6; --line: #e1e4ea; --line-2: #c9ced9;
+  --fg: #14161c; --fg-2: #4a505e; --fg-3: #7a8092;
+  --accent: #2a78d6; --accent-soft: rgba(42,120,214,.12);
+  --up: #0f9a68; --down: #d64545; --warn: #b87400; --violet: #6250d6;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14.5px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 56px; }
+.wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+header.top { padding-block: 30px 6px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-3); font-weight: 700; }
+h1 { margin: 0; font-size: clamp(24px, 3.4vw, 34px); font-weight: 800; letter-spacing: -.02em; text-wrap: balance; }
+h2 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -.01em; }
+h3 { margin: 0; font-size: 14px; font-weight: 700; }
+p { margin: 0; max-width: 72ch; color: var(--fg-2); }
+p strong, li strong { color: var(--fg); }
+.lede { font-size: 15.5px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; }
+.hint { font-size: 12.5px; color: var(--fg-3); }
+.grid { display: grid; gap: 14px; }
+.grid.two { grid-template-columns: 1fr 1fr; } .grid.three { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 860px) { .grid.two, .grid.three { grid-template-columns: 1fr; } }
+.budget { display: flex; flex-wrap: wrap; gap: 8px; }
+.budget button { background: var(--panel-2); color: var(--fg-2); border: 1px solid var(--line-2); border-radius: 999px; padding: 8px 14px; font: inherit; font-weight: 700; cursor: pointer; }
+.budget button[aria-pressed="true"] { background: var(--accent-soft); color: var(--fg); border-color: var(--accent); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.route { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 860px) { .route { grid-template-columns: 1fr; } }
+.lane { background: var(--panel-2); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; border-left: 3px solid var(--accent); }
+.lane.fast { border-left-color: var(--warn); }
+.lane .k { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-3); font-weight: 700; }
+.stat { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.stat .l { color: var(--fg-3); } .stat .v { text-align: right; font-weight: 600; }
+.pos { color: var(--up); } .neg { color: var(--down); } .warn { color: var(--warn); }
+ol.timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; counter-reset: step; }
+ol.timeline li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+ol.timeline li:last-child { border-bottom: 0; }
+ol.timeline .n { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-family: var(--font-mono); font-weight: 600; font-size: 12px; }
+ol.timeline .when { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-3); }
+ol.timeline h3 { margin-bottom: 2px; }
+.proc { display: grid; grid-template-columns: 90px 1fr; gap: 8px 14px; font-size: 14px; }
+.proc .t { font-family: var(--font-mono); font-size: 12.5px; color: var(--accent); font-weight: 600; padding-top: 2px; }
+.proc div:nth-child(even) { color: var(--fg-2); }
+.chart { width: 100%; height: 280px; }
+.calc { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.calc label { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; color: var(--fg-3); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+.calc input, .calc select { background: var(--panel-2); color: var(--fg); border: 1px solid var(--line-2); border-radius: 6px; padding: 7px 9px; font: inherit; font-family: var(--font-mono); font-size: 13px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.tile { background: var(--panel-2); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.tile .k { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-3); font-weight: 700; }
+.tile .v { font-family: var(--font-mono); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile .s { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-3); }
+.tablewrap { overflow-x: auto; min-width: 0; }
+.grid > *, .route > *, .proc > *, ol.timeline li > *, .tiles > *, .calc > * { min-width: 0; }
+.calc input, .calc select { width: 100%; min-width: 0; }
+.stat { min-width: 0; } .stat .l, .stat .v { overflow-wrap: anywhere; }
+table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { color: var(--fg-3); font-weight: 500; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+th:first-child, td:first-child { text-align: left; }
+tr.hl td { background: var(--accent-soft); }
+ul.rules { margin: 0; padding-left: 18px; color: var(--fg-2); display: flex; flex-direction: column; gap: 6px; }
+ul.check { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+ul.check li { display: flex; gap: 10px; align-items: flex-start; color: var(--fg-2); }
+ul.check input { margin-top: 4px; accent-color: var(--accent); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.pill.ok { background: rgba(27,175,122,.16); color: var(--up); } .pill.no { background: rgba(230,103,103,.16); color: var(--down); } .pill.warn { background: rgba(201,133,0,.18); color: var(--warn); }
+.honest { border-left: 3px solid var(--warn); }
+footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Operating manual · NAS100 NY open strategy · prop-firm accounts</div>
+    <h1>Funded Account Playbook</h1>
+    <p class="lede" id="lede"></p>
+  </header>
+
+  <section class="panel">
+    <div class="panel-head"><h2>1. Pick your budget</h2><span class="hint">The route changes with what you can put into challenge fees. Everything below updates.</span></div>
+    <div class="budget" role="group" aria-label="Budget">
+      <button data-b="100" aria-pressed="true">$50 to $100</button>
+      <button data-b="300" aria-pressed="false">$150 to $300</button>
+      <button data-b="1000" aria-pressed="false">$500 to $1,000</button>
+      <button data-b="3000" aria-pressed="false">$2,000 and up</button>
+    </div>
+    <div class="route" id="route"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>2. The plan, week by week</h2><span class="hint" id="plan-hint"></span></div>
+    <ol class="timeline" id="timeline"></ol>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>3. The strategy, as a daily procedure</h2><span class="hint" id="strat-hint"></span></div>
+    <div class="grid two">
+      <div class="proc" id="proc"></div>
+      <div><div class="chart" id="trade"></div><p class="hint" id="trade-hint"></p></div>
+    </div>
+    <div class="tiles" id="strat-tiles"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>4. Position size, every single trade</h2><span class="hint">Risk is a fixed share of the starting balance. Type the stop distance from the signal candle and read off the size. The drawdown lines are computed for your account.</span></div>
+    <div class="calc">
+      <label>Account size <input id="c-size" type="number" value="5000" step="1000" min="1000"></label>
+      <label>Base risk % <input id="c-risk" type="number" value="0.75" step="0.05" min="0.05" max="5"></label>
+      <label>Current balance <input id="c-bal" type="number" value="5000" step="10"></label>
+      <label>Stop distance (points) <input id="c-stop" type="number" value="30" step="1" min="1"></label>
+      <label>$ per point per 1.0 lot <input id="c-ppp" type="number" value="1" step="0.1" min="0.01"></label>
+      <label>Max loss % <select id="c-ml"><option value="10" selected>10% (CFD static)</option><option value="6">6%</option><option value="4">4% (50k futures, $2k)</option></select></label>
+    </div>
+    <div class="tiles" id="c-out"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>5. Which firm, with the simulated odds</h2><span class="hint">Every historical start replayed against each firm's real rules. Rules and promos change: verify on the firm's site before paying.</span></div>
+    <div class="grid two">
+      <div><h3>Slow lane: static drawdown, no time limit</h3><div class="tablewrap"><table id="slow"></table></div></div>
+      <div><h3>Fast lane: no minimum days, no consistency rule</h3><div class="tablewrap"><table id="fast"></table></div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>6. From one account to many</h2><span class="hint">How the payouts grow. One signal copied to several accounts is one bet placed several times, so keep the sizing rule on every one of them.</span></div>
+    <div class="tablewrap"><table id="scale"></table></div>
+  </section>
+
+  <section class="panel honest">
+    <div class="panel-head"><h2>7. Rules that get payouts denied, and the honest odds</h2></div>
+    <div class="grid two">
+      <ul class="rules">
+        <li><strong>No hedging across accounts or firms.</strong> Opposite positions so one side passes is trade-matched and ends with the payout denied and the account closed.</li>
+        <li><strong>Copying one signal to accounts you own is normally allowed.</strong> Copying to accounts in other people's names, or group copy-trading, usually is not. Read the firm's rule.</li>
+        <li><strong>Respect allocation caps.</strong> Most firms cap your total funded size (often $200k to $400k). Beyond that, add a second firm.</li>
+        <li><strong>News rules on funded CFD accounts.</strong> Standard FTMO accounts restrict trades around high-impact news; 09:30 ET is clear of the 08:30 releases, but check FOMC days.</li>
+        <li><strong>No martingale, no grid, no tick scalping.</strong> They pass evaluations sometimes and are flagged at payout.</li>
+        <li><strong>Keep the funded sizing.</strong> A funded $50k futures account dies at 2% risk. Cut to 0.25% the day it is funded.</li>
+      </ul>
+      <div class="stat" id="honest"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>8. Daily checklist</h2><span class="hint">Ticks stay in this browser only.</span></div>
+    <ul class="check" id="checklist"></ul>
+  </section>
+  <footer id="foot"></footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.6.0/echarts.min.js"></script>
+<script src="data.js"></script>
+<script>
+(function () {
+  const D = window.PLAYBOOK_DATA;
+  if (!D) { document.querySelector('.wrap').innerHTML = '<p class="hint">No data.js. Run <code>python -m nyopen.playbook</code>.</p>'; return; }
+  const $ = id => document.getElementById(id);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const money = v => (v < 0 ? '-' : '') + '$' + Math.round(Math.abs(v)).toLocaleString();
+  const pct = (v, d = 0) => v == null ? '–' : v.toFixed(d) + '%';
+  const P = D.params, M = D.metrics;
+  const row = (name, rk, sc) => D.rows.find(r => r.ruleset === name && r.risk_pct === rk && (r.scaling || 'fixed') === sc) || {};
+  const SLOW = ['FundedNext Stellar 2-step 100k', 'FundingPips 2-step 100k', 'FTMO 2-step 100k'];
+  const FAST = D.fast_track.filter(r => r.funded_within_14d_pct > 0);
+  const fastBest = FAST[0] || {};
+  const slowBest = row(SLOW[0], 0.75, 'drawdown');
+
+  $('lede').textContent = `One strategy with a real edge, one sizing rule that has passed every historical two-step challenge, and a route for your budget. Built from ${D.data_range.days.toLocaleString()} sessions of NAS100 data, ${D.data_range.start.slice(0, 10)} to ${D.data_range.end.slice(0, 10)}, with the sizing and rules replayed against each firm.`;
+  $('foot').textContent = 'Historical simulation, CFD data, fixed costs. Odds are shares of historical starts, not promises. Not financial advice.';
+
+  // ---- 1. budget routes ----
+  const routes = {
+    100: { title: 'One small two-step and the slow lane', fast: 'Skip the fast lane. One $5k FundingPips or $6k FundedNext two-step costs $33 to $59. Run the slow lane at 0.75%. Nearly certain, about six months.', slow: true, fastTry: 0, slowAcct: 5000, slowFee: 35 },
+    300: { title: 'One fast-lane ticket and one slow-lane challenge', fast: 'Buy one Lucid Pro or Apex $50k evaluation (about $100 to $150 on promo) and run it at 2%. Roughly a one-in-three shot at being funded inside two weeks. Buy one $5k to $10k two-step in parallel for the slow lane.', slow: true, fastTry: 1, slowAcct: 10000, slowFee: 60 },
+    1000: { title: 'Two or three fast-lane tickets, one $100k slow-lane challenge', fast: 'Stagger two or three $50k fast-lane evaluations a week apart at 2%. Better than even odds that one is funded within a month. Put the rest into one $100k two-step at 0.75%.', slow: true, fastTry: 3, slowAcct: 100000, slowFee: 549 },
+    3000: { title: 'Build the stack: several $100k slow-lane challenges plus fast-lane tickets', fast: 'Three or four staggered $100k two-steps at 0.75%, plus a few fast-lane tickets. In six months you have a stack of static-drawdown accounts at the biggest size the firm allows.', slow: true, fastTry: 4, slowAcct: 100000, slowFee: 549 },
+  };
+  let budget = 100;
+  function renderRoute() {
+    const r = routes[budget];
+    const fb = fastBest, sb = slowBest;
+    const fastHtml = r.fastTry ? `<div class="lane fast"><span class="k">Fast lane · ${fb.ruleset || ''}</span><p>${r.fast}</p>
+      <div class="stat"><span class="l">funded within 14 days, per attempt</span><span class="v">${pct(fb.funded_within_14d_pct)}</span><span class="l">within 30 days</span><span class="v">${pct(fb.funded_within_30d_pct)}</span><span class="l">attempts that blow up</span><span class="v neg">${pct(fb.blow_up_pct)}</span><span class="l">chance at least one of ${r.fastTry} passes in 14 days</span><span class="v">${pct((1 - Math.pow(1 - fb.funded_within_14d_pct / 100, r.fastTry)) * 100)}</span><span class="l">funded-year payout, after cutting to 0.25%</span><span class="v pos">${money(fb.expected_payout_y1_if_funded || 0)}</span></div></div>`
+      : `<div class="lane fast"><span class="k">Fast lane</span><p>${r.fast}</p></div>`;
+    const scale = r.slowAcct / 100000;
+    const slowHtml = `<div class="lane"><span class="k">Slow lane · ${SLOW[0].replace(' 100k', '')} at $${r.slowAcct.toLocaleString()}</span><p>Run the strategy at 0.75% of the starting balance, halved after 3% down, quartered after 6% down. One trade a day at 09:35 New York.</p>
+      <div class="stat"><span class="l">historical starts that passed</span><span class="v pos">${pct(sb.pass_rate_pct)}</span><span class="l">median days to funded</span><span class="v">${Math.round(sb.median_days_to_pass || 0)}</span><span class="l">90th percentile</span><span class="v">${Math.round(sb.p90_days_to_pass || 0)}</span><span class="l">still funded after 12 months</span><span class="v pos">${pct(sb.funded_survival_12m_pct)}</span><span class="l">first funded year, after split</span><span class="v pos">${money((sb.funded_pnl_12m_pct || 0) / 100 * r.slowAcct * 0.9)}</span><span class="l">fee</span><span class="v">${money(r.slowFee)} (refunded on first payout)</span></div></div>`;
+    $('route').innerHTML = `<div style="grid-column:1/-1"><h3>${r.title}</h3></div>` + fastHtml + slowHtml;
+    renderTimeline();
+    renderScale();
+  }
+  document.querySelectorAll('.budget button').forEach(b => b.addEventListener('click', () => { budget = +b.dataset.b; document.querySelectorAll('.budget button').forEach(x => x.setAttribute('aria-pressed', x === b)); renderRoute(); }));
+
+  // ---- 2. timeline ----
+  function renderTimeline() {
+    const r = routes[budget];
+    const fb = fastBest, sb = slowBest;
+    const steps = [
+      ['Day 0', 'Buy the accounts', `${r.fastTry ? `${r.fastTry} fast-lane evaluation${r.fastTry > 1 ? 's, bought a week apart, not together' : ''} (${fb.ruleset}). ` : ''}One ${SLOW[0].replace(' 100k', '')} two-step at $${r.slowAcct.toLocaleString()}. Check the lot step on US100 is 0.01 or finer.`],
+      ['Day 1', 'Set up the rule, not the opinion', 'A 5-minute NAS100 chart in New York time, 8 EMA and 300 EMA on it, ATR(14). Position-size calculator open. Alarm at 09:34.'],
+      ['Every day', 'One decision at 09:35, then hands off', 'The 09:30 candle closes. Above the 8 EMA and above the 300 EMA: buy. Below both: sell. Anything else: no trade today. Stop at the candle extreme, size from the calculator, trail per the procedure, flat at 15:30.'],
+      r.fastTry ? [`Weeks 1 to 2`, 'Fast lane resolves', `At 2% risk a fast-lane evaluation is decided quickly: about ${pct(fb.funded_within_14d_pct)} are funded inside two weeks and ${pct(fb.blow_up_pct)} blow up. The day one is funded, cut its risk to 0.25%. If it blows up, buy the next ticket; never add risk to recover.`] : null,
+      ['Months 1 to 6', 'Slow lane grinds', `The two-step passes in a median ${Math.round(sb.median_days_to_pass || 0)} days at 0.75%. Expect a drawdown of 3% to 6% at some point; the sizing rule cuts risk there and that is why no historical start failed. Do not change the rule because a month was red.`],
+      ['Funded day', 'Protect the account first', 'Funded rules are the same drawdown with no target. Keep 0.75% on static-drawdown CFD accounts, 0.25% on trailing-drawdown futures accounts. First payout request as soon as the firm allows; the fee comes back with it.'],
+      ['Months 6 to 12', 'Stack and scale', 'Every account that pays out qualifies for the firm\'s scaling plan (typically +25% size per quarter of consistent payouts). Add a second $100k two-step with the first payouts. Copy the same signal; same sizing on each account.'],
+      ['Year 2', 'The stack pays', `At the firm cap (often $200k to $400k) a static-drawdown stack pays roughly ${money((sb.funded_pnl_12m_pct || 0) / 100 * 300000 * 0.9)} a year at ${pct(sb.funded_pnl_12m_pct, 1)} per account after a 90% split. Then add a second firm.`],
+    ].filter(Boolean);
+    $('timeline').innerHTML = steps.map(([w, h, t], i) => `<li><span class="n">${i + 1}</span><div><span class="when">${w}</span><h3>${h}</h3><p>${t}</p></div></li>`).join('');
+    $('plan-hint').textContent = `Route for the ${document.querySelector('.budget button[aria-pressed="true"]').textContent} budget.`;
+  }
+
+  // ---- 3. procedure ----
+  const trailText = P.trail_mode === 'chandelier' ? `once the trade is ${P.trail_after_r}R in profit, move the stop to ${P.atr_mult} x ATR(${P.atr_len}) behind the best price reached, and only ever tighten it` : `trail the ${P.ema_len} EMA`;
+  $('proc').innerHTML = [
+    ['09:30', `The signal candle opens. Do nothing for five minutes.`],
+    ['09:35', `Candle closes. <strong>Long</strong> if the close is above the ${P.ema_len} EMA and above the ${P.slow_ema_len} EMA. <strong>Short</strong> if below both. Otherwise no trade.`],
+    ['09:35', `Skip if the candle's range is under ${P.min_risk_points} points, or the close is within ${P.min_body_r}R of the ${P.ema_len} EMA. Those are coin flips.`],
+    ['Entry', `Market order at the close. Stop at the candle's low (long) or high (short). That distance is 1R.`],
+    ['Size', `Risk ${0.75}% of the starting balance, from the calculator below. Halve it if the account is 3% down, quarter it at 6% down.`],
+    ['Manage', `At +${P.breakeven_at_r}R move the stop to entry. Then ${trailText}. No target: the trail does the selling.`],
+    [P.exit_time, `If still open, close at the market. Never hold overnight; the funded account's rules do not need the risk.`],
+    ['After', `Log the trade. No second trade today, whatever happened.`],
+  ].map(([t, x]) => `<span class="t">${t}</span><div>${x}</div>`).join('');
+  $('strat-hint').textContent = `Current defaults: ${P.ema_len} EMA signal, ${P.slow_ema_len} EMA trend filter, chandelier ${P.atr_mult} x ATR trail, flat ${P.exit_time}.`;
+  const T = D.best_trade, t = T.trade;
+  $('trade-hint').textContent = `Example: ${t.date}, ${t.direction}, signal ${t.entry_time.slice(11, 16)}, out ${t.exit_time} (${t.exit_reason}), ${t.r_multiple >= 0 ? '+' : ''}${t.r_multiple.toFixed(1)}R. One day like this pays for a month of small losses.`;
+  const ch = echarts.init($('trade'));
+  ch.setOption({ animation: false, textStyle: { fontFamily: css('--font-mono'), color: css('--fg-2') }, grid: { left: 58, right: 12, top: 12, bottom: 28 },
+    tooltip: { trigger: 'axis', backgroundColor: css('--panel-2'), borderColor: css('--line-2'), textStyle: { color: css('--fg'), fontSize: 12 }, formatter: ps => { const c = T.candles[ps[0].dataIndex]; return `${c[0]}<br>O ${c[1]} H ${c[4]} L ${c[3]} C ${c[2]}`; } },
+    xAxis: { type: 'category', data: T.candles.map(c => c[0].slice(11)), axisLabel: { color: css('--fg-3'), fontSize: 10, hideOverlap: true }, axisLine: { lineStyle: { color: css('--line-2') } }, axisTick: { show: false } },
+    yAxis: { type: 'value', scale: true, splitLine: { lineStyle: { color: css('--line') } }, axisLabel: { color: css('--fg-3'), fontSize: 11 }, axisLine: { show: false } },
+    series: [{ type: 'candlestick', data: T.candles.map(c => [c[1], c[2], c[3], c[4]]), itemStyle: { color: css('--up'), color0: css('--down'), borderColor: css('--up'), borderColor0: css('--down') },
+      markLine: { silent: true, symbol: 'none', label: { color: css('--fg-2'), fontSize: 10, position: 'insideEndTop' }, data: [{ yAxis: t.entry, name: 'entry', lineStyle: { color: css('--accent'), width: 1.5 } }, { yAxis: t.stop, name: 'stop', lineStyle: { color: css('--down'), type: 'dashed' } }, { yAxis: t.exit, name: 'exit', lineStyle: { color: css('--warn'), type: 'dashed' } }, { xAxis: T.entry_index, name: 'signal', lineStyle: { color: css('--fg-3'), type: 'dotted' } }] } },
+      { type: 'line', data: T.ema, showSymbol: false, lineStyle: { width: 1.5, color: css('--violet') } }] });
+  window.addEventListener('resize', () => ch.resize());
+  $('strat-tiles').innerHTML = [
+    ['Win rate', pct(M.win_rate_pct, 0), 'small losses, big winners'], ['Avg per trade', (M.avg_r >= 0 ? '+' : '') + M.avg_r.toFixed(2) + 'R', 'in units of initial risk'], ['Profit factor', M.profit_factor.toFixed(2), `out of sample ${D.oos ? D.oos.profit_factor.toFixed(2) : '–'}`],
+    ['Worst losing run', M.longest_loss_streak, 'trades in a row, in 7.8 years'], ['Years positive', `${D.yearly.filter(y => y.sum_r > 0).length} of ${D.yearly.length}`, 'every calendar year so far'], ['Max drawdown', pct(M.max_drawdown_pct, 1), 'at 1% fixed risk, compounding'],
+  ].map(([k, v, s]) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${s}</span></div>`).join('');
+
+  // ---- 4. calculator ----
+  function calc() {
+    const size = +$('c-size').value || 0, base = +$('c-risk').value || 0, bal = +$('c-bal').value || size, stop = +$('c-stop').value || 1, ppp = +$('c-ppp').value || 1, ml = +$('c-ml').value;
+    const dd = (size - bal) / size * 100;
+    const used = dd / ml;
+    const mult = used >= 0.6 ? 0.25 : used >= 0.3 ? 0.5 : 1;
+    const risk = base * mult;
+    const dollars = size * risk / 100;
+    const perPoint = dollars / stop;
+    const lots = perPoint / ppp;
+    $('c-out').innerHTML = [
+      ['Risk this trade', `${risk.toFixed(2)}%`, mult < 1 ? `cut: ${(dd).toFixed(1)}% down, ${Math.round(used * 100)}% of allowance used` : 'full size: inside the first 30% of the allowance'],
+      ['Dollars at risk', money(dollars), `stop ${stop} points away`], ['Size', `${lots.toFixed(2)} lots`, `${perPoint.toFixed(2)} $/point`],
+      ['Halve risk below', money(size * (1 - 0.3 * ml / 100)), `${(0.3 * ml).toFixed(1)}% down`], ['Quarter risk below', money(size * (1 - 0.6 * ml / 100)), `${(0.6 * ml).toFixed(1)}% down`], ['Account dies at', money(size * (1 - ml / 100)), `${ml}% max loss`],
+    ].map(([k, v, s]) => `<div class="tile"><span class="k">${k}</span><span class="v ${k === 'Account dies at' ? 'neg' : ''}">${v}</span><span class="s">${s}</span></div>`).join('');
+  }
+  ['c-size', 'c-risk', 'c-bal', 'c-stop', 'c-ppp', 'c-ml'].forEach(id => $(id).addEventListener('input', calc));
+  $('c-size').addEventListener('input', () => { $('c-bal').value = $('c-size').value; calc(); });
+  calc();
+
+  // ---- 5. firms ----
+  $('slow').innerHTML = `<thead><tr><th>Plan</th><th>Risk</th><th>Pass</th><th>Days</th><th>Funded 12 mo</th><th>Year-1 payout</th></tr></thead><tbody>` +
+    D.ranking.filter(r => r.market === 'cfd').map((r, i) => `<tr class="${i === 0 ? 'hl' : ''}"><td>${r.ruleset}</td><td>${r.risk_pct}%</td><td class="pos">${pct(r.pass_rate_pct)}</td><td>${Math.round(r.median_days_to_pass || 0)}</td><td>${pct(r.funded_survival_12m_pct)}</td><td class="pos">${money(r.expected_payout_y1)}</td></tr>`).join('') + '</tbody>';
+  $('fast').innerHTML = `<thead><tr><th>Plan</th><th>Eval risk</th><th>Funded ≤ 14 d</th><th>Blow up</th><th>Fees to one pass</th><th>Year-1 payout at 0.25%</th></tr></thead><tbody>` +
+    FAST.slice(0, 6).map((r, i) => `<tr class="${i === 0 ? 'hl' : ''}"><td>${r.ruleset}</td><td>${r.risk_pct}%</td><td class="${r.funded_within_14d_pct >= 20 ? 'pos' : ''}">${pct(r.funded_within_14d_pct)}</td><td class="neg">${pct(r.blow_up_pct)}</td><td>${money(r.expected_fees_to_funded_14d || 0)}</td><td class="pos">${money(r.expected_payout_y1_if_funded || 0)}</td></tr>`).join('') + '</tbody>';
+
+  // ---- 6. scaling ----
+  function renderScale() {
+    const sb = slowBest, y = (sb.funded_pnl_12m_pct || 0) / 100, split = 0.9;
+    const rows = [[5000, 'one small two-step'], [25000, 'after first scaling step'], [100000, 'one full account'], [200000, 'two accounts, same firm'], [400000, 'firm cap, or two firms'], [1000000, 'several firms, several years']];
+    $('scale').innerHTML = `<thead><tr><th>Funded size</th><th>How you get there</th><th>Risk per trade at 0.75%</th><th>Expected yearly P&amp;L</th><th>Yours at 90%</th><th>Per month</th></tr></thead><tbody>` +
+      rows.map(([s, how]) => `<tr><td>${money(s)}</td><td style="white-space:normal">${how}</td><td>${money(s * 0.0075)}</td><td>${money(s * y)}</td><td class="pos">${money(s * y * split)}</td><td>${money(s * y * split / 12)}</td></tr>`).join('') + '</tbody>';
+  }
+
+  // ---- 7. honest odds ----
+  $('honest').innerHTML = [['the edge, out of sample (2024 on)', `PF ${D.oos ? D.oos.profit_factor.toFixed(2) : '–'}`], ['slow lane, historical starts that passed', pct(slowBest.pass_rate_pct)], ['slow lane, worst case time', `${Math.round(slowBest.p90_days_to_pass || 0)} days`], ['fast lane, per attempt in 14 days', pct(fastBest.funded_within_14d_pct)], ['fast lane, attempts that blow up', pct(fastBest.blow_up_pct)], ['any strategy that passes "easily in two weeks"', 'does not exist'], ['what passes fast', 'luck at 2 to 3% risk, bought with fees']].map(([l, v]) => `<span class="l">${l}</span><span class="v">${v}</span>`).join('');
+
+  // ---- 8. checklist ----
+  const items = ['09:25 chart open, NY time, 8 EMA + 300 EMA + ATR visible', 'Account balance typed into the calculator', '09:35 candle closed: direction decided by the rule, not by feel', 'Candle range over 5 points and clear of the 8 EMA', 'Stop placed at the candle extreme before anything else', 'Size from the calculator, drawdown cut applied', 'Breakeven at +1R, chandelier trail after', 'Flat by 15:30', 'Trade logged, platform closed, no second trade'];
+  let saved = {}; try { saved = JSON.parse(localStorage.getItem('pb-check') || '{}'); } catch (e) {}
+  $('checklist').innerHTML = items.map((x, i) => `<li><input type="checkbox" id="ck${i}" ${saved[i] ? 'checked' : ''}><label for="ck${i}">${x}</label></li>`).join('');
+  items.forEach((_, i) => $('ck' + i).addEventListener('change', () => { saved[i] = $('ck' + i).checked; try { localStorage.setItem('pb-check', JSON.stringify(saved)); } catch (e) {} }));
+
+  renderRoute();
+})();
+</script>
+</body>
+</html>

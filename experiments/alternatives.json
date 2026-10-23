@@ -152,5 +152,52 @@
   "oos_pf": 0.7727564508172041,
   "max_drawdown_pct": 62.012318223343144,
   "verdict": "no edge"
+ },
+ {
+  "family": "other markets",
+  "name": "Bitcoin, NY open 09:30 (current defaults)",
+  "description": "BTCUSDT 5-minute (Binance), same rule and exits, $30 cost, 50-point minimum candle",
+  "config": {
+   "signal_time": "09:30",
+   "exit_time": "15:30"
+  },
+  "trades": 912,
+  "win_rate_pct": 19.7,
+  "profit_factor": 1.038,
+  "is_pf": 0.876,
+  "oos_pf": 1.116,
+  "max_drawdown_pct": 51.1,
+  "verdict": "no edge (loses in sample, 51% drawdown)"
+ },
+ {
+  "family": "other markets",
+  "name": "Bitcoin, NY open 09:30 (video rule)",
+  "description": "BTCUSDT 5-minute, plain 12 EMA rule with the EMA trail",
+  "config": {
+   "signal_time": "09:30",
+   "trail_mode": "ema"
+  },
+  "trades": 1482,
+  "win_rate_pct": 25.0,
+  "profit_factor": 0.761,
+  "is_pf": 0.68,
+  "oos_pf": 0.92,
+  "max_drawdown_pct": 85.8,
+  "verdict": "no edge"
+ },
+ {
+  "family": "other markets",
+  "name": "Bitcoin, London 03:00",
+  "description": "BTCUSDT 5-minute, same rule at the London open",
+  "config": {
+   "signal_time": "03:00"
+  },
+  "trades": 609,
+  "win_rate_pct": 19.4,
+  "profit_factor": 0.627,
+  "is_pf": 0.529,
+  "oos_pf": 0.823,
+  "max_drawdown_pct": 83.7,
+  "verdict": "no edge"
  }
 ]
