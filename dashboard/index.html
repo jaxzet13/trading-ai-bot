@@ -87,6 +87,7 @@ tr.hl td { background: var(--accent-soft); }
 .pill.long { background: rgba(27,175,122,.16); color: var(--up); } .pill.short { background: rgba(230,103,103,.16); color: var(--down); }
 .pill.trail { background: var(--accent-soft); color: var(--accent); } .pill.stop { background: rgba(230,103,103,.16); color: var(--down); } .pill.time { background: rgba(144,133,233,.18); color: var(--violet); }
 .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.controls label { display: inline-flex; align-items: center; gap: 6px; }
 .controls input, .controls select { background: var(--panel-2); color: var(--fg); border: 1px solid var(--line-2); border-radius: 6px; padding: 5px 8px; font: inherit; font-size: 12.5px; }
 .pager { display: flex; gap: 6px; align-items: center; font-family: var(--font-mono); font-size: 12px; color: var(--fg-3); }
 .pager button { background: var(--panel-2); color: var(--fg); border: 1px solid var(--line-2); border-radius: 6px; padding: 3px 9px; font: inherit; cursor: pointer; }
@@ -169,6 +170,20 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 1
       <div><div class="controls" style="margin-bottom:6px"><select id="prop-rules" aria-label="Rule set"></select><select id="prop-scaling" aria-label="Sizing"><option value="fixed">Fixed risk per trade</option><option value="drawdown" selected>Cut risk in drawdown</option></select></div><div class="chart" id="propchart"></div><p class="hint" id="prop-desc"></p></div>
     </div>
     <div class="claims" id="prop-take"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Payout planner</h2><span class="hint">The same strategy copied across several accounts. Uses the two-step odds above for the chosen sizing. Accounts copied from one signal win and lose together, so this is one bet placed several times, not diversification.</span></div>
+    <div class="controls">
+      <label class="hint">Account size <input id="pl-size" type="number" value="100000" step="10000" min="5000" style="width:100px"></label>
+      <label class="hint">Challenge fee <input id="pl-fee" type="number" value="500" step="50" min="0" style="width:80px"></label>
+      <label class="hint">Fee refunded on pass <select id="pl-refund"><option value="1" selected>Yes</option><option value="0">No</option></select></label>
+      <label class="hint">Accounts attempted <input id="pl-n" type="number" value="5" min="1" max="50" style="width:60px"></label>
+      <label class="hint">Payout split <input id="pl-split" type="number" value="80" min="50" max="100" style="width:60px">%</label>
+      <label class="hint">Risk per trade <select id="pl-risk"></select></label>
+    </div>
+    <div class="claims" id="pl-out"></div>
+    <p class="hint" id="pl-note"></p>
   </section>
 
   <section class="panel">
@@ -433,6 +448,33 @@ open dashboard/index.html</pre>
       <div class="claim"><span class="k">Largest risk with 75%+ odds, two-step</span><span class="lbl">risk</span><span class="v">${best ? best.risk_pct + '%' : '–'}</span><span class="lbl">pass</span><span class="v">${best ? fmt.pct0(best.pass_rate_pct, 0) : '–'}</span></div>
       <div class="claim"><span class="k">Time at that risk</span><span class="lbl">median</span><span class="v">${best ? Math.round(best.median_days_to_pass) + ' d' : '–'}</span><span class="lbl">90th pct</span><span class="v">${best ? Math.round(best.p90_days_to_pass) + ' d' : '–'}</span></div>`;
     }
+  }
+
+  // payout planner
+  if (PF) {
+    const risks = PF.risks;
+    $('pl-risk').innerHTML = risks.map(r => `<option value="${r}" ${r === 0.75 ? 'selected' : ''}>${r}%</option>`).join('');
+    const money0 = v => '$' + Math.round(v).toLocaleString();
+    function plan() {
+      const size = +$('pl-size').value || 0, fee = +$('pl-fee').value || 0, refund = $('pl-refund').value === '1', n = +$('pl-n').value || 0, split = (+$('pl-split').value || 0) / 100, rk = +$('pl-risk').value;
+      const r = PF.rows.find(x => x.ruleset === PF.rulesets[0].name && x.risk_pct === rk && (x.scaling || 'fixed') === $('prop-scaling').value) || {};
+      const pass = (r.pass_rate_pct || 0) / 100, surv = (r.funded_survival_12m_pct || 0) / 100, pnl = (r.funded_pnl_12m_pct || 0) / 100;
+      const funded = n * pass, feesLost = n * (1 - pass) * fee, feesPaid = n * fee, feesBack = refund ? funded * fee : 0;
+      const payoutYr = funded * size * pnl * split;
+      const net = payoutYr + feesBack - feesPaid;
+      const worst = -feesPaid;
+      $('pl-out').innerHTML = `
+        <div class="claim"><span class="k">Challenges</span><span class="lbl">attempted</span><span class="v">${n}</span><span class="lbl">expected to pass</span><span class="v">${funded.toFixed(1)}</span></div>
+        <div class="claim"><span class="k">Time to funded</span><span class="lbl">median</span><span class="v">${r.median_days_to_pass != null ? Math.round(r.median_days_to_pass) + ' d' : '–'}</span><span class="lbl">90th pct</span><span class="v">${r.p90_days_to_pass != null ? Math.round(r.p90_days_to_pass) + ' d' : '–'}</span></div>
+        <div class="claim"><span class="k">Fees</span><span class="lbl">paid up front</span><span class="v neg">${money0(feesPaid)}</span><span class="lbl">expected lost</span><span class="v neg">${money0(refund ? feesLost : feesPaid)}</span></div>
+        <div class="claim"><span class="k">First funded year</span><span class="lbl">account P&amp;L</span><span class="v">${fmt.pct(r.funded_pnl_12m_pct)}</span><span class="lbl">still funded</span><span class="v">${fmt.pct0(r.funded_survival_12m_pct, 0)}</span></div>
+        <div class="claim"><span class="k">Expected payouts, year 1</span><span class="lbl">to you</span><span class="v ${payoutYr >= 0 ? 'pos' : 'neg'}">${money0(payoutYr)}</span><span class="lbl">net of fees</span><span class="v ${net >= 0 ? 'pos' : 'neg'}">${money0(net)}</span></div>
+        <div class="claim"><span class="k">Worst case</span><span class="lbl">all fail together</span><span class="v neg">${money0(worst)}</span><span class="lbl">odds, one losing streak</span><span class="v">${fmt.pct0((1 - pass) * 100, 0)}</span></div>`;
+      $('pl-note').textContent = `Year 1 counts payouts only after each account is funded (median ${r.median_days_to_pass != null ? Math.round(r.median_days_to_pass) : '–'} days), so the first twelve months of payouts arrive over roughly the second year of the project. Most firms cap total allocation per trader and forbid hedging the same instrument across accounts; copying one signal to accounts you own is normally allowed, check the firm's rules.`;
+    }
+    ['pl-size', 'pl-fee', 'pl-refund', 'pl-n', 'pl-split', 'pl-risk'].forEach(id => $(id).addEventListener('input', plan));
+    $('prop-scaling').addEventListener('change', plan);
+    plan();
   }
 
   // alternatives
