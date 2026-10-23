@@ -28,6 +28,18 @@ Each search also wanted to skip a weekday (v3: Wednesday, v4: Thursday). Differe
 
 Result on 2019-01 to 2026-10 (1% risk, 1 point cost): video rule +275%, profit factor 1.13, max drawdown 35%. Current defaults +1,085%, profit factor 1.31, max drawdown 24%, every calendar year positive. Out of sample (2024 on) the profit factor goes from 1.10 to 1.27.
 
+## Which firm (October 2026 rules, verify before paying)
+Ranked by expected first-year value of one attempt at the best risk size that still passed 90%+ of historical starts:
+
+| # | Firm / plan | Risk | Pass | Median days | Funded after 12 mo | Fees | Expected payout, year 1 |
+|---|---|---|---|---|---|---|---|
+| 1 | FundedNext Stellar 2-step 100k (static 10%, 8/5 targets) | 0.75% cut in DD | 100% | 171 | 100% | $549 refunded | ~$12.2k |
+| 2 | FundingPips 2-step 100k | 0.75% cut in DD | 100% | 169 | 100% | $399 | ~$10.5k |
+| 3 | FTMO 2-step 100k | 0.75% cut in DD | 100% | 194 | 100% | $540 refunded | ~$9.7k |
+| 6 | MyFundedFutures Rapid 50k (best futures firm) | 0.25% cut in DD | 100% | 259 | 100% | ~$105 | ~$2.3k |
+
+Static-drawdown CFD two-steps on 100k accounts win by a wide margin. Futures firms' $2k trailing drawdown on a $50k account is a 4% allowance that ratchets, which forces risk down to 0.25% and makes the target slow to reach; Topstep's monthly billing then eats the value. Intraday trailing (Apex) is the worst fit for a strategy whose winners come from letting trades run.
+
 ## Prop-firm simulation
 `propfirm.py` replays the trade stream against typical challenge rules (two-step 10/5 with 10% max loss, one-step 10/6, 30-day-limited phases, futures-style trailing drawdown), starting an evaluation on every historical day and at several fixed risk sizes. The dashboard shows pass rate, blow-up rate, days to pass, and the odds of still being funded a year later. Read it before deciding on risk per trade. The sizing policy "cut risk in drawdown" (halve at 30% of the max-loss allowance used, quarter at 60%) is what turns a 60% pass rate into one where every historical start passed at 0.75% risk.
 

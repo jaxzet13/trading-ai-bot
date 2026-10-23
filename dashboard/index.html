@@ -164,7 +164,13 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 1
   </div>
 
   <section class="panel">
-    <div class="panel-head"><h2>Could this pass a prop-firm challenge?</h2><span class="hint">An evaluation is started on every historical day and replayed trade by trade. "Cut risk in drawdown" halves the risk once 30% of the max-loss allowance is used and quarters it at 60%. Pass rate is over the evaluations that resolved.</span></div>
+    <div class="panel-head"><h2>Which prop firm?</h2><span class="hint">Every firm's real rules (static, end-of-day or intraday trailing drawdown, consistency caps, fees, splits) replayed against the strategy. Ranked by expected first-year value of one attempt, at the best risk size that still passes 90%+ of historical starts. Rules change and promos vary: verify on the firm's site before paying.</span></div>
+    <div class="tablewrap"><table id="rank"></table></div>
+    <div class="claims" id="rank-take"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Could this pass a prop-firm challenge?</h2><span class="hint">Pick a firm. An evaluation is started on every historical day and replayed trade by trade. "Cut risk in drawdown" halves the risk once 30% of the max-loss allowance is used and quarters it at 60%. Pass rate is over the evaluations that resolved.</span></div>
     <div class="grid wide">
       <div class="tablewrap"><table id="prop"></table></div>
       <div><div class="controls" style="margin-bottom:6px"><select id="prop-rules" aria-label="Rule set"></select><select id="prop-scaling" aria-label="Sizing"><option value="fixed">Fixed risk per trade</option><option value="drawdown" selected>Cut risk in drawdown</option></select></div><div class="chart" id="propchart"></div><p class="hint" id="prop-desc"></p></div>
@@ -173,7 +179,7 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 1
   </section>
 
   <section class="panel">
-    <div class="panel-head"><h2>Payout planner</h2><span class="hint">The same strategy copied across several accounts. Uses the two-step odds above for the chosen sizing. Accounts copied from one signal win and lose together, so this is one bet placed several times, not diversification.</span></div>
+    <div class="panel-head"><h2>Payout planner</h2><span class="hint">The same strategy copied across several accounts at the firm selected above. Fee defaults to the evaluation fee plus activation plus six months of any subscription. Accounts copied from one signal win and lose together, so this is one bet placed several times, not diversification.</span></div>
     <div class="controls">
       <label class="hint">Account size <input id="pl-size" type="number" value="100000" step="10000" min="5000" style="width:100px"></label>
       <label class="hint">Challenge fee <input id="pl-fee" type="number" value="500" step="50" min="0" style="width:80px"></label>
@@ -416,7 +422,7 @@ open dashboard/index.html</pre>
     const row = (rs, rk, sc) => PF.rows.find(r => r.ruleset === rs && r.risk_pct === rk && (r.scaling || 'fixed') === (sc || scalingOf())) || {};
     const tone = v => v == null ? '' : v >= 75 ? 'pos' : v < 50 ? 'neg' : '';
     function renderPropTable() { $('prop').innerHTML = `<thead><tr><th>Rule set</th><th>Risk</th><th>Pass</th><th>Blow up</th><th>Days (median)</th><th>Days (90th)</th><th>Funded 12 mo</th><th>12-mo P&amp;L</th></tr></thead><tbody>` +
-      rsNames.map(rs => risks.map((rk, i) => { const r = row(rs, rk); return `<tr><td>${i === 0 ? rs : ''}</td><td>${rk}%</td><td class="${tone(r.pass_rate_pct)}">${fmt.pct0(r.pass_rate_pct, 0)}</td><td class="${r.fail_rate_pct > 25 ? 'neg' : ''}">${fmt.pct0(r.fail_rate_pct, 0)}</td><td>${r.median_days_to_pass == null ? '–' : Math.round(r.median_days_to_pass)}</td><td>${r.p90_days_to_pass == null ? '–' : Math.round(r.p90_days_to_pass)}</td><td class="${tone(r.funded_survival_12m_pct)}">${fmt.pct0(r.funded_survival_12m_pct, 0)}</td><td class="${sign(r.funded_pnl_12m_pct || 0)}">${fmt.pct(r.funded_pnl_12m_pct)}</td></tr>`; }).join('')).join('') + '</tbody>'; }
+      [rsNames[+$('prop-rules').value]].map(rs => risks.map((rk, i) => { const r = row(rs, rk); return `<tr><td>${i === 0 ? rs : ''}</td><td>${rk}%</td><td class="${tone(r.pass_rate_pct)}">${fmt.pct0(r.pass_rate_pct, 0)}</td><td class="${r.fail_rate_pct > 25 ? 'neg' : ''}">${fmt.pct0(r.fail_rate_pct, 0)}</td><td>${r.median_days_to_pass == null ? '–' : Math.round(r.median_days_to_pass)}</td><td>${r.p90_days_to_pass == null ? '–' : Math.round(r.p90_days_to_pass)}</td><td class="${tone(r.funded_survival_12m_pct)}">${fmt.pct0(r.funded_survival_12m_pct, 0)}</td><td class="${sign(r.funded_pnl_12m_pct || 0)}">${fmt.pct(r.funded_pnl_12m_pct)}</td></tr>`; }).join('')).join('') + '</tbody>'; }
     renderPropTable();
     const pc = mk('propchart');
     function renderProp() {
@@ -431,14 +437,15 @@ open dashboard/index.html</pre>
     }
     function renderTake() {
       // sweet spot: the largest risk that still passes and survives at least 90% of the time under the chosen sizing
-      const ok = PF.rows.filter(r => r.ruleset === rsNames[0] && (r.scaling || 'fixed') === scalingOf() && r.pass_rate_pct >= 90 && (r.funded_survival_12m_pct || 0) >= 90).sort((a, b) => b.risk_pct - a.risk_pct);
-      const best = ok[0] || row(rsNames[0], 0.5);
+      const rsSel = rsNames[+$('prop-rules').value];
+      const ok = PF.rows.filter(r => r.ruleset === rsSel && (r.scaling || 'fixed') === scalingOf() && r.pass_rate_pct >= 90 && (r.funded_survival_12m_pct || 0) >= 90).sort((a, b) => b.risk_pct - a.risk_pct);
+      const best = ok[0] || row(rsSel, 0.5);
       const longest = M.longest_loss_streak;
       $('prop-take').innerHTML = `<div class="claim"><span class="k">Worst losing run</span><span class="lbl">trades</span><span class="v">${longest}</span><span class="lbl">at 1% fixed risk</span><span class="v neg">about -${longest}%</span></div>
-        <div class="claim"><span class="k">Largest risk with 90%+ odds, two-step</span><span class="lbl">risk</span><span class="v">${best.risk_pct ? best.risk_pct + '%' : '–'}</span><span class="lbl">pass</span><span class="v">${fmt.pct0(best.pass_rate_pct, 0)}</span></div>
+        <div class="claim"><span class="k">Largest risk with 90%+ odds, this firm</span><span class="lbl">risk</span><span class="v">${best.risk_pct ? best.risk_pct + '%' : '–'}</span><span class="lbl">pass</span><span class="v">${fmt.pct0(best.pass_rate_pct, 0)}</span></div>
         <div class="claim"><span class="k">Time at that risk</span><span class="lbl">median</span><span class="v">${best.median_days_to_pass != null ? Math.round(best.median_days_to_pass) + ' d' : '–'}</span><span class="lbl">90th pct</span><span class="v">${best.p90_days_to_pass != null ? Math.round(best.p90_days_to_pass) + ' d' : '–'}</span></div>`;
     }
-    $('prop-rules').addEventListener('change', renderProp);
+    $('prop-rules').addEventListener('change', () => { renderPropTable(); renderProp(); renderTake(); });
     $('prop-scaling').addEventListener('change', () => { renderPropTable(); renderProp(); renderTake(); });
     renderProp(); renderTake();
     if (false) {
@@ -450,6 +457,18 @@ open dashboard/index.html</pre>
     }
   }
 
+  // firm ranking
+  if (PF && PF.ranking) {
+    const money0 = v => (v < 0 ? '-' : '') + '$' + Math.round(Math.abs(v)).toLocaleString();
+    const mk_ = v => v == null ? '–' : v;
+    $('rank').innerHTML = `<thead><tr><th>#</th><th>Firm / plan</th><th>Market</th><th>Account</th><th>Best risk</th><th>Pass</th><th>Days (median)</th><th>Funded 12 mo</th><th>Fees / attempt</th><th>Expected payout, year 1</th><th>Value / attempt</th><th>Per $ of fees</th></tr></thead><tbody>` +
+      PF.ranking.map((r, i) => `<tr class="${i === 0 ? 'hl' : ''}"><td>${i + 1}</td><td>${r.ruleset}<br><span style="color:var(--fg-3);white-space:normal;display:block;max-width:360px;font-family:var(--font-ui);font-size:11px">${r.description}${r.verify ? ' <i>Verify: ' + r.verify + '.</i>' : ''}</span></td><td>${r.market}</td><td>${money0(r.account_size)}</td><td>${r.risk_pct}% ${r.scaling === 'drawdown' ? '(cut in DD)' : ''}</td><td class="${r.pass_rate_pct >= 90 ? 'pos' : r.pass_rate_pct < 75 ? 'neg' : ''}">${fmt.pct0(r.pass_rate_pct, 0)}</td><td>${mk_(r.median_days_to_pass == null ? null : Math.round(r.median_days_to_pass))}</td><td class="${r.funded_survival_12m_pct >= 90 ? 'pos' : ''}">${fmt.pct0(r.funded_survival_12m_pct, 0)}</td><td class="neg">${money0(r.expected_fees)}</td><td class="pos">${money0(r.expected_payout_y1)}</td><td class="${r.ev_y1 >= 0 ? 'pos' : 'neg'}"><b>${money0(r.ev_y1)}</b></td><td>${r.expected_fees ? (r.ev_y1 / r.expected_fees).toFixed(1) + 'x' : '–'}</td></tr>`).join('') + '</tbody>';
+    const top = PF.ranking[0], topF = PF.ranking.filter(r => r.market === 'futures')[0];
+    $('rank-take').innerHTML = `<div class="claim"><span class="k">Best overall</span><span class="lbl">${top.ruleset}</span><span class="v">${money0(top.ev_y1)}</span><span class="lbl">risk ${top.risk_pct}%, pass</span><span class="v">${fmt.pct0(top.pass_rate_pct, 0)}</span></div>` +
+      (topF ? `<div class="claim"><span class="k">Best futures firm</span><span class="lbl">${topF.ruleset}</span><span class="v">${money0(topF.ev_y1)}</span><span class="lbl">risk ${topF.risk_pct}%, pass</span><span class="v">${fmt.pct0(topF.pass_rate_pct, 0)}</span></div>` : '') +
+      `<div class="claim"><span class="k">Why the gap</span><span class="lbl">static DD, 100k</span><span class="v">CFD firms</span><span class="lbl">trailing DD, 50k</span><span class="v">futures firms</span></div>`;
+  }
+
   // payout planner
   if (PF) {
     const risks = PF.risks;
@@ -457,7 +476,8 @@ open dashboard/index.html</pre>
     const money0 = v => '$' + Math.round(v).toLocaleString();
     function plan() {
       const size = +$('pl-size').value || 0, fee = +$('pl-fee').value || 0, refund = $('pl-refund').value === '1', n = +$('pl-n').value || 0, split = (+$('pl-split').value || 0) / 100, rk = +$('pl-risk').value;
-      const r = PF.rows.find(x => x.ruleset === PF.rulesets[0].name && x.risk_pct === rk && (x.scaling || 'fixed') === $('prop-scaling').value) || {};
+      const rsSel = PF.rulesets[+$('prop-rules').value];
+      const r = PF.rows.find(x => x.ruleset === rsSel.name && x.risk_pct === rk && (x.scaling || 'fixed') === $('prop-scaling').value) || {};
       const pass = (r.pass_rate_pct || 0) / 100, surv = (r.funded_survival_12m_pct || 0) / 100, pnl = (r.funded_pnl_12m_pct || 0) / 100;
       const funded = n * pass, feesLost = n * (1 - pass) * fee, feesPaid = n * fee, feesBack = refund ? funded * fee : 0;
       const payoutYr = funded * size * pnl * split;
@@ -474,7 +494,9 @@ open dashboard/index.html</pre>
     }
     ['pl-size', 'pl-fee', 'pl-refund', 'pl-n', 'pl-split', 'pl-risk'].forEach(id => $(id).addEventListener('input', plan));
     $('prop-scaling').addEventListener('change', plan);
-    plan();
+    function planDefaults() { const rsSel = PF.rulesets[+$('prop-rules').value]; $('pl-size').value = rsSel.account_size; $('pl-fee').value = Math.round(rsSel.fee + rsSel.activation_fee + rsSel.monthly_fee * 6); $('pl-refund').value = rsSel.fee_refund ? '1' : '0'; $('pl-split').value = Math.round(rsSel.split * 100); plan(); }
+    $('prop-rules').addEventListener('change', planDefaults);
+    planDefaults();
   }
 
   // alternatives
