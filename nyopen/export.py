@@ -10,7 +10,7 @@ import pandas as pd
 
 from .backtest import backtest, get_bars, load_experiments
 from .optimize import OOS_START, split_metrics, walk_forward
-from .propfirm import prop_firm_report
+from .propfirm import fast_track_report, prop_firm_report
 from .strategy import Params, VIDEO_RULE, add_indicators
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -124,6 +124,7 @@ def export_dashboard(res: dict, run_id: str) -> Path:
     b_is, b_oos = split_metrics(base, p.start_equity)
     mc = monte_carlo(tr, p.start_equity, p.risk_pct)
     prop = prop_firm_report(tr)
+    prop["fast_track"] = fast_track_report(tr)
     mfe_mae = [[round(float(t.mfe_r), 2), round(float(t.mae_r), 2), round(float(t.r_multiple), 2), t.direction] for t in tr.itertuples()]
     data = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

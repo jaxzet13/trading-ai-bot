@@ -170,6 +170,12 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 1
   </section>
 
   <section class="panel">
+    <div class="panel-head"><h2>Fast track: funded within two weeks</h2><span class="hint">Plans with no minimum days and no consistency rule can be passed by one strong day. This replays every historical start at high evaluation risk, then cuts risk to 0.25% once funded so the account survives. "Attempts" assumes staggered starts and keeps buying until one passes inside 14 days. Most attempts blow up: that is the price of speed.</span></div>
+    <div class="tablewrap"><table id="fast"></table></div>
+    <div class="claims" id="fast-take"></div>
+  </section>
+
+  <section class="panel">
     <div class="panel-head"><h2>Could this pass a prop-firm challenge?</h2><span class="hint">Pick a firm. An evaluation is started on every historical day and replayed trade by trade. "Cut risk in drawdown" halves the risk once 30% of the max-loss allowance is used and quarters it at 60%. Pass rate is over the evaluations that resolved.</span></div>
     <div class="grid wide">
       <div class="tablewrap"><table id="prop"></table></div>
@@ -467,6 +473,18 @@ open dashboard/index.html</pre>
     $('rank-take').innerHTML = `<div class="claim"><span class="k">Best overall</span><span class="lbl">${top.ruleset}</span><span class="v">${money0(top.ev_y1)}</span><span class="lbl">risk ${top.risk_pct}%, pass</span><span class="v">${fmt.pct0(top.pass_rate_pct, 0)}</span></div>` +
       (topF ? `<div class="claim"><span class="k">Best futures firm</span><span class="lbl">${topF.ruleset}</span><span class="v">${money0(topF.ev_y1)}</span><span class="lbl">risk ${topF.risk_pct}%, pass</span><span class="v">${fmt.pct0(topF.pass_rate_pct, 0)}</span></div>` : '') +
       `<div class="claim"><span class="k">Why the gap</span><span class="lbl">static DD, 100k</span><span class="v">CFD firms</span><span class="lbl">trailing DD, 50k</span><span class="v">futures firms</span></div>`;
+  }
+
+  // fast track
+  if (PF && PF.fast_track) {
+    const money0 = v => (v < 0 ? '-' : '') + '$' + Math.round(Math.abs(v)).toLocaleString();
+    const FT = PF.fast_track.filter(r => r.funded_within_14d_pct > 0).slice(0, 12);
+    $('fast').innerHTML = `<thead><tr><th>Plan</th><th>Eval risk</th><th>Funded ≤ 14 d</th><th>Funded ≤ 30 d</th><th>Blow up</th><th>Attempts to pass in 14 d</th><th>Fees burned</th><th>Funded survives 12 mo (0.25%)</th><th>Payout, first funded year</th></tr></thead><tbody>` +
+      FT.map((r, i) => `<tr class="${i === 0 ? 'hl' : ''}"><td>${r.ruleset}</td><td>${r.risk_pct}%</td><td class="${r.funded_within_14d_pct >= 20 ? 'pos' : ''}">${fmt.pct0(r.funded_within_14d_pct, 0)}</td><td>${fmt.pct0(r.funded_within_30d_pct, 0)}</td><td class="neg">${fmt.pct0(r.blow_up_pct, 0)}</td><td>${r.expected_attempts_14d == null ? '–' : r.expected_attempts_14d.toFixed(1)}</td><td class="neg">${r.expected_fees_to_funded_14d == null ? '–' : money0(r.expected_fees_to_funded_14d)}</td><td class="${r.funded_survival_12m_pct >= 90 ? 'pos' : r.funded_survival_12m_pct < 60 ? 'neg' : ''}">${fmt.pct0(r.funded_survival_12m_pct, 0)}</td><td class="pos">${money0(r.expected_payout_y1_if_funded)}</td></tr>`).join('') + '</tbody>';
+    const top = FT[0];
+    if (top) $('fast-take').innerHTML = `<div class="claim"><span class="k">Fastest plan</span><span class="lbl">${top.ruleset}</span><span class="v">${fmt.pct0(top.funded_within_14d_pct, 0)}</span><span class="lbl">per attempt, in 14 days at ${top.risk_pct}%</span><span class="v">${money0(top.expected_fees_to_funded_14d)} fees</span></div>
+      <div class="claim"><span class="k">Reality check</span><span class="lbl">attempts that blow up</span><span class="v neg">${fmt.pct0(top.blow_up_pct, 0)}</span><span class="lbl">same strategy, slow lane</span><span class="v pos">100% pass</span></div>
+      <div class="claim"><span class="k">After funding</span><span class="lbl">cut risk to</span><span class="v">0.25%</span><span class="lbl">first-year payout</span><span class="v">${money0(top.expected_payout_y1_if_funded)}</span></div>`;
   }
 
   // payout planner

@@ -70,6 +70,9 @@ CATALOG: list[RuleSet] = [
     RuleSet("Lucid Flex 50k", "Lucid Trading", "futures", 50_000, (6,), 0, 4, "eod", True, 50, 0, 0, 0, 100, 0, 0, False, 0.9,
             "Target $3k. $2k end-of-day trailing that locks at start + $100, optional daily limit, 50% consistency. One-time fee from ~$70-100 after discounts. Funded Flex: no consistency, 90% split.",
             "pricing after discounts varies"),
+    RuleSet("Lucid Pro 50k (fast)", "Lucid Trading", "futures", 50_000, (6,), 2.4, 4, "eod", True, 0, 40, 0, 0, 120, 0, 0, False, 0.9,
+            "Target $3k. $2k end-of-day trailing that locks at start + $100, $1.2k daily limit, no consistency rule, no minimum days (can pass in one day). Funded: 40% consistency per payout cycle, 90% split.",
+            "pricing and the funded consistency rule vary by promo and cycle"),
     RuleSet("Take Profit Trader PRO 50k", "Take Profit Trader", "futures", 50_000, (6,), 2, 4, "static", False, 0, 0, 3, 0, 150, 0, 130, False, 0.8,
             "Target $3k. $2k static max loss, $500 daily limit, 3 min days (since Aug 2026), no consistency. One-time fee plus $130 activation (often waived). 80% split, withdrawals from day one.",
             "daily limit applies to the Test; PRO details vary"),
@@ -132,7 +135,9 @@ def run_phase(r: np.ndarray, mfe: np.ndarray, dates: np.ndarray, start: int, ris
     return "unfinished", days, i
 
 
-def simulate(trades: pd.DataFrame, risk_pct: float, rs: RuleSet, funded_months: int = 12, scaling: str = "fixed") -> dict:
+def simulate(trades: pd.DataFrame, risk_pct: float, rs: RuleSet, funded_months: int = 12, scaling: str = "fixed", funded_risk_pct: float | None = None) -> dict:
+    """funded_risk_pct: risk used once funded (default: same as the evaluation). Fast-track plans pass at high risk and then cut back."""
+    frisk = risk_pct if funded_risk_pct is None else funded_risk_pct
     d = _daily(trades)
     r, mfe, dates = d.r.to_numpy(), d.mfe.to_numpy(), d.date.to_numpy()
     n = len(r)
@@ -156,7 +161,7 @@ def simulate(trades: pd.DataFrame, risk_pct: float, rs: RuleSet, funded_months: 
         bal, peak, breached, j = 0.0, 0.0, False, i
         end = dates[i] + np.timedelta64(30 * funded_months, "D") if i < n else None
         while j < n and dates[j] < end:
-            rk = scaled_risk(risk_pct, bal, peak, rs, scaling)
+            rk = scaled_risk(frisk, bal, peak, rs, scaling)
             day_pnl = r[j] * rk
             if rs.dd_type == "intraday":
                 peak = max(peak, bal + max(mfe[j], 0.0) * rk)
@@ -179,7 +184,7 @@ def simulate(trades: pd.DataFrame, risk_pct: float, rs: RuleSet, funded_months: 
     payout = pass_rate * rs.account_size * pnl12 / 100 * rs.split
     refund = rs.fee * pass_rate if rs.fee_refund else 0.0
     return {
-        "ruleset": rs.name, "firm": rs.firm, "market": rs.market, "risk_pct": risk_pct, "scaling": scaling, "starts": int(len(o)), "resolved": int(len(counted)),
+        "ruleset": rs.name, "firm": rs.firm, "market": rs.market, "risk_pct": risk_pct, "funded_risk_pct": frisk, "scaling": scaling, "starts": int(len(o)), "resolved": int(len(counted)),
         "pass_rate_pct": pass_rate * 100 if len(counted) else None,
         "fail_rate_pct": float((counted == "fail").mean() * 100) if len(counted) else None,
         "median_days_to_pass": float(np.median(days_to_pass)) if days_to_pass else None,
@@ -205,6 +210,45 @@ def prop_firm_report(trades: pd.DataFrame, risks=(0.25, 0.5, 0.75, 1.0, 1.5), sc
             ranking.append({**best, "description": rs.description, "verify": rs.verify, "account_size": rs.account_size, "split": rs.split, "fee": rs.fee, "monthly_fee": rs.monthly_fee, "activation_fee": rs.activation_fee})
     ranking.sort(key=lambda x: x["ev_y1"], reverse=True)
     return {"rulesets": [asdict(rs) for rs in CATALOG], "risks": list(risks), "scalings": list(scalings), "rows": rows, "ranking": ranking}
+
+
+def fast_track_report(trades: pd.DataFrame, risks=(1.0, 2.0, 3.0), funded_risk_pct: float = 0.25, limits=(14, 30)) -> list[dict]:
+    """For every plan and evaluation risk: share of historical starts funded within N days, blow-up rate, and what it
+    costs to keep buying staggered attempts until one passes quickly. Funded phase runs at `funded_risk_pct`."""
+    d = _daily(trades)
+    r, mfe, dates = d.r.to_numpy(), d.mfe.to_numpy(), d.date.to_numpy()
+    n = len(r)
+    out = []
+    for rs in CATALOG:
+        for rk in risks:
+            within = {L: 0 for L in limits}
+            fail = tot = 0
+            for s0 in range(0, n - 60):
+                i, ok = s0, True
+                for tg in rs.targets_pct:
+                    res, used, i = run_phase(r, mfe, dates, i, rk, rs, tg, "fixed")
+                    if res != "pass":
+                        ok = False
+                        break
+                tot += 1
+                if not ok:
+                    fail += 1
+                    continue
+                days = int((dates[i - 1] - dates[s0]).astype("timedelta64[D]").astype(int))
+                for L in limits:
+                    if days <= L:
+                        within[L] += 1
+            sim = simulate(trades, rk, rs, scaling="fixed", funded_risk_pct=funded_risk_pct)
+            p14 = within[limits[0]] / tot
+            attempts = (1 / p14) if p14 > 0 else None
+            fee_per_attempt = rs.fee + rs.monthly_fee * 1 + rs.activation_fee * p14
+            out.append({"ruleset": rs.name, "firm": rs.firm, "market": rs.market, "account_size": rs.account_size, "risk_pct": rk, "funded_risk_pct": funded_risk_pct,
+                        **{f"funded_within_{L}d_pct": within[L] / tot * 100 for L in limits},
+                        "blow_up_pct": fail / tot * 100, "expected_attempts_14d": attempts, "expected_fees_to_funded_14d": attempts * fee_per_attempt if attempts else None,
+                        "funded_survival_12m_pct": sim["funded_survival_12m_pct"], "funded_pnl_12m_pct": sim["funded_pnl_12m_pct"],
+                        "expected_payout_y1_if_funded": (sim["funded_pnl_12m_pct"] or 0) / 100 * rs.account_size * rs.split, "split": rs.split})
+    out.sort(key=lambda x: x[f"funded_within_{limits[0]}d_pct"], reverse=True)
+    return out
 
 
 # backwards-compatible alias used by propbot

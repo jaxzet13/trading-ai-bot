@@ -40,6 +40,9 @@ Ranked by expected first-year value of one attempt at the best risk size that st
 
 Static-drawdown CFD two-steps on 100k accounts win by a wide margin. Futures firms' $2k trailing drawdown on a $50k account is a 4% allowance that ratchets, which forces risk down to 0.25% and makes the target slow to reach; Topstep's monthly billing then eats the value. Intraday trailing (Apex) is the worst fit for a strategy whose winners come from letting trades run.
 
+## Fast track (funded within two weeks)
+Plans with no minimum days and no consistency rule in evaluation (Lucid Pro, Apex, Take Profit Trader PRO) can be passed by one strong day. `fast_track_report()` replays every start at 1-3% evaluation risk and reports the share funded within 14 and 30 days, the blow-up rate, and the fees burned buying staggered attempts until one passes. Best case in October 2026: Lucid Pro 50k at 2%: 32% of attempts funded inside 14 days, 66% blow up, about 3 attempts and ~$380 of fees per funded account, then cut risk to 0.25% to keep it. Payouts on a 50k futures account are a fraction of a 100k static CFD account, so the fast lane buys time, not money.
+
 ## Prop-firm simulation
 `propfirm.py` replays the trade stream against typical challenge rules (two-step 10/5 with 10% max loss, one-step 10/6, 30-day-limited phases, futures-style trailing drawdown), starting an evaluation on every historical day and at several fixed risk sizes. The dashboard shows pass rate, blow-up rate, days to pass, and the odds of still being funded a year later. Read it before deciding on risk per trade. The sizing policy "cut risk in drawdown" (halve at 30% of the max-loss allowance used, quarter at 60%) is what turns a 60% pass rate into one where every historical start passed at 0.75% risk.
 
