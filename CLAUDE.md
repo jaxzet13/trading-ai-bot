@@ -4,6 +4,8 @@ Two independent pieces live here:
 
 * `nyopen/` – the NAS100 "NY open first-candle vs 12 EMA" strategy, its backtester, optimiser and dashboard exporter. Read `nyopen/README.md` first. The dashboard is `dashboard/index.html` and reads `dashboard/data.js`.
 * `propbot/` – a generic intraday engine plus five candidate strategies built to look for a lower-variance, prop-firm-friendly edge. None found one (see `propbot/README.md`); keep it for testing new ideas.
+* `fastfund/` – the fast route: sportsbook promo conversion math and offers, sequential fast-lane ticket odds. Shown at the top of `playbook/index.html`.
+* `playbook/` – the Funded Account Playbook app (generated data via `python -m nyopen.playbook`).
 * `src/`, `server.py` – an older, unrelated toy model and an X posting template.
 
 ## Working on the strategy

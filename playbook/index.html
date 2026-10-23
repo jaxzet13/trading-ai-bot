@@ -100,16 +100,57 @@ ul.check input { margin-top: 4px; accent-color: var(--accent); }
 .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
 .pill.ok { background: rgba(27,175,122,.16); color: var(--up); } .pill.no { background: rgba(230,103,103,.16); color: var(--down); } .pill.warn { background: rgba(201,133,0,.18); color: var(--warn); }
 .honest { border-left: 3px solid var(--warn); }
+.fastroute { border-left: 3px solid var(--up); }
+h3 { margin-top: 4px; }
 footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 8px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="eyebrow">Operating manual · NAS100 NY open strategy · prop-firm accounts</div>
+    <div class="eyebrow">Operating manual · sportsbook promos → prop-firm tickets → funded account</div>
     <h1>Funded Account Playbook</h1>
     <p class="lede" id="lede"></p>
   </header>
+
+  <section class="panel fastroute">
+    <div class="panel-head"><h2>Fast route: funded in two to four weeks from $100</h2><span class="hint">Three engines at once. Promos build the bankroll, the bankroll buys fast-lane tickets, free competitions are extra lottery tickets that cost nothing.</span></div>
+    <div class="tiles" id="fr-tiles"></div>
+    <ol class="timeline" id="fr-steps"></ol>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Engine 1: sportsbook sign-up promos, hedged</h2><span class="hint">Each book gives new customers bonus bets. Bet the bonus on one side and hedge the other side with cash at a different book or exchange, and you lock in most of the bonus whatever the result. Ordered so the cheapest one funds the next.</span></div>
+    <div class="tablewrap"><table id="promos"></table></div>
+    <h3>Hedge calculator</h3>
+    <div class="calc">
+      <label>Promo type <select id="h-type"><option value="bonus" selected>Bonus bet (stake not returned)</option><option value="bet_back">Bet back / reset (refund as bonus)</option><option value="cash">Plain cash bet (qualifier)</option></select></label>
+      <label>Amount ($) <input id="h-amt" type="number" value="25" min="1" step="5"></label>
+      <label>Odds on promo book <input id="h-o1" type="number" value="400" step="5"></label>
+      <label>Hedge odds (other book) <input id="h-o2" type="number" value="-500" step="5"></label>
+      <label>Bonus conversion (bet back) <input id="h-c" type="number" value="0.70" min="0" max="1" step="0.05"></label>
+    </div>
+    <div class="tiles" id="h-out"></div>
+    <ul class="rules">
+      <li><strong>Where to hedge.</strong> A second sportsbook you have an account with, or a low-fee exchange or prediction market that lists the same game (Novig, ProphetX, Sporttrade, Kalshi where legal). Lower vig on the hedge means more of the bonus kept.</li>
+      <li><strong>Bonus bets go on longshots (+300 to +500).</strong> Because the stake is not returned, the conversion is best at longer odds. Hedge the favourite with cash.</li>
+      <li><strong>Not enough capital to hedge?</strong> Do the cheap promos first, or bet the bonus tokens unhedged at +300 to +500. Expected value is about the same (~75%), only the variance is higher.</li>
+      <li><strong>Must:</strong> be 21+, in a state where the book is legal, on your own identity, one account per person. Winnings are taxable. Books will limit promo-only accounts later; that is expected and fine.</li>
+    </ul>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Engine 2: fast-lane tickets, bought with the promo money</h2><span class="hint" id="tk-hint"></span></div>
+    <div class="grid two">
+      <div class="chart" id="tk-chart"></div>
+      <div class="tablewrap"><table id="tk-table"></table></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Engine 3: free prop-firm competitions</h2><span class="hint">Free entries that award funded accounts or cash. Only the top of the leaderboard wins and losing costs nothing, so trade the strategy at the maximum size the competition allows. These are bonus tickets, not the plan.</span></div>
+    <div class="tablewrap"><table id="comps"></table></div>
+  </section>
 
   <section class="panel">
     <div class="panel-head"><h2>1. Pick your budget</h2><span class="hint">The route changes with what you can put into challenge fees. Everything below updates.</span></div>
@@ -201,7 +242,7 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 8
   const fastBest = FAST[0] || {};
   const slowBest = row(SLOW[0], 0.75, 'drawdown');
 
-  $('lede').textContent = `One strategy with a real edge, one sizing rule that has passed every historical two-step challenge, and a route for your budget. Built from ${D.data_range.days.toLocaleString()} sessions of NAS100 data, ${D.data_range.start.slice(0, 10)} to ${D.data_range.end.slice(0, 10)}, with the sizing and rules replayed against each firm.`;
+  $('lede').textContent = `The fast route turns sportsbook sign-up promos into a bankroll, spends it on fast-lane prop evaluations one after another, and adds free competitions on the side. The slow route underneath is the near-certain one. Odds come from ${D.data_range.days.toLocaleString()} sessions of NAS100 data, ${D.data_range.start.slice(0, 10)} to ${D.data_range.end.slice(0, 10)}, replayed against each firm's rules.`;
   $('foot').textContent = 'Historical simulation, CFD data, fixed costs. Odds are shares of historical starts, not promises. Not financial advice.';
 
   // ---- 1. budget routes ----
@@ -318,6 +359,75 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 8
   items.forEach((_, i) => $('ck' + i).addEventListener('change', () => { saved[i] = $('ck' + i).checked; try { localStorage.setItem('pb-check', JSON.stringify(saved)); } catch (e) {} }));
 
   renderRoute();
+
+  // ================= fast route =================
+  const FR = D.fast_route;
+  if (FR) {
+    const promos = FR.promos, totalPromo = promos.reduce((a, p) => a + p.expected_cash, 0);
+    const seq = FR.sequential, stag = FR.staggered;
+    const ticketFee = seq[0].fee_per_ticket;
+    const nTickets = Math.max(1, Math.min(8, Math.floor((totalPromo + 100 - 60) / ticketFee)));
+    const pick = seq.filter(x => x.max_tickets <= nTickets).slice(-1)[0];
+    const pickStag = stag.filter(x => x.tickets <= nTickets).slice(-1)[0];
+    $('fr-tiles').innerHTML = [
+      ['Start', '$100', 'your money, never at risk on the hedged promos'],
+      ['Promo cash, ~3 weeks', money(totalPromo), `${promos.length} sign-up offers, hedged (state-dependent)`],
+      ['Fast-lane tickets', `${nTickets} x ${money(ticketFee)}`, 'Lucid Pro 50k, bought one after another'],
+      ['Funded within 14 days', pct(pick['funded_by_14d_pct']), `of the first ticket; ${pickStag ? pct(pickStag.funded_pct) : '–'} if all ${nTickets} are bought on consecutive days`],
+      ['Funded within 30 days', pct(pick['funded_by_30d_pct']), 'same tickets, a little more patience'],
+      ['Funded within 60 days', pct(pick['funded_by_60d_pct']), `average ${pick.avg_tickets_used.toFixed(1)} tickets used, ${money(pick.avg_fees)} fees`],
+    ].map(([k, v, x]) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${x}</span></div>`).join('');
+    const steps = [
+      ['Days 1 to 3', 'Open the cheap promos', 'Caesars, DraftKings, bet365, and start FanDuel\'s 7 days. Each qualifier is $5 to $10. Use bonus tokens on +300 to +500 lines and hedge the other side with the calculator. The first ~$270 of profit lands within a week as games settle.'],
+      ['Day 4 to 7', 'Buy ticket one', `As soon as the bankroll covers it, buy one Lucid Pro 50k evaluation (${money(ticketFee)} on promo). Trade the 09:35 rule at 2% risk. Same procedure as below, larger size.`],
+      ['Week 2', 'Fanatics and the rest', 'Start Fanatics\' 10-day matched FanCash with the bankroll the first promos built. Its ~$575 pays for four more tickets. Finish FanDuel. BetMGM last, sized to whatever capital you have.'],
+      ['Weeks 1 to 4', 'Ticket after ticket', `When a ticket blows up, buy the next the same day. Never raise the risk to win it back. Historical odds of one funded within 14 days of the first ticket: ${pct(pick['funded_by_14d_pct'])}; within 30 days: ${pct(pick['funded_by_30d_pct'])}.`],
+      ['Funded day', 'Switch to keep-mode', 'Cut risk to 0.25% the moment the account is funded. A 2% funded account is a dead account. Payouts come from the slow, small-risk version of the same rule.'],
+      ['In parallel', 'Free competitions and one slow lane', 'Enter every free monthly competition (max size, nothing to lose). Spend $35 on a $5k static two-step at 0.75% for the near-certain six-month route.'],
+    ];
+    $('fr-steps').innerHTML = steps.map(([w, h, t], i) => `<li><span class="n">${i + 1}</span><div><span class="when">${w}</span><h3>${h}</h3><p>${t}</p></div></li>`).join('');
+
+    $('promos').innerHTML = `<thead><tr><th>Order</th><th>Book</th><th>Offer</th><th>Cash needed at once</th><th>Expected cash</th><th>Days</th><th>Notes</th><th>Done</th></tr></thead><tbody>` +
+      promos.map((p, i) => `<tr><td>${i + 1}</td><td>${p.book}</td><td style="white-space:normal;min-width:200px">${p.headline}</td><td>${money(p.capital_needed)}</td><td class="pos">${money(p.expected_cash)}</td><td>${p.days}</td><td style="white-space:normal;min-width:260px;font-family:var(--font-ui);color:var(--fg-3)">${p.notes}</td><td><input type="checkbox" class="pdone" data-i="${i}" aria-label="done"></td></tr>`).join('') +
+      `<tr><td></td><td><b>Total</b></td><td></td><td></td><td class="pos"><b>${money(totalPromo)}</b></td><td></td><td style="white-space:normal;font-family:var(--font-ui);color:var(--fg-3)">Estimates at ~67% conversion. Terms vary by state; check each book's promo page.</td><td></td></tr></tbody>`;
+    let pd = {}; try { pd = JSON.parse(localStorage.getItem('pb-promos') || '{}'); } catch (e) {}
+    document.querySelectorAll('.pdone').forEach(cb => { cb.checked = !!pd[cb.dataset.i]; cb.addEventListener('change', () => { pd[cb.dataset.i] = cb.checked; try { localStorage.setItem('pb-promos', JSON.stringify(pd)); } catch (e) {} }); });
+
+    const dec = a => 1 + (a > 0 ? a / 100 : 100 / -a);
+    function hedge() {
+      const type = $('h-type').value, amt = +$('h-amt').value || 0, o1 = dec(+$('h-o1').value || 100), o2 = dec(+$('h-o2').value || -110), c = +$('h-c').value || 0;
+      let H, pIfPromo, pIfHedge;
+      if (type === 'bonus') { H = amt * (o1 - 1) / o2; pIfPromo = amt * (o1 - 1) - H; pIfHedge = H * (o2 - 1); }
+      else if (type === 'bet_back') { H = amt * (o1 - c) / o2; pIfPromo = amt * (o1 - 1) - H; pIfHedge = H * (o2 - 1) - amt + c * amt; }
+      else { H = amt * o1 / o2; pIfPromo = amt * (o1 - 1) - H; pIfHedge = H * (o2 - 1) - amt; }
+      const locked = Math.min(pIfPromo, pIfHedge);
+      $('h-out').innerHTML = [
+        ['Hedge stake', money(H), 'cash, on the other side, other book'],
+        ['If the promo side wins', (pIfPromo >= 0 ? '+' : '') + money(pIfPromo), 'net of both bets'],
+        ['If the hedge side wins', (pIfHedge >= 0 ? '+' : '') + money(pIfHedge), type === 'bet_back' ? `incl. refund valued at ${Math.round(c * 100)}%` : 'net of both bets'],
+        ['Locked in', (locked >= 0 ? '+' : '') + money(locked), type === 'cash' ? 'qualifier cost (the vig)' : `${(locked / amt * 100).toFixed(0)}% of the ${type === 'bonus' ? 'bonus' : 'stake'}`],
+        ['Cash needed', money(H + (type === 'bonus' ? 0 : amt)), 'tied up until the game settles'],
+      ].map(([k, v, x]) => `<div class="tile"><span class="k">${k}</span><span class="v ${k === 'Locked in' ? (locked >= 0 ? 'pos' : 'neg') : ''}">${v}</span><span class="s">${x}</span></div>`).join('');
+    }
+    ['h-type', 'h-amt', 'h-o1', 'h-o2', 'h-c'].forEach(id => $(id).addEventListener('input', hedge));
+    $('h-type').addEventListener('change', () => { const t = $('h-type').value; if (t === 'bonus') { $('h-o1').value = 400; $('h-o2').value = -500; } else { $('h-o1').value = -110; $('h-o2').value = -110; } hedge(); });
+    hedge();
+
+    $('tk-hint').textContent = `Lucid Pro 50k at 2% risk, replayed from every historical start day. Buy one ticket; if it blows up, buy the next the same day. Odds flatten after about six tickets because a failed ticket hands the next one the same bad week.`;
+    const tk = echarts.init($('tk-chart'));
+    tk.setOption({ animation: false, textStyle: { fontFamily: css('--font-mono'), color: css('--fg-2') }, grid: { left: 44, right: 16, top: 28, bottom: 36 },
+      legend: { top: 0, right: 8, textStyle: { color: css('--fg-3'), fontSize: 11 }, itemWidth: 14 },
+      tooltip: { trigger: 'axis', backgroundColor: css('--panel-2'), borderColor: css('--line-2'), textStyle: { color: css('--fg'), fontSize: 12 }, valueFormatter: v => v.toFixed(0) + '%' },
+      xAxis: { type: 'category', data: seq.map(x => x.max_tickets), name: 'tickets you are willing to buy', nameLocation: 'middle', nameGap: 22, nameTextStyle: { color: css('--fg-3'), fontSize: 11 }, axisLabel: { color: css('--fg-3') }, axisLine: { lineStyle: { color: css('--line-2') } }, axisTick: { show: false } },
+      yAxis: { type: 'value', min: 0, max: 100, axisLabel: { color: css('--fg-3'), formatter: v => v + '%' }, splitLine: { lineStyle: { color: css('--line') } } },
+      series: [['funded_by_14d_pct', '14 days', css('--warn')], ['funded_by_30d_pct', '30 days', css('--accent')], ['funded_by_60d_pct', '60 days', css('--up')]].map(([k, n, col]) => ({ type: 'line', name: n, data: seq.map(x => x[k]), lineStyle: { width: 2, color: col }, itemStyle: { color: col }, symbolSize: 7 })) });
+    window.addEventListener('resize', () => tk.resize());
+    $('tk-table').innerHTML = `<thead><tr><th>Tickets</th><th>≤ 7 d</th><th>≤ 14 d</th><th>≤ 30 d</th><th>≤ 60 d</th><th>Avg used</th><th>Avg fees</th></tr></thead><tbody>` +
+      seq.map(x => `<tr class="${x.max_tickets === pick.max_tickets ? 'hl' : ''}"><td>${x.max_tickets}</td><td>${pct(x.funded_by_7d_pct)}</td><td>${pct(x.funded_by_14d_pct)}</td><td>${pct(x.funded_by_30d_pct)}</td><td class="pos">${pct(x.funded_by_60d_pct)}</td><td>${x.avg_tickets_used.toFixed(1)}</td><td>${money(x.avg_fees)}</td></tr>`).join('') + '</tbody>';
+
+    $('comps').innerHTML = `<thead><tr><th>Firm</th><th>How often</th><th>Prize</th><th>Cost</th></tr></thead><tbody>` +
+      FR.competitions.map(c => `<tr><td>${c.firm}</td><td>${c.cadence}</td><td style="white-space:normal">${c.prize}</td><td class="pos">${c.cost}</td></tr>`).join('') + '</tbody>';
+  }
 })();
 </script>
 </body>

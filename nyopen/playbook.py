@@ -7,6 +7,24 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 
+COMPETITIONS = [
+    {"firm": "FundedNext", "cadence": "monthly", "prize": "Cash for the top 3, funded/challenge accounts deep into the leaderboard (top ~600)", "cost": "free, no card"},
+    {"firm": "Alpha Capital Group", "cadence": "monthly", "prize": "Evaluation accounts down to about 70th place", "cost": "free, one entry per person"},
+    {"firm": "FundingPips", "cadence": "monthly", "prize": "Funded accounts or cash", "cost": "free"},
+    {"firm": "Blue Guardian", "cadence": "monthly", "prize": "Instant funded accounts or cash", "cost": "free"},
+    {"firm": "The5ers", "cadence": "weekly", "prize": "100 winners a week", "cost": "free"},
+    {"firm": "Pipster", "cadence": "seasonal (e.g. 25-30 Oct)", "prize": "$100k account for first", "cost": "free, no card"},
+]
+
+
+def fast_route(trades) -> dict:
+    from fastfund.promos import promo_plan
+    from fastfund.tickets import sequential, staggered
+    seq = [sequential(trades, "Lucid Pro 50k (fast)", 2.0, k) for k in (1, 2, 3, 4, 6, 8)]
+    stag = [staggered(trades, "Lucid Pro 50k (fast)", 2.0, k, 1, 14) for k in (1, 2, 3, 4, 6, 8)]
+    return {"promos": promo_plan(100.0), "sequential": seq, "staggered": stag, "competitions": COMPETITIONS}
+
+
 def export_playbook() -> Path:
     d = json.loads((ROOT / "dashboard" / "data.json").read_text())
     pf = d["prop_firm"]
@@ -17,6 +35,9 @@ def export_playbook() -> Path:
         "rulesets": pf["rulesets"], "rows": keep_rows, "ranking": pf["ranking"], "fast_track": pf.get("fast_track", []),
         "alternatives": d.get("alternatives", []),
     }
+    from .backtest import backtest
+    from .strategy import Params
+    out["fast_route"] = fast_route(backtest(Params())["trades"])
     (ROOT / "playbook").mkdir(exist_ok=True)
     p = ROOT / "playbook" / "data.js"
     p.write_text("window.PLAYBOOK_DATA = " + json.dumps(out, default=str) + ";\n")
