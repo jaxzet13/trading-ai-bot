@@ -38,6 +38,16 @@ def export_playbook() -> Path:
     from .backtest import backtest
     from .strategy import Params
     out["fast_route"] = fast_route(backtest(Params())["trades"])
+    dp = ROOT / "experiments" / "desk" / "portfolio.json"
+    if dp.exists():
+        desk = json.loads(dp.read_text())
+        tested = []
+        for f in sorted((ROOT / "experiments" / "desk").glob("*.json")):
+            if f.name != "portfolio.json":
+                j = json.loads(f.read_text())
+                tested.append({"instrument": j["instrument"], "tested": j["tested"], "best": j["best"]})
+        desk["tested"] = tested
+        out["desk"] = desk
     (ROOT / "playbook").mkdir(exist_ok=True)
     p = ROOT / "playbook" / "data.js"
     p.write_text("window.PLAYBOOK_DATA = " + json.dumps(out, default=str) + ";\n")

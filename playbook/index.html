@@ -101,6 +101,11 @@ ul.check input { margin-top: 4px; accent-color: var(--accent); }
 .pill.ok { background: rgba(27,175,122,.16); color: var(--up); } .pill.no { background: rgba(230,103,103,.16); color: var(--down); } .pill.warn { background: rgba(201,133,0,.18); color: var(--warn); }
 .honest { border-left: 3px solid var(--warn); }
 .fastroute { border-left: 3px solid var(--up); }
+.desk { border-left: 3px solid var(--accent); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.card { background: var(--panel-2); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.card .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.card ol { margin: 0; padding-left: 18px; color: var(--fg-2); display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; }
 h3 { margin-top: 4px; }
 footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 8px; }
 </style>
@@ -112,6 +117,19 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 8
     <h1>Funded Account Playbook</h1>
     <p class="lede" id="lede"></p>
   </header>
+
+  <section class="panel desk" id="desk-sec">
+    <div class="panel-head"><h2>Day-trading desk: forex, gold and index futures</h2><span class="hint" id="desk-hint"></span></div>
+    <div class="tiles" id="desk-tiles"></div>
+    <div class="grid two">
+      <div><h3>Desk equity, in R, one line per strategy</h3><div class="chart" id="desk-eq"></div></div>
+      <div><h3>Prop-firm odds for the whole desk</h3><div class="tablewrap"><table id="desk-prop"></table></div></div>
+    </div>
+    <h3>The strategies on the desk</h3>
+    <div class="cards" id="desk-cards"></div>
+    <h3>Everything that was tested</h3>
+    <div class="tablewrap"><table id="desk-tested"></table></div>
+  </section>
 
   <section class="panel fastroute">
     <div class="panel-head"><h2>Fast route: funded in two to four weeks from $100</h2><span class="hint">Three engines at once. Promos build the bankroll, the bankroll buys fast-lane tickets, free competitions are extra lottery tickets that cost nothing.</span></div>
@@ -359,6 +377,66 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 8
   items.forEach((_, i) => $('ck' + i).addEventListener('change', () => { saved[i] = $('ck' + i).checked; try { localStorage.setItem('pb-check', JSON.stringify(saved)); } catch (e) {} }));
 
   renderRoute();
+
+  // ================= desk =================
+  const DK = D.desk;
+  if (!DK || !DK.strategies || !DK.strategies.length) { $('desk-sec').hidden = true; }
+  else {
+    const S = DK.strategies, Mm = DK.metrics, Mo = DK.oos;
+    const fmtT = h => { const s = String(h).padStart(4, '0'); return s.slice(0, 2) + ':' + s.slice(2); };
+    const tradesPerWeek = Mm.trades / (Mm.years * 52);
+    $('desk-hint').textContent = `${S.length} strategies across ${new Set(S.map(x => x.instrument)).size} markets survived the in-sample / out-of-sample test, out of ${DK.tested.reduce((a, t) => a + t.tested, 0)} configurations tried. All trade at the same risk per trade; a day's result is their sum.`;
+    $('desk-tiles').innerHTML = [
+      ['Strategies', S.length, S.map(x => x.instrument).filter((v, i, a) => a.indexOf(v) === i).join(', ')],
+      ['Trading days with a trade', Math.round(tradesPerWeek * 10) / 10 + ' / week', `${Mm.trades.toLocaleString()} desk-days since ${DK.equity.dates[0]}`],
+      ['Profit factor', Mm.profit_factor.toFixed(2), `out of sample ${Mo.profit_factor.toFixed(2)}`],
+      ['Avg per trading day', (Mm.avg_r >= 0 ? '+' : '') + Mm.avg_r.toFixed(2) + 'R', `out of sample ${(Mo.avg_r >= 0 ? '+' : '') + Mo.avg_r.toFixed(2)}R`],
+      ['Worst losing run', Mm.longest_loss_streak + ' days', `win rate ${pct(Mm.win_rate_pct)} of days`],
+      ['Years positive', `${Object.values(DK.yearly_r).filter(v => v > 0).length} of ${Object.keys(DK.yearly_r).length}`, Object.entries(DK.yearly_r).map(([y, v]) => `${String(y).slice(2)}:${v > 0 ? '+' : ''}${Math.round(v)}`).join(' ')],
+    ].map(([k, v, x]) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${x}</span></div>`).join('');
+
+    const pal = [css('--accent'), css('--warn'), css('--up'), css('--violet'), css('--down'), css('--fg-2'), '#d55181', '#199e70'];
+    const eqc = echarts.init($('desk-eq'));
+    const ids = Object.keys(DK.equity.per_strategy);
+    eqc.setOption({ animation: false, textStyle: { fontFamily: css('--font-mono'), color: css('--fg-2') }, grid: { left: 48, right: 12, top: 40, bottom: 28 },
+      legend: { top: 0, left: 0, textStyle: { color: css('--fg-3'), fontSize: 10 }, itemWidth: 12, type: 'scroll' },
+      tooltip: { trigger: 'axis', backgroundColor: css('--panel-2'), borderColor: css('--line-2'), textStyle: { color: css('--fg'), fontSize: 11 } },
+      xAxis: { type: 'category', data: DK.equity.dates, axisLabel: { color: css('--fg-3'), fontSize: 10, hideOverlap: true }, axisLine: { lineStyle: { color: css('--line-2') } }, axisTick: { show: false } },
+      yAxis: { type: 'value', axisLabel: { color: css('--fg-3'), fontSize: 11, formatter: v => v + 'R' }, splitLine: { lineStyle: { color: css('--line') } } },
+      series: [{ type: 'line', name: 'Desk total', data: DK.equity.cum_r, showSymbol: false, lineStyle: { width: 2.5, color: css('--fg') }, itemStyle: { color: css('--fg') }, z: 5 }]
+        .concat(ids.map((id, i) => ({ type: 'line', name: id.replace(/_/g, ' '), data: DK.equity.per_strategy[id], showSymbol: false, lineStyle: { width: 1.2, color: pal[i % pal.length] }, itemStyle: { color: pal[i % pal.length] } }))) });
+    window.addEventListener('resize', () => eqc.resize());
+
+    const want = ['FundedNext Stellar 2-step 100k', 'FTMO 2-step 100k', 'Lucid Pro 50k (fast)', 'Apex 50k (intraday trailing)', 'Topstep 50k Combine'];
+    const pr = DK.prop.filter(r => want.includes(r.ruleset) && r.scaling === 'drawdown');
+    $('desk-prop').innerHTML = `<thead><tr><th>Plan</th><th>Risk / strategy</th><th>Pass</th><th>Median days</th><th>Funded 12 mo</th><th>Funded-year P&amp;L</th></tr></thead><tbody>` +
+      pr.map(r => `<tr><td>${r.ruleset}</td><td>${r.risk_pct}%</td><td class="${r.pass_rate_pct >= 90 ? 'pos' : r.pass_rate_pct < 60 ? 'neg' : ''}">${pct(r.pass_rate_pct)}</td><td>${r.median_days_to_pass == null ? '–' : Math.round(r.median_days_to_pass)}</td><td>${pct(r.funded_survival_12m_pct)}</td><td>${r.funded_pnl_12m_pct == null ? '–' : (r.funded_pnl_12m_pct >= 0 ? '+' : '') + r.funded_pnl_12m_pct.toFixed(1) + '%'}</td></tr>`).join('') + '</tbody>';
+
+    const describe = s => {
+      const c = s.config, sess = s.session === 'london' ? 'London' : 'New York';
+      if (s.setup.startsWith('open_candle')) {
+        const video = s.setup.endsWith('video');
+        return [`At ${c.signal_time} New York, take the first 5-minute candle of the ${sess} session.`,
+          `Close above the ${c.ema_len} EMA: long at the close. Below: short.${video ? '' : ' Only with the trend: price above the 300 EMA for longs, below for shorts. Skip candles that close within 0.1R of the EMA.'}`,
+          `Stop at the candle's low (long) or high (short).`,
+          video ? `Trail the stop along the ${c.ema_len} EMA.` : `Breakeven at +1R, then a 3.5 x ATR chandelier trail behind the best price.`,
+          `Flat by ${c.exit_time}.`];
+      }
+      const trend = c.trend === 'slow_ema' ? ' in the direction of the 200 EMA' : '';
+      const tgt = c.target_r ? `Target ${c.target_r}R.` : 'No target.';
+      const be = c.be_at_r ? ` Move the stop to entry at +${c.be_at_r}R.` : '';
+      if (s.setup === 'or_break') return [`Mark the high and low of the first 15 minutes of the ${sess} session (from ${fmtT(c.start - 15)}).`, `Between ${fmtT(c.start)} and ${fmtT(c.end)}, the first 5-minute close outside that range${trend}: enter at the close.`, `Stop at the middle of the range.`, `${tgt}${be}`, `Flat by ${fmtT(c.time_exit)}. One trade a day.`];
+      if (s.setup === 'asia_break') return [`Mark the Asian session's high and low (19:00 to 03:00 New York).`, `Between 03:00 and ${fmtT(c.end)}, the first 5-minute close outside it${trend}: enter at the close.`, `Stop at the middle of the Asian range.`, `${tgt}${be}`, `Flat by ${fmtT(c.time_exit)}. One trade a day.`];
+      return [`With the trend (price vs the 200 EMA), wait for a 5-minute bar that dips to session VWAP and closes back on the trend side.`, `Between ${fmtT(c.start)} and ${fmtT(c.end)}: enter at the close.`, `Stop a quarter ATR beyond that bar.`, `${tgt}${be}`, `Flat by ${fmtT(c.time_exit)}. One trade a day.`];
+    };
+    $('desk-cards').innerHTML = S.map(s => `<div class="card"><div class="top"><h3>${s.instrument} · ${s.session === 'london' ? 'London' : 'New York'} · ${s.setup.replace('_', ' ')}</h3><span class="pill ok">accepted</span></div>
+      <ol>${describe(s).map(x => `<li>${x}</li>`).join('')}</ol>
+      <div class="stat"><span class="l">trades</span><span class="v">${s.trades.toLocaleString()}</span><span class="l">win rate</span><span class="v">${pct(s.win_rate_pct)}</span><span class="l">profit factor in / out of sample</span><span class="v">${s.is_pf.toFixed(2)} / ${s.oos_pf.toFixed(2)}</span><span class="l">avg R in / out of sample</span><span class="v">${s.is_avg_r.toFixed(2)} / ${s.oos_avg_r.toFixed(2)}</span><span class="l">in-sample years positive</span><span class="v">${pct(s.consistency * 100)}</span></div></div>`).join('');
+
+    const all = DK.tested.flatMap(t => t.best);
+    $('desk-tested').innerHTML = `<thead><tr><th>Market</th><th>Session</th><th>Setup</th><th>Trades</th><th>Win</th><th>IS PF</th><th>OOS PF</th><th>Years +</th><th>Verdict</th></tr></thead><tbody>` +
+      all.sort((a, b) => a.instrument.localeCompare(b.instrument) || b.is_pf - a.is_pf).map(r => `<tr><td>${r.instrument}</td><td>${r.session}</td><td>${r.setup.replace(/_/g, ' ')}</td><td>${r.trades.toLocaleString()}</td><td>${pct(r.win_rate_pct)}</td><td>${r.is_pf.toFixed(2)}</td><td>${r.oos_pf.toFixed(2)}</td><td>${pct(r.consistency * 100)}</td><td><span class="pill ${r.accepted ? 'ok' : 'no'}">${r.accepted ? 'on the desk' : 'rejected'}</span></td></tr>`).join('') + '</tbody>';
+  }
 
   // ================= fast route =================
   const FR = D.fast_route;
