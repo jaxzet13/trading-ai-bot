@@ -119,10 +119,10 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 8
   </header>
 
   <section class="panel desk" id="desk-sec">
-    <div class="panel-head"><h2>Day-trading desk: forex, gold and index futures</h2><span class="hint" id="desk-hint"></span></div>
+    <div class="panel-head"><h2>Day-trading desk: what survived across forex, gold and index futures</h2><span class="hint" id="desk-hint"></span></div>
     <div class="tiles" id="desk-tiles"></div>
     <div class="grid two">
-      <div><h3>Desk equity, in R, one line per strategy</h3><div class="chart" id="desk-eq"></div></div>
+      <div><h3>Desk equity, in R</h3><div class="chart" id="desk-eq"></div></div>
       <div><h3>Prop-firm odds for the whole desk</h3><div class="tablewrap"><table id="desk-prop"></table></div></div>
     </div>
     <h3>The strategies on the desk</h3>
@@ -385,7 +385,10 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 8
     const S = DK.strategies, Mm = DK.metrics, Mo = DK.oos;
     const fmtT = h => { const s = String(h).padStart(4, '0'); return s.slice(0, 2) + ':' + s.slice(2); };
     const tradesPerWeek = Mm.trades / (Mm.years * 52);
-    $('desk-hint').textContent = `${S.length} strategies across ${new Set(S.map(x => x.instrument)).size} markets survived the in-sample / out-of-sample test, out of ${DK.tested.reduce((a, t) => a + t.tested, 0)} configurations tried. All trade at the same risk per trade; a day's result is their sum.`;
+    const nTried = DK.tested.reduce((a, t) => a + t.tested, 0), mk = DK.tested.map(t => t.instrument).join(', ');
+    $('desk-hint').textContent = S.length === 1
+      ? `${nTried} day-trading configurations tested on ${mk}: opening-range breakouts, Asian-range breakouts, VWAP pullbacks and the open-candle rule, in the London and New York sessions. Exactly one survived both the 2019-2023 test and the 2024-2026 hold-out: the NAS100 New York open. It trades the same on the NQ / MNQ futures contract.`
+      : `${S.length} strategies across ${new Set(S.map(x => x.instrument)).size} markets survived the in-sample / out-of-sample test, out of ${nTried} configurations tried. All trade at the same risk per trade; a day's result is their sum.`;
     $('desk-tiles').innerHTML = [
       ['Strategies', S.length, S.map(x => x.instrument).filter((v, i, a) => a.indexOf(v) === i).join(', ')],
       ['Trading days with a trade', Math.round(tradesPerWeek * 10) / 10 + ' / week', `${Mm.trades.toLocaleString()} desk-days since ${DK.equity.dates[0]}`],

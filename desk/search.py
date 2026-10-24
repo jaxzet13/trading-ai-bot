@@ -72,7 +72,9 @@ def candidates_for(name: str):
                 yield ("setup", label, setup, (s0, s1), DP(start=start, end=win[1], time_exit=exit_t, **kw))
         # the open-candle rule from the NAS100 study, at this session's open
         for rule, extra in (("open_candle", {}), ("open_candle_video", VIDEO_RULE)):
-            yield ("open", label, rule, (s0, s1), {**Params().to_dict(), **extra, "signal_time": _fmt(s0), "exit_time": _fmt(exit_t),
+            # the tuned rule keeps its own exit when the session is the cash session it was tuned on (15:30); otherwise session close
+            ex = Params().exit_time if (rule == "open_candle" and s1 == 1600) else _fmt(exit_t)
+            yield ("open", label, rule, (s0, s1), {**Params().to_dict(), **extra, "signal_time": _fmt(s0), "exit_time": ex,
                                                     "cost_points": ins.cost, "min_risk_points": ins.min_risk})
 
 
