@@ -102,6 +102,7 @@ ul.check input { margin-top: 4px; accent-color: var(--accent); }
 .honest { border-left: 3px solid var(--warn); }
 .fastroute { border-left: 3px solid var(--up); }
 .desk { border-left: 3px solid var(--accent); }
+.fwd { border-left: 3px solid var(--violet); }
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
 .card { background: var(--panel-2); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .card .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
@@ -117,6 +118,13 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 8
     <h1>Funded Account Playbook</h1>
     <p class="lede" id="lede"></p>
   </header>
+
+  <section class="panel fwd" id="fwd-sec">
+    <div class="panel-head"><h2>Live forward test: 10 trading days from 26 October</h2><span class="hint" id="fwd-hint"></span></div>
+    <div class="tiles" id="fwd-tiles"></div>
+    <div class="tablewrap"><table id="fwd-table"></table></div>
+    <p class="hint">How to read it: each row is what the strategy should have done that day, computed independently from fresh market data after the close. Your robot's Experts log should show the same direction, an entry and stop within a few points, and the same exit reason. A mismatch is a setup problem (time zone, symbol, lot size), not a strategy problem. Ten days cannot show whether it makes money: a normal 10-day stretch ranges from about -4R to +8R and is positive only about half the time.</p>
+  </section>
 
   <section class="panel desk" id="desk-sec">
     <div class="panel-head"><h2>Day-trading desk: what survived across forex, gold and index futures</h2><span class="hint" id="desk-hint"></span></div>
@@ -377,6 +385,23 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 8
   items.forEach((_, i) => $('ck' + i).addEventListener('change', () => { saved[i] = $('ck' + i).checked; try { localStorage.setItem('pb-check', JSON.stringify(saved)); } catch (e) {} }));
 
   renderRoute();
+
+  // ================= forward test =================
+  const FW = D.forward;
+  if (!FW) { $('fwd-sec').hidden = true; }
+  else {
+    const n = FW.trades.length, nr = FW.normal_10_day;
+    $('fwd-hint').textContent = `Market data through ${FW.data_through.slice(0, 16)} UTC. Updated each weekday evening after the New York close.`;
+    $('fwd-tiles').innerHTML = [
+      ['Sessions so far', `${FW.sessions} of 10`, `since ${FW.forward_start}`],
+      ['Trades', n, `no-trade days: ${FW.no_trade_days.length}`],
+      ['Running total', (FW.total_r >= 0 ? '+' : '') + FW.total_r.toFixed(2) + 'R', `${FW.total_usd_100k >= 0 ? '+' : '-'}$${Math.abs(FW.total_usd_100k).toLocaleString()} at 0.75% of $100k`],
+      ['Normal 10 days', `${nr.p10_r}R to +${nr.p90_r}R`, `positive ${nr.share_positive_pct}% of the time, ~${nr.trades_median} trades`],
+    ].map(([k, v, x]) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${x}</span></div>`).join('');
+    const rows = FW.trades.map(r => `<tr><td>${r.date}</td><td><span class="pill ${r.direction === 'long' ? 'ok' : 'no'}">${r.direction}</span></td><td>${r.signal}</td><td>${r.entry}</td><td>${r.stop}</td><td>${r.exit}</td><td>${r.exit_time}</td><td>${r.exit_reason}</td><td class="${r.r >= 0 ? 'pos' : 'neg'}">${r.r >= 0 ? '+' : ''}${r.r.toFixed(2)}R</td><td>${r.cum_r >= 0 ? '+' : ''}${r.cum_r.toFixed(2)}R</td></tr>`)
+      .concat(FW.no_trade_days.map(d => `<tr><td>${d}</td><td colspan="9" style="text-align:left;color:var(--fg-3)">no trade (the rule's filters said skip)</td></tr>`)).sort();
+    $('fwd-table').innerHTML = `<thead><tr><th>Date</th><th>Side</th><th>Signal</th><th>Entry</th><th>Stop</th><th>Exit</th><th>Out</th><th>Why</th><th>Result</th><th>Running</th></tr></thead><tbody>${rows.join('') || '<tr><td colspan="10" style="text-align:left;color:var(--fg-3)">First session is Monday 26 October. The first row appears that evening.</td></tr>'}</tbody>`;
+  }
 
   // ================= desk =================
   const DK = D.desk;
