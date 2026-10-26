@@ -103,6 +103,8 @@ ul.check input { margin-top: 4px; accent-color: var(--accent); }
 .fastroute { border-left: 3px solid var(--up); }
 .desk { border-left: 3px solid var(--accent); }
 .fwd { border-left: 3px solid var(--violet); }
+.farm { border-left: 3px solid var(--warn); }
+ol.steps { margin: 0; padding-left: 20px; color: var(--fg-2); display: flex; flex-direction: column; gap: 6px; }
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
 .card { background: var(--panel-2); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .card .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
@@ -118,6 +120,23 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 8
     <h1>Funded Account Playbook</h1>
     <p class="lede" id="lede"></p>
   </header>
+
+  <section class="panel farm" id="farm-sec">
+    <div class="panel-head"><h2>Eval farming: the "$50,000 in a week" method, tested</h2><span class="hint" id="farm-hint"></span></div>
+    <div class="grid two">
+      <div>
+        <h3>The rules, on a futures evaluation</h3>
+        <ol class="steps" id="farm-rules"></ol>
+      </div>
+      <div>
+        <h3>What it costs and what it pays, per funded account</h3>
+        <div class="tablewrap"><table id="farm-sizes"></table></div>
+        <p class="hint" id="farm-note"></p>
+      </div>
+    </div>
+    <h3>Stop and target settings tested</h3>
+    <div class="tablewrap"><table id="farm-grid"></table></div>
+  </section>
 
   <section class="panel fwd" id="fwd-sec">
     <div class="panel-head"><h2>Live forward test: 10 trading days from 26 October</h2><span class="hint" id="fwd-hint"></span></div>
@@ -385,6 +404,27 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; padding-top: 8
   items.forEach((_, i) => $('ck' + i).addEventListener('change', () => { saved[i] = $('ck' + i).checked; try { localStorage.setItem('pb-check', JSON.stringify(saved)); } catch (e) {} }));
 
   renderRoute();
+
+  // ================= eval farming =================
+  const EF = D.evalfarm;
+  if (!EF) { $('farm-sec').hidden = true; }
+  else {
+    const best = EF.sizes.reduce((a, b) => (b.monthly / b.cost_per_funded > a.monthly / a.cost_per_funded ? b : a));
+    $('farm-hint').textContent = `From the Andy Trades video: on evaluations he "risks the whole account" with a target smaller than the risk and never moves to breakeven. Each win is a slice of the target; a loss ends the evaluation and he buys another. Tested here on ${EF.signal_days.toLocaleString()} NAS100 New York open signals.`;
+    $('farm-rules').innerHTML = [
+      'Buy a cheap futures evaluation with no daily loss limit (Tradeify Select, Lucid Flex). Trade NQ or MNQ.',
+      'At 09:35 New York, take the open-candle signal: close above the 12 EMA, buy; below, sell. One trade a day.',
+      'Stop at <strong>twice</strong> the candle\'s size from entry. Size the position so that stop costs the <strong>entire</strong> remaining drawdown ($2,000 on 50k).',
+      'Target at <strong>0.75 x</strong> the stop distance. No breakeven, no trailing. If neither is hit, close at 15:30.',
+      'A win banks about half the profit target. Three wins pass it, and stay inside the 40% consistency rule. A loss ends the evaluation: buy the next one.',
+      'The day an evaluation passes, it becomes a funded account: <strong>stop</strong> the all-in method and trade it at 0.25% risk for payouts.',
+    ].map(x => `<li>${x}</li>`).join('');
+    $('farm-sizes').innerHTML = `<thead><tr><th>Evaluation</th><th>Fee</th><th>Pass</th><th>Days</th><th>Evals per funded</th><th>Cost per funded</th><th>Funded, per month</th></tr></thead><tbody>` +
+      EF.sizes.map(r => `<tr class="${r === best ? 'hl' : ''}"><td>${r.plan}</td><td>${money(r.fee)}</td><td>${pct(r.pass_pct)}</td><td>${Math.round(r.median_days)}</td><td>${r.evals_per_pass.toFixed(1)}</td><td class="neg">${money(r.cost_per_funded)}</td><td class="pos">${money(r.monthly)}</td></tr>`).join('') + '</tbody>';
+    $('farm-note').textContent = `Each evaluation is a one-in-three shot settled in about four trading days. Funded income assumes 0.25% risk after passing (the funded futures accounts survive the first year about 70% of the time). Ten funded 150k accounts is about ${money(EF.sizes.find(x => x.size === 150000).monthly * 10)} a month; that is how the "$50k week" screenshots are built: many accounts, plus payouts withdrawn together. Check each firm's rules on maximum contracts and prohibited strategies before using it.`;
+    $('farm-grid').innerHTML = `<thead><tr><th>Stop (x candle)</th><th>Target (x stop)</th><th>Single trade wins</th><th>Evaluation passes</th><th>Within 14 days</th><th>Median days</th><th>Evals per funded</th></tr></thead><tbody>` +
+      EF.grid.map(r => `<tr class="${r.stop_mult === 2 && r.rr === 0.75 ? 'hl' : ''}"><td>${r.stop_mult}</td><td>${r.rr}</td><td>${pct(r.single_trade_win_pct)}</td><td>${pct(r.pass_pct)}</td><td>${pct(r.pass_within_14d_pct)}</td><td>${r.median_days == null ? '–' : Math.round(r.median_days)}</td><td>${r.evals_per_pass ? r.evals_per_pass.toFixed(1) : '–'}</td></tr>`).join('') + '</tbody>';
+  }
 
   // ================= forward test =================
   const FW = D.forward;

@@ -38,6 +38,9 @@ def export_playbook() -> Path:
     from .backtest import backtest
     from .strategy import Params
     out["fast_route"] = fast_route(backtest(Params())["trades"])
+    ef = ROOT / "experiments" / "evalfarm.json"
+    if ef.exists():
+        out["evalfarm"] = json.loads(ef.read_text())
     fw = ROOT / "experiments" / "forward.json"
     if fw.exists():
         out["forward"] = json.loads(fw.read_text())
