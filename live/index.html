@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Live Eval Run</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a trading-desk status board. Account state on top (pass / blown / live), then one card per session with the real chart, then the rules. */
+:root {
+  --bg: #0b0c10; --panel: #14161c; --panel-2: #1a1d25; --line: #262a35; --line-2: #343a48;
+  --fg: #eef0f5; --fg-2: #b7bcc9; --fg-3: #7d8496;
+  --accent: #5598e7; --up: #1baf7a; --down: #e66767; --warn: #c98500; --violet: #9085e9;
+  --up-soft: rgba(27,175,122,.15); --down-soft: rgba(230,103,103,.15); --warn-soft: rgba(201,133,0,.18);
+  --font-ui: "Manrope", "Segoe UI", system-ui, sans-serif; --font-mono: "JetBrains Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #f4f5f8; --panel: #ffffff; --panel-2: #eff1f5; --line: #e0e3ea; --line-2: #c8cdd8; --fg: #12141a; --fg-2: #4a505e; --fg-3: #7a8092;
+  --accent: #2a78d6; --up: #0f9a68; --down: #d64545; --warn: #b87400; --violet: #6250d6; color-scheme: light; } }
+:root[data-theme="light"] { --bg: #f4f5f8; --panel: #ffffff; --panel-2: #eff1f5; --line: #e0e3ea; --line-2: #c8cdd8; --fg: #12141a; --fg-2: #4a505e; --fg-3: #7a8092;
+  --accent: #2a78d6; --up: #0f9a68; --down: #d64545; --warn: #b87400; --violet: #6250d6; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+.wrap { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+header { padding-block: 28px 4px; display: flex; flex-direction: column; gap: 6px; }
+.eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-3); font-weight: 700; }
+h1 { margin: 0; font-size: clamp(26px, 4vw, 36px); font-weight: 800; letter-spacing: -.02em; }
+h2 { margin: 0; font-size: 17px; font-weight: 800; }
+p { margin: 0; color: var(--fg-2); max-width: 70ch; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.status { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; }
+@media (max-width: 700px) { .status { grid-template-columns: 1fr; } }
+.badge { font-family: var(--font-mono); font-weight: 600; font-size: 22px; padding: 14px 20px; border-radius: 10px; text-align: center; min-width: 190px; }
+.badge.live { background: rgba(85,152,231,.15); color: var(--accent); }
+.badge.passed { background: var(--up-soft); color: var(--up); }
+.badge.failed { background: var(--down-soft); color: var(--down); }
+.badge .sub { display: block; font-size: 12px; font-weight: 500; opacity: .85; margin-top: 2px; }
+.meter { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.bar { position: relative; height: 26px; border-radius: 6px; background: var(--panel-2); overflow: hidden; }
+.bar .fill { position: absolute; top: 0; bottom: 0; }
+.bar .zero { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--fg-3); }
+.scale { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12px; color: var(--fg-3); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.tile { background: var(--panel-2); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile .k { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-3); font-weight: 700; }
+.tile .v { font-family: var(--font-mono); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile .s { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-3); }
+.pos { color: var(--up); } .neg { color: var(--down); }
+.sess { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+@media (max-width: 800px) { .sess { grid-template-columns: 1fr; } }
+.sess > * { min-width: 0; }
+.chart { width: 100%; height: 300px; }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.kv .l { color: var(--fg-3); } .kv .v { text-align: right; font-weight: 600; }
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.pill.open { background: rgba(85,152,231,.15); color: var(--accent); } .pill.win { background: var(--up-soft); color: var(--up); } .pill.loss { background: var(--down-soft); color: var(--down); } .pill.wait { background: var(--warn-soft); color: var(--warn); }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.hint { font-size: 12.5px; color: var(--fg-3); }
+ol { margin: 0; padding-left: 20px; color: var(--fg-2); display: flex; flex-direction: column; gap: 5px; }
+.warm { opacity: .92; border-style: dashed; }
+footer { color: var(--fg-3); font-size: 12px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Paper trading on live NAS100 prices · his all-in method</div>
+    <h1>Live Eval Run</h1>
+    <p id="lede"></p>
+  </header>
+
+  <section class="panel">
+    <div class="status">
+      <div class="badge" id="badge"></div>
+      <div class="meter">
+        <div class="head"><h2>Account: Lucid Flex 50k evaluation</h2><span class="hint" id="upd"></span></div>
+        <div class="bar" id="bar"></div>
+        <div class="scale"><span>-$2,000 blown</span><span>$0</span><span>+$3,000 passed</span></div>
+      </div>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <div id="sessions" style="display:flex;flex-direction:column;gap:18px"></div>
+
+  <section class="panel">
+    <h2>The rules it follows, every session</h2>
+    <ol>
+      <li>At 9:35am New York, look at the 9:30 five-minute candle. Closed above the 12 EMA: buy. Below: sell.</li>
+      <li>Stop at twice the candle's size from the entry. Size the trade so the stop costs the whole remaining $2,000.</li>
+      <li>Target at 0.75 times the stop distance. No breakeven, no trailing. Close at 3:30pm if neither is hit.</li>
+      <li>Pass: reach +$3,000 with no single day over half of the profit. Blown: lose the $2,000. A blown evaluation is replaced by a new $100 one the next session.</li>
+    </ol>
+    <p class="hint">Prices are real Dukascopy NAS100 ticks, published about an hour after each hour ends, so each update lands about 35 minutes after the entry and again after the close. Contracts: NQ is $20 a point, MNQ $2. One point of costs per trade. Historical odds for this method: about 1 evaluation in 3 passes, usually within 4 trading days.</p>
+  </section>
+  <footer>Paper trading, not a real account. No orders are placed.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.6.0/echarts.min.js"></script>
+<script src="data.js"></script>
+<script>
+(function () {
+  const L = window.LIVE_DATA; const $ = id => document.getElementById(id);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const money = v => (v < 0 ? '-$' : '$') + Math.abs(Math.round(v)).toLocaleString();
+  const st = L.official, warm = L.warmup;
+  const planned = st.planned_sessions || [];
+  const fmtDate = d => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' });
+
+  $('lede').textContent = `A paper Lucid Flex 50k evaluation traded with the all-in method from the "$50,000 in a week" video, on the real NAS100 sessions of ${planned.map(fmtDate).join(' and ')}. Nothing here is a backtest: each row is filled in after that day's real prices are published.`;
+  $('upd').textContent = st.updated_utc ? `updated ${st.updated_utc.replace('T', ' ')} UTC` : 'waiting for the first session';
+
+  const status = st.status === 'passed' ? 'passed' : st.status === 'failed' ? 'failed' : 'live';
+  $('badge').className = 'badge ' + status;
+  $('badge').innerHTML = (status === 'passed' ? 'PASSED' : status === 'failed' ? 'BLOWN' : 'LIVE') + `<span class="sub">attempt ${st.attempt || 1} · ${money(st.balance)}</span>`;
+  const lo = -2000, hi = 3000, pos = v => (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo) * 100;
+  const b = st.balance;
+  $('bar').innerHTML = `<div class="zero" style="left:${pos(0)}%"></div><div class="fill" style="left:${Math.min(pos(0), pos(b))}%;width:${Math.abs(pos(b) - pos(0))}%;background:${b >= 0 ? css('--up') : css('--down')}"></div>`;
+  const closed = st.sessions.filter(s => s.status === 'closed');
+  $('tiles').innerHTML = [
+    ['Balance', money(b), `target +$3,000, floor ${money(st.floor ?? -2000)}`],
+    ['Sessions traded', `${closed.length} of ${planned.length}`, planned.map(d => d.slice(5)).join(' · ')],
+    ['Best day', money(st.best_day || 0), 'must stay under half the profit'],
+    ['Evaluations bought', st.attempt || 1, `${money(st.fees_spent || 100)} in fees`],
+  ].map(([k, v, s]) => `<div class="tile"><span class="k">${k}</span><span class="v ${k === 'Balance' ? (b >= 0 ? 'pos' : 'neg') : ''}">${v}</span><span class="s">${s}</span></div>`).join('');
+
+  const cards = [];
+  planned.forEach((d, i) => cards.push({ s: st.sessions.find(x => x.date === d) || { date: d, status: 'waiting for the 09:30 candle' }, label: `Day ${i + 1} · ${fmtDate(d)}`, warm: false }));
+  if (warm) warm.sessions.forEach(s => cards.push({ s, label: `Warm-up, not counted · ${fmtDate(s.date)}`, warm: true }));
+
+  const host = $('sessions');
+  cards.forEach((c, idx) => {
+    const s = c.s;
+    const pill = s.status === 'closed' ? (s.pnl_usd >= 0 ? '<span class="pill win">win</span>' : '<span class="pill loss">loss</span>') : s.status === 'open' ? '<span class="pill open">open</span>' : '<span class="pill wait">waiting</span>';
+    const kv = s.direction ? [
+      ['side', s.direction.toUpperCase()], ['entry 09:35', s.entry.toLocaleString()], ['stop', `${s.stop.toLocaleString()} (${s.stop_pts} pts)`], ['target', s.target.toLocaleString()],
+      ['size', `${s.nq} NQ + ${s.mnq} MNQ ($${s.usd_per_pt}/pt)`], ['risking / to make', `${money(s.risk_usd)} / ${money(s.reward_usd)}`],
+      s.status === 'closed' ? ['exit', `${s.exit.toLocaleString()} · ${s.exit_reason}`] : ['last price', s.last_price ? s.last_price.toLocaleString() : '–'],
+      s.status === 'closed' ? ['result', money(s.pnl_usd)] : ['open P&L', s.open_pnl_usd != null ? money(s.open_pnl_usd) : '–'],
+    ] : [['status', s.status]];
+    const sec = document.createElement('section');
+    sec.className = 'panel' + (c.warm ? ' warm' : '');
+    sec.innerHTML = `<div class="head"><h2>${c.label}</h2>${pill}</div><div class="sess"><div class="chart" id="ch${idx}"></div><div class="kv">${kv.map(([l, v]) => `<span class="l">${l}</span><span class="v ${l === 'result' || l === 'open P&L' ? (String(v).startsWith('-') ? 'neg' : 'pos') : ''}">${v}</span>`).join('')}</div></div>` +
+      (c.warm ? '<p class="hint">Today\'s session, run as a dry run of the engine before the official two days. It shows what the method would have done on its own: short at the open, stopped out a minute later, evaluation blown. That is the two-in-three case the method accepts.</p>' : '');
+    host.appendChild(sec);
+    const el = $('ch' + idx);
+    if (!s.candles || !s.candles.length) { el.style.height = 'auto'; el.innerHTML = `<p class="hint" style="padding:12px 0">Chart appears after about 10:10am New York on ${fmtDate(s.date)}.</p>`; return; }
+    const ch = echarts.init(el);
+    const lines = s.direction ? [{ yAxis: s.entry, name: 'entry', lineStyle: { color: css('--accent'), width: 1.5 } }, { yAxis: s.stop, name: 'stop', lineStyle: { color: css('--down'), type: 'dashed' } }, { yAxis: s.target, name: 'target', lineStyle: { color: css('--up'), type: 'dashed' } }] : [];
+    const i930 = s.candles.findIndex(c => c[0] === '09:30');
+    if (i930 >= 0) lines.push({ xAxis: i930, name: '9:30 candle', lineStyle: { color: css('--fg-3'), type: 'dotted' } });
+    ch.setOption({ animation: false, textStyle: { fontFamily: css('--font-mono'), color: css('--fg-2') }, grid: { left: 62, right: 12, top: 14, bottom: 26 },
+      tooltip: { trigger: 'axis', backgroundColor: css('--panel-2'), borderColor: css('--line-2'), textStyle: { color: css('--fg'), fontSize: 12 }, formatter: ps => { const c = s.candles[ps[0].dataIndex]; return `${c[0]} New York<br>O ${c[1]} H ${c[4]}<br>L ${c[3]} C ${c[2]}`; } },
+      xAxis: { type: 'category', data: s.candles.map(c => c[0]), axisLabel: { color: css('--fg-3'), fontSize: 10, hideOverlap: true }, axisLine: { lineStyle: { color: css('--line-2') } }, axisTick: { show: false } },
+      yAxis: { type: 'value', scale: true, splitLine: { lineStyle: { color: css('--line') } }, axisLabel: { color: css('--fg-3'), fontSize: 11 } },
+      series: [{ type: 'candlestick', data: s.candles.map(c => [c[1], c[2], c[3], c[4]]), itemStyle: { color: css('--up'), color0: css('--down'), borderColor: css('--up'), borderColor0: css('--down') },
+        markLine: { silent: true, symbol: 'none', label: { color: css('--fg-2'), fontSize: 10, position: 'insideEndTop' }, data: lines } },
+        { type: 'line', data: s.ema, showSymbol: false, lineStyle: { width: 1.5, color: css('--violet') }, name: '12 EMA' }] });
+    window.addEventListener('resize', () => ch.resize());
+  });
+})();
+</script>
+</body>
+</html>
