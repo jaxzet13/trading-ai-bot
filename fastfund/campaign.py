@@ -22,7 +22,7 @@ import pandas as pd
 
 from nyopen.backtest import backtest
 from nyopen.strategy import Params, VIDEO_RULE
-from .evalfarm import outcome, trade_paths
+from .evalfarm import points_outcome, trade_paths
 
 ROOT = Path(__file__).resolve().parent.parent
 FEE, DD, TARGET, CONS, FUNDED_R_USD, MAX_FUNDED = 100.0, 2000.0, 3000.0, 0.5, 125.0, 5
@@ -32,7 +32,7 @@ PAYOUT_EVERY, CUSHION, CAP, MIN_PAY, SPLIT = 20, 1100.0, 1000.0, 500.0, 0.9
 def calendars():
     vr = Params.from_dict({**Params().to_dict(), **VIDEO_RULE, "exit_time": "15:30"})
     paths = trade_paths(vr)
-    ev = {p["date"]: outcome(p, 2.0, 0.75) for p in paths}
+    ev = {p["date"]: points_outcome(p, 2.0, 0.75) for p in paths}
     t = backtest(Params())["trades"]
     fr = t.groupby("date").r_multiple.sum().to_dict()
     days = sorted(set(ev) | set(fr) | {str(d.date()) for d in pd.bdate_range(min(ev), max(ev))})
@@ -49,13 +49,19 @@ def run(days, ev, fr, start: int, bankroll: float, horizon: int = 252) -> dict:
         d = days[k]
         if active is None and cash >= FEE and len(funded) < MAX_FUNDED:
             cash -= FEE; fees += FEE; evals_bought += 1
-            active = {"bal": 0.0, "best": 0.0}
+            active = {"bal": 0.0, "best": 0.0, "peak": 0.0}
         if active is not None and d in ev:
-            room = DD if active["bal"] >= 0 else DD + active["bal"]
-            pnl = ev[d] * room
-            active["bal"] += pnl
-            active["best"] = max(active["best"], pnl)
-            if active["bal"] <= -DD + 1e-6:
+            floor = min(active["peak"] - DD, 0.0)
+            room = active["bal"] - floor
+            made, sd = ev[d]
+            per_pt = np.floor(room / (sd + 1.0) / 2.0) * 2.0
+            if per_pt > 0:
+                pnl = (made - 1.0) * per_pt
+                active["bal"] += pnl
+                active["best"] = max(active["best"], pnl)
+                active["peak"] = max(active["peak"], active["bal"])
+            floor = min(active["peak"] - DD, 0.0)
+            if active["bal"] <= floor + 1e-6 or active["bal"] - floor < 500.0 and active["bal"] < TARGET:
                 active = None
             elif active["bal"] >= TARGET and active["best"] <= CONS * active["bal"]:
                 evals_passed += 1; funded_ever += 1

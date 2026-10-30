@@ -88,16 +88,76 @@ def farm(paths: list[dict], stop_mult: float, rr: float, target_in_dd: float = 1
             "median_trades": float(np.median(trades_used)) if trades_used else None, "evals_per_pass": tot / passed if passed else None}
 
 
+def points_outcome(path: dict, stop_mult: float, rr: float) -> tuple[float, float]:
+    """(points made before costs, stop distance in points) for one signal day."""
+    d, e = path["dir"], path["entry"]
+    sd = stop_mult * path["risk"]
+    stop, tgt = e - d * sd, e + d * rr * sd
+    h, l, o, c, hh = path["h"], path["l"], path["o"], path["c"], path["hhmm"]
+    for j in range(len(h)):
+        if j == len(h) - 1 or hh[j] >= hh[-1]:
+            return (o[j] - e) * d, sd
+        if (l[j] <= stop) if d > 0 else (h[j] >= stop):
+            return -sd, sd
+        if (h[j] >= tgt) if d > 0 else (l[j] <= tgt):
+            return rr * sd, sd
+    return ((c[-1] - e) * d if len(c) else 0.0), sd
+
+
+def farm_usd(paths: list[dict], stop_mult: float = 2.0, rr: float = 0.75, dd: float = 2000.0, target: float = 3000.0,
+             consistency: float = 0.5, cost_pts: float = 1.0, min_room: float = 500.0, horizon_days: int = 14) -> dict:
+    """Same rules as the live engine: each trade risks the distance to the end-of-day trailing floor (stop plus costs
+    lands on the floor), sized in whole MNQ ($2/pt); an evaluation with under min_room of room is reset (counted as
+    blown); pass at the target with the best day under the consistency share."""
+    pts = [points_outcome(p, stop_mult, rr) for p in paths]
+    dates = pd.to_datetime([p["date"] for p in paths])
+    n = len(pts)
+    passed = failed = within = 0
+    days_to_pass, trades_used, wins = [], [], 0
+    for s in range(n - 10):
+        bal = peak = best = 0.0
+        k = s
+        while k < n:
+            floor = min(peak - dd, 0.0)
+            room = bal - floor
+            if room < min_room:
+                failed += 1
+                break
+            made, sd = pts[k]
+            per_pt = np.floor(room / (sd + cost_pts) / 2.0) * 2.0
+            if per_pt > 0:
+                pnl = (made - cost_pts) * per_pt
+                bal += pnl
+                best = max(best, pnl)
+                peak = max(peak, bal)
+            if bal <= floor + 1e-9:
+                failed += 1
+                break
+            if bal >= target and best <= consistency * bal + 1e-9:
+                passed += 1
+                dd_days = (dates[k] - dates[s]).days
+                days_to_pass.append(dd_days)
+                trades_used.append(k - s + 1)
+                within += dd_days <= horizon_days
+                break
+            k += 1
+    tot = passed + failed
+    single = np.array([m - cost_pts for m, _ in pts]) > 0
+    return {"stop_mult": stop_mult, "rr": rr, "single_trade_win_pct": float(single.mean() * 100), "pass_pct": passed / tot * 100,
+            "pass_within_14d_pct": within / tot * 100, "median_days": float(np.median(days_to_pass)) if days_to_pass else None,
+            "median_trades": float(np.median(trades_used)) if trades_used else None, "evals_per_pass": tot / passed if passed else None}
+
+
 def export() -> dict:
     import json
     from pathlib import Path
     vr = Params.from_dict({**Params().to_dict(), **VIDEO_RULE, "exit_time": "15:30"})
     paths = trade_paths(vr)
-    grid = [farm(paths, sm, rr) for sm in (1.0, 1.5, 2.0) for rr in (0.5, 0.75, 1.0)]
+    grid = [farm_usd(paths, sm, rr) for sm in (1.0, 1.5, 2.0) for rr in (0.5, 0.75, 1.0)]
     sizes = []
-    for label, size, tdd, cons, fee, yearly in (("Tradeify Select 50k", 50_000, 1.5, 0.4, 165, 2800), ("Tradeify Select 100k", 100_000, 2.0, 0.4, 265, 5600),
-                                                ("Tradeify Select 150k", 150_000, 2.0, 0.4, 369, 8400), ("Lucid Flex 50k", 50_000, 1.5, 0.5, 100, 2800)):
-        r = farm(paths, 2.0, 0.75, tdd, cons)
+    for label, size, dd_usd, tgt_usd, cons, fee, yearly in (("Tradeify Select 50k", 50_000, 2000, 3000, 0.4, 165, 2800), ("Tradeify Select 100k", 100_000, 3000, 6000, 0.4, 265, 5600),
+                                                            ("Tradeify Select 150k", 150_000, 4500, 9000, 0.4, 369, 8400), ("Lucid Flex 50k", 50_000, 2000, 3000, 0.5, 100, 2800)):
+        r = farm_usd(paths, 2.0, 0.75, dd_usd, tgt_usd, cons)
         cost = r["evals_per_pass"] * fee if r["evals_per_pass"] else None
         sizes.append({**r, "plan": label, "size": size, "fee": fee, "cost_per_funded": cost, "funded_year_payout": yearly, "monthly": yearly / 12})
     out = {"signal_days": len(paths), "grid": grid, "sizes": sizes,

@@ -28,6 +28,7 @@ STATE = ROOT / "experiments" / "live_eval.json"
 APP = ROOT / "live" / "data.js"
 H = {"User-Agent": "Mozilla/5.0 (research)"}
 TARGET, DD, CONS, STOP_MULT, RR, COST_PTS = 3000.0, 2000.0, 0.5, 2.0, 0.75, 1.0
+MIN_ROOM = 500.0   # below this much room an evaluation cannot realistically pass: reset it, as an eval farmer would
 EXIT_HHMM = 1530
 
 
@@ -85,17 +86,52 @@ def load_state() -> dict:
             "rules": {"target": TARGET, "drawdown": DD, "consistency": CONS, "stop_mult": STOP_MULT, "rr": RR}}
 
 
+def ledger(st: dict, date_: str, event: str, amount: float = 0.0, note: str = "") -> None:
+    st.setdefault("ledger", []).append({"date": date_, "event": event, "amount": round(amount, 2), "note": note})
+
+
 def new_attempt_if_needed(st: dict, session: str) -> None:
-    """His method: a blown evaluation is replaced by a new one the next session."""
-    if st["status"] == "failed" and not any(x["date"] == session for x in st["sessions"]):
-        st["past_attempts"].append({"attempt": st["attempt"], "balance": st["balance"], "status": "failed"})
+    """His method: a blown or passed evaluation is replaced by a new $100 one at the next session."""
+    if st["status"] in ("failed", "passed") and not any(x["date"] == session for x in st["sessions"]):
+        st["past_attempts"].append({"attempt": st["attempt"], "balance": st["balance"], "status": st["status"]})
         st.update({"attempt": st["attempt"] + 1, "fees_spent": st["fees_spent"] + FEE, "balance": 0.0, "peak": 0.0, "best_day": 0.0, "status": "active"})
+        ledger(st, session, "bought evaluation", -FEE, f"evaluation #{st['attempt']}")
+
+
+# ---- funded accounts: trade the tuned NY open rule at 0.25% of $50k, end-of-day trailing $2,000 floor locked at +$100,
+# ---- payout every 20 sessions: min(profit - $1,100 cushion, $1,000) if >= $500, 90% split
+FUNDED_R_USD, PAYOUT_EVERY, CUSHION, CAP, MIN_PAY, SPLIT = 125.0, 20, 1100.0, 1000.0, 500.0, 0.9
+
+
+def update_funded(st: dict, session: str, r_multiple: float | None) -> None:
+    for f in st.setdefault("funded", []):
+        if f["status"] != "live" or f["since"] >= session or session in f["days"]:
+            continue
+        pnl = round((r_multiple or 0.0) * FUNDED_R_USD, 2)
+        f["days"].append(session)
+        f["balance"] = round(f["balance"] + pnl, 2)
+        f["peak"] = max(f["peak"], f["balance"])
+        if r_multiple is not None:
+            ledger(st, session, f"funded #{f['id']} trade", pnl, f"{r_multiple:+.2f}R at $125 per R")
+        if f["balance"] <= min(f["peak"] - DD, 100.0):
+            f["status"] = "breached"
+            ledger(st, session, f"funded #{f['id']} breached", 0.0, "hit the trailing floor")
+            continue
+        if len(f["days"]) % PAYOUT_EVERY == 0:
+            amt = min(f["balance"] - CUSHION, CAP)
+            if amt >= MIN_PAY:
+                f["balance"] = round(f["balance"] - amt, 2)
+                f["peak"] = max(f["peak"] - amt, f["balance"])
+                f["payouts"] = round(f.get("payouts", 0.0) + amt * SPLIT, 2)
+                st["payouts_total"] = round(st.get("payouts_total", 0.0) + amt * SPLIT, 2)
+                ledger(st, session, f"funded #{f['id']} payout", amt * SPLIT, f"${amt:,.0f} withdrawn, 90% split")
 
 
 def contracts_for(stake: float, stop_pts: float) -> tuple[int, int, float]:
+    """Largest NQ + MNQ size whose stop loss does not exceed the stake (never risk more than the account)."""
     per_pt = stake / stop_pts
     nq = int(per_pt // 20)
-    mnq = int(round((per_pt - 20 * nq) / 2))
+    mnq = int((per_pt - 20 * nq) // 2)
     return nq, mnq, nq * 20 + mnq * 2
 
 
@@ -104,14 +140,26 @@ def run(session: str) -> dict:
     st = load_state()
     if st["start"] is None:
         st["start"] = session
+        ledger(st, session, "bought evaluation", -FEE, "evaluation #1")
     new_attempt_if_needed(st, session)
-    # history through the previous UTC day, then today's ticks
-    data_mod.download(sd - timedelta(days=10), sd - timedelta(days=1), verbose=False)
+    # past sessions: the published minute file; today: hourly ticks as far as published
+    past = sd < datetime.now(timezone.utc).date()
+    data_mod.download(sd - timedelta(days=10), sd if past else sd - timedelta(days=1), verbose=False)
     data_mod.build_m1(verbose=False)
-    hist = data_mod.load_m1()
-    hist = hist[hist.time >= pd.Timestamp(sd - timedelta(days=40), tz="UTC")]
-    live, last_hour = today_m1(sd)
+    hist_all = data_mod.load_m1()
+    hist = hist_all[hist_all.time >= pd.Timestamp(sd - timedelta(days=40), tz="UTC")]
+    if past:
+        live = hist[(hist.time >= pd.Timestamp(sd, tz="UTC")) & (hist.time < pd.Timestamp(sd + timedelta(days=1), tz="UTC"))]
+    else:
+        live, last_hour = today_m1(sd)
     m1 = pd.concat([hist[hist.time < pd.Timestamp(sd, tz="UTC")], live], ignore_index=True).sort_values("time")
+    # the tuned rule's result for this session (what the funded accounts trade)
+    from .backtest import _BARS_CACHE, backtest
+    from .strategy import Params
+    _BARS_CACHE.clear()
+    tuned = backtest(Params())["trades"]
+    tuned_today = tuned[tuned.date == session]
+    tuned_r = float(tuned_today.r_multiple.sum()) if len(tuned_today) else 0.0
     bars = data_mod.resample(m1, 5)
     bars["ema"] = ema(bars.close, 12)
     bars["hhmm"] = bars.time.dt.hour * 100 + bars.time.dt.minute
@@ -140,8 +188,13 @@ def run(session: str) -> dict:
             else:
                 risk = abs(s.close - (s.low if d > 0 else s.high))
                 stop_pts = STOP_MULT * risk
-                room = DD if st["balance"] >= 0 else DD + st["balance"]
-                nq, mnq, per_pt = contracts_for(room, stop_pts)
+                floor_now = min(st["peak"] - DD, 100.0)
+                room = st["balance"] - floor_now          # distance to the trailing floor: the whole account
+                nq, mnq, per_pt = contracts_for(room, stop_pts + COST_PTS)   # stop plus costs lands on the floor
+                if per_pt <= 0:
+                    rec["status"] = f"no trade: only ${room:,.0f} of room, too little for 1 MNQ with a {stop_pts:.0f}-point stop"
+                    per_pt = None
+            if d != 0 and per_pt:
                 rec.update({"direction": "long" if d > 0 else "short", "entry_time": "09:35", "entry": round(float(s.close), 2),
                             "candle_risk_pts": round(float(risk), 2), "stop": round(float(s.close - d * stop_pts), 2),
                             "target": round(float(s.close + d * RR * stop_pts), 2), "stop_pts": round(float(stop_pts), 2),
@@ -167,20 +220,39 @@ def run(session: str) -> dict:
             reason, px = res
             pnl = round(((px - rec["entry"]) * d - COST_PTS) * rec["usd_per_pt"], 0)
             rec.update({"exit": round(px, 2), "exit_reason": reason, "pnl_usd": pnl, "status": "closed"})
+            rec.pop("open_pnl_usd", None); rec.pop("last_price", None)
+            ledger(st, session, f"evaluation #{st['attempt']} trade", pnl, f"{rec['direction']} {rec['entry']:,} -> {px:,.2f}, {reason}")
             st["balance"] = round(st["balance"] + pnl, 0)
             st["peak"] = max(st["peak"], st["balance"])
             st["best_day"] = max(st["best_day"], pnl)
             floor = min(st["peak"] - DD, 100.0)
             if st["balance"] <= floor:
                 st["status"] = "failed"
+                ledger(st, session, f"evaluation #{st['attempt']} blown", 0.0, f"balance {st['balance']:+,.0f} below floor {floor:+,.0f}")
+            elif st["balance"] - floor < MIN_ROOM and not (st["balance"] >= TARGET):
+                st["status"] = "failed"
+                ledger(st, session, f"evaluation #{st['attempt']} reset", 0.0, f"only ${st['balance'] - floor:,.0f} of room left above the floor; replaced by a new evaluation")
             elif st["balance"] >= TARGET and st["best_day"] <= CONS * st["balance"]:
                 st["status"] = "passed"
+                fid = len(st.setdefault("funded", [])) + 1
+                st["funded"].append({"id": fid, "since": session, "from_attempt": st["attempt"], "balance": 0.0, "peak": 0.0, "days": [], "payouts": 0.0, "status": "live"})
+                ledger(st, session, f"evaluation #{st['attempt']} PASSED", 0.0, f"becomes funded account #{fid}")
         else:
             last = after.iloc[-1] if len(after) else None
             if last is not None:
                 rec["open_pnl_usd"] = round(((float(last.close) - rec["entry"]) * d - COST_PTS) * rec["usd_per_pt"], 0)
                 rec["last_price"] = round(float(last.close), 2)
+    if not (rec.get("status") in ("open",) or "waiting" in str(rec.get("status"))):
+        update_funded(st, session, tuned_r if len(tuned_today) else None)
+        rec["tuned_r"] = round(tuned_r, 2) if len(tuned_today) else None
     st["floor"] = min(st["peak"] - DD, 100.0)
+    fees = st["fees_spent"]
+    pays = st.get("payouts_total", 0.0)
+    st["campaign"] = {"fees": fees, "payouts": pays, "net": round(pays - fees, 2), "evals_bought": st["attempt"],
+                      "evals_blown": sum(1 for a in st["past_attempts"] if a["status"] == "failed") + (st["status"] == "failed"),
+                      "evals_passed": sum(1 for a in st["past_attempts"] if a["status"] == "passed") + (st["status"] == "passed"),
+                      "funded_live": sum(1 for f in st.get("funded", []) if f["status"] == "live"),
+                      "sessions": len([x for x in st["sessions"] if x.get("status") == "closed" or str(x.get("status", "")).startswith("no trade")])}
     st["updated_utc"] = datetime.now(timezone.utc).isoformat(timespec="minutes")
     STATE.write_text(json.dumps(st, indent=1))
     APP.parent.mkdir(exist_ok=True)

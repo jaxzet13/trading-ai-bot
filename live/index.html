@@ -63,41 +63,63 @@ p { margin: 0; color: var(--fg-2); max-width: 70ch; }
 ol { margin: 0; padding-left: 20px; color: var(--fg-2); display: flex; flex-direction: column; gap: 5px; }
 .warm { opacity: .92; border-style: dashed; }
 footer { color: var(--fg-3); font-size: 12px; text-align: center; }
+.tablewrap { overflow-x: auto; min-width: 0; }
+table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { color: var(--fg-3); font-weight: 500; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="eyebrow">Paper trading on live NAS100 prices · his all-in method</div>
+    <div class="eyebrow">Paper trading on live NAS100 prices · his all-in method, run as a business</div>
     <h1>Live Eval Run</h1>
     <p id="lede"></p>
   </header>
 
   <section class="panel">
+    <div class="head"><h2>The business so far</h2><span class="hint" id="upd"></span></div>
+    <div class="tiles" id="biz"></div>
+    <p class="hint">Net is what would be in your pocket: payouts received minus evaluation fees paid. Evaluation balances are not money; only funded payouts are.</p>
+  </section>
+
+  <section class="panel">
     <div class="status">
       <div class="badge" id="badge"></div>
       <div class="meter">
-        <div class="head"><h2>Account: Lucid Flex 50k evaluation</h2><span class="hint" id="upd"></span></div>
+        <div class="head"><h2 id="evtitle">Current evaluation</h2><span class="hint" id="evhint"></span></div>
         <div class="bar" id="bar"></div>
-        <div class="scale"><span>-$2,000 blown</span><span>$0</span><span>+$3,000 passed</span></div>
+        <div class="scale"><span id="lo">-$2,000 blown</span><span>$0</span><span>+$3,000 passed</span></div>
       </div>
     </div>
     <div class="tiles" id="tiles"></div>
   </section>
 
+  <section class="panel" id="funded-sec">
+    <div class="head"><h2>Funded accounts</h2><span class="hint">Trade the tuned NY open rule at 0.25% ($125 per R). Payout every 20 sessions, 90% split.</span></div>
+    <div class="tablewrap"><table id="funded"></table></div>
+  </section>
+
   <div id="sessions" style="display:flex;flex-direction:column;gap:18px"></div>
+
+  <section class="panel">
+    <div class="head"><h2>Ledger: everything that happened</h2><span class="hint">newest first</span></div>
+    <div class="tablewrap"><table id="ledger"></table></div>
+  </section>
 
   <section class="panel">
     <h2>The rules it follows, every session</h2>
     <ol>
       <li>At 9:35am New York, look at the 9:30 five-minute candle. Closed above the 12 EMA: buy. Below: sell.</li>
-      <li>Stop at twice the candle's size from the entry. Size the trade so the stop costs the whole remaining $2,000.</li>
+      <li>Stop at twice the candle's size from the entry. Size the trade in whole MNQ so the stop plus costs lands exactly on the account's trailing floor: the whole account is at risk, never more.</li>
       <li>Target at 0.75 times the stop distance. No breakeven, no trailing. Close at 3:30pm if neither is hit.</li>
-      <li>Pass: reach +$3,000 with no single day over half of the profit. Blown: lose the $2,000. A blown evaluation is replaced by a new $100 one the next session.</li>
+      <li>Pass: reach +$3,000 with no single day over half of the profit. Blown: hit the floor. The floor trails the best closing balance up, so after a win less room is left; with under $500 of room the evaluation is reset. Either way a new $100 evaluation starts the next session, exactly like the video.</li>
+      <li>A passed evaluation becomes a funded account that trades small and pays out. The business is judged on payouts minus fees.</li>
     </ol>
-    <p class="hint">Prices are real Dukascopy NAS100 ticks, published about an hour after each hour ends, so each update lands about 35 minutes after the entry and again after the close. Contracts: NQ is $20 a point, MNQ $2. One point of costs per trade. Historical odds for this method: about 1 evaluation in 3 passes, usually within 4 trading days.</p>
+    <p class="hint">Prices are real Dukascopy NAS100 data: hourly ticks during the day, the full minute file after midnight UTC. Contracts: NQ $20 a point, MNQ $2. One point of costs per trade. Historical odds under these exact rules: about 1 evaluation in 5 passes (21%), usually in 2 winning days. A one-year run of this business started with $300 ended ahead 27% of the time and lost the whole $300 60% of the time; it averaged +$1,500 only because the good runs are large (+$7,000 or more one time in ten).</p>
   </section>
-  <footer>Paper trading, not a real account. No orders are placed.</footer>
+  <footer>Paper trading, not a real account. No orders are placed. Updated every weekday night.</footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.6.0/echarts.min.js"></script>
@@ -108,28 +130,44 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; }
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const money = v => (v < 0 ? '-$' : '$') + Math.abs(Math.round(v)).toLocaleString();
   const st = L.official, warm = L.warmup;
-  const planned = st.planned_sessions || [];
-  const fmtDate = d => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' });
-
-  $('lede').textContent = `A paper Lucid Flex 50k evaluation traded with the all-in method from the "$50,000 in a week" video, on the real NAS100 sessions of ${planned.map(fmtDate).join(' and ')}. Nothing here is a backtest: each row is filled in after that day's real prices are published.`;
-  $('upd').textContent = st.updated_utc ? `updated ${st.updated_utc.replace('T', ' ')} UTC` : 'waiting for the first session';
+  const fmtDate = d => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+  const C = st.campaign || { fees: st.fees_spent || 100, payouts: 0, net: -(st.fees_spent || 100), evals_bought: st.attempt || 1, evals_blown: 0, evals_passed: 0, funded_live: 0, sessions: 0 };
+  $('lede').textContent = `The all-in evaluation method from the "$50,000 in a week" video, run every trading day since ${fmtDate(st.start || '2026-10-27')} on real NAS100 prices: buy a $100 Lucid Flex 50k evaluation, risk the whole drawdown each day, replace it when it blows, trade it small when it passes. Nothing here is a backtest.`;
+  $('upd').textContent = st.updated_utc ? `updated ${st.updated_utc.replace('T', ' ')} UTC` : '';
+  $('biz').innerHTML = [
+    ['Net so far', money(C.net), 'payouts minus fees', C.net >= 0 ? 'pos' : 'neg'],
+    ['Fees paid', money(C.fees), `${C.evals_bought} evaluations bought`, ''],
+    ['Payouts received', money(C.payouts), `${C.funded_live} funded account${C.funded_live === 1 ? '' : 's'} live`, C.payouts > 0 ? 'pos' : ''],
+    ['Evaluations', `${C.evals_passed} passed · ${C.evals_blown} blown`, `${C.sessions} sessions traded`, ''],
+  ].map(([k, v, x, c]) => `<div class="tile"><span class="k">${k}</span><span class="v ${c}">${v}</span><span class="s">${x}</span></div>`).join('');
 
   const status = st.status === 'passed' ? 'passed' : st.status === 'failed' ? 'failed' : 'live';
+  $('evtitle').textContent = `Evaluation #${st.attempt || 1} · Lucid Flex 50k`;
+  $('evhint').textContent = status === 'live' ? 'running' : status === 'passed' ? 'passed: a new evaluation starts next session' : 'blown: a new evaluation starts next session';
   $('badge').className = 'badge ' + status;
-  $('badge').innerHTML = (status === 'passed' ? 'PASSED' : status === 'failed' ? 'BLOWN' : 'LIVE') + `<span class="sub">attempt ${st.attempt || 1} · ${money(st.balance)}</span>`;
-  const lo = -2000, hi = 3000, pos = v => (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo) * 100;
+  $('badge').innerHTML = (status === 'passed' ? 'PASSED' : status === 'failed' ? 'BLOWN' : 'LIVE') + `<span class="sub">#${st.attempt || 1} · ${money(st.balance)}</span>`;
+  const lo = Math.min(-2000, (st.floor ?? -2000)), hi = 3000, pos = v => (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo) * 100;
   const b = st.balance;
+  $('lo').textContent = `${money(st.floor ?? -2000)} blown`;
   $('bar').innerHTML = `<div class="zero" style="left:${pos(0)}%"></div><div class="fill" style="left:${Math.min(pos(0), pos(b))}%;width:${Math.abs(pos(b) - pos(0))}%;background:${b >= 0 ? css('--up') : css('--down')}"></div>`;
-  const closed = st.sessions.filter(s => s.status === 'closed');
+  const mine = st.sessions.filter(s => s.attempt === st.attempt && s.status === 'closed');
   $('tiles').innerHTML = [
     ['Balance', money(b), `target +$3,000, floor ${money(st.floor ?? -2000)}`],
-    ['Sessions traded', `${closed.length} of ${planned.length}`, planned.map(d => d.slice(5)).join(' · ')],
+    ['Days on this evaluation', mine.length, 'one trade a day'],
     ['Best day', money(st.best_day || 0), 'must stay under half the profit'],
-    ['Evaluations bought', st.attempt || 1, `${money(st.fees_spent || 100)} in fees`],
+    ['Room to the floor', money(b - (st.floor ?? -2000)), 'risked in full on the next trade'],
   ].map(([k, v, s]) => `<div class="tile"><span class="k">${k}</span><span class="v ${k === 'Balance' ? (b >= 0 ? 'pos' : 'neg') : ''}">${v}</span><span class="s">${s}</span></div>`).join('');
 
-  const cards = [];
-  planned.forEach((d, i) => cards.push({ s: st.sessions.find(x => x.date === d) || { date: d, status: 'waiting for the 09:30 candle' }, label: `Day ${i + 1} · ${fmtDate(d)}`, warm: false }));
+  const F = st.funded || [];
+  $('funded').innerHTML = F.length ? `<thead><tr><th>Account</th><th>Since</th><th>From evaluation</th><th>Balance</th><th>Sessions</th><th>Paid out to you</th><th>Status</th></tr></thead><tbody>` +
+    F.map(f => `<tr><td>#${f.id}</td><td>${f.since}</td><td>#${f.from_attempt}</td><td class="${f.balance >= 0 ? 'pos' : 'neg'}">${money(f.balance)}</td><td>${f.days.length}</td><td class="pos">${money(f.payouts || 0)}</td><td>${f.status}</td></tr>`).join('') + '</tbody>'
+    : '<tbody><tr><td style="text-align:left;color:var(--fg-3)">None yet. The first passed evaluation appears here and starts trading the next session.</td></tr></tbody>';
+
+  const Lg = (st.ledger || []).slice().reverse();
+  $('ledger').innerHTML = `<thead><tr><th>Date</th><th>What happened</th><th>Amount</th><th>Detail</th></tr></thead><tbody>` +
+    Lg.map(l => `<tr><td>${l.date}</td><td>${l.event}</td><td class="${l.amount > 0 ? 'pos' : l.amount < 0 ? 'neg' : ''}">${l.amount ? money(l.amount) : '–'}</td><td style="white-space:normal;color:var(--fg-3)">${l.note || ''}</td></tr>`).join('') + '</tbody>';
+
+  const cards = st.sessions.slice().reverse().map(s => ({ s, label: `${fmtDate(s.date)} · evaluation #${s.attempt || 1}`, warm: false }));
   if (warm) warm.sessions.forEach(s => cards.push({ s, label: `Warm-up, not counted · ${fmtDate(s.date)}`, warm: true }));
 
   const host = $('sessions');
@@ -145,7 +183,7 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; }
     const sec = document.createElement('section');
     sec.className = 'panel' + (c.warm ? ' warm' : '');
     sec.innerHTML = `<div class="head"><h2>${c.label}</h2>${pill}</div><div class="sess"><div class="chart" id="ch${idx}"></div><div class="kv">${kv.map(([l, v]) => `<span class="l">${l}</span><span class="v ${l === 'result' || l === 'open P&L' ? (String(v).startsWith('-') ? 'neg' : 'pos') : ''}">${v}</span>`).join('')}</div></div>` +
-      (c.warm ? '<p class="hint">Today\'s session, run as a dry run of the engine before the official two days. It shows what the method would have done on its own: short at the open, stopped out a minute later, evaluation blown. That is the two-in-three case the method accepts.</p>' : '');
+      (c.warm ? '<p class="hint">Today\'s session, run as a dry run of the engine before the official two days. It shows what the method would have done on its own: short at the open, stopped out a minute later, evaluation blown. That is the most common outcome: about four evaluations in five end this way.</p>' : '');
     host.appendChild(sec);
     const el = $('ch' + idx);
     if (!s.candles || !s.candles.length) { el.style.height = 'auto'; el.innerHTML = `<p class="hint" style="padding:12px 0">Chart appears after about 10:10am New York on ${fmtDate(s.date)}.</p>`; return; }
