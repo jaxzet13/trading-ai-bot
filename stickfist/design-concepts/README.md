@@ -25,3 +25,18 @@ Plain on purpose. One style per card, so even the bulk feels varied.
 | Common ● | C1 Knuckles (sumi ink), C2 Shiv (Swiss minimal), C3 Bulwark (slate carving), C4 Bo (night sky) |
 | Uncommon ◆ | U1 Lash (woodblock), U2 Snap (manga panel), U3 Breaker (street poster), U4 Ronin (tarot) |
 | Rare ★ | R1 Arcanist (stained glass), R2 Fletch (ukiyo-e), R3 Kusari (brush strike), R4 Twinblade (moonlit sky) |
+
+## Logos (round 3): `logos/`
+
+| File | Direction |
+|---|---|
+| L1-ink-seal | Brush fist inside a red hanko seal, heavy condensed wordmark |
+| L2-gold-monogram | Interlocked S/F diamond crest that reads as a punching stickman, gold on black |
+| L3-esports-mascot | Faceless stickman punching through a red slash, sports lettering |
+| L4-swiss-wordmark | Clean wordmark, the I is a tiny stickman |
+| L5-gold-crest | Round crest with crossed katanas and a fist, gold on black |
+| L6-graffiti | Spray-paint bubble letters with a crown and fist |
+
+## Card backs (round 3): `card-backs/`
+
+B1 black + gold seal · B2 sumi ink enso on rice paper · B3 indigo with holo S/F crest · B4 blood moon · B5 Swiss charcoal · B6 gold mandala. One back is used for every card, so pick it before the first print run.

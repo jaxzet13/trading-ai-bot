@@ -1387,7 +1387,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     GS: { name: "Gold Scroll", release: 78, run: 5000, window: 380, col: "#e4ae3a",
       r: { R: { name: "Scroll", sym: "◇", col: "#c9a04a" }, UR: { name: "Brocade", sym: "✦✦", col: "#f0c75e" }, SIR: { name: "Gold Screen", sym: "✦✦✦", col: "#ffd76a" } } }
   };
-  const LIM_ODDS = { R: 84, UR: 14, SIR: 2 };
+  const LIM_ODDS = { R: 76, UR: 20, SIR: 4 };
   [["BM1", "shiv", "R", 300], ["BM2", "lash", "R", 320], ["BM3", "umbra", "R", 340], ["BM4", "kusari", "UR", 1500, "bm_kusari"], ["BM5", "chrono", "UR", 1600, "bm_chrono"], ["BM6", "phantom", "SIR", 9000, "bm_phantom"],
    ["GS1", "bo", "R", 330], ["GS2", "pike", "R", 340], ["GS3", "bulwark", "R", 360], ["GS4", "shogun", "UR", 1700, "gs_shogun"], ["GS5", "fletch", "UR", 1650, "gs_fletch"], ["GS6", "ronin", "SIR", 11000, "gs_ronin"]]
     .forEach(([no, id, rar, v, art]) => CARDS.push({ no, id, rar, v, ex: false, set: no.slice(0, 2), art }));
@@ -1601,9 +1601,13 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     return 2 * mr("C") + mr("U") + dm(p.rh) + dm(p.rare);
   }
   let PRICE_DAY = -1;
+  // Friendlier odds: high rarities come up 1.5-3x more often than launch. Prices are then set from the new
+  // expected value so the average sell-back is HOUSE_RTP of the price (the house keeps the rest on average).
+  const HOUSE_RTP = 0.88, BOOST = { H: 1.25, RR: 1.4, UR: 1.8, HR: 2, IR: 1.6, SIR: 1.8 };
+  for (const p of PACKS) for (const d of [p.rare, p.rh]) for (const k in d) if (BOOST[k]) d[k] = +(d[k] * BOOST[k]).toFixed(3);
   function refreshPackPrices() {   // sealed product reprices when the cards inside appreciate (never below its launch price)
     const d = mktDay(); if (d === PRICE_DAY) return; PRICE_DAY = d;
-    for (const p of PACKS) { if (p.base == null) { p.base = p.price; p.ev0 = packEVAt(p, p.lim ? LSETS[p.lim].release : 0); } if (p.cur !== "coin") continue; const r = packEVAt(p, d) / p.ev0; p.price = r > 1 ? Math.round(p.base * r / 10) * 10 - 1 : p.base; }
+    for (const p of PACKS) { if (p.base == null) { if (p.cur === "coin") p.price = Math.max(99, Math.round(packEVAt(p, p.lim ? LSETS[p.lim].release : 0) * BUYBACK / HOUSE_RTP / 10) * 10 - 1); p.base = p.price; p.ev0 = packEVAt(p, p.lim ? LSETS[p.lim].release : 0); } if (p.cur !== "coin") continue; const r = packEVAt(p, d) / p.ev0; p.price = r > 1 ? Math.round(p.base * r / 10) * 10 - 1 : p.base; }
   }
   function packEV(p) { if (p.lim) { let lv = 0; for (const [k, pr] of Object.entries(LIM_ODDS)) { const pool = poolSet(p.lim, k); lv += pr / 100 * pool.reduce((a, c) => a + cardBaseValue(c), 0) / pool.length; } return meanR(p, "C") + meanR(p, "U") + lv; } return 2 * meanR(p, "C") + meanR(p, "U") + distMean(p, p.rh) + distMean(p, p.rare); }
   let HIT = {}, HIT_DAY = -1;
