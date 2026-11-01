@@ -194,6 +194,65 @@ def fair_value_bid(P, start=2, end=12, edge=0.05, vol_mult=1.0, min_price=0.10, 
 
 
 # name -> (function, description, parameter grid for the sweep)
+def _own_z(P):
+    """This coin's move since the open, in standard deviations for the time elapsed."""
+    with np.errstate(invalid="ignore", divide="ignore"):
+        return np.log(P["spot"] / P["strike"]) / (P["vol1m"] * np.sqrt(MIN[None, :]))
+
+
+def cross_lead(P, start=2, end=10, min_z=1.5, lag=0.5, max_price=0.7):
+    """BTC tends to move first. When BTC has moved `min_z` sd since the open but this
+    coin has moved less than `lag` x that, buy this coin in BTC's direction."""
+    if "btc_z" not in P:
+        n = P["yes_ask"].shape[0]
+        return np.zeros(n, int), np.ones(n, int)
+    bz, oz = P["btc_z"], _own_z(P)
+    win = ((MIN >= start) & (MIN <= end))[None, :]
+    with np.errstate(invalid="ignore"):
+        y = win & (bz >= min_z) & (oz < lag * bz) & _valid(P["yes_ask"]) & (P["yes_ask"] <= max_price)
+        n = win & (bz <= -min_z) & (oz > lag * bz) & _valid(P["no_ask"]) & (P["no_ask"] <= max_price)
+    return _first(y, n)
+
+
+def quote_move(P, lookback=2, min_move=0.15, follow=False, start=3, end=12, min_price=0.15, max_price=0.85):
+    """Kalshi's own price jumped by `min_move` over `lookback` minutes without a matching
+    spot move. Fade it (or follow it if follow=True)."""
+    mid = (P["yes_bid"] + P["yes_ask"]) / 2
+    d = np.full_like(mid, np.nan)
+    d[:, lookback:] = mid[:, lookback:] - mid[:, :-lookback]
+    win = ((MIN >= start) & (MIN <= end))[None, :]
+    up, dn = d >= min_move, d <= -min_move
+    if not follow:
+        up, dn = dn, up  # fade: price fell -> buy YES
+    with np.errstate(invalid="ignore"):
+        y = win & up & _valid(P["yes_ask"]) & (P["yes_ask"] >= min_price) & (P["yes_ask"] <= max_price)
+        n = win & dn & _valid(P["no_ask"]) & (P["no_ask"] >= min_price) & (P["no_ask"] <= max_price)
+    return _first(y, n)
+
+
+def fair_value_regime(P, start=2, end=13, edge=0.10, regime="rising", min_price=0.05, max_price=0.95):
+    """Fair-value model, only when short-term vol is rising (vol60 > vol240) or falling."""
+    with np.errstate(invalid="ignore", divide="ignore"):
+        ratio = P["vol1m"] / P["vol240"]
+    keep = (ratio > 1.1) if regime == "rising" else (ratio < 0.9)
+    side, minute = fair_value(P, start=start, end=end, edge=edge, min_price=min_price, max_price=max_price)
+    rows = np.arange(len(side))
+    side = np.where(keep[rows, minute - 1], side, 0)
+    return side, minute
+
+
+def opening_value(P, minute=1, edge=0.06, vol_mult=1.0):
+    """The strike is set at the open, so the first minutes should price near 50% plus
+    whatever spot did since. Buy whichever side the model says is cheap at `minute`."""
+    j = minute - 1
+    p = model_prob(P, vol_mult)[:, j]
+    ya, na = P["yes_ask"][:, j], P["no_ask"][:, j]
+    with np.errstate(invalid="ignore"):
+        y = np.isfinite(p) & _valid(ya) & (p - ya >= edge)
+        n = ~y & np.isfinite(p) & _valid(na) & ((1 - p) - na >= edge)
+    return _at(P, minute, y, n)
+
+
 STRATEGIES = {
     "baseline_yes": (baseline_yes, "Always buy YES at minute 1. The control group: shows what spread and fees cost.",
                      {"minute": [1]}),
@@ -220,6 +279,17 @@ STRATEGIES = {
     "fair_value_bid": (fair_value_bid, "Made for limit orders: bid on the side the fair-value model rates above the current bid.",
                        {"start": [2, 5], "end": [10, 13], "edge": [0.02, 0.04, 0.06, 0.10],
                         "vol_mult": [0.8, 1.0, 1.25], "min_price": [0.1, 0.25], "max_price": [0.75, 0.9]}),
+    "cross_lead": (cross_lead, "BTC moved first; buy this coin in BTC's direction before its own price catches up.",
+                   {"start": [1, 2, 4], "end": [6, 10, 13], "min_z": [1.0, 1.5, 2.0, 3.0], "lag": [0.3, 0.6],
+                    "max_price": [0.6, 0.75]}),
+    "quote_move": (quote_move, "Kalshi's price jumped on its own: fade it (or follow it).",
+                   {"lookback": [1, 2, 3], "min_move": [0.1, 0.15, 0.25], "follow": [False, True],
+                    "start": [3, 6], "end": [10, 13], "min_price": [0.15], "max_price": [0.85]}),
+    "fair_value_regime": (fair_value_regime, "Fair-value model only when short-term volatility is rising, or only when it is falling.",
+                          {"start": [2, 5], "end": [10, 13], "edge": [0.06, 0.10, 0.14], "regime": ["rising", "falling"],
+                           "min_price": [0.05, 0.2], "max_price": [0.8, 0.95]}),
+    "opening_value": (opening_value, "First minutes: buy whichever side the model says the opening price gets wrong.",
+                      {"minute": [1, 2, 3], "edge": [0.03, 0.05, 0.08, 0.12], "vol_mult": [0.8, 1.0, 1.25]}),
     "fair_value": (fair_value, "Lognormal fair-value model vs. the order book; buy whichever side is underpriced.",
                    {"start": [2, 5, 8], "end": [10, 13], "edge": [0.04, 0.08, 0.12, 0.16],
                     "vol_mult": [0.8, 1.0, 1.25]}),

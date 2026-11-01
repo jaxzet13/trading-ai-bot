@@ -22,7 +22,12 @@ SERIES = {  # Kalshi series ticker -> Coinbase product
     "KXBTC15M": "BTC-USD",
     "KXETH15M": "ETH-USD",
     "KXSOL15M": "SOL-USD",
+    "KXXRP15M": "XRP-USD",
+    "KXHYPE15M": "HYPE-USD",
+    "KXBNB15M": "BNB-USD",
+    "KXNEAR15M": "NEAR-USD",
 }
+CORE = ("KXBTC15M", "KXETH15M", "KXSOL15M")
 
 _session = requests.Session()
 

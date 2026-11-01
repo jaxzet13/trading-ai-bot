@@ -25,7 +25,15 @@ def main():
     b.add_argument("--solo", nargs="*", default=[], help="also show these coins on their own, e.g. KXSOL15M")
     s = sub.add_parser("serve", help="open the dashboard at http://localhost:8050")
     s.add_argument("--port", type=int, default=8050)
+    lb = sub.add_parser("lab", help="search every strategy x coin x order type, judge on a locked holdout")
+    lb.add_argument("--series", nargs="+", default=None)
+    lb.add_argument("--workers", type=int, default=4)
     sub.add_parser("live-report", help="refresh the dashboard with the live paper-trading log")
+    hr = sub.add_parser("hourly", help="hourly crypto markets: download, walk-forward search, locked holdout")
+    hr.add_argument("--series", nargs="+", default=None)
+    hr.add_argument("--days", type=int, default=45)
+    hr.add_argument("--workers", type=int, default=4)
+    hr.add_argument("--skip-download", action="store_true")
     t = sub.add_parser("bot", help="run the trading loop (paper by default)")
     t.add_argument("--series", nargs="+", default=["KXSOL15M"], help="one or more coins; each runs in its own thread")
     t.add_argument("--strategy", default="auto",
@@ -49,6 +57,12 @@ def main():
         h = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(report.OUT))
         print(f"dashboard: http://localhost:{a.port}")
         http.server.ThreadingHTTPServer(("", a.port), h).serve_forever()
+    elif a.cmd == "lab":
+        from . import lab
+        lab.main(a.series, a.workers)
+    elif a.cmd == "hourly":
+        from . import hourly
+        hourly.main(a.series, a.workers, a.days, a.skip_download)
     elif a.cmd == "live-report":
         from . import live_report
         live_report.build()

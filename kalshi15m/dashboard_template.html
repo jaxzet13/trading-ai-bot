@@ -59,6 +59,7 @@ table { width: 100%; border-collapse: collapse; font-size: 13px; }
 #board td:first-child { min-width: 230px; }
 #folds { min-width: 700px; }
 #picks { min-width: 900px; }
+#labFinals { min-width: 980px; }
 #trades { min-width: 420px; }
 th { text-align: left; font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
   padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
@@ -170,6 +171,16 @@ td.coin { font-size: 12px; }
     </div>
   </section>
 
+  <section class="panel" id="labPanel" hidden>
+    <div class="panel-head">
+      <div><h2>Strategy search</h2><p id="labIntro"></p></div>
+      <div class="seg" role="group" aria-label="Market type" id="labSeg"></div>
+    </div>
+    <div class="verdict" id="labStats" style="border:0;padding:0;margin-bottom:16px"></div>
+    <div class="eyebrow" style="margin-bottom:8px">Final exam: every shortlisted strategy, frozen, run once on the locked holdout</div>
+    <div class="tablewrap"><table id="labFinals"></table></div>
+  </section>
+
   <details class="research" id="research">
   <summary><span><h2>Research: every strategy tested</h2><span class="sdesc">12 strategies × 2 order types, walk-forward on BTC, ETH and SOL. Where the two live strategies came from.</span></span></summary>
   <div class="research-body">
@@ -265,11 +276,12 @@ td.coin { font-size: 12px; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>const DATA=/*__RESULTS__*/null;</script>
 <script>const LIVE=/*__LIVE__*/null;</script>
+<script>const LAB=/*__LAB__*/null;</script>
 <script>
 (() => {
   const NAMES = { baseline_yes: "Always buy YES", momentum: "Momentum", reversal: "Reversal", late_favorite: "Late favourite",
     longshot: "Longshot", spot_lag: "Spot lag", reversal_z: "Reversal after big move", momentum_z: "Momentum after big move",
-    fair_value_v2: "Fair value, mid-priced", fair_value_bid: "Fair value vs bid", closing_value: "Closing-minute value", fair_value: "Fair value model" };
+    fair_value_v2: "Fair value, mid-priced", fair_value_bid: "Fair value vs bid", closing_value: "Closing-minute value", cross_lead: "BTC leads", quote_move: "Fade price jumps", fair_value_regime: "Fair value by vol regime", opening_value: "Opening mispricing", fair_value: "Fair value model" };
   const COIN = s => s.replace("KX", "").replace("15M", "");
   const $ = id => document.getElementById(id);
   const money = (v, d = 0) => (v < 0 ? "−$" : "$") + Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -332,7 +344,7 @@ td.coin { font-size: 12px; }
     const names = Object.keys(R.strategies);
     if (!cur.strat || !R.strategies[cur.strat]) cur.strat = names.filter(n => n !== "baseline_yes")
       .sort((a, b) => R.strategies[b].runs[cur.ex].oos.t_stat - R.strategies[a].runs[cur.ex].oos.t_stat)[0];
-    renderLive(); renderVerdict(); renderPortfolio(); renderBoard(); renderCmp(); renderDetail(); renderCal(); renderNotes();
+    renderLive(); renderLab(); renderVerdict(); renderPortfolio(); renderBoard(); renderCmp(); renderDetail(); renderCal(); renderNotes();
   }
 
   function renderVerdict() {
@@ -367,6 +379,31 @@ td.coin { font-size: 12px; }
   }
 
   const COIN_COL = ["--accent", "--accent-2", "--s3"];
+  let labKey = null;
+  function renderLab() {
+    const L = typeof LAB === "undefined" ? null : LAB; $("labPanel").hidden = !L; if (!L) return;
+    const keys = Object.keys(L); if (!labKey || !L[labKey]) labKey = keys[0];
+    const lbl = { m15: "15-minute", hourly: "Hourly" };
+    $("labSeg").innerHTML = keys.length > 1 ? keys.map(k => `<button type="button" aria-pressed="${k === labKey}" data-lab="${k}">${lbl[k] || k}</button>`).join("") : "";
+    const R = L[labKey], F = R.finals || [], B = R.benchmarks || [];
+    const coins = Object.keys(R.coins || {}).map(COIN).join(", ");
+    const nPass = F.filter(f => f.passed).length, nStrict = F.filter(f => f.passed_strict).length;
+    $("labIntro").innerHTML = `Searched ${R.n_strategies} strategy types (${R.n_combos.toLocaleString()} parameter sets each run as taker and maker) on ${coins}, one coin at a time, pooled, and by time of day. The last ${R.holdout_days || "few"} days (from ${fmtDate(R.holdout_start)}) were locked away and only used once, at the end. Trying this many things makes some look good by luck, so a strategy only counts if it also wins on the locked days.`;
+    $("labStats").innerHTML = `
+      <div><div class="eyebrow">Result</div><div class="big">${nStrict ? `${nStrict} passed` : nPass ? `${nPass} passed the basic bar, none the strict one` : "Nothing passed the final exam"}</div></div>
+      <div class="stat"><div class="eyebrow">Walk-forwards run</div><div class="v">${R.n_search.toLocaleString()}</div><div class="s">${R.n_positive.toLocaleString()} made money out of sample</div></div>
+      <div class="stat"><div class="eyebrow">Shortlisted</div><div class="v">${F.length}</div><div class="s">t ≥ 1.5 before the final exam</div></div>
+      <div class="stat"><div class="eyebrow">Strict bar</div><div class="v">t ≥ ${R.t_bar_strict}</div><div class="s">corrected for ${F.length} tests</div></div>`;
+    const row = (x, tag) => { const h = x.holdout, st = x.passed_strict ? ["cand", "Passed"] : x.passed ? ["prom", "Basic pass"] : tag ? ["luck", tag] : h.pnl > 0 ? ["luck", "Positive, not significant"] : ["loses", "Failed"];
+      const name = x.strategy.split("@"); return `<tr><td class="mono">${x.scope === "ALL" ? "All coins" : COIN(x.scope)}</td>
+      <td><div class="sname">${NAMES[name[0]] || name[0]}</div>${name[1] ? `<div class="sdesc">${name[1]} session only</div>` : ""}</td><td class="mono">${x.execution}</td>
+      <td class="params">${params(x.params)}</td><td class="num ${cls(h.pnl)}">${money(h.pnl)}</td><td class="num">${h.trades.toLocaleString()}</td>
+      <td class="num">${h.trades ? pct(h.win_rate) : "–"}</td><td class="num">${tfmt(h.t_stat)}</td><td><span class="pill ${st[0]}">${st[1]}</span></td></tr>`; };
+    $("labFinals").innerHTML = `<thead><tr><th>Coin</th><th>Strategy</th><th>Order</th><th>Frozen params</th><th class="num">Holdout P&amp;L</th><th class="num">Trades</th><th class="num">Win</th><th class="num">t-stat</th><th>Status</th></tr></thead><tbody>` +
+      (F.length ? F.map(f => row(f)).join("") : `<tr><td colspan="9" class="empty">Nothing made the shortlist.</td></tr>`) +
+      B.map(b => row(b, "Current live strategy")).join("") + "</tbody>";
+  }
+
   function renderLive() {
     const L = typeof LIVE === "undefined" ? null : LIVE; $("livePanel").hidden = !L; if (!L) return;
     const c = C(), ago = t => { const m = Math.round((L.generated - t) / 60); return m < 60 ? `${m} min` : `${(m / 60).toFixed(1)} h`; };
@@ -538,6 +575,7 @@ td.coin { font-size: 12px; }
   }
 
   document.addEventListener("click", e => {
+    const lb = e.target.closest("[data-lab]"); if (lb) { labKey = lb.dataset.lab; renderLab(); return; }
     const sc = e.target.closest("[data-scope]"); if (sc) { setScope(sc.dataset.scope); renderAll(); return; }
     const ex = e.target.closest("[data-ex]"); if (ex) { cur.ex = ex.dataset.ex; renderAll(); return; }
     const co = e.target.closest("[data-coin]"); if (co) { cur.coin = co.dataset.coin; renderCal(); renderAll(); return; }

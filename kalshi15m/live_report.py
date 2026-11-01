@@ -113,11 +113,29 @@ def summarise() -> dict:
     return out
 
 
+def lab_summary():
+    """Compact view of data/lab/*.json for the dashboard (drops the full search list)."""
+    out = {}
+    for key, fname in (("m15", "results.json"), ("hourly", "hourly_results.json")):
+        f = OUT.parent / "data" / "lab" / fname
+        if not f.exists():
+            continue
+        r = json.loads(f.read_text())
+        search = r.get("search", [])
+        out[key] = {k: r.get(k) for k in ("generated", "holdout_start", "holdout_days", "t_bar_strict", "coins",
+                                          "n_strategies", "n_combos", "finals", "benchmarks")}
+        out[key]["n_search"] = len(search)
+        out[key]["n_positive"] = sum(1 for x in search if x["oos"]["pnl"] > 0)
+        out[key]["top"] = sorted(search, key=lambda x: -x["oos"]["t_stat"])[:15]
+    return out or None
+
+
 def build():
     live = summarise()
     html = (ROOT / "dashboard_template.html").read_text()
     results = (OUT / "results.json").read_text()
     html = html.replace("/*__RESULTS__*/null", results).replace("/*__LIVE__*/null", json.dumps(live))
+    html = html.replace("/*__LAB__*/null", json.dumps(lab_summary()))
     (OUT / "index.html").write_text(html)
     (OUT / "live.json").write_text(json.dumps(live))
     for s in live["strategies"]:
