@@ -1241,6 +1241,11 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     FX_("null", "Null", "secret", 3000, 9, 10, 9, { wpn: "book", void: true, body: "#efebe2", outline: "#0a0a0b", accent: "#0a0a0b", glow: "#ffffff", cover: "#0a0a0b", acc: "none", c: "#3a3a3e", title: "Void book", sig: "cast" }, "Not on any checklist.")
   ];
   const BY_ID = Object.fromEntries(FIGHTERS.map(f => [f.id, f]));
+  // Every card is its own fighter. Cards that reuse an original fighter's look get their own name; they keep that
+  // fighter's stats, moves, art pose and cutscene through .base.
+  const VARIANTS = {"021":["mourne","Mourne"],"022":["monolith","Monolith"],"023":["daimyo","Daimyo"],"024":["cipher","Cipher"],"026":["kensei","Kensei"],"027":["havoc","Havoc"],"028":["glyph","Glyph"],"029":["gemini","Gemini"],"030":["quiver","Quiver"],"031":["rattle","Rattle"],"032":["brickfist","Brickfist"],"033":["stiletto","Stiletto"],"034":["aegis","Aegis"],"035":["lancer","Lancer"],"036":["sensei","Sensei"],"037":["cinder","Cinder"],"038":["harvester","Harvester"],"039":["oblivion","Oblivion"],"040":["emperor","Emperor"],"041":["gyre","Gyre"],"042":["wraith","Wraith"],"043":["eclipse","Eclipse"],"044":["sunblade","Sunblade"],"045":["epoch","Epoch"],"046":["quake","Quake"],"047":["doppel","Doppel"],"BM1":["bloodfang","Bloodfang"],"BM2":["thorn","Thorn"],"BM3":["penumbra","Penumbra"],"BM4":["vein","Vein"],"BM5":["hourglass","Hourglass"],"BM6":["nightfall","Nightfall"],"GS1":["willow","Willow"],"GS2":["crane","Crane"],"GS3":["rampart","Rampart"],"GS4":["regent","Regent"],"GS5":["heron","Heron"],"GS6":["tsunami","Tsunami"]};
+  for (const c of CARDS) { const v = VARIANTS[c.no]; if (!v) continue; const b = BY_ID[c.id]; const f = Object.assign({}, b, { id: v[0], name: v[1], base: b.id }); FIGHTERS.push(f); BY_ID[f.id] = f; c.id = f.id; }
+  const baseOf = id => (BY_ID[id] && BY_ID[id].base) || id;
 
   const P = (o) => o;
   const PACKS = [
@@ -1371,7 +1376,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     { id: "standard", name: "Standard", fee: 499, days: 3 },
     { id: "express", name: "Express", fee: 1499, days: 1 }
   ];
-  const featW = (p, c) => p.feat && p.feat[0] === c.id ? p.feat[1] : 1;
+  const featW = (p, c) => p.feat && p.feat[0] === baseOf(c.id) ? p.feat[1] : 1;
   const poolSet = (set, rar) => CARDS.filter(c => c.set === set && c.rar === rar);
   const poolR = rar => { const all = CARDS.filter(c => c.rar === rar && !c.set), d = mktDay(); extendMarket(d); const open = all.filter(c => d < vaultedAt(c.no)); return open.length ? open : all; };
   function pickKey(d) { let tot = 0; for (const v of Object.values(d)) tot += v; let x = rand() * tot; for (const [k, v] of Object.entries(d)) { x -= v; if (x < 0) return k; } return Object.keys(d).pop(); }
@@ -1441,9 +1446,13 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       state.history.unshift({ t: Date.now(), text: `Refunded ${gone.length} retired card${gone.length > 1 ? "s" : ""} from the old roster`, delta: refund, cur: "coin" });
     }
     for (const it of state.vault.concat(state.hits || [])) if (it && !it.cno && BY_ID[it.id]) { const c = CARDS.find(x => x.id === it.id); it.cno = c.no; it.rar = c.rar; }
+    // cards renamed to their own fighter: move saved copies over to the new fighter id
+    for (const it of state.vault.concat(state.hits || [])) { const c = it && CARD_BY_NO[it.cno]; if (c && c.id !== it.id && BY_ID[c.id] && BY_ID[c.id].base === it.id) it.id = c.id; }
+    if (state.s && state.s.best) { const c = CARD_BY_NO[state.s.best.cno]; if (c && BY_ID[c.id] && BY_ID[c.id].base === state.s.best.id) state.s.best.id = c.id; }
     state.hits = (state.hits || []).filter(h => BY_ID[h.id]);
     if (state.s && state.s.best && !BY_ID[state.s.best.id]) state.s.best = null;
     state.history = (state.history || []).filter(h => h && typeof h.t === "number");
+    save();
   } catch (e) { state = fresh(); }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
   function log(text, delta, cur) { state.history.unshift({ t: Date.now(), text, delta, cur }); if (state.history.length > 250) state.history.length = 250; }
@@ -2387,7 +2396,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     snap: "films/nunchaku.mp4", lash: "films/chainwhip.mp4", kusari: "films/sickle.mp4", bo: "films/bostaff.mp4"
   };
   const CUT_BY_CARD = { "038": "films/reel_scythe.mp4" };
-  const cutFor = it => CUT_BY_CARD[cardOf(it).no] || CUTSCENES[it.id];
+  const cutFor = it => CUT_BY_CARD[cardOf(it).no] || CUTSCENES[baseOf(it.id)];
   let CUT = null;
   const hasCutscene = it => it.ed !== "sketch" && !!cutFor(it) && (CR[rarOf(it)] || CR.C).tier >= 4;   // only footage traced from the owner's own videos
   const DUMMY = () => Object.assign({}, BY_ID.knuckles, { id: "dummy", name: "Sparring dummy", body: "#434343", acc: "none" });
@@ -2728,10 +2737,10 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     }
   }
   // Card illustrations are hand-picked comic-style artworks in art/<id>.jpg
-  function portrait(f) { return `art/${f.id}.jpg`; }
+  function portrait(f) { return `art/${baseOf(f.id)}.jpg`; }
   function portraitDrawn(f) {
     if (PORTRAIT[f.id]) return PORTRAIT[f.id];
-    const Wd = 600, Ht = 840, T = THEME[f.id] || THEME.knuckles, rnd = artRng(f.id);
+    const Wd = 600, Ht = 840, T = THEME[baseOf(f.id)] || THEME.knuckles, rnd = artRng(f.id);
     const cv = document.createElement("canvas"); cv.width = Wd; cv.height = Ht; const c = cv.getContext("2d");
     FLAT = true;
     c.fillStyle = PAPER; c.fillRect(0, 0, Wd, Ht);
@@ -2770,7 +2779,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   function pictogram(f) {
     if (PICTO[f.id]) return PICTO[f.id];
     const W = 900, H = 900, cv = document.createElement("canvas"); cv.width = W; cv.height = H; const c = cv.getContext("2d");
-    const T = THEME[f.id] || THEME.knuckles, F = Object.assign({}, f, { scale: f.bulk ? 2.1 : 2.6 });
+    const T = THEME[baseOf(f.id)] || THEME.knuckles, F = Object.assign({}, f, { scale: f.bulk ? 2.1 : 2.6 });
     FLAT = true; c.translate(W / 2, H * .82 - GROUND); drawFighter(c, F, poseState(T.pose, T.rot || 0), { time: 1.3, noShadow: true, sil: "#121212" }); FLAT = false;
     const d = c.getImageData(0, 0, W, H).data; let x0 = W, y0 = H, x1 = 0, y1 = 0;
     for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) if (d[(y * W + x) * 4 + 3] > 20) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }

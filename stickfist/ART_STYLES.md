@@ -8,6 +8,10 @@ Face prompt recipe: *Finished trading card front, flat and straight-on, the card
 
 For print, regenerate the final faces at 2k or upscale them, and print the scan ID on its own pass (see PRINT_SPEC.md).
 
+## Every card is its own fighter
+
+No two cards share a name. The 21 original fighters keep their first card; every later card that reuses one of their looks is a new fighter with its own name (it keeps the original's stats, moves, pose and cutscene through `base` in `VARIANTS`): Mourne, Monolith, Daimyo, Cipher, Kensei, Havoc, Glyph, Gemini, Quiver, Rattle, Brickfist, Stiletto, Aegis, Lancer, Sensei, Cinder, Harvester, Oblivion, Emperor, Gyre, Wraith, Eclipse, Sunblade, Epoch, Quake, Doppel, Bloodfang, Thorn, Penumbra, Vein, Hourglass, Nightfall, Willow, Crane, Rampart, Regent, Heron, Tsunami. Their faces were made by editing the original face and swapping only the name.
+
 ## Source artwork per card (used as the reference for each face)
 
 New art lives in `art/c/<no>.jpg`. The existing comic art in `art/<fighter>.jpg` goes on that fighter's top card. Limited cards with their own art use `art/<set>_<fighter>.jpg`.
