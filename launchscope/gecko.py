@@ -14,7 +14,7 @@ from pathlib import Path
 import requests
 
 BASE = "https://api.geckoterminal.com/api/v2"
-CACHE_DIR = Path(os.environ.get("MEV_CACHE_DIR", Path(__file__).resolve().parent.parent / "data" / "mev" / "cache"))
+CACHE_DIR = Path(os.environ.get("LAUNCHSCOPE_CACHE_DIR", Path(__file__).resolve().parent.parent / "data" / "launches" / "cache"))
 MIN_INTERVAL = float(os.environ.get("GECKO_MIN_INTERVAL", "6.5"))
 
 _last_call = 0.0
@@ -63,22 +63,13 @@ def new_pools(page: int = 1) -> list[dict]:
     return get("/networks/solana/new_pools", {"page": page, "include": "base_token"}, cache=False).get("data", [])
 
 
-def trending_pools(page: int = 1) -> list[dict]:
-    return get("/networks/solana/trending_pools", {"page": page}, cache=False).get("data", [])
+def ohlcv_minute(pool: str, before: int, limit: int = 60, currency: str = "usd") -> list[list[float]]:
+    """Minute candles [ts, open, high, low, close, volume_usd] ending before `before`, oldest first.
 
-
-def token_pools(token: str, page: int = 1) -> list[dict]:
-    return get(f"/networks/solana/tokens/{token}/pools", {"page": page}, cache=False).get("data", [])
-
-
-def pool_trades(pool: str, cache: bool = True) -> list[dict]:
-    return get(f"/networks/solana/pools/{pool}/trades", {}, cache=cache).get("data", [])
-
-
-def ohlcv_minute(pool: str, limit: int = 1000, before: int | None = None, cache: bool = True) -> list[list[float]]:
-    params = {"aggregate": 1, "limit": limit, "currency": "token"}
-    if before:
-        params["before_timestamp"] = before
-    d = get(f"/networks/solana/pools/{pool}/ohlcv/minute", params, cache=cache)
-    rows = d.get("data", {}).get("attributes", {}).get("ohlcv_list", []) if isinstance(d.get("data"), dict) else []
+    Minutes with no trades are absent from the response.
+    """
+    params = {"aggregate": 1, "limit": limit, "currency": currency, "before_timestamp": before}
+    d = get(f"/networks/solana/pools/{pool}/ohlcv/minute", params)
+    data = d.get("data")
+    rows = data.get("attributes", {}).get("ohlcv_list", []) if isinstance(data, dict) else []
     return sorted(rows, key=lambda r: r[0])

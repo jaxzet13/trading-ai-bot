@@ -3,7 +3,7 @@
 GeckoTerminal's new_pools feed only covers the last few minutes, so we poll it
 and append unseen pools, together with their stats at first sight, to a JSONL file.
 
-    python -m mevbot.collect --minutes 90
+    python -m launchscope.collect --minutes 90
 """
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from pathlib import Path
 
 from . import gecko
 
-OUT = Path(__file__).resolve().parent.parent / "data" / "mev" / "launches.jsonl"
+OUT = Path(__file__).resolve().parent.parent / "data" / "launches" / "launches.jsonl"
 
 
 def main() -> None:
