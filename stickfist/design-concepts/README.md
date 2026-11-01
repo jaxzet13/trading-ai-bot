@@ -45,3 +45,7 @@ B1 black + gold seal · B2 sumi ink enso on rice paper · B3 indigo with holo S/
 
 Logos X1 brush wordmark with crossed swords as the XX · X2 gold wordmark, the I is a stickman · X3 esports mascot · X4 katana crest · X5 graffiti · X6 app icon.
 Backs XB1 black + gold · XB2 sumi enso · XB3 indigo holo crest · XB4 blood moon · XB5 Swiss charcoal · XB6 gold mandala.
+
+## Minimal logos (round 5): `logos-minimal/`
+
+One icon plus a tiny STIXX: M1 crossed sticks · M2 dot + X figure · M3 brush X with red dot · M4 X cut out of a circle · M5 thin-line figure on black · M6 red seal with X.
