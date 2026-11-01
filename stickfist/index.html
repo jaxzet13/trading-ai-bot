@@ -825,7 +825,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .kcard.face.myth { box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 0 5cqi color-mix(in srgb, var(--acc) 50%, transparent), 0 14px 30px rgba(0,0,0,.55); }
 .kcard.face.rh::after { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 3; pointer-events: none; mix-blend-mode: color-dodge; opacity: .35; background: linear-gradient(115deg, #ff9ac4, #fff3b0 20%, #9be8ff 40%, #d9a8ff 60%, #b6ffe0 80%, #ff9ac4); background-size: 220% 220%; background-position: var(--mx) var(--my); }
 .kcard.face.sketch .face-img { filter: grayscale(1) contrast(1.1); opacity: .85; }
-.kcard.face .f-id { position: absolute; z-index: 4; left: 50%; bottom: 2.6%; transform: translateX(-50%); display: flex; align-items: center; gap: 1.8cqi; padding: .7cqi 1cqi .7cqi 2.2cqi; background: rgba(250,248,242,.92); color: #141414; border-radius: .9cqi; box-shadow: 0 0 0 .2cqi rgba(0,0,0,.25); font-family: var(--f-mono); font-size: max(6px, 2.6cqi); letter-spacing: .12em; white-space: nowrap; pointer-events: none; }
+.kcard.face .f-id { position: absolute; z-index: 4; left: 50%; top: var(--idy, 94%); transform: translate(-50%, -50%); display: flex; align-items: center; gap: 1.8cqi; padding: .7cqi 1cqi .7cqi 2.2cqi; background: rgba(250,248,242,.92); color: #141414; border-radius: .9cqi; box-shadow: 0 0 0 .2cqi rgba(0,0,0,.25); font-family: var(--f-mono); font-size: max(6px, 2.6cqi); letter-spacing: .12em; white-space: nowrap; pointer-events: none; }
 .kcard.face .f-id .rt { font-family: var(--f-body); font-weight: 700; font-size: 1em; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: var(--acc); padding: .5cqi 1.4cqi; margin-left: -1.4cqi; border-radius: .6cqi; text-shadow: 0 1px 1px rgba(0,0,0,.45); }
 .kcard.face.cr-C .f-id .rt { background: #6b6b6b; }
 .kcard.face.cr-UR .f-id .rt, .kcard.face.cr-HR .f-id .rt, .kcard.face.cr-IR .f-id .rt { color: #141414; text-shadow: none; }
@@ -1512,13 +1512,15 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const pwr = (f.atk + f.spd + f.def) * 10 + (card.ex ? 60 : 0);
     const myth = t >= 5, sid = scanId(card, item.serial);
     const cls = `tcard kcard face cr-${rar}${myth ? " myth" : ""}${item.rh ? " rh" : ""}${sk ? " sketch" : ""}${card.set ? " lim lim-" + card.set : ""}`;
-    return `<div class="${cls}" style="--acc:${R.col}"><div class="k-face">
+    return `<div class="${cls}" style="--acc:${R.col};--idy:${ID_Y[card.no] || 94}%"><div class="k-face">
       <img class="face-img" src="art/face/${card.no}.jpg" alt="${esc(f.name)}, ${esc(R.name)}, power ${pwr}" draggable="false"><div class="tc-holo"></div>${myth ? `<div class="k-sweep"></div>` : ""}
       <div class="f-id"><b class="rt">${esc(R.name)} ${R.sym}</b><span>${sid}</span>${item.serial ? `<span class="qr">${qrSvg("STICKFIST:" + sid)}</span>` : ""}</div>
       ${sk ? `<span class="stamp">SKETCH</span>` : ""}
       <span class="tc-val" hidden></span><span class="tc-bottom" hidden><span class="tag"></span></span>
     </div><div class="glare"></div><div class="k-guides"><i class="bleed"></i><i class="safe"></i></div></div>`;
   }
+  // vertical centre (% of card height) of the blank box each face leaves for the scan ID, measured per face
+  const ID_Y = {"001":91.3,"002":92.3,"003":94,"004":93.7,"005":93,"006":90.8,"007":93,"008":93.5,"009":93,"010":93.3,"011":92.9,"012":94.3,"013":92.4,"014":93.4,"015":94.1,"016":91.5,"017":91.7,"018":93.5,"019":92.2,"020":92.4,"021":94,"022":92,"023":91.5,"024":94.4,"025":93,"026":93.7,"027":92.7,"028":93.4,"029":93.1,"030":95.8,"031":93.2,"032":93,"033":92.9,"034":93,"035":95.1,"036":93.5,"037":96,"038":94.5,"039":93.7,"040":92.5,"041":95.8,"042":95.2,"043":93,"044":93.5,"045":93,"046":95.5,"047":93.8,"BM1":93,"BM2":93,"BM3":93.6,"BM4":96,"BM5":94.8,"BM6":96,"GS1":92.5,"GS2":93.5,"GS3":91.3,"GS4":93.8,"GS5":96,"GS6":94};
   // Scan ID printed on every physical card: set + collector number + the copy's own serial.
   const scanId = (card, serial) => `${card.set || "IS"}-${card.set ? card.no.slice(2).padStart(3, "0") : card.no}${serial ? "-" + String(serial).padStart(6, "0") : ""}`;
   const QR_CACHE = {};
