@@ -161,38 +161,98 @@ table.odds th:not(:first-child), table.odds td:not(:first-child) { text-align: r
 .tcard.r-legendary { --f1: #8a5a07; --f2: #ffe39a; }
 .tcard.r-secret { background: linear-gradient(115deg, #ff4d8d, #ffd36b, #6bffb8, #5ab0ff, #c47bff, #ff4d8d); background-size: 300% 300%; animation: holo 6s linear infinite; }
 @keyframes holo { to { background-position: 300% 0; } }
-.tc-face { height: 100%; border-radius: 3.6cqi; position: relative; overflow: hidden; color: #f4f1ea; background: #0b0b0c; box-shadow: inset 0 0 0 .5cqi rgba(0,0,0,.85), 0 0 0 .35cqi rgba(255,255,255,.35); }
-.tc-face::after { content: ""; position: absolute; inset: 2.2cqi; border: .35cqi solid rgba(255,255,255,.28); border-radius: 2.4cqi; pointer-events: none; z-index: 4;
+.full .tc-face { height: 100%; border-radius: 3.6cqi; position: relative; overflow: hidden; color: #f4f1ea; background: #0b0b0c; box-shadow: inset 0 0 0 .5cqi rgba(0,0,0,.85), 0 0 0 .35cqi rgba(255,255,255,.35); }
+.full .tc-face::after { content: ""; position: absolute; inset: 2.2cqi; border: .35cqi solid rgba(255,255,255,.28); border-radius: 2.4cqi; pointer-events: none; z-index: 4;
   -webkit-mask: linear-gradient(#000 0 0) top left / 14% 10% no-repeat, linear-gradient(#000 0 0) top right / 14% 10% no-repeat, linear-gradient(#000 0 0) bottom left / 14% 10% no-repeat, linear-gradient(#000 0 0) bottom right / 14% 10% no-repeat;
   mask: linear-gradient(#000 0 0) top left / 14% 10% no-repeat, linear-gradient(#000 0 0) top right / 14% 10% no-repeat, linear-gradient(#000 0 0) bottom left / 14% 10% no-repeat, linear-gradient(#000 0 0) bottom right / 14% 10% no-repeat; }
-.tc-art { --fc: #888; position: absolute; inset: 0; overflow: hidden; background: #1a1a1c; }
-.tc-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; }
-.tc-holo { position: absolute; inset: 0; pointer-events: none; opacity: 0; mix-blend-mode: color-dodge;
+.full .tc-art { --fc: #888; position: absolute; inset: 0; overflow: hidden; background: #1a1a1c; }
+.full .tc-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; }
+.full .tc-holo { position: absolute; inset: 0; pointer-events: none; opacity: 0; mix-blend-mode: color-dodge;
   background: repeating-linear-gradient(118deg, rgba(255,60,150,0) 0%, rgba(255,60,150,.22) 3%, rgba(255,220,90,.22) 6%, rgba(90,255,190,.22) 9%, rgba(90,170,255,.22) 12%, rgba(255,60,150,0) 15%),
     radial-gradient(circle at 20% 30%, rgba(255,255,255,.5) 0 .4cqi, transparent .6cqi) 0 0 / 9cqi 9cqi;
   background-size: 260% 260%, 9cqi 9cqi; background-position: var(--mx) var(--my), 0 0; }
 .r-epic .tc-holo { opacity: .14; } .r-legendary .tc-holo { opacity: .2; } .r-secret .tc-holo { opacity: .3; }
-.tc-top { position: absolute; top: 0; left: 0; right: 0; z-index: 3; display: flex; align-items: center; gap: 2.2cqi; padding: 5cqi 6cqi 9cqi; background: linear-gradient(rgba(6,6,7,.78), rgba(6,6,7,.3) 60%, transparent); }
-.gem { width: 4.2cqi; height: 4.2cqi; transform: rotate(45deg); background: var(--rc); box-shadow: 0 0 2.4cqi var(--rc), inset 0 0 0 .4cqi rgba(255,255,255,.5); flex: none; }
-.tc-name { font-family: var(--f-display); font-style: italic; font-weight: 700; font-size: 12cqi; line-height: .9; letter-spacing: -.01em; text-shadow: 0 .6cqi 2cqi rgba(0,0,0,.8); overflow-wrap: anywhere; flex: 1; min-width: 0; }
-.tc-serial { font-family: var(--f-mono); font-size: 3.8cqi; color: rgba(244,241,234,.7); white-space: nowrap; letter-spacing: .08em; }
-.tc-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; padding: 12cqi 6cqi 5cqi; display: grid; gap: 1.6cqi; background: linear-gradient(transparent, rgba(6,6,7,.72) 34%, rgba(6,6,7,.92)); }
-.tc-mid { display: flex; justify-content: space-between; align-items: baseline; gap: 2cqi; }
-.tc-rarity { font-family: var(--f-mono); font-weight: 600; font-size: 4.2cqi; letter-spacing: .22em; text-transform: uppercase; color: var(--rc, var(--dim)); text-shadow: 0 0 2cqi var(--rc); }
-.tc-wpn { font-family: var(--f-display); font-style: italic; font-size: 5cqi; color: rgba(244,241,234,.75); }
+.full .tc-top { position: absolute; top: 0; left: 0; right: 0; z-index: 3; display: flex; align-items: center; gap: 2.2cqi; padding: 5cqi 6cqi 9cqi; background: linear-gradient(rgba(6,6,7,.78), rgba(6,6,7,.3) 60%, transparent); }
+.full .gem { width: 4.2cqi; height: 4.2cqi; transform: rotate(45deg); background: var(--rc); box-shadow: 0 0 2.4cqi var(--rc), inset 0 0 0 .4cqi rgba(255,255,255,.5); flex: none; }
+.full .tc-name { font-family: var(--f-display); font-style: italic; font-weight: 700; font-size: 12cqi; line-height: .9; letter-spacing: -.01em; text-shadow: 0 .6cqi 2cqi rgba(0,0,0,.8); overflow-wrap: anywhere; flex: 1; min-width: 0; }
+.full .tc-serial { font-family: var(--f-mono); font-size: 3.8cqi; color: rgba(244,241,234,.7); white-space: nowrap; letter-spacing: .08em; }
+.full .tc-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; padding: 12cqi 6cqi 5cqi; display: grid; gap: 1.6cqi; background: linear-gradient(transparent, rgba(6,6,7,.72) 34%, rgba(6,6,7,.92)); }
+.full .tc-mid { display: flex; justify-content: space-between; align-items: baseline; gap: 2cqi; }
+.full .tc-rarity { font-family: var(--f-mono); font-weight: 600; font-size: 4.2cqi; letter-spacing: .22em; text-transform: uppercase; color: var(--rc, var(--dim)); text-shadow: 0 0 2cqi var(--rc); }
+.full .tc-wpn { font-family: var(--f-display); font-style: italic; font-size: 5cqi; color: rgba(244,241,234,.75); }
 .r-common { --rc: var(--r-common); } .r-rare { --rc: var(--r-rare); } .r-epic { --rc: var(--r-epic); } .r-legendary { --rc: var(--r-legendary); } .r-secret { --rc: var(--r-secret); }
-.tc-trait { font-family: var(--f-display); font-style: italic; font-size: 5.4cqi; line-height: 1.15; color: rgba(244,241,234,.86); }
-.tc-stats { display: grid; gap: 1.1cqi; }
-.tc-stats .sb { display: grid; grid-template-columns: 9cqi 1fr 4cqi; align-items: center; gap: 2cqi; font-family: var(--f-mono); font-size: 3.2cqi; color: rgba(244,241,234,.6); letter-spacing: .1em; }
-.tc-stats .sb i { height: 1.3cqi; background: rgba(255,255,255,.12); display: block; overflow: hidden; }
-.tc-stats .sb b { display: block; height: 100%; background: linear-gradient(90deg, var(--rc), #fff); }
-.tc-stats .sb em { font-style: normal; color: #f4f1ea; text-align: right; }
-.tc-bottom { display: flex; justify-content: space-between; align-items: center; border-top: .3cqi solid rgba(255,255,255,.18); padding-top: 2.2cqi; gap: 2cqi; }
-.tc-bottom .tag { font-family: var(--f-mono); font-size: 3.4cqi; letter-spacing: .16em; color: rgba(244,241,234,.6); }
-.tc-val { font-family: var(--f-mono); font-weight: 600; font-size: 6.2cqi; color: var(--brass-hi); text-shadow: 0 0 2cqi rgba(230,211,163,.35); }
+.full .tc-trait { font-family: var(--f-display); font-style: italic; font-size: 5.4cqi; line-height: 1.15; color: rgba(244,241,234,.86); }
+.full .tc-stats { display: grid; gap: 1.1cqi; }
+.full .tc-stats .sb { display: grid; grid-template-columns: 9cqi 1fr 4cqi; align-items: center; gap: 2cqi; font-family: var(--f-mono); font-size: 3.2cqi; color: rgba(244,241,234,.6); letter-spacing: .1em; }
+.full .tc-stats .sb i { height: 1.3cqi; background: rgba(255,255,255,.12); display: block; overflow: hidden; }
+.full .tc-stats .sb b { display: block; height: 100%; background: linear-gradient(90deg, var(--rc), #fff); }
+.full .tc-stats .sb em { font-style: normal; color: #f4f1ea; text-align: right; }
+.full .tc-bottom { display: flex; justify-content: space-between; align-items: center; border-top: .3cqi solid rgba(255,255,255,.18); padding-top: 2.2cqi; gap: 2cqi; }
+.full .tc-bottom .tag { font-family: var(--f-mono); font-size: 3.4cqi; letter-spacing: .16em; color: rgba(244,241,234,.6); }
+.full .tc-val { font-family: var(--f-mono); font-weight: 600; font-size: 6.2cqi; color: var(--brass-hi); text-shadow: 0 0 2cqi rgba(230,211,163,.35); }
+
+/* ---- standard cards (Common to Double Rare): Pokemon-style layout ---- */
+.tcard.std { background: linear-gradient(135deg, #f7da62, #e5b522 35%, #fbe788 55%, #d7a315 80%, #f3d35a); padding: 3%; }
+.tcard.std.cr-RR, .tcard.std.rh { background: linear-gradient(135deg, #9aa0aa, #eef1f6 30%, #a9afba 55%, #f6f8fb 75%, #8f96a1); }
+.std .tc-face { height: 100%; border-radius: 2.6cqi; padding: 3.2cqi 4cqi 2.6cqi; display: flex; flex-direction: column; gap: 1.5cqi; position: relative; overflow: hidden; color: #17171a;
+  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--tc) 70%, #fff), var(--tc) 55%, color-mix(in srgb, var(--tc) 70%, #000) 130%); }
+.std.cr-RR .tc-face { background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--tc) 55%, #fff), color-mix(in srgb, var(--tc) 80%, #2a1a3a) 60%, #1d1426 140%); color: #fff; }
+.std .tc-head { display: flex; align-items: center; gap: 1.6cqi; }
+.std .tc-stage { font-family: var(--f-mono); font-size: 2.8cqi; font-weight: 600; letter-spacing: .08em; padding: .4cqi 1.4cqi; border-radius: 1cqi; background: linear-gradient(#f2f2f2, #b8b8b8); color: #333; }
+.std .tc-name { font-family: var(--f-body); font-weight: 800; font-size: 7.4cqi; line-height: 1; letter-spacing: -.01em; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.tcard .ex { font-family: var(--f-display); font-style: italic; font-weight: 700; font-size: 1.15em; margin-left: .15em; color: #fff; -webkit-text-stroke: .45cqi #17171a; paint-order: stroke; }
+.std .tc-hp { font-family: var(--f-body); font-weight: 800; font-size: 5.4cqi; white-space: nowrap; }
+.std .tc-hp small { font-size: .55em; margin-right: .6cqi; letter-spacing: .05em; }
+.std .tc-type { width: 6.4cqi; height: 6.4cqi; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-body); font-weight: 800; font-size: 3.6cqi; color: #fff; background: color-mix(in srgb, var(--tc) 55%, #000); box-shadow: inset 0 0 0 .5cqi rgba(255,255,255,.6); flex: none; }
+.std .tc-art { position: relative; aspect-ratio: 1.42; border: 1cqi solid transparent; border-image: linear-gradient(135deg, #e9c46a, #fff3c4, #b8892b) 1; overflow: hidden; box-shadow: 0 .6cqi 1.4cqi rgba(0,0,0,.35); background: #222; flex: none; }
+.std .tc-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; }
+.std .tc-strip { align-self: center; font-family: var(--f-body); font-style: italic; font-weight: 600; font-size: 2.9cqi; padding: .4cqi 3cqi; margin-top: -1cqi; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); }
+.std.cr-RR .tc-strip { background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent); }
+.std .tc-moves { display: grid; gap: 1.6cqi; flex: 1; align-content: center; }
+.std .mv { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .4cqi 2cqi; }
+.std .mv .mc { display: flex; gap: .7cqi; }
+.std .mv .mc i { width: 3.4cqi; height: 3.4cqi; border-radius: 50%; background: color-mix(in srgb, var(--tc) 50%, #000); box-shadow: inset 0 0 0 .4cqi rgba(255,255,255,.55); display: block; }
+.std .mv b { font-family: var(--f-body); font-weight: 800; font-size: 5cqi; }
+.std .mv em { font-style: normal; font-family: var(--f-body); font-weight: 800; font-size: 6cqi; }
+.std .mv small { grid-column: 1 / -1; font-family: var(--f-body); font-size: 3.1cqi; line-height: 1.25; opacity: .85; }
+.std .tc-flavor { font-family: var(--f-display); font-style: italic; font-size: 3.6cqi; line-height: 1.2; padding: 1.2cqi 2cqi; border: .3cqi solid rgba(0,0,0,.25); border-radius: 1.2cqi; background: rgba(255,255,255,.35); }
+.std.cr-RR .tc-flavor { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.08); }
+.std .tc-foot { display: flex; justify-content: space-between; align-items: center; gap: 2cqi; font-family: var(--f-mono); font-size: 3cqi; }
+.std .tc-foot .sym { font-size: 1.3em; color: #17171a; }
+.std.cr-RR .tc-foot .sym, .std.cr-RR .tc-foot { color: #fff; }
+.std .rhb { font-size: .85em; letter-spacing: .12em; padding: .2cqi 1cqi; border-radius: .8cqi; background: linear-gradient(90deg, #ffd6f0, #cfe9ff, #d9ffe9); color: #333; }
+.std .tc-val { font-family: var(--f-mono); font-weight: 700; font-size: 4.4cqi; padding: .4cqi 1.6cqi; border-radius: 1.2cqi; background: #17171a; color: var(--brass-hi); }
+/* holo art window (Holo Rare, Double Rare) */
+.std .tc-holo { position: absolute; inset: 0; pointer-events: none; opacity: 0; mix-blend-mode: color-dodge; background: repeating-linear-gradient(118deg, rgba(255,60,150,0) 0%, rgba(255,60,150,.3) 3%, rgba(255,220,90,.3) 6%, rgba(90,255,190,.3) 9%, rgba(90,170,255,.3) 12%, rgba(255,60,150,0) 15%); background-size: 260% 260%; background-position: var(--mx) var(--my); }
+.std.cr-H .tc-holo { opacity: .55; } .std.cr-RR .tc-holo { opacity: .7; }
+/* reverse holo: the card body shines, the art stays flat */
+.std.rh .tc-face::before { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: .85; z-index: 0;
+  background: repeating-linear-gradient(118deg, rgba(255,120,200,.0) 0%, rgba(255,120,200,.55) 4%, rgba(255,240,140,.55) 8%, rgba(120,255,210,.55) 12%, rgba(120,190,255,.55) 16%, rgba(255,120,200,0) 20%), radial-gradient(circle, rgba(255,255,255,.8) 0 .35cqi, transparent .5cqi) 0 0 / 5cqi 5cqi; background-size: 300% 300%, 5cqi 5cqi; background-position: var(--mx) var(--my), 0 0; }
+.std .tc-face > * { position: relative; z-index: 1; }
+/* full-art frames by rarity */
+.tcard.full { padding: 2.4%; }
+.tcard.cr-UR { background: linear-gradient(135deg, #7d828d, #f4f6f9 25%, #9aa0aa 50%, #ffffff 70%, #868c97); }
+.tcard.cr-IR { background: linear-gradient(135deg, #b08d57, #f3dfb0 35%, #c9a46a 65%, #f8ecd0); padding: 1.6%; }
+.tcard.cr-SIR { background: linear-gradient(115deg, #ff4d8d, #ffd36b, #6bffb8, #5ab0ff, #c47bff, #ff4d8d); background-size: 300% 300%; animation: holo 6s linear infinite; }
+.tcard.cr-HR { background: linear-gradient(135deg, #8a6200, #ffe58a 25%, #c9930f 50%, #fff2b8 70%, #9c7208); }
+.full .tc-top { display: flex; align-items: center; gap: 2cqi; }
+.full .tc-hp { margin-left: auto; font-family: var(--f-body); font-weight: 800; font-size: 5.6cqi; color: #fff; text-shadow: 0 .4cqi 1.4cqi rgba(0,0,0,.8); white-space: nowrap; }
+.full .tc-hp small { font-size: .55em; margin-right: .6cqi; }
+.full .tc-moves { display: grid; gap: 1.2cqi; }
+.full .mv { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .3cqi 2cqi; color: #f4f1ea; }
+.full .mv .mc { display: flex; gap: .6cqi; } .full .mv .mc i { width: 3cqi; height: 3cqi; border-radius: 50%; background: var(--tc); box-shadow: inset 0 0 0 .4cqi rgba(255,255,255,.6); display: block; }
+.full .mv b { font-family: var(--f-body); font-weight: 800; font-size: 4.6cqi; } .full .mv em { font-style: normal; font-family: var(--f-body); font-weight: 800; font-size: 5.4cqi; }
+.full .mv small { grid-column: 1 / -1; font-size: 3cqi; opacity: .8; }
+.full .sym { color: var(--rc); }
+.cr-UR .tc-art::after { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; background: repeating-linear-gradient(45deg, rgba(255,255,255,.18) 0 1px, transparent 1px 4px), repeating-linear-gradient(-45deg, rgba(255,255,255,.12) 0 1px, transparent 1px 5px); }
+.cr-UR .tc-holo { opacity: .25 !important; } .cr-IR .tc-holo { opacity: .12 !important; } .cr-SIR .tc-holo { opacity: .45 !important; } .cr-HR .tc-holo { opacity: .35 !important; }
+.cr-IR .tc-info { background: linear-gradient(transparent, rgba(6,6,7,.55) 40%, rgba(6,6,7,.8)) !important; }
+.cr-HR .tc-art img { filter: sepia(1) saturate(2.6) hue-rotate(-14deg) brightness(1.08) contrast(1.15); }
+.cr-HR .tc-name, .cr-SIR .tc-name { color: #ffe9a8; }
+.cr-HR .tc-art::after { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; background: repeating-linear-gradient(45deg, rgba(255,240,180,.25) 0 1px, transparent 1px 4px); }
 .tcard .glare { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 5; opacity: var(--go); transition: opacity .3s;
   background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.38), rgba(255,255,255,0) 42%); mix-blend-mode: overlay; }
-.tcard.r-epic .glare, .tcard.r-legendary .glare, .tcard.r-secret .glare {
+.tcard.cr-H .glare, .tcard.cr-RR .glare, .tcard.full .glare, .tcard.rh .glare {
   background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.45), rgba(255,255,255,0) 40%),
     linear-gradient(calc(110deg + (var(--mx) - 50%) * .4), transparent 20%, rgba(255,90,170,.35) 35%, rgba(255,230,120,.35) 45%, rgba(110,255,200,.35) 55%, rgba(110,170,255,.35) 65%, transparent 80%);
   background-size: 100% 100%, 220% 220%; background-position: center, var(--mx) var(--my); mix-blend-mode: color-dodge; }
@@ -376,8 +436,9 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   padding: calc(70px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
 .sum-in { width: min(900px, 100%); display: grid; gap: 26px; justify-items: center; }
 .fan { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; width: 100%; }
-.fan .tcard { width: min(250px, 62vw); animation: fanin .5s cubic-bezier(.2,1.2,.4,1) both; }
-.fan .tcard:nth-child(2) { animation-delay: .08s; } .fan .tcard:nth-child(3) { animation-delay: .16s; }
+.fan { flex-wrap: nowrap !important; gap: 10px !important; }
+.fan .tcard { width: min(170px, 18vw); animation: fanin .5s cubic-bezier(.2,1.2,.4,1) both; }
+.fan .tcard:nth-child(2) { animation-delay: .08s; } .fan .tcard:nth-child(3) { animation-delay: .16s; } .fan .tcard:nth-child(4) { animation-delay: .24s; } .fan .tcard:nth-child(5) { animation-delay: .32s; }
 @keyframes fanin { from { transform: translateY(40px) rotate(-6deg); opacity: 0; } }
 .sum-head { text-align: center; display: grid; gap: 6px; }
 .sum-head .big { font-family: var(--f-mono); font-size: clamp(30px, 5vw, 46px); font-weight: 500; }
@@ -499,7 +560,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <div>
         <div class="label">Series II · <span id="heroCount">0</span> fighters · <span id="heroPacks">0</span> packs</div>
         <h1 style="margin-top:18px">Sealed.<br>Numbered.<br><b>Waiting.</b></h1>
-        <p class="lede">One pack. One graded card. Every card has a cash price, and the grade can multiply it by up to 2.5×.</p>
+        <p class="lede">Five cards a pack, rare slot last. Thirty cards in the set, from ● commons to ★★★ gold hyper rares. Every card has a cash price.</p>
         <div class="ctas"><a class="btn brass big" href="#all-packs">Browse packs</a><button class="btn ghost big" data-buy="lastframe" id="heroOpen">Open the featured pack</button></div>
         <div class="facts">
           <div><span class="label">Top chase</span><strong id="heroChase">–</strong></div>
@@ -548,7 +609,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <div class="stat"><span class="label">Top card</span><strong id="vStatUsd">$0.00</strong></div>
       <div class="spacer"></div>
       <label for="vSort" class="sr">Sort</label>
-      <select id="vSort"><option value="value">Highest value</option><option value="new">Newest</option><option value="atk">Attack</option></select>
+      <select id="vSort"><option value="value">Highest value</option><option value="new">Newest</option><option value="atk">Attack</option><option value="set">Set number</option></select>
       <button class="btn small" id="sellCommons">Sell commons</button>
       <button class="btn small" id="sellSketch">Sell sketches</button>
     </div>
@@ -574,7 +635,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     <div class="rules">
       <div class="panel"><h3>Rarity</h3><div class="table-wrap"><table class="odds" id="valueTable"></table></div></div>
       <div class="panel"><h3>Pulls</h3><ul>
-        <li>Every pack holds one card. Its rarity rolls with the odds printed on the pack, then its grade rolls separately.</li>
+        <li>Every booster holds 5 cards: 2 commons, 1 uncommon, a reverse-holo slot (which can instead hold an Illustration Rare or Special Illustration Rare), and the rare slot. Each slot rolls with the odds printed on the pack.</li>
         <li>Inside a rarity, every fighter is equally likely, except a pack's featured fighter, whose boost is printed on the pack.</li>
         <li>Rolls use your browser's cryptographic random generator. Odds never change with what you've spent or pulled.</li></ul></div>
       <div class="panel"><h3>Currency</h3><ul>
@@ -649,9 +710,44 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   // DATA
   // =====================================================================
   const RARITIES = ["common", "rare", "epic", "legendary", "secret"];
-  const RLABEL = { common: "Common", rare: "Rare", epic: "Epic", legendary: "Legendary", secret: "Secret" };
+  const RLABEL = { common: "Rookie", rare: "Veteran", epic: "Elite", legendary: "Champion", secret: "Mythic" };   // fighter tiers (Arena)
   const RCOLOR = { common: "#9b9b9b", rare: "#4f8fe6", epic: "#9b62f0", legendary: "#e4ae3a", secret: "#f04f9a" };
   const BUILD = { common: .9, rare: 1.3, epic: 1.8, legendary: 2.4, secret: 3.0 };
+  // ---------- Card rarity, Pokemon-style: rarity belongs to the card, not the fighter ----------
+  const CR = {
+    C:   { name: "Common", sym: "●", col: "#a5a5a5", tier: 0, build: 0 },
+    U:   { name: "Uncommon", sym: "◆", col: "#8cbf94", tier: 1, build: 0 },
+    R:   { name: "Rare", sym: "★", col: "#4f8fe6", tier: 2, build: .45 },
+    H:   { name: "Holo Rare", sym: "★", col: "#5fc8ff", tier: 3, build: .9 },
+    RR:  { name: "Double Rare", sym: "★★", col: "#9b62f0", tier: 4, build: 1.2 },
+    UR:  { name: "Ultra Rare", sym: "★★", col: "#d4d8e0", tier: 5, build: 1.6 },
+    IR:  { name: "Illustration Rare", sym: "★", col: "#e4ae3a", tier: 5, build: 1.5 },
+    SIR: { name: "Special Illustration Rare", sym: "★★", col: "#f04f9a", tier: 6, build: 2.4 },
+    HR:  { name: "Hyper Rare", sym: "★★★", col: "#f5c542", tier: 7, build: 2.6 }
+  };
+  const CR_ORDER = ["C", "U", "R", "H", "RR", "UR", "IR", "SIR", "HR"];
+  const SET_SIZE = 17, SET_NAME = "Ink & Steel", RH_MULT = 2.2;
+  const CARDS = [
+    ["001", "knuckles", "C", 8], ["002", "shiv", "C", 9], ["003", "bulwark", "C", 8], ["004", "pike", "C", 10],
+    ["005", "ronin", "U", 25], ["006", "reaver", "U", 28], ["007", "breaker", "U", 22],
+    ["008", "arcanist", "R", 55], ["009", "twinblade", "R", 60],
+    ["010", "reaper", "H", 220], ["011", "colossus", "H", 180], ["012", "shogun", "H", 260], ["013", "null", "H", 240],
+    ["014", "reaper", "RR", 450], ["015", "colossus", "RR", 380], ["016", "shogun", "RR", 600], ["017", "null", "RR", 520],
+    ["018", "ronin", "UR", 1100], ["019", "reaver", "UR", 1000], ["020", "arcanist", "UR", 1200], ["021", "twinblade", "UR", 1300],
+    ["022", "knuckles", "IR", 600], ["023", "shiv", "IR", 500], ["024", "bulwark", "IR", 450], ["025", "pike", "IR", 550],
+    ["026", "reaper", "SIR", 4500], ["027", "null", "SIR", 5200], ["028", "shogun", "SIR", 6500],
+    ["029", "null", "HR", 3200], ["030", "shogun", "HR", 3800]
+  ].map(([no, id, rar, v]) => ({ no, id, rar, v, ex: rar === "RR" }));
+  const CARD_BY_NO = Object.fromEntries(CARDS.map(c => [c.no, c]));
+  const TYPES = { fist: { name: "Fist", col: "#cdbd9f" }, blade: { name: "Blade", col: "#e2a3a0" }, guard: { name: "Guard", col: "#aebdcb" }, reach: { name: "Reach", col: "#bcd29b" }, blunt: { name: "Blunt", col: "#e5c77f" }, arcane: { name: "Arcane", col: "#a5dbe9" }, shadow: { name: "Shadow", col: "#bf9cc1" }, royal: { name: "Royal", col: "#eed689" }, void: { name: "Void", col: "#cfcfcf" } };
+  const FTYPE = { knuckles: "fist", shiv: "blade", bulwark: "guard", pike: "reach", ronin: "blade", reaver: "blade", breaker: "blunt", arcanist: "arcane", twinblade: "blade", reaper: "shadow", colossus: "blunt", shogun: "royal", null: "void" };
+  const MOVES = {
+    knuckles: [["Jab-Jab", 20], ["Haymaker", 60]], shiv: [["Quick Cut", 20], ["Backstab", 50]], bulwark: [["Shield Wall", "", "Takes 30 less damage next turn."], ["Shield Bash", 40]],
+    pike: [["Keep Away", 30], ["Long Thrust", 60]], ronin: [["Iaido", 90, "Strikes first."]], reaver: [["Twin Chop", 40], ["Whirlwind", 80]],
+    breaker: [["Groundbreaker", 100, "Shakes the whole arena."]], arcanist: [["Rune Bolt", 50], ["Page Turner", 110]], twinblade: [["Cross Cut", 60], ["Mirror Dance", 120]],
+    reaper: [["Harvest", 160, "Ends it."]], colossus: [["Stomp", 80], ["Cataclysm", 200]], shogun: [["Gold Draw", 220, "The last thing they see."]], null: [["Unwrite", 250, "Erases a page of the fight."]]
+  };
+  const chimeKey = rar => { const t = (CR[rar] || CR.C).tier; return t <= 1 ? "common" : t === 2 ? "rare" : t <= 4 ? "epic" : t === 5 ? "legendary" : "secret"; };
   const BUYBACK = 0.90, SKETCH_MULT = 0.10, SIGNUP_BONUS = 300, COINS_PER_USD = 100;
 
   const FX_ = (id, name, r, v, atk, spd, def, look, trait) => Object.assign({ id, name, r, v, atk, spd, def, trait }, look);
@@ -674,18 +770,18 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 
   const P = (o) => o;
   const PACKS = [
-    P({ id: "scrapbin", chase: "shogun", no: "01", name: "Scrap Bin", cur: "coin", price: 17, n: 1, a: "#151515", b: "#26262a", acc: "#8d8d8d", fig: "knuckles", odds: { common: 96, rare: 3.6, epic: .36, legendary: .036, secret: .004 } }),
-    P({ id: "starter", chase: "null", no: "02", name: "First Ink", cur: "coin", price: 42, n: 1, a: "#0f1420", b: "#1d2740", acc: "#4f8fe6", fig: "shiv", odds: { common: 55, rare: 42, epic: 2.6, legendary: .35, secret: .05 } }),
-    P({ id: "ink", chase: "reaper", no: "03", name: "Ink Brawlers", cur: "coin", price: 92, n: 1, a: "#121214", b: "#2a2a30", acc: "#e9e4d8", fig: "ronin", odds: { rare: 88, epic: 10.5, legendary: 1.3, secret: .2 } }),
-    P({ id: "night", chase: "colossus", no: "04", name: "Night Shift", cur: "coin", price: 205, n: 1, a: "#0c0f1c", b: "#1c2240", acc: "#6f7fd8", fig: "arcanist", odds: { rare: 30, epic: 65, legendary: 4.4, secret: .6 } }),
-    P({ id: "glitchhunt", chase: "null", no: "05", name: "Null Hunt", cur: "coin", price: 339, n: 1, a: "#140b1a", b: "#2c1640", acc: "#c435ff", fig: "null", feat: { id: "null", x: 5 }, odds: { epic: 90, legendary: 7.5, secret: 2.5 } }),
-    P({ id: "redline", chase: "reaper", no: "06", name: "Reaper Hunt", cur: "coin", price: 469, n: 1, a: "#170a0c", b: "#3a1218", acc: "#d81f3a", fig: "reaper", feat: { id: "reaper", x: 4 }, odds: { epic: 72, legendary: 26, secret: 2 } }),
-    P({ id: "graphite", chase: "colossus", no: "07", name: "Iron Vault", cur: "coin", price: 689, n: 1, a: "#131416", b: "#2e3138", acc: "#a9afba", fig: "colossus", odds: { epic: 40, legendary: 57, secret: 3 } }),
-    P({ id: "legend", chase: "shogun", no: "08", name: "Gold Leaf", cur: "coin", price: 1099, n: 1, a: "#18130a", b: "#3a2c10", acc: "#e4ae3a", fig: "twinblade", odds: { legendary: 93, secret: 7 } }),
-    P({ id: "black", chase: "null", no: "09", name: "Black Label", cur: "coin", price: 1849, n: 1, a: "#050505", b: "#141414", acc: "#e9e4d8", fig: "breaker", odds: { legendary: 70, secret: 30 } }),
-    P({ id: "lastframe", chase: "shogun", no: "10", name: "Shogun's Seal", cur: "coin", price: 3699, n: 1, a: "#0d0b05", b: "#2b2208", acc: "#f5b400", fig: "shogun", feat: { id: "shogun", x: 3 }, odds: { legendary: 30, secret: 70 } }),
-    P({ id: "sketch", chase: "twinblade", no: "T1", name: "Sketchbook", cur: "token", price: 40, n: 1, ed: "sketch", a: "#1a1a1c", b: "#2a2a2e", acc: "#6fb7a8", fig: "pike", odds: { common: 55, rare: 42, epic: 2.6, legendary: .35, secret: .05 } }),
-    P({ id: "sketch2", chase: "reaper", no: "T2", name: "Sketch Vault", cur: "token", price: 120, n: 1, ed: "sketch", a: "#141a19", b: "#22302d", acc: "#6fb7a8", fig: "reaver", odds: { rare: 88, epic: 10.5, legendary: 1.3, secret: .2 } })
+    P({ id: "scrapbin", chase: "shogun", no: "01", name: "Scrap Bin", cur: "coin", price: 179, n: 5, a: "#151515", b: "#26262a", acc: "#8d8d8d", fig: "knuckles", rh: { RH: 96, IR: 3.6, SIR: .4 }, rare: { U: 60, R: 32, H: 6.5, RR: 1.3, UR: .18, HR: .02 } }),
+    P({ id: "starter", chase: "null", no: "02", name: "First Ink", cur: "coin", price: 329, n: 5, a: "#0f1420", b: "#1d2740", acc: "#4f8fe6", fig: "shiv", rh: { RH: 93, IR: 6, SIR: 1 }, rare: { R: 70, H: 20, RR: 7.5, UR: 2, HR: .5 } }),
+    P({ id: "ink", chase: "reaper", no: "03", name: "Ink Brawlers", cur: "coin", price: 449, n: 5, a: "#121214", b: "#2a2a30", acc: "#e9e4d8", fig: "ronin", rh: { RH: 90, IR: 8.5, SIR: 1.5 }, rare: { R: 50, H: 32, RR: 13, UR: 4, HR: 1 } }),
+    P({ id: "night", chase: "colossus", no: "04", name: "Night Shift", cur: "coin", price: 659, n: 5, a: "#0c0f1c", b: "#1c2240", acc: "#6f7fd8", fig: "arcanist", rh: { RH: 85, IR: 12, SIR: 3 }, rare: { R: 30, H: 40, RR: 20, UR: 8, HR: 2 } }),
+    P({ id: "glitchhunt", chase: "null", no: "05", name: "Null Hunt", cur: "coin", price: 659, n: 5, a: "#140b1a", b: "#2c1640", acc: "#c435ff", fig: "null", rh: { RH: 85, IR: 12, SIR: 3 }, rare: { R: 30, H: 40, RR: 20, UR: 8, HR: 2 }, feat: ["null", 4] }),
+    P({ id: "redline", chase: "reaper", no: "06", name: "Reaper Hunt", cur: "coin", price: 919, n: 5, a: "#170a0c", b: "#3a1218", acc: "#d81f3a", fig: "reaper", rh: { RH: 80, IR: 15, SIR: 5 }, rare: { H: 55, RR: 30, UR: 11, HR: 4 }, feat: ["reaper", 4] }),
+    P({ id: "graphite", chase: "colossus", no: "07", name: "Iron Vault", cur: "coin", price: 1169, n: 5, a: "#131416", b: "#2e3138", acc: "#a9afba", fig: "colossus", rh: { RH: 75, IR: 18, SIR: 7 }, rare: { H: 40, RR: 38, UR: 17, HR: 5 } }),
+    P({ id: "legend", chase: "shogun", no: "08", name: "Gold Leaf", cur: "coin", price: 1779, n: 5, a: "#18130a", b: "#3a2c10", acc: "#e4ae3a", fig: "twinblade", rh: { RH: 65, IR: 25, SIR: 10 }, rare: { RR: 55, UR: 33, HR: 12 } }),
+    P({ id: "black", chase: "null", no: "09", name: "Black Label", cur: "coin", price: 2789, n: 5, a: "#050505", b: "#141414", acc: "#e9e4d8", fig: "breaker", rh: { RH: 50, IR: 30, SIR: 20 }, rare: { RR: 30, UR: 45, HR: 25 } }),
+    P({ id: "lastframe", chase: "shogun", no: "10", name: "Shogun's Seal", cur: "coin", price: 4179, n: 5, a: "#0d0b05", b: "#2b2208", acc: "#f5b400", fig: "shogun", rh: { RH: 35, IR: 35, SIR: 30 }, rare: { UR: 55, HR: 45 }, feat: ["shogun", 3] }),
+    P({ id: "sketch", chase: "twinblade", no: "T1", name: "Sketchbook", cur: "token", price: 40, n: 5, ed: "sketch", a: "#1a1a1c", b: "#2a2a2e", acc: "#6fb7a8", fig: "pike", rh: { RH: 93, IR: 6, SIR: 1 }, rare: { R: 70, H: 20, RR: 7.5, UR: 2, HR: .5 } }),
+    P({ id: "sketch2", chase: "reaper", no: "T2", name: "Sketch Vault", cur: "token", price: 120, n: 5, ed: "sketch", a: "#141a19", b: "#22302d", acc: "#6fb7a8", fig: "reaver", rh: { RH: 90, IR: 8.5, SIR: 1.5 }, rare: { R: 50, H: 32, RR: 13, UR: 4, HR: 1 } })
   ];
   const PACK_BY_ID = Object.fromEntries(PACKS.map(p => [p.id, p]));
 
@@ -700,13 +796,12 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   const REWARD = { common: 10, rare: 20, epic: 35, legendary: 60, secret: 100 };
   const LOSS_REWARD = 3;
 
-  const cardValue = (f, ed) => ed === "sketch" ? Math.max(1, Math.round(f.v * SKETCH_MULT)) : f.v;
   const sellValue = (f, ed) => Math.max(1, Math.floor(cardValue(f, ed) * BUYBACK));
   const GRADES = [{ g: 6, p: .18, m: .5, name: "EX" }, { g: 7, p: .24, m: .75, name: "NM" }, { g: 8, p: .26, m: 1, name: "NM-MT" }, { g: 9, p: .20, m: 1.5, name: "MINT" }, { g: 10, p: .12, m: 2.5, name: "GEM MINT" }];
   const GRADE_MEAN = GRADES.reduce((s, x) => s + x.p * x.m, 0);
   const gradeOf = g => GRADES.find(x => x.g === g) || GRADES[2];
   function rollGrade() { let x = rand(); for (const g of GRADES) { x -= g.p; if (x < 0) return g.g; } return 8; }
-  const itemVal = it => it.val != null ? it.val : cardValue(BY_ID[it.id], it.ed);
+  const itemVal = it => it.val != null ? it.val : cardBaseValue(cardOf(it), it.ed, it.rh);
   const itemSell = it => Math.max(1, Math.floor(itemVal(it) * BUYBACK));
   const money = c => "$" + (c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const priceTxt = p => p.cur === "coin" ? money(p.price) : "⬡" + p.price.toLocaleString("en-US");
@@ -714,14 +809,37 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   const levelOf = xp => { let n = 0; while (xp >= LEVEL_XP(n + 1)) n++; return n; };
   const levelReward = n => 25 + 15 * n;
   const DAY = 864e5;
-  function weightOf(p, f) { return p.feat && p.feat.id === f.id ? p.feat.x : 1; }
-  function poolOf(p, r) { return FIGHTERS.filter(f => f.r === r); }
-  function meanVal(p, r) { const pool = poolOf(p, r); let w = 0, s = 0; for (const f of pool) { const x = weightOf(p, f); w += x; s += x * cardValue(f, p.ed); } return s / w; }
-  function packEV(p) { let v = 0; for (const r of RARITIES) if (p.odds[r]) v += p.odds[r] / 100 * meanVal(p, r); return v * p.n * GRADE_MEAN; }
+  const SLOTS = ["C", "C", "U", "RHS", "RARE"];   // booster layout: 2 commons, 1 uncommon, a reverse-holo slot, the rare slot last
+  const cardOf = it => (it && CARD_BY_NO[it.cno]) || CARDS.find(c => c.id === (it && it.id)) || CARDS[0];
+  const rarOf = it => (it && it.rar) || cardOf(it).rar;
+  const cardBaseValue = (card, ed, rh) => { let v = card.v * (rh ? RH_MULT : 1); if (ed === "sketch") v = Math.max(1, v * SKETCH_MULT); return Math.max(1, Math.round(v)); };
+  const featW = (p, c) => p.feat && p.feat[0] === c.id ? p.feat[1] : 1;
+  const poolR = rar => CARDS.filter(c => c.rar === rar);
+  function pickKey(d) { let tot = 0; for (const v of Object.values(d)) tot += v; let x = rand() * tot; for (const [k, v] of Object.entries(d)) { x -= v; if (x < 0) return k; } return Object.keys(d).pop(); }
+  function pickCard(p, rar) { const pool = poolR(rar), tot = pool.reduce((a, c) => a + featW(p, c), 0); let x = rand() * tot; for (const c of pool) { x -= featW(p, c); if (x < 0) return c; } return pool[pool.length - 1]; }
+  function pullPack(p) {
+    return SLOTS.map(slot => {
+      if (slot === "C" || slot === "U") return { card: pickCard(p, slot), rh: false, slot };
+      if (slot === "RHS") { const k = pickKey(p.rh); if (k !== "RH") return { card: pickCard(p, k), rh: false, slot }; const b = rand(); return { card: pickCard(p, b < .5 ? "C" : b < .85 ? "U" : "R"), rh: true, slot }; }
+      return { card: pickCard(p, pickKey(p.rare)), rh: false, slot };
+    });
+  }
+  function meanR(p, rar) { const pool = poolR(rar); let w = 0, v = 0; for (const c of pool) { const x = featW(p, c); w += x; v += x * cardBaseValue(c, p.ed, false); } return v / w; }
+  function distMean(p, d) { let tot = 0, v = 0; for (const [k, pr] of Object.entries(d)) { tot += pr; v += pr * (k === "RH" ? (.5 * meanR(p, "C") + .35 * meanR(p, "U") + .15 * meanR(p, "R")) * RH_MULT : meanR(p, k)); } return v / tot; }
+  function packEV(p) { return 2 * meanR(p, "C") + meanR(p, "U") + distMean(p, p.rh) + distMean(p, p.rare); }
   const HIT = {};
-  function hitRate(p) { if (HIT[p.id] != null) return HIT[p.id]; const N = 3000; let h = 0; for (let i = 0; i < N; i++) { let t = 0; for (let k = 0; k < p.n; k++) t += Math.max(1, Math.floor(Math.max(1, Math.round(cardValue(pullFighter(p, rollRarity(p)), p.ed) * gradeOf(rollGrade()).m)) * BUYBACK)); if (t >= p.price) h++; } return (HIT[p.id] = h / N); }
-  function chaseOf(p) { return BY_ID[p.chase]; }
-  function chanceOf(p, f) { const pool = poolOf(p, f.r); const w = pool.reduce((s, x) => s + weightOf(p, x), 0); const per = (p.odds[f.r] || 0) / 100 * weightOf(p, f) / w; return 1 - Math.pow(1 - per, p.n); }
+  function hitRate(p) { if (HIT[p.id] != null) return HIT[p.id]; const N = 2500; let h = 0; for (let i = 0; i < N; i++) { const t = pullPack(p).reduce((a, x) => a + Math.floor(cardBaseValue(x.card, p.ed, x.rh) * BUYBACK), 0); if (t >= p.price) h++; } return (HIT[p.id] = h / N); }
+  function chaseOf(p) {
+    const can = CARDS.filter(c => (p.rare[c.rar] || p.rh[c.rar]) && (!p.feat || c.id === p.feat[0] || !CARDS.some(x => x.id === p.feat[0] && (p.rare[x.rar] || p.rh[x.rar]))));
+    const mine = can.filter(c => c.id === p.chase); const list = mine.length ? mine : can;
+    return list.sort((a, b) => b.v - a.v)[0] || CARDS[CARDS.length - 1];
+  }
+  function chanceOf(p, card) {
+    let per = 0; for (const d of [p.rare, p.rh]) { const tot = Object.values(d).reduce((a, b) => a + b, 0); if (d[card.rar]) { const pool = poolR(card.rar), w = pool.reduce((a, c) => a + featW(p, c), 0); per = 1 - (1 - per) * (1 - d[card.rar] / tot * featW(p, card) / w); } }
+    return per;
+  }
+  // legacy helpers kept for the old fighter-based values
+  const cardValue = (f, ed) => cardBaseValue(CARDS.find(c => c.id === f.id) || CARDS[0], ed, false);
 
   // =====================================================================
   // STATE
@@ -740,6 +858,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       state.coins += refund;
       state.history.unshift({ t: Date.now(), text: `Refunded ${gone.length} retired card${gone.length > 1 ? "s" : ""} from the old roster`, delta: refund, cur: "coin" });
     }
+    for (const it of state.vault.concat(state.hits || [])) if (it && !it.cno && BY_ID[it.id]) { const c = CARDS.find(x => x.id === it.id); it.cno = c.no; it.rar = c.rar; }
     state.hits = (state.hits || []).filter(h => BY_ID[h.id]);
     if (state.s && state.s.best && !BY_ID[state.s.best.id]) state.s.best = null;
     state.history = (state.history || []).filter(h => h && typeof h.t === "number");
@@ -779,18 +898,29 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   function figImg(f, cls) { return `<img class="${cls || ""}" src="${portrait(f)}" alt="" draggable="false">`; }
 
   function cardHTML(item, pending) {
-    const f = BY_ID[item.id], sk = item.ed === "sketch";
-    const serial = item.serial ? "No. " + String(item.serial).padStart(4, "0") : "No. —";
-    const bar = (k, v) => `<div class="sb"><span>${k}</span><i><b style="width:${v * 10}%"></b></i><em>${v}</em></div>`;
-    return `<div class="tcard r-${f.r}${sk ? " sketch" : ""}"><div class="tc-face">
-      <div class="tc-art" style="--fc:${f.c}">${figImg(f)}<div class="tc-holo"></div></div>
-      <div class="tc-top"><span class="gem"></span><span class="tc-name">${esc(f.name)}</span><span class="tc-serial">${serial}</span></div>
-      ${sk ? `<span class="stamp">SKETCH</span>` : ""}
+    const f = BY_ID[item.id], card = cardOf(item), rar = rarOf(item), R = CR[rar] || CR.C, sk = item.ed === "sketch", T = TYPES[FTYPE[f.id]] || TYPES.fist;
+    const num = `${card.no}/${String(SET_SIZE).padStart(3, "0")}`, full = R.tier >= 5;
+    const val = money(pending ? cardBaseValue(card, item.ed, item.rh) : itemVal(item));
+    const pwr = (f.atk + f.spd + f.def) * 10 + (card.ex ? 60 : 0);
+    const name = esc(f.name) + (card.ex ? `<i class="ex">ex</i>` : "");
+    const moves = (MOVES[f.id] || []).map(([n, d, txt]) => `<div class="mv"><span class="mc"><i></i><i></i></span><b>${esc(n)}</b><em>${d || ""}</em>${txt ? `<small>${esc(txt)}</small>` : ""}</div>`).join("");
+    const cls = `tcard cr-${rar}${item.rh ? " rh" : ""}${full ? " full" : " std"}${sk ? " sketch" : ""}`;
+    const stamp = sk ? `<span class="stamp">SKETCH</span>` : "";
+    if (!full) return `<div class="${cls}" style="--tc:${T.col};--rc:${R.col}"><div class="tc-face">
+        <div class="tc-head"><span class="tc-stage">${card.ex ? "EX" : "BASIC"}</span><span class="tc-name">${name}</span><span class="tc-hp"><small>PWR</small>${pwr}</span><span class="tc-type" title="${T.name} type">${T.name[0]}</span></div>
+        <div class="tc-art">${figImg(f)}<div class="tc-holo"></div></div>
+        <div class="tc-strip">${esc(f.title)} · ${T.name} type · ${SET_NAME}</div>
+        <div class="tc-moves">${moves}</div>
+        <div class="tc-flavor">${esc(f.trait)}</div>
+        <div class="tc-foot"><span class="tc-no">${num} <b class="sym">${R.sym}</b>${item.rh ? ` <span class="rhb">REVERSE</span>` : ""}</span><span class="tc-val">${val}</span></div>
+        ${stamp}</div><div class="glare"></div></div>`;
+    return `<div class="${cls}" style="--tc:${T.col};--rc:${R.col}"><div class="tc-face">
+      <div class="tc-art">${figImg(f)}<div class="tc-holo"></div></div>
+      <div class="tc-top"><span class="tc-name">${name}</span><span class="tc-hp"><small>PWR</small>${pwr}</span></div>
+      ${stamp}
       <div class="tc-info">
-        <div class="tc-mid"><span class="tc-rarity">${RLABEL[f.r]}</span><span class="tc-wpn">${esc(f.title || "")}</span></div>
-        <div class="tc-trait">${esc(f.trait)}</div>
-        <div class="tc-stats">${bar("ATK", f.atk)}${bar("SPD", f.spd)}${bar("DEF", f.def)}</div>
-        <div class="tc-bottom"><span class="tag">${pending ? "GRADING…" : item.g ? "GRADE " + item.g + " · " + gradeOf(item.g).name : "SERIES II"}</span><span class="tc-val">${money(pending ? cardValue(f, item.ed) : itemVal(item))}</span></div>
+        <div class="tc-moves">${moves}</div>
+        <div class="tc-bottom"><span class="tag">${num} <b class="sym">${R.sym}</b></span><span class="tc-val">${val}</span></div>
       </div>
     </div><div class="glare"></div></div>`;
   }
@@ -802,7 +932,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <div class="pk-body">${inner}<img class="pk-fig" src="${cutout(fig)}" alt="" draggable="false">
         <div class="pk-no">No. ${p.no}</div><div class="pk-name">${esc(p.name)}</div>
         <svg class="pk-sigil" viewBox="0 0 40 40"><use href="#i-sigil"/></svg>
-        <div class="pk-sub">1 graded card · Series II</div></div>
+        <div class="pk-sub">5 cards · Ink &amp; Steel</div></div>
       <div class="pk-top">${inner}</div>
       <div class="sheen"></div>
     </div>`;
@@ -880,20 +1010,20 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   function renderWallet() { $("balCoins").textContent = money(state.coins); { const xp = state.s.xp || 0, L = levelOf(xp), a = LEVEL_XP(L), b = LEVEL_XP(L + 1); $("lvl").textContent = "LV " + L; $("lvlBar").style.width = ((xp - a) / (b - a) * 100).toFixed(1) + "%"; } $("balTokens").textContent = fmt(state.tokens); $("vaultCount").textContent = state.vault.length; }
 
   function tileHTML(p) {
-    const ev = packEV(p), chase = chaseOf(p), ch = chanceOf(p, chase);
+    const ev = packEV(p), chase = chaseOf(p), ch = chanceOf(p, chase), chaseF = BY_ID[chase.id];
     const have = p.cur === "coin" ? state.coins : state.tokens, can = have >= p.price;
-    const rows = RARITIES.filter(r => p.odds[r]).map(r => `<tr><td><span class="rdot" style="background:${RCOLOR[r]}"></span>${RLABEL[r]}</td><td>${money(meanVal(p, r))}</td><td>${p.odds[r]}%</td></tr>`).join("");
+    const rows = (d, label) => { const tot = Object.values(d).reduce((a, b) => a + b, 0); return `<tr><th colspan="3">${label}</th></tr>` + Object.entries(d).map(([k, v]) => `<tr><td>${k === "RH" ? "Reverse Holo" : `<b style="color:${CR[k].col}">${CR[k].sym}</b> ${CR[k].name}`}</td><td>${k === "RH" ? "" : money(meanR(p, k))}</td><td>${+(v / tot * 100).toFixed(2)}%</td></tr>`).join(""); };
     const btn = can ? `Open · ${priceTxt(p)}` : p.cur === "coin" ? "Add funds" : `${fmt(p.price - have)} tokens short`;
     return `<article class="tile">
-      <span class="no">No. ${p.no}</span><span class="cnt">1 graded card</span>
-      <div class="stagebox"><div class="peek">${cardHTML({ id: chase.id, serial: 0, ed: p.ed })}</div>${packHTML(p)}</div>
+      <span class="no">No. ${p.no}</span><span class="cnt">5 cards</span>
+      <div class="stagebox"><div class="peek">${cardHTML({ id: chase.id, cno: chase.no, rar: chase.rar, serial: 0, ed: p.ed, val: cardBaseValue(chase, p.ed, false) })}</div>${packHTML(p)}</div>
       <div class="row"><h3>${esc(p.name)}</h3><span class="price${p.cur === "token" ? " tok" : ""}">${priceTxt(p)}</span></div>
-      <div class="chase">Chase: <b>${esc(chase.name)}</b> · up to ${money(cardValue(chase, p.ed) * 2.5)} · ${oneIn(ch)} packs${p.feat ? ` · ${p.feat.x}× boosted` : ""}</div>
+      <div class="chase">Chase: <b>${esc(chaseF.name)}${chase.ex ? " ex" : ""}</b> ${CR[chase.rar].sym} ${CR[chase.rar].name} · ${money(cardBaseValue(chase, p.ed, false))} · ${oneIn(ch)} packs${p.feat ? ` · ${p.feat.x}× boosted` : ""}</div>
       <div class="meta">
         <span>Hit rate</span><span>${p.cur === "coin" ? Math.round(hitRate(p) * 100) + "% of packs" : "–"}</span>
         <span>Average sell-back</span><span>${p.cur === "coin" ? Math.round(ev * BUYBACK / p.price * 100) + "% of price" : money(ev * BUYBACK)}</span>
       </div>
-      <details><summary>Odds per card</summary><table class="odds"><thead><tr><th>Rarity</th><th>Base avg</th><th>Chance</th></tr></thead><tbody>${rows}</tbody></table></details>
+      <details><summary>Pack odds</summary><table class="odds"><thead><tr><th>5 cards: ● ● ◆ + slot 4 + slot 5</th><th>Avg value</th><th>Chance</th></tr></thead><tbody>${rows(p.rh, "Slot 4 · reverse holo slot")}${rows(p.rare, "Slot 5 · rare slot")}</tbody></table></details>
       <button class="btn ${can ? "brass" : ""}" data-buy="${p.id}" ${!can && p.cur === "token" ? "disabled" : ""}>${btn}</button>
     </article>`;
   }
@@ -911,9 +1041,9 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     document.querySelectorAll("#filters [data-filter]").forEach(b => b.setAttribute("aria-pressed", b.dataset.filter === shelfFilter));
   }
   function renderHero() {
-    const p = PACK_BY_ID.lastframe, chase = chaseOf(p);
+    const p = PACK_BY_ID.lastframe, chase = chaseOf(p), chaseF = BY_ID[chase.id];
     $("heroCount").textContent = FIGHTERS.length; $("heroPacks").textContent = PACKS.length;
-    $("heroChase").textContent = `${chase.name} · up to ${money(chase.v * 2.5)}`;
+    $("heroChase").textContent = `${chaseF.name} ${CR[chase.rar].name} · ${money(chase.v)}`;
     const best = state.s.best ? BY_ID[state.s.best.id] : null;
     $("heroBest").textContent = best ? `${best.name} · ${money(state.s.best.val || best.v)}` : "Nothing yet";
     $("heroOpen").textContent = state.coins >= p.price ? `Open ${p.name} · ${money(p.price)}` : `Featured: ${p.name}`;
@@ -923,8 +1053,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const hits = (state.hits || []).slice(0, 6);
     $("hitsWrap").hidden = !hits.length;
     $("hitsRow").innerHTML = hits.map(h => `<div class="hit">${cardHTML(h)}<span class="small-print">${esc(PACK_BY_ID[h.pack] ? PACK_BY_ID[h.pack].name : "")}</span></div>`).join("");
-    $("showcase").innerHTML = `<div class="sc-card">${cardHTML({ id: chase.id, serial: 0 })}</div><div class="sc-pack" id="scPack">${packHTML(p)}</div>
-      <div class="caption"><span class="label">Featured · No. ${p.no}</span><span class="small-print">${chase.name} pulls ${oneIn(chanceOf(p, chase))} packs</span></div>`;
+    $("showcase").innerHTML = `<div class="sc-card">${cardHTML({ id: chase.id, cno: chase.no, rar: chase.rar, serial: 0, val: chase.v })}</div><div class="sc-pack" id="scPack">${packHTML(p)}</div>
+      <div class="caption"><span class="label">Featured · No. ${p.no}</span><span class="small-print">${chaseF.name} ${CR[chase.rar].name}: ${oneIn(chanceOf(p, chase))} packs</span></div>`;
   }
 
   // ---------- Vault ----------
@@ -932,11 +1062,12 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const items = state.vault.slice(), sort = $("vSort").value, val = it => itemVal(it);
     if (sort === "value") items.sort((a, b) => val(b) - val(a) || b.serial - a.serial);
     else if (sort === "atk") items.sort((a, b) => BY_ID[b.id].atk - BY_ID[a.id].atk || val(b) - val(a));
+    else if (sort === "set") items.sort((a, b) => cardOf(a).no.localeCompare(cardOf(b).no) || (a.rh ? 1 : 0) - (b.rh ? 1 : 0));
     else items.sort((a, b) => b.serial - a.serial);
     const sell = vaultSellCoins();
     $("vStatCount").textContent = items.length; $("vStatValue").textContent = money(items.reduce((s, it) => s + val(it), 0));
     $("vStatBuy").textContent = money(sell); $("vStatUsd").textContent = items.length ? money(Math.max(...items.map(val))) : "–";
-    $("sellCommons").disabled = !items.some(it => BY_ID[it.id].r === "common" && it.ed !== "sketch");
+    $("sellCommons").disabled = !items.some(it => rarOf(it) === "C" && !it.rh && it.ed !== "sketch");
     $("sellSketch").disabled = !items.some(it => it.ed === "sketch");
     if (!items.length) { $("vaultBody").innerHTML = `<div class="empty"><h3>The vault is empty.</h3><p>Open a pack and your pulls are kept here.</p><a class="btn brass" href="#packs">Browse packs</a></div>`; return; }
     $("vaultBody").innerHTML = `<div class="card-grid">${items.map(it => `<div class="vault-item">${cardHTML(it)}
@@ -997,10 +1128,10 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     }).join("");
   }
   function renderTerms() {
-    $("valueTable").innerHTML = `<thead><tr><th>Rarity</th><th>Fighters</th><th>Value range</th></tr></thead><tbody>` + RARITIES.map(r => {
-      const vs = FIGHTERS.filter(f => f.r === r).map(f => f.v);
-      return `<tr><td><span class="rdot" style="background:${RCOLOR[r]}"></span>${RLABEL[r]}</td><td>${vs.length}</td><td>${fmt(Math.min(...vs))}–${fmt(Math.max(...vs))}</td></tr>`;
-    }).join("") + `</tbody>`;
+    $("valueTable").innerHTML = `<thead><tr><th>Rarity</th><th>Cards</th><th>Value range</th></tr></thead><tbody>` + CR_ORDER.map(r => {
+      const vs = CARDS.filter(c => c.rar === r).map(c => c.v);
+      return `<tr><td><b style="color:${CR[r].col}">${CR[r].sym}</b> ${CR[r].name}</td><td>${vs.length}</td><td>${money(Math.min(...vs))}–${money(Math.max(...vs))}</td></tr>`;
+    }).join("") + `<tr><td>Reverse Holo (any ●◆★)</td><td>–</td><td>${RH_MULT}× the card</td></tr></tbody>`;
   }
 
   // ---------- Arena (fight films) ----------
@@ -1058,8 +1189,6 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     log(label || `Sold back ${n} fighter${n > 1 ? "s" : ""}`, got, "coin");
     snap(); save(); renderAll(); return got;
   }
-  function rollRarity(p) { const roll = rand() * RARITIES.reduce((s, r) => s + (p.odds[r] || 0), 0); let acc = 0, last = null; for (const r of RARITIES) { if (!p.odds[r]) continue; acc += p.odds[r]; last = r; if (roll < acc) return r; } return last; }
-  function pullFighter(p, r) { const pool = poolOf(p, r), tot = pool.reduce((s, f) => s + weightOf(p, f), 0); let x = rand() * tot; for (const f of pool) { x -= weightOf(p, f); if (x < 0) return f; } return pool[pool.length - 1]; }
 
   function buy(packId, free) {
     const p = PACK_BY_ID[packId]; if (!p) return;
@@ -1074,10 +1203,9 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       if (after > before) { let bonus = 0; for (let L = before + 1; L <= after; L++) bonus += levelReward(L); state.coins += bonus; state.s.freeCoins += bonus; log(`Reached level ${after}`, bonus, "coin"); levelUp = { level: after, bonus }; }
     } else { state.tokens -= p.price; state.s.tokensOnPacks += p.price; }
     const items = [];
-    for (let i = 0; i < p.n; i++) {
-      const f = pullFighter(p, rollRarity(p)); state.serial++;
-      const g = rollGrade();
-      const item = { uid: Date.now().toString(36) + "-" + state.serial, id: f.id, serial: state.serial, t: Date.now(), pack: p.id, ed: p.ed || "foil", g, val: Math.max(1, Math.round(cardValue(f, p.ed) * gradeOf(g).m)) };
+    for (const pull of pullPack(p)) {
+      const f = BY_ID[pull.card.id]; state.serial++;
+      const item = { uid: Date.now().toString(36) + "-" + state.serial, id: f.id, cno: pull.card.no, rar: pull.card.rar, rh: pull.rh, slot: pull.slot, serial: state.serial, t: Date.now(), pack: p.id, ed: p.ed || "foil", val: cardBaseValue(pull.card, p.ed, pull.rh) };
       items.push(item); state.vault.push(item);
       if (p.cur === "coin" && !free) state.s.coinValuePulled += item.val;
       if (p.ed !== "sketch" && (!state.s.best || item.val > (state.s.best.val || 0))) state.s.best = { id: f.id, serial: item.serial, val: item.val };
@@ -1088,7 +1216,6 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     if (p.cur === "coin" && sellTotal >= p.price) state.s.packHits = (state.s.packHits || 0) + 1;
     log(free ? `Daily free ${p.name}` : `Opened ${p.name}`, free ? 0 : -p.price, p.cur);
     snap(); save(); renderAll();
-    items.sort((a, b) => itemVal(a) - itemVal(b));
     openStage(p, items, { free: !!free, levelUp });
   }
 
@@ -1249,7 +1376,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const st = $("stStack");
     st.innerHTML = SS.items.map((it, i) => {
       const rot = i === 0 ? 0 : (rand() - .5) * 6, ox = i * 3, oy = i * 4;
-      return `<div class="sc rise" data-i="${i}" style="z-index:${50 - i};--rot:${rot.toFixed(1)}deg;--ox:${ox}px;--oy:${oy}px;--c:${RCOLOR[BY_ID[it.id].r]}">
+      return `<div class="sc rise" data-i="${i}" style="z-index:${50 - i};--rot:${rot.toFixed(1)}deg;--ox:${ox}px;--oy:${oy}px;--c:${(CR[rarOf(it)] || CR.C).col}">
         <div class="tilt"><div class="flip-inner"><div class="face back"><div class="cback"><div class="in"><svg viewBox="0 0 40 40"><use href="#i-sigil"/></svg><span class="t">STICKFIST · II</span></div></div></div><div class="face front">${cardHTML(it, !!it.g)}</div></div></div></div>`;
     }).join("");
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -1270,51 +1397,52 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   }
 
   function reveal(el) {
-    const it = SS.items[SS.idx], f = BY_ID[it.id], r = f.r, dur = reduceMotion() ? 0 : BUILD[r] * (it.ed === "sketch" ? .5 : 1);
+    const it = SS.items[SS.idx], f = BY_ID[it.id], r = rarOf(it), RC = CR[r] || CR.C, dur = reduceMotion() ? 0 : (RC.build + (it.rh ? .35 : 0)) * (it.ed === "sketch" ? .5 : 1);
     SS.busy = true;
     if (dur <= 0) { flipNow(el, it); return; }
     el.classList.add("charging");
     stage.classList.add("dim");
-    sfx.charge(dur, r);
+    sfx.charge(dur, chimeKey(r));
     const tilt = el.querySelector(".tilt"), t0 = performance.now();
-    const amp = { common: 3, rare: 5, epic: 8, legendary: 11, secret: 15 }[r] || 4;
+    const amp = [2, 3, 5, 7, 9, 11, 14, 16][RC.tier] || 4;
     (function run(now) {
       if (!SS || SS.phase !== "stack") return;
       const k = Math.min(1, (now - t0) / (dur * 1000)), a = amp * k * k;
       tilt.style.setProperty("--jx", ((rand() - .5) * 2 * a).toFixed(1) + "px");
       tilt.style.setProperty("--jy", ((rand() - .5) * 2 * a).toFixed(1) + "px");
       tilt.style.setProperty("--g", (k * .9).toFixed(3));
-      const tell = r !== "common" && k > .5;
-      el.style.setProperty("--c", tell ? RCOLOR[r] : "rgba(233,228,216,.55)");
+      const tell = (RC.tier >= 2 || it.rh) && k > .5;
+      el.style.setProperty("--c", tell ? (it.rh && RC.tier < 2 ? "#cfe9ff" : RC.col) : "rgba(233,228,216,.55)");
       const c = center(el);
-      if (rand() < .3 + k) fx.inward(c.x, c.y, tell ? RCOLOR[r] : "#e9e4d8");
+      if (rand() < .3 + k) fx.inward(c.x, c.y, tell ? RC.col : "#e9e4d8");
       if (k < 1) requestAnimationFrame(run);
       else { tilt.style.setProperty("--jx", "0px"); tilt.style.setProperty("--jy", "0px"); el.classList.remove("charging"); flipNow(el, it); }
     })(t0);
   }
 
   function flipNow(el, it) {
-    const f = BY_ID[it.id], r = f.r, val = itemVal(it);
+    const f = BY_ID[it.id], r = rarOf(it), RC = CR[r] || CR.C, val = itemVal(it);
     el.classList.add("flipped");
     sfx.snap();
     setTimeout(() => {
       if (!SS || SS.phase !== "stack") return;
       stage.classList.remove("dim");
-      const tilt = el.querySelector(".tilt"); tilt.style.setProperty("--g", r === "common" ? "0" : r === "rare" ? ".25" : ".5");
+      const tilt = el.querySelector(".tilt"); tilt.style.setProperty("--g", RC.tier < 2 ? (it.rh ? ".2" : "0") : RC.tier < 4 ? ".3" : ".55");
       const c = center(el);
-      if (r === "common") { fx.dust(c.x, c.y, 18); sfx.chime("common"); }
+      const big = RC.tier < 2 ? (it.rh ? 1 : 0) : RC.tier === 2 ? 1 : RC.tier <= 4 ? 2 : RC.tier === 5 ? 3 : 4;
+      if (!big) { fx.dust(c.x, c.y, 14); sfx.chime("common"); }
       else {
-        const big = { rare: 1, epic: 2, legendary: 3, secret: 4 }[r];
-        const cols = r === "secret" ? ["#ff4d8d", "#ffd36b", "#6bffb8", "#5ab0ff", "#c47bff", "#ffffff"] : [RCOLOR[r], "#ffffff", RCOLOR[r]];
+        const rainbow = ["#ff4d8d", "#ffd36b", "#6bffb8", "#5ab0ff", "#c47bff", "#ffffff"], gold = ["#f5c542", "#fff1c2", "#e4ae3a", "#ffffff"];
+        const cols = r === "SIR" ? rainbow : r === "HR" ? gold : it.rh && RC.tier < 2 ? ["#cfe9ff", "#ffffff", "#ffd6f0"] : [RC.col, "#ffffff", RC.col];
         fx.burst(c.x, c.y, [0, 70, 150, 260, 420][big], cols, 500 + big * 220);
         if (big >= 2) fx.confetti(c.x, c.y - c.h * .3, big * 30, cols);
-        const fl = $("flash"); fl.style.setProperty("--fo", [0, .25, .45, .7, .9][big]); fl.style.background = big >= 3 ? "#fff" : RCOLOR[r];
+        const fl = $("flash"); fl.style.setProperty("--fo", [0, .25, .45, .7, .9][big]); fl.style.background = big >= 3 ? "#fff" : RC.col;
         fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on");
         shake(big * 4, 200 + big * 120);
-        const rays = $("rays"); rays.style.setProperty("--rc", RCOLOR[r]); if (big >= 2) rays.classList.add("on");
-        sfx.chime(r);
+        const rays = $("rays"); rays.style.setProperty("--rc", RC.col); if (big >= 2) rays.classList.add("on");
+        sfx.chime(chimeKey(r));
       }
-      const base = it.g ? cardValue(f, it.ed) : val;
+      const base = it.g ? cardBaseValue(cardOf(it), it.ed, it.rh) : val;
       showTitle(f, it, base, !!it.g);
       updateTotal(base);
     }, 260);
@@ -1360,13 +1488,13 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   // ---------- Cutscenes: rare+ fighters that have one play it right after the pull ----------
   const CUTSCENES = { ronin: "films/cut_ronin.mp4", reaver: "films/cut_reaver.mp4", reaper: "films/cut_reaper.mp4" };
   let CUT = null;
-  const hasCutscene = it => it.ed !== "sketch" && !!CUTSCENES[it.id];   // only footage traced from the owner's own videos
+  const hasCutscene = it => it.ed !== "sketch" && !!CUTSCENES[it.id] && (CR[rarOf(it)] || CR.C).tier >= 3;   // only footage traced from the owner's own videos
   const DUMMY = () => Object.assign({}, BY_ID.knuckles, { id: "dummy", name: "Sparring dummy", body: "#434343", acc: "none" });
   function playCutscene(it, done) {
     const f = BY_ID[it.id], box = $("cut"), v = $("cutVideo");
     CUT = { it, done, phase: "play" };
-    box.className = "cut r-" + f.r; box.style.setProperty("--rc", RCOLOR[f.r]);
-    $("cutRarity").textContent = `${RLABEL[f.r]} pull · cutscene`;
+    const RC = CR[rarOf(it)] || CR.C; box.className = "cut"; box.style.setProperty("--rc", RC.col);
+    $("cutRarity").textContent = `${RC.name} pull · cutscene`;
     $("cutName").textContent = f.name;
     $("cutCard").innerHTML = cardHTML(it); $("cutCard").hidden = true; $("cutCont").hidden = true;
     box.hidden = false; void box.offsetWidth; box.classList.add("on");
@@ -1384,7 +1512,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const v = $("cutVideo"); v.pause();
     const box = $("cut"); box.classList.add("ended");
     const fl = $("flash"); fl.style.setProperty("--fo", .9); fl.style.background = "#fff"; fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on");
-    sfx.boom(1.1); sfx.chime(BY_ID[CUT.it.id].r);
+    sfx.boom(1.1); sfx.chime(chimeKey(rarOf(CUT.it)));
     $("cutCard").hidden = false; setTimeout(() => { if (CUT) $("cutCont").hidden = false; }, 700);
   }
   function closeCutscene() {
@@ -1394,8 +1522,9 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 
   function showTitle(f, it, val, pending) {
     const t = $("stTitle");
-    t.className = "st-title"; t.style.setProperty("--rc", RCOLOR[f.r]);
-    t.innerHTML = `<div class="rw">${it.ed === "sketch" ? "Sketch · " : ""}${RLABEL[f.r]}</div><div class="nm">${esc(f.name)}</div><div class="vl">${it.g ? `<span class="gr">${pending ? "Grading…" : `Grade ${it.g} · ${gradeOf(it.g).name}`}</span> ` : ""}<span class="vv">${money(val)}</span></div>`;
+    const RC = CR[rarOf(it)] || CR.C, card = cardOf(it);
+    t.className = "st-title"; t.style.setProperty("--rc", it.rh && RC.tier < 2 ? "#cfe9ff" : RC.col);
+    t.innerHTML = `<div class="rw">${it.ed === "sketch" ? "Sketch · " : ""}${RC.sym} ${RC.name}${it.rh ? " · Reverse Holo" : ""}</div><div class="nm">${esc(f.name)}${card.ex ? " ex" : ""}</div><div class="vl">${it.g ? `<span class="gr">${pending ? "Grading…" : `Grade ${it.g} · ${gradeOf(it.g).name}`}</span> ` : ""}<span class="vv">${money(val)}</span></div>`;
     void t.offsetWidth; t.classList.add("slam");
   }
 
@@ -1425,7 +1554,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     SS.phase = "summary"; SS.busy = false;
     const rest = SS.items.reduce((s, it) => s + itemVal(it), 0) - SS.total;
     if (rest > 0) updateTotal(rest);
-    const best = SS.items[SS.items.length - 1]; sfx.chime(BY_ID[best.id].r);
+    const best = SS.items.slice().sort((a, b) => itemVal(b) - itemVal(a))[0]; sfx.chime(chimeKey(rarOf(best)));
     showSummary();
   }
 
@@ -1446,7 +1575,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const lv = SS.levelUp ? `<div class="lvup">Level ${SS.levelUp.level} reached · +${money(SS.levelUp.bonus)} bonus added</div>` : "";
     $("stSummary").innerHTML = `<div class="sum-in">
       <div class="sum-head"><span class="label">${esc(p.name)}</span>${head}</div>${lv}
-      <div class="fan">${items.slice().reverse().map(cardHTML).join("")}</div>
+      <div class="fan">${items.map(x => cardHTML(x)).join("")}</div>
       <div class="sum-lines"><span>Card value <b>${money(total)}</b></span><span>Instant sell-back <b>${money(sell)}</b></span><span>Pack hit rate <b>${p.cur === "coin" ? Math.round(hitRate(p) * 100) + "%" : "–"}</b></span></div>
       <div class="sum-btns"><button class="btn" id="sumSell">Sell all · ${money(sell)}</button><button class="btn brass" id="sumKeep">Keep in vault</button>
         ${items.some(hasCutscene) ? `<button class="btn ghost" id="sumReplay">Replay cutscene</button>` : ""}<button class="btn ghost" id="sumAgain">${can ? `Open another · ${priceTxt(p)}` : p.cur === "coin" ? "Add funds" : "Not enough tokens"}</button></div>
@@ -2206,7 +2335,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       case "toSketch": closeFight(); location.hash = "#packs"; buy("sketch"); break;
       case "closeStore": $("store").hidden = true; break;
       case "payBtn": pay(); break;
-      case "sellCommons": { const u = state.vault.filter(it => BY_ID[it.id].r === "common" && it.ed !== "sketch").map(it => it.uid); const g = sellUids(u, `Sold back ${u.length} commons`); if (g) toast(`Sold ${u.length} commons for ${money(g)}`); break; }
+      case "sellCommons": { const u = state.vault.filter(it => rarOf(it) === "C" && !it.rh && it.ed !== "sketch").map(it => it.uid); const g = sellUids(u, `Sold back ${u.length} commons`); if (g) toast(`Sold ${u.length} commons for ${money(g)}`); break; }
       case "sellSketch": { const u = state.vault.filter(it => it.ed === "sketch").map(it => it.uid); const g = sellUids(u, `Sold back ${u.length} sketches`); if (g) toast(`Sold ${u.length} sketches for ${money(g)}`); break; }
       case "resetBtn": resetDemo(t); break;
       case "dailyBtn": if ((state.lastFree || 0) + DAY <= Date.now()) buy("starter", true); break;
