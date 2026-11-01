@@ -449,6 +449,10 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .rays { position: absolute; left: 50%; top: 52%; width: 200vmax; height: 200vmax; margin: -100vmax 0 0 -100vmax; pointer-events: none; z-index: 0; opacity: 0; transition: opacity .6s;
   background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--rc, #fff) 22%, transparent) 0 5deg, transparent 5deg 15deg); -webkit-mask: radial-gradient(circle, #000 0, transparent 45%); mask: radial-gradient(circle, #000 0, transparent 45%); animation: spin 22s linear infinite; }
 .rays.on { opacity: 1; }
+.rays { display: none; }
+#aura { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.stage.void::after { opacity: .97; transition: opacity .35s; }
+.sc.lift .tilt { translate: 0 calc(var(--lift, 0) * -5%); rotate: calc(var(--spin, 0) * 1deg); }
 @keyframes spin { to { transform: rotate(360deg); } }
 .st-bar { position: relative; z-index: 7; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px max(16px, env(safe-area-inset-left, 0px)) 0; }
 .st-bar .pname { font-family: var(--f-display); font-style: italic; font-size: 22px; }
@@ -930,7 +934,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 
 <!-- Opening stage -->
 <div class="stage" id="stage" tabindex="-1" hidden>
-  <div class="rays" id="rays"></div>
+  <div class="rays" id="rays"></div><canvas id="aura"></canvas>
   <canvas id="fx"></canvas>
   <div class="st-bar">
     <span class="pname" id="stName">Pack</span>
@@ -1985,7 +1989,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   function reveal(el) {
     const it = SS.items[SS.idx], f = BY_ID[it.id], r = rarOf(it), RC = CR[r] || CR.C, cut = hasCutscene(it);
     // rare cards get a long, staged build-up; cutscene cards the longest
-    const base = (RC.build + (it.rh ? .35 : 0)) * (it.ed === "sketch" ? .5 : 1), dur = reduceMotion() ? 0 : cut ? Math.max(4.6, base + 2.2) : RC.tier >= 4 ? base + 1.4 : RC.tier >= 2 ? base + .5 : base;
+    const base = (RC.build + (it.rh ? .35 : 0)) * (it.ed === "sketch" ? .5 : 1), dur = reduceMotion() ? 0 : cut ? Math.max(6.8, base + 4) : RC.tier >= 4 ? base + 1.4 : RC.tier >= 2 ? base + .5 : base;
     SS.busy = true;
     if (dur <= 0) { cut ? flashToCutscene(el, it) : flipNow(el, it); return; }
     el.classList.add("charging");
@@ -1993,7 +1997,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     sfx.charge(dur, chimeKey(r));
     const tilt = el.querySelector(".tilt"), t0 = performance.now(), big = RC.tier >= 4 || cut;
     const amp = [2, 3, 5, 7, 9, 11, 14, 16][RC.tier] || 4;
-    const beats = big ? [.22, .42, .6, .74, .84, .91, .96] : RC.tier >= 2 ? [.5, .8] : [];
+    const beats = cut ? [.12, .26, .38, .48, .57, .65, .72, .78, .83, .87, .905, .935, .96, .98] : big ? [.22, .42, .6, .74, .84, .91, .96] : RC.tier >= 2 ? [.5, .8] : [];
+    if (cut) el.classList.add("lift");
     let bi = 0;
     (function run(now) {
       if (!SS || SS.phase !== "stack") return;
@@ -2001,6 +2006,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       tilt.style.setProperty("--jx", ((rand() - .5) * 2 * a).toFixed(1) + "px");
       tilt.style.setProperty("--jy", ((rand() - .5) * 2 * a).toFixed(1) + "px");
       tilt.style.setProperty("--g", (k * .9).toFixed(3));
+      aura.charge = big ? Math.min(1, k * 1.15) * (k > .35 ? 1 : .35) : 0;
+      if (cut) { el.style.setProperty("--lift", Math.min(1, k * 2.2).toFixed(3)); el.style.setProperty("--spin", (Math.sin(now / 160) * 3 * k * k).toFixed(2)); }
       // stage 1: neutral glow · stage 2 (35%): screen darkens, rays wake up · stage 3 (65%): light cracks out of the card, rarity colour bleeds in
       const tell = (RC.tier >= 2 || it.rh) && k > (big ? .65 : .5);
       el.style.setProperty("--c", tell ? (it.rh && RC.tier < 2 ? "#cfe9ff" : RC.col) : "rgba(233,228,216,.55)");
@@ -2014,19 +2021,95 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       while (bi < beats.length && k >= beats[bi]) { bi++; sfx.boom(.18 + bi * .05); shake(2 + bi * 1.4, 160); const sc = $("stCenter"); sc.classList.remove("beat"); void sc.offsetWidth; sc.classList.add("beat"); }
       const c = center(el);
       if (rand() < .3 + k * (big ? 1.6 : 1)) fx.inward(c.x, c.y, tell ? RC.col : "#e9e4d8");
+      if (cut && k > .6 && rand() < k) fx.inward(c.x, c.y, "#ffffff");
       if (k < 1) requestAnimationFrame(run);
       else {
-        tilt.style.setProperty("--jx", "0px"); tilt.style.setProperty("--jy", "0px"); el.classList.remove("charging");
+        tilt.style.setProperty("--jx", "0px"); tilt.style.setProperty("--jy", "0px"); el.classList.remove("charging"); aura.charge = 0;
         if (cut) flashToCutscene(el, it); else { stage.classList.remove("dim2"); flipNow(el, it); }
       }
     })(t0);
   }
 
   // the card stays face-down: white-out straight into the cutscene, the card is revealed only after it
+  // =====================================================================
+  // AURA: the light behind the card on the opening stage. Soft volumetric god-rays (tapered, blurred, additive),
+  // a bloom, drifting coloured smoke and bokeh, shockwave rings. Driven by the #rays element's state + aura.charge.
+  // =====================================================================
+  const aura = (function () {
+    const cv = $("aura"), c = cv.getContext("2d"), off = document.createElement("canvas"), oc = off.getContext("2d");
+    const R = mkRng(99), rays = [], smoke = [], bokeh = [], rings = [];
+    for (let i = 0; i < 26; i++) rays.push({ a: i / 26 * Math.PI * 2 + R() * .2, w: .03 + R() * .07, len: .55 + R() * .5, al: .25 + R() * .55, sp: (R() - .5) * .08, ph: R() * 6.28, fq: .6 + R() * 1.6 });
+    for (let i = 0; i < 7; i++) smoke.push({ a: R() * 6.28, r: .12 + R() * .2, s: .18 + R() * .22, sp: (R() - .5) * .05, ph: R() * 6.28 });
+    for (let i = 0; i < 46; i++) bokeh.push({ x: R(), y: R(), z: .3 + R() * .7, s: 2 + R() * 9, ph: R() * 6.28 });
+    let lvl = 0, col = [233, 228, 216], tcol = [233, 228, 216], t = 0;
+    const api = { charge: 0, burst: 0 };
+    const parse = s => { s = (s || "").trim(); if (/^#([0-9a-f]{6})$/i.test(s)) return [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)); const m = s.match(/(\d+)\D+(\d+)\D+(\d+)/); return m ? [+m[1], +m[2], +m[3]] : [233, 228, 216]; };
+    const rgba = (cc, a) => `rgba(${cc[0] | 0},${cc[1] | 0},${cc[2] | 0},${a})`;
+    api.shock = () => { rings.push({ t: 0 }); rings.push({ t: -.12 }); api.burst = 1; };
+    api.step = dt => {
+      t += dt;
+      const d = Math.min(devicePixelRatio || 1, 2), W = cv.clientWidth, H = cv.clientHeight; if (!W) return;
+      if (cv.width !== Math.round(W * d)) { cv.width = Math.round(W * d); cv.height = Math.round(H * d); }
+      const el = $("rays"), on = el.classList.contains("on");
+      tcol = parse(el.style.getPropertyValue("--rc")); for (let i = 0; i < 3; i++) col[i] += (tcol[i] - col[i]) * Math.min(1, dt * 4);
+      const target = Math.max(on ? 1 : 0, api.charge);
+      lvl += (target - lvl) * Math.min(1, dt * (target > lvl ? 3 : 1.6));
+      api.burst = Math.max(0, api.burst - dt * 1.2);
+      c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, W, H);
+      if (lvl < .01 && !rings.length) return;
+      const box = document.querySelector("#stStack .sc.top") || $("stBox"), r = box.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+      const cx = r.left + r.width / 2 - sr.left, cy = r.top + r.height / 2 - sr.top, M = Math.hypot(W, H) * .62, L = lvl * (1 + api.burst * .8);
+      // 1. bloom
+      let g = c.createRadialGradient(cx, cy, 0, cx, cy, M * .7);
+      g.addColorStop(0, rgba(col, .55 * L)); g.addColorStop(.18, rgba(col, .22 * L)); g.addColorStop(.5, rgba(col, .06 * L)); g.addColorStop(1, rgba(col, 0));
+      c.globalCompositeOperation = "lighter"; c.fillStyle = g; c.fillRect(0, 0, W, H);
+      // 2. smoke: big soft lobes slowly orbiting
+      for (const s of smoke) { s.a += s.sp * dt; const x = cx + Math.cos(s.a) * M * s.r, y = cy + Math.sin(s.a) * M * s.r * .7, rr = M * s.s * (1 + .08 * Math.sin(t * .7 + s.ph));
+        const sg = c.createRadialGradient(x, y, 0, x, y, rr); sg.addColorStop(0, rgba(col, .07 * L)); sg.addColorStop(1, rgba(col, 0)); c.fillStyle = sg; c.fillRect(x - rr, y - rr, rr * 2, rr * 2); }
+      // 3. god rays, drawn small then blurred up for soft volumetric edges
+      const ow = Math.round(W / 4), oh = Math.round(H / 4); if (off.width !== ow) { off.width = ow; off.height = oh; }
+      oc.setTransform(1, 0, 0, 1, 0, 0); oc.clearRect(0, 0, ow, oh); oc.globalCompositeOperation = "lighter";
+      const ocx = cx / 4, ocy = cy / 4, OM = M / 4;
+      for (const ry of rays) {
+        ry.a += ry.sp * dt * (1 + api.charge * 3);
+        const fl = .55 + .45 * Math.sin(t * ry.fq + ry.ph), len = OM * ry.len * (.75 + .35 * fl) * (1 + api.burst * .6), hw = ry.w * (.7 + .5 * fl);
+        const lg = oc.createLinearGradient(ocx, ocy, ocx + Math.cos(ry.a) * len, ocy + Math.sin(ry.a) * len);
+        lg.addColorStop(0, rgba([255, 255, 255], .0)); lg.addColorStop(.06, rgba(col.map(v => v * .5 + 127), .55 * ry.al * L)); lg.addColorStop(.35, rgba(col, .35 * ry.al * L)); lg.addColorStop(1, rgba(col, 0));
+        oc.fillStyle = lg; oc.beginPath(); oc.moveTo(ocx + Math.cos(ry.a + Math.PI / 2) * 2, ocy + Math.sin(ry.a + Math.PI / 2) * 2);
+        oc.lineTo(ocx + Math.cos(ry.a - hw) * len, ocy + Math.sin(ry.a - hw) * len); oc.quadraticCurveTo(ocx + Math.cos(ry.a) * len * 1.08, ocy + Math.sin(ry.a) * len * 1.08, ocx + Math.cos(ry.a + hw) * len, ocy + Math.sin(ry.a + hw) * len);
+        oc.lineTo(ocx + Math.cos(ry.a - Math.PI / 2) * 2, ocy + Math.sin(ry.a - Math.PI / 2) * 2); oc.closePath(); oc.fill();
+      }
+      c.save(); c.filter = "blur(6px)"; c.globalAlpha = 1; c.drawImage(off, 0, 0, W, H); c.filter = "blur(1.5px)"; c.globalAlpha = .45; c.drawImage(off, 0, 0, W, H); c.restore();
+      c.globalCompositeOperation = "lighter";
+      // 4. bokeh: soft discs drifting up, parallax by depth
+      for (const b of bokeh) { b.y -= dt * .015 * b.z * (1 + api.charge * 2); if (b.y < -.05) { b.y = 1.05; b.x = Math.random(); }
+        const x = b.x * W, y = b.y * H, s = b.s * b.z * (1 + L * .4), a = (.08 + .12 * Math.sin(t * 1.3 + b.ph) ** 2) * L * b.z;
+        const bg = c.createRadialGradient(x, y, 0, x, y, s); bg.addColorStop(0, rgba(col.map(v => v * .4 + 153), a)); bg.addColorStop(.7, rgba(col, a * .5)); bg.addColorStop(1, rgba(col, 0)); c.fillStyle = bg; c.fillRect(x - s, y - s, s * 2, s * 2); }
+      // 5. shockwave rings
+      for (const rg of rings) { rg.t += dt; if (rg.t <= 0) continue; const k = rg.t / .9, rad = M * .1 + M * 1.1 * (1 - Math.pow(1 - k, 3)), a = Math.max(0, 1 - k);
+        c.save(); c.filter = "blur(2px)"; c.lineWidth = 3 + 14 * a; c.strokeStyle = rgba(col.map(v => v * .5 + 127), .5 * a); c.beginPath(); c.arc(cx, cy, rad, 0, 7); c.stroke(); c.restore(); }
+      for (let i = rings.length - 1; i >= 0; i--) if (rings[i].t > .9) rings.splice(i, 1);
+      c.globalCompositeOperation = "source-over";
+    };
+    return api;
+  })();
+
   function flashToCutscene(el, it) {
     SS.cutDone = SS.cutDone || {}; SS.cutDone[it.uid] = true;
-    const fl = $("flash"); fl.style.setProperty("--fo", 1); fl.style.background = "#fff"; fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on");
-    sfx.boom(1); shake(14, 300);
+    const RC = crOf(cardOf(it)), tilt = el.querySelector(".tilt");
+    // 1. silence: everything goes black except the cracked card, which hangs still
+    stage.classList.add("void"); $("rays").classList.remove("on"); el.style.setProperty("--crk", 1); el.style.setProperty("--leak", 1);
+    tilt.style.setProperty("--g", "1.4"); el.style.setProperty("--c", RC.col); el.style.setProperty("--spin", 0);
+    // 2. one last heartbeat, a tremor, then it implodes and shatters into white
+    setTimeout(() => { if (!SS) return; sfx.boom(.6); shake(5, 200); tilt.style.setProperty("--jx", "0px"); }, 700);
+    setTimeout(() => { if (!SS) return; tilt.style.transition = "transform .28s cubic-bezier(.6,0,.9,.4)"; tilt.style.transform = "scale(.86)"; sfx.charge(.3, "secret"); }, 1150);
+    setTimeout(() => {
+      if (!SS) return;
+      tilt.style.transition = ""; tilt.style.transform = ""; stage.classList.remove("void"); el.classList.remove("lift");
+      const c0 = center(el); fx.burst(c0.x, c0.y, 260, [RC.col, "#ffffff", "#ffffff"], 1500); aura.shock();
+      const fl = $("flash"); fl.style.setProperty("--fo", 1); fl.style.background = "#fff"; fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on");
+      sfx.boom(1.4); shake(22, 420);
+    }, 1450);
     setTimeout(() => {
       if (!SS) return;
       playCutscene(it, () => {
@@ -2034,7 +2117,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
         el.style.setProperty("--leak", 0); el.style.setProperty("--crk", 0);
         setTimeout(() => flipNow(el, it), 250);
       }, { pull: true });
-    }, 380);
+    }, 1450 + 420);
   }
 
   function flipNow(el, it) {
@@ -2056,7 +2139,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
         const fl = $("flash"); fl.style.setProperty("--fo", [0, .25, .45, .7, .9][big]); fl.style.background = big >= 3 ? "#fff" : RC.col;
         fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on");
         shake(big * 4, 200 + big * 120);
-        const rays = $("rays"); rays.style.setProperty("--rc", RC.col); if (big >= 2) rays.classList.add("on");
+        const rays = $("rays"); rays.style.setProperty("--rc", RC.col); if (big >= 2) { rays.classList.add("on"); aura.shock(); }
         sfx.chime(chimeKey(r));
       }
       const base = it.g ? cardBaseValue(cardOf(it), it.ed, it.rh) : val;
@@ -2926,7 +3009,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
     if (fight && !$("fight").hidden && !fight.done) { fight.update(dt); fight.draw(); }
     if (CUT && CUT.ink && CUT.phase === "play") { CUT.ink.update(dt); CUT.ink.draw(); }
-    if (!stage.hidden) fx.step(dt);
+    if (!stage.hidden) { fx.step(dt); aura.step(dt); }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
