@@ -596,6 +596,49 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .copy { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; font-size: 13px; padding: 8px 10px; background: var(--slate); border: 1px solid var(--line); }
 .copy .num { color: var(--brass-hi); }
 @media (max-width: 900px) { .binder { grid-template-columns: 1fr; } .bnav { display: none; } .cm-box { grid-template-columns: 1fr; } .cm-card { width: min(300px, 80vw); justify-self: center; } .pgrid { gap: 8px; } .book { padding: 12px; } }
+.mk-demo { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.mk-top { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px; }
+.mk-idx-row { display: flex; align-items: baseline; gap: 14px; } .mk-idx-row strong { font-family: var(--f-mono); font-weight: 500; font-size: 30px; } .mk-idx-row small { color: var(--faint); }
+.mk-index .spark { width: 100%; height: 70px; }
+.nw { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--line); } .nw:last-child { border: 0; } .nw .num { color: var(--faint); font-size: 11px; }
+.up { color: var(--good); } .dn { color: var(--bad); } .fl { color: var(--dim); }
+.mk-table-wrap { overflow-x: auto; border: 1px solid var(--line); }
+.mk-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 720px; }
+.mk-table th { text-align: left; font-family: var(--f-mono); font-weight: 500; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--ash); }
+.mk-table td { padding: 8px 12px; border-bottom: 1px solid var(--line); font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.mk-table tbody tr { cursor: pointer; } .mk-table tbody tr:hover { background: #151517; }
+.mkc { display: flex; align-items: center; gap: 10px; font-family: var(--f-body); } .mkc img { width: 34px; height: 46px; object-fit: cover; object-position: 50% 20%; border-radius: 3px; }
+.mkc b { display: block; font-family: var(--f-display); font-style: italic; font-size: 17px; font-weight: 600; } .mkc small { color: var(--dim); font-size: 11.5px; } .mkc i { font-style: normal; }
+.spark { display: block; }
+.mk-head { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; } .mk-head strong { display: block; font-size: 30px; font-weight: 500; }
+.mk-ch { font-family: var(--f-mono); font-size: 13px; display: flex; gap: 4px; align-items: baseline; } .mk-ch small { color: var(--faint); margin-right: 8px; }
+.rng { display: flex; gap: 4px; } .rng button { background: none; border: 1px solid var(--line); color: var(--dim); font-family: var(--f-mono); font-size: 11px; padding: 3px 9px; } .rng button[aria-pressed="true"] { color: var(--bone); border-color: var(--brass); }
+.pchart { width: 100%; height: auto; display: block; }
+.ladder { width: 100%; border-collapse: collapse; font-family: var(--f-mono); font-size: 12px; text-align: center; }
+.ladder th { font-weight: 500; color: var(--faint); font-size: 10px; letter-spacing: .1em; padding: 4px; border-bottom: 1px solid var(--line); } .ladder td { padding: 6px 4px; color: var(--brass-hi); }
+.cm-box { max-height: calc(100vh - 32px); overflow-y: auto; width: min(980px, 100%) !important; grid-template-columns: minmax(0, 320px) minmax(0, 1fr) !important; }
+.copy { grid-template-columns: 1fr auto auto !important; }
+.cp-l { display: grid; gap: 3px; min-width: 0; } .cp-v { display: grid; text-align: right; } .cp-v small { font-size: 10.5px; } .cp-a { display: flex; gap: 6px; }
+.gpill { justify-self: start; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .1em; padding: 1px 7px; background: #e9e4d8; color: #111; } .gpill.bl { background: #0a0a0b; color: #e6d3a3; box-shadow: inset 0 0 0 1px #e6d3a3; } .gpill.wait { background: var(--raise); color: var(--dim); }
+.gradeform { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: #141416; border: 1px solid var(--line); border-top: 0; margin-top: -6px; }
+.greveal { border: 1px solid var(--brass-lo); padding: 12px 14px; display: grid; gap: 10px; background: #17150f; }
+.subs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; } .subs div { display: grid; text-align: center; background: #0f0f10; padding: 8px 4px; animation: subin .4s both; } .subs span { font-size: 10px; color: var(--faint); letter-spacing: .1em; text-transform: uppercase; } .subs b { font-family: var(--f-mono); font-size: 22px; font-weight: 500; }
+.gfinal { font-family: var(--f-mono); letter-spacing: .2em; color: var(--brass-hi); animation: subin .5s both; } .gfinal b { font-size: 34px; letter-spacing: 0; margin-left: 8px; }
+@keyframes subin { from { opacity: 0; transform: translateY(8px) scale(.9); } }
+/* IGC slab */
+.slab { container-type: inline-size; position: relative; padding: 3cqi 3.4cqi 3.4cqi; border-radius: 2cqi; background: linear-gradient(135deg, rgba(255,255,255,.22), rgba(255,255,255,.06) 40%, rgba(255,255,255,.14)); box-shadow: inset 0 0 0 .5cqi rgba(255,255,255,.35), inset 0 0 0 1.4cqi rgba(255,255,255,.06), 0 10px 26px rgba(0,0,0,.6); display: grid; gap: 2.4cqi; }
+.slab-label { display: flex; justify-content: space-between; gap: 2cqi; padding: 2.2cqi 2.8cqi; background: linear-gradient(#f4f1ea, #e2ddd0); color: #111; border-radius: 1cqi; font-family: var(--f-mono); }
+.slab.black .slab-label { background: linear-gradient(#141414, #050505); color: #e6d3a3; box-shadow: inset 0 0 0 .4cqi #b8892b; }
+.sl-l { display: grid; font-size: 3.1cqi; line-height: 1.3; letter-spacing: .04em; min-width: 0; } .sl-l b { font-size: 4.6cqi; letter-spacing: .2em; color: #b3121b; }
+.sl-r { display: grid; text-align: right; align-content: center; } .sl-r span { font-size: 3cqi; letter-spacing: .1em; } .sl-r strong { font-size: 10cqi; line-height: 1; } .sl-r small { font-size: 2.6cqi; opacity: .7; }
+.slab-well { border-radius: 1.4cqi; padding: 2.2cqi; background: rgba(0,0,0,.35); box-shadow: inset 0 0 0 .3cqi rgba(255,255,255,.18); }
+.slab-well .tcard { width: 100%; }
+.slab::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.18) 42%, transparent 52%); }
+.pocket.slabbed { padding: 1%; } .pocket.slabbed .slab { height: 100%; padding: 2cqi 2.4cqi; gap: 1.4cqi; } .pocket.slabbed .slab-well { padding: 1.4cqi; } .pocket.slabbed .slab-well .tcard { width: 100%; }
+.pocket.slabbed .slab-label { padding: 1.4cqi 2cqi; }
+.atigc { position: absolute; inset: 40% 6% auto; z-index: 4; text-align: center; font-family: var(--f-mono); font-size: 11px; letter-spacing: .2em; background: rgba(10,10,11,.85); color: var(--brass-hi); padding: 6px 0; }
+.cm-card .slab { width: 100%; }
+@media (max-width: 900px) { .mk-top { grid-template-columns: 1fr; } }
 .toast { position: fixed; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50; background: var(--bone); color: var(--void); padding: 10px 18px; font-size: 13px; font-weight: 600; max-width: calc(100% - 32px); }
 
 .lv { display: flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em; color: var(--dim); }
@@ -663,6 +706,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <a href="#packs" data-tab="packs">Packs</a>
       <a href="#arena" data-tab="arena">Arena</a>
       <a href="#vault" data-tab="vault">Vault<span class="count" id="vaultCount">0</span></a>
+      <a href="#market" data-tab="market">Market</a>
       <a href="#ledger" data-tab="ledger">Ledger</a>
       <a href="#terms" data-tab="terms">Odds</a>
     </nav>
@@ -673,7 +717,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <span class="lv" title="Level: every $1 opened is 100 XP. Each level pays a bonus."><span id="lvl">LV 0</span><span class="lvtrack"><i id="lvlBar"></i></span></span>
     </div>
   </div>
-  <div class="notice"><div class="wrap"><span>Simulated currency · demo build</span><span>Shown in demo dollars</span><span>Instant sell-back at 90%</span></div></div>
+  <div class="notice"><div class="wrap"><span>Simulated currency · demo build</span><span>Shown in demo dollars</span><span>Instant sell-back at 90% of market</span><span id="mktTick">Market day –</span></div></div>
 </header>
 
 <main class="wrap">
@@ -740,6 +784,21 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     <div id="vaultBody"></div>
   </section>
 
+  <section class="view" id="view-market" hidden>
+    <div class="section-head">
+      <div><div class="label">Simulated market · <span id="mkDay">day –</span></div><h2>Market</h2><p class="lede">Raw near-mint prices for every card in Ink &amp; Steel. Prices move once per market day (15 minutes) with scarcity, fighter hype and news. Graded copies trade at a multiple of raw.</p></div>
+      <div class="mk-demo"><span class="label">Demo time</span><button class="btn small" data-adv="1">+1 day</button><button class="btn small" data-adv="7">+1 week</button><button class="btn small" data-adv="96">+1 real day</button></div>
+    </div>
+    <div class="mk-top">
+      <div class="panel mk-index"><div class="label">Ink &amp; Steel index · all 47 raw cards</div><div class="mk-idx-row"><strong id="mkIdx">–</strong><span id="mkIdxCh"></span></div><div id="mkIdxChart"></div></div>
+      <div class="panel mk-news"><div class="label">News</div><div id="mkNews"></div></div>
+    </div>
+    <div class="filters" id="mkFilters">
+      <button data-mksort="move" aria-pressed="true">Movers (7d)</button><button data-mksort="price" aria-pressed="false">Price</button><button data-mksort="set" aria-pressed="false">Set order</button><button data-mksort="mine" aria-pressed="false">My cards</button>
+    </div>
+    <div class="mk-table-wrap"><table class="mk-table" id="mkTable"></table></div>
+  </section>
+
   <section class="view" id="view-ledger" hidden>
     <div class="section-head"><div><div class="label">In and out</div><h2>Ledger</h2><p class="lede">What you've put in, what you hold, and what the house has made.</p></div><button class="btn brass" data-open-store>Buy coins</button></div>
     <div class="kpis" id="kpis"></div>
@@ -765,7 +824,9 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <div class="panel"><h3>Currency</h3><ul>
         <li>Balances and prices are shown in demo dollars. Larger deposits include a bonus.</li>
         <li>Tokens come only from Arena fights. The winner is rolled from the two fighters' stats (win chance shown on each opponent), then the fight plays out. A win pays 10 to 100 tokens by opponent rarity; a loss pays 3.</li>
-        <li>Every card sells back instantly for 90% of its value. Sketch cards are valued at 10% of foil.</li>
+        <li>Card values come from the simulated market: each card has a raw near-mint price that moves once per market day (15 minutes) with scarcity, fighter hype and news. Sell-back is 90% of today's price. Sketch cards are valued at 10% of foil.</li>
+        <li>Packs never sell below their launch price. When the cards inside appreciate, the pack price rises with them.</li>
+        <li>Every card is pulled with a hidden condition (centering, corners, edges, surface, 6–10). Ink Grading Co. reveals it for a fee and seals the card in a slab. Graded value is a multiple of raw: 10 is worth 1.6× (commons) to 6× (Masterwork), Black Label (four perfect 10s) doubles that, 9 is worth a little more than raw, 8 and below less.</li>
         <li>Every pulled card gets a grade from 6 to 10. Grade multiplies the card's base value: 6 ×0.5 (18%), 7 ×0.75 (24%), 8 ×1 (26%), 9 ×1.5 (20%), 10 ×2.5 (12%).</li>
         <li>Hit rate is the share of packs whose cards sell back for at least the pack price, from 3,000 simulated openings with the published odds.</li>
         <li>Levels: every $1 spent on packs is 100 XP. Each new level pays a bonus of $0.25 plus $0.15 per level. One free First Ink pack every 24 hours.</li>
@@ -945,7 +1006,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   const GRADE_MEAN = GRADES.reduce((s, x) => s + x.p * x.m, 0);
   const gradeOf = g => GRADES.find(x => x.g === g) || GRADES[2];
   function rollGrade() { let x = rand(); for (const g of GRADES) { x -= g.p; if (x < 0) return g.g; } return 8; }
-  const itemVal = it => it.val != null ? it.val : cardBaseValue(cardOf(it), it.ed, it.rh);
+  const itemVal = it => { const c = cardOf(it); let v = cardBaseValue(c, it.ed, it.rh); if (it.slab) v = v * gradeMult(c.rar, it.slab.g, it.slab.black); return Math.max(1, Math.round(v)); };
+  const costOf = it => it.val != null ? it.val : itemVal(it);
   const itemSell = it => Math.max(1, Math.floor(itemVal(it) * BUYBACK));
   const money = c => "$" + (c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const priceTxt = p => p.cur === "coin" ? money(p.price) : "⬡" + p.price.toLocaleString("en-US");
@@ -956,7 +1018,73 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   const SLOTS = ["C", "C", "U", "RHS", "RARE"];   // booster layout: 2 commons, 1 uncommon, a reverse-holo slot, the rare slot last
   const cardOf = it => { if (!it) return CARDS[0]; const c = CARD_BY_NO[it.cno]; if (c && c.id === it.id && (!it.rar || c.rar === it.rar)) return c; return CARDS.find(x => x.id === it.id && x.rar === it.rar) || CARDS.find(x => x.id === it.id) || CARDS[0]; };
   const rarOf = it => (it && it.rar) || cardOf(it).rar;
-  const cardBaseValue = (card, ed, rh) => { let v = card.v * (rh ? RH_MULT : 1); if (ed === "sketch") v = Math.max(1, v * SKETCH_MULT); return Math.max(1, Math.round(v)); };
+  const cardBaseValue = (card, ed, rh) => { let v = rawPrice(card.no) * (rh ? RH_MULT : 1); if (ed === "sketch") v = Math.max(1, v * SKETCH_MULT); return Math.max(1, Math.round(v)); };
+  // =====================================================================
+  // MARKET (simulated). Every card has a raw "near mint" market price that moves once per market day.
+  // Model: price = launch price × rarity trend (scarcity: chase cards appreciate as packs dry up, bulk sinks)
+  //               × exp(card noise, mean-reverting) × exp(fighter hype). Hype jumps on news events and fades.
+  // Deterministic from the set's launch, so every reload shows the same history. 1 market day = 15 minutes.
+  // =====================================================================
+  const MKT_EPOCH = Date.UTC(2026, 10, 1, 0, 0, 0), DAY_MS = 15 * 60 * 1000;
+  const MKT_GROWTH = { C: .8, U: .88, R: 1, H: 1.15, RR: 1.3, UR: 1.75, IR: 2, SIR: 2.9, HR: 2.5 };
+  const MKT_VOL = { C: .007, U: .009, R: .012, H: .016, RR: .018, UR: .022, IR: .02, SIR: .026, HR: .024 };
+  const MKT_T = 700;   // days for most of the scarcity trend to play out (~1 real week)
+  const MKT_NEWS = [["won the Ink Cup", .2], ["cutscene went viral", .28], ["opened live by a big streamer", .14], ["topped the Arena win rate", .12],
+    ["reprint announced", -.16], ["counterfeits reported", -.12], ["nerfed in the Arena", -.1], ["featured in a set trailer", .16]];
+  const mktDay = () => Math.max(0, Math.floor((Date.now() - MKT_EPOCH) / DAY_MS) + ((typeof state !== "undefined" && state.dayOffset) || 0));
+  function hashStr(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function mkRng(seed) { let a = seed || 1; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const gauss = r => { const u = Math.max(1e-9, r()), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.283185 * v); };
+  const MKT = { upTo: -1, px: {}, y: {}, rng: {}, hype: {}, hy: {}, hrng: {}, news: [] };
+  function extendMarket(D) {
+    if (D <= MKT.upTo) return;
+    const fids = [...new Set(CARDS.map(c => c.id))];
+    if (MKT.upTo < 0) { for (const c of CARDS) { MKT.px[c.no] = []; MKT.y[c.no] = 0; MKT.rng[c.no] = mkRng(hashStr("card" + c.no)); } for (const f of fids) { MKT.hype[f] = []; MKT.hy[f] = 0; MKT.hrng[f] = mkRng(hashStr("hype" + f)); } }
+    for (let d = MKT.upTo + 1; d <= D; d++) {
+      const er = mkRng(hashStr("news" + d)), shock = {};
+      if (d > 3 && er() < .03) { const f = fids[Math.floor(er() * fids.length)], n = MKT_NEWS[Math.floor(er() * MKT_NEWS.length)]; shock[f] = n[1]; MKT.news.push({ d, f, text: n[0], s: n[1] }); }
+      for (const f of fids) { MKT.hy[f] = MKT.hy[f] * .985 + .008 * gauss(MKT.hrng[f]) + (shock[f] || 0); MKT.hype[f][d] = MKT.hy[f]; }
+      const tk = 1 - Math.exp(-d / MKT_T);
+      for (const c of CARDS) {
+        MKT.y[c.no] = MKT.y[c.no] * .97 + MKT_VOL[c.rar] * gauss(MKT.rng[c.no]);
+        const trend = 1 + (MKT_GROWTH[c.rar] - 1) * tk, beta = .5 + .12 * CR[c.rar].tier;
+        MKT.px[c.no][d] = Math.max(1, Math.round(c.v * trend * Math.exp(MKT.y[c.no] + MKT.hy[c.id] * beta)));
+      }
+    }
+    MKT.upTo = D;
+  }
+  function rawPrice(no, d) { const D = d == null ? mktDay() : Math.max(0, d); extendMarket(D); return MKT.px[no][D]; }
+  function priceHistory(no, days) { const D = mktDay(); extendMarket(D); const out = []; for (let d = Math.max(0, D - days + 1); d <= D; d++) out.push(MKT.px[no][d]); return out; }
+  const pctChange = (no, days) => { const a = rawPrice(no, mktDay() - days), b = rawPrice(no); return a ? (b - a) / a : 0; };
+
+  // =====================================================================
+  // CONDITION + GRADING. Every pulled card gets hidden subgrades (centering, corners, edges, surface).
+  // Ink Grading Co. (IGC) reveals them and seals the card in a slab with a 1-10 grade.
+  // =====================================================================
+  const SUBG = [[10, .12], [9.5, .3], [9, .28], [8.5, .15], [8, .08], [7.5, .04], [7, .02], [6, .01]];
+  function rollSub(r) { let x = r(); for (const [g, p] of SUBG) { x -= p; if (x < 0) return g; } return 9; }
+  function rollCondition() { const r = () => rand(); return { cen: rollSub(r), cor: rollSub(r), edg: rollSub(r), sur: rollSub(r) }; }
+  const condOf = it => { if (!it.cond) { const r = mkRng(hashStr("cond" + it.uid)); it.cond = { cen: rollSub(r), cor: rollSub(r), edg: rollSub(r), sur: rollSub(r) }; } return it.cond; };
+  const CENTER_TXT = { 10: "50/50", 9.5: "54/46", 9: "58/42", 8.5: "61/39", 8: "64/36", 7.5: "68/32", 7: "72/28", 6: "78/22" };
+  function finalGrade(s) {
+    const v = [s.cen, s.cor, s.edg, s.sur], avg = v.reduce((a, b) => a + b, 0) / 4, lo = Math.min(...v);
+    if (v.every(x => x === 10)) return { g: 10, black: true };
+    let g = Math.floor(Math.min(avg + .25, lo + 1));
+    if (g >= 10 && (avg < 9.6 || lo < 9.5)) g = 9;
+    return { g: Math.max(1, Math.min(10, g)), black: false };
+  }
+  const GRADE_NAME = { 10: "GEM MINT", 9: "MINT", 8: "NM-MT", 7: "NEAR MINT", 6: "EX-MT", 5: "EXCELLENT", 4: "VG-EX", 3: "VERY GOOD", 2: "GOOD", 1: "POOR" };
+  const GEM_MULT = { C: 1.6, U: 1.9, R: 2.6, H: 3.2, RR: 3.6, UR: 4.2, IR: 4.6, SIR: 6, HR: 5.2 };
+  function gradeMult(rar, g, black) {
+    const t = CR[rar].tier;
+    if (g >= 10) return GEM_MULT[rar] * (black ? 2.2 : 1);
+    return { 9: 1.3 + .1 * t, 8: .95, 7: .75, 6: .6, 5: .5, 4: .4, 3: .32, 2: .25, 1: .2 }[g] || .5;
+  }
+  const IGC_TIERS = [
+    { id: "value", name: "Value", fee: 199, days: 8 },
+    { id: "standard", name: "Standard", fee: 499, days: 3 },
+    { id: "express", name: "Express", fee: 1499, days: 1 }
+  ];
   const featW = (p, c) => p.feat && p.feat[0] === c.id ? p.feat[1] : 1;
   const poolR = rar => CARDS.filter(c => c.rar === rar);
   function pickKey(d) { let tot = 0; for (const v of Object.values(d)) tot += v; let x = rand() * tot; for (const [k, v] of Object.entries(d)) { x -= v; if (x < 0) return k; } return Object.keys(d).pop(); }
@@ -970,9 +1098,19 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   }
   function meanR(p, rar) { const pool = poolR(rar); let w = 0, v = 0; for (const c of pool) { const x = featW(p, c); w += x; v += x * cardBaseValue(c, p.ed, false); } return v / w; }
   function distMean(p, d) { let tot = 0, v = 0; for (const [k, pr] of Object.entries(d)) { tot += pr; v += pr * (k === "RH" ? (.5 * meanR(p, "C") + .35 * meanR(p, "U") + .15 * meanR(p, "R")) * RH_MULT : meanR(p, k)); } return v / tot; }
+  function packEVAt(p, d) {
+    const mr = rar => { const pool = poolR(rar); let w = 0, v = 0; for (const c of pool) { const x = featW(p, c); w += x; v += x * rawPrice(c.no, d) * (p.ed === "sketch" ? SKETCH_MULT : 1); } return v / w; };
+    const dm = dd => { let tot = 0, v = 0; for (const [k, pr] of Object.entries(dd)) { tot += pr; v += pr * (k === "RH" ? (.5 * mr("C") + .35 * mr("U") + .15 * mr("R")) * RH_MULT : mr(k)); } return v / tot; };
+    return 2 * mr("C") + mr("U") + dm(p.rh) + dm(p.rare);
+  }
+  let PRICE_DAY = -1;
+  function refreshPackPrices() {   // sealed product reprices when the cards inside appreciate (never below its launch price)
+    const d = mktDay(); if (d === PRICE_DAY) return; PRICE_DAY = d;
+    for (const p of PACKS) { if (p.base == null) { p.base = p.price; p.ev0 = packEVAt(p, 0); } if (p.cur !== "coin") continue; const r = packEVAt(p, d) / p.ev0; p.price = r > 1 ? Math.round(p.base * r / 10) * 10 - 1 : p.base; }
+  }
   function packEV(p) { return 2 * meanR(p, "C") + meanR(p, "U") + distMean(p, p.rh) + distMean(p, p.rare); }
-  const HIT = {};
-  function hitRate(p) { if (HIT[p.id] != null) return HIT[p.id]; const N = 2500; let h = 0; for (let i = 0; i < N; i++) { const t = pullPack(p).reduce((a, x) => a + Math.floor(cardBaseValue(x.card, p.ed, x.rh) * BUYBACK), 0); if (t >= p.price) h++; } return (HIT[p.id] = h / N); }
+  let HIT = {}, HIT_DAY = -1;
+  function hitRate(p) { if (HIT_DAY !== mktDay()) { HIT = {}; HIT_DAY = mktDay(); } if (HIT[p.id] != null) return HIT[p.id]; const N = 2500; let h = 0; for (let i = 0; i < N; i++) { const t = pullPack(p).reduce((a, x) => a + Math.floor(cardBaseValue(x.card, p.ed, x.rh) * BUYBACK), 0); if (t >= p.price) h++; } return (HIT[p.id] = h / N); }
   function chaseOf(p) {
     const can = CARDS.filter(c => (p.rare[c.rar] || p.rh[c.rar]) && (!p.feat || c.id === p.feat[0] || !CARDS.some(x => x.id === p.feat[0] && (p.rare[x.rar] || p.rh[x.rar]))));
     const mine = can.filter(c => c.id === p.chase); const list = mine.length ? mine : can;
@@ -1199,7 +1337,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   function renderHero() {
     const p = PACK_BY_ID.lastframe, chase = chaseOf(p), chaseF = BY_ID[chase.id];
     $("heroCount").textContent = FIGHTERS.length; $("heroPacks").textContent = PACKS.length;
-    $("heroChase").textContent = `${chaseF.name} ${CR[chase.rar].name} · ${money(chase.v)}`;
+    $("heroChase").textContent = `${chaseF.name} ${CR[chase.rar].name} · ${money(cardBaseValue(chase))}`;
     const best = state.s.best ? BY_ID[state.s.best.id] : null;
     $("heroBest").textContent = best ? `${best.name} · ${money(state.s.best.val || best.v)}` : "Nothing yet";
     $("heroOpen").textContent = state.coins >= p.price ? `Open ${p.name} · ${money(p.price)}` : `Featured: ${p.name}`;
@@ -1235,6 +1373,90 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <div class="row"><span class="num">${money(itemSell(it))}</span><button class="btn small" data-sell="${it.uid}">Sell</button></div></div>`).join("")}</div>`;
   }
 
+  // ---------- Market UI ----------
+  let mkSort = "move";
+  const pctTxt = x => `<span class="${x > .0005 ? "up" : x < -.0005 ? "dn" : "fl"}">${x > 0 ? "+" : ""}${(x * 100).toFixed(1)}%</span>`;
+  function spark(arr, w, h, opts) {
+    opts = opts || {}; if (!arr.length) return "";
+    const lo = Math.min(...arr), hi = Math.max(...arr), sp = hi - lo || 1, up = arr[arr.length - 1] >= arr[0];
+    const pts = arr.map((v, i) => `${(i / Math.max(1, arr.length - 1) * w).toFixed(1)},${(h - 2 - (v - lo) / sp * (h - 4)).toFixed(1)}`).join(" ");
+    const col = up ? "var(--good)" : "var(--bad)";
+    return `<svg class="spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" preserveAspectRatio="none" aria-hidden="true">${opts.fill ? `<polygon points="0,${h} ${pts} ${w},${h}" fill="${col}" opacity=".12"/>` : ""}<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="${opts.sw || 1.5}" vector-effect="non-scaling-stroke"/></svg>`;
+  }
+  function priceChart(no, days, rh) {
+    const W = 560, H = 190, pl = 54, pr = 10, pt = 10, pb = 22, D = mktDay();
+    const arr = priceHistory(no, days).map(v => v * (rh ? RH_MULT : 1)); const n = arr.length;
+    const lo = Math.min(...arr) * .97, hi = Math.max(...arr) * 1.03, x = i => pl + i / Math.max(1, n - 1) * (W - pl - pr), y = v => pt + (hi - v) / (hi - lo || 1) * (H - pt - pb);
+    const line = arr.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(""), up = arr[n - 1] >= arr[0], col = up ? "#8cbf94" : "#cf7a6c";
+    const ticks = [hi / 1.03, (hi / 1.03 + lo / .97) / 2, lo / .97];
+    const card = CARD_BY_NO[no], news = MKT.news.filter(e => e.f === card.id && e.d > D - n && e.d <= D);
+    return `<svg viewBox="0 0 ${W} ${H}" class="pchart" role="img" aria-label="Price over the last ${n} market days">
+      ${ticks.map(v => `<line x1="${pl}" x2="${W - pr}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="#2b2b30" stroke-dasharray="2 4"/><text x="${pl - 6}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" fill="#8d897f" font-size="11" font-family="IBM Plex Mono, monospace">${money(v)}</text>`).join("")}
+      <path d="${line}L${x(n - 1)} ${H - pb}L${pl} ${H - pb}Z" fill="${col}" opacity=".1"/><path d="${line}" fill="none" stroke="${col}" stroke-width="1.8"/>
+      ${news.map(e => { const i = e.d - (D - n + 1); return `<circle cx="${x(i).toFixed(1)}" cy="${y(arr[i]).toFixed(1)}" r="4" fill="${e.s > 0 ? "#e6d3a3" : "#cf7a6c"}" stroke="#0b0b0c" stroke-width="1.5"><title>Day ${e.d}: ${BY_ID[e.f].name} ${e.text}</title></circle>`; }).join("")}
+      <text x="${pl}" y="${H - 6}" fill="#8d897f" font-size="11" font-family="IBM Plex Mono, monospace">day ${D - n + 1}</text><text x="${W - pr}" y="${H - 6}" text-anchor="end" fill="#8d897f" font-size="11" font-family="IBM Plex Mono, monospace">today</text>
+    </svg>`;
+  }
+  function renderTick() {
+    const d = mktDay(), left = DAY_MS - ((Date.now() - MKT_EPOCH) % DAY_MS);
+    $("mktTick").textContent = `Market day ${d} · next move in ${Math.floor(left / 60000)}:${String(Math.floor(left / 1000) % 60).padStart(2, "0")}`;
+    if ($("mkDay")) $("mkDay").textContent = `day ${d}`;
+  }
+  function renderMarket() {
+    if (!$("mkTable")) return;
+    const D = mktDay(); extendMarket(D);
+    const idx = []; for (let d = Math.max(0, D - 120); d <= D; d++) idx.push(CARDS.reduce((a, c) => a + MKT.px[c.no][d], 0));
+    $("mkIdx").textContent = money(idx[idx.length - 1]);
+    const w = idx[Math.max(0, idx.length - 8)]; $("mkIdxCh").innerHTML = `${pctTxt((idx[idx.length - 1] - w) / w)} <small>7 days</small>`;
+    $("mkIdxChart").innerHTML = spark(idx, 520, 70, { fill: true, sw: 2 });
+    const news = MKT.news.filter(e => e.d <= D).slice(-6).reverse();
+    $("mkNews").innerHTML = news.length ? news.map(e => `<div class="nw"><span class="num">D${e.d}</span><span><b>${esc(BY_ID[e.f].name)}</b> ${esc(e.text)}</span>${pctTxt(e.s)}</div>`).join("") : `<p class="small-print">No news yet. Headlines move a fighter's prices when they hit.</p>`;
+    const mine = new Set(state.vault.map(it => cardOf(it).no));
+    let rows = CARDS.map(c => ({ c, p: rawPrice(c.no), d1: pctChange(c.no, 1), d7: pctChange(c.no, 7), d30: pctChange(c.no, 30) }));
+    if (mkSort === "move") rows.sort((a, b) => Math.abs(b.d7) - Math.abs(a.d7)); else if (mkSort === "price") rows.sort((a, b) => b.p - a.p); else if (mkSort === "mine") rows = rows.filter(r => mine.has(r.c.no)).sort((a, b) => b.p - a.p);
+    document.querySelectorAll("[data-mksort]").forEach(b => b.setAttribute("aria-pressed", b.dataset.mksort === mkSort));
+    $("mkTable").innerHTML = `<thead><tr><th>Card</th><th>Raw NM</th><th>1d</th><th>7d</th><th>30d</th><th>30 days</th><th>IGC 10</th></tr></thead><tbody>` + (rows.length ? rows.map(r => {
+      const f = BY_ID[r.c.id], R = CR[r.c.rar];
+      return `<tr data-mkcard="${r.c.no}"><td><span class="mkc"><img src="${portrait(f)}" alt=""><span><b>${esc(f.name)}</b><small><i style="color:${R.col}">${R.sym}</i> ${R.name} · ${r.c.no}${mine.has(r.c.no) ? " · owned" : ""}</small></span></span></td>
+        <td class="num">${money(r.p)}</td><td>${pctTxt(r.d1)}</td><td>${pctTxt(r.d7)}</td><td>${pctTxt(r.d30)}</td><td>${spark(priceHistory(r.c.no, 30), 110, 28)}</td><td class="num">${money(r.p * gradeMult(r.c.rar, 10, false))}</td></tr>`;
+    }).join("") : `<tr><td colspan="7" class="small-print">You don't own any cards yet.</td></tr>`) + `</tbody>`;
+  }
+  function advanceMarket(days) { state.dayOffset = (state.dayOffset || 0) + days; save(); renderAll(); if (cmNo) openCardModal(cmNo); toast(`Market moved ${days} day${days > 1 ? "s" : ""} (demo)`); }
+
+  // ---------- Grading (Ink Grading Co.) ----------
+  let gradeQueue = [];
+  function checkGrading() {
+    const d = mktDay(), done = state.vault.filter(it => it.grading && d >= it.grading.due);
+    for (const it of done) {
+      const sub = condOf(it), fg = finalGrade(sub);
+      state.certs = (state.certs || 0) + 1;
+      it.slab = { g: fg.g, black: fg.black, sub, cert: String(84210000 + state.certs), day: d }; delete it.grading;
+      log(`IGC graded ${BY_ID[it.id].name} ${CR[rarOf(it)].name}: ${fg.black ? "Black Label " : ""}${fg.g}`, 0, "coin");
+      gradeQueue.push(it.uid);
+    }
+    if (done.length) { save(); setTimeout(showGradeReveal, 400); }
+  }
+  function sendToGrading(uid, tierId) {
+    const it = state.vault.find(x => x.uid === uid), T = IGC_TIERS.find(x => x.id === tierId); if (!it || !T || it.slab || it.grading) return;
+    if (state.coins < T.fee) { openStore(T.fee - state.coins); return; }
+    state.coins -= T.fee; state.s.gradingFees = (state.s.gradingFees || 0) + T.fee;
+    it.grading = { tier: T.id, sent: mktDay(), due: mktDay() + T.days, fee: T.fee };
+    log(`Sent ${BY_ID[it.id].name} to IGC (${T.name})`, -T.fee, "coin"); snap(); save(); renderAll(); openCardModal(cardOf(it).no);
+    toast(`At IGC · back in ${T.days} market day${T.days > 1 ? "s" : ""}`);
+  }
+  function slabHTML(it, big) {
+    const c = cardOf(it), f = BY_ID[it.id], R = CR[c.rar], sl = it.slab;
+    return `<div class="slab${sl.black ? " black" : ""}${big ? " big" : ""}"><div class="slab-label">
+        <div class="sl-l"><b>IGC</b><span>${new Date(MKT_EPOCH).getFullYear()} INK &amp; STEEL #${c.no}</span><span>${esc(f.name.toUpperCase())}${it.rh ? " · REV FOIL" : ""}</span><span>${R.name.toUpperCase()}</span></div>
+        <div class="sl-r"><span>${GRADE_NAME[sl.g]}</span><strong>${sl.g}</strong><small>${sl.cert}</small></div>
+      </div><div class="slab-well">${cardHTML(it)}</div></div>`;
+  }
+  function showGradeReveal() {
+    if (!gradeQueue.length || !$("cardModal").hidden || !$("cut").hidden || !stage.hidden) return;
+    const uid = gradeQueue.shift(), it = state.vault.find(x => x.uid === uid); if (!it) return;
+    openCardModal(cardOf(it).no, uid, true);
+  }
+
   // ---------- Binder ----------
   let vaultMode = "binder", binderSpread = 0, cmNo = null;
   const PER_PAGE = 9;
@@ -1243,7 +1465,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const copies = copiesOf(card.no), R = CR[card.rar], f = BY_ID[card.id];
     if (!copies.length) return `<div class="pocket empty-p" title="${esc(f.name)} · ${R.name} · not collected"><div class="ghost"><img src="${portrait(f)}" alt="" draggable="false"></div><span class="pn">${card.no}</span><span class="pr" style="color:${R.col}">${R.sym}</span></div>`;
     const best = copies[0], cut = copies.some(hasCutscene);
-    return `<button class="pocket" data-pocket="${card.no}" aria-label="${esc(f.name)}, ${R.name}, ${copies.length} owned">${cardHTML(best)}${copies.length > 1 ? `<span class="pc">×${copies.length}</span>` : ""}${cut ? `<span class="pplay" title="Has a cutscene">▶</span>` : ""}</button>`;
+    return `<button class="pocket${best.slab ? " slabbed" : ""}" data-pocket="${card.no}" aria-label="${esc(f.name)}, ${R.name}, ${copies.length} owned">${best.slab ? slabHTML(best) : cardHTML(best)}${best.grading ? `<span class="atigc">AT IGC</span>` : ""}${copies.length > 1 ? `<span class="pc">×${copies.length}</span>` : ""}${cut ? `<span class="pplay" title="Has a cutscene">▶</span>` : ""}</button>`;
   }
   function renderBinder(items) {
     const pages = []; for (let i = 0; i < CARDS.length; i += PER_PAGE) pages.push(CARDS.slice(i, i + PER_PAGE));
@@ -1259,19 +1481,38 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     </div>`;
   }
   function turnBinder(d) { binderSpread += d; renderVault(); const b = $("book"); if (b) { b.classList.add(d > 0 ? "turnL" : "turnR"); } }
-  function openCardModal(no) {
-    cmNo = no; const copies = copiesOf(no); if (!copies.length) { closeCardModal(); return; }
-    const card = CARD_BY_NO[no], f = BY_ID[card.id], R = CR[card.rar], best = copies[0];
-    $("cmCard").innerHTML = cardHTML(best);
-    const cut = copies.find(hasCutscene);
+  let cmRange = 30;
+  function openCardModal(no, focusUid, reveal) {
+    cmNo = no; const copies = copiesOf(no);
+    const card = CARD_BY_NO[no], f = BY_ID[card.id], R = CR[card.rar];
+    const show = (focusUid && copies.find(x => x.uid === focusUid)) || copies.find(x => x.slab) || copies[0] || { id: card.id, cno: card.no, rar: card.rar, serial: 0, ed: "foil" };
+    $("cmCard").innerHTML = show.slab ? slabHTML(show, true) : cardHTML(show);
+    const raw = rawPrice(no), cut = copies.find(hasCutscene);
+    const ladder = [["Raw", 1], ["IGC 7", gradeMult(card.rar, 7)], ["IGC 8", gradeMult(card.rar, 8)], ["IGC 9", gradeMult(card.rar, 9)], ["IGC 10", gradeMult(card.rar, 10)], ["Black Label", gradeMult(card.rar, 10, true)]];
+    const condLine = it => { const c = condOf(it); const worst = Math.min(c.cor, c.edg, c.sur); return `Centering ${CENTER_TXT[c.cen]}${worst <= 8 ? " · visible wear" : worst <= 9 ? " · light wear" : " · looks clean"}`; };
+    const copyRow = it => {
+      const tag = it.slab ? `<span class="gpill${it.slab.black ? " bl" : ""}">IGC ${it.slab.g}</span>` : it.grading ? `<span class="gpill wait">At IGC · day ${it.grading.due}</span>` : `<span class="small-print">${condLine(it)}</span>`;
+      const gain = itemVal(it) - costOf(it);
+      return `<div class="copy"><div class="cp-l"><span>No. ${String(it.serial).padStart(4, "0")}${it.rh ? " · Reverse Foil" : ""}${it.ed === "sketch" ? " · Sketch" : ""}</span>${tag}</div>
+        <div class="cp-v"><span class="num">${money(itemVal(it))}</span><small class="${gain >= 0 ? "up" : "dn"}">${gain >= 0 ? "+" : "−"}${money(Math.abs(gain))} since pulled</small></div>
+        <div class="cp-a">${!it.slab && !it.grading && it.ed !== "sketch" ? `<button class="btn small" data-gradeopen="${it.uid}">Grade</button>` : ""}${it.grading ? "" : `<button class="btn small" data-sell="${it.uid}">Sell ${money(itemSell(it))}</button>`}</div></div>
+        <div class="gradeform" id="gf-${it.uid}" hidden>${IGC_TIERS.map(T => `<button class="btn small" data-grade="${it.uid}" data-tier="${T.id}">${T.name} · ${money(T.fee)} · ${T.days}d</button>`).join("")}<span class="small-print">Raw ${money(itemVal(it))} → IGC 10 would be ${money(itemVal(it) * gradeMult(card.rar, 10))}, IGC 8 ${money(itemVal(it) * gradeMult(card.rar, 8))}.</span></div>`;
+    };
+    let revealHTML = "";
+    if (reveal && show.slab) { const sb = show.slab.sub; revealHTML = `<div class="greveal"><div class="label">IGC results · cert ${show.slab.cert}</div><div class="subs">${[["Centering", sb.cen], ["Corners", sb.cor], ["Edges", sb.edg], ["Surface", sb.sur]].map(([k, v], n) => `<div style="animation-delay:${.15 + n * .25}s"><span>${k}</span><b>${v}</b></div>`).join("")}</div><div class="gfinal" style="animation-delay:1.3s">${show.slab.black ? "BLACK LABEL " : ""}${GRADE_NAME[show.slab.g]} <b>${show.slab.g}</b></div><div class="small-print">Now worth ${money(itemVal(show))} (raw ${money(cardBaseValue(card, show.ed, show.rh))}).</div></div>`; }
     $("cmSide").innerHTML = `<span class="label" style="color:${R.col}">${R.sym} ${R.name} · ${card.no}/${String(SET_SIZE).padStart(3, "0")}</span>
-      <h2>${esc(f.name)}</h2><p class="small-print">${esc(f.title)} · ${esc(f.trait)}</p>
-      ${cut ? `<button class="btn brass big" data-replay="${cut.uid}">▶ Replay cutscene</button>` : `<p class="small-print">No cutscene for this card. Signature, Ultra, Illustration, Masterwork and Gilded cards of fighters with a film get one.</p>`}
-      <div class="label" style="margin-top:6px">Your copies · ${copies.length}</div>
-      <div class="copies">${copies.map(it => `<div class="copy"><span>No. ${String(it.serial).padStart(4, "0")}${it.rh ? " · Reverse Foil" : ""}${it.ed === "sketch" ? " · Sketch" : ""}</span><span class="num">${money(itemVal(it))}</span><button class="btn small" data-sell="${it.uid}">Sell ${money(itemSell(it))}</button></div>`).join("")}</div>`;
+      <h2>${esc(f.name)}</h2>${revealHTML}
+      <div class="mk-head"><div><span class="label">Raw near-mint</span><strong class="num">${money(raw)}</strong></div><div class="mk-ch">${pctTxt(pctChange(no, 1))}<small>1d</small> ${pctTxt(pctChange(no, 7))}<small>7d</small> ${pctTxt(pctChange(no, 30))}<small>30d</small></div></div>
+      <div class="rng">${[30, 90, 365].map(d => `<button data-cmrange="${d}" aria-pressed="${cmRange === d}">${d === 365 ? "1y" : d + "d"}</button>`).join("")}</div>
+      ${priceChart(no, cmRange)}
+      <table class="ladder"><tr>${ladder.map(([k]) => `<th>${k}</th>`).join("")}</tr><tr>${ladder.map(([, m]) => `<td>${money(raw * m)}</td>`).join("")}</tr></table>
+      ${cut ? `<button class="btn brass" data-replay="${cut.uid}">▶ Replay cutscene</button>` : ""}
+      <div class="label">${copies.length ? `Your copies · ${copies.length}` : "You don't own this card yet"}</div>
+      <div class="copies">${copies.map(copyRow).join("")}</div>`;
     $("cardModal").hidden = false; $("closeCard").focus();
+    if (reveal) { const fl = $("flash"); fl.style.setProperty("--fo", .5); fl.style.background = "#fff"; fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on"); sfx.chime(show.slab && show.slab.g >= 10 ? "legendary" : "rare"); }
   }
-  function closeCardModal() { cmNo = null; $("cardModal").hidden = true; }
+  function closeCardModal() { cmNo = null; $("cardModal").hidden = true; setTimeout(showGradeReveal, 300); }
   $("cardModal").addEventListener("pointermove", e => { const tc = $("cmCard").querySelector(".tcard"); if (!tc) return; const r = tc.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; tc.style.setProperty("--mx", (x * 100).toFixed(1) + "%"); tc.style.setProperty("--my", (y * 100).toFixed(1) + "%"); tc.style.setProperty("--go", "1"); tc.style.transform = `perspective(900px) rotateY(${((x - .5) * 18).toFixed(1)}deg) rotateX(${((.5 - y) * 14).toFixed(1)}deg)`; });
   $("cardModal").addEventListener("click", e => { if (e.target === $("cardModal")) closeCardModal(); });
   addEventListener("resize", () => { if (currentTab === "vault" && vaultMode === "binder") renderVault(); });
@@ -1281,6 +1522,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const s = state.s, cash = cashOutUsd(), net = netUsd();
     $("kpis").innerHTML = `
       <div class="kpi ${net >= 0 ? "up" : "down"}"><span class="label">Net, in dollars</span><strong>${sUsd(net)}</strong><small>Cash-out value minus money in</small></div>
+      <div class="kpi"><span class="label">Collection at market</span><strong>${money(state.vault.reduce((a, it) => a + itemVal(it), 0))}</strong><small>${(() => { const g = state.vault.reduce((a, it) => a + itemVal(it) - costOf(it), 0); return `${g >= 0 ? "+" : "−"}${money(Math.abs(g))} vs. value when pulled`; })()}</small></div>
       <div class="kpi"><span class="label">Money in</span><strong>${usd(s.usdSpent)}</strong><small>${s.purchases} purchase${s.purchases === 1 ? "" : "s"}</small></div>
       <div class="kpi"><span class="label">Cash-out value</span><strong>${usd(cash)}</strong><small>Coins plus vault sold back</small></div>
       <div class="kpi"><span class="label">Sold back</span><strong style="color:var(--brass-hi)">${money(s.coinsFromSales)}</strong><small>${fmt(s.packHits || 0)} of ${fmt(s.packs)} packs were hits</small></div>
@@ -1362,12 +1604,12 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     $("arenaRecord").innerHTML = `<div><span class="label">Wins</span><strong>${state.s.wins}</strong></div><div><span class="label">Losses</span><strong>${state.s.losses}</strong></div><div><span class="label">Tokens</span><strong style="color:var(--token)">${fmt(state.tokens)}</strong></div>`;
   }
 
-  function renderAll() { renderWallet(); renderHero(); renderShelf(); renderVault(); renderLedger(); renderTerms(); renderArena(); }
+  function renderAll() { refreshPackPrices(); renderMarket(); renderTick(); checkGrading(); renderWallet(); renderHero(); renderShelf(); renderVault(); renderLedger(); renderTerms(); renderArena(); }
 
   // =====================================================================
   // TABS
   // =====================================================================
-  const TABS = ["packs", "arena", "vault", "ledger", "terms"];
+  const TABS = ["packs", "arena", "vault", "market", "ledger", "terms"];
   let currentTab = "packs";
   function showTab() {
     let h = location.hash.slice(1);
@@ -1385,7 +1627,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   // =====================================================================
   function sellUids(uids, label) {
     const set = new Set(uids); let got = 0, n = 0;
-    state.vault = state.vault.filter(it => { if (set.has(it.uid)) { got += itemSell(it); n++; return false; } return true; });
+    state.vault = state.vault.filter(it => { if (set.has(it.uid) && !it.grading) { got += itemSell(it); n++; return false; } return true; });
     if (!n) return 0;
     state.coins += got; state.s.coinsFromSales += got;
     log(label || `Sold back ${n} fighter${n > 1 ? "s" : ""}`, got, "coin");
@@ -1407,7 +1649,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const items = [];
     for (const pull of pullPack(p)) {
       const f = BY_ID[pull.card.id]; state.serial++;
-      const item = { uid: Date.now().toString(36) + "-" + state.serial, id: f.id, cno: pull.card.no, rar: pull.card.rar, rh: pull.rh, slot: pull.slot, serial: state.serial, t: Date.now(), pack: p.id, ed: p.ed || "foil", val: cardBaseValue(pull.card, p.ed, pull.rh) };
+      const item = { uid: Date.now().toString(36) + "-" + state.serial, id: f.id, cno: pull.card.no, rar: pull.card.rar, rh: pull.rh, slot: pull.slot, serial: state.serial, t: Date.now(), pack: p.id, ed: p.ed || "foil", val: cardBaseValue(pull.card, p.ed, pull.rh), cond: rollCondition(), day: mktDay() };
       items.push(item); state.vault.push(item);
       if (p.cur === "coin" && !free) state.s.coinValuePulled += item.val;
       if (p.ed !== "sketch" && (!state.s.best || item.val > (state.s.best.val || 0))) state.s.best = { id: f.id, serial: item.serial, val: item.val };
@@ -2541,6 +2783,11 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     if (t.matches("[data-open-store]")) { openStore(); return; }
     if (t.dataset.buy) { buy(t.dataset.buy); return; }
     if (t.dataset.sell) { const g = sellUids([t.dataset.sell]); if (g) toast(`Sold for ${money(g)}`); return; }
+    if (t.dataset.adv) { advanceMarket(+t.dataset.adv); return; }
+    if (t.dataset.mksort) { mkSort = t.dataset.mksort; renderMarket(); return; }
+    if (t.dataset.cmrange) { cmRange = +t.dataset.cmrange; openCardModal(cmNo); return; }
+    if (t.dataset.gradeopen) { const g = document.getElementById("gf-" + t.dataset.gradeopen); if (g) g.hidden = !g.hidden; return; }
+    if (t.dataset.grade) { sendToGrading(t.dataset.grade, t.dataset.tier); return; }
     if (t.dataset.vmode) { vaultMode = t.dataset.vmode; renderVault(); return; }
     if (t.dataset.bnav) { turnBinder(+t.dataset.bnav); return; }
     if (t.dataset.bspread) { const d = +t.dataset.bspread - binderSpread; if (d) turnBinder(d); return; }
@@ -2572,6 +2819,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   });
   $("store").addEventListener("click", e => { if (e.target === $("store")) $("store").hidden = true; });
   $("vSort").addEventListener("change", renderVault);
+  $("mkTable").addEventListener("click", e => { const r = e.target.closest("[data-mkcard]"); if (r) openCardModal(r.dataset.mkcard); });
   $("packSort").addEventListener("change", renderShelf);
 
   let resetArmed = false;
@@ -2584,7 +2832,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   $("gateEnter").addEventListener("click", () => { state.ageOK = true; if (!state.history.length) grantSignup(); save(); renderAll(); $("gate").hidden = true; toast(`${money(SIGNUP_BONUS)} signup bonus added`); });
 
   renderAll(); showTab();
-  setInterval(() => { if (currentTab === "packs" && stage.hidden) renderHero(); }, 60000);
+  let lastDay = mktDay();
+  setInterval(() => { renderTick(); const d = mktDay(); if (d !== lastDay && stage.hidden && $("cut").hidden) { lastDay = d; renderAll(); if (cmNo && $("cardModal").hidden === false) openCardModal(cmNo); } if (currentTab === "packs" && stage.hidden && Date.now() % 60000 < 1000) renderHero(); }, 1000);
   $("gate").hidden = !!state.ageOK;
 })();
 </script>
