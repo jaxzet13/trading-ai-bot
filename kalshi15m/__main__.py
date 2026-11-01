@@ -80,7 +80,7 @@ def main():
                 jobs.append(threading.Thread(target=bot.run, daemon=True, kwargs=dict(
                     series=e["series"], strategy=e["strategy"], params=e["params"], stake=cfg.get("stake", a.stake),
                     live=a.live, demo=a.demo, max_daily_loss=cfg.get("max_daily_loss", a.max_daily_loss),
-                    execution=e["execution"], wait=e.get("wait", a.wait))))
+                    execution=e["execution"], wait=e.get("wait", a.wait), poll=e.get("poll", 5))))
         for series in ([] if a.config else a.series):
             strategy, execution = a.strategy, a.execution
             params = json.loads(a.params) if a.params else None

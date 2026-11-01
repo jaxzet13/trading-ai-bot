@@ -117,7 +117,7 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                 day, day_pnl, day_trades = today, 0.0, 0
             m = api.open_market(series)
             if not m:
-                time.sleep(poll); continue
+                _wait(poll); continue
             # settle paper positions from previous markets
             for tk in list(open_pos):
                 if tk != m["ticker"]:
@@ -163,7 +163,7 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
             open_ts = _ts(m["open_time"])
             minute = int((time.time() - open_ts) // 60)
             if minute < 1 or minute > 14 or minute in seen:
-                time.sleep(poll); continue
+                _wait(poll); continue
             spot, vol, vol240, bars = _spot_and_vol(SERIES[series])
             yb = float(m.get("yes_bid_dollars") or 0)
             ya = float(m.get("yes_ask_dollars") or 1)
@@ -207,15 +207,25 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                 price = P["yes_ask"][0, j] if side == "yes" else P["no_ask"][0, j]
                 n = max(1, int(stake // price))
                 fee = kalshi_fee(price, n)
-                print(f"  >>> BUY {n} {side.upper()} @ {price:.3f} (fee ${fee:.2f})")
+                lag = round(time.time() - (open_ts + 60 * minute), 1)
+                print(f"  >>> BUY {n} {side.upper()} @ {price:.3f} (fee ${fee:.2f}), {lag}s after the minute")
                 if live:
                     print("  order:", api.buy(cur, side, n, price))
                 open_pos[cur] = {"side": side, "n": n, "price": price, "fee": fee}
-                log({"event": "buy", "mode": mode, "ticker": cur, "side": side, "n": n, "price": price})
+                log({"event": "buy", "mode": mode, "ticker": cur, "side": side, "n": n, "price": price,
+                     "lag_s": lag, "model": float(P["p_model"][0, j]), "spot": spot, "strike": strike})
         except requests.RequestException as e:
             print("  network error:", e)
         except KeyboardInterrupt:
             print("stopped"); return
+        _wait(poll)
+
+
+def _wait(poll):
+    """poll = seconds between checks, or "minute" = wake 0.5 s after each minute starts."""
+    if poll == "minute":
+        time.sleep(60 - time.time() % 60 + 0.5)
+    else:
         time.sleep(poll)
 
 

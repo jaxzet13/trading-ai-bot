@@ -1,13 +1,16 @@
 {
-  "_note": "The two strategies being paper-traded on live markets. Params are frozen; do not re-tune from live results.",
+  "_note": "Strategies paper-traded on live markets. Params are frozen; do not re-tune from live results.",
   "stake": 5.0,
   "max_daily_loss": 50.0,
   "strategies": [
+    {"series": "KXHYPE15M", "strategy": "fair_value", "execution": "taker", "poll": "minute",
+     "params": {"start": 2, "end": 13, "edge": 0.12, "vol_mult": 1.0},
+     "why": "Strategy lab winner: +$2,193 on 770 holdout trades (t=3.43), 9 of 9 weeks positive. Edge disappears with a 1-minute delay, so this tests whether it survives real latency."},
+    {"series": "KXNEAR15M", "strategy": "fair_value", "execution": "taker", "poll": "minute",
+     "params": {"start": 2, "end": 13, "edge": 0.12, "vol_mult": 1.0},
+     "why": "Strategy lab: +$1,307 on 811 holdout trades (t=2.53), 8 of 9 weeks positive. Also latency-sensitive."},
     {"series": "KXETH15M", "strategy": "reversal_z", "execution": "maker",
      "params": {"minute": 2, "min_z": 1.5, "max_price": 0.55},
-     "why": "ETH-only walk-forward (maker): +$377 on 292 trades out of sample, t=1.56; picked twice by the per-coin selector"},
-    {"series": "KXSOL15M", "strategy": "fair_value", "execution": "maker",
-     "params": {"start": 2, "end": 13, "edge": 0.12, "vol_mult": 1.0},
-     "why": "SOL-only walk-forward +$878 on 1,687 trades (t=1.03), but it FAILED the blind test on Apr-Aug data: -$280 on 1,913 trades (t=-0.27). See SOL_BLIND_TEST.md"}
+     "why": "Earlier pick: +$74 on 74 holdout trades (t=0.62). Kept for comparison."}
   ]
 }

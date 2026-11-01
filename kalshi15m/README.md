@@ -53,6 +53,23 @@ order type and settings with the best t-stat on that coin's earlier data (sittin
 On Aug 31 - Nov 1: BTC picked spot lag (+$12), ETH mostly sat out (+$41), SOL picked the fair-value
 family (+$610). Combined +$663, t = 0.80: not yet distinguishable from luck.
 
+## Strategy lab (all coins, locked holdout)
+
+```bash
+python -m kalshi15m lab        # ~12 min on 4 cores
+```
+
+Searches 16 strategy types (plus Asia/Europe/US/late-session variants), every coin with a Kalshi
+15-minute market (BTC, ETH, SOL, XRP, HYPE, BNB, NEAR) one at a time and pooled, as taker and maker.
+The last 15 days are locked away; shortlisted strategies are frozen and run on them once.
+
+Result on Nov 1 2026 (holdout Oct 17 - Nov 1): the fair-value model as a taker passed on **HYPE**
+(+$2,193 on 770 trades, t = 3.43, above the multiple-testing bar of 3.06; 9 of 9 weeks positive)
+and **NEAR** (+$1,307, t = 2.53). BTC, ETH, SOL and XRP showed nothing.
+**Caveat:** buying one minute later turns HYPE to -$666. The edge is Kalshi's price lagging the spot
+price for less than a minute, so it only works if the bot acts within seconds. The live paper test
+(`live.json`) measures exactly that.
+
 ## Live paper trading on your computer
 
 `kalshi15m/live.json` holds the two strategies being paper-traded (no money): ETH reversal after a big

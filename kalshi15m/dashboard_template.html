@@ -412,19 +412,22 @@ td.coin { font-size: 12px; }
     $("liveBadge").className = "pill " + (running ? "cand" : "luck"); $("liveBadge").textContent = running ? "Running" : "Not running";
     const tot = L.strategies.reduce((a, s) => a + s.pnl, 0), n = L.strategies.reduce((a, s) => a + s.settled, 0);
     $("liveIntro").innerHTML = `Paper trades on the real Kalshi markets: live prices, simulated $${L.stake} orders, real settlements. No money at risk. Running for ${ago(since)}, snapshot ${fmtTime(L.generated)}. So far: <b class="${cls(tot)}">${money(tot, 2)}</b> on ${n} settled trade${n === 1 ? "" : "s"}. It takes hundreds of trades before live results mean anything.`;
-    $("liveCards").innerHTML = L.strategies.map((s, i) => { const b = s.backtest, st = s.status;
+    $("liveCards").className = "coins" + (L.strategies.length === 2 ? " two" : "");
+    $("liveCards").innerHTML = L.strategies.map((s, i) => { const b = s.lab ? { oos: s.lab, diag: {} } : s.backtest, st = s.status, bl = s.lab ? "Holdout test" : "Backtest";
+      const lag = s.lags && s.lags.length ? (s.lags.reduce((a, x) => a + x, 0) / s.lags.length).toFixed(1) + "s" : "–";
       return `<div class="coin-card">
       <div class="top"><span class="sym"><i style="background:${tok(COIN_COL[i + 1])}"></i>${COIN(s.series)} · ${s.name}</span><span class="num ${cls(s.pnl)}" style="font:500 18px var(--f-mono)">${money(s.pnl, 2)}</span></div>
       <div class="params">${s.execution} · ${params(s.params)}</div>
       <div class="sdesc" style="max-width:none">${s.why}</div>
       <div class="kv" style="grid-template-columns:auto 1fr 1fr;margin-top:4px">
-        <div class="h">&nbsp;</div><div class="h num">Live</div><div class="h num">Backtest</div>
+        <div class="h">&nbsp;</div><div class="h num">Live</div><div class="h num">${bl}</div>
         <div>Orders placed</div><div class="num">${s.orders}</div><div class="num">${b && b.diag.orders ? b.diag.orders.toLocaleString() : "–"}</div>
         <div>Filled</div><div class="num">${s.fills}</div><div class="num">${b && b.diag.fill_rate != null ? pct(b.diag.fill_rate) : "–"}</div>
         <div>Settled trades</div><div class="num">${s.settled}</div><div class="num">${b ? b.oos.trades.toLocaleString() : "–"}</div>
         <div>Win rate</div><div class="num">${s.settled ? pct(s.wins / s.settled) : "–"}</div><div class="num">${b ? pct(b.oos.win_rate) : "–"}</div>
         <div>Profit</div><div class="num ${cls(s.pnl)}">${money(s.pnl, 2)}</div><div class="num ${b ? cls(b.oos.pnl) : ""}">${b ? money(b.oos.pnl) : "–"}</div>
         <div>t-stat</div><div class="num">–</div><div class="num">${b ? tfmt(b.oos.t_stat) : "–"}</div>
+        ${s.execution === "taker" ? `<div>Avg seconds after the minute</div><div class="num">${lag}</div><div class="num">0</div>` : ""}
       </div>
       <div class="live-state">${st ? `${s.stale ? "Last seen" : "Now"}: ${st.ticker}, minute ${st.minute}, bid/ask ${(st.yes_bid * 100).toFixed(1)}¢ / ${(st.yes_ask * 100).toFixed(1)}¢${st.model != null ? `, model ${(st.model * 100).toFixed(1)}%` : ""}${s.open.length ? ` · open: ${s.open.length}` : ""}` : "Waiting for the first market"}</div>
     </div>`; }).join("");

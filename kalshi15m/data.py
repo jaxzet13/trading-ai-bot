@@ -213,6 +213,28 @@ def fetch_candles_hist(series: str, markets: pd.DataFrame, part: Path, workers: 
 
 
 # --------------------------------------------------------------------------- spot
+HL_SPOT = {}  # Hyperliquid only serves ~3.5 days of 1-min history, too short for backtests; kept for live use
+
+
+def fetch_spot_hl(coin: str, start: int, end: int) -> pd.DataFrame:
+    """1-minute candles from Hyperliquid (5,000 per request). Same columns as fetch_spot."""
+    rows, t = [], start
+    while t < end:
+        t2 = min(t + 4999 * 60, end)
+        for i in range(8):
+            r = _session.post("https://api.hyperliquid.xyz/info", json={"type": "candleSnapshot", "req": {
+                "coin": coin, "interval": "1m", "startTime": t * 1000, "endTime": t2 * 1000}}, timeout=30)
+            if r.status_code == 200:
+                break
+            time.sleep(2 ** i)
+        rows += [[int(c["t"]) // 1000, float(c["l"]), float(c["h"]), float(c["o"]), float(c["c"]), float(c["v"])]
+                 for c in r.json()]
+        t = t2
+        time.sleep(0.3)
+    df = pd.DataFrame(rows, columns=["ts", "low", "high", "open", "close", "volume"])
+    return df.drop_duplicates("ts").sort_values("ts").reset_index(drop=True)
+
+
 def fetch_spot(product: str, start: int, end: int) -> pd.DataFrame:
     rows, t = [], start
     step = 300 * 60
@@ -263,7 +285,9 @@ def download(series_list=("KXBTC15M",), days: int = 45, force: bool = False, his
         mk = mk.drop_duplicates("ticker").sort_values("open_ts").reset_index(drop=True)
         cd = cd.drop_duplicates(["ticker", "ts"])
         print(f"  {len(mk)} markets; fetching spot ...")
-        sp = fetch_spot(SERIES[series], int(mk.open_ts.min()) - 4 * 3600, int(mk.close_ts.max()) + 120)
+        lo, hi = int(mk.open_ts.min()) - 4 * 3600, int(mk.close_ts.max()) + 120
+        prod = SERIES[series]
+        sp = fetch_spot_hl(HL_SPOT[prod], lo, hi) if prod in HL_SPOT else fetch_spot(prod, lo, hi)
         mk.to_csv(mpath, index=False)
         cd.to_csv(cpath, index=False)
         sp.to_csv(spath, index=False)

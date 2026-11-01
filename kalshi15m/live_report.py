@@ -14,6 +14,19 @@ from .report import OUT, ROOT
 
 CONFIG = ROOT / "live.json"
 NAMES = {"reversal_z": "Reversal after big move", "fair_value": "Fair value model"}
+_LAB = None
+
+
+def _lab_holdout(series, strategy, execution):
+    """Holdout result for this exact strategy from the strategy lab, if it was tested there."""
+    global _LAB
+    if _LAB is None:
+        f = OUT.parent / "data" / "lab" / "results.json"
+        _LAB = json.loads(f.read_text()) if f.exists() else {}
+    for x in (_LAB.get("finals") or []) + (_LAB.get("benchmarks") or []):
+        if x["scope"] == series and x["strategy"] == strategy and x["execution"] == execution:
+            return x["holdout"]
+    return None
 
 
 def _backtest(results: dict, series: str, strategy: str, execution: str):
@@ -108,6 +121,8 @@ def summarise() -> dict:
             "open": [x["ticker"] for x in fills if x["ticker"] not in settled],
             "status": st, "stale": (not st) or now - st.get("ts", 0) > 180,
             "backtest": _backtest(results, s, e["strategy"], e["execution"]),
+            "lab": _lab_holdout(s, e["strategy"], e["execution"]),
+            "lags": [x.get("lag_s") for x in ev if x["event"] == "buy" and x.get("lag_s") is not None],
         })
     out["events"] = [x for x in events if x["event"] != "start"][-40:]
     return out

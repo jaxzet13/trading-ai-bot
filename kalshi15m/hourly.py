@@ -54,31 +54,55 @@ def _kget(path, params):
 
 
 # =========================================================================== download
+def _mrow(m):
+    if m.get("result") not in ("yes", "no") or m.get("floor_strike") is None:
+        return None
+    return {"ticker": m["ticker"], "event": m.get("event_ticker") or m["ticker"].rsplit("-", 1)[0],
+            "open_ts": _ts(m["open_time"]), "close_ts": _ts(m["close_time"]),
+            "strike": float(str(m["floor_strike"]).replace(",", "")),
+            "strike_type": m.get("strike_type"),
+            "result": 1 if m["result"] == "yes" else 0,
+            "volume": float(m.get("volume_fp") or m.get("volume") or 0)}
+
+
+def _event_tickers(series: str, days: int):
+    """Hourly event tickers are labelled by the closing hour in New York time: KXBTCD-26NOV0114."""
+    from datetime import datetime, timezone
+    from zoneinfo import ZoneInfo
+    ny = ZoneInfo("America/New_York")
+    now = int(time.time()) // 3600 * 3600
+    out = []
+    for t in range(now - days * 86400, now, 3600):
+        d = datetime.fromtimestamp(t, timezone.utc).astimezone(ny)
+        out.append(f"{series}-{d:%y}{d.strftime('%b').upper()}{d:%d%H}")
+    return out
+
+
 def fetch_hourly_markets(series: str, days: int) -> pd.DataFrame:
-    params = {"series_ticker": series, "status": "settled", "limit": 1000,
-              "min_close_ts": int(time.time()) - days * 86400}
-    rows, cursor, pages = [], None, 0
-    while True:
-        if cursor:
-            params["cursor"] = cursor
-        d = _kget("/markets", params)
-        ms = d.get("markets", [])
-        for m in ms:
-            if m.get("result") not in ("yes", "no") or m.get("floor_strike") is None:
-                continue
-            rows.append({"ticker": m["ticker"], "event": m.get("event_ticker") or m["ticker"].rsplit("-", 1)[0],
-                         "open_ts": _ts(m["open_time"]), "close_ts": _ts(m["close_time"]),
-                         "strike": float(str(m["floor_strike"]).replace(",", "")),
-                         "strike_type": m.get("strike_type"),
-                         "result": 1 if m["result"] == "yes" else 0,
-                         "volume": float(m.get("volume_fp") or m.get("volume") or 0)})
-        pages += 1
-        print(f"  {series} market pages {pages} ({len(rows)} markets)", end="\r", flush=True)
-        cursor = d.get("cursor")
-        if not cursor or not ms:
-            break
-    print()
-    return pd.DataFrame(rows).drop_duplicates("ticker").reset_index(drop=True)
+    """One request per hourly event (paging the whole series is ~12 s per 1000 markets; per event
+    is ~0.3 s for the full ladder). Resumable via a part file."""
+    from concurrent.futures import ThreadPoolExecutor
+    part, done_p = HDIR / f"{series}_markets.part.csv", HDIR / f"{series}_mdone.txt"
+    done = set(done_p.read_text().split()) if done_p.exists() else set()
+    todo = [e for e in _event_tickers(series, days) if e not in done]
+    print(f"  {series}: {len(done)} event listings cached, {len(todo)} to fetch")
+
+    def one(ev):
+        d = _kget("/markets", {"event_ticker": ev, "limit": 1000})
+        return [r for r in map(_mrow, d.get("markets", [])) if r]
+
+    with ThreadPoolExecutor(8) as ex:
+        for i in range(0, len(todo), 100):
+            chunk = todo[i:i + 100]
+            rows = [r for rs in ex.map(one, chunk) for r in rs]
+            if rows:
+                pd.DataFrame(rows).to_csv(part, mode="a", header=not part.exists(), index=False)
+            with open(done_p, "a") as f:
+                f.write("\n".join(chunk) + "\n")
+            print(f"  {series} event listings {min(i + 100, len(todo))}/{len(todo)}", flush=True)
+    if not part.exists():
+        return pd.DataFrame()
+    return pd.read_csv(part).drop_duplicates("ticker").reset_index(drop=True)
 
 
 def _spot_series(sp: pd.DataFrame) -> pd.Series:
@@ -205,11 +229,11 @@ class HPanel:
         key = pd.MultiIndex.from_arrays([np.repeat(self.ticker, M), ts.ravel()])
         q = cd.reindex(key)
         for f in FIELDS:
-            P[f] = q[f].to_numpy(float).reshape(n, M)
+            P[f] = np.array(q[f].to_numpy(float).reshape(n, M))
         # a minute with no candle: quotes unchanged, nothing traded
         for f, extreme in (("yes_bid", "bid_high"), ("yes_ask", "ask_low")):
             miss = np.isnan(P[f])
-            P[f] = pd.DataFrame(P[f]).ffill(axis=1).to_numpy()
+            P[f] = np.array(pd.DataFrame(P[f]).ffill(axis=1).to_numpy(float))
             P[extreme] = np.where(miss, P[f], P[extreme])
         bad = (P["yes_bid"] <= 0) | (P["yes_ask"] >= 1) | np.isnan(P["yes_bid"]) | np.isnan(P["yes_ask"])
         P["yes_bid"][bad] = np.nan
