@@ -271,6 +271,60 @@ table.odds th:not(:first-child), table.odds td:not(:first-child) { text-align: r
 .cr-HR .tc-art::after { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; background: repeating-linear-gradient(45deg, rgba(255,240,180,.25) 0 1px, transparent 1px 4px); }
 .tcard .glare { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 5; opacity: var(--go); transition: opacity .3s;
   background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.38), rgba(255,255,255,0) 42%); mix-blend-mode: overlay; }
+/* ===== premium full-art finish (Ultra, Illustration, Masterwork, Gilded) ===== */
+.tcard.full { padding: 1.3%; border-radius: 4.8% / 3.4%; box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 0 0 2px rgba(255,255,255,.08), 0 18px 40px rgba(0,0,0,.6); }
+.tcard.full.cr-UR { background: linear-gradient(135deg, #5f646e, #f7f8fa 18%, #868c96 36%, #ffffff 52%, #747a84 70%, #eef0f3 88%, #5f646e); }
+.tcard.full.cr-HR { background: linear-gradient(135deg, #5c3f00, #ffe58a 16%, #a87a06 34%, #fff6cf 50%, #9c7208 68%, #ffd966 86%, #5c3f00); }
+.tcard.full.cr-SIR { background: linear-gradient(115deg, #ff4d8d, #ffd36b, #6bffb8, #5ab0ff, #c47bff, #ff4d8d); background-size: 300% 300%; animation: holo 7s linear infinite; }
+.tcard.full .tc-face { border-radius: 3.8cqi; box-shadow: inset 0 0 0 .3cqi rgba(255,255,255,.22), inset 0 0 6cqi rgba(0,0,0,.45); }
+.tcard.full .tc-face::before { display: none; }
+.tcard.full .tc-face::after { inset: 2.6cqi; border-color: rgba(255,255,255,.4); }
+.tcard.full .tc-art img { object-position: 50% 24%; transform: scale(1.03); }
+.tcard.full .tc-top { padding: 5.2cqi 6cqi 12cqi; background: linear-gradient(rgba(5,5,6,.7), rgba(5,5,6,.25) 60%, transparent); }
+.tcard.full .tc-name { font-size: 13cqi; line-height: .88; background: linear-gradient(180deg, #ffffff 10%, #e2e4e8 50%, #9aa0aa 92%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 .5cqi .9cqi rgba(0,0,0,.9)); }
+.tcard.full.cr-HR .tc-name { background-image: linear-gradient(180deg, #fff8dc 5%, #ffd966 45%, #c98f0a 80%, #fff1b8 100%); }
+.tcard.full.cr-SIR .tc-name { background-image: linear-gradient(100deg, #ffd1e6, #fff3b0, #c8ffe6, #c9e3ff, #ead1ff, #ffd1e6); background-size: 300% 100%; animation: holo 6s linear infinite; }
+.tcard.full .tc-hp { font-size: 5.4cqi; }
+.tcard.full .tc-info { padding: 15cqi 6cqi 5.2cqi; gap: 1.8cqi; background: linear-gradient(transparent, rgba(6,6,8,.62) 30%, rgba(6,6,8,.9)); }
+.tcard.full .mv { padding-bottom: .9cqi; border-bottom: .25cqi solid rgba(255,255,255,.14); }
+.tcard.full .mv b { font-size: 6cqi; } .tcard.full .mv em { font-size: 6.2cqi; }
+.tcard.full .tc-bottom { border-top: 0; padding-top: .6cqi; }
+.tcard.full .tc-bottom .tag { display: flex; align-items: center; gap: 1.6cqi; font-size: 3cqi; letter-spacing: .14em; text-transform: uppercase; color: rgba(244,241,234,.75); }
+.tcard.full .crest { display: grid; place-items: center; width: 7.4cqi; height: 7.4cqi; font-size: 2.9cqi; letter-spacing: -.1em; color: #141414; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: linear-gradient(135deg, #cfd3da, #ffffff 45%, #8d939d); }
+.tcard.full.cr-HR .crest { background: linear-gradient(135deg, #b8860b, #fff1b8 45%, #8a6200); }
+.tcard.full.cr-SIR .crest { background: linear-gradient(135deg, #ff9ac4, #fff3b0, #9be8ff, #d9a8ff); }
+.tcard.full.cr-IR .crest { background: #b3121b; color: #f6efe1; }
+.tcard.full .tc-val { font-size: 6.6cqi; padding: .3cqi 1.8cqi; background: rgba(0,0,0,.55); box-shadow: inset 0 0 0 .3cqi rgba(230,211,163,.35); }
+/* moving light sweep */
+.tcard.full .tc-shine { position: absolute; inset: -30%; z-index: 5; pointer-events: none; mix-blend-mode: overlay; background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,.75) 50%, transparent 58%); transform: translateX(-80%); animation: sweep 5.2s ease-in-out infinite; }
+@keyframes sweep { 0%, 62% { transform: translateX(-80%); } 100% { transform: translateX(80%); } }
+/* textures per rarity */
+.tcard.full .tc-tex { position: absolute; inset: 0; pointer-events: none; }
+.tcard.full.cr-UR .tc-tex { mix-blend-mode: overlay; opacity: .55; background: repeating-linear-gradient(45deg, rgba(255,255,255,.35) 0 .25cqi, transparent .25cqi 1.4cqi), repeating-linear-gradient(-45deg, rgba(255,255,255,.22) 0 .25cqi, transparent .25cqi 1.8cqi); }
+.tcard.full.cr-UR .tc-holo { opacity: .35 !important; }
+.tcard.full.cr-SIR .tc-tex { mix-blend-mode: soft-light; opacity: .7; background: repeating-radial-gradient(circle at 50% 38%, rgba(255,255,255,.55) 0 .5cqi, transparent .5cqi 3cqi); }
+.tcard.full.cr-SIR .tc-holo { opacity: .5 !important; }
+.tcard.full.cr-HR .tc-tex { mix-blend-mode: overlay; opacity: .6; background: repeating-linear-gradient(90deg, rgba(255,240,180,.45) 0 .2cqi, transparent .2cqi 1.2cqi), radial-gradient(ellipse at 50% 30%, rgba(255,230,150,.35), transparent 65%); }
+.tcard.full.cr-HR .tc-holo { opacity: .3 !important; }
+.tcard.full .tc-sparkle { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0; mix-blend-mode: screen;
+  background-image: radial-gradient(circle, #fff 0 .45cqi, transparent .8cqi), radial-gradient(circle, #fff 0 .3cqi, transparent .6cqi), radial-gradient(circle, #fff6cf 0 .4cqi, transparent .7cqi);
+  background-size: 23cqi 29cqi, 17cqi 21cqi, 31cqi 37cqi; background-position: 3cqi 5cqi, 11cqi 13cqi, 19cqi 2cqi; animation: twinkle 2.6s ease-in-out infinite alternate; }
+.tcard.full.cr-SIR .tc-sparkle, .tcard.full.cr-HR .tc-sparkle { opacity: 1; }
+@keyframes twinkle { from { filter: brightness(.4); background-position: 3cqi 5cqi, 11cqi 13cqi, 19cqi 2cqi; } to { filter: brightness(1.4); background-position: 4cqi 4cqi, 10cqi 15cqi, 20cqi 4cqi; } }
+/* Illustration stays a paper art print */
+.tcard.full.cr-IR { background: #0f0f10; padding: 2%; }
+.tcard.full.cr-IR .tc-face::before { display: block; }
+.tcard.full.cr-IR .tc-name { background: none; color: #141414; filter: none; }
+.tcard.full.cr-IR .tc-hp { color: #141414; text-shadow: none; }
+.tcard.full.cr-IR .tc-info { background: none; }
+.tcard.full.cr-IR .tc-bottom .tag { color: rgba(20,20,20,.7); }
+.tcard.full.cr-IR .tc-val { background: #141414; box-shadow: none; color: var(--brass-hi); }
+.tcard.full.cr-IR .tc-art { inset: 17% 7% 31% 7%; }
+.tcard.full.cr-IR .tc-top { background: none; padding: 6cqi 7cqi 0; }
+.tcard.full.cr-IR .tc-name { font-size: 11cqi; }
+.tcard.full.cr-IR .tc-info { padding-top: 0; }
+.tcard.full.cr-IR .tc-shine { mix-blend-mode: soft-light; }
+.tcard.full.cr-IR .mv { border-bottom-color: rgba(20,20,20,.18); }
 .tcard.cr-H .glare, .tcard.cr-RR .glare, .tcard.full .glare, .tcard.rh .glare {
   background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.45), rgba(255,255,255,0) 40%),
     linear-gradient(calc(110deg + (var(--mx) - 50%) * .4), transparent 20%, rgba(255,90,170,.35) 35%, rgba(255,230,120,.35) 45%, rgba(110,255,200,.35) 55%, rgba(110,170,255,.35) 65%, transparent 80%);
@@ -431,7 +485,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .st-tray:empty { display: none; }
 .st-tray .mini { width: 62px; animation: mini .4s cubic-bezier(.2,1.3,.4,1) both; }
 @keyframes mini { from { transform: translateY(30px) scale(.6); opacity: 0; } }
-.cut { position: fixed; inset: 0; z-index: 28; background: #000; display: grid; place-items: center; overflow: hidden; cursor: pointer; }
+.cut { position: fixed; inset: 0; z-index: 45; background: #000; display: grid; place-items: center; overflow: hidden; cursor: pointer; }
 .cut video, .cut canvas { width: 100%; height: 100%; object-fit: contain; transition: filter .5s, opacity .5s; }
 .cut canvas { width: min(100vw, calc(100vh * 16 / 9)); height: auto; aspect-ratio: 16 / 9; }
 .cut.ended video, .cut.ended canvas { filter: brightness(.35) saturate(.6); }
@@ -447,8 +501,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 @keyframes cutslam { from { transform: scale(2.6) rotate(-8deg); opacity: 0; filter: blur(6px); } to { transform: none; opacity: 1; filter: none; } }
 .cut-cont { position: absolute; z-index: 4; bottom: calc(11vh + 18px); right: max(28px, 5vw); font-family: var(--f-mono); font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: #e9e4d8; animation: blink 1.4s infinite; }
 @keyframes blink { 50% { opacity: .35; } }
-.cut-skip { position: absolute; z-index: 5; top: calc(11vh + 14px); right: max(16px, 3vw); }
-.flash { position: fixed; inset: 0; z-index: 30; pointer-events: none; opacity: 0; background: #fff; }
+.cut .cut-skip { position: absolute; z-index: 5; top: calc(11vh + 14px); right: max(16px, 3vw); left: auto; bottom: auto; width: auto; height: auto; justify-self: end; align-self: start; }
+.flash { position: fixed; inset: 0; z-index: 46; pointer-events: none; opacity: 0; background: #fff; }
 .flash.on { animation: flash .9s ease-out; }
 @keyframes flash { 0% { opacity: var(--fo, .8); } 100% { opacity: 0; } }
 .st-summary { position: absolute; inset: 0; z-index: 9; display: grid; place-items: center; overflow-y: auto; background: rgba(5,5,6,.6); backdrop-filter: blur(3px);
@@ -493,6 +547,55 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .gate-box label { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; }
 .gate-box input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--brass); flex: none; }
 
+.vmode { display: flex; border: 1px solid var(--line-2); }
+.vmode button { background: none; border: 0; padding: 7px 14px; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+.vmode button[aria-pressed="true"] { background: var(--bone); color: var(--void); }
+.binder { position: relative; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; margin-top: 8px; }
+.book { position: relative; display: grid; grid-template-columns: 1fr 34px 1fr; padding: 22px; border-radius: 14px; perspective: 1600px;
+  background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.06), transparent 60%), repeating-linear-gradient(35deg, rgba(255,255,255,.012) 0 2px, transparent 2px 5px), #2a1712;
+  box-shadow: 0 30px 60px rgba(0,0,0,.6), inset 0 0 0 2px rgba(0,0,0,.6), inset 0 0 0 9px #2a1712, inset 0 0 0 10px rgba(216,180,120,.35); }
+.book::before { content: ""; position: absolute; inset: 12px; border: 1px dashed rgba(216,180,120,.35); border-radius: 9px; pointer-events: none; }
+.binder.single .book { grid-template-columns: 1fr; }
+.bpage { position: relative; background: radial-gradient(ellipse at 50% 0%, #26262b, #18181c 75%); border-radius: 6px; padding: 16px 16px 10px; box-shadow: inset 0 0 30px rgba(0,0,0,.6); min-width: 0; }
+.pgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.pocket { position: relative; aspect-ratio: 5 / 7; border: 0; padding: 4%; border-radius: 6px; background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), inset 0 -10px 18px rgba(0,0,0,.35); cursor: pointer; min-width: 0; transition: transform .2s; }
+.pocket:not(.empty-p):not(.blank):hover { transform: translateY(-4px) scale(1.02); z-index: 2; }
+.pocket::after { content: ""; position: absolute; inset: 0; border-radius: 6px; pointer-events: none; background: linear-gradient(115deg, rgba(255,255,255,.14), transparent 28%, transparent 70%, rgba(255,255,255,.07)); }
+.pocket .tcard { width: 100%; height: 100%; box-shadow: 0 4px 10px rgba(0,0,0,.5); }
+.pocket.empty-p, .pocket.blank { cursor: default; }
+.pocket.blank { background: rgba(255,255,255,.015); }
+.ghost { position: absolute; inset: 8%; border-radius: 4px; overflow: hidden; border: 1px dashed rgba(255,255,255,.12); }
+.ghost img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; filter: grayscale(1) brightness(.18) contrast(1.4); opacity: .55; }
+.pocket .pn { position: absolute; left: 0; right: 0; bottom: 36%; text-align: center; font-family: var(--f-mono); font-size: 13px; letter-spacing: .14em; color: rgba(233,228,216,.42); }
+.pocket .pr { position: absolute; left: 0; right: 0; bottom: 26%; text-align: center; font-size: 12px; opacity: .7; }
+.pocket .pc { position: absolute; top: -6px; right: -6px; z-index: 3; font-family: var(--f-mono); font-size: 11px; font-weight: 600; background: var(--bone); color: var(--void); padding: 2px 6px; border-radius: 10px; }
+.pocket .pplay { position: absolute; top: -6px; left: -6px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; background: rgba(179,18,27,.92); color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.6); }
+.pfoot { margin-top: 10px; text-align: center; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(233,228,216,.35); }
+.spine { display: flex; flex-direction: column; justify-content: space-around; align-items: center; background: linear-gradient(90deg, rgba(0,0,0,.5), rgba(0,0,0,.15) 50%, rgba(0,0,0,.5)); }
+.spine i { width: 30px; height: 16px; border-radius: 9px; background: linear-gradient(180deg, #f1f1f1, #8e8e94 45%, #d9d9de 60%, #6d6d72); box-shadow: 0 2px 4px rgba(0,0,0,.6); }
+.endpaper { display: grid; place-items: center; background: repeating-linear-gradient(45deg, #1d1d21 0 6px, #19191d 6px 12px); }
+.endmark { display: grid; justify-items: center; gap: 8px; color: rgba(216,180,120,.6); }
+.endmark svg { width: 46px; height: 46px; color: rgba(216,180,120,.6); }
+.endmark span { font-family: var(--f-display); font-style: italic; font-size: 30px; }
+.endmark small { font-family: var(--f-mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; }
+.bnav { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-2); background: var(--slate); font-size: 26px; line-height: 1; display: grid; place-items: center; }
+.bnav[disabled] { opacity: .25; cursor: default; }
+.bdots { grid-column: 1 / -1; display: flex; justify-content: center; gap: 8px; }
+.bdots button { width: 9px; height: 9px; border-radius: 50%; border: 0; background: var(--line-2); padding: 0; }
+.bdots button[aria-pressed="true"] { background: var(--brass); }
+.book.turnL .bpage:last-child, .binder.single .book.turnL .bpage { animation: turnL .45s cubic-bezier(.3,.7,.3,1); transform-origin: left center; }
+.book.turnR .bpage:first-child, .binder.single .book.turnR .bpage { animation: turnR .45s cubic-bezier(.3,.7,.3,1); transform-origin: right center; }
+@keyframes turnL { from { transform: rotateY(-70deg); opacity: .3; } }
+@keyframes turnR { from { transform: rotateY(70deg); opacity: .3; } }
+.cm-box { position: relative; background: var(--ash); border: 1px solid var(--line-2); padding: 28px; width: min(860px, 100%); display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 28px; align-items: start; }
+.cm-x { position: absolute; top: 12px; right: 12px; }
+.cm-card .tcard { width: 100%; transition: transform .12s ease-out; will-change: transform; }
+.cm-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.cm-side h2 { font-size: 42px; font-style: italic; }
+.copies { display: grid; gap: 6px; max-height: 260px; overflow-y: auto; }
+.copy { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; font-size: 13px; padding: 8px 10px; background: var(--slate); border: 1px solid var(--line); }
+.copy .num { color: var(--brass-hi); }
+@media (max-width: 900px) { .binder { grid-template-columns: 1fr; } .bnav { display: none; } .cm-box { grid-template-columns: 1fr; } .cm-card { width: min(300px, 80vw); justify-self: center; } .pgrid { gap: 8px; } .book { padding: 12px; } }
 .toast { position: fixed; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50; background: var(--bone); color: var(--void); padding: 10px 18px; font-size: 13px; font-weight: 600; max-width: calc(100% - 32px); }
 
 .lv { display: flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em; color: var(--dim); }
@@ -620,9 +723,11 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   </section>
 
   <section class="view" id="view-vault" hidden>
-    <div class="section-head"><div><div class="label">Holdings</div><h2>Vault</h2><p class="lede">Every fighter you've pulled. Sell any of them back instantly for 90% of card value.</p></div></div>
+    <div class="section-head"><div><div class="label">Holdings</div><h2>Binder</h2><p class="lede">Your binder, in set order. Open any card to see every copy you own, sell it, or replay its cutscene.</p></div></div>
     <div class="toolbar">
-      <div class="stat"><span class="label">Fighters</span><strong id="vStatCount">0</strong></div>
+      <div class="vmode" role="group" aria-label="View"><button data-vmode="binder" aria-pressed="true">Binder</button><button data-vmode="list" aria-pressed="false">List</button></div>
+      <div class="stat"><span class="label">Collected</span><strong id="vStatSet">0/0</strong></div>
+      <div class="stat"><span class="label">Cards</span><strong id="vStatCount">0</strong></div>
       <div class="stat"><span class="label">Card value</span><strong id="vStatValue">0</strong></div>
       <div class="stat"><span class="label">Sell-back</span><strong id="vStatBuy">0</strong></div>
       <div class="stat"><span class="label">Top card</span><strong id="vStatUsd">$0.00</strong></div>
@@ -719,6 +824,13 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     <p class="small-print">Demo checkout. No card is charged and no payment details are collected.</p>
   </div>
 </div>
+<div class="modal" id="cardModal" hidden>
+  <div class="cm-box" role="dialog" aria-modal="true" aria-label="Card">
+    <button class="x cm-x" id="closeCard" aria-label="Close">×</button>
+    <div class="cm-card" id="cmCard"></div>
+    <div class="cm-side" id="cmSide"></div>
+  </div>
+</div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -745,22 +857,27 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     HR:  { name: "Gilded", sym: "★★★", col: "#f5c542", tier: 7, build: 2.6 }
   };
   const CR_ORDER = ["C", "U", "R", "H", "RR", "UR", "IR", "SIR", "HR"];
-  const SET_SIZE = 17, SET_NAME = "Ink & Steel", RH_MULT = 2.2;
+  const SET_SIZE = 25, SET_NAME = "Ink & Steel", RH_MULT = 2.2;
   const CARDS = [
-    ["001", "knuckles", "C", 8], ["002", "shiv", "C", 9], ["003", "bulwark", "C", 8], ["004", "pike", "C", 10],
-    ["005", "ronin", "U", 25], ["006", "reaver", "U", 28], ["007", "breaker", "U", 22],
-    ["008", "arcanist", "R", 55], ["009", "twinblade", "R", 60],
-    ["010", "reaper", "H", 220], ["011", "colossus", "H", 180], ["012", "shogun", "H", 260], ["013", "null", "H", 240],
-    ["014", "reaper", "RR", 450], ["015", "colossus", "RR", 380], ["016", "shogun", "RR", 600], ["017", "null", "RR", 520],
-    ["018", "ronin", "UR", 1100], ["019", "reaver", "UR", 1000], ["020", "arcanist", "UR", 1200], ["021", "twinblade", "UR", 1300],
-    ["022", "knuckles", "IR", 600], ["023", "shiv", "IR", 500], ["024", "bulwark", "IR", 450], ["025", "pike", "IR", 550],
-    ["026", "reaper", "SIR", 4500], ["027", "null", "SIR", 5200], ["028", "shogun", "SIR", 6500],
-    ["029", "null", "HR", 3200], ["030", "shogun", "HR", 3800]
+    ["001", "knuckles", "C", 8], ["002", "shiv", "C", 9], ["003", "bulwark", "C", 8], ["004", "pike", "C", 10], ["005", "bo", "C", 9],
+    ["006", "ronin", "U", 25], ["007", "reaver", "U", 28], ["008", "breaker", "U", 22], ["009", "lash", "U", 24], ["010", "snap", "U", 26],
+    ["011", "arcanist", "R", 55], ["012", "twinblade", "R", 60], ["013", "fletch", "R", 52], ["014", "kusari", "R", 58],
+    ["015", "reaper", "H", 220], ["016", "colossus", "H", 180], ["017", "shogun", "H", 260], ["018", "null", "H", 240], ["019", "phantom", "H", 210], ["020", "umbra", "H", 200],
+    ["021", "reaper", "RR", 450], ["022", "colossus", "RR", 380], ["023", "shogun", "RR", 600], ["024", "null", "RR", 520], ["025", "chrono", "RR", 480],
+    ["026", "ronin", "UR", 1100], ["027", "reaver", "UR", 1000], ["028", "arcanist", "UR", 1200], ["029", "twinblade", "UR", 1300], ["030", "fletch", "UR", 1050], ["031", "snap", "UR", 1000],
+    ["032", "knuckles", "IR", 600], ["033", "shiv", "IR", 500], ["034", "bulwark", "IR", 450], ["035", "pike", "IR", 550], ["036", "bo", "IR", 520], ["037", "lash", "IR", 560],
+    ["038", "reaper", "SIR", 4500], ["039", "null", "SIR", 5200], ["040", "shogun", "SIR", 6500], ["041", "kusari", "SIR", 4800], ["042", "phantom", "SIR", 5000],
+    ["043", "null", "HR", 3200], ["044", "shogun", "HR", 3800], ["045", "chrono", "HR", 3500],
+    ["046", "breaker", "UR", 1150], ["047", "umbra", "UR", 1150]
   ].map(([no, id, rar, v]) => ({ no, id, rar, v, ex: rar === "RR" }));
   const CARD_BY_NO = Object.fromEntries(CARDS.map(c => [c.no, c]));
-  const TYPES = { fist: { name: "Fist", col: "#cdbd9f" }, blade: { name: "Blade", col: "#e2a3a0" }, guard: { name: "Guard", col: "#aebdcb" }, reach: { name: "Reach", col: "#bcd29b" }, blunt: { name: "Blunt", col: "#e5c77f" }, arcane: { name: "Arcane", col: "#a5dbe9" }, shadow: { name: "Shadow", col: "#bf9cc1" }, royal: { name: "Royal", col: "#eed689" }, void: { name: "Void", col: "#cfcfcf" } };
-  const FTYPE = { knuckles: "fist", shiv: "blade", bulwark: "guard", pike: "reach", ronin: "blade", reaver: "blade", breaker: "blunt", arcanist: "arcane", twinblade: "blade", reaper: "shadow", colossus: "blunt", shogun: "royal", null: "void" };
+  const TYPES = { chain: { name: "Chain", col: "#d4a5a5" }, time: { name: "Time", col: "#e8c3c3" }, fist: { name: "Fist", col: "#cdbd9f" }, blade: { name: "Blade", col: "#e2a3a0" }, guard: { name: "Guard", col: "#aebdcb" }, reach: { name: "Reach", col: "#bcd29b" }, blunt: { name: "Blunt", col: "#e5c77f" }, arcane: { name: "Arcane", col: "#a5dbe9" }, shadow: { name: "Shadow", col: "#bf9cc1" }, royal: { name: "Royal", col: "#eed689" }, void: { name: "Void", col: "#cfcfcf" } };
+  const FTYPE = { bo: "reach", lash: "chain", snap: "fist", fletch: "reach", kusari: "chain", phantom: "shadow", umbra: "shadow", chrono: "time", knuckles: "fist", shiv: "blade", bulwark: "guard", pike: "reach", ronin: "blade", reaver: "blade", breaker: "blunt", arcanist: "arcane", twinblade: "blade", reaper: "shadow", colossus: "blunt", shogun: "royal", null: "void" };
   const MOVES = {
+    bo: [["Sweep", 30], ["Six Down", 70]], lash: [["Crack", 40], ["Red End", 90, "Burns through shields."]], snap: [["Rattle", 30], ["Pink Spiral", 100]],
+    fletch: [["Loose", 50], ["Arrow Rain", 130, "Hits everything on the field."]], kusari: [["Hook", 60], ["Blood Geyser", 140]],
+    phantom: [["Ribbon Cut", 80], ["Vanish", 170, "Can't be hit next turn."]], umbra: [["Mirror Step", 70], ["Swallow", 160, "Takes the shadow's strength."]],
+    chrono: [["Freeze Frame", "", "Opponent loses a turn."], ["Nine Seconds", 230]],
     knuckles: [["Jab-Jab", 20], ["Haymaker", 60]], shiv: [["Quick Cut", 20], ["Backstab", 50]], bulwark: [["Shield Wall", "", "Takes 30 less damage next turn."], ["Shield Bash", 40]],
     pike: [["Keep Away", 30], ["Long Thrust", 60]], ronin: [["Iaido", 90, "Strikes first."]], reaver: [["Twin Chop", 40], ["Whirlwind", 80]],
     breaker: [["Groundbreaker", 100, "Shakes the whole arena."]], arcanist: [["Rune Bolt", 50], ["Page Turner", 110]], twinblade: [["Cross Cut", 60], ["Mirror Dance", 120]],
@@ -783,6 +900,14 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     FX_("reaper", "Reaper", "legendary", 810, 10, 7, 6, { wpn: "scythe", body: "#121214", accent: "#9e1b22", cloak: "#2a0a0d", eye: "#e8473f", acc: "cloak", c: "#9e1b22", title: "Scythe", sig: "victory" }, "Shows up when the fight's already over."),
     FX_("colossus", "Colossus", "legendary", 700, 10, 2, 10, { wpn: "hammer", body: "#4b4b52", accent: "#8a6a3a", acc: "none", bulk: true, scale: 1.9, c: "#7a7a82", title: "Giant hammer", sig: "victory" }, "Three meters of bad news."),
     FX_("shogun", "Shogun", "secret", 4200, 10, 9, 9, { wpn: "katana", gold: true, body: "#0e0e10", accent: "#e4ae3a", cloak: "#2a2008", acc: "cape", c: "#e4ae3a", title: "Gold katana", sig: "stance" }, "The last sword anyone sees."),
+    FX_("bo", "Bo", "common", 9, 4, 5, 5, { wpn: "staff", body: "#121214", accent: "#8a5a2b", acc: "none", c: "#8a5a2b", title: "Bo staff", sig: "stance" }, "Fought six knives. Brought one stick."),
+    FX_("lash", "Lash", "rare", 48, 7, 5, 3, { wpn: "chain", body: "#121214", accent: "#c4232b", acc: "none", c: "#c4232b", title: "Chain whip", sig: "windSide" }, "Ten feet of reach and a red-hot end."),
+    FX_("snap", "Snap", "rare", 50, 6, 8, 3, { wpn: "nunchaku", body: "#121214", accent: "#e0479a", acc: "none", c: "#e0479a", title: "Nunchaku", sig: "stance" }, "You hear it before you see it."),
+    FX_("fletch", "Fletch", "epic", 160, 8, 6, 3, { wpn: "bow", body: "#121214", accent: "#8a6a3a", glow: "#0d0d0e", acc: "none", c: "#8a8f99", title: "Longbow", sig: "cast" }, "One arrow to start it. A thousand to end it."),
+    FX_("kusari", "Kusari", "epic", 170, 8, 7, 4, { wpn: "sickle", body: "#121214", accent: "#c4232b", acc: "none", c: "#c4232b", title: "Chain sickle", sig: "windSide" }, "The chain decides where you stand."),
+    FX_("phantom", "Phantom", "legendary", 700, 9, 10, 4, { wpn: "knife", twin: true, body: "#121214", accent: "#0d0d0e", cloak: "#0d0d0e", acc: "cape", c: "#b3121b", title: "Twin daggers", sig: "dash" }, "Gone before the cape lands."),
+    FX_("umbra", "Umbra", "legendary", 650, 8, 8, 8, { wpn: "knife", body: "#121214", accent: "#434343", acc: "none", c: "#434343", title: "Knife & shadow", sig: "stance" }, "Fights the only one who knows all his moves."),
+    FX_("chrono", "Chrono", "secret", 3500, 9, 10, 9, { wpn: "knife", body: "#efebe2", outline: "#b3121b", accent: "#b3121b", acc: "none", c: "#b3121b", title: "Stopped time", sig: "slashSide" }, "Nine seconds. Nobody else gets to move."),
     FX_("null", "Null", "secret", 3000, 9, 10, 9, { wpn: "book", void: true, body: "#efebe2", outline: "#0a0a0b", accent: "#0a0a0b", glow: "#ffffff", cover: "#0a0a0b", acc: "none", c: "#3a3a3e", title: "Void book", sig: "cast" }, "Not on any checklist.")
   ];
   const BY_ID = Object.fromEntries(FIGHTERS.map(f => [f.id, f]));
@@ -829,7 +954,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   const levelReward = n => 25 + 15 * n;
   const DAY = 864e5;
   const SLOTS = ["C", "C", "U", "RHS", "RARE"];   // booster layout: 2 commons, 1 uncommon, a reverse-holo slot, the rare slot last
-  const cardOf = it => (it && CARD_BY_NO[it.cno]) || CARDS.find(c => c.id === (it && it.id)) || CARDS[0];
+  const cardOf = it => { if (!it) return CARDS[0]; const c = CARD_BY_NO[it.cno]; if (c && c.id === it.id && (!it.rar || c.rar === it.rar)) return c; return CARDS.find(x => x.id === it.id && x.rar === it.rar) || CARDS.find(x => x.id === it.id) || CARDS[0]; };
   const rarOf = it => (it && it.rar) || cardOf(it).rar;
   const cardBaseValue = (card, ed, rh) => { let v = card.v * (rh ? RH_MULT : 1); if (ed === "sketch") v = Math.max(1, v * SKETCH_MULT); return Math.max(1, Math.round(v)); };
   const featW = (p, c) => p.feat && p.feat[0] === c.id ? p.feat[1] : 1;
@@ -946,12 +1071,12 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
         <div class="tc-foot"><span class="tc-no">${num}</span><span class="rseal" title="${R.name}">${R.sym}</span>${item.rh ? `<span class="rhb">REVERSE FOIL</span>` : ""}<span class="tc-val">${val}</span></div>
         ${stamp}</div><div class="glare"></div></div>`;
     return `<div class="${cls}" style="--tc:${T.col};--rc:${R.col}"><div class="tc-face">
-      <div class="tc-art">${figImg(f)}<div class="tc-holo"></div></div>
+      <div class="tc-art">${figImg(f)}<div class="tc-holo"></div><div class="tc-tex"></div></div><div class="tc-sparkle"></div><div class="tc-shine"></div>
       <div class="tc-top"><span class="tc-name">${name}</span><span class="tc-hp"><small>PWR</small>${pwr}</span></div>
       ${stamp}
       <div class="tc-info">
         <div class="tc-moves">${tech}</div>
-        <div class="tc-bottom"><span class="tag">${num} <b class="sym">${R.sym}</b></span><span class="tc-val">${val}</span></div>
+        <div class="tc-bottom"><span class="tag"><span class="crest">${R.sym}</span>${num} · ${R.name}</span><span class="tc-val">${val}</span></div>
       </div>
     </div><div class="glare"></div></div>`;
   }
@@ -1100,10 +1225,56 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     $("vStatBuy").textContent = money(sell); $("vStatUsd").textContent = items.length ? money(Math.max(...items.map(val))) : "–";
     $("sellCommons").disabled = !items.some(it => rarOf(it) === "C" && !it.rh && it.ed !== "sketch");
     $("sellSketch").disabled = !items.some(it => it.ed === "sketch");
-    if (!items.length) { $("vaultBody").innerHTML = `<div class="empty"><h3>The vault is empty.</h3><p>Open a pack and your pulls are kept here.</p><a class="btn brass" href="#packs">Browse packs</a></div>`; return; }
+    const owned = new Set(items.map(it => cardOf(it).no));
+    $("vStatSet").textContent = `${owned.size}/${CARDS.length}`;
+    document.querySelectorAll("[data-vmode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.vmode === vaultMode));
+    $("vSort").hidden = vaultMode === "binder";
+    if (vaultMode === "binder") { renderBinder(items); return; }
+    if (!items.length) { $("vaultBody").innerHTML = `<div class="empty"><h3>The binder is empty.</h3><p>Open a pack and your pulls are kept here.</p><a class="btn brass" href="#packs">Browse packs</a></div>`; return; }
     $("vaultBody").innerHTML = `<div class="card-grid">${items.map(it => `<div class="vault-item">${cardHTML(it)}
       <div class="row"><span class="num">${money(itemSell(it))}</span><button class="btn small" data-sell="${it.uid}">Sell</button></div></div>`).join("")}</div>`;
   }
+
+  // ---------- Binder ----------
+  let vaultMode = "binder", binderSpread = 0, cmNo = null;
+  const PER_PAGE = 9;
+  const copiesOf = no => state.vault.filter(it => cardOf(it).no === no).sort((a, b) => itemVal(b) - itemVal(a));
+  function pocketHTML(card) {
+    const copies = copiesOf(card.no), R = CR[card.rar], f = BY_ID[card.id];
+    if (!copies.length) return `<div class="pocket empty-p" title="${esc(f.name)} · ${R.name} · not collected"><div class="ghost"><img src="${portrait(f)}" alt="" draggable="false"></div><span class="pn">${card.no}</span><span class="pr" style="color:${R.col}">${R.sym}</span></div>`;
+    const best = copies[0], cut = copies.some(hasCutscene);
+    return `<button class="pocket" data-pocket="${card.no}" aria-label="${esc(f.name)}, ${R.name}, ${copies.length} owned">${cardHTML(best)}${copies.length > 1 ? `<span class="pc">×${copies.length}</span>` : ""}${cut ? `<span class="pplay" title="Has a cutscene">▶</span>` : ""}</button>`;
+  }
+  function renderBinder(items) {
+    const pages = []; for (let i = 0; i < CARDS.length; i += PER_PAGE) pages.push(CARDS.slice(i, i + PER_PAGE));
+    const narrow = innerWidth < 900, per = narrow ? 1 : 2, spreads = Math.ceil(pages.length / per);
+    binderSpread = Math.max(0, Math.min(spreads - 1, binderSpread));
+    const page = (cards, idx) => cards ? `<div class="bpage"><div class="pgrid">${cards.map(pocketHTML).join("")}${"<div class=\"pocket blank\"></div>".repeat(PER_PAGE - cards.length)}</div><div class="pfoot">${SET_NAME} · page ${idx + 1} of ${pages.length}</div></div>` : `<div class="bpage endpaper"><div class="endmark"><svg viewBox="0 0 40 40"><use href="#i-sigil"/></svg><span>${SET_NAME}</span><small>${CARDS.length} cards · Series II</small></div></div>`;
+    const a = binderSpread * per;
+    $("vaultBody").innerHTML = `<div class="binder${narrow ? " single" : ""}">
+      <button class="bnav prev" data-bnav="-1" ${binderSpread === 0 ? "disabled" : ""} aria-label="Previous page">‹</button>
+      <div class="book" id="book">${page(pages[a], a)}${per === 2 ? `<div class="spine"><i></i><i></i><i></i></div>${page(pages[a + 1], a + 1)}` : ""}</div>
+      <button class="bnav next" data-bnav="1" ${binderSpread >= spreads - 1 ? "disabled" : ""} aria-label="Next page">›</button>
+      <div class="bdots">${Array.from({ length: spreads }, (_, i) => `<button data-bspread="${i}" aria-pressed="${i === binderSpread}" aria-label="Page ${i * per + 1}"></button>`).join("")}</div>
+    </div>`;
+  }
+  function turnBinder(d) { binderSpread += d; renderVault(); const b = $("book"); if (b) { b.classList.add(d > 0 ? "turnL" : "turnR"); } }
+  function openCardModal(no) {
+    cmNo = no; const copies = copiesOf(no); if (!copies.length) { closeCardModal(); return; }
+    const card = CARD_BY_NO[no], f = BY_ID[card.id], R = CR[card.rar], best = copies[0];
+    $("cmCard").innerHTML = cardHTML(best);
+    const cut = copies.find(hasCutscene);
+    $("cmSide").innerHTML = `<span class="label" style="color:${R.col}">${R.sym} ${R.name} · ${card.no}/${String(SET_SIZE).padStart(3, "0")}</span>
+      <h2>${esc(f.name)}</h2><p class="small-print">${esc(f.title)} · ${esc(f.trait)}</p>
+      ${cut ? `<button class="btn brass big" data-replay="${cut.uid}">▶ Replay cutscene</button>` : `<p class="small-print">No cutscene for this card. Signature, Ultra, Illustration, Masterwork and Gilded cards of fighters with a film get one.</p>`}
+      <div class="label" style="margin-top:6px">Your copies · ${copies.length}</div>
+      <div class="copies">${copies.map(it => `<div class="copy"><span>No. ${String(it.serial).padStart(4, "0")}${it.rh ? " · Reverse Foil" : ""}${it.ed === "sketch" ? " · Sketch" : ""}</span><span class="num">${money(itemVal(it))}</span><button class="btn small" data-sell="${it.uid}">Sell ${money(itemSell(it))}</button></div>`).join("")}</div>`;
+    $("cardModal").hidden = false; $("closeCard").focus();
+  }
+  function closeCardModal() { cmNo = null; $("cardModal").hidden = true; }
+  $("cardModal").addEventListener("pointermove", e => { const tc = $("cmCard").querySelector(".tcard"); if (!tc) return; const r = tc.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; tc.style.setProperty("--mx", (x * 100).toFixed(1) + "%"); tc.style.setProperty("--my", (y * 100).toFixed(1) + "%"); tc.style.setProperty("--go", "1"); tc.style.transform = `perspective(900px) rotateY(${((x - .5) * 18).toFixed(1)}deg) rotateX(${((.5 - y) * 14).toFixed(1)}deg)`; });
+  $("cardModal").addEventListener("click", e => { if (e.target === $("cardModal")) closeCardModal(); });
+  addEventListener("resize", () => { if (currentTab === "vault" && vaultMode === "binder") renderVault(); });
 
   // ---------- Ledger ----------
   function renderLedger() {
@@ -1218,7 +1389,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     if (!n) return 0;
     state.coins += got; state.s.coinsFromSales += got;
     log(label || `Sold back ${n} fighter${n > 1 ? "s" : ""}`, got, "coin");
-    snap(); save(); renderAll(); return got;
+    snap(); save(); renderAll(); if (cmNo) openCardModal(cmNo); return got;
   }
 
   function buy(packId, free) {
@@ -1517,9 +1688,17 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   }
 
   // ---------- Cutscenes: rare+ fighters that have one play it right after the pull ----------
-  const CUTSCENES = { ronin: "films/cut_ronin.mp4", reaver: "films/cut_reaver.mp4", reaper: "films/cut_reaper.mp4" };
+  // Cutscenes: the owner's own traced fights. Only rarer cards (Signature and up) play one.
+  const CUTSCENES = {
+    ronin: "films/reel_katana.mp4", shogun: "films/reel_katana.mp4", reaper: "films/reel_brawl.mp4", colossus: "films/reel_giant.mp4",
+    pike: "films/reel_spear.mp4", breaker: "films/reel_hammer.mp4", knuckles: "films/reel_crowd.mp4", reaver: "films/axes.mp4",
+    phantom: "films/daggers.mp4", chrono: "films/timestop.mp4", umbra: "films/shadow.mp4", fletch: "films/archer.mp4",
+    snap: "films/nunchaku.mp4", lash: "films/chainwhip.mp4", kusari: "films/sickle.mp4", bo: "films/bostaff.mp4"
+  };
+  const CUT_BY_CARD = { "038": "films/reel_scythe.mp4" };
+  const cutFor = it => CUT_BY_CARD[cardOf(it).no] || CUTSCENES[it.id];
   let CUT = null;
-  const hasCutscene = it => it.ed !== "sketch" && !!CUTSCENES[it.id] && (CR[rarOf(it)] || CR.C).tier >= 3;   // only footage traced from the owner's own videos
+  const hasCutscene = it => it.ed !== "sketch" && !!cutFor(it) && (CR[rarOf(it)] || CR.C).tier >= 4;   // only footage traced from the owner's own videos
   const DUMMY = () => Object.assign({}, BY_ID.knuckles, { id: "dummy", name: "Sparring dummy", body: "#434343", acc: "none" });
   function playCutscene(it, done) {
     const f = BY_ID[it.id], box = $("cut"), v = $("cutVideo");
@@ -1530,9 +1709,9 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     $("cutCard").innerHTML = cardHTML(it); $("cutCard").hidden = true; $("cutCont").hidden = true;
     box.hidden = false; void box.offsetWidth; box.classList.add("on");
     const cv = $("cutCanvas");
-    if (CUTSCENES[f.id]) {
+    if (cutFor(it)) {
       v.hidden = false; cv.hidden = true;
-      v.src = CUTSCENES[f.id]; v.currentTime = 0; v.muted = !!state.muted;
+      v.src = cutFor(it); v.currentTime = 0; v.muted = !!state.muted;
       v.onerror = () => { if (CUT && CUT.phase === "play") endCutscene(); };
       const pr = v.play(); if (pr && pr.catch) pr.catch(() => { v.muted = true; v.play().catch(() => endCutscene()); });
     }
@@ -1734,6 +1913,11 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       c.fillStyle = sil || "#5a5a5e"; c.beginPath(); c.ellipse(6, 0, 7, 30, 0, 0, 7); c.fill();
       if (!sil) { c.strokeStyle = "#2c2c30"; c.lineWidth = 2.4; c.beginPath(); c.ellipse(6, 0, 7, 30, 0, 0, 7); c.stroke(); c.beginPath(); c.moveTo(4, -22); c.lineTo(9, -6); c.lineTo(3, 6); c.lineTo(8, 20); c.stroke(); c.fillStyle = "#3d3d42"; c.beginPath(); c.ellipse(7, 0, 3, 6, 0, 0, 7); c.fill(); }
     },
+    staff(c, F, sil) { c.lineCap = "round"; c.strokeStyle = sil || "#6b4423"; c.lineWidth = 3.6; c.beginPath(); c.moveTo(-60, 0); c.lineTo(70, 0); c.stroke(); if (!sil) { c.strokeStyle = "#2a1a0e"; c.lineWidth = 3.8; c.beginPath(); c.moveTo(-60, 0); c.lineTo(-52, 0); c.moveTo(62, 0); c.lineTo(70, 0); c.stroke(); } },
+    chain(c, F, sil) { c.strokeStyle = sil || "#2a2a2e"; c.lineWidth = 2.2; for (let i = 0; i < 14; i++) { c.beginPath(); c.ellipse(4 + i * 5.4, Math.sin(i * .7) * 3, 3, 1.8, i % 2 ? .6 : 0, 0, 7); c.stroke(); } c.fillStyle = sil || F.accent; c.beginPath(); c.ellipse(80, Math.sin(9.8) * 3, 6, 3, 0, 0, 7); c.fill(); },
+    sickle(c, F, sil) { c.lineCap = "round"; c.strokeStyle = sil || "#2b211b"; c.lineWidth = 3.4; c.beginPath(); c.moveTo(-4, 0); c.lineTo(22, 0); c.stroke(); c.fillStyle = sil || "#d9dadd"; c.beginPath(); c.moveTo(20, -1); c.quadraticCurveTo(36, -26, 20, -38); c.quadraticCurveTo(30, -22, 16, 2); c.closePath(); c.fill(); c.strokeStyle = sil || "#2a2a2e"; c.lineWidth = 1.8; for (let i = 0; i < 6; i++) { c.beginPath(); c.ellipse(-8 - i * 5, 2 + i * 1.5, 2.6, 1.6, 0, 0, 7); c.stroke(); } },
+    nunchaku(c, F, sil) { c.lineCap = "round"; c.strokeStyle = sil || "#1a1a1c"; c.lineWidth = 4.2; c.beginPath(); c.moveTo(-2, 0); c.lineTo(22, 0); c.stroke(); c.strokeStyle = sil || "#555"; c.lineWidth = 1.4; c.beginPath(); c.moveTo(22, 0); c.lineTo(32, 6); c.stroke(); c.strokeStyle = sil || "#1a1a1c"; c.lineWidth = 4.2; c.beginPath(); c.moveTo(32, 6); c.lineTo(54, 16); c.stroke(); if (!sil) { c.strokeStyle = F.accent; c.lineWidth = 4.4; c.beginPath(); c.moveTo(16, 0); c.lineTo(20, 0); c.moveTo(48, 13); c.lineTo(52, 15); c.stroke(); } },
+    bow(c, F, sil) { c.strokeStyle = sil || "#3a2a1a"; c.lineWidth = 3.2; c.lineCap = "round"; c.beginPath(); c.moveTo(6, -38); c.quadraticCurveTo(26, 0, 6, 38); c.stroke(); c.strokeStyle = sil || "#cfcfcf"; c.lineWidth = .9; c.beginPath(); c.moveTo(6, -38); c.lineTo(6, 38); c.stroke(); },
     none() {}
   };
 
@@ -1908,6 +2092,11 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     hammer: { wind: ["windHigh", .3], strike: ["smash", .1], fx: "smash", reach: 118, special: "quake", smear: true, tip: 70 },
     scythe: { wind: ["windSide", .22], strike: ["slashSide", .1], fx: "arc", reach: 140, special: "reap", smear: true, tip: 86 },
     shield: { wind: ["guard", .2], strike: ["thrust", .1], fx: "punch", reach: 70, special: "flurry", smear: false, tip: 20 },
+    staff:  { wind: ["windSide", .16], strike: ["thrust", .08], fx: "thrust", reach: 150, special: "skewer", smear: true, tip: 70 },
+    chain:  { wind: ["windSide", .18], strike: ["slashSide", .09], fx: "arc", reach: 160, special: "whirl", smear: true, tip: 84 },
+    sickle: { wind: ["windSide", .16], strike: ["slashSide", .08], fx: "arc", reach: 120, special: "reap", smear: true, tip: 40 },
+    nunchaku: { wind: ["windSide", .1], strike: ["jab", .06], fx: "arc", reach: 74, special: "flurry", smear: true, tip: 54 },
+    bow:    { wind: ["cast", .2], strike: ["cast", .05], fx: "orb", reach: 520, special: "beam", smear: false, ranged: true },
     book:   { wind: ["cast", .22], strike: ["cast", .05], fx: "orb", reach: 520, special: "beam", smear: false, ranged: true }
   };
   const kitOf = F => KIT[F.wpn === "none" ? "fists" : F.wpn];
@@ -1991,7 +2180,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       const hitAt = t + .04;
       if (K.ranged) {
         const from = { x: cur[a].x + dirA * 50 * S0 / 1.55, y: GROUND - 76 * S0 }, to = chest(d);
-        ev(t, "orb", { x0: from.x, y0: from.y, x1: to.x, y1: to.y, d: .3, c: F.void ? INK_BLACK : (F.glow || "#6fd3ff"), big: heavy });
+        ev(t, "orb", { x0: from.x, y0: from.y, x1: to.x, y1: to.y, d: .3, c: F.void ? INK_BLACK : (F.glow || "#6fd3ff"), big: heavy, arrow: F.wpn === "bow" });
         react(t + .3, d, outcome, heavy ? 1.3 : 1); mv(a, t + .2, .3, "stance", {});
         return t + .75;
       }
@@ -2160,7 +2349,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
         case "crescent": P.fx.push({ k: "crescent", x: e.x, y: e.y, r: e.r, f: e.f, life: e.d, max: e.d }); break;
         case "vortex": P.fx.push({ k: "vortex", x: e.x, y: e.y, r: e.r, life: e.d, max: e.d }); break;
         case "spikes": P.fx.push({ k: "spikes", x: e.x, y: e.y, r: e.r, life: e.d, max: e.d, seed: rnd() * 999 }); break;
-        case "orb": P.fx.push({ k: "orb", x0: e.x0, y0: e.y0, x1: e.x1, y1: e.y1, c: e.c, life: e.d, max: e.d, big: e.big }); break;
+        case "orb": P.fx.push({ k: "orb", x0: e.x0, y0: e.y0, x1: e.x1, y1: e.y1, c: e.c, life: e.d, max: e.d, big: e.big, arrow: e.arrow }); break;
         case "beam": P.fx.push({ k: "beam", x0: e.x0, y0: e.y0, x1: e.x1, y1: e.y1, c: e.c, inv: e.inv, life: e.d, max: e.d }); break;
         case "crack": P.decals.push({ k: "crack", x: e.x, w: e.w, seed: rnd() * 999 }); break;
         case "pool": P.decals.push({ k: "pool", x: e.x, w: e.w, seed: rnd() * 999 }); break;
@@ -2272,7 +2461,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
           if (f.k === "crescent") crescentFx(f);
           if (f.k === "star") { c.save(); c.translate(f.x, f.y); const r = f.big ? 46 : 28; c.fillStyle = INK_BLACK; c.beginPath(); for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6, rr = i % 2 ? r * .3 : r * 1.15; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } c.closePath(); c.fill(); c.fillStyle = "#f2f2ef"; c.beginPath(); for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6, rr = i % 2 ? r * .22 : r; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } c.closePath(); c.fill(); c.restore(); }
           if (f.k === "spikes") { const g = Math.min(1, (1 - f.life / f.max) * 3 + .35); let s = f.seed; const q = () => (s = (s * 9301 + 49297) % 233280) / 233280; for (const [col, rk] of [[INK_BLACK, 1], [INK_RED2, .72], ["#f2f2ef", .3]]) { c.fillStyle = col; c.beginPath(); for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2 + q() * .2, rr = f.r * rk * g * (.5 + q() * .7); c.lineTo(f.x + Math.cos(a) * rr, f.y + Math.sin(a) * rr * .8); const a2 = a + Math.PI / 18; c.lineTo(f.x + Math.cos(a2) * rr * .3, f.y + Math.sin(a2) * rr * .3 * .8); } c.closePath(); c.fill(); } }
-          if (f.k === "orb") { const kk = Math.min(1, Math.floor((1 - f.life / f.max) * 6) / 5), x = lerp(f.x0, f.x1, kk), y = lerp(f.y0, f.y1, kk), r = f.big ? 22 : 15; c.fillStyle = INK_BLACK; c.beginPath(); c.arc(x, y, r + 4, 0, 7); c.fill(); c.fillStyle = f.c; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.fillStyle = "#f2f2ef"; c.beginPath(); c.arc(x - r * .3, y - r * .3, r * .35, 0, 7); c.fill(); }
+          if (f.k === "orb" && f.arrow) { const kk = Math.min(1, Math.floor((1 - f.life / f.max) * 6) / 5), x = lerp(f.x0, f.x1, kk), y = lerp(f.y0, f.y1, kk), a = Math.atan2(f.y1 - f.y0, f.x1 - f.x0); c.save(); c.translate(x, y); c.rotate(a); c.fillStyle = INK_BLACK; c.fillRect(-60, -2, 60, 4); c.beginPath(); c.moveTo(0, -7); c.lineTo(14, 0); c.lineTo(0, 7); c.fill(); c.fillStyle = INK_RED; c.beginPath(); c.moveTo(-60, -2); c.lineTo(-70, -9); c.lineTo(-52, -2); c.moveTo(-60, 2); c.lineTo(-70, 9); c.lineTo(-52, 2); c.fill(); c.restore(); }
+          else if (f.k === "orb") { const kk = Math.min(1, Math.floor((1 - f.life / f.max) * 6) / 5), x = lerp(f.x0, f.x1, kk), y = lerp(f.y0, f.y1, kk), r = f.big ? 22 : 15; c.fillStyle = INK_BLACK; c.beginPath(); c.arc(x, y, r + 4, 0, 7); c.fill(); c.fillStyle = f.c; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.fillStyle = "#f2f2ef"; c.beginPath(); c.arc(x - r * .3, y - r * .3, r * .35, 0, 7); c.fill(); }
           if (f.k === "beam") { const wdt = 70; c.fillStyle = f.inv ? "#f2f2ef" : INK_BLACK; c.beginPath(); c.moveTo(f.x0, f.y0 - wdt / 2 - 6); c.lineTo(f.x1, f.y1 - wdt / 2 - 14); c.lineTo(f.x1, f.y1 + wdt / 2 + 14); c.lineTo(f.x0, f.y0 + wdt / 2 + 6); c.closePath(); c.fill(); c.fillStyle = f.c; c.beginPath(); c.moveTo(f.x0, f.y0 - wdt / 2); c.lineTo(f.x1, f.y1 - wdt / 2 - 8); c.lineTo(f.x1, f.y1 + wdt / 2 + 8); c.lineTo(f.x0, f.y0 + wdt / 2); c.closePath(); c.fill(); c.fillStyle = f.inv ? INK_BLACK : "#f2f2ef"; c.fillRect(Math.min(f.x0, f.x1), f.y0 - 9, Math.abs(f.x1 - f.x0), 18); }
         }
         for (const p of P.parts) if (p.k === "blood") { c.fillStyle = INK_RED; c.save(); c.translate(p.x, p.y); c.rotate(Math.atan2(p.vy, p.vx)); c.beginPath(); c.ellipse(0, 0, p.r * 1.6, p.r * .7, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-p.r * 1.2, -p.r * .4); c.lineTo(-p.r * 4, 0); c.lineTo(-p.r * 1.2, p.r * .4); c.fill(); c.restore(); }
@@ -2343,12 +2533,19 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       return;
     }
     if (k === "escape" && !$("store").hidden) $("store").hidden = true;
+    if (k === "escape" && !$("cardModal").hidden) closeCardModal();
+    if (currentTab === "vault" && vaultMode === "binder" && $("cardModal").hidden && $("store").hidden && (k === "arrowright" || k === "arrowleft")) { const n = document.querySelector(`[data-bnav="${k === "arrowright" ? 1 : -1}"]`); if (n && !n.disabled) turnBinder(k === "arrowright" ? 1 : -1); }
   });
   document.addEventListener("click", e => {
     const t = e.target.closest("button, [data-open-store]"); if (!t) return;
     if (t.matches("[data-open-store]")) { openStore(); return; }
     if (t.dataset.buy) { buy(t.dataset.buy); return; }
     if (t.dataset.sell) { const g = sellUids([t.dataset.sell]); if (g) toast(`Sold for ${money(g)}`); return; }
+    if (t.dataset.vmode) { vaultMode = t.dataset.vmode; renderVault(); return; }
+    if (t.dataset.bnav) { turnBinder(+t.dataset.bnav); return; }
+    if (t.dataset.bspread) { const d = +t.dataset.bspread - binderSpread; if (d) turnBinder(d); return; }
+    if (t.dataset.pocket) { openCardModal(t.dataset.pocket); return; }
+    if (t.dataset.replay) { const it = state.vault.find(x => x.uid === t.dataset.replay); if (it) playCutscene(it, null); return; }
     if (t.dataset.filter) { shelfFilter = t.dataset.filter; renderShelf(); return; }
     if (t.dataset.pick) { pickFighter = t.dataset.pick; pickOpp = null; renderArena(); return; }
     if (t.dataset.opp) { pickOpp = t.dataset.opp; renderArena(); return; }
@@ -2365,6 +2562,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       case "fightSkip": if (fight && !fight.done) fight.skip(); break;
       case "toSketch": closeFight(); location.hash = "#packs"; buy("sketch"); break;
       case "closeStore": $("store").hidden = true; break;
+      case "closeCard": closeCardModal(); break;
       case "payBtn": pay(); break;
       case "sellCommons": { const u = state.vault.filter(it => rarOf(it) === "C" && !it.rh && it.ed !== "sketch").map(it => it.uid); const g = sellUids(u, `Sold back ${u.length} commons`); if (g) toast(`Sold ${u.length} commons for ${money(g)}`); break; }
       case "sellSketch": { const u = state.vault.filter(it => it.ed === "sketch").map(it => it.uid); const g = sellUids(u, `Sold back ${u.length} sketches`); if (g) toast(`Sold ${u.length} sketches for ${money(g)}`); break; }
