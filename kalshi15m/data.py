@@ -27,11 +27,15 @@ SERIES = {  # Kalshi series ticker -> Coinbase product
 _session = requests.Session()
 
 
-def _get(url: str, params: dict | None = None, tries: int = 6):
+def _get(url: str, params: dict | None = None, tries: int = 12):
     for i in range(tries):
-        r = _session.get(url, params=params, timeout=30)
+        try:
+            r = _session.get(url, params=params, timeout=30)
+        except requests.RequestException:
+            time.sleep(min(60, 2 ** i))
+            continue
         if r.status_code == 429 or r.status_code >= 500:
-            time.sleep(1.5 * (i + 1))
+            time.sleep(min(60, 2 ** i))  # back off: 1, 2, 4 ... 60 s
             continue
         r.raise_for_status()
         return r.json()
