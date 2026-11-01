@@ -1,22 +1,14 @@
-# Card style map
+# Card faces and style map
 
-Every card in the set has its own artwork in its own style. No two cards share a look. All cards carry the **same overlay elements in the same spots**: the name and power at the top, and the collector number with its rarity symbol at the bottom left. That keeps them reading as one game and keeps print layout identical.
+Every card's **whole face** (art, frame, name, power) is one finished image generated on Higgsfield (`gpt_image_2_5`, 2:3), saved in `art/face/<no>.jpg`. Each card wears one of the 10 frame styles from `design-concepts/`, matched to its art. Commons and Uncommons get the style's plain look, Rare to Signature get added accents, and Ultra and up get the full Mythic look (gold, chrome, holo, glow).
 
-The **overlay graphics** carry the rarity, and they escalate from Common to Mythic:
+The site draws **only the scan ID** on top, in the blank strip each face leaves at the bottom: `IS-014-000123` (set, collector number, the copy's own serial) plus a QR code encoding `STICKFIST:IS-014-000123`. Mythics also get a live holo sheen and light sweep on screen.
 
-| Tier | Border | Name and power plates | Rarity gem (bottom right) | Extras |
-|---|---|---|---|---|
-| Common | Matte black | Small flat black chips, plain sans | None | None |
-| Uncommon | Matte black | Same, plus a green tab on the name | None | None |
-| Rare | Black, blue keyline round the art | Display italic name, blue tab | Small blue gem | None |
-| Foil Rare | Silver foil | Silver foil plates, dark lettering | Silver gem | None |
-| Signature | Black, gold double keyline | Black plates lettered in gold, red wax power seal | Gold gem | None |
-| Ultra and up (Mythic) | Borderless art | Foil plates (chrome / pearl / rainbow / gold) | Large glowing foil crest | Foil ring, edge glow, holo, light sweep, foil flourish |
-| Limited bases | Blood-red (Bloodmoon) or indigo (Gold Scroll) | Accent tab in the set colour | Set-colour gem | None |
+Face prompt recipe: *Finished trading card front, flat and straight-on, the card fills the whole image... Use the reference image as the card artwork... {frame style with the name and power}. The only text on the card is "NAME" and "POWER", spelled exactly. Leave a plain empty strip along the bottom edge of the card with nothing on it.* The reference image is the card's art from the table below.
 
-Gold, chrome, holo and glowing light appear **only** on Mythics. The art for every non-mythic was generated with no metallic or glowing effects.
+For print, regenerate the final faces at 2k or upscale them, and print the scan ID on its own pass (see PRINT_SPEC.md).
 
-## Artwork per card
+## Source artwork per card (used as the reference for each face)
 
 New art lives in `art/c/<no>.jpg`. The existing comic art in `art/<fighter>.jpg` goes on that fighter's top card. Limited cards with their own art use `art/<set>_<fighter>.jpg`.
 
@@ -82,7 +74,7 @@ New art lives in `art/c/<no>.jpg`. The existing comic art in `art/<fighter>.jpg`
 | GS5 | Fletch | UR | Original comic art (limited) | `art/gs_fletch.jpg` |
 | GS6 | Ronin | SIR | Original comic art (limited) | `art/gs_ronin.jpg` |
 
-## Prompt recipe (gpt_image_2_5, 2:3)
+## Source-art prompt recipe (gpt_image_2_5, 2:3)
 
 `<style description>. <fighter description>. Full-bleed trading card illustration, edge to edge, portrait. The character is a minimalist stickman: round head with no face, thick rounded limbs, a single torso line, no hand or foot detail. Keep the top 14% and bottom 12% of the image calm because text will be overlaid there. No text, no letters, no numbers, no logos, no signature, no card border, no frame.` Then add either `Do not use any gold, metallic, chrome, holographic or glowing effects.` (non-mythic) or `Premium mythic finish allowed.` (mythic).
 

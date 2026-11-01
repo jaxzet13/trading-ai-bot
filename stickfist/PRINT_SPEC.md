@@ -54,6 +54,10 @@ Fonts go in as outlines. The small collector line is solid 100% K black or white
 - Linen or smooth finish: get a sample of each.
 - Same card back for every card. Design it before the first print run, because it can never change once the set exists.
 
+## Scan ID
+
+Each face leaves a blank strip at the bottom. Print the scan ID there on its own black-ink pass so every physical copy is unique: `IS-014-000123` (set, collector number, serial) and a QR code that encodes `STICKFIST:IS-014-000123`. The serial is assigned at print time, so the faces themselves never change between copies.
+
 ## Before the first run
 
 - Order a printed proof of one card per rarity and per limited set, and check foil placement, colour and text size by hand.
