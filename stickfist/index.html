@@ -1360,7 +1360,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   // ---------- Cutscenes: rare+ fighters that have one play it right after the pull ----------
   const CUTSCENES = { ronin: "films/cut_ronin.mp4", reaver: "films/cut_reaver.mp4", reaper: "films/cut_reaper.mp4" };
   let CUT = null;
-  const hasCutscene = it => it.ed !== "sketch" && RARITIES.indexOf(BY_ID[it.id].r) >= 1;
+  const hasCutscene = it => it.ed !== "sketch" && !!CUTSCENES[it.id];   // only footage traced from the owner's own videos
   const DUMMY = () => Object.assign({}, BY_ID.knuckles, { id: "dummy", name: "Sparring dummy", body: "#434343", acc: "none" });
   function playCutscene(it, done) {
     const f = BY_ID[it.id], box = $("cut"), v = $("cutVideo");
@@ -1374,12 +1374,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     if (CUTSCENES[f.id]) {
       v.hidden = false; cv.hidden = true;
       v.src = CUTSCENES[f.id]; v.currentTime = 0; v.muted = !!state.muted;
-      v.onerror = () => { if (CUT && CUT.phase === "play") inkCut(); };
-      const pr = v.play(); if (pr && pr.catch) pr.catch(() => { v.muted = true; v.play().catch(() => inkCut()); });
-    } else inkCut();
-    function inkCut() {
-      v.hidden = true; cv.hidden = false;
-      CUT.ink = createInkPlayer(cv, buildFight(f, DUMMY(), "a", Math.random(), "pull"), { sfx: playSfx, onEnd: () => endCutscene() });
+      v.onerror = () => { if (CUT && CUT.phase === "play") endCutscene(); };
+      const pr = v.play(); if (pr && pr.catch) pr.catch(() => { v.muted = true; v.play().catch(() => endCutscene()); });
     }
   }
   function endCutscene() {
@@ -1854,7 +1850,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       ev(land, "dust", { x: landX, y: GROUND, n: heavy ? 22 : 14 }); ev(land, "sfx", { s: "hit" }); ev(land, "pool", { x: landX, w: 120 });
       return land;
     }
-    function cutscene(t, w, d) { ev(t, "cut", { who: w, d }); ev(t, "sfx", { s: "charge", d: d * .8 }); ev(t + d - .25, "slashframe", { d: .25 }); ev(t + d - .25, "sfx", { s: "slash" }); return t + d; }
+    // (no cutscene beats in fights: cutscenes come only from the owner's traced videos)
+    function cutscene(t) { return t + .12; }
     function finishBurst(t, d, dir, big) {
       const p = chest(d);
       ev(t, "crescent", { x: p.x, y: p.y, r: big ? 230 : 180, f: dir, d: .5 }); ev(t, "spikes", { x: p.x, y: p.y, d: .5, r: big ? 260 : 200 });
