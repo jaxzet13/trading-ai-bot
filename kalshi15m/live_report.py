@@ -8,6 +8,7 @@ import json
 import time
 from pathlib import Path
 
+from .backtest import MAKER_RATE, TAKER_RATE, kalshi_fee
 from .bot import LOG, STATUS
 from .report import OUT, ROOT
 
@@ -26,6 +27,43 @@ def _backtest(results: dict, series: str, strategy: str, execution: str):
             "folds": len(run["folds"]), "diag": run.get("diag", {})}
 
 
+def settle_open(events: list) -> list:
+    """Settle paper fills the bot never got to settle (e.g. it stopped mid-market), using
+    Kalshi's real result. Appends the settle events to the log so it only happens once."""
+    import requests
+    settled = {e["ticker"] for e in events if e["event"] == "settle"}
+    new = []
+    for e in events:
+        if e["event"] not in ("fill", "buy") or e["ticker"] in settled:
+            continue
+        try:
+            m = requests.get(f"https://api.elections.kalshi.com/trade-api/v2/markets/{e['ticker']}",
+                             timeout=15).json()["market"]
+        except Exception:
+            continue
+        res = m.get("result")
+        if res not in ("yes", "no"):
+            continue
+        rate = MAKER_RATE if e["event"] == "fill" else TAKER_RATE
+        fee = kalshi_fee(e["price"], e["n"], rate=rate)
+        pnl = e["n"] * ((res == e["side"]) - e["price"]) - fee
+        new.append({"event": "settle", "ticker": e["ticker"], "result": res, "pnl": round(pnl, 4),
+                    "side": e["side"], "price": e["price"], "series": e["series"], "strategy": e["strategy"],
+                    "execution": e.get("execution"), "params": e.get("params"), "settled_by": "report",
+                    "ts": int(datetime_close(m))})
+        settled.add(e["ticker"])
+    if new:
+        with LOG.open("a") as f:
+            for x in new:
+                f.write(json.dumps(x) + "\n")
+    return events + new
+
+
+def datetime_close(m):
+    from datetime import datetime
+    return datetime.fromisoformat(m["close_time"].replace("Z", "+00:00")).timestamp()
+
+
 def summarise() -> dict:
     cfg = json.loads(CONFIG.read_text())
     events = []
@@ -35,6 +73,8 @@ def summarise() -> dict:
                 events.append(json.loads(line))
             except json.JSONDecodeError:
                 pass
+    events = settle_open(events)
+    events.sort(key=lambda x: x.get("ts", 0))
     try:
         status = json.loads(STATUS.read_text())
     except Exception:
