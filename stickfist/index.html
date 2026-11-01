@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
 /* Layout: an unmarked vault. Charcoal ground with film grain, one brass accent, serif names, mono numbers. Color only appears on the cards themselves. Single dark theme by choice. */
 :root {
@@ -813,6 +813,124 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .kcard .k-guides .safe { position: absolute; inset: 4.76%; border: 1px dashed #36c3ff; border-radius: 2.4cqi; }
 .kcard .k-guides .bleed { position: absolute; inset: 0; border: 1px solid #ff3b47; border-radius: inherit; }
 .kcard .stamp { z-index: 5; }
+/* ---- ONE OVERLAY FOR EVERY CARD: unique art underneath; name + power top, collector + rarity bottom, same spots.
+   The overlay graphics carry the rarity: plain ink chips on Commons, up to borderless foil, glow and light on Mythics. ---- */
+.kcard.fa { padding: 0; background: #0d0d0e; }
+.kcard.fa .k-face { background: var(--fa-frame, #0d0d0e); }
+.kcard.fa .k-art { inset: 3.2cqi; border-radius: 2cqi; background: #e9e4d8; z-index: 0; }
+.kcard.fa .k-art::after { display: none; }
+.kcard.fa .k-art img { object-position: 50% 50%; }
+.kcard.fa .fa-frame { position: absolute; inset: 3.2cqi; border-radius: 2cqi; z-index: 2; pointer-events: none; }
+.kcard.fa .fa-top { position: absolute; z-index: 3; top: 6.2cqi; left: 6.2cqi; right: 6.2cqi; display: flex; justify-content: space-between; align-items: center; gap: 2cqi; pointer-events: none; }
+.kcard.fa .fa-name, .kcard.fa .fa-pwr, .kcard.fa .fa-foot { background: var(--fa-plate, rgba(16,16,18,.82)); color: var(--fa-ink, #f4f1ea); border-radius: 1.1cqi; }
+.kcard.fa .fa-name { font-family: var(--f-body); font-weight: 700; font-size: 5.2cqi; letter-spacing: .06em; text-transform: uppercase; line-height: 1; padding: 1.5cqi 2.6cqi 1.3cqi; white-space: nowrap; overflow: hidden; }
+.kcard.fa .fa-pwr { font-family: var(--f-mono); font-weight: 600; font-size: 4.4cqi; line-height: 1; padding: 1.6cqi 2.2cqi 1.3cqi; }
+.kcard.fa .fa-foot { position: absolute; z-index: 3; left: 6.2cqi; bottom: 6.2cqi; display: flex; gap: 1.6cqi; align-items: center; padding: 1cqi 2cqi; font-family: var(--f-mono); font-size: max(6.5px, 2.5cqi); letter-spacing: .16em; pointer-events: none; }
+.kcard.fa .fa-sym { color: var(--fa-sym, currentColor); letter-spacing: 0; font-size: 1.15em; }
+/* foil ring helper: a gradient drawn only on the border of .fa-frame */
+.kcard.fa .fa-frame.ring, .kcard.fa.cr-H .fa-frame, .kcard.fa.cr-RR .fa-frame, .kcard.fa.myth .fa-frame { border: var(--fa-rw, .6cqi) solid transparent; background: var(--fa-foil) border-box; background-size: 220% 220%; background-position: var(--mx) var(--my);
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); }
+
+/* COMMON: matte black border, small flat chips, nothing else */
+.kcard.fa.cr-C { --fa-sym: #bdbdbd; }
+.kcard.fa.cr-C .fa-name { font-size: 4.8cqi; font-weight: 600; }
+/* UNCOMMON: adds a coloured tab on the name */
+.kcard.fa.cr-U { --fa-sym: #8cbf94; }
+.kcard.fa.cr-U .fa-name { border-left: .9cqi solid #8cbf94; }
+/* RARE: thin coloured keyline round the art, name set in the display face */
+.kcard.fa.cr-R { --fa-sym: #6aa6ff; }
+.kcard.fa.cr-R .fa-frame { box-shadow: inset 0 0 0 .45cqi #4f8fe6, inset 0 0 0 1.1cqi rgba(13,13,14,.55); }
+.kcard.fa.cr-R .fa-name, .kcard.fa.cr-H .fa-name, .kcard.fa.cr-RR .fa-name, .kcard.fa.myth .fa-name { font-family: var(--f-display); font-style: italic; font-weight: 700; text-transform: none; letter-spacing: 0; font-size: 6.6cqi; padding: 1cqi 3cqi 1.2cqi; }
+.kcard.fa.cr-R .fa-name { border-left: .9cqi solid #4f8fe6; }
+/* FOIL RARE: silver foil border and silver plates */
+.kcard.fa.cr-H { --fa-silver: linear-gradient(115deg, #7d828d, #f4f6f9 22%, #9aa0aa 40%, #ffffff 58%, #868c97 78%, #e7eaee); --fa-frame: var(--fa-silver); --fa-foil: linear-gradient(115deg, #fff, #aeb4be 40%, #fff 60%, #8a8f99); --fa-rw: .4cqi;
+  --fa-plate: linear-gradient(100deg, #9aa0aa, #f7f8fa 30%, #b9bec6 55%, #ffffff 80%, #9aa0aa); --fa-ink: #121214; --fa-sym: #121214; }
+.kcard.fa.cr-H .k-face { background: var(--fa-silver); background-size: 220% 220%; background-position: var(--mx) var(--my); }
+.kcard.fa.cr-H .fa-name, .kcard.fa.cr-H .fa-pwr, .kcard.fa.cr-H .fa-foot { background-size: 220% 100%; background-position: var(--mx) 50%; box-shadow: 0 .4cqi 1.4cqi rgba(0,0,0,.4); }
+/* SIGNATURE: black border with a gold double keyline, black plates lettered in gold, power in a round seal */
+.kcard.fa.cr-RR { --fa-frame: #0b0a08; --fa-foil: linear-gradient(115deg, #8a6200, #ffe58a 25%, #c9930f 50%, #fff2b8 72%, #9c7208); --fa-rw: .5cqi; --fa-plate: rgba(10,9,6,.88); --fa-ink: #f2d48a; --fa-sym: #f2d48a; }
+.kcard.fa.cr-RR .fa-frame::after { content: ""; position: absolute; inset: .9cqi; border-radius: 1.4cqi; border: .2cqi solid rgba(242,212,138,.7); }
+.kcard.fa.cr-RR .fa-name, .kcard.fa.cr-RR .fa-pwr, .kcard.fa.cr-RR .fa-foot { box-shadow: inset 0 0 0 .3cqi #c9a24a; }
+.kcard.fa.cr-RR .fa-pwr { border-radius: 50%; width: 10.5cqi; height: 10.5cqi; padding: 0; display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #c9232c, #7d0f17); color: #fff3e0; box-shadow: inset 0 0 0 .5cqi #e2b65a, 0 .5cqi 1.4cqi rgba(0,0,0,.5); }
+
+/* MYTHICS (Ultra and up): borderless art, foil ring, foil plates, edge glow, holo and a light sweep */
+.kcard.fa.myth { --fa-rw: .55cqi; box-shadow: 0 0 0 1px rgba(255,255,255,.3), 0 0 5cqi color-mix(in srgb, var(--acc) 55%, transparent), 0 14px 30px rgba(0,0,0,.55); }
+.kcard.fa.myth .k-art { inset: 0; border-radius: inherit; }
+.kcard.fa.myth .fa-frame { inset: 2.2cqi; border-radius: 2.4cqi; filter: drop-shadow(0 0 .8cqi rgba(255,255,255,.55)); }
+.kcard.fa.myth .fa-name, .kcard.fa.myth .fa-pwr, .kcard.fa.myth .fa-foot { --fa-ink: #141414; --fa-sym: #141414; background: var(--fa-foil); background-size: 220% 100%; background-position: var(--mx) 50%; text-shadow: 0 1px 0 rgba(255,255,255,.45); box-shadow: 0 0 0 .25cqi rgba(255,255,255,.7), 0 0 2.6cqi color-mix(in srgb, var(--acc) 70%, transparent), 0 .6cqi 1.6cqi rgba(0,0,0,.45); }
+.kcard.fa.myth .fa-name { font-size: 7.4cqi; padding: 1.2cqi 3.4cqi 1.4cqi; }
+.kcard.fa.myth .fa-pwr { font-size: 5cqi; padding: 1.9cqi 2.6cqi 1.6cqi; }
+.kcard.fa.myth .tc-holo { opacity: .28; }
+.kcard.fa.cr-UR { --fa-foil: linear-gradient(110deg, #8a8f99, #f7f8fa 20%, #a3a9b3 38%, #ffffff 55%, #7d828d 72%, #eef0f3 88%, #8a8f99); }
+.kcard.fa.cr-UR .k-art::after { display: block; background: repeating-linear-gradient(45deg, rgba(255,255,255,.14) 0 .25cqi, transparent .25cqi 1.4cqi); mix-blend-mode: overlay; }
+.kcard.fa.cr-IR { --fa-foil: linear-gradient(110deg, #e9e2d2, #fffaf0 40%, #e3d9c4 70%, #fffaf0); }
+.kcard.fa.cr-IR .tc-holo { opacity: .1; }
+.kcard.fa.cr-SIR { --fa-foil: linear-gradient(110deg, #ff8fc0, #fff09a 17%, #9dffd6 34%, #9fd0ff 51%, #d7a8ff 68%, #ff8fc0 85%, #fff09a); --fa-rw: .8cqi; }
+.kcard.fa.cr-SIR .fa-name, .kcard.fa.cr-SIR .fa-pwr, .kcard.fa.cr-SIR .fa-foot, .kcard.fa.cr-SIR .fa-frame { animation: holo 6s linear infinite; background-size: 300% 300%; }
+.kcard.fa.cr-SIR .tc-holo { opacity: .45; }
+.kcard.fa.cr-HR { --fa-foil: linear-gradient(110deg, #8a6200, #ffe58a 20%, #c9930f 38%, #fff6cf 55%, #a87a06 72%, #ffd966 88%, #8a6200); --fa-rw: .9cqi; }
+.kcard.fa.cr-HR .fa-frame::after { content: ""; position: absolute; inset: 1.2cqi; border-radius: 1.6cqi; border: .25cqi solid #ffe58a; }
+.kcard.fa.cr-HR .k-art::after { display: block; mix-blend-mode: soft-light; background: repeating-conic-gradient(from 0deg at 50% 42%, rgba(255,230,150,.45) 0 4deg, transparent 4deg 14deg); }
+.kcard.fa.cr-HR .tc-holo { opacity: .3; }
+.kcard.fa.lim-BM.myth { --fa-foil: linear-gradient(110deg, #7a0910, #ff8a91 25%, #c4121e 50%, #ffd0d3 72%, #7a0910); }
+.kcard.fa.lim-GS.myth { --fa-foil: linear-gradient(110deg, #8a6200, #ffe58a 25%, #c9930f 50%, #fff2b8 72%, #9c7208); }
+/* limited base cards: their own border stock */
+.kcard.fa.lim-BM.fa-std { --fa-frame: #3a0509; --fa-sym: #ff6b73; }
+.kcard.fa.lim-BM.fa-std .fa-name { border-left-color: #e2414b; }
+.kcard.fa.lim-BM.fa-std .fa-frame { box-shadow: inset 0 0 0 .45cqi #e2414b, inset 0 0 0 1.1cqi rgba(13,0,2,.5); }
+.kcard.fa.lim-GS.fa-std { --fa-frame: #15183a; --fa-sym: #e9b949; }
+.kcard.fa.lim-GS.fa-std .fa-name { border-left-color: #c9a04a; }
+.kcard.fa.lim-GS.fa-std .fa-frame { box-shadow: inset 0 0 0 .45cqi #c9a04a, inset 0 0 0 1.1cqi rgba(5,6,20,.5); }
+.kcard.fa.fa-std .tc-holo { opacity: 0; }
+/* reverse foil: the holo is on the border, the art stays matte */
+.kcard.fa.fa-std.rh .k-face { background: linear-gradient(115deg, #ff9ac4, #fff3b0 20%, #9be8ff 40%, #d9a8ff 60%, #b6ffe0 80%, #ff9ac4); background-size: 220% 220%; background-position: var(--mx) var(--my); }
+.kcard.fa.sketch .k-art img { filter: grayscale(1) contrast(1.1) brightness(1.05); opacity: .8; }
+/* rarity gem, bottom right: grows with the tier (none on Common/Uncommon) */
+.kcard.fa .fa-gem { position: absolute; z-index: 3; right: 6.2cqi; bottom: 5.6cqi; width: 6cqi; height: 6cqi; display: none; pointer-events: none; }
+.kcard.fa .fa-gem::before { content: ""; position: absolute; inset: 0; transform: rotate(45deg) scale(.78); border-radius: .8cqi; background: var(--gem); box-shadow: 0 0 0 .35cqi rgba(13,13,14,.85), 0 .4cqi 1.2cqi rgba(0,0,0,.5); }
+.kcard.fa.cr-R .fa-gem, .kcard.fa.cr-H .fa-gem, .kcard.fa.cr-RR .fa-gem, .kcard.fa.myth .fa-gem, .kcard.fa.lim .fa-gem { display: block; }
+.kcard.fa.cr-R { --gem: radial-gradient(circle at 35% 30%, #cfe2ff, #4f8fe6 55%, #1d3f7a); }
+.kcard.fa.lim-BM { --gem: radial-gradient(circle at 35% 30%, #ffd0d3, #e2414b 55%, #6a0a10); }
+.kcard.fa.lim-GS { --gem: radial-gradient(circle at 35% 30%, #fff2b8, #c9a04a 55%, #5a430e); }
+.kcard.fa.cr-H { --gem: linear-gradient(135deg, #8a8f99, #ffffff 45%, #9aa0aa 60%, #f4f6f9); }
+.kcard.fa.cr-RR { --gem: linear-gradient(135deg, #8a6200, #fff2b8 45%, #c9930f 60%, #ffe58a); }
+.kcard.fa.cr-RR .fa-gem, .kcard.fa.cr-H .fa-gem { width: 7cqi; height: 7cqi; }
+.kcard.fa.myth .fa-gem { width: 10cqi; height: 10cqi; right: 5cqi; bottom: 4.6cqi; --gem: var(--fa-foil); }
+.kcard.fa.myth .fa-gem::before { background-size: 220% 220%; background-position: var(--mx) var(--my); box-shadow: 0 0 0 .3cqi rgba(255,255,255,.8), 0 0 3cqi color-mix(in srgb, var(--acc) 80%, transparent), 0 0 7cqi color-mix(in srgb, var(--acc) 45%, transparent); }
+.kcard.fa.myth .fa-gem::after { content: ""; position: absolute; inset: -60%; background: radial-gradient(circle, rgba(255,255,255,.95) 0 3%, transparent 9%), linear-gradient(0deg, transparent 48.5%, rgba(255,255,255,.9) 50%, transparent 51.5%), linear-gradient(90deg, transparent 48.5%, rgba(255,255,255,.9) 50%, transparent 51.5%); -webkit-mask: radial-gradient(circle, #000 15%, transparent 60%); mask: radial-gradient(circle, #000 15%, transparent 60%); animation: gemtw 2.8s ease-in-out infinite; }
+.kcard.fa.cr-SIR .fa-gem::before { animation: holo 6s linear infinite; background-size: 300% 300%; }
+@keyframes gemtw { 0%,100% { opacity: .35; transform: scale(.8) rotate(0deg); } 50% { opacity: 1; transform: scale(1.1) rotate(20deg); } }
+/* mythic name plates get a foil flourish under them */
+.kcard.fa.myth .fa-name { position: relative; overflow: visible; }
+.kcard.fa.myth .fa-top::after { content: ""; position: absolute; left: 0; right: 0; top: calc(100% + 1.2cqi); height: .35cqi; background: linear-gradient(90deg, transparent, rgba(255,255,255,.9) 20%, color-mix(in srgb, var(--acc) 80%, white) 50%, rgba(255,255,255,.9) 80%, transparent); box-shadow: 0 0 1.6cqi color-mix(in srgb, var(--acc) 80%, transparent); }
+@media (prefers-reduced-motion: reduce) { .kcard.fa .fa-gem::after, .kcard.fa.cr-SIR .fa-name, .kcard.fa.cr-SIR .fa-pwr, .kcard.fa.cr-SIR .fa-foot, .kcard.fa.cr-SIR .fa-frame, .kcard.fa.cr-SIR .fa-gem::before { animation: none; } }
+/* ---- RARE: sumi ink on rice paper ---- */
+.kcard.sumi { background: #efe7d4; box-shadow: 0 0 0 1px rgba(0,0,0,.3), 0 10px 22px rgba(0,0,0,.45); }
+.kcard.sumi .k-face { display: flex; flex-direction: column; padding: 6cqi 7cqi 5.5cqi; color: #141414;
+  background: var(--grain), repeating-linear-gradient(83deg, rgba(120,95,50,.05) 0 1px, transparent 1px 8px), repeating-linear-gradient(-9deg, rgba(120,95,50,.04) 0 1px, transparent 1px 13px), radial-gradient(ellipse at 45% 30%, #f6efdf, #e8dec7 85%);
+  box-shadow: inset 0 0 0 2.6cqi transparent, inset 0 0 0 calc(2.6cqi + max(1px,.35cqi)) #1a1a1a, inset 0 0 6cqi rgba(120,90,40,.18); }
+.kcard.sumi .s-name { text-align: center; font-family: "Permanent Marker", var(--f-display); font-size: 10.5cqi; letter-spacing: .04em; text-transform: uppercase; line-height: 1; margin-top: 2cqi; }
+.kcard.sumi .s-art { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; padding: 6cqi 3cqi 3cqi; }
+.kcard.sumi .s-art img { position: relative; max-width: 100%; max-height: 100%; object-fit: contain; filter: url(#sumi); opacity: .94; }
+.kcard.sumi .s-wash { position: absolute; left: 14%; right: 14%; bottom: 6%; height: 10%; border-radius: 50%; background: radial-gradient(ellipse, rgba(20,20,20,.28), transparent 70%); filter: blur(1.5cqi); }
+.kcard.sumi .s-foot { display: flex; justify-content: space-between; align-items: flex-end; }
+.kcard.sumi .s-pwr { font-family: "Permanent Marker", var(--f-display); font-style: italic; font-size: 8cqi; line-height: 1; }
+.kcard.sumi .s-no { font-family: var(--f-display); font-style: italic; font-size: max(7px, 3cqi); color: #4a4436; }
+.kcard.sumi .s-no b { font-style: normal; color: #141414; }
+.kcard.sumi.rh .k-face { background-color: #f3eee2; background-image: linear-gradient(115deg, rgba(255,214,240,.55), rgba(207,233,255,.55) 30%, rgba(217,255,233,.55) 55%, rgba(255,243,196,.55) 80%); background-size: 200% 200%; background-position: var(--mx) var(--my); }
+/* ---- COMMON: Swiss-minimal white card, flat black pictogram ---- */
+.kcard.mini { background: #f6f6f4; box-shadow: 0 0 0 1px rgba(0,0,0,.25), 0 10px 22px rgba(0,0,0,.45); }
+.kcard.mini .k-face { background: #f6f6f4; color: #121212; display: flex; flex-direction: column; padding: 7cqi 7.5cqi 6cqi; }
+.kcard.mini .m-head { display: flex; justify-content: space-between; align-items: baseline; gap: 3cqi; }
+.kcard.mini .m-name { font-family: var(--f-body); font-weight: 800; font-size: 10cqi; letter-spacing: -.01em; text-transform: uppercase; line-height: 1; white-space: nowrap; overflow: hidden; }
+.kcard.mini .m-pwr { font-family: var(--f-body); font-weight: 600; font-size: 7cqi; }
+.kcard.mini .m-rule { height: max(1px, .35cqi); background: #c9c9c6; margin: 3.4cqi 0 0; }
+.kcard.mini .m-art { flex: 1; min-height: 0; display: grid; place-items: center; padding: 8cqi 4cqi 6cqi; }
+.kcard.mini .m-art img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.kcard.mini .m-foot { display: flex; justify-content: space-between; align-items: center; font-family: var(--f-body); font-size: max(7px, 3.2cqi); color: #8a8a86; }
+.kcard.mini .m-dot { width: 3.4cqi; height: 3.4cqi; border-radius: 50%; background: #121212; }
+.kcard.mini.rh .k-face { background: linear-gradient(115deg, #ffe6f4, #e6f3ff 30%, #e9fff2 55%, #fff8de 80%, #ffe6f4) !important; background-size: 200% 200% !important; background-position: var(--mx) var(--my) !important; }
+.kcard.mini.sketch .m-art img { opacity: .55; }
 /* --- tier 1: PAPER (Common, Uncommon, Rare): matte off-white stock, framed art window, ink below --- */
 .kcard.paper .k-face { padding: 0; background: var(--grain), radial-gradient(ellipse at 40% 20%, #f2ece0, #e4dccb 80%); }
 .kcard.paper .k-art { inset: 5.5cqi 5.5cqi auto 5.5cqi; height: 64%; border-radius: .8cqi; box-shadow: 0 0 0 .5cqi #1a1a1c; }
@@ -890,6 +1008,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   </defs>
 </svg>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="sumi" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G" result="d"/><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="1" seed="3" result="g"/><feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.35" result="holes"/><feComposite in="d" in2="holes" operator="in"/></filter></svg>
 <div class="gate" id="gate" hidden>
   <div class="gate-box" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
     <svg><use href="#i-sigil"/></svg>
@@ -1449,20 +1568,22 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const f = BY_ID[item.id], card = cardOf(item), rar = rarOf(item), R = crOf(card) || CR.C, sk = item.ed === "sketch", t = R.tier;
     const borderless = t >= 5 || (card.set && t >= 5), num = card.set ? `${card.set} ${card.no.slice(2).padStart(3, "0")}` : `${SET_CODE} ${card.no}`;
     const pwr = (f.atk + f.spd + f.def) * 10 + (card.ex ? 60 : 0);
-    const art = card.art ? `<img src="art/${card.art}.jpg" alt="" draggable="false">` : figImg(f);
-    const tierCls = t <= 2 ? " paper" : t <= 4 ? " framed" : " secret";
-    const cls = `tcard kcard cr-${rar}${tierCls}${item.rh ? " rh" : ""}${borderless ? " bl" : " bd"}${sk ? " sketch" : ""}${card.set ? " lim lim-" + card.set : ""}`;
-    const sub = card.ex ? `${esc(f.title)} · Signature` : esc(f.title);
-    return `<div class="${cls}"><div class="k-face">
-      <div class="k-art">${art}<div class="tc-holo"></div><div class="k-tex"></div></div>${t >= 5 ? `<div class="k-spark"></div><div class="k-sweep"></div>` : ""}
-      ${card.set ? `<div class="k-ribbon">${esc(LSETS[card.set].name)}</div>` : ""}
-      <div class="k-seal"><b>${pwr}</b></div>
-      <div class="k-strike"><span class="k-sub">${sub}</span><span class="k-name">${esc(f.name)}</span></div>
-      <div class="k-foot"><span>${num}</span><span class="k-mark">${R.sym}</span><span class="k-cr">© STICKFIST</span></div>
+    const myth = t >= 5, src = cardArt(card);
+    const cls = `tcard kcard fa cr-${rar}${myth ? " myth" : " fa-std"}${item.rh ? " rh" : ""}${sk ? " sketch" : ""}${card.set ? " lim lim-" + card.set : ""}`;
+    return `<div class="${cls}" style="--acc:${R.col}"><div class="k-face">
+      <div class="k-art"><img src="art/${src}.jpg" alt="" draggable="false"><div class="tc-holo"></div>${myth ? `<div class="k-spark"></div><div class="k-sweep"></div>` : ""}</div>
+      <div class="fa-frame"></div>
+      <div class="fa-top"><span class="fa-name"><span>${esc(f.name)}</span></span><span class="fa-pwr">${pwr}</span></div>
+      <div class="fa-foot"><span class="fa-no">${num}</span><span class="fa-sym">${R.sym}</span></div><div class="fa-gem"></div>
       ${sk ? `<span class="stamp">SKETCH</span>` : ""}
       <span class="tc-val" hidden></span><span class="tc-bottom" hidden><span class="tag"></span></span>
     </div><div class="glare"></div><div class="k-guides"><i class="bleed"></i><i class="safe"></i></div></div>`;
   }
+  // Every card has its own artwork in its own style (see ART_STYLES.md). Fighter art from art/<id>.jpg
+  // goes on that fighter's top card; every other card has a dedicated piece in art/c/<no>.jpg.
+  const ART_OF = { "022": "colossus", "026": "ronin", "027": "reaver", "028": "arcanist", "029": "twinblade", "030": "fletch", "031": "snap", "046": "breaker", "047": "umbra",
+    "032": "knuckles", "033": "shiv", "034": "bulwark", "035": "pike", "036": "bo", "037": "lash", "038": "reaper", "039": "null", "041": "kusari", "042": "phantom", "044": "shogun", "045": "chrono" };
+  const cardArt = card => card.art || ART_OF[card.no] || "c/" + card.no;
 
   function packHTML(p) {
     const fig = BY_ID[p.fig];
@@ -2689,6 +2810,19 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     FLAT = false;
     try { PORTRAIT[f.id] = cv.toDataURL("image/png"); } catch (e) { PORTRAIT[f.id] = ""; }
     return PORTRAIT[f.id];
+  }
+  const PICTO = {};
+  function pictogram(f) {
+    if (PICTO[f.id]) return PICTO[f.id];
+    const W = 900, H = 900, cv = document.createElement("canvas"); cv.width = W; cv.height = H; const c = cv.getContext("2d");
+    const T = THEME[f.id] || THEME.knuckles, F = Object.assign({}, f, { scale: f.bulk ? 2.1 : 2.6 });
+    FLAT = true; c.translate(W / 2, H * .82 - GROUND); drawFighter(c, F, poseState(T.pose, T.rot || 0), { time: 1.3, noShadow: true, sil: "#121212" }); FLAT = false;
+    const d = c.getImageData(0, 0, W, H).data; let x0 = W, y0 = H, x1 = 0, y1 = 0;
+    for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) if (d[(y * W + x) * 4 + 3] > 20) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    const pad = 12, w = Math.max(1, x1 - x0 + pad * 2), h = Math.max(1, y1 - y0 + pad * 2), o = document.createElement("canvas"); o.width = w; o.height = h;
+    o.getContext("2d").drawImage(cv, x0 - pad, y0 - pad, w, h, 0, 0, w, h);
+    try { PICTO[f.id] = o.toDataURL("image/png"); } catch (e) { PICTO[f.id] = ""; }
+    return PICTO[f.id];
   }
   function cutout(f) {
     if (CUTOUT[f.id]) return CUTOUT[f.id];
