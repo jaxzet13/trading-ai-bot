@@ -217,7 +217,14 @@ def build(series_list=tuple(SERIES), stake=10.0, n_folds=6, out=None, solo=(), p
     blob = json.dumps(results, default=_np)
     (out_dir / "results.json").write_text(blob)
     html = (ROOT / "dashboard_template.html").read_text()
-    (out_dir / "index.html").write_text(html.replace("/*__RESULTS__*/null", blob))
+    html = html.replace("/*__RESULTS__*/null", blob)
+    try:  # keep the live paper-trading panel when re-running the backtest
+        from .live_report import summarise
+        (out_dir / "results.json").write_text(blob)
+        html = html.replace("/*__LIVE__*/null", json.dumps(summarise()))
+    except Exception as e:
+        print("live panel skipped:", e)
+    (out_dir / "index.html").write_text(html)
     print(f"wrote {out_dir / 'index.html'}")
     return results
 

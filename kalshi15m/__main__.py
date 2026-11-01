@@ -25,6 +25,7 @@ def main():
     b.add_argument("--solo", nargs="*", default=[], help="also show these coins on their own, e.g. KXSOL15M")
     s = sub.add_parser("serve", help="open the dashboard at http://localhost:8050")
     s.add_argument("--port", type=int, default=8050)
+    sub.add_parser("live-report", help="refresh the dashboard with the live paper-trading log")
     t = sub.add_parser("bot", help="run the trading loop (paper by default)")
     t.add_argument("--series", nargs="+", default=["KXSOL15M"], help="one or more coins; each runs in its own thread")
     t.add_argument("--strategy", default="auto",
@@ -35,6 +36,7 @@ def main():
     t.add_argument("--execution", choices=["taker", "maker"], default="taker",
                    help="taker = cross the spread now; maker = rest a limit order at the bid")
     t.add_argument("--wait", type=int, default=2, help="maker: minutes to leave the order resting")
+    t.add_argument("--config", default=None, help="JSON file listing {series, strategy, execution, params}; overrides the rest")
     t.add_argument("--live", action="store_true", help="send REAL orders (needs API key env vars)")
     t.add_argument("--demo", action="store_true", help="use Kalshi's demo exchange")
     a = ap.parse_args()
@@ -47,6 +49,9 @@ def main():
         h = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(report.OUT))
         print(f"dashboard: http://localhost:{a.port}")
         http.server.ThreadingHTTPServer(("", a.port), h).serve_forever()
+    elif a.cmd == "live-report":
+        from . import live_report
+        live_report.build()
     elif a.cmd == "bot":
         import threading
         try:
@@ -54,7 +59,15 @@ def main():
         except FileNotFoundError:
             res = {}
         jobs = []
-        for series in a.series:
+        if a.config:
+            cfg = json.loads(open(a.config).read())
+            for e in cfg["strategies"]:
+                print(f"{e['series']}: {e['strategy']} / {e['execution']} {e['params']}")
+                jobs.append(threading.Thread(target=bot.run, daemon=True, kwargs=dict(
+                    series=e["series"], strategy=e["strategy"], params=e["params"], stake=cfg.get("stake", a.stake),
+                    live=a.live, demo=a.demo, max_daily_loss=cfg.get("max_daily_loss", a.max_daily_loss),
+                    execution=e["execution"], wait=e.get("wait", a.wait))))
+        for series in ([] if a.config else a.series):
             strategy, execution = a.strategy, a.execution
             params = json.loads(a.params) if a.params else None
             if strategy == "auto":

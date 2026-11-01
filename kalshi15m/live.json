@@ -1,0 +1,13 @@
+{
+  "_note": "The two strategies being paper-traded on live markets. Params are frozen; do not re-tune from live results.",
+  "stake": 5.0,
+  "max_daily_loss": 50.0,
+  "strategies": [
+    {"series": "KXETH15M", "strategy": "reversal_z", "execution": "maker",
+     "params": {"minute": 2, "min_z": 1.5, "max_price": 0.55},
+     "why": "ETH-only walk-forward (maker): +$377 on 292 trades out of sample, t=1.56; picked twice by the per-coin selector"},
+    {"series": "KXSOL15M", "strategy": "fair_value", "execution": "maker",
+     "params": {"start": 2, "end": 13, "edge": 0.12, "vol_mult": 1.0},
+     "why": "SOL-only walk-forward +$878 on 1,687 trades (t=1.03); same rule as SOL_BLIND_TEST.md"}
+  ]
+}

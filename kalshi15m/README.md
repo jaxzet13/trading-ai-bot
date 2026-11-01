@@ -53,6 +53,19 @@ order type and settings with the best t-stat on that coin's earlier data (sittin
 On Aug 31 - Nov 1: BTC picked spot lag (+$12), ETH mostly sat out (+$41), SOL picked the fair-value
 family (+$610). Combined +$663, t = 0.80: not yet distinguishable from luck.
 
+## Live paper trading (current setup)
+
+`kalshi15m/live.json` holds the two strategies being paper-traded on live markets:
+ETH reversal after a big move (maker) and SOL fair value (maker). Start and refresh:
+
+```bash
+python -m kalshi15m bot --config kalshi15m/live.json     # runs both, paper mode
+python -m kalshi15m live-report                          # update dashboard/index.html
+```
+
+The bot only runs while its machine is on. For a long paper run, start it on a computer or
+server that stays up.
+
 ## Going live (read this first)
 
 * Paper mode is the default. `--demo --live` trades on Kalshi's demo exchange (fake money).

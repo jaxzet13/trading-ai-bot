@@ -95,6 +95,8 @@ def _ts(s): return int(datetime.fromisoformat(s.replace("Z", "+00:00")).timestam
 def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=False, demo=False,
         max_daily_loss=50.0, max_trades_per_day=40, poll=5, execution="taker", wait=2, improve=0.01):
     fn = STRATEGIES[strategy][0]
+    tag = {"series": series, "strategy": strategy, "execution": execution, "params": params}
+    log = lambda d: _log({**d, **tag})
     params = params or {}
     base = DEMO if demo else PROD
     api = Kalshi(base, os.getenv("KALSHI_KEY_ID"), os.getenv("KALSHI_PRIVATE_KEY_PATH")) if live else Kalshi(base)
@@ -104,6 +106,7 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
     print(f"[{mode}] {strategy} {params} on {series}, {execution} orders, stake ${stake}/trade, "
           f"daily loss cap ${max_daily_loss}")
     LOG.parent.mkdir(parents=True, exist_ok=True)
+    log({"event": "start", "mode": mode, "stake": stake})
 
     P, seen, traded, cur, day, day_pnl, day_trades, open_pos = None, set(), set(), None, None, 0.0, 0, {}
     pending = {}  # resting maker orders: ticker -> order info
@@ -124,7 +127,7 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                         pnl = p["n"] * ((res == p["side"]) - p["price"]) - p["fee"]
                         day_pnl += pnl
                         print(f"  settled {tk}: {res} -> pnl ${pnl:+.2f} (today ${day_pnl:+.2f})")
-                        _log({"event": "settle", "ticker": tk, "result": res, "pnl": pnl})
+                        log({"event": "settle", "ticker": tk, "result": res, "pnl": pnl, "side": p["side"], "price": p["price"]})
             # resting maker orders: filled? expired?
             for tk, o in list(pending.items()):
                 if tk == m["ticker"]:
@@ -135,16 +138,19 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                         filled = int(float(st.get("fill_count_fp") or st.get("fill_count") or 0))
                     else:  # paper: assume filled once the other side reaches our price
                         hit = qa <= o["price"] if o["side"] == "yes" else qb >= 1 - o["price"]
+                        if not hit:
+                            hit = _traded_through(api, tk, o)
                         filled = o["n"] if hit else 0
                     if filled:
                         fee = kalshi_fee(o["price"], filled, rate=MAKER_RATE)
                         open_pos[tk] = {"side": o["side"], "n": filled, "price": o["price"], "fee": fee}
                         print(f"  filled {filled} {o['side'].upper()} @ {o['price']:.3f} (maker fee ${fee:.2f})")
-                        _log({"event": "fill", "ticker": tk, "n": filled, "price": o["price"]})
+                        log({"event": "fill", "ticker": tk, "n": filled, "price": o["price"], "side": o["side"]})
                 if tk not in open_pos and time.time() < o["expires"] and tk == m["ticker"]:
                     continue
                 if tk not in open_pos:
                     print(f"  maker order on {tk} expired unfilled")
+                    log({"event": "expired", "ticker": tk, "price": o["price"], "side": o["side"]})
                 if o.get("id") and (tk not in open_pos or open_pos[tk]["n"] < o["n"]):
                     try:
                         api.cancel(o["id"])
@@ -172,6 +178,10 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                 P[f][0, j] = vals.get(f, np.nan)
             P["p_model"] = model_prob(P)
             seen.add(minute)
+            _status(series, {"ticker": cur, "minute": minute, "spot": spot, "strike": strike, "yes_bid": yb,
+                             "yes_ask": ya, "model": float(P["p_model"][0, j]) if np.isfinite(P["p_model"][0, j]) else None,
+                             "strategy": strategy, "execution": execution, "mode": mode,
+                             "day_pnl": day_pnl, "open": list(open_pos), "resting": list(pending)})
             print(f"{datetime.now():%H:%M:%S} {cur} m{minute:02d} spot={spot:.2f} K={strike:.2f} "
                   f"bid/ask={yb:.3f}/{ya:.3f} model={P['p_model'][0, j]:.3f}")
             if cur in traded or day_pnl <= -max_daily_loss or day_trades >= max_trades_per_day:
@@ -190,8 +200,9 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                     print(f"  >>> REST {n} {side.upper()} @ {price:.3f} for {wait} min")
                     oid = api.buy(cur, side, n, price, maker=True).get("order_id") if live else None
                     pending[cur] = {"side": side, "n": n, "price": price, "id": oid,
+                                    "posted": time.time(), "alone": bid + improve < ask - 1e-9,
                                     "expires": open_ts + 60 * min(minute + wait, 14)}
-                    _log({"event": "rest", "mode": mode, "ticker": cur, "side": side, "n": n, "price": price})
+                    log({"event": "rest", "mode": mode, "ticker": cur, "side": side, "n": n, "price": price})
                     continue
                 price = P["yes_ask"][0, j] if side == "yes" else P["no_ask"][0, j]
                 n = max(1, int(stake // price))
@@ -200,12 +211,48 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                 if live:
                     print("  order:", api.buy(cur, side, n, price))
                 open_pos[cur] = {"side": side, "n": n, "price": price, "fee": fee}
-                _log({"event": "buy", "mode": mode, "ticker": cur, "side": side, "n": n, "price": price})
+                log({"event": "buy", "mode": mode, "ticker": cur, "side": side, "n": n, "price": price})
         except requests.RequestException as e:
             print("  network error:", e)
         except KeyboardInterrupt:
             print("stopped"); return
         time.sleep(poll)
+
+
+def _traded_through(api, ticker, o) -> bool:
+    """Paper fill check: did a real trade print at our price (we were alone at the top)
+    or through it (we joined a queue) since the order was posted?"""
+    try:
+        tr = api.req("GET", "/markets/trades", params={"ticker": ticker, "limit": 200,
+                                                       "min_ts": int(o["posted"])}).get("trades", [])
+    except requests.RequestException:
+        return False
+    for t in tr:
+        y = float(t.get("yes_price_dollars") or 0)
+        if not y:
+            continue
+        if o["side"] == "yes":
+            ok = y <= o["price"] + 1e-9 if o["alone"] else y < o["price"] - 1e-9
+        else:
+            ok = y >= 1 - o["price"] - 1e-9 if o["alone"] else y > 1 - o["price"] + 1e-9
+        if ok:
+            return True
+    return False
+
+
+STATUS = LOG.parent / "bot_status.json"
+_status_lock = __import__("threading").Lock()
+
+
+def _status(series, d):
+    d["ts"] = int(time.time())
+    with _status_lock:
+        try:
+            cur = json.loads(STATUS.read_text())
+        except Exception:
+            cur = {}
+        cur[series] = d
+        STATUS.write_text(json.dumps(cur))
 
 
 def _log(d):
