@@ -84,11 +84,12 @@ def measure(launch: dict) -> dict:
     }
 
 
-def track(max_launches: int, idle_exit_min: float) -> None:
+def track(max_launches: int, idle_exit_min: float, every: int = 1) -> None:
     done = {json.loads(l)["address"] for l in OUTCOMES.read_text().splitlines()} if OUTCOMES.exists() else set()
     idle_since = time.time()
     while len(done) < max_launches:
         launches = [json.loads(l) for l in LAUNCHES.read_text().splitlines() if l.strip()]
+        launches = [l for l in launches if l["quote_token"] == SOL and l["price_usd"] > 0][::every]
         ready = [l for l in launches
                  if l["address"] not in done and l["quote_token"] == SOL and l["price_usd"] > 0
                  and time.time() >= ts(l["seen_at"]) + (WINDOW + 2) * 60]
@@ -140,10 +141,11 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("mode", choices=["track", "build"])
     ap.add_argument("--max", type=int, default=250)
+    ap.add_argument("--every", type=int, default=1, help="follow every Nth launch (evenly spaced sample)")
     ap.add_argument("--idle-exit", type=float, default=10, help="stop tracking after this many idle minutes")
     args = ap.parse_args()
     if args.mode == "track":
-        track(args.max, args.idle_exit)
+        track(args.max, args.idle_exit, args.every)
     else:
         build()
 
