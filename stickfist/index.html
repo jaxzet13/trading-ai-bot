@@ -191,57 +191,76 @@ table.odds th:not(:first-child), table.odds td:not(:first-child) { text-align: r
 .full .tc-bottom .tag { font-family: var(--f-mono); font-size: 3.4cqi; letter-spacing: .16em; color: rgba(244,241,234,.6); }
 .full .tc-val { font-family: var(--f-mono); font-weight: 600; font-size: 6.2cqi; color: var(--brass-hi); text-shadow: 0 0 2cqi rgba(230,211,163,.35); }
 
-/* ---- standard cards (Common to Double Rare): Pokemon-style layout ---- */
-.tcard.std { background: linear-gradient(135deg, #f7da62, #e5b522 35%, #fbe788 55%, #d7a315 80%, #f3d35a); padding: 3%; }
-.tcard.std.cr-RR, .tcard.std.rh { background: linear-gradient(135deg, #9aa0aa, #eef1f6 30%, #a9afba 55%, #f6f8fb 75%, #8f96a1); }
-.std .tc-face { height: 100%; border-radius: 2.6cqi; padding: 3.2cqi 4cqi 2.6cqi; display: flex; flex-direction: column; gap: 1.5cqi; position: relative; overflow: hidden; color: #17171a;
-  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--tc) 70%, #fff), var(--tc) 55%, color-mix(in srgb, var(--tc) 70%, #000) 130%); }
-.std.cr-RR .tc-face { background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--tc) 55%, #fff), color-mix(in srgb, var(--tc) 80%, #2a1a3a) 60%, #1d1426 140%); color: #fff; }
-.std .tc-head { display: flex; align-items: center; gap: 1.6cqi; }
-.std .tc-stage { font-family: var(--f-mono); font-size: 2.8cqi; font-weight: 600; letter-spacing: .08em; padding: .4cqi 1.4cqi; border-radius: 1cqi; background: linear-gradient(#f2f2f2, #b8b8b8); color: #333; }
-.std .tc-name { font-family: var(--f-body); font-weight: 800; font-size: 7.4cqi; line-height: 1; letter-spacing: -.01em; flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.tcard .ex { font-family: var(--f-display); font-style: italic; font-weight: 700; font-size: 1.15em; margin-left: .15em; color: #fff; -webkit-text-stroke: .45cqi #17171a; paint-order: stroke; }
-.std .tc-hp { font-family: var(--f-body); font-weight: 800; font-size: 5.4cqi; white-space: nowrap; }
-.std .tc-hp small { font-size: .55em; margin-right: .6cqi; letter-spacing: .05em; }
-.std .tc-type { width: 6.4cqi; height: 6.4cqi; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-body); font-weight: 800; font-size: 3.6cqi; color: #fff; background: color-mix(in srgb, var(--tc) 55%, #000); box-shadow: inset 0 0 0 .5cqi rgba(255,255,255,.6); flex: none; }
-.std .tc-art { position: relative; aspect-ratio: 1.42; border: 1cqi solid transparent; border-image: linear-gradient(135deg, #e9c46a, #fff3c4, #b8892b) 1; overflow: hidden; box-shadow: 0 .6cqi 1.4cqi rgba(0,0,0,.35); background: #222; flex: none; }
+/* ---- paper cards (Common to Signature): ink-print stock, brush frame, slash-cut art window ---- */
+.tcard.std { background: #0f0f10; padding: 2%; }
+.tcard.std.rh { background: linear-gradient(135deg, #2a2a2e, #6b6f78 30%, #24252a 55%, #7a7f88 80%, #1d1e22); }
+.std .tc-face { height: 100%; border-radius: 2.4cqi; padding: 6cqi 7cqi 5cqi 6.5cqi; display: flex; flex-direction: column; gap: 1.4cqi; position: relative; overflow: hidden; color: #141414;
+  background: var(--grain), radial-gradient(ellipse at 30% 20%, #f4efe3, #e6dfcf 70%, #d9d1bf); }
+.std .tc-face::after { content: ""; position: absolute; inset: 0; background: var(--brushframe) center / 100% 100% no-repeat; pointer-events: none; z-index: 3; }
+.std .tc-wash { position: absolute; left: -12%; top: 14%; width: 92%; height: 44%; border-radius: 50%; background: radial-gradient(ellipse at 45% 50%, color-mix(in srgb, var(--tc) 85%, transparent), color-mix(in srgb, var(--tc) 35%, transparent) 50%, transparent 72%); transform: rotate(-8deg); z-index: 0; }
+.std .tc-splash { position: absolute; right: -6%; top: 20%; width: 46%; height: 36%; z-index: 0; background: var(--rc); opacity: .85;
+  clip-path: polygon(8% 30%, 30% 6%, 46% 22%, 70% 2%, 78% 26%, 98% 20%, 86% 48%, 100% 70%, 74% 72%, 66% 98%, 44% 78%, 22% 96%, 20% 70%, 0% 62%); }
+.std .tc-head { display: flex; align-items: flex-start; gap: 2cqi; z-index: 1; }
+.std .tc-name { font-family: var(--f-display); font-style: italic; font-weight: 700; font-size: 10.5cqi; line-height: .9; letter-spacing: -.01em; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.tcard .sigst { display: inline-block; margin-left: 2cqi; vertical-align: .6em; font-family: var(--f-mono); font-style: normal; font-weight: 600; font-size: 2.8cqi; letter-spacing: .14em; color: #fff; background: #b3121b; padding: .5cqi 1.2cqi; transform: rotate(-6deg); box-shadow: 0 0 0 .4cqi rgba(179,18,27,.35); }
+.std .tc-pwr { flex: none; display: grid; place-items: center; width: 11.5cqi; height: 11.5cqi; background: #b3121b; color: #f6efe1; font-family: var(--f-mono); font-weight: 600; font-size: 4.2cqi; line-height: 1; transform: rotate(-5deg); border-radius: 1.4cqi; box-shadow: inset 0 0 0 .5cqi rgba(246,239,225,.55); }
+.std .tc-pwr small { font-size: 2.2cqi; letter-spacing: .12em; display: block; }
+.std .tc-sub { font-family: var(--f-mono); font-size: 2.8cqi; letter-spacing: .18em; text-transform: uppercase; color: rgba(20,20,20,.6); margin-top: -1cqi; z-index: 1; }
+.std .tc-artwrap { position: relative; z-index: 1; background: #111; padding: .9cqi; clip-path: polygon(0 6%, 100% 0, 100% 94%, 0 100%); flex: none; }
+.std .tc-art { position: relative; aspect-ratio: 1.36; overflow: hidden; clip-path: polygon(0 5.6%, 100% 0, 100% 94.4%, 0 100%); background: #222; }
 .std .tc-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; }
-.std .tc-strip { align-self: center; font-family: var(--f-body); font-style: italic; font-weight: 600; font-size: 2.9cqi; padding: .4cqi 3cqi; margin-top: -1cqi; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); }
-.std.cr-RR .tc-strip { background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent); }
-.std .tc-moves { display: grid; gap: 1.6cqi; flex: 1; align-content: center; }
-.std .mv { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .4cqi 2cqi; }
-.std .mv .mc { display: flex; gap: .7cqi; }
-.std .mv .mc i { width: 3.4cqi; height: 3.4cqi; border-radius: 50%; background: color-mix(in srgb, var(--tc) 50%, #000); box-shadow: inset 0 0 0 .4cqi rgba(255,255,255,.55); display: block; }
-.std .mv b { font-family: var(--f-body); font-weight: 800; font-size: 5cqi; }
-.std .mv em { font-style: normal; font-family: var(--f-body); font-weight: 800; font-size: 6cqi; }
-.std .mv small { grid-column: 1 / -1; font-family: var(--f-body); font-size: 3.1cqi; line-height: 1.25; opacity: .85; }
-.std .tc-flavor { font-family: var(--f-display); font-style: italic; font-size: 3.6cqi; line-height: 1.2; padding: 1.2cqi 2cqi; border: .3cqi solid rgba(0,0,0,.25); border-radius: 1.2cqi; background: rgba(255,255,255,.35); }
-.std.cr-RR .tc-flavor { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.08); }
-.std .tc-foot { display: flex; justify-content: space-between; align-items: center; gap: 2cqi; font-family: var(--f-mono); font-size: 3cqi; }
-.std .tc-foot .sym { font-size: 1.3em; color: #17171a; }
-.std.cr-RR .tc-foot .sym, .std.cr-RR .tc-foot { color: #fff; }
-.std .rhb { font-size: .85em; letter-spacing: .12em; padding: .2cqi 1cqi; border-radius: .8cqi; background: linear-gradient(90deg, #ffd6f0, #cfe9ff, #d9ffe9); color: #333; }
-.std .tc-val { font-family: var(--f-mono); font-weight: 700; font-size: 4.4cqi; padding: .4cqi 1.6cqi; border-radius: 1.2cqi; background: #17171a; color: var(--brass-hi); }
-/* holo art window (Holo Rare, Double Rare) */
+.std .tc-vert { position: absolute; right: 2.6cqi; top: 36%; writing-mode: vertical-rl; font-family: var(--f-mono); font-size: 2.4cqi; letter-spacing: .32em; text-transform: uppercase; color: rgba(20,20,20,.45); z-index: 2; }
+.std .tc-moves { display: grid; gap: 1.3cqi; flex: 1; align-content: center; z-index: 1; }
+.std .mv { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: .2cqi 2cqi; padding-bottom: 1cqi; border-bottom: .3cqi solid rgba(20,20,20,.18); }
+.std .mv .cost { font-family: var(--f-mono); font-weight: 600; font-size: 4.4cqi; letter-spacing: -.1em; color: color-mix(in srgb, var(--tc) 45%, #000); }
+.std .mv b { font-family: var(--f-display); font-style: italic; font-weight: 700; font-size: 6cqi; }
+.std .mv em { font-style: normal; font-family: var(--f-mono); font-weight: 600; font-size: 6.4cqi; }
+.std .mv small { grid-column: 1 / -1; font-family: var(--f-body); font-size: 3cqi; line-height: 1.25; opacity: .75; }
+.std .tc-flavor { font-family: var(--f-display); font-style: italic; font-size: 3.8cqi; line-height: 1.2; padding-left: 2.2cqi; border-left: .7cqi solid #b3121b; z-index: 1; }
+.std .tc-foot { display: flex; align-items: center; gap: 1.8cqi; font-family: var(--f-mono); font-size: 2.8cqi; letter-spacing: .08em; z-index: 1; }
+.std .rseal { display: grid; place-items: center; min-width: 6cqi; height: 6cqi; padding: 0 1cqi; font-size: 3.2cqi; color: #f6efe1; background: var(--rc); transform: rotate(-4deg); box-shadow: inset 0 0 0 .35cqi rgba(255,255,255,.5); }
+.std.cr-C .rseal { background: #6b6b6b; } .std.cr-U .rseal { background: #4f7d5a; }
+.std .rhb { font-size: .9em; letter-spacing: .14em; padding: .2cqi 1cqi; background: linear-gradient(90deg, #ffd6f0, #cfe9ff, #d9ffe9); color: #333; }
+.std .tc-val { margin-left: auto; font-family: var(--f-mono); font-weight: 600; font-size: 4.4cqi; padding: .4cqi 1.6cqi; background: #141414; color: var(--brass-hi); }
+/* Foil Rare + Signature: foil art window */
 .std .tc-holo { position: absolute; inset: 0; pointer-events: none; opacity: 0; mix-blend-mode: color-dodge; background: repeating-linear-gradient(118deg, rgba(255,60,150,0) 0%, rgba(255,60,150,.3) 3%, rgba(255,220,90,.3) 6%, rgba(90,255,190,.3) 9%, rgba(90,170,255,.3) 12%, rgba(255,60,150,0) 15%); background-size: 260% 260%; background-position: var(--mx) var(--my); }
 .std.cr-H .tc-holo { opacity: .55; } .std.cr-RR .tc-holo { opacity: .7; }
-/* reverse holo: the card body shines, the art stays flat */
-.std.rh .tc-face::before { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: .85; z-index: 0;
-  background: repeating-linear-gradient(118deg, rgba(255,120,200,.0) 0%, rgba(255,120,200,.55) 4%, rgba(255,240,140,.55) 8%, rgba(120,255,210,.55) 12%, rgba(120,190,255,.55) 16%, rgba(255,120,200,0) 20%), radial-gradient(circle, rgba(255,255,255,.8) 0 .35cqi, transparent .5cqi) 0 0 / 5cqi 5cqi; background-size: 300% 300%, 5cqi 5cqi; background-position: var(--mx) var(--my), 0 0; }
-.std .tc-face > * { position: relative; z-index: 1; }
+.std.cr-H .tc-artwrap { background: linear-gradient(135deg, #8a8f99, #f4f6f9, #8a8f99); }
+/* Signature: charcoal stock, light ink */
+.std.cr-RR .tc-face { color: #ece6d8; background: var(--grain), radial-gradient(ellipse at 30% 20%, #2b2926, #1b1a18 70%, #121110); }
+.std.cr-RR .tc-face::after { filter: invert(1); opacity: .8; }
+.std.cr-RR .tc-sub, .std.cr-RR .tc-vert { color: rgba(236,230,216,.55); }
+.std.cr-RR .mv { border-bottom-color: rgba(236,230,216,.18); }
+.std.cr-RR .mv .cost { color: var(--tc); }
+.std.cr-RR .tc-artwrap { background: linear-gradient(135deg, #b08d57, #f3dfb0, #b08d57); }
+.std.cr-RR .tc-val { background: #ece6d8; color: #141414; }
+/* Reverse Foil: foil flecks across the paper, the art stays matte */
+.std.rh .tc-face::before { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; opacity: .55; z-index: 0;
+  background: repeating-linear-gradient(118deg, rgba(255,120,200,0) 0%, rgba(255,120,200,.5) 4%, rgba(255,240,140,.5) 8%, rgba(120,255,210,.5) 12%, rgba(120,190,255,.5) 16%, rgba(255,120,200,0) 20%), radial-gradient(circle, rgba(140,140,160,.6) 0 .3cqi, transparent .45cqi) 0 0 / 4.4cqi 4.4cqi; background-size: 300% 300%, 4.4cqi 4.4cqi; background-position: var(--mx) var(--my), 0 0; }
 /* full-art frames by rarity */
 .tcard.full { padding: 2.4%; }
 .tcard.cr-UR { background: linear-gradient(135deg, #7d828d, #f4f6f9 25%, #9aa0aa 50%, #ffffff 70%, #868c97); }
-.tcard.cr-IR { background: linear-gradient(135deg, #b08d57, #f3dfb0 35%, #c9a46a 65%, #f8ecd0); padding: 1.6%; }
+.full .tc-face::before { content: ""; position: absolute; inset: 0; background: var(--brushframe) center / 100% 100% no-repeat; filter: invert(1); opacity: .7; z-index: 4; pointer-events: none; }
+.cr-HR.full .tc-face::before { filter: invert(.75) sepia(1) saturate(4) hue-rotate(5deg); opacity: .9; }
+.full .sigst { font-size: 2.6cqi; }
+.tcard.cr-IR { background: #0f0f10; padding: 2%; }
+.cr-IR.full .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, #f4efe3, #e6dfcf 70%, #d9d1bf); color: #141414; }
+.cr-IR.full .tc-face::before { filter: none; opacity: 1; }
+.cr-IR.full .tc-art { inset: 7% 7% 27% 7%; clip-path: polygon(0 3%, 100% 0, 100% 97%, 0 100%); }
+.cr-IR.full .tc-top { background: none; padding-top: 1.6cqi; }
+.cr-IR.full .tc-name { color: #fff; }
+.cr-IR.full .tc-hp { color: #fff; }
+.cr-IR.full .tc-info { background: none !important; color: #141414; padding-top: 0; }
+.cr-IR.full .mv { color: #141414; } .cr-IR.full .tc-val { color: #141414; text-shadow: none; } .cr-IR.full .tc-bottom { border-top-color: rgba(20,20,20,.2); } .cr-IR.full .tc-bottom .tag { color: rgba(20,20,20,.6); }
 .tcard.cr-SIR { background: linear-gradient(115deg, #ff4d8d, #ffd36b, #6bffb8, #5ab0ff, #c47bff, #ff4d8d); background-size: 300% 300%; animation: holo 6s linear infinite; }
 .tcard.cr-HR { background: linear-gradient(135deg, #8a6200, #ffe58a 25%, #c9930f 50%, #fff2b8 70%, #9c7208); }
 .full .tc-top { display: flex; align-items: center; gap: 2cqi; }
-.full .tc-hp { margin-left: auto; font-family: var(--f-body); font-weight: 800; font-size: 5.6cqi; color: #fff; text-shadow: 0 .4cqi 1.4cqi rgba(0,0,0,.8); white-space: nowrap; }
+.full .tc-hp { margin-left: auto; font-family: var(--f-mono); font-weight: 600; font-size: 5cqi; color: #fff; text-shadow: 0 .4cqi 1.4cqi rgba(0,0,0,.8); white-space: nowrap; }
 .full .tc-hp small { font-size: .55em; margin-right: .6cqi; }
 .full .tc-moves { display: grid; gap: 1.2cqi; }
 .full .mv { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .3cqi 2cqi; color: #f4f1ea; }
-.full .mv .mc { display: flex; gap: .6cqi; } .full .mv .mc i { width: 3cqi; height: 3cqi; border-radius: 50%; background: var(--tc); box-shadow: inset 0 0 0 .4cqi rgba(255,255,255,.6); display: block; }
-.full .mv b { font-family: var(--f-body); font-weight: 800; font-size: 4.6cqi; } .full .mv em { font-style: normal; font-family: var(--f-body); font-weight: 800; font-size: 5.4cqi; }
+.full .mv .cost { font-family: var(--f-mono); font-weight: 600; font-size: 4cqi; letter-spacing: -.1em; color: var(--tc); }
+.full .mv b { font-family: var(--f-display); font-style: italic; font-weight: 700; font-size: 5.4cqi; } .full .mv em { font-style: normal; font-family: var(--f-mono); font-weight: 600; font-size: 5.4cqi; }
 .full .mv small { grid-column: 1 / -1; font-size: 3cqi; opacity: .8; }
 .full .sym { color: var(--rc); }
 .cr-UR .tc-art::after { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; background: repeating-linear-gradient(45deg, rgba(255,255,255,.18) 0 1px, transparent 1px 4px), repeating-linear-gradient(-45deg, rgba(255,255,255,.12) 0 1px, transparent 1px 5px); }
@@ -560,7 +579,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <div>
         <div class="label">Series II · <span id="heroCount">0</span> fighters · <span id="heroPacks">0</span> packs</div>
         <h1 style="margin-top:18px">Sealed.<br>Numbered.<br><b>Waiting.</b></h1>
-        <p class="lede">Five cards a pack, rare slot last. Thirty cards in the set, from ● commons to ★★★ gold hyper rares. Every card has a cash price.</p>
+        <p class="lede">Five cards a pack, rare slot last. Thirty cards in the set, from ● commons to ★★★ gilded cards. Every card has a cash price.</p>
         <div class="ctas"><a class="btn brass big" href="#all-packs">Browse packs</a><button class="btn ghost big" data-buy="lastframe" id="heroOpen">Open the featured pack</button></div>
         <div class="facts">
           <div><span class="label">Top chase</span><strong id="heroChase">–</strong></div>
@@ -635,7 +654,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     <div class="rules">
       <div class="panel"><h3>Rarity</h3><div class="table-wrap"><table class="odds" id="valueTable"></table></div></div>
       <div class="panel"><h3>Pulls</h3><ul>
-        <li>Every booster holds 5 cards: 2 commons, 1 uncommon, a reverse-holo slot (which can instead hold an Illustration Rare or Special Illustration Rare), and the rare slot. Each slot rolls with the odds printed on the pack.</li>
+        <li>Every booster holds 5 cards: 2 commons, 1 uncommon, a reverse-foil slot (which can instead hold an Illustration or a Masterwork), and the rare slot. Each slot rolls with the odds printed on the pack.</li>
         <li>Inside a rarity, every fighter is equally likely, except a pack's featured fighter, whose boost is printed on the pack.</li>
         <li>Rolls use your browser's cryptographic random generator. Odds never change with what you've spent or pulled.</li></ul></div>
       <div class="panel"><h3>Currency</h3><ul>
@@ -718,12 +737,12 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     C:   { name: "Common", sym: "●", col: "#a5a5a5", tier: 0, build: 0 },
     U:   { name: "Uncommon", sym: "◆", col: "#8cbf94", tier: 1, build: 0 },
     R:   { name: "Rare", sym: "★", col: "#4f8fe6", tier: 2, build: .45 },
-    H:   { name: "Holo Rare", sym: "★", col: "#5fc8ff", tier: 3, build: .9 },
-    RR:  { name: "Double Rare", sym: "★★", col: "#9b62f0", tier: 4, build: 1.2 },
-    UR:  { name: "Ultra Rare", sym: "★★", col: "#d4d8e0", tier: 5, build: 1.6 },
-    IR:  { name: "Illustration Rare", sym: "★", col: "#e4ae3a", tier: 5, build: 1.5 },
-    SIR: { name: "Special Illustration Rare", sym: "★★", col: "#f04f9a", tier: 6, build: 2.4 },
-    HR:  { name: "Hyper Rare", sym: "★★★", col: "#f5c542", tier: 7, build: 2.6 }
+    H:   { name: "Foil Rare", sym: "★", col: "#5fc8ff", tier: 3, build: .9 },
+    RR:  { name: "Signature", sym: "★★", col: "#9b62f0", tier: 4, build: 1.2 },
+    UR:  { name: "Ultra", sym: "★★", col: "#d4d8e0", tier: 5, build: 1.6 },
+    IR:  { name: "Illustration", sym: "★", col: "#e4ae3a", tier: 5, build: 1.5 },
+    SIR: { name: "Masterwork", sym: "★★", col: "#f04f9a", tier: 6, build: 2.4 },
+    HR:  { name: "Gilded", sym: "★★★", col: "#f5c542", tier: 7, build: 2.6 }
   };
   const CR_ORDER = ["C", "U", "R", "H", "RR", "UR", "IR", "SIR", "HR"];
   const SET_SIZE = 17, SET_NAME = "Ink & Steel", RH_MULT = 2.2;
@@ -897,29 +916,41 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 
   function figImg(f, cls) { return `<img class="${cls || ""}" src="${portrait(f)}" alt="" draggable="false">`; }
 
+  // hand-drawn brush frame for the paper cards (generated once, stretched to every card)
+  (function () {
+    let sd = 7; const q = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
+    const edge = (x0, y0, x1, y1, n, j) => { let d = ""; for (let i = 0; i <= n; i++) { const t = i / n; d += `${(x0 + (x1 - x0) * t + (q() - .5) * j).toFixed(1)},${(y0 + (y1 - y0) * t + (q() - .5) * j).toFixed(1)} `; } return d; };
+    const ring = (m, j) => "M" + edge(m, m, 500 - m, m, 22, j) + "L" + edge(500 - m, m, 500 - m, 700 - m, 30, j) + "L" + edge(500 - m, 700 - m, m, 700 - m, 22, j) + "L" + edge(m, 700 - m, m, m, 30, j) + "Z";
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 700' preserveAspectRatio='none'><g fill='none' stroke='%23111' stroke-linejoin='round'><path d='${ring(10, 5)}' stroke-width='9'/><path d='${ring(12, 9)}' stroke-width='3' opacity='.55'/><path d='${ring(20, 4)}' stroke-width='1.6' opacity='.7'/></g></svg>`;
+    document.documentElement.style.setProperty("--brushframe", `url("data:image/svg+xml;utf8,${svg.replace(/#/g, "%23").replace(/"/g, "'")}")`);
+  })();
+
   function cardHTML(item, pending) {
     const f = BY_ID[item.id], card = cardOf(item), rar = rarOf(item), R = CR[rar] || CR.C, sk = item.ed === "sketch", T = TYPES[FTYPE[f.id]] || TYPES.fist;
     const num = `${card.no}/${String(SET_SIZE).padStart(3, "0")}`, full = R.tier >= 5;
     const val = money(pending ? cardBaseValue(card, item.ed, item.rh) : itemVal(item));
     const pwr = (f.atk + f.spd + f.def) * 10 + (card.ex ? 60 : 0);
-    const name = esc(f.name) + (card.ex ? `<i class="ex">ex</i>` : "");
+    const name = esc(f.name) + (card.ex ? `<i class="sigst">SIG</i>` : "");
     const moves = (MOVES[f.id] || []).map(([n, d, txt]) => `<div class="mv"><span class="mc"><i></i><i></i></span><b>${esc(n)}</b><em>${d || ""}</em>${txt ? `<small>${esc(txt)}</small>` : ""}</div>`).join("");
     const cls = `tcard cr-${rar}${item.rh ? " rh" : ""}${full ? " full" : " std"}${sk ? " sketch" : ""}`;
     const stamp = sk ? `<span class="stamp">SKETCH</span>` : "";
+    const sig = card.ex ? `<i class="sigst">SIG</i>` : "";
+    const tech = (MOVES[f.id] || []).map(([n, d, txt], k) => `<div class="mv"><span class="cost">${"/".repeat(k + 1 + (d >= 100 ? 1 : 0))}</span><b>${esc(n)}</b><em>${d || "–"}</em>${txt ? `<small>${esc(txt)}</small>` : ""}</div>`).join("");
     if (!full) return `<div class="${cls}" style="--tc:${T.col};--rc:${R.col}"><div class="tc-face">
-        <div class="tc-head"><span class="tc-stage">${card.ex ? "EX" : "BASIC"}</span><span class="tc-name">${name}</span><span class="tc-hp"><small>PWR</small>${pwr}</span><span class="tc-type" title="${T.name} type">${T.name[0]}</span></div>
-        <div class="tc-art">${figImg(f)}<div class="tc-holo"></div></div>
-        <div class="tc-strip">${esc(f.title)} · ${T.name} type · ${SET_NAME}</div>
-        <div class="tc-moves">${moves}</div>
+        <div class="tc-wash"></div>
+        <div class="tc-head"><span class="tc-name">${esc(f.name)}${sig}</span><span class="tc-pwr"><small>PWR</small>${pwr}</span></div>
+        <div class="tc-sub">${esc(f.title)} · ${T.name} · ${SET_NAME}</div>
+        <div class="tc-artwrap"><div class="tc-art">${figImg(f)}<div class="tc-holo"></div></div></div>
+        <div class="tc-moves">${tech}</div>
         <div class="tc-flavor">${esc(f.trait)}</div>
-        <div class="tc-foot"><span class="tc-no">${num} <b class="sym">${R.sym}</b>${item.rh ? ` <span class="rhb">REVERSE</span>` : ""}</span><span class="tc-val">${val}</span></div>
+        <div class="tc-foot"><span class="tc-no">${num}</span><span class="rseal" title="${R.name}">${R.sym}</span>${item.rh ? `<span class="rhb">REVERSE FOIL</span>` : ""}<span class="tc-val">${val}</span></div>
         ${stamp}</div><div class="glare"></div></div>`;
     return `<div class="${cls}" style="--tc:${T.col};--rc:${R.col}"><div class="tc-face">
       <div class="tc-art">${figImg(f)}<div class="tc-holo"></div></div>
       <div class="tc-top"><span class="tc-name">${name}</span><span class="tc-hp"><small>PWR</small>${pwr}</span></div>
       ${stamp}
       <div class="tc-info">
-        <div class="tc-moves">${moves}</div>
+        <div class="tc-moves">${tech}</div>
         <div class="tc-bottom"><span class="tag">${num} <b class="sym">${R.sym}</b></span><span class="tc-val">${val}</span></div>
       </div>
     </div><div class="glare"></div></div>`;
@@ -1012,18 +1043,18 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   function tileHTML(p) {
     const ev = packEV(p), chase = chaseOf(p), ch = chanceOf(p, chase), chaseF = BY_ID[chase.id];
     const have = p.cur === "coin" ? state.coins : state.tokens, can = have >= p.price;
-    const rows = (d, label) => { const tot = Object.values(d).reduce((a, b) => a + b, 0); return `<tr><th colspan="3">${label}</th></tr>` + Object.entries(d).map(([k, v]) => `<tr><td>${k === "RH" ? "Reverse Holo" : `<b style="color:${CR[k].col}">${CR[k].sym}</b> ${CR[k].name}`}</td><td>${k === "RH" ? "" : money(meanR(p, k))}</td><td>${+(v / tot * 100).toFixed(2)}%</td></tr>`).join(""); };
+    const rows = (d, label) => { const tot = Object.values(d).reduce((a, b) => a + b, 0); return `<tr><th colspan="3">${label}</th></tr>` + Object.entries(d).map(([k, v]) => `<tr><td>${k === "RH" ? "Reverse Foil" : `<b style="color:${CR[k].col}">${CR[k].sym}</b> ${CR[k].name}`}</td><td>${k === "RH" ? "" : money(meanR(p, k))}</td><td>${+(v / tot * 100).toFixed(2)}%</td></tr>`).join(""); };
     const btn = can ? `Open · ${priceTxt(p)}` : p.cur === "coin" ? "Add funds" : `${fmt(p.price - have)} tokens short`;
     return `<article class="tile">
       <span class="no">No. ${p.no}</span><span class="cnt">5 cards</span>
       <div class="stagebox"><div class="peek">${cardHTML({ id: chase.id, cno: chase.no, rar: chase.rar, serial: 0, ed: p.ed, val: cardBaseValue(chase, p.ed, false) })}</div>${packHTML(p)}</div>
       <div class="row"><h3>${esc(p.name)}</h3><span class="price${p.cur === "token" ? " tok" : ""}">${priceTxt(p)}</span></div>
-      <div class="chase">Chase: <b>${esc(chaseF.name)}${chase.ex ? " ex" : ""}</b> ${CR[chase.rar].sym} ${CR[chase.rar].name} · ${money(cardBaseValue(chase, p.ed, false))} · ${oneIn(ch)} packs${p.feat ? ` · ${p.feat.x}× boosted` : ""}</div>
+      <div class="chase">Chase: <b>${esc(chaseF.name)}</b> ${CR[chase.rar].sym} ${CR[chase.rar].name} · ${money(cardBaseValue(chase, p.ed, false))} · ${oneIn(ch)} packs${p.feat ? ` · ${p.feat.x}× boosted` : ""}</div>
       <div class="meta">
         <span>Hit rate</span><span>${p.cur === "coin" ? Math.round(hitRate(p) * 100) + "% of packs" : "–"}</span>
         <span>Average sell-back</span><span>${p.cur === "coin" ? Math.round(ev * BUYBACK / p.price * 100) + "% of price" : money(ev * BUYBACK)}</span>
       </div>
-      <details><summary>Pack odds</summary><table class="odds"><thead><tr><th>5 cards: ● ● ◆ + slot 4 + slot 5</th><th>Avg value</th><th>Chance</th></tr></thead><tbody>${rows(p.rh, "Slot 4 · reverse holo slot")}${rows(p.rare, "Slot 5 · rare slot")}</tbody></table></details>
+      <details><summary>Pack odds</summary><table class="odds"><thead><tr><th>5 cards: ● ● ◆ + slot 4 + slot 5</th><th>Avg value</th><th>Chance</th></tr></thead><tbody>${rows(p.rh, "Slot 4 · reverse foil slot")}${rows(p.rare, "Slot 5 · rare slot")}</tbody></table></details>
       <button class="btn ${can ? "brass" : ""}" data-buy="${p.id}" ${!can && p.cur === "token" ? "disabled" : ""}>${btn}</button>
     </article>`;
   }
@@ -1131,7 +1162,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     $("valueTable").innerHTML = `<thead><tr><th>Rarity</th><th>Cards</th><th>Value range</th></tr></thead><tbody>` + CR_ORDER.map(r => {
       const vs = CARDS.filter(c => c.rar === r).map(c => c.v);
       return `<tr><td><b style="color:${CR[r].col}">${CR[r].sym}</b> ${CR[r].name}</td><td>${vs.length}</td><td>${money(Math.min(...vs))}–${money(Math.max(...vs))}</td></tr>`;
-    }).join("") + `<tr><td>Reverse Holo (any ●◆★)</td><td>–</td><td>${RH_MULT}× the card</td></tr></tbody>`;
+    }).join("") + `<tr><td>Reverse Foil (any ●◆★)</td><td>–</td><td>${RH_MULT}× the card</td></tr></tbody>`;
   }
 
   // ---------- Arena (fight films) ----------
@@ -1524,7 +1555,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const t = $("stTitle");
     const RC = CR[rarOf(it)] || CR.C, card = cardOf(it);
     t.className = "st-title"; t.style.setProperty("--rc", it.rh && RC.tier < 2 ? "#cfe9ff" : RC.col);
-    t.innerHTML = `<div class="rw">${it.ed === "sketch" ? "Sketch · " : ""}${RC.sym} ${RC.name}${it.rh ? " · Reverse Holo" : ""}</div><div class="nm">${esc(f.name)}${card.ex ? " ex" : ""}</div><div class="vl">${it.g ? `<span class="gr">${pending ? "Grading…" : `Grade ${it.g} · ${gradeOf(it.g).name}`}</span> ` : ""}<span class="vv">${money(val)}</span></div>`;
+    t.innerHTML = `<div class="rw">${it.ed === "sketch" ? "Sketch · " : ""}${RC.sym} ${RC.name}${it.rh ? " · Reverse Foil" : ""}</div><div class="nm">${esc(f.name)}${card.ex ? " · Signature" : ""}</div><div class="vl">${it.g ? `<span class="gr">${pending ? "Grading…" : `Grade ${it.g} · ${gradeOf(it.g).name}`}</span> ` : ""}<span class="vv">${money(val)}</span></div>`;
     void t.offsetWidth; t.classList.add("slam");
   }
 
