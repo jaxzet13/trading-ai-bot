@@ -2,6 +2,10 @@
 
 The card face in `index.html` (`cardHTML`, `.kcard` styles) is the reference layout. In the app, open any card in the binder and press **Print guides** to see the trim (red line) and the safe zone (blue dashes) drawn on the card.
 
+## MakePlayingCards (MPC) game cards
+
+MPC's "Game cards (63.5 x 88.9 mm)" product fits our card shape exactly (5:7). Upload files at 1650 x 2250 px (600 dpi): 1500 x 2100 trim plus a 1/8" (75 px) bleed on each side, with square corners (MPC rounds them). Keep text 1/8" inside the trim. `exports/bloodmoon-mpc/` follows this. Pick S33 (black core) or M30 linen stock, and the "Custom foil booster pack" packaging for sealed packs.
+
 ## Size
 
 | | mm | inches | pixels at 300 dpi |

@@ -1,4 +1,4 @@
-<title>StickFist Rips</title>
+<title>STIXX</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1146,7 +1146,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
 
 <header class="top">
   <div class="wrap">
-    <a class="mark" href="#packs"><svg><use href="#i-sigil"/></svg><span>StickFist</span></a>
+    <a class="mark" href="#packs"><svg><use href="#i-sigil"/></svg><span>STIXX</span></a>
     <nav class="tabs" aria-label="Sections">
       <a href="#packs" data-tab="packs">Packs</a>
       <a href="#arena" data-tab="arena">Arena</a>
@@ -2378,7 +2378,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     st.innerHTML = SS.items.map((it, i) => {
       const rot = i === 0 ? 0 : (rand() - .5) * 6, ox = i * 3, oy = i * 4;
       return `<div class="sc rise" data-i="${i}" style="z-index:${50 - i};--rot:${rot.toFixed(1)}deg;--ox:${ox}px;--oy:${oy}px;--c:${(CR[rarOf(it)] || CR.C).col}">
-        <div class="tilt"><div class="flip-inner"><div class="face back"><div class="cback"><div class="in"><svg viewBox="0 0 40 40"><use href="#i-sigil"/></svg><span class="t">STICKFIST · II</span></div><span class="leak"></span><span class="crk"></span></div></div><div class="face front">${cardHTML(it, !!it.g)}</div></div></div></div>`;
+        <div class="tilt"><div class="flip-inner"><div class="face back"><div class="cback"><div class="in"><svg viewBox="0 0 40 40"><use href="#i-sigil"/></svg><span class="t">STIXX · II</span></div><span class="leak"></span><span class="crk"></span></div></div><div class="face front">${cardHTML(it, !!it.g)}</div></div></div></div>`;
     }).join("");
     requestAnimationFrame(() => requestAnimationFrame(() => {
       st.querySelectorAll(".sc").forEach((el, i) => setTimeout(() => { el.classList.remove("rise"); sfx.deal(); }, 120 + i * 110));

@@ -40,3 +40,8 @@ Plain on purpose. One style per card, so even the bulk feels varied.
 ## Card backs (round 3): `card-backs/`
 
 B1 black + gold seal · B2 sumi ink enso on rice paper · B3 indigo with holo S/F crest · B4 blood moon · B5 Swiss charcoal · B6 gold mandala. One back is used for every card, so pick it before the first print run.
+
+## STIXX (round 4): `logos-stixx/` and `card-backs-stixx/`
+
+Logos X1 brush wordmark with crossed swords as the XX · X2 gold wordmark, the I is a stickman · X3 esports mascot · X4 katana crest · X5 graffiti · X6 app icon.
+Backs XB1 black + gold · XB2 sumi enso · XB3 indigo holo crest · XB4 blood moon · XB5 Swiss charcoal · XB6 gold mandala.
