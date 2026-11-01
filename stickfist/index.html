@@ -1,0 +1,681 @@
+<title>StickFist Rips</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: sketchbook graph-paper ground, ink stickmen, rarity shown as marker colors; top bar + tabbed panels + full-screen rip stage */
+:root {
+  --bg: #eef1f4;
+  --grid: #dde3ea;
+  --panel: #ffffff;
+  --ink: #15181d;
+  --muted: #5a6370;
+  --line: #cdd4dc;
+  --accent: #e2412b;
+  --accent-ink: #ffffff;
+  --card-bg: #fbfcfd;
+  --good: #1f8a4c;
+  --r-common: #8a939e;
+  --r-rare: #2f74d0;
+  --r-epic: #8146d1;
+  --r-legendary: #c98a06;
+  --r-secret: #d0367a;
+  --shade: rgba(14, 17, 22, .72);
+  --f-display: "Archivo Black", "Arial Black", Impact, sans-serif;
+  --f-body: "Work Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111419; --grid: #1a1f26; --panel: #181c23; --ink: #e8ecf1; --muted: #98a2ae; --line: #2b323c;
+  --accent: #ff5b3f; --accent-ink: #14161a; --card-bg: #1d222a; --good: #3fbf78;
+  --r-common: #8f99a5; --r-rare: #5596ec; --r-epic: #a477ee; --r-legendary: #f0b323; --r-secret: #f0559b;
+  --shade: rgba(5, 7, 10, .8); color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #111419; --grid: #1a1f26; --panel: #181c23; --ink: #e8ecf1; --muted: #98a2ae; --line: #2b323c;
+  --accent: #ff5b3f; --accent-ink: #14161a; --card-bg: #1d222a; --good: #3fbf78;
+  --r-common: #8f99a5; --r-rare: #5596ec; --r-epic: #a477ee; --r-legendary: #f0b323; --r-secret: #f0559b;
+  --shade: rgba(5, 7, 10, .8); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.wrap { max-width: 1100px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* Top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--panel); border-bottom: 2px solid var(--ink); }
+.top .wrap { display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; padding-block: 10px; }
+.logo { font-family: var(--f-display); font-size: 22px; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; margin-right: auto; }
+.logo b { background: var(--accent); color: var(--accent-ink); padding: 0 6px; transform: rotate(-3deg); display: inline-block; }
+.balance { display: flex; align-items: center; gap: 8px; border: 2px solid var(--ink); padding: 4px 10px; background: var(--card-bg); }
+.balance .coin { width: 16px; height: 16px; border-radius: 50%; background: var(--r-legendary); border: 2px solid var(--ink); }
+.balance strong { font-size: 17px; }
+.balance small { color: var(--muted); font-size: 12px; }
+nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; width: 100%; }
+nav.tabs a { text-decoration: none; color: var(--muted); font-weight: 600; padding: 6px 12px; border: 2px solid transparent; }
+nav.tabs a[aria-current="page"] { color: var(--ink); border-color: var(--ink); background: var(--card-bg); }
+nav.tabs a .count { font-family: var(--f-mono); font-size: 12px; margin-left: 4px; color: var(--muted); }
+.demo-strip { background: var(--ink); color: var(--bg); font-size: 13px; }
+.demo-strip .wrap { padding-block: 6px; display: flex; gap: 6px 16px; flex-wrap: wrap; }
+
+main { padding-block: 28px 64px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 400; text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.05; }
+h2 { font-size: 24px; }
+.lede { color: var(--muted); max-width: 62ch; margin: 8px 0 0; }
+.section-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+
+/* Buttons */
+.btn { border: 2px solid var(--ink); background: var(--card-bg); padding: 8px 14px; font-weight: 700; box-shadow: 3px 3px 0 var(--ink); transition: transform .08s, box-shadow .08s; }
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+.btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.small { padding: 4px 10px; font-size: 13px; box-shadow: 2px 2px 0 var(--ink); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; box-shadow: 2px 2px 0 var(--ink); }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--muted); text-decoration: underline; font-size: 13px; }
+
+/* Packs */
+.packs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 24px; }
+.pack { background: var(--panel); border: 2px solid var(--ink); display: flex; flex-direction: column; }
+.pack-art { position: relative; aspect-ratio: 16 / 10; max-width: 100%; border-bottom: 2px solid var(--ink); overflow: hidden; display: grid; place-items: center; }
+.pack-art .stripe { position: absolute; inset: 0; opacity: .9; }
+.pack-art .pack-name { position: relative; font-family: var(--f-display); font-size: 30px; color: #fff; text-shadow: 3px 3px 0 #15181d; transform: rotate(-4deg); text-align: center; line-height: 1; }
+.pack-art .pack-name small { display: block; font-family: var(--f-mono); font-size: 12px; letter-spacing: .12em; margin-top: 6px; text-transform: uppercase; }
+.pack-art svg.bg-fighter { position: absolute; right: -6px; bottom: -6px; width: 42%; opacity: .5; }
+.pack-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.pack-price { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.pack-price strong { font-family: var(--f-mono); font-size: 26px; }
+.pack-price span { color: var(--muted); font-size: 13px; }
+.odds { width: 100%; border-collapse: collapse; font-size: 13px; }
+.odds td { padding: 3px 0; border-bottom: 1px dashed var(--line); }
+.odds td:last-child { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.odds td:nth-child(2) { text-align: right; color: var(--muted); font-family: var(--f-mono); font-variant-numeric: tabular-nums; padding-right: 12px; }
+.rdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 0; border: 1.5px solid var(--ink); }
+.ev { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; font-size: 13px; background: var(--bg); border: 1px solid var(--line); padding: 8px 10px; }
+.ev span:nth-child(even) { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; font-weight: 700; }
+.pack .btn.primary { margin-top: auto; font-size: 16px; padding: 10px; }
+
+/* Cards */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+.tcard { --rc: var(--r-common); position: relative; aspect-ratio: 5 / 7; max-width: 100%; background: var(--card-bg); border: 3px solid var(--ink); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; container-type: inline-size; }
+.tcard::before { content: ""; position: absolute; inset: 0; border: 5px solid var(--rc); border-radius: 6px; pointer-events: none; z-index: 2; }
+.tcard[data-r="rare"] { --rc: var(--r-rare); }
+.tcard[data-r="epic"] { --rc: var(--r-epic); }
+.tcard[data-r="legendary"] { --rc: var(--r-legendary); }
+.tcard[data-r="secret"] { --rc: var(--r-secret); }
+.tcard[data-r="secret"]::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: color; opacity: .55;
+  background: linear-gradient(115deg, #ff4d6d, #ffd43b, #51cf66, #339af0, #cc5de8, #ff4d6d); background-size: 300% 300%; animation: holo 4s linear infinite; }
+@keyframes holo { to { background-position: 300% 0; } }
+.tc-head { display: flex; justify-content: space-between; align-items: center; gap: 4px; padding: 8% 9% 0; position: relative; z-index: 3; }
+.tc-name { font-family: var(--f-display); font-size: clamp(11px, 9cqi, 18px); line-height: 1.05; overflow-wrap: anywhere; }
+.tc-serial { font-family: var(--f-mono); font-size: clamp(9px, 6cqi, 12px); color: var(--muted); white-space: nowrap; }
+.tc-art { flex: 1; margin: 4% 9%; border: 2px solid var(--ink); background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 10px 10px;
+  display: grid; place-items: center; min-height: 0; position: relative; z-index: 3; }
+.tc-art svg { width: 82%; height: 92%; }
+.tc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 0 9%; position: relative; z-index: 3; text-align: center; }
+.tc-stats div { font-family: var(--f-mono); font-size: clamp(9px, 6.5cqi, 13px); }
+.tc-stats b { display: block; font-size: clamp(8px, 5cqi, 10px); color: var(--muted); font-weight: 500; letter-spacing: .08em; }
+.tc-foot { display: flex; justify-content: space-between; align-items: center; padding: 4% 9% 8%; position: relative; z-index: 3; gap: 4px; }
+.tc-rarity { font-size: clamp(8px, 5.5cqi, 11px); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); background: var(--rc); padding: 1px 6px; border-radius: 3px; }
+.tcard[data-r="common"] .tc-rarity, .tcard[data-r="legendary"] .tc-rarity { color: #15181d; }
+.tcard[data-r="rare"] .tc-rarity, .tcard[data-r="epic"] .tc-rarity, .tcard[data-r="secret"] .tc-rarity { color: #fff; }
+.tc-value { font-family: var(--f-mono); font-weight: 700; font-size: clamp(10px, 7cqi, 14px); }
+
+.vault-item { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.vault-item .row { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 13px; }
+.vault-item .trait { font-size: 12px; color: var(--muted); margin: 0; }
+
+/* Vault toolbar */
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; background: var(--panel); border: 2px solid var(--ink); padding: 12px 14px; margin-bottom: 20px; }
+.toolbar .stat { display: flex; flex-direction: column; }
+.toolbar .stat span { font-size: 12px; color: var(--muted); }
+.toolbar .stat strong { font-family: var(--f-mono); font-size: 18px; }
+.toolbar .spacer { flex: 1; }
+select { font: inherit; border: 2px solid var(--ink); background: var(--card-bg); color: var(--ink); padding: 6px 8px; }
+
+.empty { background: var(--panel); border: 2px dashed var(--line); padding: 32px 20px; text-align: center; color: var(--muted); }
+.empty h3 { color: var(--ink); margin-bottom: 6px; font-size: 20px; }
+
+/* History */
+.history { background: var(--panel); border: 2px solid var(--ink); }
+.history .h-row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); align-items: center; }
+.history .h-row:last-child { border-bottom: 0; }
+.history time { color: var(--muted); font-size: 12px; font-family: var(--f-mono); }
+.history .delta { font-family: var(--f-mono); font-weight: 700; }
+.history .delta.plus { color: var(--good); }
+.history .h-text { min-width: 0; overflow-wrap: anywhere; }
+
+/* Rules */
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.rules section { background: var(--panel); border: 2px solid var(--ink); padding: 18px; min-width: 0; }
+.rules h3 { font-size: 18px; margin-bottom: 8px; }
+.rules p, .rules li { color: var(--muted); max-width: 62ch; }
+.rules ul { padding-left: 18px; margin: 8px 0 0; }
+.rules .table-wrap { overflow-x: auto; }
+
+/* Rip stage */
+.stage { position: fixed; inset: 0; z-index: 20; background: var(--shade); display: grid; place-items: center; overflow-y: auto;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.stage-inner { width: min(760px, 100%); display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.stage-title { color: #fff; font-family: var(--f-display); font-size: 22px; text-align: center; }
+.stage-hint { color: #d6dbe1; font-size: 14px; margin-top: -14px; text-align: center; }
+.sealed { width: min(240px, 60vw); aspect-ratio: 5 / 7; max-width: 100%; border: 3px solid #15181d; border-radius: 10px; position: relative; overflow: hidden; display: grid; place-items: center; cursor: pointer; box-shadow: 8px 8px 0 #15181d; background: var(--panel); }
+.sealed .stripe { position: absolute; inset: 0; }
+.sealed .pack-name { position: relative; font-family: var(--f-display); font-size: 28px; color: #fff; text-shadow: 3px 3px 0 #15181d; transform: rotate(-6deg); text-align: center; line-height: 1; }
+.sealed .tear { position: absolute; left: 0; right: 0; top: 14%; border-top: 3px dashed rgba(255,255,255,.85); }
+.sealed.shake { animation: shake .45s ease-in-out 2; }
+.sealed.ripped { animation: ripaway .4s ease-in forwards; }
+@keyframes shake { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-4deg) scale(1.03); } 75% { transform: rotate(4deg) scale(1.03); } }
+@keyframes ripaway { to { transform: translateY(-40px) scale(.9); opacity: 0; } }
+.reveal-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; width: 100%; }
+.flip { perspective: 900px; cursor: pointer; background: none; border: 0; padding: 0; }
+.flip-inner { position: relative; width: 100%; aspect-ratio: 5 / 7; transition: transform .55s cubic-bezier(.3,.8,.3,1); transform-style: preserve-3d; }
+.flip.is-flipped .flip-inner { transform: rotateY(180deg); }
+.flip .face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.flip .front { transform: rotateY(180deg); }
+.flip .front .tcard { height: 100%; }
+.card-back { height: 100%; border: 3px solid #15181d; border-radius: 10px; background: #15181d;
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.06) 0 8px, transparent 8px 16px); display: grid; place-items: center; }
+.card-back span { font-family: var(--f-display); color: var(--accent); font-size: clamp(22px, 6vw, 40px); transform: rotate(-8deg); }
+.flip.is-flipped.big .flip-inner { animation: pop .6s .5s ease-out; }
+@keyframes pop { 50% { transform: rotateY(180deg) scale(1.08); } }
+.flash { position: fixed; inset: 0; z-index: 30; pointer-events: none; opacity: 0; }
+.flash.on { animation: flash .7s ease-out; }
+@keyframes flash { 0% { opacity: .85; } 100% { opacity: 0; } }
+.summary { background: var(--panel); border: 2px solid var(--ink); padding: 14px 16px; width: 100%; display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; }
+.summary .stat span { display: block; font-size: 12px; color: var(--muted); }
+.summary .stat strong { font-family: var(--f-mono); font-size: 20px; }
+.summary .spacer { flex: 1; }
+.summary .verdict { width: 100%; font-size: 13px; color: var(--muted); margin: 0; }
+
+/* Age gate */
+.gate { position: fixed; inset: 0; z-index: 40; background: var(--bg); display: grid; place-items: center; overflow-y: auto;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.gate-box { background: var(--panel); border: 3px solid var(--ink); box-shadow: 8px 8px 0 var(--ink); padding: 24px; max-width: 480px; width: 100%; display: flex; flex-direction: column; gap: 14px; }
+.gate-box p { margin: 0; color: var(--muted); }
+.gate-box label { display: flex; gap: 10px; align-items: flex-start; font-weight: 500; }
+.gate-box input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--accent); }
+
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50; background: var(--ink); color: var(--bg); padding: 10px 16px; font-weight: 600; max-width: calc(100% - 32px); }
+
+@media (max-width: 520px) {
+  .reveal-row { gap: 8px; }
+  .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<div class="gate" id="gate" hidden>
+  <div class="gate-box" role="dialog" aria-labelledby="gateTitle">
+    <h2 id="gateTitle">StickFist Rips is 18+</h2>
+    <p>This is a demo. Everything runs on play coins that can't be bought or cashed out. A real-money version would check your ID before you open a single pack.</p>
+    <label for="ageCheck"><input type="checkbox" id="ageCheck"> I'm 18 or older and I understand coins here are play money.</label>
+    <button class="btn primary" id="gateEnter" disabled>Enter and claim 300 play coins</button>
+  </div>
+</div>
+
+<header class="top">
+  <div class="wrap">
+    <div class="logo">Stick<b>Fist</b> Rips</div>
+    <div class="balance" title="Play coins">
+      <span class="coin" aria-hidden="true"></span>
+      <strong class="num" id="balance">0</strong>
+      <small>coins</small>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#packs" data-tab="packs">Packs</a>
+      <a href="#vault" data-tab="vault">Vault <span class="count" id="vaultCount">0</span></a>
+      <a href="#history" data-tab="history">History</a>
+      <a href="#rules" data-tab="rules">Odds &amp; rules</a>
+    </nav>
+  </div>
+  <div class="demo-strip"><div class="wrap"><span>Demo build · play coins only · no real money in or out</span><span>Buyback is always 85% of card value</span></div></div>
+</header>
+
+<main class="wrap">
+  <section id="view-packs">
+    <h1>Rip a pack. Keep the fighter or sell it back.</h1>
+    <p class="lede">Every pack holds 3 stickman fighters. Odds and the expected value of each pack are printed right on it, so you know the math before you rip.</p>
+    <div class="packs" id="packList"></div>
+  </section>
+
+  <section id="view-vault" hidden>
+    <div class="section-head">
+      <div><h2>Your vault</h2><p class="lede">Fighters you've pulled. Sell any of them back at a fixed 85% of card value.</p></div>
+    </div>
+    <div class="toolbar">
+      <div class="stat"><span>Fighters</span><strong id="vStatCount">0</strong></div>
+      <div class="stat"><span>Card value</span><strong id="vStatValue">0</strong></div>
+      <div class="stat"><span>Buyback total</span><strong id="vStatBuy">0</strong></div>
+      <div class="spacer"></div>
+      <label for="vSort" class="sr">Sort</label>
+      <select id="vSort">
+        <option value="value">Highest value</option>
+        <option value="new">Newest pulls</option>
+      </select>
+      <button class="btn small" id="sellCommons">Sell all commons</button>
+    </div>
+    <div id="vaultBody"></div>
+  </section>
+
+  <section id="view-history" hidden>
+    <div class="section-head"><div><h2>History</h2><p class="lede">Every coin in and out of your balance.</p></div></div>
+    <div id="historyBody"></div>
+  </section>
+
+  <section id="view-rules" hidden>
+    <div class="section-head"><div><h2>Odds &amp; rules</h2><p class="lede">How the numbers on this site work, all in one place.</p></div></div>
+    <div class="rules">
+      <section>
+        <h3>Card values</h3>
+        <div class="table-wrap"><table class="odds" id="valueTable"></table></div>
+      </section>
+      <section>
+        <h3>How pulls work</h3>
+        <ul>
+          <li>Each card in a pack rolls its rarity separately, using the odds printed on the pack.</li>
+          <li>Within a rarity, every fighter is equally likely.</li>
+          <li>Rolls use your browser's cryptographic random number generator. Nothing is weighted by how much you've spent.</li>
+          <li>Each pull gets a serial number, shown in the top corner of the card.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Buyback</h3>
+        <ul>
+          <li>Sell any fighter back for 85% of its card value, any time.</li>
+          <li>The rate is fixed. If it ever changed, it would be announced here first and never applied to cards you already own.</li>
+          <li>On average, packs return less than they cost. The "if you sell everything back" number on each pack shows how much less.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Before real money</h3>
+        <p>This demo can't take payments. A real-money launch would need, at minimum:</p>
+        <ul>
+          <li>An adult-owned business and a lawyer's sign-off on the pack and buyback model</li>
+          <li>ID checks so every buyer is 18+, before their first purchase</li>
+          <li>A payment processor that approves the model in writing</li>
+          <li>Physical cards in stock for every fighter that can be pulled</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Demo controls</h3>
+        <p>Your coins and vault live only in this browser.</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px">
+          <button class="btn small" id="topUp">Add 500 play coins</button>
+          <button class="btn small" id="resetBtn">Reset demo</button>
+        </div>
+      </section>
+    </div>
+  </section>
+</main>
+
+<div class="stage" id="stage" hidden>
+  <div class="stage-inner">
+    <div class="stage-title" id="stageTitle">Starter Pack</div>
+    <div class="stage-hint" id="stageHint">Tap the pack to rip it open</div>
+    <div class="sealed" id="sealed" role="button" tabindex="0" aria-label="Rip the pack open"></div>
+    <div class="reveal-row" id="revealRow" hidden></div>
+    <div class="summary" id="summary" hidden></div>
+  </div>
+</div>
+<div class="flash" id="flash"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Data ----------
+  const RARITIES = ["common", "rare", "epic", "legendary", "secret"];
+  const RLABEL = { common: "Common", rare: "Rare", epic: "Epic", legendary: "Legendary", secret: "Secret" };
+  const RVALUE = { common: 15, rare: 50, epic: 150, legendary: 600, secret: 2500 };
+  const BUYBACK = 0.85;
+  const SIGNUP_BONUS = 300;
+  const CARDS_PER_PACK = 3;
+
+  const POSES = {
+    idle:     [[50,22],[50,34],[50,70],[40,50],[36,64],[60,50],[64,64],[44,90],[40,110],[56,90],[60,110]],
+    punch:    [[46,24],[48,36],[46,70],[38,46],[46,36],[66,40],[88,38],[38,90],[30,110],[58,88],[66,110]],
+    kick:     [[36,28],[40,40],[48,68],[28,48],[24,36],[52,52],[44,60],[42,90],[38,110],[68,60],[92,50]],
+    guard:    [[50,26],[50,38],[50,72],[38,48],[46,32],[62,48],[54,32],[40,90],[34,110],[60,90],[66,110]],
+    jump:     [[52,14],[52,26],[52,60],[38,18],[32,6],[66,34],[80,26],[40,74],[46,94],[64,78],[72,96]],
+    uppercut: [[54,22],[52,34],[48,68],[40,48],[38,60],[66,30],[66,8],[40,88],[32,110],[58,88],[64,110]],
+    crouch:   [[50,48],[50,58],[50,82],[38,66],[32,76],[62,64],[74,58],[34,94],[28,110],[66,94],[72,110]]
+  };
+
+  const FIGHTERS = [
+    { id: "scrap",     name: "Scrap",          r: "common",    pose: "idle",     c: "#7c8a99", atk: 3, spd: 4, def: 3, trait: "Never stops bouncing." },
+    { id: "doodle",    name: "Doodle",         r: "common",    pose: "guard",    c: "#5fa37a", atk: 2, spd: 3, def: 5, trait: "Blocks first, asks later." },
+    { id: "pete",      name: "Pencil Pete",    r: "common",    pose: "punch",    c: "#e0a032", atk: 5, spd: 3, def: 2, trait: "Sharp, but snaps easily." },
+    { id: "smudge",    name: "Smudge",         r: "common",    pose: "crouch",   c: "#8a6a5a", atk: 3, spd: 3, def: 4, trait: "Low and hard to hit." },
+    { id: "noodle",    name: "Noodle",         r: "common",    pose: "jump",     c: "#e86f9a", atk: 2, spd: 6, def: 2, trait: "+Speed, folds under pressure." },
+    { id: "tally",     name: "Tally",          r: "common",    pose: "kick",     c: "#4a90b8", atk: 4, spd: 4, def: 2, trait: "Counts every hit." },
+    { id: "jabjr",     name: "Jab Jr.",        r: "rare",      pose: "punch",    c: "#3f7fe0", atk: 6, spd: 5, def: 3, trait: "Fast hands, short reach." },
+    { id: "inkblot",   name: "Inkblot",        r: "rare",      pose: "guard",    c: "#2d3a55", atk: 3, spd: 3, def: 8, trait: "Tank. Soaks the first two hits." },
+    { id: "hopscotch", name: "Hopscotch",      r: "rare",      pose: "jump",     c: "#2bb3a3", atk: 4, spd: 8, def: 2, trait: "+5 Speed, -2 Defense." },
+    { id: "margin",    name: "Margin",         r: "rare",      pose: "kick",     c: "#c4543a", atk: 6, spd: 4, def: 4, trait: "Lives on the edge of the page." },
+    { id: "eraser",    name: "Eraser",         r: "rare",      pose: "uppercut", c: "#e46b8c", atk: 7, spd: 3, def: 4, trait: "Wipes a combo clean." },
+    { id: "crosshatch",name: "Crosshatch",     r: "epic",      pose: "kick",     c: "#7c4fd6", atk: 8, spd: 6, def: 4, trait: "Double-strike on every third kick." },
+    { id: "static",    name: "Static",         r: "epic",      pose: "crouch",   c: "#20c0e0", atk: 6, spd: 8, def: 4, trait: "Glitchy movement. Hard to read." },
+    { id: "blueprint", name: "Blueprint",      r: "epic",      pose: "guard",    c: "#2f6fd8", atk: 5, spd: 5, def: 9, trait: "Planned every block in advance." },
+    { id: "haymaker",  name: "Haymaker",       r: "epic",      pose: "uppercut", c: "#e2412b", atk: 10, spd: 2, def: 5, trait: "High attack, slow wind-up." },
+    { id: "graphite",  name: "Graphite King",  r: "legendary", pose: "uppercut", c: "#3b3f47", atk: 9, spd: 7, def: 8, trait: "Heavier with every round won." },
+    { id: "sumi",      name: "Sumi",           r: "legendary", pose: "kick",     c: "#111111", atk: 9, spd: 9, def: 5, trait: "One brushstroke, one knockout." },
+    { id: "redline",   name: "Redline",        r: "legendary", pose: "punch",    c: "#d81f3a", atk: 10, spd: 8, def: 6, trait: "Overheats after 10 seconds." },
+    { id: "glitch",    name: "Glitch.exe",     r: "secret",    pose: "jump",     c: "#c435ff", atk: 9, spd: 10, def: 8, trait: "Teleports between frames." },
+    { id: "lastframe", name: "The Last Frame", r: "secret",    pose: "punch",    c: "#f5b400", atk: 10, spd: 9, def: 10, trait: "The final drawing in the flipbook." }
+  ];
+  const BY_ID = Object.fromEntries(FIGHTERS.map(f => [f.id, f]));
+
+  const PACKS = [
+    { id: "starter", name: "Starter", tag: "Scribble series", price: 100, colors: ["#3a8de0", "#2463b8"], fighter: "noodle",
+      odds: { common: 85, rare: 12, epic: 2.5, legendary: 0.45, secret: 0.05 } },
+    { id: "brawler", name: "Brawler", tag: "Ink series", price: 500, colors: ["#e2412b", "#a8261a"], fighter: "haymaker",
+      odds: { common: 25, rare: 45, epic: 22, legendary: 6.5, secret: 1.5 } },
+    { id: "legend",  name: "Legend",  tag: "Gold-leaf series", price: 2500, colors: ["#e3a40d", "#9c6a00"], fighter: "redline",
+      odds: { epic: 40, legendary: 45, secret: 15 } }
+  ];
+  const PACK_BY_ID = Object.fromEntries(PACKS.map(p => [p.id, p]));
+
+  function packEV(p) {
+    let perCard = 0;
+    for (const r of RARITIES) perCard += ((p.odds[r] || 0) / 100) * RVALUE[r];
+    return perCard * CARDS_PER_PACK;
+  }
+
+  // ---------- State ----------
+  const KEY = "stickfist-rips-v1";
+  const fresh = () => ({ ageOK: false, coins: 0, vault: [], history: [], serial: 0 });
+  let state = fresh();
+  try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s); } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function log(text, delta) { state.history.unshift({ t: Date.now(), text, delta }); if (state.history.length > 300) state.history.length = 300; }
+
+  // ---------- Helpers ----------
+  const $ = id => document.getElementById(id);
+  const fmt = n => Math.round(n).toLocaleString("en-US");
+  const esc = s => String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+  function rand() { try { return crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296; } catch (e) { return Math.random(); } }
+  const buyback = f => Math.floor(RVALUE[f.r] * BUYBACK);
+  let toastTimer;
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2400); }
+
+  function stickSVG(f, extraClass) {
+    const p = POSES[f.pose];
+    const [head, neck, hip, lE, lH, rE, rH, lK, lF, rK, rF] = p;
+    const line = (a, b) => `M${a[0]} ${a[1]}L${b[0]} ${b[1]}`;
+    const d = [line(neck, hip), line(neck, lE), line(lE, lH), line(neck, rE), line(rE, rH), line(hip, lK), line(lK, lF), line(hip, rK), line(rK, rF)].join("");
+    return `<svg class="${extraClass || ""}" viewBox="0 0 100 120" aria-hidden="true">
+      <path d="${d}" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="${rH[0]}" cy="${rH[1]}" r="5" fill="${f.c}" stroke="var(--ink)" stroke-width="2.5"/>
+      <circle cx="${head[0]}" cy="${head[1]}" r="10" fill="${f.c}" stroke="var(--ink)" stroke-width="4"/>
+    </svg>`;
+  }
+
+  function cardHTML(item) {
+    const f = BY_ID[item.id];
+    return `<div class="tcard" data-r="${f.r}">
+      <div class="tc-head"><div class="tc-name">${esc(f.name)}</div><div class="tc-serial">#${String(item.serial).padStart(4, "0")}</div></div>
+      <div class="tc-art">${stickSVG(f)}</div>
+      <div class="tc-stats"><div><b>ATK</b>${f.atk}</div><div><b>SPD</b>${f.spd}</div><div><b>DEF</b>${f.def}</div></div>
+      <div class="tc-foot"><span class="tc-rarity">${RLABEL[f.r]}</span><span class="tc-value">${fmt(RVALUE[f.r])}</span></div>
+    </div>`;
+  }
+
+  function oddsRows(p) {
+    return RARITIES.filter(r => p.odds[r]).map(r =>
+      `<tr><td><span class="rdot" style="background:var(--r-${r})"></span>${RLABEL[r]}</td><td>${fmt(RVALUE[r])}</td><td>${p.odds[r]}%</td></tr>`).join("");
+  }
+
+  // ---------- Render ----------
+  function renderBalance() {
+    $("balance").textContent = fmt(state.coins);
+    $("vaultCount").textContent = state.vault.length;
+  }
+
+  function renderPacks() {
+    $("packList").innerHTML = PACKS.map(p => {
+      const ev = packEV(p);
+      const canAfford = state.coins >= p.price;
+      return `<article class="pack">
+        <div class="pack-art">
+          <div class="stripe" style="background: repeating-linear-gradient(-35deg, ${p.colors[0]} 0 18px, ${p.colors[1]} 18px 36px)"></div>
+          ${stickSVG(BY_ID[p.fighter], "bg-fighter")}
+          <div class="pack-name">${p.name}<small>${p.tag}</small></div>
+        </div>
+        <div class="pack-body">
+          <div class="pack-price"><strong>${fmt(p.price)}</strong><span>coins · ${CARDS_PER_PACK} cards</span></div>
+          <table class="odds"><tbody><tr><td style="color:var(--muted)">Rarity</td><td>Value</td><td style="color:var(--muted)">Per card</td></tr>${oddsRows(p)}</tbody></table>
+          <div class="ev">
+            <span>Average pack value</span><span>${fmt(ev)} (${Math.round(ev / p.price * 100)}%)</span>
+            <span>If you sell everything back</span><span>${fmt(ev * BUYBACK)} (${Math.round(ev * BUYBACK / p.price * 100)}%)</span>
+          </div>
+          <button class="btn primary" data-buy="${p.id}" ${canAfford ? "" : "disabled"}>${canAfford ? "Rip for " + fmt(p.price) : "Need " + fmt(p.price - state.coins) + " more coins"}</button>
+        </div>
+      </article>`;
+    }).join("");
+  }
+
+  function renderVault() {
+    const items = state.vault.slice();
+    const sort = $("vSort").value;
+    if (sort === "value") items.sort((a, b) => RVALUE[BY_ID[b.id].r] - RVALUE[BY_ID[a.id].r] || b.serial - a.serial);
+    else items.sort((a, b) => b.serial - a.serial);
+    const total = items.reduce((s, it) => s + RVALUE[BY_ID[it.id].r], 0);
+    const buyTotal = items.reduce((s, it) => s + buyback(BY_ID[it.id]), 0);
+    $("vStatCount").textContent = items.length;
+    $("vStatValue").textContent = fmt(total);
+    $("vStatBuy").textContent = fmt(buyTotal);
+    $("sellCommons").disabled = !items.some(it => BY_ID[it.id].r === "common");
+    if (!items.length) {
+      $("vaultBody").innerHTML = `<div class="empty"><h3>No fighters yet</h3><p>Rip a pack and your pulls land here.</p><p><a class="btn primary" href="#packs" style="display:inline-block;text-decoration:none">Go to packs</a></p></div>`;
+      return;
+    }
+    $("vaultBody").innerHTML = `<div class="card-grid">${items.map(it => {
+      const f = BY_ID[it.id];
+      return `<div class="vault-item">${cardHTML(it)}
+        <p class="trait">${esc(f.trait)}</p>
+        <div class="row"><span class="num">Buyback ${fmt(buyback(f))}</span><button class="btn small" data-sell="${it.uid}">Sell</button></div>
+      </div>`;
+    }).join("")}</div>`;
+  }
+
+  function renderHistory() {
+    if (!state.history.length) { $("historyBody").innerHTML = `<div class="empty"><h3>Nothing yet</h3><p>Pack rips and buybacks show up here.</p></div>`; return; }
+    $("historyBody").innerHTML = `<div class="history">${state.history.map(h => {
+      const d = new Date(h.t);
+      const when = d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+      return `<div class="h-row"><time>${when}</time><span class="h-text">${esc(h.text)}</span><span class="delta ${h.delta > 0 ? "plus" : ""}">${h.delta > 0 ? "+" : ""}${fmt(h.delta)}</span></div>`;
+    }).join("")}</div>`;
+  }
+
+  function renderRules() {
+    $("valueTable").innerHTML = `<tbody><tr><td style="color:var(--muted)">Rarity</td><td>Card value</td><td style="color:var(--muted)">Buyback</td></tr>` +
+      RARITIES.map(r => `<tr><td><span class="rdot" style="background:var(--r-${r})"></span>${RLABEL[r]}</td><td>${fmt(RVALUE[r])}</td><td>${fmt(Math.floor(RVALUE[r] * BUYBACK))}</td></tr>`).join("") + `</tbody>`;
+  }
+
+  function renderAll() { renderBalance(); renderPacks(); renderVault(); renderHistory(); renderRules(); }
+
+  // ---------- Tabs ----------
+  const TABS = ["packs", "vault", "history", "rules"];
+  function showTab() {
+    const tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "packs";
+    TABS.forEach(t => { $("view-" + t).hidden = t !== tab; });
+    document.querySelectorAll("nav.tabs a").forEach(a => { if (a.dataset.tab === tab) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  }
+  window.addEventListener("hashchange", showTab);
+
+  // ---------- Selling ----------
+  function sellUids(uids, label) {
+    const set = new Set(uids);
+    let got = 0, n = 0;
+    state.vault = state.vault.filter(it => { if (set.has(it.uid)) { got += buyback(BY_ID[it.id]); n++; return false; } return true; });
+    if (!n) return 0;
+    state.coins += got;
+    log(label || `Sold back ${n} fighter${n > 1 ? "s" : ""}`, got);
+    save(); renderAll();
+    return got;
+  }
+
+  // ---------- Pack opening ----------
+  let current = null; // { pack, items, flipped }
+  function rollRarity(p) {
+    const roll = rand() * 100;
+    let acc = 0, last = null;
+    for (const r of RARITIES) { if (!p.odds[r]) continue; acc += p.odds[r]; last = r; if (roll < acc) return r; }
+    return last;
+  }
+  function pullFighter(r) { const pool = FIGHTERS.filter(f => f.r === r); return pool[Math.floor(rand() * pool.length)]; }
+
+  function buy(packId) {
+    const p = PACK_BY_ID[packId];
+    if (!p || state.coins < p.price) return;
+    state.coins -= p.price;
+    const items = [];
+    for (let i = 0; i < CARDS_PER_PACK; i++) {
+      const f = pullFighter(rollRarity(p));
+      state.serial += 1;
+      const item = { uid: Date.now().toString(36) + "-" + state.serial, id: f.id, serial: state.serial, t: Date.now(), pack: p.id };
+      items.push(item);
+      state.vault.push(item);
+    }
+    log(`Ripped a ${p.name} pack`, -p.price);
+    save(); renderAll();
+    // Reveal the rarest card last
+    items.sort((a, b) => RARITIES.indexOf(BY_ID[a.id].r) - RARITIES.indexOf(BY_ID[b.id].r));
+    current = { pack: p, items, flipped: 0, sold: false };
+    openStage();
+  }
+
+  function openStage() {
+    const p = current.pack;
+    $("stageTitle").textContent = p.name + " Pack";
+    $("stageHint").textContent = "Tap the pack to rip it open";
+    $("stageHint").hidden = false;
+    const sealed = $("sealed");
+    sealed.className = "sealed";
+    sealed.hidden = false;
+    sealed.innerHTML = `<div class="stripe" style="background: repeating-linear-gradient(-35deg, ${p.colors[0]} 0 18px, ${p.colors[1]} 18px 36px)"></div><div class="tear"></div><div class="pack-name">${p.name}<br><span style="font-size:14px;font-family:var(--f-mono)">${CARDS_PER_PACK} fighters</span></div>`;
+    $("revealRow").hidden = true;
+    $("summary").hidden = true;
+    $("stage").hidden = false;
+    sealed.focus();
+  }
+
+  function rip() {
+    const sealed = $("sealed");
+    if (!current || sealed.classList.contains("shake") || sealed.hidden) return;
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    sealed.classList.add("shake");
+    setTimeout(() => { sealed.classList.add("ripped"); }, reduce ? 0 : 900);
+    setTimeout(showCards, reduce ? 0 : 1300);
+  }
+
+  function showCards() {
+    $("sealed").hidden = true;
+    $("stageHint").textContent = "Tap each card to flip it";
+    const row = $("revealRow");
+    row.innerHTML = current.items.map((it, i) => `<button class="flip" data-flip="${i}" aria-label="Flip card ${i + 1}">
+      <div class="flip-inner"><div class="face back"><div class="card-back"><span>SF</span></div></div><div class="face front">${cardHTML(it)}</div></div>
+    </button>`).join("");
+    row.hidden = false;
+    const firstFlip = row.querySelector(".flip");
+    if (firstFlip) firstFlip.focus();
+  }
+
+  function flip(i) {
+    const btn = document.querySelector(`[data-flip="${i}"]`);
+    if (!btn || btn.classList.contains("is-flipped")) return;
+    const f = BY_ID[current.items[i].id];
+    btn.classList.add("is-flipped");
+    btn.setAttribute("aria-label", `${f.name}, ${RLABEL[f.r]}, value ${RVALUE[f.r]}`);
+    if (f.r === "legendary" || f.r === "secret" || f.r === "epic") {
+      btn.classList.add("big");
+      const fl = $("flash");
+      fl.style.background = `radial-gradient(circle at center, var(--r-${f.r}), transparent 70%)`;
+      fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on");
+    }
+    current.flipped++;
+    if (current.flipped === current.items.length) setTimeout(showSummary, 600);
+  }
+
+  function showSummary() {
+    $("stageHint").hidden = true;
+    const p = current.pack;
+    const total = current.items.reduce((s, it) => s + RVALUE[BY_ID[it.id].r], 0);
+    const bb = current.items.reduce((s, it) => s + buyback(BY_ID[it.id]), 0);
+    const best = current.items[current.items.length - 1];
+    const bestF = BY_ID[best.id];
+    const net = bb - p.price;
+    const verdict = net >= 0
+      ? `Selling all three back would put you ${fmt(net)} coins ahead on this pack. Big pull: ${bestF.name} (${RLABEL[bestF.r]}).`
+      : `Selling all three back returns ${fmt(bb)} of the ${fmt(p.price)} you spent, ${fmt(-net)} short. That's the usual result; the odds table on the pack shows why.`;
+    const s = $("summary");
+    s.innerHTML = `<div class="stat"><span>You paid</span><strong>${fmt(p.price)}</strong></div>
+      <div class="stat"><span>Card value</span><strong>${fmt(total)}</strong></div>
+      <div class="stat"><span>Buyback for all</span><strong>${fmt(bb)}</strong></div>
+      <div class="spacer"></div>
+      <button class="btn" id="sellPull">Sell all for ${fmt(bb)}</button>
+      <button class="btn primary" id="keepPull">Keep in vault</button>
+      <p class="verdict">${esc(verdict)}</p>`;
+    s.hidden = false;
+    $("keepPull").focus();
+  }
+
+  function closeStage() { $("stage").hidden = true; current = null; }
+
+  // ---------- Events ----------
+  document.addEventListener("click", e => {
+    const t = e.target.closest("[data-buy],[data-sell],[data-flip],#sellPull,#keepPull");
+    if (!t) return;
+    if (t.dataset.buy) buy(t.dataset.buy);
+    else if (t.dataset.sell) { const got = sellUids([t.dataset.sell]); if (got) toast(`Sold for ${fmt(got)} coins`); }
+    else if (t.dataset.flip !== undefined) flip(+t.dataset.flip);
+    else if (t.id === "sellPull") { const got = sellUids(current.items.map(i => i.uid), `Sold back a ${current.pack.name} pull`); closeStage(); toast(`Sold for ${fmt(got)} coins`); }
+    else if (t.id === "keepPull") { closeStage(); toast("Added to your vault"); }
+  });
+  $("sealed").addEventListener("click", rip);
+  $("sealed").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); rip(); } });
+  $("vSort").addEventListener("change", renderVault);
+  $("sellCommons").addEventListener("click", () => {
+    const uids = state.vault.filter(it => BY_ID[it.id].r === "common").map(it => it.uid);
+    const got = sellUids(uids, `Sold back ${uids.length} commons`);
+    if (got) toast(`Sold ${uids.length} commons for ${fmt(got)} coins`);
+  });
+  $("topUp").addEventListener("click", () => { state.coins += 500; log("Added demo play coins", 500); save(); renderAll(); toast("Added 500 play coins"); });
+  let resetArmed = false;
+  $("resetBtn").addEventListener("click", () => {
+    const b = $("resetBtn");
+    if (!resetArmed) { resetArmed = true; b.textContent = "Tap again to wipe everything"; setTimeout(() => { resetArmed = false; b.textContent = "Reset demo"; }, 3000); return; }
+    state = fresh(); state.ageOK = true; state.coins = SIGNUP_BONUS; log("Signup bonus (play coins)", SIGNUP_BONUS);
+    save(); renderAll(); resetArmed = false; b.textContent = "Reset demo"; toast("Demo reset");
+  });
+
+  // Age gate
+  $("ageCheck").addEventListener("change", e => { $("gateEnter").disabled = !e.target.checked; });
+  $("gateEnter").addEventListener("click", () => {
+    state.ageOK = true;
+    if (!state.history.length) { state.coins += SIGNUP_BONUS; log("Signup bonus (play coins)", SIGNUP_BONUS); }
+    save(); renderAll();
+    $("gate").hidden = true;
+    toast(`${SIGNUP_BONUS} play coins added`);
+  });
+
+  renderAll();
+  showTab();
+  $("gate").hidden = !!state.ageOK;
+})();
+</script>
