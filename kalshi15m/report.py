@@ -143,10 +143,17 @@ def evaluate(series_list, n_folds=6, stake=10.0, min_trades=60):
     return res
 
 
-def build(series_list=tuple(SERIES), stake=10.0, n_folds=6, out=None):
+def build(series_list=tuple(SERIES), stake=10.0, n_folds=6, out=None, solo=()):
+    """Write the dashboard. `solo` adds single-coin views (e.g. SOL only) next to the pooled one."""
     out_dir = Path(out) if out else OUT
     series_list = [s for s in series_list if (DATA_DIR / f"{s}_markets.csv").exists()]
-    results = evaluate(series_list, n_folds=n_folds, stake=stake)
+    scopes = {"All coins" if len(series_list) > 1 else series_list[0].replace("KX", "").replace("15M", "") + " only":
+              evaluate(series_list, n_folds=n_folds, stake=stake)}
+    for s in solo:
+        if s in series_list or (DATA_DIR / f"{s}_markets.csv").exists():
+            print(f"== {s} on its own ==")
+            scopes[s.replace("KX", "").replace("15M", "") + " only"] = evaluate([s], n_folds=n_folds, stake=stake)
+    results = {"scopes": scopes} if len(scopes) > 1 else next(iter(scopes.values()))
     out_dir.mkdir(parents=True, exist_ok=True)
     blob = json.dumps(results, default=_np)
     (out_dir / "results.json").write_text(blob)

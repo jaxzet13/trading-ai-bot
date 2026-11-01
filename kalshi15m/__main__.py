@@ -22,6 +22,7 @@ def main():
     b.add_argument("--stake", type=float, default=10.0)
     b.add_argument("--folds", type=int, default=6)
     b.add_argument("--out", default=None, help="output folder (default: dashboard/)")
+    b.add_argument("--solo", nargs="*", default=[], help="also show these coins on their own, e.g. KXSOL15M")
     s = sub.add_parser("serve", help="open the dashboard at http://localhost:8050")
     s.add_argument("--port", type=int, default=8050)
     t = sub.add_parser("bot", help="run the trading loop (paper by default)")
@@ -40,7 +41,7 @@ def main():
     if a.cmd == "download":
         data.download(a.series, a.days, a.force, not a.no_history, a.since, a.every)
     elif a.cmd == "backtest":
-        report.build(a.series, a.stake, a.folds, a.out)
+        report.build(a.series, a.stake, a.folds, a.out, a.solo)
     elif a.cmd == "serve":
         h = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(report.OUT))
         print(f"dashboard: http://localhost:{a.port}")
@@ -50,6 +51,8 @@ def main():
         if params is None:
             try:
                 r = json.loads((report.OUT / "results.json").read_text())
+                r = r.get("scopes", {}).get(a.series.replace("KX", "").replace("15M", "") + " only") \
+                    or next(iter(r.get("scopes", {"": r}).values()))
                 params = r["strategies"][a.strategy]["runs"][a.execution]["final_params"]
                 print("using backtest-best params:", params)
             except Exception:

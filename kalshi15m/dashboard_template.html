@@ -126,6 +126,8 @@ td.coin { font-size: 12px; }
       <div class="meta" id="meta"></div>
     </div>
     <div class="ctrls">
+      <div class="ctrl" id="scopeCtrl" hidden><label for="scopeSeg">Markets</label>
+        <div class="seg" role="group" aria-label="Markets" id="scopeSeg"></div></div>
       <div class="ctrl"><label for="exSeg">Order type</label>
         <div class="seg" role="group" aria-label="Order type" id="exSeg"></div></div>
     </div>
@@ -154,7 +156,7 @@ td.coin { font-size: 12px; }
   <div class="grid">
     <section class="panel c8">
       <div class="panel-head">
-        <div><h2 id="eqTitle">Out-of-sample equity</h2><p>Cumulative profit across all coins, $<span id="stake"></span> per trade. The first fold is only used for tuning, so the curve starts at fold 2. Bands mark folds.</p></div>
+        <div><h2 id="eqTitle">Out-of-sample equity</h2><p>Cumulative profit, $<span id="stake"></span> per trade. The first fold is only used for tuning, so the curve starts at fold 2. Bands mark folds.</p></div>
       </div>
       <div class="chart"><canvas id="eq" aria-label="Out-of-sample equity curve"></canvas></div>
     </section>
@@ -202,7 +204,7 @@ td.coin { font-size: 12px; }
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script>const R=/*__RESULTS__*/null;</script>
+<script>const DATA=/*__RESULTS__*/null;</script>
 <script>
 (() => {
   const NAMES = { baseline_yes: "Always buy YES", momentum: "Momentum", reversal: "Reversal", late_favorite: "Late favourite",
@@ -219,17 +221,24 @@ td.coin { font-size: 12px; }
   const tfmt = t => Math.abs(t) > 50 ? (t < 0 ? "all lost" : "all won") : t.toFixed(2);
   const params = p => Object.entries(p || {}).map(([k, v]) => `${k}=${v}`).join(" ");
 
-  if (!R) { document.querySelector(".wrap").innerHTML = '<p class="empty">No results yet. Run <code>python -m kalshi15m backtest</code>.</p>'; return; }
-  const coins = Object.keys(R.coins);
-  const makerData = coins.some(c => R.coins[c].maker_data);
-  let cur = { ex: "taker", strat: null, coin: coins[0], calMin: "10" };
-  try { const sv = JSON.parse(localStorage.getItem("k15wf") || "{}"); if (sv.ex) cur.ex = sv.ex; if (R.coins[sv.coin]) cur.coin = sv.coin; if (sv.calMin) cur.calMin = sv.calMin; } catch (e) {}
-  $("stake").textContent = R.stake; $("nf").textContent = R.n_folds;
-  $("poolNote").textContent = coins.length > 1 ? `and one parameter set has to serve ${coins.map(COIN).join(", ")} together.` : `tuned on ${COIN(coins[0])} only.`;
+  if (!DATA) { document.querySelector(".wrap").innerHTML = '<p class="empty">No results yet. Run <code>python -m kalshi15m backtest</code>.</p>'; return; }
+  const SCOPES = DATA.scopes || { "All coins": DATA };
+  const scopeKeys = Object.keys(SCOPES);
+  let R, coins, makerData;
+  let cur = { scope: scopeKeys[0], ex: "taker", strat: null, coin: null, calMin: "10" };
+  try { const sv = JSON.parse(localStorage.getItem("k15wf") || "{}"); if (sv.ex) cur.ex = sv.ex; if (SCOPES[sv.scope]) cur.scope = sv.scope; if (sv.calMin) cur.calMin = sv.calMin; cur.coin = sv.coin; } catch (e) {}
+  if (location.hash === "#sol" && SCOPES["SOL only"]) cur.scope = "SOL only";
+  function setScope(k) {
+    cur.scope = k; R = SCOPES[k]; coins = Object.keys(R.coins);
+    makerData = coins.some(c => R.coins[c].maker_data);
+    if (!R.coins[cur.coin]) cur.coin = coins[0];
+    if (cur.strat && !R.strategies[cur.strat]) cur.strat = null;
+  }
+  setScope(cur.scope);
 
   function status(run) {
     const m = run.oos, coinsUp = Object.values(run.per_coin || {}).filter(c => c.pnl > 0).length;
-    if (m.trades && m.t_stat >= 2 && run.fold_win >= 0.6 && coinsUp >= 2) return ["cand", "Candidate"];
+    if (m.trades && m.t_stat >= 2 && run.fold_win >= 0.6 && coinsUp >= Math.min(2, coins.length)) return ["cand", "Candidate"];
     if (m.pnl > 0 && m.t_stat >= 1) return ["prom", "Promising"];
     if (m.pnl > 0) return ["luck", "Could be luck"];
     return ["loses", m.trades ? "Loses" : "No trades"];
@@ -251,7 +260,11 @@ td.coin { font-size: 12px; }
     if (py < a.top || py > a.bottom) return; ctx.save(); ctx.strokeStyle = c.muted; ctx.beginPath(); ctx.moveTo(a.left, py); ctx.lineTo(a.right, py); ctx.stroke(); ctx.restore(); } });
 
   function renderAll() {
-    try { localStorage.setItem("k15wf", JSON.stringify({ ex: cur.ex, coin: cur.coin, calMin: cur.calMin })); } catch (e) {}
+    try { localStorage.setItem("k15wf", JSON.stringify({ scope: cur.scope, ex: cur.ex, coin: cur.coin, calMin: cur.calMin })); } catch (e) {}
+    $("scopeCtrl").hidden = scopeKeys.length < 2;
+    $("scopeSeg").innerHTML = scopeKeys.map(k => `<button type="button" aria-pressed="${k === cur.scope}" data-scope="${k}">${k}</button>`).join("");
+    $("stake").textContent = R.stake; $("nf").textContent = R.n_folds;
+    $("poolNote").textContent = coins.length > 1 ? `and one parameter set has to serve ${coins.map(COIN).join(", ")} together.` : `tuned on ${COIN(coins[0])} only.`;
     $("exSeg").innerHTML = [["taker", "Taker (buy at ask)"], ["maker", "Maker (rest at bid)"]].map(([k, l]) =>
       `<button type="button" aria-pressed="${k === cur.ex}" data-ex="${k}">${l}</button>`).join("");
     const total = coins.reduce((a, c) => a + R.coins[c].markets, 0);
@@ -273,7 +286,7 @@ td.coin { font-size: 12px; }
     const head = cand ? `${cand} candidate${cand > 1 ? "s" : ""} worth paper trading` : "No strategy survived out-of-sample testing";
     $("verdict").innerHTML = `
       <div><div class="eyebrow">Verdict · all strategies, both order types</div><div class="big">${head}</div>
-        <p>${pos} of ${n} strategy and order-type combinations made money out of sample. A candidate needs a t-stat of at least 2, profit in 60% of folds, and profit on at least two coins.</p></div>
+        <p>${pos} of ${n} strategy and order-type combinations made money out of sample. A candidate needs a t-stat of at least 2, profit in 60% of folds${coins.length > 1 ? ", and profit on at least two coins" : ""}.${coins.length === 1 ? ` Picking one coin after seeing it do best overstates its results, so ${COIN(coins[0])} also gets a blind test on older data it was never tuned on.` : ""}</p></div>
       <div class="stat"><div class="eyebrow">Best out-of-sample t-stat</div><div class="v">${best ? best.t.toFixed(2) : "–"}</div><div class="s">${best ? NAMES[best.name] + ", " + best.ex : ""}</div></div>
       <div class="stat"><div class="eyebrow">Buy YES every market · taker</div><div class="v ${cls(bt.roi)}">${spct(bt.roi)}</div><div class="s">ROI per $ staked</div></div>
       <div class="stat"><div class="eyebrow">Same, as maker</div><div class="v ${cls(bm.roi)}">${bm.trades ? spct(bm.roi) : "–"}</div><div class="s">${bm.trades ? bm.trades.toLocaleString() + " fills" : "needs bid/ask high-low data"}</div></div>`;
@@ -398,6 +411,7 @@ td.coin { font-size: 12px; }
   }
 
   document.addEventListener("click", e => {
+    const sc = e.target.closest("[data-scope]"); if (sc) { setScope(sc.dataset.scope); renderAll(); return; }
     const ex = e.target.closest("[data-ex]"); if (ex) { cur.ex = ex.dataset.ex; renderAll(); return; }
     const co = e.target.closest("[data-coin]"); if (co) { cur.coin = co.dataset.coin; renderCal(); renderAll(); return; }
     const m = e.target.closest("[data-m]"); if (m) { cur.calMin = m.dataset.m; renderCal(); return; }
