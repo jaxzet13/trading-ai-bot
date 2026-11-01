@@ -127,6 +127,9 @@ td.coin { font-size: 12px; }
 .research > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .research-body { display: grid; gap: 20px; margin-top: 20px; }
 .live-state { font-size: 12px; color: var(--muted); }
+.now { display: grid; gap: 4px; border-top: 1px solid var(--grid); padding-top: 10px; }
+.now-line { font-size: 15px; }
+.holding { font-size: 13px; background: var(--chip); border-radius: 6px; padding: 6px 10px; margin-top: 4px; }
 .coins { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .coin-card { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 8px; align-content: start; min-width: 0; }
 .coin-card .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -144,6 +147,9 @@ td.coin { font-size: 12px; }
 .research > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .research-body { display: grid; gap: 20px; margin-top: 20px; }
 .live-state { font-size: 12px; color: var(--muted); }
+.now { display: grid; gap: 4px; border-top: 1px solid var(--grid); padding-top: 10px; }
+.now-line { font-size: 15px; }
+.holding { font-size: 13px; background: var(--chip); border-radius: 6px; padding: 6px 10px; margin-top: 4px; }
 .coins { grid-template-columns: 1fr; } }
 .fold-note { color: var(--muted); font-size: 12px; margin-top: 8px; }
 </style>
@@ -164,7 +170,7 @@ td.coin { font-size: 12px; }
     </div>
     <div class="coins two" id="liveCards"></div>
     <div class="grid" style="margin-top:16px">
-      <div class="c6" style="min-width:0"><div class="eyebrow" style="margin-bottom:8px">Backtest, out of sample · same two strategies</div>
+      <div class="c6" style="min-width:0"><div class="eyebrow" style="margin-bottom:8px">Holdout test, last 15 days · same strategies</div>
         <div class="legend" id="btLegend"></div><div class="chart short"><canvas id="bt" aria-label="Backtest equity of the live strategies"></canvas></div></div>
       <div class="c6" style="min-width:0"><div class="eyebrow" style="margin-bottom:8px">Live log</div>
         <div class="tablewrap" style="max-height:280px;overflow-y:auto"><table id="liveLog"></table></div></div>
@@ -404,6 +410,20 @@ td.coin { font-size: 12px; }
       B.map(b => row(b, "Current live strategy")).join("") + "</tbody>";
   }
 
+  const usd = v => v == null ? "?" : "$" + (Math.abs(v) >= 100 ? v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : Math.abs(v) >= 1 ? v.toFixed(4) : v.toFixed(5));
+  const cents = p => (p * 100).toFixed(p < 0.1 ? 1 : 0) + "¢";
+  const hm = ts => new Date(ts * 1000).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const dirWord = side => side === "yes" ? "UP" : "DOWN";
+  const betText = e => `${COIN(e.series)} finishes ${e.side === "yes" ? "at or above" : "below"} <b>${usd(e.strike)}</b>${e.close_ts ? ` at ${hm(e.close_ts)}` : ""}`;
+  function describe(e) {
+    const c = COIN(e.series), chance = e.model != null ? (e.side === "yes" ? e.model : 1 - e.model) : null;
+    if (e.event === "buy" || e.event === "fill") return `<b>Bet ${dirWord(e.side)}:</b> ${betText(e)}. ${e.event === "fill" ? "Limit order filled," : "Bought"} ${e.n} × ${cents(e.price)}, pays $1 each if right${chance != null ? ` (model: ${pct(chance)} chance, market: ${pct(e.price)})` : ""}.${e.spot ? ` ${c} was ${usd(e.spot)}${e.lag_s != null ? `, ${e.lag_s}s into the minute` : ""}.` : ""}`;
+    if (e.event === "rest") return `Placed a limit order to bet <b>${dirWord(e.side)}</b>: ${betText(e)}, ${e.n} × ${cents(e.price)}.`;
+    if (e.event === "expired") return `Limit order to bet ${dirWord(e.side)} at ${cents(e.price)} wasn't filled, cancelled.`;
+    if (e.event === "settle") { const won = e.result === e.side;
+      return `${c} finished at <b>${usd(e.final)}</b>${e.final != null && e.strike != null ? `, ${e.final >= e.strike ? "above" : "below"} the ${usd(e.strike)} target` : ""}. <b class="${won ? "pos" : "neg"}">Bet ${dirWord(e.side)} ${won ? "won" : "lost"}.</b>`; }
+    return e.event;
+  }
   let LIVE_DATA = typeof LIVE === "undefined" ? null : LIVE, liveSource = "snapshot";
   function setLive(d, src) { if (!d || (LIVE_DATA && d.generated < LIVE_DATA.generated)) return; LIVE_DATA = d; liveSource = src; renderLive(); fresh(); }
   function renderLive() {
@@ -434,19 +454,24 @@ td.coin { font-size: 12px; }
         ${s.execution === "taker" ? `<div>Avg seconds after the minute</div><div class="num">${lag}</div><div class="num">0</div>` : ""}
       </div>
       ${s.strategy.startsWith("fair_value") && s.near && s.near.length ? `<div class="live-state">Biggest model gap per recent market (trades at ${s.strategy === "fair_value" && s.params.edge ? Math.round(s.params.edge * 100) + "¢" : "its trigger"}): ${s.near.map(n => `${Math.round(n[1] * 100)}¢`).join(" · ")}</div>` : ""}
-      <div class="live-state">${st ? `${s.stale ? "Last seen" : "Now"}: ${st.ticker}, minute ${st.minute}, bid/ask ${(st.yes_bid * 100).toFixed(1)}¢ / ${(st.yes_ask * 100).toFixed(1)}¢${st.model != null ? `, model ${(st.model * 100).toFixed(1)}%` : ""}${s.open.length ? ` · open: ${s.open.length}` : ""}` : "Waiting for the first market"}</div>
+      <div class="now">${st ? (() => { const left = st.close_ts ? Math.max(0, Math.round((st.close_ts - L.generated) / 60)) : 15 - st.minute;
+        const mid = st.yes_bid > 0 && st.yes_ask < 1 ? (st.yes_bid + st.yes_ask) / 2 : null, d = st.strike ? (st.spot / st.strike - 1) * 100 : null;
+        return `<div class="eyebrow">${s.stale ? "Last seen" : "Right now"} · market closing ${st.close_ts ? hm(st.close_ts) : ""}</div>
+          <div class="now-line"><b>${COIN(s.series)} ${usd(st.spot)}</b> vs target <b>${usd(st.strike)}</b> <span class="${d >= 0 ? "pos" : "neg"}">(${d != null ? (d >= 0 ? "+" : "") + d.toFixed(3) + "%" : ""})</span> · ${left} min left</div>
+          <div class="live-state">Chance it finishes UP: market ${mid != null ? pct(mid) : "–"}, model ${st.model != null ? pct(st.model) : "–"}. ${s.execution === "taker" && s.params && s.params.edge ? `Bets when they differ by ${Math.round(s.params.edge * 100)}¢ or more.` : ""}</div>`; })() : `<div class="live-state">Waiting for the first market</div>`}
+        ${(s.holding || []).map(h => `<div class="holding">Holding: <b>bet ${dirWord(h.side)}</b>, ${betText({ ...h, series: s.series })}. ${h.n} × ${cents(h.price)} (wins ${money(h.n * (1 - h.price), 2)}, risks ${money(h.n * h.price, 2)})</div>`).join("")}
+      </div>
     </div>`; }).join("");
     $("btLegend").innerHTML = L.strategies.map((s, i) => `<span><i style="background:${tok(COIN_COL[i + 1])}"></i>${COIN(s.series)} ${s.name}</span>`).join("");
     const o = base(c); o.interaction = { mode: "nearest", intersect: false };
     o.plugins.tooltip.callbacks = { title: i => fmtTime(i[0].parsed.x / 1000), label: i => `${i.dataset.label}: ${money(i.parsed.y, 2)}` };
     o.scales = { x: axis(c, { type: "linear", ticks: { color: c.muted, maxTicksLimit: 6, callback: v => fmtDate(v / 1000) } }), y: axis(c, { ticks: { color: c.muted, callback: v => money(v) } }) };
-    mk("bt", { type: "line", data: { datasets: L.strategies.filter(s => s.backtest).map((s, i) => ({ label: COIN(s.series), data: s.backtest.curve.map(([t, v]) => ({ x: t * 1000, y: v })),
+    const btc = s => (s.lab && s.lab.curve && s.lab.curve.length ? s.lab.curve : s.backtest ? s.backtest.curve : []);
+    mk("bt", { type: "line", data: { datasets: L.strategies.map((s, i) => ({ s, i })).filter(x => btc(x.s).length).map(({ s, i }) => ({ label: COIN(s.series), data: btc(s).map(([t, v]) => ({ x: t * 1000, y: v })),
       borderColor: tok(COIN_COL[i + 1]), borderWidth: 2, pointRadius: 0, pointHoverRadius: 4 })) }, options: o, plugins: [zeroLine(c)] });
-    const evName = { rest: "Order placed", fill: "Filled", expired: "Expired unfilled", settle: "Settled", buy: "Bought" };
-    const ev = [...L.events].reverse();
-    $("liveLog").innerHTML = ev.length ? `<thead><tr><th>Time</th><th>Coin</th><th>Event</th><th>Side</th><th class="num">Price</th><th class="num">P&amp;L</th></tr></thead><tbody>` +
-      ev.map(e => `<tr><td class="mono">${fmtTime(e.ts)}</td><td class="mono">${COIN(e.series)}</td><td>${evName[e.event] || e.event}${e.event === "settle" ? ` (${e.result.toUpperCase()})` : ""}</td>
-        <td class="mono">${e.side ? e.side.toUpperCase() : ""}</td><td class="num">${e.price != null ? (e.price * 100).toFixed(1) + "¢" : ""}</td>
+    const ev = [...L.events].filter(e => e.event !== "watched").reverse();
+    $("liveLog").innerHTML = ev.length ? `<thead><tr><th>Time</th><th>Coin</th><th>What happened</th><th class="num">P&amp;L</th></tr></thead><tbody>` +
+      ev.map(e => `<tr><td class="mono">${hm(e.ts)}</td><td class="mono">${COIN(e.series)}</td><td style="min-width:260px">${describe(e)}</td>
         <td class="num ${e.pnl != null ? cls(e.pnl) : ""}">${e.pnl != null ? money(e.pnl, 2) : ""}</td></tr>`).join("") + "</tbody>"
       : `<tbody><tr><td class="empty">No orders yet. The strategies only trade when their conditions are met, which can take a while.</td></tr></tbody>`;
   }

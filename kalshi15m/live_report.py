@@ -26,6 +26,7 @@ def _lab_holdout(series, strategy, execution):
     for x in (_LAB.get("finals") or []) + (_LAB.get("benchmarks") or []):
         if x["scope"] == series and x["strategy"] == strategy and x["execution"] == execution:
             h = dict(x["holdout"])
+            h["curve"] = x.get("curve") or []
             n = (_LAB.get("coins") or {}).get(series, {}).get("holdout_markets")
             if n:
                 h["per_market"] = round(h["trades"] / n, 3)
@@ -81,6 +82,46 @@ def datetime_close(m):
     return datetime.fromisoformat(m["close_time"].replace("Z", "+00:00")).timestamp()
 
 
+_MCACHE = LOG.parent / "market_cache.json"
+
+
+def enrich(events: list) -> list:
+    """Attach each traded market's target price, closing time and final price (from Kalshi),
+    so the dashboard can say in words what each bet was on."""
+    import requests
+    from datetime import datetime
+    try:
+        cache = json.loads(_MCACHE.read_text())
+    except Exception:
+        cache = {}
+    tickers = {e["ticker"] for e in events if e.get("event") in ("rest", "buy", "fill", "settle", "expired")}
+    changed = False
+    for tk in tickers:
+        c = cache.get(tk)
+        if c and c.get("final") is not None:
+            continue
+        try:
+            m = requests.get(f"https://api.elections.kalshi.com/trade-api/v2/markets/{tk}", timeout=15).json()["market"]
+        except Exception:
+            continue
+        fin = m.get("expiration_value")
+        cache[tk] = {"strike": float(str(m.get("floor_strike")).replace(",", "")) if m.get("floor_strike") is not None else None,
+                     "close_ts": int(datetime.fromisoformat(m["close_time"].replace("Z", "+00:00")).timestamp()),
+                     "final": float(str(fin).replace(",", "")) if fin not in (None, "") else None,
+                     "result": m.get("result") or None}
+        changed = True
+    if changed:
+        _MCACHE.write_text(json.dumps(cache))
+    for e in events:
+        c = cache.get(e.get("ticker"))
+        if c:
+            e.setdefault("strike", c["strike"])
+            e.setdefault("close_ts", c["close_ts"])
+            if e.get("event") == "settle":
+                e["final"] = c["final"]
+    return events
+
+
 def summarise() -> dict:
     cfg = json.loads(CONFIG.read_text())
     events = []
@@ -92,6 +133,7 @@ def summarise() -> dict:
                 pass
     events = settle_open(events)
     events.sort(key=lambda x: x.get("ts", 0))
+    events = enrich(events)
     try:
         status = json.loads(STATUS.read_text())
     except Exception:
@@ -123,6 +165,8 @@ def summarise() -> dict:
             "settled": len(settles), "wins": sum(x["pnl"] > 0 for x in settles),
             "pnl": round(sum(x["pnl"] for x in settles), 2), "curve": pnl_curve,
             "open": [x["ticker"] for x in fills if x["ticker"] not in settled],
+            "holding": [{k: x.get(k) for k in ("ticker", "side", "n", "price", "strike", "close_ts", "model", "spot")}
+                        for x in fills if x["ticker"] not in settled],
             "status": st, "stale": (not st) or now - st.get("ts", 0) > 180,
             "backtest": _backtest(results, s, e["strategy"], e["execution"]),
             "lab": _lab_holdout(s, e["strategy"], e["execution"]),

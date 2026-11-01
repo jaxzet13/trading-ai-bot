@@ -188,7 +188,8 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
             _status(series, {"ticker": cur, "minute": minute, "spot": spot, "strike": strike, "yes_bid": yb,
                              "yes_ask": ya, "model": float(P["p_model"][0, j]) if np.isfinite(P["p_model"][0, j]) else None,
                              "strategy": strategy, "execution": execution, "mode": mode,
-                             "day_pnl": day_pnl, "open": list(open_pos), "resting": list(pending)})
+                             "day_pnl": day_pnl, "open": list(open_pos), "resting": list(pending),
+                             "close_ts": open_ts + 900, "seconds_left": int(open_ts + 900 - time.time())})
             print(f"{datetime.now():%H:%M:%S} {cur} m{minute:02d} spot={spot:.2f} K={strike:.2f} "
                   f"bid/ask={yb:.3f}/{ya:.3f} model={P['p_model'][0, j]:.3f}")
             if cur in traded or day_pnl <= -max_daily_loss or day_trades >= max_trades_per_day:
@@ -209,7 +210,8 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                     pending[cur] = {"side": side, "n": n, "price": price, "id": oid,
                                     "posted": time.time(), "alone": bid + improve < ask - 1e-9,
                                     "expires": open_ts + 60 * min(minute + wait, 14)}
-                    log({"event": "rest", "mode": mode, "ticker": cur, "side": side, "n": n, "price": price})
+                    log({"event": "rest", "mode": mode, "ticker": cur, "side": side, "n": n, "price": price,
+                         "model": float(P["p_model"][0, j]), "spot": spot, "strike": strike, "close_ts": open_ts + 900})
                     continue
                 price = P["yes_ask"][0, j] if side == "yes" else P["no_ask"][0, j]
                 n = max(1, int(stake // price))
@@ -220,7 +222,8 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                     print("  order:", api.buy(cur, side, n, price))
                 open_pos[cur] = {"side": side, "n": n, "price": price, "fee": fee}
                 log({"event": "buy", "mode": mode, "ticker": cur, "side": side, "n": n, "price": price,
-                     "lag_s": lag, "model": float(P["p_model"][0, j]), "spot": spot, "strike": strike})
+                     "lag_s": lag, "model": float(P["p_model"][0, j]), "spot": spot, "strike": strike,
+                     "close_ts": open_ts + 900})
         except requests.RequestException as e:
             print("  network error:", e)
         except KeyboardInterrupt:
