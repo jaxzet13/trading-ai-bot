@@ -431,6 +431,20 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
 .stage::after { content: ""; position: absolute; inset: 0; background: #000; opacity: 0; transition: opacity .5s; pointer-events: none; z-index: 1; }
 .stage.dim::after { opacity: .55; }
+.stage.dim2::after { opacity: .82; }
+.st-center.beat { animation: beat .32s cubic-bezier(.2,.8,.3,1); }
+@keyframes beat { 30% { transform: scale(1.035); } }
+.cback { position: relative; overflow: hidden; }
+.cback .leak { position: absolute; inset: -40%; pointer-events: none; opacity: var(--leak, 0); mix-blend-mode: screen;
+  background: repeating-conic-gradient(from 0deg at 50% 50%, color-mix(in srgb, var(--c, #fff) 85%, #fff) 0 3deg, transparent 3deg 14deg);
+  -webkit-mask: radial-gradient(circle, #000 0 18%, transparent 62%); mask: radial-gradient(circle, #000 0 18%, transparent 62%); animation: spin 9s linear infinite; }
+.cback .crk { position: absolute; inset: 0; pointer-events: none; opacity: var(--crk, 0);
+  background:
+    linear-gradient(62deg, transparent 47.6%, #fff 48.2%, #fff 48.8%, transparent 49.4%) 0 0 / 100% 100%,
+    linear-gradient(-28deg, transparent 49%, #fff 49.5%, transparent 50.2%) 0 0 / 100% 100%,
+    linear-gradient(118deg, transparent 50.2%, #fff 50.6%, transparent 51.2%) 0 0 / 100% 100%,
+    radial-gradient(circle at 50% 46%, #fff 0 4%, color-mix(in srgb, var(--c, #fff) 80%, #fff) 6%, transparent 22%);
+  filter: drop-shadow(0 0 6px var(--c, #fff)) drop-shadow(0 0 14px var(--c, #fff)); }
 #fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6; }
 .rays { position: absolute; left: 50%; top: 52%; width: 200vmax; height: 200vmax; margin: -100vmax 0 0 -100vmax; pointer-events: none; z-index: 0; opacity: 0; transition: opacity .6s;
   background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--rc, #fff) 22%, transparent) 0 5deg, transparent 5deg 15deg); -webkit-mask: radial-gradient(circle, #000 0, transparent 45%); mask: radial-gradient(circle, #000 0, transparent 45%); animation: spin 22s linear infinite; }
@@ -564,8 +578,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .pocket .tcard { width: 100%; height: 100%; box-shadow: 0 4px 10px rgba(0,0,0,.5); }
 .pocket.empty-p, .pocket.blank { cursor: default; }
 .pocket.blank { background: rgba(255,255,255,.015); }
-.ghost { position: absolute; inset: 8%; border-radius: 4px; overflow: hidden; border: 1px dashed rgba(255,255,255,.12); }
-.ghost img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; filter: grayscale(1) brightness(.18) contrast(1.4); opacity: .55; }
+.pocket .ghostcard { position: absolute; inset: 8%; border-radius: 4px; overflow: hidden; border: 1px dashed rgba(255,255,255,.12); }
+.pocket .ghostcard img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; filter: grayscale(1) brightness(.18) contrast(1.4); opacity: .55; }
 .pocket .pn { position: absolute; left: 0; right: 0; bottom: 36%; text-align: center; font-family: var(--f-mono); font-size: 13px; letter-spacing: .14em; color: rgba(233,228,216,.42); }
 .pocket .pr { position: absolute; left: 0; right: 0; bottom: 26%; text-align: center; font-size: 12px; opacity: .7; }
 .pocket .pc { position: absolute; top: -6px; right: -6px; z-index: 3; font-family: var(--f-mono); font-size: 11px; font-weight: 600; background: var(--bone); color: var(--void); padding: 2px 6px; border-radius: 10px; }
@@ -797,7 +811,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <div>
         <div class="label">Series II · <span id="heroCount">0</span> fighters · <span id="heroPacks">0</span> packs</div>
         <h1 style="margin-top:18px">Sealed.<br>Numbered.<br><b>Waiting.</b></h1>
-        <p class="lede">Five cards a pack, rare slot last. Thirty cards in the set, from ● commons to ★★★ gilded cards. Every card has a cash price.</p>
+        <p class="lede">Five cards a pack, rare slot last. 47 cards in Ink &amp; Steel plus 12 limited-edition cards, from ● commons to ★★★ gilded. Every card has a live market price.</p>
         <div class="ctas"><a class="btn brass big" href="#all-packs">Browse packs</a><button class="btn ghost big" data-buy="lastframe" id="heroOpen">Open the featured pack</button></div>
         <div class="facts">
           <div><span class="label">Top chase</span><strong id="heroChase">–</strong></div>
@@ -1577,7 +1591,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   const copiesOf = no => state.vault.filter(it => cardOf(it).no === no).sort((a, b) => itemVal(b) - itemVal(a));
   function pocketHTML(card) {
     const copies = copiesOf(card.no), R = crOf(card), f = BY_ID[card.id];
-    if (!copies.length) return `<div class="pocket empty-p" title="${esc(f.name)} · ${R.name} · not collected"><div class="ghost"><img src="${portrait(f)}" alt="" draggable="false"></div><span class="pn">${card.no}</span><span class="pr" style="color:${R.col}">${R.sym}</span></div>`;
+    if (!copies.length) return `<div class="pocket empty-p" title="${esc(f.name)} · ${R.name} · not collected"><div class="ghostcard"><img src="${portrait(f)}" alt="" draggable="false"></div><span class="pn">${card.no}</span><span class="pr" style="color:${R.col}">${R.sym}</span></div>`;
     const best = copies[0], cut = copies.some(hasCutscene);
     return `<button class="pocket${best.slab ? " slabbed" : ""}" data-pocket="${card.no}" aria-label="${esc(f.name)}, ${R.name}, ${copies.length} owned">${best.slab ? slabHTML(best) : cardHTML(best)}${best.grading ? `<span class="atigc">AT IGC</span>` : ""}${copies.length > 1 ? `<span class="pc">×${copies.length}</span>` : ""}${cut ? `<span class="pplay" title="Has a cutscene">▶</span>` : ""}</button>`;
   }
@@ -1949,7 +1963,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     st.innerHTML = SS.items.map((it, i) => {
       const rot = i === 0 ? 0 : (rand() - .5) * 6, ox = i * 3, oy = i * 4;
       return `<div class="sc rise" data-i="${i}" style="z-index:${50 - i};--rot:${rot.toFixed(1)}deg;--ox:${ox}px;--oy:${oy}px;--c:${(CR[rarOf(it)] || CR.C).col}">
-        <div class="tilt"><div class="flip-inner"><div class="face back"><div class="cback"><div class="in"><svg viewBox="0 0 40 40"><use href="#i-sigil"/></svg><span class="t">STICKFIST · II</span></div></div></div><div class="face front">${cardHTML(it, !!it.g)}</div></div></div></div>`;
+        <div class="tilt"><div class="flip-inner"><div class="face back"><div class="cback"><div class="in"><svg viewBox="0 0 40 40"><use href="#i-sigil"/></svg><span class="t">STICKFIST · II</span></div><span class="leak"></span><span class="crk"></span></div></div><div class="face front">${cardHTML(it, !!it.g)}</div></div></div></div>`;
     }).join("");
     requestAnimationFrame(() => requestAnimationFrame(() => {
       st.querySelectorAll(".sc").forEach((el, i) => setTimeout(() => { el.classList.remove("rise"); sfx.deal(); }, 120 + i * 110));
@@ -1969,27 +1983,58 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   }
 
   function reveal(el) {
-    const it = SS.items[SS.idx], f = BY_ID[it.id], r = rarOf(it), RC = CR[r] || CR.C, dur = reduceMotion() ? 0 : (RC.build + (it.rh ? .35 : 0)) * (it.ed === "sketch" ? .5 : 1);
+    const it = SS.items[SS.idx], f = BY_ID[it.id], r = rarOf(it), RC = CR[r] || CR.C, cut = hasCutscene(it);
+    // rare cards get a long, staged build-up; cutscene cards the longest
+    const base = (RC.build + (it.rh ? .35 : 0)) * (it.ed === "sketch" ? .5 : 1), dur = reduceMotion() ? 0 : cut ? Math.max(4.6, base + 2.2) : RC.tier >= 4 ? base + 1.4 : RC.tier >= 2 ? base + .5 : base;
     SS.busy = true;
-    if (dur <= 0) { flipNow(el, it); return; }
+    if (dur <= 0) { cut ? flashToCutscene(el, it) : flipNow(el, it); return; }
     el.classList.add("charging");
     stage.classList.add("dim");
     sfx.charge(dur, chimeKey(r));
-    const tilt = el.querySelector(".tilt"), t0 = performance.now();
+    const tilt = el.querySelector(".tilt"), t0 = performance.now(), big = RC.tier >= 4 || cut;
     const amp = [2, 3, 5, 7, 9, 11, 14, 16][RC.tier] || 4;
+    const beats = big ? [.22, .42, .6, .74, .84, .91, .96] : RC.tier >= 2 ? [.5, .8] : [];
+    let bi = 0;
     (function run(now) {
       if (!SS || SS.phase !== "stack") return;
-      const k = Math.min(1, (now - t0) / (dur * 1000)), a = amp * k * k;
+      const k = Math.min(1, (now - t0) / (dur * 1000)), a = amp * k * k * (big ? 1.25 : 1);
       tilt.style.setProperty("--jx", ((rand() - .5) * 2 * a).toFixed(1) + "px");
       tilt.style.setProperty("--jy", ((rand() - .5) * 2 * a).toFixed(1) + "px");
       tilt.style.setProperty("--g", (k * .9).toFixed(3));
-      const tell = (RC.tier >= 2 || it.rh) && k > .5;
+      // stage 1: neutral glow · stage 2 (35%): screen darkens, rays wake up · stage 3 (65%): light cracks out of the card, rarity colour bleeds in
+      const tell = (RC.tier >= 2 || it.rh) && k > (big ? .65 : .5);
       el.style.setProperty("--c", tell ? (it.rh && RC.tier < 2 ? "#cfe9ff" : RC.col) : "rgba(233,228,216,.55)");
+      if (big) {
+        el.style.setProperty("--leak", Math.max(0, (k - .55) / .45).toFixed(3));
+        el.style.setProperty("--crk", Math.max(0, (k - .7) / .3).toFixed(3));
+        stage.classList.toggle("dim2", k > .35);
+        const rays = $("rays"); if (k > .35 && !rays.classList.contains("on")) { rays.style.setProperty("--rc", tell ? RC.col : "#e9e4d8"); rays.classList.add("on"); }
+        if (tell) rays.style.setProperty("--rc", RC.col);
+      }
+      while (bi < beats.length && k >= beats[bi]) { bi++; sfx.boom(.18 + bi * .05); shake(2 + bi * 1.4, 160); const sc = $("stCenter"); sc.classList.remove("beat"); void sc.offsetWidth; sc.classList.add("beat"); }
       const c = center(el);
-      if (rand() < .3 + k) fx.inward(c.x, c.y, tell ? RC.col : "#e9e4d8");
+      if (rand() < .3 + k * (big ? 1.6 : 1)) fx.inward(c.x, c.y, tell ? RC.col : "#e9e4d8");
       if (k < 1) requestAnimationFrame(run);
-      else { tilt.style.setProperty("--jx", "0px"); tilt.style.setProperty("--jy", "0px"); el.classList.remove("charging"); flipNow(el, it); }
+      else {
+        tilt.style.setProperty("--jx", "0px"); tilt.style.setProperty("--jy", "0px"); el.classList.remove("charging");
+        if (cut) flashToCutscene(el, it); else { stage.classList.remove("dim2"); flipNow(el, it); }
+      }
     })(t0);
+  }
+
+  // the card stays face-down: white-out straight into the cutscene, the card is revealed only after it
+  function flashToCutscene(el, it) {
+    SS.cutDone = SS.cutDone || {}; SS.cutDone[it.uid] = true;
+    const fl = $("flash"); fl.style.setProperty("--fo", 1); fl.style.background = "#fff"; fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on");
+    sfx.boom(1); shake(14, 300);
+    setTimeout(() => {
+      if (!SS) return;
+      playCutscene(it, () => {
+        stage.classList.remove("dim2"); $("rays").classList.remove("on");
+        el.style.setProperty("--leak", 0); el.style.setProperty("--crk", 0);
+        setTimeout(() => flipNow(el, it), 250);
+      }, { pull: true });
+    }, 380);
   }
 
   function flipNow(el, it) {
@@ -2022,7 +2067,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       if (!SS || SS.phase !== "stack") return;
       el.querySelector(".tcard").style.setProperty("--go", "1");
       const done = () => { if (!SS || SS.phase !== "stack") return; SS.busy = false; $("stHint").textContent = SS.idx < SS.items.length - 1 ? "Click again for the next card · Space" : "Click to see your result · Space"; };
-      const after = () => hasCutscene(it) ? setTimeout(() => playCutscene(it, done), 650) : done();
+      const after = () => hasCutscene(it) && !(SS.cutDone && SS.cutDone[it.uid]) ? setTimeout(() => playCutscene(it, done), 650) : done();
       if (it.g) { $("stHint").textContent = "Grading…"; gradeRoll(el, it, after); } else after();
     }, 900);
   }
@@ -2070,12 +2115,13 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   let CUT = null;
   const hasCutscene = it => it.ed !== "sketch" && !!cutFor(it) && (CR[rarOf(it)] || CR.C).tier >= 4;   // only footage traced from the owner's own videos
   const DUMMY = () => Object.assign({}, BY_ID.knuckles, { id: "dummy", name: "Sparring dummy", body: "#434343", acc: "none" });
-  function playCutscene(it, done) {
+  function playCutscene(it, done, opts) {
+    opts = opts || {};
     const f = BY_ID[it.id], box = $("cut"), v = $("cutVideo");
-    CUT = { it, done, phase: "play" };
+    CUT = { it, done, phase: "play", pull: !!opts.pull };
     const RC = crOf(cardOf(it)); box.className = "cut"; box.style.setProperty("--rc", RC.col);
-    $("cutRarity").textContent = `${RC.name} pull · cutscene`;
-    $("cutName").textContent = f.name;
+    $("cutRarity").textContent = CUT.pull ? "Something rare is coming…" : `${RC.name} · cutscene replay`;
+    $("cutName").textContent = CUT.pull ? "" : f.name;
     $("cutCard").innerHTML = cardHTML(it); $("cutCard").hidden = true; $("cutCont").hidden = true;
     box.hidden = false; void box.offsetWidth; box.classList.add("on");
     const cv = $("cutCanvas");
@@ -2090,6 +2136,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     if (!CUT || CUT.phase !== "play") return;
     CUT.phase = "card";
     const v = $("cutVideo"); v.pause();
+    if (CUT.pull) { const fl0 = $("flash"); fl0.style.setProperty("--fo", 1); fl0.style.background = "#fff"; fl0.classList.remove("on"); void fl0.offsetWidth; fl0.classList.add("on"); setTimeout(closeCutscene, 120); return; }
     const box = $("cut"); box.classList.add("ended");
     const fl = $("flash"); fl.style.setProperty("--fo", .9); fl.style.background = "#fff"; fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on");
     sfx.boom(1.1); sfx.chime(chimeKey(rarOf(CUT.it)));
