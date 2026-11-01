@@ -267,6 +267,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .table-wrap { overflow-x: auto; }
 
 /* ---------- Opening stage ---------- */
+.stage:focus { outline: none; }
 .stage { position: fixed; inset: 0; z-index: 20; background: radial-gradient(ellipse at 50% 45%, #1a1917 0%, #0b0b0c 55%, #050506 100%); overflow: hidden; display: grid; grid-template-rows: auto 1fr auto; user-select: none; -webkit-user-select: none;
   padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
 .stage::after { content: ""; position: absolute; inset: 0; background: #000; opacity: 0; transition: opacity .5s; pointer-events: none; z-index: 1; }
@@ -322,6 +323,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .st-title.fade { opacity: 0; transition: opacity .3s; }
 .st-hint { position: relative; z-index: 7; text-align: center; font-family: var(--f-mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); padding-bottom: 8px; }
 .st-tray { position: relative; z-index: 7; display: flex; justify-content: center; gap: 8px; padding: 6px 16px 18px; min-height: 108px; }
+.st-tray:empty { display: none; }
 .st-tray .mini { width: 62px; animation: mini .4s cubic-bezier(.2,1.3,.4,1) both; }
 @keyframes mini { from { transform: translateY(30px) scale(.6); opacity: 0; } }
 .flash { position: fixed; inset: 0; z-index: 30; pointer-events: none; opacity: 0; background: #fff; }
@@ -331,7 +333,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   padding: calc(70px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
 .sum-in { width: min(900px, 100%); display: grid; gap: 26px; justify-items: center; }
 .fan { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; width: 100%; }
-.fan .tcard { width: min(210px, 28vw); animation: fanin .5s cubic-bezier(.2,1.2,.4,1) both; }
+.fan .tcard { width: min(250px, 62vw); animation: fanin .5s cubic-bezier(.2,1.2,.4,1) both; }
 .fan .tcard:nth-child(2) { animation-delay: .08s; } .fan .tcard:nth-child(3) { animation-delay: .16s; }
 @keyframes fanin { from { transform: translateY(40px) rotate(-6deg); opacity: 0; } }
 .sum-head { text-align: center; display: grid; gap: 6px; }
@@ -370,6 +372,24 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 
 .toast { position: fixed; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50; background: var(--bone); color: var(--void); padding: 10px 18px; font-size: 13px; font-weight: 600; max-width: calc(100% - 32px); }
 
+.lv { display: flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em; color: var(--dim); }
+.lvtrack { width: 54px; height: 3px; background: var(--line-2); display: block; }
+.lvtrack i { display: block; height: 100%; background: var(--brass); width: 0; transition: width .4s; }
+.st-total .pct { font-size: 12px; margin-left: 6px; color: var(--dim); }
+.st-total.up b, .st-total.up .pct { color: var(--good); }
+.st-total.pop { animation: pop .6s cubic-bezier(.2,1.6,.4,1); }
+@keyframes pop { 40% { transform: scale(1.25); } }
+.st-title .gr { display: block; font-size: .62em; letter-spacing: .3em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+.st-title .gr.hi { color: var(--brass-hi); }
+.st-title .gr.landed { color: var(--bone); }
+.st-title .gr.landed.hi { color: var(--brass-hi); text-shadow: 0 0 18px rgba(230,211,163,.6); }
+.sum-head .verdict { font-family: var(--f-mono); font-size: 13px; letter-spacing: .5em; text-transform: uppercase; color: var(--dim); }
+.sum-head .verdict.up { color: var(--good); }
+.sum-head .big.down { color: var(--bad); }
+.sum-head .big.up { color: var(--good); }
+.lvup { font-family: var(--f-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--brass-hi); border: 1px solid var(--brass-lo); padding: 8px 14px; }
+.hits { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 18px; }
+.hit { display: grid; gap: 6px; min-width: 0; }
 @media (max-width: 900px) {
   .hero, .arena-setup { grid-template-columns: minmax(0, 1fr); }
   .showcase { height: 400px; }
@@ -421,12 +441,13 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <a href="#terms" data-tab="terms">Odds</a>
     </nav>
     <div class="wallet">
-      <span class="bal c" title="Coins"><svg class="ico"><use href="#i-coin"/></svg><span id="balCoins">0</span></span>
+      <span class="bal c" title="Demo balance"><span id="balCoins">$0.00</span></span>
       <span class="bal t" title="Fight tokens"><svg class="ico"><use href="#i-token"/></svg><span id="balTokens">0</span></span>
-      <button class="addc" data-open-store aria-label="Buy coins">+</button>
+      <button class="addc" data-open-store aria-label="Add funds">+</button>
+      <span class="lv" title="Level: every $1 opened is 100 XP. Each level pays a bonus."><span id="lvl">LV 0</span><span class="lvtrack"><i id="lvlBar"></i></span></span>
     </div>
   </div>
-  <div class="notice"><div class="wrap"><span>Simulated currency · demo build</span><span>◈100 = $1.00</span><span>Sell-back fixed at 85%</span></div></div>
+  <div class="notice"><div class="wrap"><span>Simulated currency · demo build</span><span>Shown in demo dollars</span><span>Instant sell-back at 90%</span></div></div>
 </header>
 
 <main class="wrap">
@@ -435,23 +456,26 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <div>
         <div class="label">Series II · <span id="heroCount">0</span> fighters · <span id="heroPacks">0</span> packs</div>
         <h1 style="margin-top:18px">Sealed.<br>Numbered.<br><b>Waiting.</b></h1>
-        <p class="lede">Every pack holds numbered stickman fighters, and every fighter has a price. Tear one open and see what's inside.</p>
+        <p class="lede">One pack. One graded card. Every card has a cash price, and the grade can multiply it by up to 2.5×.</p>
         <div class="ctas"><a class="btn brass big" href="#all-packs">Browse packs</a><button class="btn ghost big" data-buy="lastframe" id="heroOpen">Open the featured pack</button></div>
         <div class="facts">
           <div><span class="label">Top chase</span><strong id="heroChase">–</strong></div>
           <div><span class="label">Your best pull</span><strong id="heroBest">–</strong></div>
+          <div><span class="label">Daily</span><button class="btn small" id="dailyBtn">Claim daily free pack</button></div>
         </div>
       </div>
       <div class="showcase" id="showcase"></div>
     </div>
 
+    <div id="hitsWrap" hidden style="display:flex;flex-direction:column;gap:18px"><div class="section-head"><div><div class="label">Your top hits</div><h2>Best pulls</h2></div></div><div class="hits" id="hitsRow"></div></div>
+
     <div id="all-packs" style="display:flex;flex-direction:column;gap:22px">
       <div class="section-head"><div><div class="label">The shelf</div><h2>Packs</h2></div></div>
       <div class="filters" id="filters">
         <button data-filter="all" aria-pressed="true">All</button>
-        <button data-filter="low">Under 500</button>
-        <button data-filter="mid">500 – 2,500</button>
-        <button data-filter="high">5,000+</button>
+        <button data-filter="low">Under $1</button>
+        <button data-filter="mid">$1 – $10</button>
+        <button data-filter="high">$10+</button>
         <button data-filter="token">Tokens</button>
         <span class="spacer"></span>
         <label for="packSort" class="sr">Sort packs</label>
@@ -483,12 +507,12 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   </section>
 
   <section class="view" id="view-vault" hidden>
-    <div class="section-head"><div><div class="label">Holdings</div><h2>Vault</h2><p class="lede">Every fighter you've pulled. Sell any of them back at a fixed 85% of card value.</p></div></div>
+    <div class="section-head"><div><div class="label">Holdings</div><h2>Vault</h2><p class="lede">Every fighter you've pulled. Sell any of them back instantly for 90% of card value.</p></div></div>
     <div class="toolbar">
       <div class="stat"><span class="label">Fighters</span><strong id="vStatCount">0</strong></div>
       <div class="stat"><span class="label">Card value</span><strong id="vStatValue">0</strong></div>
       <div class="stat"><span class="label">Sell-back</span><strong id="vStatBuy">0</strong></div>
-      <div class="stat"><span class="label">In dollars</span><strong id="vStatUsd">$0.00</strong></div>
+      <div class="stat"><span class="label">Top card</span><strong id="vStatUsd">$0.00</strong></div>
       <div class="spacer"></div>
       <label for="vSort" class="sr">Sort</label>
       <select id="vSort"><option value="value">Highest value</option><option value="new">Newest</option><option value="atk">Attack</option></select>
@@ -517,13 +541,16 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     <div class="rules">
       <div class="panel"><h3>Rarity</h3><div class="table-wrap"><table class="odds" id="valueTable"></table></div></div>
       <div class="panel"><h3>Pulls</h3><ul>
-        <li>Each card rolls its rarity on its own, using the odds printed on its pack.</li>
+        <li>Every pack holds one card. Its rarity rolls with the odds printed on the pack, then its grade rolls separately.</li>
         <li>Inside a rarity, every fighter is equally likely, except a pack's featured fighter, whose boost is printed on the pack.</li>
         <li>Rolls use your browser's cryptographic random generator. Odds never change with what you've spent or pulled.</li></ul></div>
       <div class="panel"><h3>Currency</h3><ul>
-        <li>◈100 coins = $1.00. Larger bundles include bonus coins.</li>
+        <li>Balances and prices are shown in demo dollars. Larger deposits include a bonus.</li>
         <li>Tokens come only from Arena fights. They can't be bought or sold.</li>
-        <li>Foil cards sell back for 85% of card value. Sketch cards are valued at 10% of foil.</li>
+        <li>Every card sells back instantly for 90% of its value. Sketch cards are valued at 10% of foil.</li>
+        <li>Every pulled card gets a grade from 6 to 10. Grade multiplies the card's base value: 6 ×0.5 (18%), 7 ×0.75 (24%), 8 ×1 (26%), 9 ×1.5 (20%), 10 ×2.5 (12%).</li>
+        <li>Hit rate is the share of packs whose cards sell back for at least the pack price, from 3,000 simulated openings with the published odds.</li>
+        <li>Levels: every $1 spent on packs is 100 XP. Each new level pays a bonus of $0.25 plus $0.15 per level. One free First Ink pack every 24 hours.</li>
         <li>Every pack returns less than it costs on average. Each pack prints exactly how much.</li></ul></div>
       <div class="panel"><h3>Before real money</h3><ul>
         <li>An adult-owned business and a lawyer's sign-off on paid packs with cash sell-back</li>
@@ -536,12 +563,12 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 </main>
 
 <!-- Opening stage -->
-<div class="stage" id="stage" hidden>
+<div class="stage" id="stage" tabindex="-1" hidden>
   <div class="rays" id="rays"></div>
   <canvas id="fx"></canvas>
   <div class="st-bar">
     <span class="pname" id="stName">Pack</span>
-    <span class="st-total" id="stTotal">PULLED <b>◈0</b> / ◈0</span>
+    <span class="st-total" id="stTotal">CASH VALUE <b>$0.00</b> / $0.00</span>
     <span class="st-ctrl"><button class="btn small ghost" id="stMute" aria-label="Sound"><svg class="ico" style="width:16px;height:16px"><use href="#i-sound"/></svg></button><button class="btn small ghost" id="stSkip">Skip</button></span>
   </div>
   <div class="st-center" id="stCenter">
@@ -570,7 +597,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 <!-- Store -->
 <div class="modal" id="store" hidden>
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="storeTitle">
-    <div class="modal-head"><div><div class="label">Coin desk</div><h2 id="storeTitle">Buy coins</h2></div><button class="x" id="closeStore" aria-label="Close">×</button></div>
+    <div class="modal-head"><div><div class="label">Cashier</div><h2 id="storeTitle">Add funds</h2></div><button class="x" id="closeStore" aria-label="Close">×</button></div>
     <div class="bundles" id="bundles"></div>
     <div class="checkout" id="checkout"></div>
     <p class="small-print">Demo checkout. No card is charged and no payment details are collected.</p>
@@ -588,8 +615,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   const RARITIES = ["common", "rare", "epic", "legendary", "secret"];
   const RLABEL = { common: "Common", rare: "Rare", epic: "Epic", legendary: "Legendary", secret: "Secret" };
   const RCOLOR = { common: "#9b9b9b", rare: "#4f8fe6", epic: "#9b62f0", legendary: "#e4ae3a", secret: "#f04f9a" };
-  const BUILD = { common: 0, rare: .45, epic: 1.0, legendary: 1.6, secret: 2.4 };
-  const BUYBACK = 0.85, SKETCH_MULT = 0.10, SIGNUP_BONUS = 300, COINS_PER_USD = 100;
+  const BUILD = { common: .9, rare: 1.3, epic: 1.8, legendary: 2.4, secret: 3.0 };
+  const BUYBACK = 0.90, SKETCH_MULT = 0.10, SIGNUP_BONUS = 300, COINS_PER_USD = 100;
 
   const POSES = {
     idle:     [[50,22],[50,34],[50,70],[40,50],[38,62],[60,48],[66,58],[44,90],[40,110],[56,90],[60,110]],
@@ -647,18 +674,18 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 
   const P = (o) => o;
   const PACKS = [
-    P({ id: "scrapbin", chase: "nullf", no: "01", name: "Scrap Bin", cur: "coin", price: 50, n: 3, a: "#151515", b: "#26262a", acc: "#8d8d8d", fig: "crumple", odds: { common: 97.8, rare: 1.9, epic: .27, legendary: .028, secret: .002 } }),
-    P({ id: "starter", chase: "origin", no: "02", name: "First Ink", cur: "coin", price: 100, n: 3, a: "#0f1420", b: "#1d2740", acc: "#4f8fe6", fig: "noodle", odds: { common: 82.7, rare: 14, epic: 2.79, legendary: .45, secret: .06 } }),
-    P({ id: "ink", chase: "redline", no: "03", name: "Ink Brawlers", cur: "coin", price: 250, n: 3, a: "#121214", b: "#2a2a30", acc: "#e9e4d8", fig: "jabjr", odds: { common: 36.1, rare: 50, epic: 12, legendary: 1.7, secret: .2 } }),
-    P({ id: "night", chase: "eclipse", no: "04", name: "Night Shift", cur: "coin", price: 500, n: 3, a: "#0c0f1c", b: "#1c2240", acc: "#6f7fd8", fig: "static", odds: { common: 20, rare: 42, epic: 32, legendary: 5.4, secret: .6 } }),
-    P({ id: "glitchhunt", chase: "glitch", no: "05", name: "Glitch Hunt", cur: "coin", price: 750, n: 3, a: "#140b1a", b: "#2c1640", acc: "#c435ff", fig: "glitch", feat: { id: "glitch", x: 5 }, odds: { common: 38, rare: 14.1, epic: 38, legendary: 7.6, secret: 2.3 } }),
-    P({ id: "redline", chase: "redline", no: "06", name: "Redline Hunt", cur: "coin", price: 1000, n: 3, a: "#170a0c", b: "#3a1218", acc: "#d81f3a", fig: "redline", feat: { id: "redline", x: 4 }, odds: { common: 20, rare: 1.8, epic: 61, legendary: 16, secret: 1.2 } }),
-    P({ id: "graphite", chase: "graphite", no: "07", name: "Graphite Vault", cur: "coin", price: 1500, n: 3, a: "#131416", b: "#2e3138", acc: "#a9afba", fig: "graphite", odds: { rare: 26, epic: 40, legendary: 30.7, secret: 3.3 } }),
-    P({ id: "legend", chase: "gilt", no: "08", name: "Gold Leaf", cur: "coin", price: 2500, n: 3, a: "#18130a", b: "#3a2c10", acc: "#e4ae3a", fig: "gilt", odds: { epic: 34, legendary: 60, secret: 6 } }),
-    P({ id: "black", chase: "origin", no: "09", name: "Black Label", cur: "coin", price: 5000, n: 2, a: "#050505", b: "#141414", acc: "#e9e4d8", fig: "onyx", odds: { legendary: 49, secret: 51 } }),
-    P({ id: "lastframe", chase: "lastframe", no: "10", name: "The Last Frame", cur: "coin", price: 10000, n: 3, a: "#0d0b05", b: "#2b2208", acc: "#f5b400", fig: "lastframe", feat: { id: "lastframe", x: 3 }, odds: { legendary: 38, secret: 62 } }),
-    P({ id: "sketch", chase: "hopscotch", no: "T1", name: "Sketchbook", cur: "token", price: 100, n: 3, ed: "sketch", a: "#1a1a1c", b: "#2a2a2e", acc: "#6fb7a8", fig: "tally", odds: { common: 82.7, rare: 14, epic: 2.79, legendary: .45, secret: .06 } }),
-    P({ id: "sketch2", chase: "sumi", no: "T2", name: "Sketch Vault", cur: "token", price: 400, n: 3, ed: "sketch", a: "#141a19", b: "#22302d", acc: "#6fb7a8", fig: "vellum", odds: { common: 36.1, rare: 50, epic: 12, legendary: 1.7, secret: .2 } })
+    P({ id: "scrapbin", chase: "nullf", no: "01", name: "Scrap Bin", cur: "coin", price: 17, n: 1, a: "#151515", b: "#26262a", acc: "#8d8d8d", fig: "crumple", odds: { common: 96, rare: 3.6, epic: .36, legendary: .036, secret: .004 } }),
+    P({ id: "starter", chase: "origin", no: "02", name: "First Ink", cur: "coin", price: 42, n: 1, a: "#0f1420", b: "#1d2740", acc: "#4f8fe6", fig: "noodle", odds: { common: 55, rare: 42, epic: 2.6, legendary: .35, secret: .05 } }),
+    P({ id: "ink", chase: "redline", no: "03", name: "Ink Brawlers", cur: "coin", price: 92, n: 1, a: "#121214", b: "#2a2a30", acc: "#e9e4d8", fig: "jabjr", odds: { rare: 88, epic: 10.5, legendary: 1.3, secret: .2 } }),
+    P({ id: "night", chase: "eclipse", no: "04", name: "Night Shift", cur: "coin", price: 205, n: 1, a: "#0c0f1c", b: "#1c2240", acc: "#6f7fd8", fig: "static", odds: { rare: 30, epic: 65, legendary: 4.4, secret: .6 } }),
+    P({ id: "glitchhunt", chase: "glitch", no: "05", name: "Glitch Hunt", cur: "coin", price: 339, n: 1, a: "#140b1a", b: "#2c1640", acc: "#c435ff", fig: "glitch", feat: { id: "glitch", x: 5 }, odds: { epic: 90, legendary: 7.5, secret: 2.5 } }),
+    P({ id: "redline", chase: "redline", no: "06", name: "Redline Hunt", cur: "coin", price: 469, n: 1, a: "#170a0c", b: "#3a1218", acc: "#d81f3a", fig: "redline", feat: { id: "redline", x: 4 }, odds: { epic: 72, legendary: 26, secret: 2 } }),
+    P({ id: "graphite", chase: "graphite", no: "07", name: "Graphite Vault", cur: "coin", price: 689, n: 1, a: "#131416", b: "#2e3138", acc: "#a9afba", fig: "graphite", odds: { epic: 40, legendary: 57, secret: 3 } }),
+    P({ id: "legend", chase: "gilt", no: "08", name: "Gold Leaf", cur: "coin", price: 1099, n: 1, a: "#18130a", b: "#3a2c10", acc: "#e4ae3a", fig: "gilt", odds: { legendary: 93, secret: 7 } }),
+    P({ id: "black", chase: "origin", no: "09", name: "Black Label", cur: "coin", price: 1849, n: 1, a: "#050505", b: "#141414", acc: "#e9e4d8", fig: "onyx", odds: { legendary: 70, secret: 30 } }),
+    P({ id: "lastframe", chase: "lastframe", no: "10", name: "The Last Frame", cur: "coin", price: 3699, n: 1, a: "#0d0b05", b: "#2b2208", acc: "#f5b400", fig: "lastframe", feat: { id: "lastframe", x: 3 }, odds: { legendary: 30, secret: 70 } }),
+    P({ id: "sketch", chase: "hopscotch", no: "T1", name: "Sketchbook", cur: "token", price: 40, n: 1, ed: "sketch", a: "#1a1a1c", b: "#2a2a2e", acc: "#6fb7a8", fig: "tally", odds: { common: 55, rare: 42, epic: 2.6, legendary: .35, secret: .05 } }),
+    P({ id: "sketch2", chase: "sumi", no: "T2", name: "Sketch Vault", cur: "token", price: 120, n: 1, ed: "sketch", a: "#141a19", b: "#22302d", acc: "#6fb7a8", fig: "vellum", odds: { rare: 88, epic: 10.5, legendary: 1.3, secret: .2 } })
   ];
   const PACK_BY_ID = Object.fromEntries(PACKS.map(p => [p.id, p]));
 
@@ -673,10 +700,24 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 
   const cardValue = (f, ed) => ed === "sketch" ? Math.max(1, Math.round(f.v * SKETCH_MULT)) : f.v;
   const sellValue = (f, ed) => Math.max(1, Math.floor(cardValue(f, ed) * BUYBACK));
+  const GRADES = [{ g: 6, p: .18, m: .5, name: "EX" }, { g: 7, p: .24, m: .75, name: "NM" }, { g: 8, p: .26, m: 1, name: "NM-MT" }, { g: 9, p: .20, m: 1.5, name: "MINT" }, { g: 10, p: .12, m: 2.5, name: "GEM MINT" }];
+  const GRADE_MEAN = GRADES.reduce((s, x) => s + x.p * x.m, 0);
+  const gradeOf = g => GRADES.find(x => x.g === g) || GRADES[2];
+  function rollGrade() { let x = rand(); for (const g of GRADES) { x -= g.p; if (x < 0) return g.g; } return 8; }
+  const itemVal = it => it.val != null ? it.val : cardValue(BY_ID[it.id], it.ed);
+  const itemSell = it => Math.max(1, Math.floor(itemVal(it) * BUYBACK));
+  const money = c => "$" + (c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const priceTxt = p => p.cur === "coin" ? money(p.price) : "⬡" + p.price.toLocaleString("en-US");
+  const LEVEL_XP = n => 250 * n * (n + 1) / 2;
+  const levelOf = xp => { let n = 0; while (xp >= LEVEL_XP(n + 1)) n++; return n; };
+  const levelReward = n => 25 + 15 * n;
+  const DAY = 864e5;
   function weightOf(p, f) { return p.feat && p.feat.id === f.id ? p.feat.x : 1; }
   function poolOf(p, r) { return FIGHTERS.filter(f => f.r === r); }
   function meanVal(p, r) { const pool = poolOf(p, r); let w = 0, s = 0; for (const f of pool) { const x = weightOf(p, f); w += x; s += x * cardValue(f, p.ed); } return s / w; }
-  function packEV(p) { let v = 0; for (const r of RARITIES) if (p.odds[r]) v += p.odds[r] / 100 * meanVal(p, r); return v * p.n; }
+  function packEV(p) { let v = 0; for (const r of RARITIES) if (p.odds[r]) v += p.odds[r] / 100 * meanVal(p, r); return v * p.n * GRADE_MEAN; }
+  const HIT = {};
+  function hitRate(p) { if (HIT[p.id] != null) return HIT[p.id]; const N = 3000; let h = 0; for (let i = 0; i < N; i++) { let t = 0; for (let k = 0; k < p.n; k++) t += Math.max(1, Math.floor(Math.max(1, Math.round(cardValue(pullFighter(p, rollRarity(p)), p.ed) * gradeOf(rollGrade()).m)) * BUYBACK)); if (t >= p.price) h++; } return (HIT[p.id] = h / N); }
   function chaseOf(p) { return BY_ID[p.chase]; }
   function chanceOf(p, f) { const pool = poolOf(p, f.r); const w = pool.reduce((s, x) => s + weightOf(p, x), 0); const per = (p.odds[f.r] || 0) / 100 * weightOf(p, f) / w; return 1 - Math.pow(1 - per, p.n); }
 
@@ -690,7 +731,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") { state = Object.assign(fresh(), s); state.s = Object.assign(fresh().s, s.s || {}); state.vault = state.vault.filter(it => BY_ID[it.id]); } } catch (e) {}
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
   function log(text, delta, cur) { state.history.unshift({ t: Date.now(), text, delta, cur }); if (state.history.length > 250) state.history.length = 250; }
-  const vaultSellCoins = () => state.vault.reduce((s, it) => s + sellValue(BY_ID[it.id], it.ed), 0);
+  const vaultSellCoins = () => state.vault.reduce((s, it) => s + itemSell(it), 0);
   const cashOutUsd = () => (state.coins + vaultSellCoins()) / COINS_PER_USD;
   const netUsd = () => cashOutUsd() - state.s.usdSpent;
   function snap() { state.netlog.push({ t: Date.now(), net: +netUsd().toFixed(2) }); if (state.netlog.length > 300) state.netlog.splice(0, state.netlog.length - 300); }
@@ -735,7 +776,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     </svg>`;
   }
 
-  function cardHTML(item) {
+  function cardHTML(item, pending) {
     const f = BY_ID[item.id], sk = item.ed === "sketch";
     const serial = item.serial ? "No. " + String(item.serial).padStart(4, "0") : "No. —";
     return `<div class="tcard r-${f.r}${sk ? " sketch" : ""}"><div class="tc-face">
@@ -744,7 +785,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       ${sk ? `<span class="stamp">SKETCH</span>` : ""}
       <div class="tc-mid"><span class="tc-rarity">${RLABEL[f.r]}</span><span class="tc-stats">A${f.atk} S${f.spd} D${f.def}</span></div>
       <div class="tc-trait">${esc(f.trait)}</div>
-      <div class="tc-bottom"><span class="tag">SERIES II</span><span class="tc-val">${ico("coin")}${fmt(cardValue(f, item.ed))}</span></div>
+      <div class="tc-bottom"><span class="tag">${pending ? "GRADING…" : item.g ? "GRADE " + item.g + " · " + gradeOf(item.g).name : "SERIES II"}</span><span class="tc-val">${money(pending ? cardValue(f, item.ed) : itemVal(item))}</span></div>
     </div><div class="glare"></div></div>`;
   }
 
@@ -755,7 +796,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <div class="pk-body">${inner}${stickSVG(fig, { cls: "pk-fig" })}
         <div class="pk-no">No. ${p.no}</div><div class="pk-name">${esc(p.name)}</div>
         <svg class="pk-sigil" viewBox="0 0 40 40"><use href="#i-sigil"/></svg>
-        <div class="pk-sub">${p.n} cards · Series II</div></div>
+        <div class="pk-sub">1 graded card · Series II</div></div>
       <div class="pk-top">${inner}</div>
       <div class="sheen"></div>
     </div>`;
@@ -827,31 +868,31 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   // RENDER: shelf
   // =====================================================================
   let shelfFilter = "all";
-  function renderWallet() { $("balCoins").textContent = fmt(state.coins); $("balTokens").textContent = fmt(state.tokens); $("vaultCount").textContent = state.vault.length; }
+  function renderWallet() { $("balCoins").textContent = money(state.coins); { const xp = state.s.xp || 0, L = levelOf(xp), a = LEVEL_XP(L), b = LEVEL_XP(L + 1); $("lvl").textContent = "LV " + L; $("lvlBar").style.width = ((xp - a) / (b - a) * 100).toFixed(1) + "%"; } $("balTokens").textContent = fmt(state.tokens); $("vaultCount").textContent = state.vault.length; }
 
   function tileHTML(p) {
     const ev = packEV(p), chase = chaseOf(p), ch = chanceOf(p, chase);
     const have = p.cur === "coin" ? state.coins : state.tokens, can = have >= p.price;
-    const rows = RARITIES.filter(r => p.odds[r]).map(r => `<tr><td><span class="rdot" style="background:${RCOLOR[r]}"></span>${RLABEL[r]}</td><td>${fmt(meanVal(p, r))}</td><td>${p.odds[r]}%</td></tr>`).join("");
-    const btn = can ? `Open · ${p.cur === "coin" ? "◈" : "⬡"}${fmt(p.price)}` : p.cur === "coin" ? "Add coins" : `${fmt(p.price - have)} tokens short`;
+    const rows = RARITIES.filter(r => p.odds[r]).map(r => `<tr><td><span class="rdot" style="background:${RCOLOR[r]}"></span>${RLABEL[r]}</td><td>${money(meanVal(p, r))}</td><td>${p.odds[r]}%</td></tr>`).join("");
+    const btn = can ? `Open · ${priceTxt(p)}` : p.cur === "coin" ? "Add funds" : `${fmt(p.price - have)} tokens short`;
     return `<article class="tile">
-      <span class="no">No. ${p.no}</span><span class="cnt">${p.n} cards</span>
+      <span class="no">No. ${p.no}</span><span class="cnt">1 graded card</span>
       <div class="stagebox"><div class="peek">${cardHTML({ id: chase.id, serial: 0, ed: p.ed })}</div>${packHTML(p)}</div>
-      <div class="row"><h3>${esc(p.name)}</h3><span class="price${p.cur === "token" ? " tok" : ""}">${ico(p.cur)}${fmt(p.price)}</span></div>
-      <div class="chase">Chase: <b>${esc(chase.name)}</b> · ◈${fmt(cardValue(chase, p.ed))} · ${oneIn(ch)} packs${p.feat ? ` · ${p.feat.x}× boosted` : ""}</div>
+      <div class="row"><h3>${esc(p.name)}</h3><span class="price${p.cur === "token" ? " tok" : ""}">${priceTxt(p)}</span></div>
+      <div class="chase">Chase: <b>${esc(chase.name)}</b> · up to ${money(cardValue(chase, p.ed) * 2.5)} · ${oneIn(ch)} packs${p.feat ? ` · ${p.feat.x}× boosted` : ""}</div>
       <div class="meta">
-        <span>Average card value</span><span>${p.cur === "coin" ? Math.round(ev / p.price * 100) + "%" : "◈" + fmt(ev)}</span>
-        <span>Average if sold back</span><span>${p.cur === "coin" ? Math.round(ev * BUYBACK / p.price * 100) + "%" : "◈" + fmt(ev * BUYBACK)}</span>
+        <span>Hit rate</span><span>${p.cur === "coin" ? Math.round(hitRate(p) * 100) + "% of packs" : "–"}</span>
+        <span>Average sell-back</span><span>${p.cur === "coin" ? Math.round(ev * BUYBACK / p.price * 100) + "% of price" : money(ev * BUYBACK)}</span>
       </div>
-      <details><summary>Odds per card</summary><table class="odds"><thead><tr><th>Rarity</th><th>Avg value</th><th>Chance</th></tr></thead><tbody>${rows}</tbody></table></details>
+      <details><summary>Odds per card</summary><table class="odds"><thead><tr><th>Rarity</th><th>Base avg</th><th>Chance</th></tr></thead><tbody>${rows}</tbody></table></details>
       <button class="btn ${can ? "brass" : ""}" data-buy="${p.id}" ${!can && p.cur === "token" ? "disabled" : ""}>${btn}</button>
     </article>`;
   }
   function renderShelf() {
     let list = PACKS.slice();
-    if (shelfFilter === "low") list = list.filter(p => p.cur === "coin" && p.price < 500);
-    else if (shelfFilter === "mid") list = list.filter(p => p.cur === "coin" && p.price >= 500 && p.price <= 2500);
-    else if (shelfFilter === "high") list = list.filter(p => p.cur === "coin" && p.price >= 5000);
+    if (shelfFilter === "low") list = list.filter(p => p.cur === "coin" && p.price < 100);
+    else if (shelfFilter === "mid") list = list.filter(p => p.cur === "coin" && p.price >= 100 && p.price < 1000);
+    else if (shelfFilter === "high") list = list.filter(p => p.cur === "coin" && p.price >= 1000);
     else if (shelfFilter === "token") list = list.filter(p => p.cur === "token");
     const sort = $("packSort").value;
     if (sort === "asc") list.sort((a, b) => (a.cur === b.cur ? 0 : a.cur === "token" ? 1 : -1) || a.price - b.price);
@@ -863,28 +904,34 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   function renderHero() {
     const p = PACK_BY_ID.lastframe, chase = chaseOf(p);
     $("heroCount").textContent = FIGHTERS.length; $("heroPacks").textContent = PACKS.length;
-    $("heroChase").textContent = `${chase.name} · ◈${fmt(chase.v)}`;
+    $("heroChase").textContent = `${chase.name} · up to ${money(chase.v * 2.5)}`;
     const best = state.s.best ? BY_ID[state.s.best.id] : null;
-    $("heroBest").textContent = best ? `${best.name} · ◈${fmt(best.v)}` : "Nothing yet";
-    $("heroOpen").textContent = state.coins >= p.price ? `Open ${p.name} · ◈${fmt(p.price)}` : `Featured: ${p.name}`;
+    $("heroBest").textContent = best ? `${best.name} · ${money(state.s.best.val || best.v)}` : "Nothing yet";
+    $("heroOpen").textContent = state.coins >= p.price ? `Open ${p.name} · ${money(p.price)}` : `Featured: ${p.name}`;
+    const left = (state.lastFree || 0) + DAY - Date.now();
+    const db = $("dailyBtn"); db.disabled = left > 0;
+    db.textContent = left > 0 ? `Free pack in ${Math.floor(left / 36e5)}h ${Math.floor(left % 36e5 / 6e4)}m` : "Claim daily free pack";
+    const hits = (state.hits || []).slice(0, 6);
+    $("hitsWrap").hidden = !hits.length;
+    $("hitsRow").innerHTML = hits.map(h => `<div class="hit">${cardHTML(h)}<span class="small-print">${esc(PACK_BY_ID[h.pack] ? PACK_BY_ID[h.pack].name : "")}</span></div>`).join("");
     $("showcase").innerHTML = `<div class="sc-card">${cardHTML({ id: chase.id, serial: 0 })}</div><div class="sc-pack" id="scPack">${packHTML(p)}</div>
       <div class="caption"><span class="label">Featured · No. ${p.no}</span><span class="small-print">${chase.name} pulls ${oneIn(chanceOf(p, chase))} packs</span></div>`;
   }
 
   // ---------- Vault ----------
   function renderVault() {
-    const items = state.vault.slice(), sort = $("vSort").value, val = it => cardValue(BY_ID[it.id], it.ed);
+    const items = state.vault.slice(), sort = $("vSort").value, val = it => itemVal(it);
     if (sort === "value") items.sort((a, b) => val(b) - val(a) || b.serial - a.serial);
     else if (sort === "atk") items.sort((a, b) => BY_ID[b.id].atk - BY_ID[a.id].atk || val(b) - val(a));
     else items.sort((a, b) => b.serial - a.serial);
     const sell = vaultSellCoins();
-    $("vStatCount").textContent = items.length; $("vStatValue").textContent = fmt(items.reduce((s, it) => s + val(it), 0));
-    $("vStatBuy").textContent = fmt(sell); $("vStatUsd").textContent = usd(sell / COINS_PER_USD);
+    $("vStatCount").textContent = items.length; $("vStatValue").textContent = money(items.reduce((s, it) => s + val(it), 0));
+    $("vStatBuy").textContent = money(sell); $("vStatUsd").textContent = items.length ? money(Math.max(...items.map(val))) : "–";
     $("sellCommons").disabled = !items.some(it => BY_ID[it.id].r === "common" && it.ed !== "sketch");
     $("sellSketch").disabled = !items.some(it => it.ed === "sketch");
     if (!items.length) { $("vaultBody").innerHTML = `<div class="empty"><h3>The vault is empty.</h3><p>Open a pack and your pulls are kept here.</p><a class="btn brass" href="#packs">Browse packs</a></div>`; return; }
     $("vaultBody").innerHTML = `<div class="card-grid">${items.map(it => `<div class="vault-item">${cardHTML(it)}
-      <div class="row"><span class="num">${ico("coin")} ${fmt(sellValue(BY_ID[it.id], it.ed))}</span><button class="btn small" data-sell="${it.uid}">Sell back</button></div></div>`).join("")}</div>`;
+      <div class="row"><span class="num">${money(itemSell(it))}</span><button class="btn small" data-sell="${it.uid}">Sell</button></div></div>`).join("")}</div>`;
   }
 
   // ---------- Ledger ----------
@@ -894,21 +941,21 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <div class="kpi ${net >= 0 ? "up" : "down"}"><span class="label">Net, in dollars</span><strong>${sUsd(net)}</strong><small>Cash-out value minus money in</small></div>
       <div class="kpi"><span class="label">Money in</span><strong>${usd(s.usdSpent)}</strong><small>${s.purchases} purchase${s.purchases === 1 ? "" : "s"}</small></div>
       <div class="kpi"><span class="label">Cash-out value</span><strong>${usd(cash)}</strong><small>Coins plus vault sold back</small></div>
-      <div class="kpi"><span class="label">Coins from sell-backs</span><strong style="color:var(--brass-hi)">${fmt(s.coinsFromSales)}</strong><small>${usd(s.coinsFromSales / COINS_PER_USD)}</small></div>
+      <div class="kpi"><span class="label">Sold back</span><strong style="color:var(--brass-hi)">${money(s.coinsFromSales)}</strong><small>${fmt(s.packHits || 0)} of ${fmt(s.packs)} packs were hits</small></div>
       <div class="kpi"><span class="label">Tokens earned</span><strong style="color:var(--token)">${fmt(s.tokensEarned)}</strong><small>${s.wins} W · ${s.losses} L</small></div>`;
     $("coinLedger").innerHTML = `
-      <dt>Coins bought</dt><dd>${fmt(s.coinsBought)}</dd><dt>Signup coins</dt><dd>${fmt(s.freeCoins)}</dd>
-      <dt>Spent on packs</dt><dd>−${fmt(s.coinsOnPacks)}</dd><dt>From sell-backs</dt><dd>+${fmt(s.coinsFromSales)}</dd>
-      <div class="sep"></div><dt>Balance</dt><dd>${fmt(state.coins)}</dd><dt>Vault sell-back</dt><dd>${fmt(vaultSellCoins())}</dd>
-      <dt>Card value pulled per coin spent</dt><dd>${s.coinsOnPacks ? Math.round(s.coinValuePulled / s.coinsOnPacks * 100) + "%" : "–"}</dd>`;
+      <dt>Deposited (incl. bonus)</dt><dd>${money(s.coinsBought)}</dd><dt>Signup, level and daily bonuses</dt><dd>${money(s.freeCoins)}</dd>
+      <dt>Spent on packs</dt><dd>−${money(s.coinsOnPacks)}</dd><dt>Sold back</dt><dd>+${money(s.coinsFromSales)}</dd>
+      <div class="sep"></div><dt>Balance</dt><dd>${money(state.coins)}</dd><dt>Vault sell-back</dt><dd>${money(vaultSellCoins())}</dd>
+      <dt>Card value pulled per $1 spent</dt><dd>${s.coinsOnPacks ? money(s.coinValuePulled / s.coinsOnPacks * 100) : "–"}</dd>`;
     const edges = PACKS.filter(p => p.cur === "coin").map(p => 1 - packEV(p) * BUYBACK / p.price);
     $("houseLedger").innerHTML = `
       <dt>Revenue from you</dt><dd>${usd(s.usdSpent)}</dd><dt>Owed to you at cash-out</dt><dd>−${usd(cash)}</dd>
       <div class="sep"></div><dt>House profit from you</dt><dd style="color:${-net >= 0 ? "var(--good)" : "var(--bad)"}">${sUsd(-net)}</dd>
-      <dt>Signup coins (in the line above)</dt><dd>${usd(s.freeCoins / COINS_PER_USD)}</dd>
+      <dt>Bonuses paid (in the line above)</dt><dd>${usd(s.freeCoins / COINS_PER_USD)}</dd>
       <dt>House edge across packs</dt><dd>${Math.round(Math.min(...edges) * 100)}–${Math.round(Math.max(...edges) * 100)}%</dd>`;
     const best = s.best ? BY_ID[s.best.id] : null;
-    $("recordLedger").innerHTML = `<dt>Packs opened</dt><dd>${fmt(s.packs)}</dd><dt>Best pull</dt><dd>${best ? esc(best.name) : "–"}</dd>
+    $("recordLedger").innerHTML = `<dt>Packs opened</dt><dd>${fmt(s.packs)}</dd><dt>Hits (sold back ≥ price)</dt><dd>${fmt(s.packHits || 0)}</dd><dt>Level</dt><dd>${levelOf(s.xp || 0)}</dd><dt>Best pull</dt><dd>${best ? esc(best.name) + " · " + money(s.best.val || best.v) : "–"}</dd>
       <dt>Fights</dt><dd>${s.wins} W · ${s.losses} L</dd><dt>Tokens on Sketch packs</dt><dd>${fmt(s.tokensOnPacks)}</dd>`;
     renderChart(); renderHistory();
   }
@@ -936,7 +983,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     $("historyBody").innerHTML = rows.map(h => {
       const when = new Date(h.t).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
       const amt = h.cur === "usd" ? `<span class="delta minus-c">−${usd(Math.abs(h.delta))}</span>`
-        : `<span class="delta ${h.delta > 0 ? "plus-c" : h.delta < 0 ? "minus-c" : ""}">${h.delta > 0 ? "+" : h.delta < 0 ? "−" : ""}${fmt(Math.abs(h.delta))} ${ico(h.cur || "coin")}</span>`;
+        : `<span class="delta ${h.delta > 0 ? "plus-c" : h.delta < 0 ? "minus-c" : ""}">${h.delta > 0 ? "+" : h.delta < 0 ? "−" : ""}${(h.cur || "coin") === "coin" ? money(Math.abs(h.delta)) : fmt(Math.abs(h.delta)) + " " + ico(h.cur)}</span>`;
       return `<div class="h-row"><time>${when}</time><span class="h-text">${esc(h.text)}</span>${amt}</div>`;
     }).join("");
   }
@@ -986,7 +1033,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   // =====================================================================
   function sellUids(uids, label) {
     const set = new Set(uids); let got = 0, n = 0;
-    state.vault = state.vault.filter(it => { if (set.has(it.uid)) { got += sellValue(BY_ID[it.id], it.ed); n++; return false; } return true; });
+    state.vault = state.vault.filter(it => { if (set.has(it.uid)) { got += itemSell(it); n++; return false; } return true; });
     if (!n) return 0;
     state.coins += got; state.s.coinsFromSales += got;
     log(label || `Sold back ${n} fighter${n > 1 ? "s" : ""}`, got, "coin");
@@ -995,25 +1042,35 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   function rollRarity(p) { const roll = rand() * RARITIES.reduce((s, r) => s + (p.odds[r] || 0), 0); let acc = 0, last = null; for (const r of RARITIES) { if (!p.odds[r]) continue; acc += p.odds[r]; last = r; if (roll < acc) return r; } return last; }
   function pullFighter(p, r) { const pool = poolOf(p, r), tot = pool.reduce((s, f) => s + weightOf(p, f), 0); let x = rand() * tot; for (const f of pool) { x -= weightOf(p, f); if (x < 0) return f; } return pool[pool.length - 1]; }
 
-  function buy(packId) {
+  function buy(packId, free) {
     const p = PACK_BY_ID[packId]; if (!p) return;
-    if (p.cur === "coin" && state.coins < p.price) { openStore(p.price - state.coins); return; }
-    if (p.cur === "token" && state.tokens < p.price) { toast(`Win ${fmt(p.price - state.tokens)} more tokens in the Arena`); return; }
+    if (!free && p.cur === "coin" && state.coins < p.price) { openStore(p.price - state.coins); return; }
+    if (!free && p.cur === "token" && state.tokens < p.price) { toast(`Win ${fmt(p.price - state.tokens)} more tokens in the Arena`); return; }
     sfx.unlock();
-    if (p.cur === "coin") { state.coins -= p.price; state.s.coinsOnPacks += p.price; } else { state.tokens -= p.price; state.s.tokensOnPacks += p.price; }
+    let levelUp = null;
+    if (free) { state.lastFree = Date.now(); }
+    else if (p.cur === "coin") {
+      state.coins -= p.price; state.s.coinsOnPacks += p.price;
+      const before = levelOf(state.s.xp || 0); state.s.xp = (state.s.xp || 0) + p.price; const after = levelOf(state.s.xp);
+      if (after > before) { let bonus = 0; for (let L = before + 1; L <= after; L++) bonus += levelReward(L); state.coins += bonus; state.s.freeCoins += bonus; log(`Reached level ${after}`, bonus, "coin"); levelUp = { level: after, bonus }; }
+    } else { state.tokens -= p.price; state.s.tokensOnPacks += p.price; }
     const items = [];
     for (let i = 0; i < p.n; i++) {
       const f = pullFighter(p, rollRarity(p)); state.serial++;
-      const item = { uid: Date.now().toString(36) + "-" + state.serial, id: f.id, serial: state.serial, t: Date.now(), pack: p.id, ed: p.ed || "foil" };
+      const g = rollGrade();
+      const item = { uid: Date.now().toString(36) + "-" + state.serial, id: f.id, serial: state.serial, t: Date.now(), pack: p.id, ed: p.ed || "foil", g, val: Math.max(1, Math.round(cardValue(f, p.ed) * gradeOf(g).m)) };
       items.push(item); state.vault.push(item);
-      if (p.cur === "coin") state.s.coinValuePulled += cardValue(f, p.ed);
-      if (p.ed !== "sketch" && (!state.s.best || f.v > BY_ID[state.s.best.id].v)) state.s.best = { id: f.id, serial: item.serial };
+      if (p.cur === "coin" && !free) state.s.coinValuePulled += item.val;
+      if (p.ed !== "sketch" && (!state.s.best || item.val > (state.s.best.val || 0))) state.s.best = { id: f.id, serial: item.serial, val: item.val };
+      state.hits = (state.hits || []).concat([Object.assign({}, item)]).sort((a, b) => b.val - a.val).slice(0, 12);
     }
     state.s.packs++;
-    log(`Opened ${p.name}`, -p.price, p.cur);
+    const sellTotal = items.reduce((s, it) => s + itemSell(it), 0);
+    if (p.cur === "coin" && sellTotal >= p.price) state.s.packHits = (state.s.packHits || 0) + 1;
+    log(free ? `Daily free ${p.name}` : `Opened ${p.name}`, free ? 0 : -p.price, p.cur);
     snap(); save(); renderAll();
-    items.sort((a, b) => cardValue(BY_ID[a.id], a.ed) - cardValue(BY_ID[b.id], b.ed));
-    openStage(p, items);
+    items.sort((a, b) => itemVal(a) - itemVal(b));
+    openStage(p, items, { free: !!free, levelUp });
   }
 
   // ---------- Store ----------
@@ -1024,17 +1081,17 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   }
   function renderStore() {
     $("bundles").innerHTML = BUNDLES.map(b => `<button class="bundle" data-bundle="${b.id}" aria-pressed="${pickBundle === b.id}">
-      <span class="bonus">${b.bonus ? "+" + fmt(b.bonus) + " bonus" : "&nbsp;"}</span><strong>◈${fmt(b.coins + b.bonus)}</strong><span class="usd">$${b.usd.toFixed(2)}</span></button>`).join("");
+      <span class="bonus">${b.bonus ? "+" + money(b.bonus) + " bonus" : "&nbsp;"}</span><strong>${money(b.coins + b.bonus)}</strong><span class="usd">for $${b.usd.toFixed(2)}</span></button>`).join("");
     const b = BUNDLES.find(x => x.id === pickBundle);
-    $("checkout").innerHTML = `<div class="line"><span>◈${fmt(b.coins)}${b.bonus ? ` + ◈${fmt(b.bonus)} bonus` : ""}</span><b>$${b.usd.toFixed(2)}</b></div>
+    $("checkout").innerHTML = `<div class="line"><span>${money(b.coins)} balance${b.bonus ? ` + ${money(b.bonus)} bonus` : ""}</span><b>$${b.usd.toFixed(2)}</b></div>
       <div class="fakecard">DEMO CARD · NOTHING IS CHARGED</div>
       <div class="line"><span class="small-print">Money in so far: ${usd(state.s.usdSpent)}</span><button class="btn brass big" id="payBtn">Pay $${b.usd.toFixed(2)} (demo)</button></div>`;
   }
   function pay() {
     const b = BUNDLES.find(x => x.id === pickBundle), total = b.coins + b.bonus;
     state.coins += total; state.s.coinsBought += total; state.s.usdSpent = +(state.s.usdSpent + b.usd).toFixed(2); state.s.purchases++;
-    log(`Bought ◈${fmt(total)}`, b.usd, "usd"); snap(); save(); renderAll();
-    $("store").hidden = true; toast(`◈${fmt(total)} added (demo)`);
+    log(`Deposited ${money(total)}`, b.usd, "usd"); snap(); save(); renderAll();
+    $("store").hidden = true; toast(`${money(total)} added (demo)`);
   }
 
   // =====================================================================
@@ -1074,8 +1131,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   const stage = $("stage");
   function center(el) { const r = el.getBoundingClientRect(), s = stage.getBoundingClientRect(); return { x: r.left + r.width / 2 - s.left, y: r.top + r.height / 2 - s.top, w: r.width, h: r.height, l: r.left - s.left, t: r.top - s.top }; }
 
-  function openStage(p, items) {
-    SS = { pack: p, items, idx: 0, phase: "pack", tear: 0, total: 0, busy: false, drag: null };
+  function openStage(p, items, extra) {
+    SS = { pack: p, items, free: extra && extra.free, levelUp: extra && extra.levelUp, crossed: false, idx: 0, phase: "pack", tear: 0, total: 0, busy: false, drag: null };
     $("stName").textContent = p.name;
     updateTotal(0);
     $("stTitle").className = "st-title"; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("rays").classList.remove("on");
@@ -1083,6 +1140,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     $("stHint").textContent = "Drag across the top edge to tear it open · or press Space";
     stage.classList.remove("dim");
     stage.hidden = false;
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    stage.focus({ preventScroll: true });
     fx.clear();
     setMuteIcon();
     const sp = $("stPack");
@@ -1091,10 +1150,15 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   function updateTotal(add) {
     if (!SS) return;
     const from = SS.total; SS.total += add;
-    const el = $("stTotal"), price = SS.pack.price, cur = SS.pack.cur === "coin" ? "◈" : "⬡";
-    const paint = v => { el.innerHTML = `PULLED <b>◈${fmt(v)}</b> / ${cur}${fmt(price)}`; el.classList.toggle("up", SS.pack.cur === "coin" && v >= price); };
+    const el = $("stTotal"), price = SS.free ? 0 : SS.pack.price, coin = SS.pack.cur === "coin";
+    const paint = v => {
+      const cash = Math.floor(v * BUYBACK);
+      el.innerHTML = `CASH VALUE <b>${money(cash)}</b> / ${SS.free ? "FREE" : priceTxt(SS.pack)}${coin && price ? ` <span class="pct">${Math.round(cash / price * 100)}%</span>` : ""}`;
+      const up = coin && cash >= price; el.classList.toggle("up", up);
+      if (up && !SS.crossed && add) { SS.crossed = true; el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
+    };
     if (!add) { paint(SS.total); return; }
-    const t0 = performance.now(), dur = Math.min(1200, 350 + add * .6);
+    const t0 = performance.now(), dur = Math.min(1200, 350 + Math.abs(add) * .6);
     (function tickUp(now) { const k = Math.min(1, (now - t0) / dur), v = from + add * (1 - Math.pow(1 - k, 3)); paint(v); if (k < 1) { sfx.coin(); requestAnimationFrame(tickUp); } })(t0);
   }
 
@@ -1158,7 +1222,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       sp.classList.add("drop");
       sfx.whoosh();
     }, 380);
-    setTimeout(() => { if (!SS || SS.phase !== "opening") return; SS.phase = "stack"; $("stHint").textContent = "Click the card to reveal · Space"; }, 1150);
+    setTimeout(() => { if (!SS || SS.phase !== "opening") return; SS.phase = "stack"; $("stHint").textContent = "Click the card to reveal · Space"; if (SS.queued) { SS.queued = false; advance(); } }, 1000);
   }
 
   // --- stack ---
@@ -1167,7 +1231,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     st.innerHTML = SS.items.map((it, i) => {
       const rot = i === 0 ? 0 : (rand() - .5) * 6, ox = i * 3, oy = i * 4;
       return `<div class="sc rise" data-i="${i}" style="z-index:${50 - i};--rot:${rot.toFixed(1)}deg;--ox:${ox}px;--oy:${oy}px;--c:${RCOLOR[BY_ID[it.id].r]}">
-        <div class="tilt"><div class="flip-inner"><div class="face back"><div class="cback"><div class="in"><svg viewBox="0 0 40 40"><use href="#i-sigil"/></svg><span class="t">STICKFIST · II</span></div></div></div><div class="face front">${cardHTML(it)}</div></div></div></div>`;
+        <div class="tilt"><div class="flip-inner"><div class="face back"><div class="cback"><div class="in"><svg viewBox="0 0 40 40"><use href="#i-sigil"/></svg><span class="t">STICKFIST · II</span></div></div></div><div class="face front">${cardHTML(it, !!it.g)}</div></div></div></div>`;
     }).join("");
     requestAnimationFrame(() => requestAnimationFrame(() => {
       st.querySelectorAll(".sc").forEach((el, i) => setTimeout(() => { el.classList.remove("rise"); sfx.deal(); }, 120 + i * 110));
@@ -1180,6 +1244,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   function advance() {
     if (!SS || SS.busy) return;
     if (SS.phase === "pack") { autoTear(); return; }
+    if (SS.phase === "opening") { SS.queued = true; return; }
     if (SS.phase !== "stack") return;
     const el = scEl(SS.idx); if (!el) return;
     if (!el.classList.contains("flipped")) reveal(el); else dismiss(el);
@@ -1193,22 +1258,24 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     stage.classList.add("dim");
     sfx.charge(dur, r);
     const tilt = el.querySelector(".tilt"), t0 = performance.now();
-    const amp = { rare: 4, epic: 7, legendary: 10, secret: 14 }[r] || 4;
+    const amp = { common: 3, rare: 5, epic: 8, legendary: 11, secret: 15 }[r] || 4;
     (function run(now) {
       if (!SS || SS.phase !== "stack") return;
       const k = Math.min(1, (now - t0) / (dur * 1000)), a = amp * k * k;
       tilt.style.setProperty("--jx", ((rand() - .5) * 2 * a).toFixed(1) + "px");
       tilt.style.setProperty("--jy", ((rand() - .5) * 2 * a).toFixed(1) + "px");
       tilt.style.setProperty("--g", (k * .9).toFixed(3));
+      const tell = r !== "common" && k > .5;
+      el.style.setProperty("--c", tell ? RCOLOR[r] : "rgba(233,228,216,.55)");
       const c = center(el);
-      if (rand() < .3 + k) fx.inward(c.x, c.y, RCOLOR[r]);
+      if (rand() < .3 + k) fx.inward(c.x, c.y, tell ? RCOLOR[r] : "#e9e4d8");
       if (k < 1) requestAnimationFrame(run);
       else { tilt.style.setProperty("--jx", "0px"); tilt.style.setProperty("--jy", "0px"); el.classList.remove("charging"); flipNow(el, it); }
     })(t0);
   }
 
   function flipNow(el, it) {
-    const f = BY_ID[it.id], r = f.r, val = cardValue(f, it.ed);
+    const f = BY_ID[it.id], r = f.r, val = itemVal(it);
     el.classList.add("flipped");
     sfx.snap();
     setTimeout(() => {
@@ -1228,16 +1295,52 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
         const rays = $("rays"); rays.style.setProperty("--rc", RCOLOR[r]); if (big >= 2) rays.classList.add("on");
         sfx.chime(r);
       }
-      showTitle(f, it, val);
-      updateTotal(val);
+      const base = it.g ? cardValue(f, it.ed) : val;
+      showTitle(f, it, base, !!it.g);
+      updateTotal(base);
     }, 260);
-    setTimeout(() => { if (!SS || SS.phase !== "stack") return; SS.busy = false; el.querySelector(".tcard").style.setProperty("--go", "1"); $("stHint").textContent = SS.idx < SS.items.length - 1 ? "Click again for the next card · Space" : "Click to finish · Space"; }, 700);
+    setTimeout(() => {
+      if (!SS || SS.phase !== "stack") return;
+      el.querySelector(".tcard").style.setProperty("--go", "1");
+      const done = () => { if (!SS || SS.phase !== "stack") return; SS.busy = false; $("stHint").textContent = SS.idx < SS.items.length - 1 ? "Click again for the next card · Space" : "Click to see your result · Space"; };
+      if (it.g) { $("stHint").textContent = "Grading…"; gradeRoll(el, it, done); } else done();
+    }, 900);
   }
 
-  function showTitle(f, it, val) {
+  function gradeRoll(el, it, done) {
+    const f = BY_ID[it.id], base = cardValue(f, it.ed), t = $("stTitle"), gr = t.querySelector(".gr"), vl = t.querySelector(".vv");
+    const tag = el.querySelector(".tc-bottom .tag"), cv = el.querySelector(".tc-val");
+    const seq = []; let g = 6 + Math.floor(rand() * 5);
+    const steps = reduceMotion() ? 1 : 13;
+    for (let i = 0; i < steps; i++) { g = g >= 10 ? 6 : g + 1; seq.push(g); }
+    seq.push(it.g);
+    let i = 0, delay = 55;
+    (function step() {
+      if (!SS || SS.phase !== "stack") return;
+      const gg = seq[i], G = gradeOf(gg), v = Math.round(base * G.m);
+      gr.textContent = `Grade ${gg} · ${G.name}`; vl.textContent = money(v); tag.textContent = `GRADE ${gg} · ${G.name}`; cv.textContent = money(v);
+      gr.classList.toggle("hi", gg >= 9);
+      sfx.tick();
+      i++;
+      if (i < seq.length) { delay *= 1.16; setTimeout(step, delay); return; }
+      // landed
+      updateTotal(it.val - base);
+      const c = center(el);
+      if (it.g >= 9) {
+        const col = it.g === 10 ? ["#ffffff", "#e6d3a3", RCOLOR[f.r]] : ["#e6d3a3", "#e9e4d8"];
+        fx.burst(c.x, c.y, it.g === 10 ? 220 : 90, col, it.g === 10 ? 1100 : 700);
+        if (it.g === 10) { fx.confetti(c.x, c.y - c.h * .3, 120, col); shake(10, 420); sfx.boom(1); const fl = $("flash"); fl.style.setProperty("--fo", .6); fl.style.background = "#fff"; fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on"); }
+        sfx.chime(it.g === 10 ? "legendary" : "rare");
+      } else { fx.dust(c.x, c.y, 14); sfx.snap(); }
+      gr.classList.add("landed"); t.classList.remove("slam"); void t.offsetWidth; t.classList.add("slam");
+      setTimeout(done, 450);
+    })();
+  }
+
+  function showTitle(f, it, val, pending) {
     const t = $("stTitle");
     t.className = "st-title"; t.style.setProperty("--rc", RCOLOR[f.r]);
-    t.innerHTML = `<div class="rw">${it.ed === "sketch" ? "Sketch · " : ""}${RLABEL[f.r]}</div><div class="nm">${esc(f.name)}</div><div class="vl">◈${fmt(val)}</div>`;
+    t.innerHTML = `<div class="rw">${it.ed === "sketch" ? "Sketch · " : ""}${RLABEL[f.r]}</div><div class="nm">${esc(f.name)}</div><div class="vl">${it.g ? `<span class="gr">${pending ? "Grading…" : `Grade ${it.g} · ${gradeOf(it.g).name}`}</span> ` : ""}<span class="vv">${money(val)}</span></div>`;
     void t.offsetWidth; t.classList.add("slam");
   }
 
@@ -1265,7 +1368,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   function skipAll() {
     if (!SS) return;
     SS.phase = "summary"; SS.busy = false;
-    const rest = SS.items.reduce((s, it) => s + cardValue(BY_ID[it.id], it.ed), 0) - SS.total;
+    const rest = SS.items.reduce((s, it) => s + itemVal(it), 0) - SS.total;
     if (rest > 0) updateTotal(rest);
     const best = SS.items[SS.items.length - 1]; sfx.chime(BY_ID[best.id].r);
     showSummary();
@@ -1276,17 +1379,24 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     SS.phase = "summary";
     $("stTitle").className = "st-title"; $("rays").classList.remove("on"); stage.classList.remove("dim");
     const p = SS.pack, items = SS.items;
-    const total = items.reduce((s, it) => s + cardValue(BY_ID[it.id], it.ed), 0);
-    const sell = items.reduce((s, it) => s + sellValue(BY_ID[it.id], it.ed), 0);
+    const total = items.reduce((s, it) => s + itemVal(it), 0);
+    const sell = items.reduce((s, it) => s + itemSell(it), 0);
     const can = (p.cur === "coin" ? state.coins : state.tokens) >= p.price;
-    const result = p.cur === "coin" ? sell - p.price : null;
+    const paid = SS.free ? 0 : p.cur === "coin" ? p.price : 0;
+    const result = p.cur === "coin" ? sell - paid : null, hit = result !== null && result >= 0;
+    let head;
+    if (result === null) head = `<div class="big num">${money(sell)}</div><span class="small-print">cash value from ${priceTxt(p)} tokens</span>`;
+    else if (hit) head = `<div class="verdict up">${SS.free ? "Free pack" : "Hit"}</div><div class="big num up">+${money(result)}</div><span class="small-print">sell-back ${money(sell)} on a ${SS.free ? "free" : money(paid)} pack · ${paid ? Math.round(sell / paid * 100) + "% return" : "all profit"}</span>`;
+    else head = `<div class="verdict">Miss</div><div class="big num down">−${money(-result)}</div><span class="small-print">sell-back ${money(sell)} on a ${money(paid)} pack · ${Math.round(sell / paid * 100)}% back</span>`;
+    const lv = SS.levelUp ? `<div class="lvup">Level ${SS.levelUp.level} reached · +${money(SS.levelUp.bonus)} bonus added</div>` : "";
     $("stSummary").innerHTML = `<div class="sum-in">
-      <div class="sum-head"><span class="label">${esc(p.name)} · ${items.length} cards</span><div class="big num ${p.cur === "coin" && total >= p.price ? "up" : ""}">◈${fmt(total)}</div></div>
+      <div class="sum-head"><span class="label">${esc(p.name)}</span>${head}</div>${lv}
       <div class="fan">${items.slice().reverse().map(cardHTML).join("")}</div>
-      <div class="sum-lines"><span>Paid <b>${p.cur === "coin" ? "◈" : "⬡"}${fmt(p.price)}</b></span><span>Sell-back now <b>◈${fmt(sell)}</b></span>${result !== null ? `<span>If sold <b style="color:${result >= 0 ? "var(--good)" : "var(--bad)"}">${result >= 0 ? "+" : "−"}◈${fmt(Math.abs(result))}</b></span>` : ""}</div>
-      <div class="sum-btns"><button class="btn" id="sumSell">Sell all · ◈${fmt(sell)}</button><button class="btn brass" id="sumKeep">Keep in vault</button>
-        <button class="btn ghost" id="sumAgain">${can ? `Open another · ${p.cur === "coin" ? "◈" : "⬡"}${fmt(p.price)}` : p.cur === "coin" ? "Add coins" : "Not enough tokens"}</button></div>
+      <div class="sum-lines"><span>Card value <b>${money(total)}</b></span><span>Instant sell-back <b>${money(sell)}</b></span><span>Pack hit rate <b>${p.cur === "coin" ? Math.round(hitRate(p) * 100) + "%" : "–"}</b></span></div>
+      <div class="sum-btns"><button class="btn" id="sumSell">Sell all · ${money(sell)}</button><button class="btn brass" id="sumKeep">Keep in vault</button>
+        <button class="btn ghost" id="sumAgain">${can ? `Open another · ${priceTxt(p)}` : p.cur === "coin" ? "Add funds" : "Not enough tokens"}</button></div>
     </div>`;
+    if (hit) { sfx.chime("epic"); const c = { x: innerWidth / 2, y: innerHeight * .3 }; fx.confetti(c.x, c.y, 90, ["#8cbf94", "#e6d3a3", "#e9e4d8"]); }
     $("stSummary").hidden = false;
     $("sumKeep").focus();
     $("stHint").textContent = "";
@@ -1310,7 +1420,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     }
   });
   stage.addEventListener("click", e => {
-    if (!SS || SS.phase !== "stack") return;
+    if (!SS || (SS.phase !== "stack" && SS.phase !== "opening")) return;
     if (e.target.closest(".st-ctrl")) return;
     if (e.target.closest(".sc.top") || e.target.closest("#stCenter")) advance();
   });
@@ -1637,7 +1747,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const t = e.target.closest("button, [data-open-store]"); if (!t) return;
     if (t.matches("[data-open-store]")) { openStore(); return; }
     if (t.dataset.buy) { buy(t.dataset.buy); return; }
-    if (t.dataset.sell) { const g = sellUids([t.dataset.sell]); if (g) toast(`Sold for ◈${fmt(g)}`); return; }
+    if (t.dataset.sell) { const g = sellUids([t.dataset.sell]); if (g) toast(`Sold for ${money(g)}`); return; }
     if (t.dataset.filter) { shelfFilter = t.dataset.filter; renderShelf(); return; }
     if (t.dataset.pick) { pickFighter = t.dataset.pick; renderArena(); return; }
     if (t.dataset.tier) { pickTier = t.dataset.tier; renderArena(); return; }
@@ -1645,7 +1755,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     switch (t.id) {
       case "stSkip": if (SS && SS.phase !== "summary") { if (SS.phase === "pack") { SS.phase = "opening"; } skipAll(); } break;
       case "stMute": state.muted = !state.muted; save(); setMuteIcon(); break;
-      case "sumSell": { const g = sellUids(SS.items.map(i => i.uid), `Sold back a ${SS.pack.name} pull`); closeStage(); toast(`Sold for ◈${fmt(g)}`); break; }
+      case "sumSell": { const g = sellUids(SS.items.map(i => i.uid), `Sold back a ${SS.pack.name} pull`); closeStage(); toast(`Sold for ${money(g)}`); break; }
       case "sumKeep": closeStage(); toast("Kept in your vault"); break;
       case "sumAgain": { const id = SS.pack.id; closeStage(); buy(id); break; }
       case "startFight": case "rematch": startFight(); break;
@@ -1653,9 +1763,10 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       case "toSketch": closeFight(); location.hash = "#packs"; buy("sketch"); break;
       case "closeStore": $("store").hidden = true; break;
       case "payBtn": pay(); break;
-      case "sellCommons": { const u = state.vault.filter(it => BY_ID[it.id].r === "common" && it.ed !== "sketch").map(it => it.uid); const g = sellUids(u, `Sold back ${u.length} commons`); if (g) toast(`Sold ${u.length} commons for ◈${fmt(g)}`); break; }
-      case "sellSketch": { const u = state.vault.filter(it => it.ed === "sketch").map(it => it.uid); const g = sellUids(u, `Sold back ${u.length} sketches`); if (g) toast(`Sold ${u.length} sketches for ◈${fmt(g)}`); break; }
+      case "sellCommons": { const u = state.vault.filter(it => BY_ID[it.id].r === "common" && it.ed !== "sketch").map(it => it.uid); const g = sellUids(u, `Sold back ${u.length} commons`); if (g) toast(`Sold ${u.length} commons for ${money(g)}`); break; }
+      case "sellSketch": { const u = state.vault.filter(it => it.ed === "sketch").map(it => it.uid); const g = sellUids(u, `Sold back ${u.length} sketches`); if (g) toast(`Sold ${u.length} sketches for ${money(g)}`); break; }
       case "resetBtn": resetDemo(t); break;
+      case "dailyBtn": if ((state.lastFree || 0) + DAY <= Date.now()) buy("starter", true); break;
     }
   });
   $("store").addEventListener("click", e => { if (e.target === $("store")) $("store").hidden = true; });
@@ -1667,11 +1778,12 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     if (!resetArmed) { resetArmed = true; b.textContent = "Tap again to wipe everything"; setTimeout(() => { resetArmed = false; b.textContent = "Reset demo"; }, 3000); return; }
     const muted = state.muted; state = fresh(); state.ageOK = true; state.muted = muted; grantSignup(); save(); renderAll(); resetArmed = false; b.textContent = "Reset demo"; toast("Demo reset");
   }
-  function grantSignup() { state.coins += SIGNUP_BONUS; state.s.freeCoins += SIGNUP_BONUS; log("Signup coins", SIGNUP_BONUS, "coin"); snap(); }
+  function grantSignup() { state.coins += SIGNUP_BONUS; state.s.freeCoins += SIGNUP_BONUS; log("Signup bonus", SIGNUP_BONUS, "coin"); snap(); }
   $("ageCheck").addEventListener("change", e => { $("gateEnter").disabled = !e.target.checked; });
-  $("gateEnter").addEventListener("click", () => { state.ageOK = true; if (!state.history.length) grantSignup(); save(); renderAll(); $("gate").hidden = true; toast(`◈${SIGNUP_BONUS} signup coins added`); });
+  $("gateEnter").addEventListener("click", () => { state.ageOK = true; if (!state.history.length) grantSignup(); save(); renderAll(); $("gate").hidden = true; toast(`${money(SIGNUP_BONUS)} signup bonus added`); });
 
   renderAll(); showTab();
+  setInterval(() => { if (currentTab === "packs" && stage.hidden) renderHero(); }, 60000);
   $("gate").hidden = !!state.ageOK;
 })();
 </script>
