@@ -181,6 +181,18 @@ def closing_value(P, minute=13, edge=0.10, vol_mult=1.0, min_price=0.10, max_pri
     return _at(P, minute, y, n)
 
 
+def fair_value_bid(P, start=2, end=12, edge=0.05, vol_mult=1.0, min_price=0.10, max_price=0.90):
+    """Built for limit orders: rest a bid on whichever side the fair-value model says is
+    worth at least `edge` more than the current BID (not the ask)."""
+    p = model_prob(P, vol_mult)
+    yb, nb = P["yes_bid"], 1 - P["yes_ask"]
+    ok = np.isfinite(p) & ((MIN >= start) & (MIN <= end))[None, :]
+    with np.errstate(invalid="ignore"):
+        y = ok & _valid(yb) & (yb >= min_price) & (yb <= max_price) & (p - yb >= edge)
+        n = ok & _valid(nb) & (nb >= min_price) & (nb <= max_price) & ((1 - p) - nb >= edge)
+    return _first(y, n)
+
+
 # name -> (function, description, parameter grid for the sweep)
 STRATEGIES = {
     "baseline_yes": (baseline_yes, "Always buy YES at minute 1. The control group: shows what spread and fees cost.",
@@ -205,6 +217,9 @@ STRATEGIES = {
     "closing_value": (closing_value, "Final 1-4 minutes: buy the side the spot price says is underpriced.",
                       {"minute": [11, 12, 13, 14], "edge": [0.05, 0.10, 0.15, 0.20, 0.30],
                        "vol_mult": [0.8, 1.0, 1.25], "min_price": [0.05, 0.15], "max_price": [0.85, 0.95]}),
+    "fair_value_bid": (fair_value_bid, "Made for limit orders: bid on the side the fair-value model rates above the current bid.",
+                       {"start": [2, 5], "end": [10, 13], "edge": [0.02, 0.04, 0.06, 0.10],
+                        "vol_mult": [0.8, 1.0, 1.25], "min_price": [0.1, 0.25], "max_price": [0.75, 0.9]}),
     "fair_value": (fair_value, "Lognormal fair-value model vs. the order book; buy whichever side is underpriced.",
                    {"start": [2, 5, 8], "end": [10, 13], "edge": [0.04, 0.08, 0.12, 0.16],
                     "vol_mult": [0.8, 1.0, 1.25]}),

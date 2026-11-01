@@ -55,6 +55,7 @@ header .meta { color: var(--ink-2); margin-top: 6px; }
 .tablewrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 #board { min-width: 1080px; }
+#board td:first-child { min-width: 230px; }
 #folds { min-width: 700px; }
 #trades { min-width: 420px; }
 th { text-align: left; font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
@@ -142,6 +143,14 @@ td.coin { font-size: 12px; }
     <div class="tablewrap"><table id="board"></table></div>
   </section>
 
+  <section class="panel">
+    <div class="panel-head">
+      <div><h2>Taker vs maker</h2><p>Out-of-sample return per dollar for each strategy under both order types. Maker orders pay less per contract and a smaller fee, but they only fill when someone trades against them, which is often right before the price moves the wrong way. The axis stops at −15%; hover a bar for its exact value. Click a bar to open it.</p></div>
+    </div>
+    <div class="legend"><span><i class="dot" style="background:var(--accent)"></i>Taker (buy at ask)</span><span><i class="dot" style="background:var(--accent-2)"></i>Maker (rest at bid)</span></div>
+    <div class="chart" id="cmpWrap"><canvas id="cmp" aria-label="Taker vs maker ROI by strategy"></canvas></div>
+  </section>
+
   <div class="grid">
     <section class="panel c8">
       <div class="panel-head">
@@ -198,7 +207,7 @@ td.coin { font-size: 12px; }
 (() => {
   const NAMES = { baseline_yes: "Always buy YES", momentum: "Momentum", reversal: "Reversal", late_favorite: "Late favourite",
     longshot: "Longshot", spot_lag: "Spot lag", reversal_z: "Reversal after big move", momentum_z: "Momentum after big move",
-    fair_value_v2: "Fair value, mid-priced", closing_value: "Closing-minute value", fair_value: "Fair value model" };
+    fair_value_v2: "Fair value, mid-priced", fair_value_bid: "Fair value vs bid", closing_value: "Closing-minute value", fair_value: "Fair value model" };
   const COIN = s => s.replace("KX", "").replace("15M", "");
   const $ = id => document.getElementById(id);
   const money = (v, d = 0) => (v < 0 ? "−$" : "$") + Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -249,7 +258,7 @@ td.coin { font-size: 12px; }
     const names = Object.keys(R.strategies);
     if (!cur.strat || !R.strategies[cur.strat]) cur.strat = names.filter(n => n !== "baseline_yes")
       .sort((a, b) => R.strategies[b].runs[cur.ex].oos.t_stat - R.strategies[a].runs[cur.ex].oos.t_stat)[0];
-    renderVerdict(); renderBoard(); renderDetail(); renderCal(); renderNotes();
+    renderVerdict(); renderBoard(); renderCmp(); renderDetail(); renderCal(); renderNotes();
   }
 
   function renderVerdict() {
@@ -272,15 +281,32 @@ td.coin { font-size: 12px; }
   function renderBoard() {
     const rows = Object.entries(R.strategies).sort((a, b) => b[1].runs[cur.ex].oos.pnl - a[1].runs[cur.ex].oos.pnl);
     $("board").innerHTML = `<thead><tr><th>Strategy</th><th>Latest tuned params</th><th class="num">OOS P&amp;L</th><th class="num">Trades</th><th class="num">Win</th>
-      <th class="num">ROI</th><th class="num">t-stat</th><th class="num">Folds won</th>${coins.map(c => `<th class="num">${COIN(c)}</th>`).join("")}<th>Status</th></tr></thead><tbody>` +
+      <th class="num">ROI</th><th class="num">t-stat</th><th class="num">Folds won</th>${cur.ex === "maker" ? '<th class="num">Fill rate</th>' : ""}${coins.map(c => `<th class="num">${COIN(c)}</th>`).join("")}<th>Status</th></tr></thead><tbody>` +
       rows.map(([n, s]) => { const r = s.runs[cur.ex], m = r.oos, [c, l] = status(r); return `<tr tabindex="0" data-n="${n}" class="${n === cur.strat ? "sel" : ""}">
         <td><div class="sname">${NAMES[n] || n}</div><div class="sdesc">${s.description}</div></td>
         <td class="params">${params(r.final_params)}</td>
         <td class="num ${cls(m.pnl)}">${money(m.pnl)}</td><td class="num">${m.trades.toLocaleString()}</td>
         <td class="num">${m.trades ? pct(m.win_rate) : "–"}</td><td class="num ${cls(m.roi)}">${m.trades ? spct(m.roi) : "–"}</td>
-        <td class="num">${tfmt(m.t_stat)}</td><td class="num">${pct(r.fold_win).replace(".0", "")}</td>
+        <td class="num">${tfmt(m.t_stat)}</td><td class="num">${pct(r.fold_win).replace(".0", "")}</td>${cur.ex === "maker" ? `<td class="num">${r.diag && r.diag.orders ? pct(r.diag.fill_rate) : "–"}</td>` : ""}
         ${coins.map(k => { const pc = (r.per_coin || {})[k]; return `<td class="num coin ${pc ? cls(pc.pnl) : ""}">${pc && pc.trades ? money(pc.pnl) : "–"}</td>`; }).join("")}
         <td><span class="pill ${c}">${l}</span></td></tr>`; }).join("") + "</tbody>";
+  }
+
+  function renderCmp() {
+    const c = C(), names = Object.keys(R.strategies).sort((a, b) => R.strategies[b].runs.taker.oos.roi - R.strategies[a].runs.taker.oos.roi);
+    $("cmpWrap").style.height = Math.max(260, names.length * 34 + 60) + "px";
+    const o = base(c);
+    o.indexAxis = "y";
+    o.plugins.tooltip.callbacks = { label: i => { const r = R.strategies[names[i.dataIndex]].runs[i.datasetIndex ? "maker" : "taker"].oos;
+      return `${i.datasetIndex ? "Maker" : "Taker"}: ${r.trades ? spct(r.roi) : "no trades"} · ${money(r.pnl)} · ${r.trades.toLocaleString()} trades`; } };
+    o.scales = { y: axis(c, { grid: { display: false }, ticks: { color: c.ink2, font: { family: tok("--f-body"), size: 12 } } }),
+                 x: axis(c, { min: -0.15, ticks: { color: c.muted, callback: v => Math.round(v * 100) + "%" } }) };
+    o.onClick = (e, els) => { if (els.length) { cur.strat = names[els[0].index]; cur.ex = els[0].datasetIndex ? "maker" : "taker"; renderAll(); } };
+    const ds = (ex, col) => ({ label: ex, data: names.map(n => R.strategies[n].runs[ex].oos.trades ? R.strategies[n].runs[ex].oos.roi : 0),
+      backgroundColor: col, borderRadius: 3, borderSkipped: "start", barPercentage: 0.8, categoryPercentage: 0.75 });
+    mk("cmp", { type: "bar", data: { labels: names.map(n => NAMES[n] || n), datasets: [ds("taker", c.accent), ds("maker", c.accent2)] }, options: o, plugins: [{
+      id: "zx", afterDatasetsDraw(ch) { const { ctx, chartArea: a, scales: { x } } = ch; const px = x.getPixelForValue(0);
+        ctx.save(); ctx.strokeStyle = c.muted; ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke(); ctx.restore(); } }] });
   }
 
   function renderDetail() {
@@ -291,6 +317,12 @@ td.coin { font-size: 12px; }
       ["Profit", `<span class="${cls(m.pnl)}">${money(m.pnl)}</span>`], ["ROI per $ staked", `<span class="${cls(m.roi)}">${spct(m.roi)}</span>`],
       ["Fees paid", money(m.fees)], ["Max drawdown", money(m.max_dd)], ["Daily Sharpe (ann.)", m.sharpe.toFixed(2)], ["t-stat", tfmt(m.t_stat)],
       ["Folds profitable", `${Math.round(r.fold_win * r.folds.length)} of ${r.folds.length}`]];
+    const d = r.diag || {};
+    if (cur.ex === "maker" && d.orders) kv.push(
+      ["Orders posted", d.orders.toLocaleString()], ["Fill rate", pct(d.fill_rate)],
+      ["Saved vs ask, per fill", d.avg_saved_c != null ? d.avg_saved_c.toFixed(1) + "¢" : "–"],
+      ["Win rate, all signals", d.signal_win_rate != null ? pct(d.signal_win_rate) : "–"],
+      ["Win rate, filled only", d.fill_win_rate != null ? `<span class="${d.fill_win_rate < d.signal_win_rate ? "neg" : "pos"}">${pct(d.fill_win_rate)}</span>` : "–"]);
     $("kv").innerHTML = `<div class="h">Metric</div><div class="h num" style="grid-column:span 2">Value</div>` +
       kv.map(([k, v]) => `<div>${k}</div><div class="num" style="grid-column:span 2">${v}</div>`).join("");
 
@@ -358,7 +390,7 @@ td.coin { font-size: 12px; }
     $("notes").innerHTML = [
       `Data: every settled 15-minute market for ${coins.map(COIN).join(", ")} from Kalshi's public API and archive, with each minute's closing bid and ask and the intra-minute best ask low and bid high. Spot prices are Coinbase 1-minute candles, a stand-in for the CF Benchmarks index Kalshi settles on.`,
       `Taker orders buy at the ask at the end of the signal minute and pay ceil(0.07 × contracts × price × (1 − price)).`,
-      `Maker orders rest at the bid, 1¢ better when the spread allows. A 1¢-better order counts as filled when the ask reaches it within 2 minutes; an order that joins the existing bid needs the ask to trade through it. That is stricter than reality for queue position but ignores partial fills. Maker fee assumed at 0.0175 × C × P × (1 − P).${makerData ? "" : " This dataset has no intra-minute highs and lows, so maker results are empty."}`,
+      `Maker orders rest at the bid, 1¢ better when the spread allows, for up to 2 minutes. An order alone at a new best price counts as filled once a trade prints at its price or the opposite quote reaches it; an order that joins an existing bid needs a print through its price, since others are ahead in the queue. Partial fills are ignored. Maker fee assumed at 0.0175 × C × P × (1 − P).${makerData ? "" : " This dataset has no intra-minute highs and lows, so maker results are empty."}`,
       `Overfitting control: parameters are only ever chosen using earlier data, one parameter set serves all coins, and the record shown is the glued-together out-of-sample folds.`,
       `Limits: one trade per market, $${R.stake} per trade, no slippage beyond the top of the book. Real size will move the price.`,
     ].map(t => `<li>${t}</li>`).join("");
@@ -372,7 +404,7 @@ td.coin { font-size: 12px; }
   });
   document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-n]");
     if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); const n = r.dataset.n; r.click(); setTimeout(() => document.querySelector(`tr[data-n="${n}"]`)?.focus(), 0); } });
-  const rerender = () => { renderDetail(); renderCal(); };
+  const rerender = () => { renderCmp(); renderDetail(); renderCal(); };
   try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rerender); } catch (e) {}
   new MutationObserver(rerender).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   renderAll();

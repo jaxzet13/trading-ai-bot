@@ -87,6 +87,8 @@ def _candle_row(tk: str, c: dict) -> dict:
         "yes_bid": _num(yb, "close_dollars", "close"), "yes_ask": _num(ya, "close_dollars", "close"),
         "bid_high": _num(yb, "high_dollars", "high"), "ask_low": _num(ya, "low_dollars", "low"),
         "last": _num(c.get("price"), "close_dollars", "close"),
+        "trade_low": _num(c.get("price"), "low_dollars", "low"),
+        "trade_high": _num(c.get("price"), "high_dollars", "high"),
         "volume": _num(c, "volume_fp", "volume") or 0.0,
     }
 

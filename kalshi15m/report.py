@@ -20,7 +20,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from .backtest import Panel, build_panel, metrics, run
+from .backtest import Panel, build_panel, merge_diag, metrics, run
 from .data import DATA_DIR, SERIES
 from .strategies import STRATEGIES
 
@@ -76,7 +76,7 @@ def walk_forward(panel: Panel, fn, grid: dict, execution: str, n_folds: int, sta
     t0, t1 = panel.open_ts.min(), panel.open_ts.max() + 1
     edges = np.linspace(t0, t1, n_folds + 1).astype(int)
     combos = list(_grid(grid))
-    folds, oos = [], []
+    folds, oos, diags = [], [], []
     last_sweep = None
     for k in range(1, n_folds):
         train = panel.subset(panel.open_ts < edges[k])
@@ -88,6 +88,7 @@ def walk_forward(panel: Panel, fn, grid: dict, execution: str, n_folds: int, sta
         best, best_m = max(scored, key=lambda s: _score(s[1], min_trades))
         tr = run(test, fn, stake=stake, execution=execution, **best)
         tm = metrics(tr)
+        diags.append(tr.attrs.get("diag", {}))
         folds.append({"start": int(edges[k]), "end": int(edges[k + 1]), "params": best,
                       "train_pnl": best_m["pnl"], "test_pnl": tm["pnl"], "test_trades": tm["trades"],
                       "test_roi": tm["roi"]})
@@ -98,7 +99,7 @@ def walk_forward(panel: Panel, fn, grid: dict, execution: str, n_folds: int, sta
                           for p, m in scored]
     oos = pd.concat([t for t in oos if not t.empty], ignore_index=True) if any(not t.empty for t in oos) \
         else pd.DataFrame(columns=["ts", "pnl", "win", "cost", "price", "fee", "series", "minute"])
-    return folds, oos, last_sweep
+    return folds, oos, last_sweep, merge_diag(diags)
 
 
 def evaluate(series_list, n_folds=6, stake=10.0, min_trades=60):
@@ -119,7 +120,7 @@ def evaluate(series_list, n_folds=6, stake=10.0, min_trades=60):
     for name, (fn, desc, grid) in STRATEGIES.items():
         res["strategies"][name] = {"description": desc, "runs": {}}
         for ex in EXECUTIONS:
-            folds, oos, sweep = walk_forward(pooled, fn, grid, ex, n_folds, stake, min_trades)
+            folds, oos, sweep, diag = walk_forward(pooled, fn, grid, ex, n_folds, stake, min_trades)
             m = metrics(oos)
             per_coin = {s: metrics(oos[oos.series == s]) for s in series_list} if not oos.empty else {}
             by_min = (oos.groupby("minute").agg(trades=("pnl", "size"), pnl=("pnl", "sum"), win=("win", "mean"))
@@ -132,7 +133,11 @@ def evaluate(series_list, n_folds=6, stake=10.0, min_trades=60):
                 "fold_win": round(float(np.mean([f["test_pnl"] > 0 for f in folds])), 2),
                 "sweep": sweep, "by_minute": by_min, "recent": recent,
                 "final_params": folds[-1]["params"] if folds else {},
+                "diag": diag,
             }
+            if ex == "maker" and diag.get("orders"):
+                print(f"      maker: {diag['fills']}/{diag['orders']} filled, win {diag.get('fill_win_rate')} vs "
+                      f"{diag.get('signal_win_rate')} for all signals, saved {diag.get('avg_saved_c')}c/fill")
             print(f"  {name:14s} {ex}: OOS ${m['pnl']:>9} on {m['trades']:>5} trades, t={m['t_stat']:>6}, "
                   f"folds+ {res['strategies'][name]['runs'][ex]['fold_win']}")
     return res

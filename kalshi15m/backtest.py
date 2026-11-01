@@ -52,10 +52,10 @@ def build_panel(series: str) -> pd.DataFrame:
     })
     df["series"] = series
     df["ts"] = df.open_ts + 60 * df.minute
-    for c in ("ask_low", "bid_high"):
+    for c in ("ask_low", "bid_high", "trade_low", "trade_high"):
         if c not in cd.columns:
             cd[c] = np.nan
-    q = cd[["ticker", "ts", "yes_bid", "yes_ask", "ask_low", "bid_high", "volume"]].drop_duplicates(["ticker", "ts"])
+    q = cd[["ticker", "ts", "yes_bid", "yes_ask", "ask_low", "bid_high", "trade_low", "trade_high", "volume"]].drop_duplicates(["ticker", "ts"])
     df = df.merge(q, on=["ticker", "ts"], how="left")
     # Coinbase bars are stamped at the minute START, so the price at time t is the close of bar t-60
     at = lambda t: spot.reindex(t - 60).to_numpy()
@@ -72,7 +72,7 @@ def build_panel(series: str) -> pd.DataFrame:
     return df.sort_values(["open_ts", "minute"]).reset_index(drop=True)
 
 
-FIELDS = ("yes_ask", "no_ask", "yes_bid", "ask_low", "bid_high", "spot", "strike", "vol1m", "vol240",
+FIELDS = ("yes_ask", "no_ask", "yes_bid", "ask_low", "bid_high", "trade_low", "trade_high", "spot", "strike", "vol1m", "vol240",
           "prev_ret", "ret_from_open", "volume")
 
 
@@ -149,27 +149,56 @@ def run(panel: Panel, strategy, stake: float = 10.0, execution: str = "taker", w
             in_range = (j + w) <= 13
             # YES bid fills when the YES ask comes down to it; NO bid (= selling YES at 1-p)
             # fills when the YES bid comes up to 1-p.
-            reach_yes = P["ask_low"][idx, jj]
-            reach_no = 1 - P["bid_high"][idx, jj]
-            reach = np.where(yes, reach_yes, reach_no)
+            # lowest price the YES side reached (quote or trade). A NO bid at q is an offer
+            # to sell YES at 1-q, so for NO we look at the highest YES price, mirrored.
+            q_yes = np.fmin(P["ask_low"][idx, jj], P["trade_low"][idx, jj])
+            q_no = 1 - np.fmax(P["bid_high"][idx, jj], P["trade_high"][idx, jj])
+            reach = np.where(yes, q_yes, q_no)
+            # alone at a new best price: any print at our price fills us.
+            # joining an existing queue: only a print through our price is sure to.
             hit = np.where(alone, reach <= price + 1e-9, reach < price - 1e-9)
             new = in_range & hit & (fill_j < 0) & np.isfinite(reach)
             fill_j = np.where(new, jj, fill_j)
         rate = MAKER_RATE
-    good = np.isfinite(price) & (price > 0) & (price < 1) & (fill_j >= 0)
+    valid = np.isfinite(price) & (price > 0) & (price < 1)
+    good = valid & (fill_j >= 0)
+    diag = {"orders": int(valid.sum()), "fills": int(good.sum())}
+    if execution == "maker" and valid.any():
+        sig_win = (panel.result[idx] == 1) == yes
+        ask_now = np.where(yes, P["yes_ask"][idx, j], P["no_ask"][idx, j])
+        diag.update({"signal_wins": int(sig_win[valid].sum()), "fill_wins": int(sig_win[good].sum()),
+                     "saved": float(np.nansum((ask_now - price)[good]))})
     idx, j, yes, price, fill_j = idx[good], j[good], yes[good], price[good], fill_j[good]
     if len(idx) == 0:
-        return pd.DataFrame(columns=_COLS)
+        out = pd.DataFrame(columns=_COLS)
+        out.attrs["diag"] = diag
+        return out
     n = np.maximum(1, np.floor(stake / price + 1e-9)).astype(int)
     fee = _fees(price, n, rate)
     win = (panel.result[idx] == 1) == yes
     pnl = n * (win.astype(float) - price) - fee
-    return pd.DataFrame({
+    out = pd.DataFrame({
         "ticker": panel.ticker[idx], "series": panel.series[idx], "ts": panel.open_ts[idx] + 60 * (fill_j + 1),
         "side": np.where(yes, "yes", "no"), "minute": j + 1, "price": price.round(4), "contracts": n,
         "fee": fee, "cost": n * price + fee, "win": win, "pnl": pnl.round(4),
         "p_model": panel.P["p_model"][idx, j],
     })
+    out.attrs["diag"] = diag
+    return out
+
+
+def merge_diag(ds):
+    out = {}
+    for d in ds:
+        for k, v in d.items():
+            out[k] = out.get(k, 0) + v
+    if out.get("orders"):
+        out["fill_rate"] = round(out["fills"] / out["orders"], 4)
+    if out.get("fills") and "fill_wins" in out:
+        out["signal_win_rate"] = round(out["signal_wins"] / out["orders"], 4)
+        out["fill_win_rate"] = round(out["fill_wins"] / out["fills"], 4)
+        out["avg_saved_c"] = round(100 * out["saved"] / out["fills"], 2)
+    return out
 
 
 def metrics(trades: pd.DataFrame) -> dict:
