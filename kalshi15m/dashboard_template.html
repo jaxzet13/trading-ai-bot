@@ -1,0 +1,378 @@
+<title>Kalshi 15m Backtest Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one working column; summary strip -> leaderboard -> selected-strategy detail grid. */
+:root {
+  --bg: #f4f6f8; --surface: #ffffff; --ink: #11161c; --ink-2: #4a5562; --muted: #7f8a96;
+  --line: #dfe4ea; --grid: #e9edf1; --accent: #2a78d6; --accent-2: #eb6834;
+  --good: #0a7d0a; --good-bg: #e3f3e3; --bad: #c43333; --bad-bg: #fbe7e7;
+  --warn: #8a5a00; --warn-bg: #fdf1d8; --chip: #eef2f6;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1317; --surface: #171c22; --ink: #eef1f4; --ink-2: #b4bdc7; --muted: #7f8a96;
+  --line: #29313a; --grid: #222930; --accent: #3987e5; --accent-2: #d95926;
+  --good: #3fbf3f; --good-bg: #143019; --bad: #ec6b6b; --bad-bg: #3a1a1a;
+  --warn: #f0b84a; --warn-bg: #352a12; --chip: #212830; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1317; --surface: #171c22; --ink: #eef1f4; --ink-2: #b4bdc7; --muted: #7f8a96;
+  --line: #29313a; --grid: #222930; --accent: #3987e5; --accent-2: #d95926;
+  --good: #3fbf3f; --good-bg: #143019; --bad: #ec6b6b; --bad-bg: #3a1a1a;
+  --warn: #f0b84a; --warn-bg: #352a12; --chip: #212830; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.5 var(--f-body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 20px; }
+h1, h2 { font-family: var(--f-display); font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h1 { font-size: 30px; line-height: 1.1; }
+h2 { font-size: 17px; }
+.eyebrow { font: 500 11px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mono, td.num, .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+header .meta { color: var(--ink-2); margin-top: 6px; }
+.seg { display: inline-flex; background: var(--chip); border-radius: 8px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.seg button { font: 500 13px var(--f-mono); border: 0; background: transparent; color: var(--ink-2);
+  padding: 7px 14px; border-radius: 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.seg button:focus-visible, .chips button:focus-visible, tr[tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.verdict { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px;
+  display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.verdict p { margin: 6px 0 0; color: var(--ink-2); max-width: 62ch; }
+.verdict .big { font: 600 26px/1.1 var(--f-display); margin-top: 6px; }
+.stat .v { font: 500 22px/1.2 var(--f-mono); margin-top: 6px; }
+.stat .s { color: var(--muted); font-size: 12px; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 16px; margin-bottom: 12px; }
+.panel-head p { margin: 2px 0 0; color: var(--ink-2); font-size: 13px; max-width: 70ch; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+#board { min-width: 860px; }
+#trades { min-width: 420px; }
+th { text-align: left; font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+  padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th.num, td.num { text-align: right; white-space: nowrap; }
+tbody tr[tabindex] { cursor: pointer; }
+tbody tr[tabindex]:hover { background: var(--chip); }
+tbody tr.sel { background: var(--chip); box-shadow: inset 3px 0 0 var(--accent); }
+.sname { font-weight: 600; }
+.sdesc { color: var(--muted); font-size: 12px; max-width: 46ch; }
+.params { font: 12px var(--f-mono); color: var(--ink-2); }
+.pos { color: var(--good); } .neg { color: var(--bad); }
+.pill { display: inline-flex; align-items: center; gap: 5px; font: 500 11px var(--f-mono); padding: 3px 8px; border-radius: 99px; white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.edge { color: var(--good); background: var(--good-bg); }
+.pill.fragile { color: var(--warn); background: var(--warn-bg); }
+.pill.overfit, .pill.loses { color: var(--bad); background: var(--bad-bg); }
+
+.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 20px; }
+.c8 { grid-column: span 8; } .c4 { grid-column: span 4; } .c6 { grid-column: span 6; } .c12 { grid-column: span 12; }
+.chart { position: relative; height: 300px; }
+.chart.short { height: 240px; }
+.kv { display: grid; grid-template-columns: auto 1fr 1fr; gap: 0; font-size: 13px; }
+.kv > div { padding: 7px 0; border-bottom: 1px solid var(--grid); }
+.kv .h { font: 500 11px var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.kv .num { text-align: right; padding-left: 12px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chips button { font: 500 12px var(--f-mono); border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+  padding: 4px 10px; border-radius: 99px; cursor: pointer; }
+.chips button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.legend i.dot { width: 8px; height: 8px; border-radius: 50%; }
+.notes { color: var(--ink-2); font-size: 13px; }
+.notes ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; max-width: 90ch; }
+code { font: 12px var(--f-mono); background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+.empty { color: var(--muted); padding: 40px 0; text-align: center; }
+
+@media (max-width: 900px) {
+  .verdict { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .verdict > :first-child { grid-column: 1 / -1; }
+  .c8, .c4, .c6 { grid-column: span 12; }
+}
+@media (max-width: 520px) {
+  .verdict { grid-template-columns: 1fr 1fr; }
+  h1 { font-size: 25px; }
+  .chart { height: 250px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Kalshi · 15-minute crypto up/down · backtest</div>
+      <h1>15m Backtest Lab</h1>
+      <div class="meta" id="meta"></div>
+    </div>
+    <div class="seg" role="group" aria-label="Coin" id="seriesSeg"></div>
+  </header>
+
+  <section class="verdict" id="verdict"></section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Strategy leaderboard</h2>
+        <p>Each strategy's parameters were tuned on the first 70% of markets (train), then run untouched on the last 30% (test). Only the test column is a fair estimate of live results. Click a row for detail.</p>
+      </div>
+    </div>
+    <div class="tablewrap"><table id="board"></table></div>
+  </section>
+
+  <div class="grid">
+    <section class="panel c8">
+      <div class="panel-head">
+        <div><h2 id="eqTitle">Equity curve</h2><p>Cumulative profit in dollars, best train-set parameters, $<span id="stake"></span> per trade. Shaded area is the out-of-sample test period.</p></div>
+      </div>
+      <div class="chart"><canvas id="eq" aria-label="Equity curve"></canvas></div>
+    </section>
+    <section class="panel c4">
+      <div class="panel-head"><div><h2>Train vs test</h2><p id="sdesc"></p></div></div>
+      <div class="kv" id="kv"></div>
+    </section>
+
+    <section class="panel c6">
+      <div class="panel-head">
+        <div><h2>Does tuning carry over?</h2><p>Every parameter combination tried. Points above the zero line made money on the test set. If tuning found something real, points on the right would also sit high.</p></div>
+      </div>
+      <div class="legend"><span><i class="dot" style="background:var(--accent)"></i>Parameter set</span><span><i class="dot" style="background:var(--accent-2)"></i>Picked on train</span></div>
+      <div class="chart"><canvas id="sc" aria-label="Train vs test PnL scatter"></canvas></div>
+    </section>
+    <section class="panel c6">
+      <div class="panel-head">
+        <div><h2>Are the prices right?</h2><p>Mid price vs how often YES actually won. On the diagonal means the market is fairly priced and there is nothing cheap to buy.</p></div>
+        <div class="chips" id="calChips" role="group" aria-label="Minute into market"></div>
+      </div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Market price</span><span><i style="background:var(--accent-2)"></i>Our lognormal model (min 3–13)</span><span><i style="background:var(--muted)"></i>Perfect calibration</span></div>
+      <div class="chart"><canvas id="cal" aria-label="Calibration"></canvas></div>
+    </section>
+
+    <section class="panel c6">
+      <div class="panel-head"><div><h2>Profit by entry minute</h2><p>Full period, selected strategy. Minute 1 is right after the market opens; minute 14 is the last full minute.</p></div></div>
+      <div class="chart short"><canvas id="bm" aria-label="PnL by entry minute"></canvas></div>
+    </section>
+    <section class="panel c6">
+      <div class="panel-head"><div><h2>Latest simulated trades</h2><p>Most recent 40 fills for the selected strategy.</p></div></div>
+      <div class="tablewrap" style="max-height:280px;overflow-y:auto"><table id="trades"></table></div>
+    </section>
+
+    <section class="panel c12 notes">
+      <h2>How this was tested</h2>
+      <ul id="notes"></ul>
+    </section>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>const R=/*__RESULTS__*/null;</script>
+<script>
+(() => {
+  const NAMES = { baseline_yes: "Always buy YES", momentum: "Momentum", reversal: "Reversal",
+    late_favorite: "Late favourite", longshot: "Longshot", spot_lag: "Spot lag", fair_value: "Fair value model" };
+  const COIN = s => s.replace("KX", "").replace("15M", "");
+  const $ = id => document.getElementById(id);
+  const money = (v, d = 0) => (v < 0 ? "−$" : "$") + Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+  const sgn = v => (v > 0 ? "+" : "") ;
+  const pct = v => (v * 100).toFixed(1) + "%";
+  const cls = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
+  const fmtDate = ts => new Date(ts * 1000).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const fmtTime = ts => new Date(ts * 1000).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  const tfmt = t => Math.abs(t) > 50 ? (t < 0 ? "lost every trade" : "won every trade") : t.toFixed(2);
+  const params = p => Object.entries(p).map(([k, v]) => `${k}=${v}`).join(" ");
+
+  function status(s) {
+    const tr = s.train.pnl, te = s.test.pnl, t = s.test.t_stat;
+    if (te > 0 && t >= 2) return ["edge", "Possible edge"];
+    if (te > 0) return ["fragile", "Could be luck"];
+    if (tr > 0) return ["overfit", "Overfit"];
+    return ["loses", "Loses"];
+  }
+
+  if (!R) { document.querySelector(".wrap").innerHTML = '<p class="empty">No results yet. Run <code>python -m kalshi15m backtest</code>.</p>'; return; }
+  const seriesKeys = Object.keys(R.series);
+  let cur = { series: seriesKeys[0], strat: null, calMin: "10" };
+  try { const saved = JSON.parse(localStorage.getItem("k15") || "{}"); if (R.series[saved.series]) cur.series = saved.series; if (saved.calMin) cur.calMin = saved.calMin; } catch (e) {}
+  $("stake").textContent = R.stake;
+
+  // ---------- theme-aware chart colors
+  const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function C() { return { ink: tok("--ink"), ink2: tok("--ink-2"), muted: tok("--muted"), grid: tok("--grid"), line: tok("--line"),
+    accent: tok("--accent"), accent2: tok("--accent-2"), good: tok("--good"), bad: tok("--bad"), surface: tok("--surface"), chip: tok("--chip") }; }
+  function base(c) {
+    Chart.defaults.font.family = tok("--f-mono"); Chart.defaults.font.size = 11; Chart.defaults.color = c.muted;
+    return {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: c.surface, titleColor: c.ink, bodyColor: c.ink2,
+        borderColor: c.line, borderWidth: 1, padding: 10, displayColors: false, titleFont: { family: tok("--f-mono"), weight: "500" } } },
+      scales: {},
+    };
+  }
+  const axis = (c, extra = {}) => Object.assign({ grid: { color: c.grid, drawTicks: false }, border: { color: c.line }, ticks: { padding: 6, color: c.muted } }, extra);
+  const charts = {};
+  function mk(id, cfg) { if (charts[id]) charts[id].destroy(); charts[id] = new Chart($(id), cfg); }
+
+  // ---------- render
+  function renderAll() {
+    const S = R.series[cur.series];
+    try { localStorage.setItem("k15", JSON.stringify({ series: cur.series, calMin: cur.calMin })); } catch (e) {}
+    $("seriesSeg").innerHTML = seriesKeys.map(k => `<button type="button" aria-pressed="${k === cur.series}" data-s="${k}">${COIN(k)}</button>`).join("");
+    $("meta").textContent = `${S.markets.toLocaleString()} settled markets · ${fmtDate(S.start)} – ${fmtDate(S.end)} · YES won ${pct(S.up_rate)} · data pulled ${fmtDate(R.generated)}`;
+    renderVerdict();
+    const names = Object.keys(S.strategies);
+    if (!cur.strat || !S.strategies[cur.strat]) {
+      cur.strat = names.filter(n => n !== "baseline_yes").sort((a, b) => S.strategies[b].test.pnl - S.strategies[a].test.pnl)[0];
+    }
+    renderBoard(S); renderDetail(S); renderCal(S); renderNotes(S);
+  }
+
+  function renderVerdict() {
+    let pairs = 0, edge = 0, posTest = 0, posTrain = 0, bestTest = null;
+    for (const k of seriesKeys) for (const [n, s] of Object.entries(R.series[k].strategies)) {
+      if (n === "baseline_yes") continue;
+      pairs++; if (s.train.pnl > 0) posTrain++; if (s.test.pnl > 0) posTest++; if (status(s)[0] === "edge") edge++;
+      if (!bestTest || s.test.t_stat > bestTest.t) bestTest = { t: s.test.t_stat, n, k, pnl: s.test.pnl };
+    }
+    const S = R.series[cur.series], b = S.strategies.baseline_yes;
+    const head = edge === 0 ? "No reliable edge found" : `${edge} candidate edge${edge > 1 ? "s" : ""} to paper-trade`;
+    $("verdict").innerHTML = `
+      <div><div class="eyebrow">Verdict across ${seriesKeys.map(COIN).join(", ")}</div>
+        <div class="big">${head}</div>
+        <p>${posTrain} of ${pairs} strategy/coin pairs made money on the data they were tuned on. ${posTest} made money on unseen data, and ${edge} cleared a t-stat of 2, the usual bar for "probably not luck". Prices on these markets track the real odds closely, and fees cost about 3.5% of the stake on a 50¢ contract and more on cheap ones.</p></div>
+      <div class="stat"><div class="eyebrow">Positive on test</div><div class="v">${posTest} / ${pairs}</div><div class="s">strategy × coin pairs</div></div>
+      <div class="stat"><div class="eyebrow">Best test t-stat</div><div class="v">${bestTest.t.toFixed(2)}</div><div class="s">${NAMES[bestTest.n]}, ${COIN(bestTest.k)} · need ≥ 2</div></div>
+      <div class="stat"><div class="eyebrow">Cost of playing · ${COIN(cur.series)}</div><div class="v neg">${pct(b.full.roi)}</div><div class="s">ROI buying YES every market</div></div>`;
+  }
+
+  function renderBoard(S) {
+    const rows = Object.entries(S.strategies).sort((a, b) => b[1].test.pnl - a[1].test.pnl);
+    $("board").innerHTML = `<thead><tr><th>Strategy</th><th>Tuned params</th><th class="num">Train P&amp;L</th><th class="num">Test P&amp;L</th>
+      <th class="num">Test trades</th><th class="num">Win rate</th><th class="num">Test ROI</th><th class="num">t-stat</th><th>Status</th></tr></thead><tbody>` +
+      rows.map(([n, s]) => { const [c, l] = status(s); return `<tr tabindex="0" data-n="${n}" class="${n === cur.strat ? "sel" : ""}">
+        <td><div class="sname">${NAMES[n] || n}</div><div class="sdesc">${s.description}</div></td>
+        <td class="params">${params(s.best_params)}</td>
+        <td class="num ${cls(s.train.pnl)}">${money(s.train.pnl)}</td>
+        <td class="num ${cls(s.test.pnl)}">${money(s.test.pnl)}</td>
+        <td class="num">${s.test.trades.toLocaleString()}</td>
+        <td class="num">${pct(s.test.win_rate)}</td>
+        <td class="num ${cls(s.test.roi)}">${sgn(s.test.roi)}${pct(s.test.roi)}</td>
+        <td class="num">${tfmt(s.test.t_stat)}</td>
+        <td><span class="pill ${c}">${l}</span></td></tr>`; }).join("") + "</tbody>";
+  }
+
+  function renderDetail(S) {
+    const s = S.strategies[cur.strat], c = C();
+    $("eqTitle").textContent = `Equity curve · ${NAMES[cur.strat]} · ${COIN(cur.series)}`;
+    $("sdesc").textContent = s.description;
+    const row = (label, f) => `<div>${label}</div><div class="num">${f(s.train)}</div><div class="num">${f(s.test)}</div>`;
+    $("kv").innerHTML = `<div class="h">Metric</div><div class="h num">Train</div><div class="h num">Test</div>` +
+      row("Markets", m => m === s.train ? S.train_markets.toLocaleString() : S.test_markets.toLocaleString()) +
+      row("Trades", m => m.trades.toLocaleString()) +
+      row("Win rate", m => pct(m.win_rate)) +
+      row("Avg entry price", m => (m.avg_price * 100).toFixed(1) + "¢") +
+      row("Profit", m => `<span class="${cls(m.pnl)}">${money(m.pnl)}</span>`) +
+      row("ROI per $ staked", m => `<span class="${cls(m.roi)}">${sgn(m.roi)}${pct(m.roi)}</span>`) +
+      row("Fees paid", m => money(m.fees)) +
+      row("Max drawdown", m => money(m.max_dd)) +
+      row("Daily Sharpe (ann.)", m => m.sharpe.toFixed(2)) +
+      row("t-stat", m => tfmt(m.t_stat));
+
+    // equity curve
+    const pts = s.curve.map(([t, v]) => ({ x: t * 1000, y: v }));
+    const split = S.split_ts * 1000;
+    const shade = { id: "shade", beforeDatasetsDraw(ch) {
+      const { ctx, chartArea: a, scales: { x } } = ch; const px = x.getPixelForValue(split);
+      if (px > a.right) return; ctx.save(); ctx.fillStyle = c.chip; ctx.fillRect(Math.max(px, a.left), a.top, a.right - Math.max(px, a.left), a.bottom - a.top);
+      ctx.strokeStyle = c.muted; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
+      ctx.setLineDash([]); ctx.fillStyle = c.ink2; ctx.font = `500 11px ${tok("--f-mono")}`; ctx.fillText("TRAIN", a.left + 8, a.top + 14); ctx.fillText("TEST", px + 8, a.top + 14); ctx.restore(); } };
+    const zero = { id: "zero", afterDatasetsDraw(ch) { const { ctx, chartArea: a, scales: { y } } = ch; const py = y.getPixelForValue(0);
+      if (py < a.top || py > a.bottom) return; ctx.save(); ctx.strokeStyle = c.muted; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.left, py); ctx.lineTo(a.right, py); ctx.stroke(); ctx.restore(); } };
+    const o = base(c);
+    o.interaction = { mode: "index", intersect: false };
+    o.plugins.tooltip.callbacks = { title: i => fmtTime(i[0].parsed.x / 1000), label: i => "Cumulative " + money(i.parsed.y, 2) };
+    o.scales = { x: axis(c, { type: "linear", ticks: { color: c.muted, maxTicksLimit: 7, callback: v => fmtDate(v / 1000) } }),
+                 y: axis(c, { ticks: { color: c.muted, callback: v => money(v) } }) };
+    mk("eq", { type: "line", data: { datasets: [{ data: pts, borderColor: c.accent, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4,
+      pointHoverBackgroundColor: c.accent, pointHoverBorderColor: c.surface, pointHoverBorderWidth: 2, tension: 0 }] }, options: o, plugins: [shade, zero] });
+
+    // overfit scatter
+    const bp = JSON.stringify(s.best_params);
+    const sw = s.sweep.map(p => ({ x: p.train_pnl, y: p.test_pnl, p, best: JSON.stringify(p.params) === bp }));
+    const os = base(c);
+    os.plugins.tooltip.callbacks = { title: i => params(i[0].raw.p.params), label: i => [`Train ${money(i.raw.x)} (${i.raw.p.train_trades} trades)`, `Test ${money(i.raw.y)} (${i.raw.p.test_trades} trades)`] };
+    os.scales = { x: axis(c, { title: { display: true, text: "Train P&L ($)", color: c.muted }, ticks: { color: c.muted, maxTicksLimit: 6, callback: v => money(v) } }),
+                  y: axis(c, { title: { display: true, text: "Test P&L ($)", color: c.muted }, ticks: { color: c.muted, callback: v => money(v) } }) };
+    const cross = { id: "cross", beforeDatasetsDraw(ch) { const { ctx, chartArea: a, scales: { x, y } } = ch; ctx.save(); ctx.strokeStyle = c.muted; ctx.lineWidth = 1;
+      const px = x.getPixelForValue(0), py = y.getPixelForValue(0);
+      if (px >= a.left && px <= a.right) { ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke(); }
+      if (py >= a.top && py <= a.bottom) { ctx.beginPath(); ctx.moveTo(a.left, py); ctx.lineTo(a.right, py); ctx.stroke(); } ctx.restore(); } };
+    mk("sc", { type: "scatter", data: { datasets: [
+      { data: sw.filter(d => !d.best), backgroundColor: c.accent, borderColor: c.surface, borderWidth: 1.5, pointRadius: 5, pointHoverRadius: 7 },
+      { data: sw.filter(d => d.best), backgroundColor: c.accent2, borderColor: c.surface, borderWidth: 2, pointRadius: 8, pointHoverRadius: 10 }] }, options: os, plugins: [cross] });
+
+    // by minute
+    const bm = s.by_minute;
+    const ob = base(c);
+    ob.plugins.tooltip.callbacks = { title: i => `Entry minute ${i[0].label}`, label: i => { const r = bm[i.dataIndex]; return [`P&L ${money(r.pnl, 2)}`, `${r.trades} trades · win ${pct(r.win)}`]; } };
+    ob.scales = { x: axis(c, { grid: { display: false }, ticks: { color: c.muted } }), y: axis(c, { ticks: { color: c.muted, callback: v => money(v) } }) };
+    mk("bm", { type: "bar", data: { labels: bm.map(r => r.minute), datasets: [{ data: bm.map(r => r.pnl),
+      backgroundColor: bm.map(r => r.pnl >= 0 ? c.good : c.bad), borderRadius: 4, borderSkipped: "start", maxBarThickness: 28 }] }, options: ob });
+
+    // trades
+    const tr = [...s.recent].reverse();
+    $("trades").innerHTML = tr.length ? `<thead><tr><th>Time</th><th>Side</th><th class="num">Min</th><th class="num">Price</th><th class="num">Qty</th><th class="num">Fee</th><th class="num">P&amp;L</th></tr></thead><tbody>` +
+      tr.map(t => `<tr><td class="mono">${fmtTime(t.ts)}</td><td class="mono">${t.side.toUpperCase()}</td><td class="num">${t.minute}</td>
+        <td class="num">${(t.price * 100).toFixed(1)}¢</td><td class="num">${t.contracts}</td><td class="num">${money(t.fee, 2)}</td>
+        <td class="num ${cls(t.pnl)}">${money(t.pnl, 2)}</td></tr>`).join("") + "</tbody>" : `<tbody><tr><td class="empty">No trades.</td></tr></tbody>`;
+  }
+
+  function renderCal(S) {
+    const c = C(), mins = Object.keys(S.calibration);
+    if (!S.calibration[cur.calMin]) cur.calMin = mins[mins.length - 1];
+    $("calChips").innerHTML = mins.map(m => `<button type="button" aria-pressed="${m === cur.calMin}" data-m="${m}">min ${m}</button>`).join("");
+    const mkt = S.calibration[cur.calMin].map(r => ({ x: r.implied, y: r.actual, n: r.n }));
+    const mod = S.model_calibration.map(r => ({ x: r.model, y: r.actual, n: r.n }));
+    const o = base(c);
+    o.plugins.tooltip.callbacks = { label: i => i.datasetIndex === 2 ? null : [`${i.datasetIndex === 0 ? "Priced" : "Model said"} ${pct(i.raw.x)}`, `YES won ${pct(i.raw.y)}`, `${i.raw.n.toLocaleString()} samples`] };
+    o.plugins.tooltip.filter = i => i.datasetIndex !== 2;
+    o.scales = { x: axis(c, { type: "linear", min: 0, max: 1, title: { display: true, text: "Predicted probability of YES", color: c.muted }, ticks: { color: c.muted, stepSize: .2, callback: v => Math.round(v * 100) + "%" } }),
+                 y: axis(c, { min: 0, max: 1, title: { display: true, text: "Actual YES rate", color: c.muted }, ticks: { color: c.muted, stepSize: .2, callback: v => Math.round(v * 100) + "%" } }) };
+    mk("cal", { type: "line", data: { datasets: [
+      { data: mkt, borderColor: c.accent, backgroundColor: c.accent, borderWidth: 2, pointRadius: 4, pointBorderColor: c.surface, pointBorderWidth: 1.5 },
+      { data: mod, borderColor: c.accent2, backgroundColor: c.accent2, borderWidth: 2, pointRadius: 4, pointBorderColor: c.surface, pointBorderWidth: 1.5 },
+      { data: [{ x: 0, y: 0 }, { x: 1, y: 1 }], borderColor: c.muted, borderWidth: 1, borderDash: [4, 4], pointRadius: 0 }] }, options: o });
+  }
+
+  function renderNotes(S) {
+    $("notes").innerHTML = [
+      `Data: every settled ${COIN(cur.series)} 15-minute market from Kalshi's public API (${S.markets.toLocaleString()} markets), with the order book's best bid and ask at the end of each minute. Spot prices come from Coinbase 1-minute candles, used as a stand-in for the CF Benchmarks index Kalshi settles on.`,
+      `Fills: every order buys at the quoted ask at the end of that minute (a market-taking order). A YES costs the YES ask; a NO costs 1 minus the YES bid. Real fills could be worse when size is larger than what sits at the top of the book.`,
+      `Fees: Kalshi's taker fee, round-up of 0.07 × contracts × price × (1 − price). Stake is $${R.stake} per trade. One trade per market at most.`,
+      `Overfitting check: parameters are chosen on the train period only. The test period is never used for tuning. The t-stat measures how far average test profit per trade sits from zero, relative to its noise; under 2 is easily explained by luck.`,
+      `Not tested: resting limit orders (maker fills), which can't be simulated faithfully from 1-minute candles. Being the maker earns the spread instead of paying it, so it is the most promising direction to explore with live paper trading.`,
+    ].map(t => `<li>${t}</li>`).join("");
+  }
+
+  // ---------- events
+  document.addEventListener("click", e => {
+    const s = e.target.closest("[data-s]"); if (s) { cur.series = s.dataset.s; cur.strat = cur.strat; renderAll(); return; }
+    const m = e.target.closest("[data-m]"); if (m) { cur.calMin = m.dataset.m; renderCal(R.series[cur.series]); return; }
+    const r = e.target.closest("tr[data-n]"); if (r) { cur.strat = r.dataset.n; const S = R.series[cur.series]; renderBoard(S); renderDetail(S); }
+  });
+  document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-n]");
+    if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); r.click(); const n = r.dataset.n; setTimeout(() => document.querySelector(`tr[data-n="${n}"]`)?.focus(), 0); } });
+  const rerender = () => { const S = R.series[cur.series]; renderDetail(S); renderCal(S); };
+  try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rerender); } catch (e) {}
+  new MutationObserver(rerender).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  renderAll();
+})();
+</script>
