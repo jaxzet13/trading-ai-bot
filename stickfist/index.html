@@ -1121,6 +1121,13 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
 .pk .pk-name { top: 20.5%; }
 .hero .facts > div:last-child .label { display: none; }
 @media (max-width: 760px) { .hero { min-height: 0; } .showcase { height: 400px; } .hit { flex-basis: 140px; } .hit.top { flex-basis: 170px; } }
+
+/* card back: the STIXX mark (thin X figure + tiny name) on plain black */
+.cback { background: #000; padding: 0; }
+.cback .in { background: #000; border: 0; }
+.cback .in::before { display: none; }
+.cback svg.xmark { width: 15%; color: #f2f2f0; margin-top: -10%; }
+.cback .t { bottom: 17%; font-family: var(--f-body); font-weight: 500; font-size: 2.6cqi; letter-spacing: .9em; text-indent: .9em; color: #bdbdba; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -2378,7 +2385,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     st.innerHTML = SS.items.map((it, i) => {
       const rot = i === 0 ? 0 : (rand() - .5) * 6, ox = i * 3, oy = i * 4;
       return `<div class="sc rise" data-i="${i}" style="z-index:${50 - i};--rot:${rot.toFixed(1)}deg;--ox:${ox}px;--oy:${oy}px;--c:${(CR[rarOf(it)] || CR.C).col}">
-        <div class="tilt"><div class="flip-inner"><div class="face back"><div class="cback"><div class="in"><svg viewBox="0 0 40 40"><use href="#i-sigil"/></svg><span class="t">STIXX · II</span></div><span class="leak"></span><span class="crk"></span></div></div><div class="face front">${cardHTML(it, !!it.g)}</div></div></div></div>`;
+        <div class="tilt"><div class="flip-inner"><div class="face back"><div class="cback"><div class="in"><svg class="xmark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="9.5" r="1.6" fill="currentColor"/><path d="M11 15 L29 33 M29 15 L11 33" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" fill="none"/></svg><span class="t">STIXX</span></div><span class="leak"></span><span class="crk"></span></div></div><div class="face front">${cardHTML(it, !!it.g)}</div></div></div></div>`;
     }).join("");
     requestAnimationFrame(() => requestAnimationFrame(() => {
       st.querySelectorAll(".sc").forEach((el, i) => setTimeout(() => { el.classList.remove("rise"); sfx.deal(); }, 120 + i * 110));
