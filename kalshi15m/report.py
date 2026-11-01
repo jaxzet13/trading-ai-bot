@@ -143,15 +143,16 @@ def evaluate(series_list, n_folds=6, stake=10.0, min_trades=60):
     return res
 
 
-def build(series_list=tuple(SERIES), stake=10.0, n_folds=6):
+def build(series_list=tuple(SERIES), stake=10.0, n_folds=6, out=None):
+    out_dir = Path(out) if out else OUT
     series_list = [s for s in series_list if (DATA_DIR / f"{s}_markets.csv").exists()]
     results = evaluate(series_list, n_folds=n_folds, stake=stake)
-    OUT.mkdir(exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
     blob = json.dumps(results, default=_np)
-    (OUT / "results.json").write_text(blob)
+    (out_dir / "results.json").write_text(blob)
     html = (ROOT / "dashboard_template.html").read_text()
-    (OUT / "index.html").write_text(html.replace("/*__RESULTS__*/null", blob))
-    print(f"wrote {OUT / 'index.html'}")
+    (out_dir / "index.html").write_text(html.replace("/*__RESULTS__*/null", blob))
+    print(f"wrote {out_dir / 'index.html'}")
     return results
 
 

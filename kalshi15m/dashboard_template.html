@@ -137,7 +137,7 @@ td.coin { font-size: 12px; }
     <div class="panel-head">
       <div>
         <h2>Strategy leaderboard</h2>
-        <p>Out-of-sample results only. History is cut into <span id="nf"></span> time folds; each fold is traded with parameters tuned on the folds before it, and one parameter set has to serve BTC, ETH and SOL together. Click a row for detail.</p>
+        <p>Out-of-sample results only. History is cut into <span id="nf"></span> time folds; each fold is traded with parameters tuned on the folds before it, <span id="poolNote"></span> Click a row for detail.</p>
       </div>
     </div>
     <div class="tablewrap"><table id="board"></table></div>
@@ -225,6 +225,7 @@ td.coin { font-size: 12px; }
   let cur = { ex: "taker", strat: null, coin: coins[0], calMin: "10" };
   try { const sv = JSON.parse(localStorage.getItem("k15wf") || "{}"); if (sv.ex) cur.ex = sv.ex; if (R.coins[sv.coin]) cur.coin = sv.coin; if (sv.calMin) cur.calMin = sv.calMin; } catch (e) {}
   $("stake").textContent = R.stake; $("nf").textContent = R.n_folds;
+  $("poolNote").textContent = coins.length > 1 ? `and one parameter set has to serve ${coins.map(COIN).join(", ")} together.` : `tuned on ${COIN(coins[0])} only.`;
 
   function status(run) {
     const m = run.oos, coinsUp = Object.values(run.per_coin || {}).filter(c => c.pnl > 0).length;
