@@ -15,3 +15,13 @@ Generated with Higgsfield (gpt_image_2_5) as direction mockups, not final print 
 | 08 | Ancient Relic | carved slate tablet | obsidian with lava cracks and gold runes |
 | 09 | Celestial | navy card, a few stars | nebula, constellation outline, eclipse halo |
 | 10 | Brush Strike (current, pushed) | paper card, ink banner | full-bleed red-and-gold brush slash |
+
+## Lower tiers (round 2): `low-tiers/`
+
+Plain on purpose. One style per card, so even the bulk feels varied.
+
+| Rarity | Cards |
+|---|---|
+| Common ● | C1 Knuckles (sumi ink), C2 Shiv (Swiss minimal), C3 Bulwark (slate carving), C4 Bo (night sky) |
+| Uncommon ◆ | U1 Lash (woodblock), U2 Snap (manga panel), U3 Breaker (street poster), U4 Ronin (tarot) |
+| Rare ★ | R1 Arcanist (stained glass), R2 Fletch (ukiyo-e), R3 Kusari (brush strike), R4 Twinblade (moonlit sky) |
