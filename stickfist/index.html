@@ -906,6 +906,42 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
+
+/* ===================== RARITY STOCKS (standard cards) =====================
+   Each tier gets its own card stock, built like the Bloodmoon base card: one stock colour + one accent.
+   Common = plain matte paper  ·  Uncommon = jade  ·  Rare = indigo  ·  Foil Rare = steel + silver foil  ·  Signature = black + gold foil.
+   Ultra and up stay full-art with foil frames, so the ladder runs plain paper -> dark stock -> foil -> full art. */
+.tcard.std.cr-C:not(.lim) { background: #cfc9bb; padding: 1.4%; box-shadow: 0 6px 14px rgba(0,0,0,.45); }
+.std.cr-C:not(.lim) .tc-face { background: #efebe2; }
+.std.cr-C:not(.lim) .tc-wash { display: none; }
+.std.cr-C:not(.lim) .tc-pwr { background: #3a3a3a; }
+.std.cr-C:not(.lim) .tc-artwrap { background: #3a3a3a; }
+.std.cr-C:not(.lim) .tc-art img { filter: saturate(.55) contrast(1.05); }
+.std.cr-C:not(.lim) .tc-flavor { border-left-color: #8a8a8a; }
+.std.cr-C:not(.lim) .tc-val { background: #3a3a3a; color: #efebe2; }
+
+.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-face { color: #eee9e0; background: var(--grain), radial-gradient(circle at 82% 10%, var(--sa) 0 10cqi, color-mix(in srgb, var(--sa) 35%, transparent) 10.4cqi, transparent 22cqi), radial-gradient(ellipse at 30% 20%, var(--sc), var(--sb) 70%); }
+.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-face::after { filter: invert(1); opacity: .5; }
+.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-wash { background: radial-gradient(ellipse, color-mix(in srgb, var(--sa) 50%, transparent), transparent 70%); }
+.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-artwrap { background: var(--sa); }
+.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-sub, .std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-vert { color: rgba(238,233,224,.55); }
+.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .mv { border-bottom-color: rgba(238,233,224,.15); }
+.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .mv .cost { color: var(--sa); }
+.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-pwr { background: var(--sb); box-shadow: inset 0 0 0 .5cqi var(--sa); color: #fff; }
+.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-flavor { border-left-color: var(--sa); }
+.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-val, .std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .rseal { background: var(--sa); color: var(--sv, #fff); }
+.tcard.std.cr-U:not(.lim) { --sa: #3f9b6b; --sb: #050c08; --sc: #10241a; background: linear-gradient(135deg, #0f3a24, #04100a 40%, #1e5e3c 70%, #04100a); }
+.tcard.std.cr-R:not(.lim) { --sa: #3f7fe0; --sb: #04070f; --sc: #0d1838; background: linear-gradient(135deg, #10275e, #02050d 40%, #2a5bb8 70%, #02050d); }
+/* Foil Rare: steel stock, moving silver-foil frame, holo art */
+.tcard.std.cr-H:not(.lim) { --sa: #c9ced6; --sb: #0b0c0e; --sc: #22252b; --sv: #111; background: linear-gradient(115deg, #6d727c, #f4f6f9 18%, #8a8f99 34%, #ffffff 50%, #7d828d 66%, #e7eaee 82%, #6d727c); background-size: 240% 240%; background-position: var(--mx) var(--my); }
+.std.cr-H:not(.lim) .tc-artwrap { background: linear-gradient(115deg, #8a8f99, #fff, #8a8f99); }
+.std.cr-H:not(.lim) .tc-name { background: linear-gradient(100deg, #b9bec6, #ffffff 40%, #9aa0aa 70%, #f4f6f9); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* Signature: black stock, gold foil frame and gold name */
+.tcard.std.cr-RR:not(.lim) { --sa: #d4a53a; --sb: #070604; --sc: #1e1910; --sv: #141008; background: linear-gradient(115deg, #7a5600, #ffe58a 20%, #b8860b 38%, #fff2b8 52%, #9c7208 70%, #ffd966 86%, #7a5600); background-size: 240% 240%; background-position: var(--mx) var(--my); }
+.std.cr-RR:not(.lim) .tc-artwrap { background: linear-gradient(115deg, #9c7208, #ffe58a, #9c7208); }
+.std.cr-RR:not(.lim) .tc-name { background: linear-gradient(100deg, #c9930f, #fff2b8 40%, #b8860b 70%, #ffe58a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* reverse foil keeps its holo border on any stock */
+.tcard.std.rh:not(.lim) { background: linear-gradient(115deg, #ff9ac4, #fff3b0 20%, #9be8ff 40%, #d9a8ff 60%, #b6ffe0 80%, #ff9ac4); background-size: 220% 220%; background-position: var(--mx) var(--my); }
 /* ===================== MINIMAL SKIN =====================
    The site steps back so the cards are the only colourful thing on the page:
    neutral greys, flat surfaces, no textures, glows or gold. Card styles (.tcard) are untouched. */
