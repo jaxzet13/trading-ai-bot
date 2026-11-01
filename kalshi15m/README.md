@@ -53,18 +53,28 @@ order type and settings with the best t-stat on that coin's earlier data (sittin
 On Aug 31 - Nov 1: BTC picked spot lag (+$12), ETH mostly sat out (+$41), SOL picked the fair-value
 family (+$610). Combined +$663, t = 0.80: not yet distinguishable from luck.
 
-## Live paper trading (current setup)
+## Live paper trading on your computer
 
-`kalshi15m/live.json` holds the two strategies being paper-traded on live markets:
-ETH reversal after a big move (maker) and SOL fair value (maker). Start and refresh:
+`kalshi15m/live.json` holds the two strategies being paper-traded (no money): ETH reversal after a big
+move and SOL fair value, both with limit orders. Needs Python 3.10+ and git.
 
 ```bash
-python -m kalshi15m bot --config kalshi15m/live.json     # runs both, paper mode
-python -m kalshi15m live-report                          # update dashboard/index.html
+git clone https://github.com/jaxzet13/trading-ai-bot.git
+cd trading-ai-bot
+git checkout claude/determined-mayer-o254q7
+bash scripts/run_live.sh          # Mac / Linux
+scripts\run_live.bat              # Windows
 ```
 
-The bot only runs while its machine is on. For a long paper run, start it on a computer or
-server that stays up.
+The first run installs packages into `.venv`. After that it:
+
+* trades both strategies on every ETH and SOL market, logging to `data/kalshi15m/bot_log.jsonl`
+* restarts the bot if it crashes or loses the network
+* refreshes `dashboard/index.html` every 15 minutes (open it in a browser, or run
+  `python -m kalshi15m serve` and go to http://localhost:8050)
+
+Keep the computer awake and online (on a Mac the script prevents sleep while it runs).
+Stop with Ctrl+C (Mac/Linux) or by closing the window (Windows).
 
 ## Going live (read this first)
 
