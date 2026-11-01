@@ -123,6 +123,64 @@ def spot_lag(P, start=2, end=12, move_sd=1.5, max_price=0.75):
     return _first(y, n)
 
 
+def _prev_z(P):
+    """Previous window's return in standard deviations of a 15-minute move."""
+    with np.errstate(invalid="ignore", divide="ignore"):
+        return P["prev_ret"] / (P["vol1m"] * np.sqrt(15))
+
+
+def reversal_z(P, minute=1, min_z=1.5, max_z=99.0, max_price=0.6):
+    """Fade the previous window only after an unusually large move (in vol units)."""
+    j = minute - 1
+    z, ya, na = _prev_z(P)[:, j], P["yes_ask"][:, j], P["no_ask"][:, j]
+    with np.errstate(invalid="ignore"):
+        big = np.isfinite(z) & (np.abs(z) >= min_z) & (np.abs(z) <= max_z)
+        return _at(P, minute, big & (z < 0) & _valid(ya) & (ya <= max_price),
+                   big & (z > 0) & _valid(na) & (na <= max_price))
+
+
+def momentum_z(P, minute=1, min_z=1.5, max_z=99.0, max_price=0.6):
+    """Follow the previous window only after an unusually large move (in vol units)."""
+    j = minute - 1
+    z, ya, na = _prev_z(P)[:, j], P["yes_ask"][:, j], P["no_ask"][:, j]
+    with np.errstate(invalid="ignore"):
+        big = np.isfinite(z) & (np.abs(z) >= min_z) & (np.abs(z) <= max_z)
+        return _at(P, minute, big & (z > 0) & _valid(ya) & (ya <= max_price),
+                   big & (z < 0) & _valid(na) & (na <= max_price))
+
+
+def fair_value_v2(P, start=3, end=13, edge=0.06, vol="blend", min_price=0.25, max_price=0.75):
+    """Fair-value model restricted to mid-priced contracts (where the earlier version's
+    cheap longshot buys did the damage), with a choice of volatility estimate."""
+    v = {"60": P["vol1m"], "240": P["vol240"],
+         "blend": np.sqrt((P["vol1m"] ** 2 + P["vol240"] ** 2) / 2),
+         "max": np.fmax(P["vol1m"], P["vol240"])}[vol]
+    tau = 15 - MIN[None, :]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        p = ndtr(np.log(P["spot"] / P["strike"]) / (v * np.sqrt(tau)))
+    ya, na = P["yes_ask"], P["no_ask"]
+    ok = np.isfinite(p) & ((MIN >= start) & (MIN <= end))[None, :]
+    with np.errstate(invalid="ignore"):
+        y = ok & _valid(ya) & (ya >= min_price) & (ya <= max_price) & (p - ya >= edge)
+        n = ok & _valid(na) & (na >= min_price) & (na <= max_price) & ((1 - p) - na >= edge)
+    return _first(y, n)
+
+
+def closing_value(P, minute=13, edge=0.10, vol_mult=1.0, min_price=0.10, max_price=0.90):
+    """In the last minutes, compare spot vs strike with the little time left; when the
+    quote still lags what spot implies, buy the underpriced side at that single minute."""
+    j = minute - 1
+    tau = 15 - minute
+    with np.errstate(invalid="ignore", divide="ignore"):
+        z = np.log(P["spot"][:, j] / P["strike"][:, j]) / (P["vol1m"][:, j] * vol_mult * np.sqrt(tau))
+    p = ndtr(z)
+    ya, na = P["yes_ask"][:, j], P["no_ask"][:, j]
+    with np.errstate(invalid="ignore"):
+        y = np.isfinite(p) & _valid(ya) & (ya >= min_price) & (ya <= max_price) & (p - ya >= edge)
+        n = ~y & np.isfinite(p) & _valid(na) & (na >= min_price) & (na <= max_price) & ((1 - p) - na >= edge)
+    return _at(P, minute, y, n)
+
+
 # name -> (function, description, parameter grid for the sweep)
 STRATEGIES = {
     "baseline_yes": (baseline_yes, "Always buy YES at minute 1. The control group: shows what spread and fees cost.",
@@ -137,6 +195,16 @@ STRATEGIES = {
                  {"minute": [5, 8, 10, 12], "max_price": [0.05, 0.1, 0.15, 0.25]}),
     "spot_lag": (spot_lag, "Spot has run away from the strike but the order book hasn't caught up: buy the leader.",
                  {"start": [2, 4], "end": [8, 12], "move_sd": [1.0, 1.5, 2.0, 3.0], "max_price": [0.6, 0.75, 0.85]}),
+    "reversal_z": (reversal_z, "Fade the previous 15 minutes only after an unusually big move, measured in volatility units.",
+                   {"minute": [1, 2, 3], "min_z": [1.0, 1.5, 2.0, 2.5], "max_price": [0.55, 0.65, 0.75]}),
+    "momentum_z": (momentum_z, "Follow the previous 15 minutes only after an unusually big move, measured in volatility units.",
+                   {"minute": [1, 2, 3], "min_z": [1.0, 1.5, 2.0, 2.5], "max_price": [0.55, 0.65, 0.75]}),
+    "fair_value_v2": (fair_value_v2, "Fair-value model limited to 25-75c contracts, with a choice of volatility window.",
+                      {"start": [2, 5, 8], "end": [10, 13], "edge": [0.03, 0.05, 0.08, 0.12],
+                       "vol": ["60", "blend", "max"], "min_price": [0.2, 0.35], "max_price": [0.65, 0.8]}),
+    "closing_value": (closing_value, "Final 1-4 minutes: buy the side the spot price says is underpriced.",
+                      {"minute": [11, 12, 13, 14], "edge": [0.05, 0.10, 0.15, 0.20, 0.30],
+                       "vol_mult": [0.8, 1.0, 1.25], "min_price": [0.05, 0.15], "max_price": [0.85, 0.95]}),
     "fair_value": (fair_value, "Lognormal fair-value model vs. the order book; buy whichever side is underpriced.",
                    {"start": [2, 5, 8], "end": [10, 13], "edge": [0.04, 0.08, 0.12, 0.16],
                     "vol_mult": [0.8, 1.0, 1.25]}),
