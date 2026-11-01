@@ -269,7 +269,7 @@ table.odds th:not(:first-child), table.odds td:not(:first-child) { text-align: r
 .cr-HR .tc-art img { filter: sepia(1) saturate(2.6) hue-rotate(-14deg) brightness(1.08) contrast(1.15); }
 .cr-HR .tc-name, .cr-SIR .tc-name { color: #ffe9a8; }
 .cr-HR .tc-art::after { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; background: repeating-linear-gradient(45deg, rgba(255,240,180,.25) 0 1px, transparent 1px 4px); }
-.tcard .glare { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 5; opacity: var(--go); transition: opacity .3s;
+.tcard .glare { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 2; opacity: var(--go); transition: opacity .3s;
   background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.38), rgba(255,255,255,0) 42%); mix-blend-mode: overlay; }
 /* ===== premium full-art finish (Ultra, Illustration, Masterwork, Gilded) ===== */
 .tcard.full { padding: 1.3%; border-radius: 4.8% / 3.4%; box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 0 0 2px rgba(255,255,255,.08), 0 18px 40px rgba(0,0,0,.6); }
@@ -289,7 +289,7 @@ table.odds th:not(:first-child), table.odds td:not(:first-child) { text-align: r
 .tcard.full .mv { padding-bottom: .9cqi; border-bottom: .25cqi solid rgba(255,255,255,.14); }
 .tcard.full .mv b { font-size: 6cqi; } .tcard.full .mv em { font-size: 6.2cqi; }
 .tcard.full .tc-bottom { border-top: 0; padding-top: .6cqi; }
-.tcard.full .tc-bottom .tag { display: flex; align-items: center; gap: 1.6cqi; font-size: 3cqi; letter-spacing: .14em; text-transform: uppercase; color: rgba(244,241,234,.75); }
+.tcard.full .tc-bottom .tag { display: flex; align-items: center; gap: 1.6cqi; white-space: nowrap; overflow: hidden; font-size: max(8.5px, 3cqi); letter-spacing: .14em; text-transform: uppercase; color: rgba(244,241,234,.75); }
 .tcard.full .crest { display: grid; place-items: center; width: 7.4cqi; height: 7.4cqi; font-size: 2.9cqi; letter-spacing: -.1em; color: #141414; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: linear-gradient(135deg, #cfd3da, #ffffff 45%, #8d939d); }
 .tcard.full.cr-HR .crest { background: linear-gradient(135deg, #b8860b, #fff1b8 45%, #8a6200); }
 .tcard.full.cr-SIR .crest { background: linear-gradient(135deg, #ff9ac4, #fff3b0, #9be8ff, #d9a8ff); }
@@ -306,7 +306,7 @@ table.odds th:not(:first-child), table.odds td:not(:first-child) { text-align: r
 .tcard.full.cr-SIR .tc-holo { opacity: .5 !important; }
 .tcard.full.cr-HR .tc-tex { mix-blend-mode: overlay; opacity: .6; background: repeating-linear-gradient(90deg, rgba(255,240,180,.45) 0 .2cqi, transparent .2cqi 1.2cqi), radial-gradient(ellipse at 50% 30%, rgba(255,230,150,.35), transparent 65%); }
 .tcard.full.cr-HR .tc-holo { opacity: .3 !important; }
-.tcard.full .tc-sparkle { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0; mix-blend-mode: screen;
+.tcard.full .tc-sparkle { position: absolute; inset: 0 0 42% 0; z-index: 2; pointer-events: none; opacity: 0; mix-blend-mode: screen;
   background-image: radial-gradient(circle, #fff 0 .45cqi, transparent .8cqi), radial-gradient(circle, #fff 0 .3cqi, transparent .6cqi), radial-gradient(circle, #fff6cf 0 .4cqi, transparent .7cqi);
   background-size: 23cqi 29cqi, 17cqi 21cqi, 31cqi 37cqi; background-position: 3cqi 5cqi, 11cqi 13cqi, 19cqi 2cqi; animation: twinkle 2.6s ease-in-out infinite alternate; }
 .tcard.full.cr-SIR .tc-sparkle, .tcard.full.cr-HR .tc-sparkle { opacity: 1; }
@@ -484,6 +484,11 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .sc .face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 .sc .front { transform: rotateY(180deg); }
 .sc .front .tcard { height: 100%; }
+.sc.settled .tilt { transform-style: flat; transform: translate(var(--jx, 0px), var(--jy, 0px)) perspective(1200px) rotateX(calc(var(--rx, 0deg) * .5)) rotateY(calc(var(--ry, 0deg) * .5)); }
+.sc.settled .flip-inner { transform-style: flat; transform: none; transition: none; }
+.sc.settled .face.back { display: none; }
+.sc.settled .front { transform: none; backface-visibility: visible; -webkit-backface-visibility: visible; }
+.tcard { -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; }
 .sc.top { cursor: pointer; }
 .cback { height: 100%; border-radius: 6% / 4.3%; background: linear-gradient(135deg, #2a2620, #0c0c0d 45%, #2a2620); padding: 3.2%; box-shadow: 0 16px 34px rgba(0,0,0,.6); container-type: inline-size; }
 .cback .in { height: 100%; border-radius: 4cqi; background: var(--grain), radial-gradient(circle at 50% 50%, #1b1a18, #0a0a0b 70%); border: .5cqi solid rgba(194,166,107,.35); display: grid; place-items: center; position: relative; }
@@ -661,7 +666,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .atigc { position: absolute; inset: 40% 6% auto; z-index: 4; text-align: center; font-family: var(--f-mono); font-size: 11px; letter-spacing: .2em; background: rgba(10,10,11,.85); color: var(--brass-hi); padding: 6px 0; }
 .cm-card .slab { width: 100%; }
 @media (max-width: 900px) { .mk-top { grid-template-columns: 1fr; } }
-.limtag { position: absolute; z-index: 6; top: 1.4%; left: 50%; transform: translateX(-50%); white-space: nowrap; font-family: var(--f-mono); font-size: 2.6cqi; letter-spacing: .24em; text-transform: uppercase; padding: .5cqi 2cqi; }
+.limtag { position: absolute; z-index: 6; top: 1.4%; left: 50%; transform: translateX(-50%); white-space: nowrap; font-family: var(--f-mono); font-size: max(7.5px, 2.6cqi); letter-spacing: .24em; text-transform: uppercase; padding: .5cqi 2cqi; }
 /* ===== BLOODMOON: black stock, blood-red duotone, cracked crimson glass ===== */
 .lim-BM .limtag { background: #c4121d; color: #fff; }
 .tcard.lim-BM.std { background: linear-gradient(135deg, #3a0609, #0b0102 40%, #6b0b13 70%, #0b0102); }
@@ -728,6 +733,11 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .pk .pk-lim { position: absolute; left: 0; right: 0; top: 54%; text-align: center; font-family: var(--f-mono); font-size: .55em; letter-spacing: .28em; color: #fff; background: var(--pk-acc); padding: .3em 0; transform: rotate(-6deg); box-shadow: 0 .2em .6em rgba(0,0,0,.5); }
 .pk.pk-GS .pk-lim { color: #1d1406; }
 .bpage.bp-BM { background: radial-gradient(ellipse at 50% 0%, #2a0a0d, #140608 75%); } .bpage.bp-GS { background: radial-gradient(ellipse at 50% 0%, #2a2210, #16120a 75%); }
+.tcard.full .tc-info { text-shadow: 0 1px 2px rgba(0,0,0,.9); }
+.tcard.full .mv small { font-size: max(8px, 3cqi); opacity: .9; }
+.tcard.full .tc-hp small, .std .tc-pwr small { font-size: max(7px, .55em); }
+.std .tc-sub, .std .tc-foot { font-size: max(8px, 2.8cqi); }
+.std .mv small { font-size: max(8.5px, 3cqi); }
 .toast { position: fixed; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50; background: var(--bone); color: var(--void); padding: 10px 18px; font-size: 13px; font-weight: 600; max-width: calc(100% - 32px); }
 
 .lv { display: flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em; color: var(--dim); }
@@ -1342,7 +1352,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       ${stamp}
       <div class="tc-info">
         <div class="tc-moves">${tech}</div>
-        <div class="tc-bottom"><span class="tag"><span class="crest">${R.sym}</span>${num} · ${R.name}</span><span class="tc-val">${val}</span></div>
+        <div class="tc-bottom"><span class="tag" title="${R.name}"><span class="crest">${R.sym}</span>${num}</span><span class="tc-val">${val}</span></div>
       </div>
     </div><div class="glare"></div></div>`;
   }
@@ -2148,7 +2158,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     }, 260);
     setTimeout(() => {
       if (!SS || SS.phase !== "stack") return;
-      el.querySelector(".tcard").style.setProperty("--go", "1");
+      el.querySelector(".tcard").style.setProperty("--go", "1"); el.classList.add("settled");
       const done = () => { if (!SS || SS.phase !== "stack") return; SS.busy = false; $("stHint").textContent = SS.idx < SS.items.length - 1 ? "Click again for the next card · Space" : "Click to see your result · Space"; };
       const after = () => hasCutscene(it) && !(SS.cutDone && SS.cutDone[it.uid]) ? setTimeout(() => playCutscene(it, done), 650) : done();
       if (it.g) { $("stHint").textContent = "Grading…"; gradeRoll(el, it, after); } else after();
