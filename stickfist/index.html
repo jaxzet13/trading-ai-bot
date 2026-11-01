@@ -243,15 +243,6 @@ table.odds th:not(:first-child), table.odds td:not(:first-child) { text-align: r
 .full .tc-face::before { content: ""; position: absolute; inset: 0; background: var(--brushframe) center / 100% 100% no-repeat; filter: invert(1); opacity: .7; z-index: 4; pointer-events: none; }
 .cr-HR.full .tc-face::before { filter: invert(.75) sepia(1) saturate(4) hue-rotate(5deg); opacity: .9; }
 .full .sigst { font-size: 2.6cqi; }
-.tcard.cr-IR { background: #0f0f10; padding: 2%; }
-.cr-IR.full .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, #f4efe3, #e6dfcf 70%, #d9d1bf); color: #141414; }
-.cr-IR.full .tc-face::before { filter: none; opacity: 1; }
-.cr-IR.full .tc-art { inset: 7% 7% 27% 7%; clip-path: polygon(0 3%, 100% 0, 100% 97%, 0 100%); }
-.cr-IR.full .tc-top { background: none; padding-top: 1.6cqi; }
-.cr-IR.full .tc-name { color: #fff; }
-.cr-IR.full .tc-hp { color: #fff; }
-.cr-IR.full .tc-info { background: none !important; color: #141414; padding-top: 0; }
-.cr-IR.full .mv { color: #141414; } .cr-IR.full .tc-val { color: #141414; text-shadow: none; } .cr-IR.full .tc-bottom { border-top-color: rgba(20,20,20,.2); } .cr-IR.full .tc-bottom .tag { color: rgba(20,20,20,.6); }
 .tcard.cr-SIR { background: linear-gradient(115deg, #ff4d8d, #ffd36b, #6bffb8, #5ab0ff, #c47bff, #ff4d8d); background-size: 300% 300%; animation: holo 6s linear infinite; }
 .tcard.cr-HR { background: linear-gradient(135deg, #8a6200, #ffe58a 25%, #c9930f 50%, #fff2b8 70%, #9c7208); }
 .full .tc-top { display: flex; align-items: center; gap: 2cqi; }
@@ -311,20 +302,6 @@ table.odds th:not(:first-child), table.odds td:not(:first-child) { text-align: r
   background-size: 23cqi 29cqi, 17cqi 21cqi, 31cqi 37cqi; background-position: 3cqi 5cqi, 11cqi 13cqi, 19cqi 2cqi; animation: twinkle 2.6s ease-in-out infinite alternate; }
 .tcard.full.cr-SIR .tc-sparkle, .tcard.full.cr-HR .tc-sparkle { opacity: 1; }
 @keyframes twinkle { from { filter: brightness(.4); background-position: 3cqi 5cqi, 11cqi 13cqi, 19cqi 2cqi; } to { filter: brightness(1.4); background-position: 4cqi 4cqi, 10cqi 15cqi, 20cqi 4cqi; } }
-/* Illustration stays a paper art print */
-.tcard.full.cr-IR { background: #0f0f10; padding: 2%; }
-.tcard.full.cr-IR .tc-face::before { display: block; }
-.tcard.full.cr-IR .tc-name { background: none; color: #141414; filter: none; }
-.tcard.full.cr-IR .tc-hp { color: #141414; text-shadow: none; }
-.tcard.full.cr-IR .tc-info { background: none; }
-.tcard.full.cr-IR .tc-bottom .tag { color: rgba(20,20,20,.7); }
-.tcard.full.cr-IR .tc-val { background: #141414; box-shadow: none; color: var(--brass-hi); }
-.tcard.full.cr-IR .tc-art { inset: 17% 7% 31% 7%; }
-.tcard.full.cr-IR .tc-top { background: none; padding: 6cqi 7cqi 0; }
-.tcard.full.cr-IR .tc-name { font-size: 11cqi; }
-.tcard.full.cr-IR .tc-info { padding-top: 0; }
-.tcard.full.cr-IR .tc-shine { mix-blend-mode: soft-light; }
-.tcard.full.cr-IR .mv { border-bottom-color: rgba(20,20,20,.18); }
 .tcard.cr-H .glare, .tcard.cr-RR .glare, .tcard.full .glare, .tcard.rh .glare {
   background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.45), rgba(255,255,255,0) 40%),
     linear-gradient(calc(110deg + (var(--mx) - 50%) * .4), transparent 20%, rgba(255,90,170,.35) 35%, rgba(255,230,120,.35) 45%, rgba(110,255,200,.35) 55%, rgba(110,170,255,.35) 65%, transparent 80%);
@@ -942,6 +919,73 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .std.cr-RR:not(.lim) .tc-name { background: linear-gradient(100deg, #c9930f, #fff2b8 40%, #b8860b 70%, #ffe58a); -webkit-background-clip: text; background-clip: text; color: transparent; }
 /* reverse foil keeps its holo border on any stock */
 .tcard.std.rh:not(.lim) { background: linear-gradient(115deg, #ff9ac4, #fff3b0 20%, #9be8ff 40%, #d9a8ff 60%, #b6ffe0 80%, #ff9ac4); background-size: 220% 220%; background-position: var(--mx) var(--my); }
+
+/* ===================== RARITY VFX: effects grow with the tier =====================
+   C none · U faint glow · R pulsing glow · H glow + light sweep · RR gold glow + sweep + sparkles
+   UR/IR pulsing aura · SIR/HR rotating halo behind the card + strong pulse + sparkles */
+.tcard { --gl: transparent; }
+.tcard.std.cr-U:not(.lim) { --gl: rgba(63,155,107,.35); box-shadow: 0 0 2.5cqi var(--gl), 0 10px 22px rgba(0,0,0,.5); }
+.tcard.std.cr-R:not(.lim) { --gl: rgba(63,127,224,.55); animation: rpulse 3.2s ease-in-out infinite; }
+.tcard.std.cr-H:not(.lim) { --gl: rgba(225,232,245,.6); animation: rpulse 2.6s ease-in-out infinite; }
+.tcard.std.cr-RR:not(.lim) { --gl: rgba(240,190,70,.7); animation: rpulse 2.2s ease-in-out infinite; }
+.tcard.full.cr-UR:not(.lim) { --gl: rgba(230,236,248,.7); animation: rpulse 2.4s ease-in-out infinite; }
+.tcard.full.cr-IR:not(.lim) { --gl: rgba(228,174,58,.65); animation: rpulse 2.4s ease-in-out infinite; }
+.tcard.full.cr-SIR:not(.lim) { --gl: rgba(240,79,154,.85); animation: rpulse 1.8s ease-in-out infinite, holo 6s linear infinite; }
+.tcard.full.cr-HR:not(.lim) { --gl: rgba(255,205,80,.9); animation: rpulse 1.8s ease-in-out infinite; }
+@keyframes rpulse { 0%, 100% { box-shadow: 0 0 1.5cqi var(--gl), 0 10px 22px rgba(0,0,0,.5); } 50% { box-shadow: 0 0 7cqi 1cqi var(--gl), 0 10px 22px rgba(0,0,0,.5); } }
+
+/* light sweep across the whole card (Foil Rare and Signature; full-art cards already have one) */
+.tcard.std:is(.cr-H, .cr-RR):not(.lim)::after { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 6; pointer-events: none; overflow: hidden;
+  background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,.5) 48%, rgba(255,255,255,.12) 54%, transparent 62%); background-size: 300% 100%; mix-blend-mode: overlay; animation: csweep 4.2s ease-in-out infinite; }
+.tcard.std.cr-RR:not(.lim)::after { background-image: linear-gradient(105deg, transparent 38%, rgba(255,236,170,.7) 48%, rgba(255,255,255,.15) 54%, transparent 62%); animation-duration: 3.2s; }
+@keyframes csweep { 0%, 40% { background-position: 120% 0; } 100% { background-position: -40% 0; } }
+
+/* sparkles: Signature on the art, Masterwork/Gilded already sparkle; add drifting motes to them */
+.std.cr-RR:not(.lim) .tc-artwrap::after { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+  background-image: radial-gradient(circle, #fff6d0 0 .5cqi, transparent .9cqi), radial-gradient(circle, #fff 0 .35cqi, transparent .7cqi), radial-gradient(circle, #ffe58a 0 .45cqi, transparent .8cqi);
+  background-size: 23cqi 19cqi, 31cqi 27cqi, 17cqi 29cqi; background-position: 3cqi 4cqi, 12cqi 9cqi, 7cqi 15cqi; animation: twinkle 2.4s ease-in-out infinite alternate; }
+
+/* rarest cards: an aura that shifts colour in place, hugging the card */
+.tcard.full.cr-SIR:not(.lim) { animation: rpulse 1.8s ease-in-out infinite, holo 6s linear infinite, aura 5s linear infinite; }
+@keyframes aura { 0% { --gl: rgba(255,77,141,.85); } 25% { --gl: rgba(255,211,107,.85); } 50% { --gl: rgba(107,255,184,.8); } 75% { --gl: rgba(90,176,255,.85); } 100% { --gl: rgba(255,77,141,.85); } }
+.tcard.full:is(.cr-UR, .cr-IR):not(.lim) .tc-shine { animation-duration: 3.4s; }
+
+/* limited mythics glow in their set colour */
+.tcard.full.lim-BM:not(.cr-SIR) { --gl: rgba(224,32,45,.75); animation: rpulse 2.2s ease-in-out infinite; }
+.tcard.full.lim-GS { --gl: rgba(233,185,73,.75); animation: rpulse 2.2s ease-in-out infinite; }
+
+/* small cards (binder pockets, market thumbs) keep only the static glow so the page stays calm */
+.pocket .tcard, .mkc .tcard, .copy .tcard { animation: none !important; }
+.pocket .tcard::before { display: none; }
+@media (prefers-reduced-motion: reduce) { .tcard, .tcard::before, .tcard::after, .tc-artwrap::after { animation: none !important; } }
+
+/* Illustration: full art in a warm amber-foil frame */
+.tcard.full.cr-IR { background: linear-gradient(115deg, #7a4a10, #f3c36a 20%, #a8701c 40%, #ffe3a3 55%, #8a5a14 75%, #f0b850); background-size: 240% 240%; background-position: var(--mx) var(--my); }
+.tcard.full.cr-IR .crest { background: linear-gradient(135deg, #b8860b, #fff1b8 45%, #8a6200); color: #141414; }
+
+/* ===================== FOIL RARE: the Rare stock + real holo foil ===================== */
+.tcard.std.cr-H:not(.lim) { --sa: #6fa8ff; --sb: #04070f; --sc: #0d1838; --sv: #fff; --gl: rgba(170,200,255,.7);
+  background: linear-gradient(115deg, #ff8fc0, #fff09a 14%, #9dffd6 28%, #9fd0ff 42%, #d7a8ff 56%, #ff8fc0 70%, #fff09a 84%, #9dffd6);
+  background-size: 300% 300%; animation: rpulse 2.6s ease-in-out infinite, holo 7s linear infinite; }
+.std.cr-H:not(.lim) .tc-artwrap { background: linear-gradient(115deg, #ff8fc0, #fff09a, #9dffd6, #9fd0ff, #d7a8ff); }
+.std.cr-H:not(.lim) .tc-name { background: linear-gradient(100deg, #cfe2ff, #ffffff 30%, #ffd1ec 50%, #c9fff0 70%, #ffffff); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: holo 5s linear infinite; }
+/* prismatic foil laid over the whole face, always moving and following the pointer */
+.std.cr-H:not(.lim) .tc-face::before { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; mix-blend-mode: color-dodge; opacity: .28;
+  background: repeating-linear-gradient(118deg, rgba(255,80,160,0) 0%, rgba(255,80,160,.55) 4%, rgba(255,230,110,.55) 8%, rgba(110,255,200,.55) 12%, rgba(110,180,255,.55) 16%, rgba(200,130,255,.55) 20%, rgba(255,80,160,0) 24%), radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.35), transparent 45%);
+  background-size: 300% 300%, 100% 100%; animation: foilmove 6s linear infinite; }
+.std.cr-H:not(.lim) .tc-art .tc-holo { opacity: .7 !important; mix-blend-mode: color-dodge; animation: foilmove 4s linear infinite; }
+@keyframes foilmove { to { background-position: 300% 300%, 0 0; } }
+/* foil sparkle on the art */
+.std.cr-H:not(.lim) .tc-artwrap::after { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+  background-image: radial-gradient(circle, #fff 0 .4cqi, transparent .8cqi), radial-gradient(circle, #cfe8ff 0 .3cqi, transparent .7cqi), radial-gradient(circle, #ffd1ec 0 .35cqi, transparent .75cqi);
+  background-size: 21cqi 17cqi, 29cqi 23cqi, 15cqi 27cqi; background-position: 4cqi 3cqi, 11cqi 8cqi, 6cqi 13cqi; animation: twinkle 2s ease-in-out infinite alternate; }
+
+/* every foil on the site gets the same moving prismatic sheen (reverse foils, full-art foils) */
+.tcard.full .tc-holo { animation: foilmove 6s linear infinite; }
+.tcard.rh .tc-face::before { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; mix-blend-mode: color-dodge; opacity: .18;
+  background: repeating-linear-gradient(118deg, transparent 0%, rgba(255,120,190,.6) 5%, rgba(120,230,255,.6) 10%, transparent 15%); background-size: 300% 300%; animation: foilmove 7s linear infinite; }
+.tcard.std.rh:not(.lim) { animation: holo 7s linear infinite; background-size: 300% 300%; }
+@media (prefers-reduced-motion: reduce) { .tcard .tc-face::before, .tcard .tc-holo, .tc-name { animation: none !important; } }
 /* ===================== MINIMAL SKIN =====================
    The site steps back so the cards are the only colourful thing on the page:
    neutral greys, flat surfaces, no textures, glows or gold. Card styles (.tcard) are untouched. */
