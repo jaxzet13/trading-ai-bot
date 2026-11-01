@@ -710,7 +710,20 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   const fresh = () => ({ ageOK: false, coins: 0, tokens: 0, vault: [], history: [], serial: 0, netlog: [], muted: false,
     s: { usdSpent: 0, coinsBought: 0, freeCoins: 0, coinsOnPacks: 0, coinValuePulled: 0, coinsFromSales: 0, tokensEarned: 0, tokensOnPacks: 0, packs: 0, wins: 0, losses: 0, best: null, purchases: 0 } });
   let state = fresh();
-  try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") { state = Object.assign(fresh(), s); state.s = Object.assign(fresh().s, s.s || {}); state.vault = state.vault.filter(it => BY_ID[it.id]); } } catch (e) {}
+  try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") { state = Object.assign(fresh(), s); state.s = Object.assign(fresh().s, s.s || {}); } } catch (e) {}
+  // Migrate saves from older rosters: refund retired fighters at sell-back value and drop stale references.
+  try {
+    const gone = (state.vault || []).filter(it => !BY_ID[it.id]);
+    if (gone.length) {
+      const refund = gone.reduce((sum, it) => sum + Math.max(1, Math.floor((it.val != null ? it.val : 10) * .9)), 0);
+      state.vault = state.vault.filter(it => BY_ID[it.id]);
+      state.coins += refund;
+      state.history.unshift({ t: Date.now(), text: `Refunded ${gone.length} retired card${gone.length > 1 ? "s" : ""} from the old roster`, delta: refund, cur: "coin" });
+    }
+    state.hits = (state.hits || []).filter(h => BY_ID[h.id]);
+    if (state.s && state.s.best && !BY_ID[state.s.best.id]) state.s.best = null;
+    state.history = (state.history || []).filter(h => h && typeof h.t === "number");
+  } catch (e) { state = fresh(); }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
   function log(text, delta, cur) { state.history.unshift({ t: Date.now(), text, delta, cur }); if (state.history.length > 250) state.history.length = 250; }
   const vaultSellCoins = () => state.vault.reduce((s, it) => s + itemSell(it), 0);
