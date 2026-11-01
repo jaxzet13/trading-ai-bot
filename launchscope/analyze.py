@@ -90,11 +90,13 @@ def track(max_launches: int, idle_exit_min: float, every: int = 1) -> None:
     while len(done) < max_launches:
         launches = [json.loads(l) for l in LAUNCHES.read_text().splitlines() if l.strip()]
         launches = [l for l in launches if l["quote_token"] == SOL and l["price_usd"] > 0][::every]
-        ready = [l for l in launches
-                 if l["address"] not in done and l["quote_token"] == SOL and l["price_usd"] > 0
-                 and time.time() >= ts(l["seen_at"]) + (WINDOW + 2) * 60]
+        pending = [l for l in launches if l["address"] not in done]
+        ready = [l for l in pending if time.time() >= ts(l["seen_at"]) + (WINDOW + 2) * 60]
         if not ready:
-            if time.time() - idle_since > idle_exit_min * 60:
+            # Only count as idle once every collected launch is scored (waiting for launches to age isn't idle).
+            if pending:
+                idle_since = time.time()
+            elif time.time() - idle_since > idle_exit_min * 60:
                 break
             time.sleep(20)
             continue
