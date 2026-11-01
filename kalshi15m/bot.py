@@ -109,6 +109,7 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
     log({"event": "start", "mode": mode, "stake": stake})
 
     P, seen, traded, cur, day, day_pnl, day_trades, open_pos = None, set(), set(), None, None, 0.0, 0, {}
+    max_gap = -1.0
     pending = {}  # resting maker orders: ticker -> order info
     while True:
         try:
@@ -158,7 +159,10 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                         pass
                 pending.pop(tk)
             if m["ticker"] != cur:
-                cur, seen = m["ticker"], set()
+                if cur and len(seen) >= 8:  # finished watching a market: record it
+                    log({"event": "watched", "ticker": cur, "minutes": len(seen), "max_gap": round(max_gap, 4),
+                         "traded": cur in traded})
+                cur, seen, max_gap = m["ticker"], set(), -1.0
                 P = {f: np.full((1, 14), np.nan) for f in FIELDS}
             open_ts = _ts(m["open_time"])
             minute = int((time.time() - open_ts) // 60)
@@ -177,6 +181,9 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
             for f in FIELDS:
                 P[f][0, j] = vals.get(f, np.nan)
             P["p_model"] = model_prob(P)
+            pm = P["p_model"][0, j]
+            if np.isfinite(pm) and np.isfinite(P["yes_ask"][0, j]) and np.isfinite(P["no_ask"][0, j]):
+                max_gap = max(max_gap, pm - P["yes_ask"][0, j], (1 - pm) - P["no_ask"][0, j])
             seen.add(minute)
             _status(series, {"ticker": cur, "minute": minute, "spot": spot, "strike": strike, "yes_bid": yb,
                              "yes_ask": ya, "model": float(P["p_model"][0, j]) if np.isfinite(P["p_model"][0, j]) else None,

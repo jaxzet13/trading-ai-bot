@@ -25,7 +25,11 @@ def _lab_holdout(series, strategy, execution):
         _LAB = json.loads(f.read_text()) if f.exists() else {}
     for x in (_LAB.get("finals") or []) + (_LAB.get("benchmarks") or []):
         if x["scope"] == series and x["strategy"] == strategy and x["execution"] == execution:
-            return x["holdout"]
+            h = dict(x["holdout"])
+            n = (_LAB.get("coins") or {}).get(series, {}).get("holdout_markets")
+            if n:
+                h["per_market"] = round(h["trades"] / n, 3)
+            return h
     return None
 
 
@@ -123,6 +127,8 @@ def summarise() -> dict:
             "backtest": _backtest(results, s, e["strategy"], e["execution"]),
             "lab": _lab_holdout(s, e["strategy"], e["execution"]),
             "lags": [x.get("lag_s") for x in ev if x["event"] == "buy" and x.get("lag_s") is not None],
+            "watched": sum(x["event"] == "watched" for x in ev),
+            "near": sorted(([x["ticker"], x["max_gap"]] for x in ev if x["event"] == "watched"), key=lambda t: t[0])[-12:],
         })
     out["events"] = [x for x in events if x["event"] != "start"][-40:]
     return out

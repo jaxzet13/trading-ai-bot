@@ -423,6 +423,8 @@ td.coin { font-size: 12px; }
       <div class="sdesc" style="max-width:none">${s.why}</div>
       <div class="kv" style="grid-template-columns:auto 1fr 1fr;margin-top:4px">
         <div class="h">&nbsp;</div><div class="h num">Live</div><div class="h num">${bl}</div>
+        <div>Markets watched</div><div class="num">${s.watched || 0}</div><div class="num">${s.lab && s.lab.per_market != null ? s.lab.per_market.toFixed(2) + " trades/market" : "–"}</div>
+        <div>Trades expected so far</div><div class="num">${s.lab && s.lab.per_market != null ? (s.watched * s.lab.per_market).toFixed(1) : "–"}</div><div class="num"></div>
         <div>Orders placed</div><div class="num">${s.orders}</div><div class="num">${b && b.diag.orders ? b.diag.orders.toLocaleString() : "–"}</div>
         <div>Filled</div><div class="num">${s.fills}</div><div class="num">${b && b.diag.fill_rate != null ? pct(b.diag.fill_rate) : "–"}</div>
         <div>Settled trades</div><div class="num">${s.settled}</div><div class="num">${b ? b.oos.trades.toLocaleString() : "–"}</div>
@@ -431,6 +433,7 @@ td.coin { font-size: 12px; }
         <div>t-stat</div><div class="num">–</div><div class="num">${b ? tfmt(b.oos.t_stat) : "–"}</div>
         ${s.execution === "taker" ? `<div>Avg seconds after the minute</div><div class="num">${lag}</div><div class="num">0</div>` : ""}
       </div>
+      ${s.strategy.startsWith("fair_value") && s.near && s.near.length ? `<div class="live-state">Biggest model gap per recent market (trades at ${s.strategy === "fair_value" && s.params.edge ? Math.round(s.params.edge * 100) + "¢" : "its trigger"}): ${s.near.map(n => `${Math.round(n[1] * 100)}¢`).join(" · ")}</div>` : ""}
       <div class="live-state">${st ? `${s.stale ? "Last seen" : "Now"}: ${st.ticker}, minute ${st.minute}, bid/ask ${(st.yes_bid * 100).toFixed(1)}¢ / ${(st.yes_ask * 100).toFixed(1)}¢${st.model != null ? `, model ${(st.model * 100).toFixed(1)}%` : ""}${s.open.length ? ` · open: ${s.open.length}` : ""}` : "Waiting for the first market"}</div>
     </div>`; }).join("");
     $("btLegend").innerHTML = L.strategies.map((s, i) => `<span><i style="background:${tok(COIN_COL[i + 1])}"></i>${COIN(s.series)} ${s.name}</span>`).join("");
