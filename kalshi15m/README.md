@@ -12,7 +12,7 @@ pip install -r kalshi15m/requirements.txt
 python -m kalshi15m download --days 45     # ~10 min, public APIs, no key needed
 python -m kalshi15m backtest               # sweeps + train/test split, writes dashboard/
 python -m kalshi15m serve                  # open http://localhost:8050
-python -m kalshi15m bot --strategy closing_value --execution maker   # PAPER trading
+python -m kalshi15m bot --series KXBTC15M KXETH15M KXSOL15M   # PAPER: each coin runs its own pick
 ```
 
 ## What's tested
@@ -44,6 +44,14 @@ both as taker (buy at the ask) and maker (rest a limit order at the bid).
 
 `python -m kalshi15m download` also pulls Kalshi's archive (from `--since`, every `--every`-th market)
 for a longer test; it takes a few hours because the archive serves one market per request.
+
+## Each coin, its own strategy
+
+`backtest` also picks a strategy per coin, walk-forward: before each period it takes the strategy,
+order type and settings with the best t-stat on that coin's earlier data (sitting out if none reaches
+2), then trades the period untouched. `bot --strategy auto` (the default) runs each coin's latest pick.
+On Aug 31 - Nov 1: BTC picked spot lag (+$12), ETH mostly sat out (+$41), SOL picked the fair-value
+family (+$610). Combined +$663, t = 0.80: not yet distinguishable from luck.
 
 ## Going live (read this first)
 

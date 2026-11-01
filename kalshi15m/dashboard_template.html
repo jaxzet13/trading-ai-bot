@@ -6,7 +6,7 @@
 /* Layout: one working column; summary strip -> leaderboard -> selected-strategy detail grid. */
 :root {
   --bg: #f4f6f8; --surface: #ffffff; --ink: #11161c; --ink-2: #4a5562; --muted: #7f8a96;
-  --line: #dfe4ea; --grid: #e9edf1; --accent: #2a78d6; --accent-2: #eb6834;
+  --line: #dfe4ea; --grid: #e9edf1; --accent: #2a78d6; --accent-2: #eb6834; --s3: #1baf7a;
   --good: #0a7d0a; --good-bg: #e3f3e3; --bad: #c43333; --bad-bg: #fbe7e7;
   --warn: #8a5a00; --warn-bg: #fdf1d8; --chip: #eef2f6;
   --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
@@ -15,12 +15,12 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0f1317; --surface: #171c22; --ink: #eef1f4; --ink-2: #b4bdc7; --muted: #7f8a96;
-  --line: #29313a; --grid: #222930; --accent: #3987e5; --accent-2: #d95926;
+  --line: #29313a; --grid: #222930; --accent: #3987e5; --accent-2: #d95926; --s3: #199e70;
   --good: #3fbf3f; --good-bg: #143019; --bad: #ec6b6b; --bad-bg: #3a1a1a;
   --warn: #f0b84a; --warn-bg: #352a12; --chip: #212830; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #0f1317; --surface: #171c22; --ink: #eef1f4; --ink-2: #b4bdc7; --muted: #7f8a96;
-  --line: #29313a; --grid: #222930; --accent: #3987e5; --accent-2: #d95926;
+  --line: #29313a; --grid: #222930; --accent: #3987e5; --accent-2: #d95926; --s3: #199e70;
   --good: #3fbf3f; --good-bg: #143019; --bad: #ec6b6b; --bad-bg: #3a1a1a;
   --warn: #f0b84a; --warn-bg: #352a12; --chip: #212830; color-scheme: dark; }
 
@@ -57,6 +57,7 @@ table { width: 100%; border-collapse: collapse; font-size: 13px; }
 #board { min-width: 1080px; }
 #board td:first-child { min-width: 230px; }
 #folds { min-width: 700px; }
+#picks { min-width: 900px; }
 #trades { min-width: 420px; }
 th { text-align: left; font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
   padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
@@ -115,6 +116,15 @@ td.coin { font-size: 12px; }
 .pill.prom { color: var(--warn); background: var(--warn-bg); }
 .pill.luck { color: var(--ink-2); background: var(--chip); }
 .pill.loses { color: var(--bad); background: var(--bad-bg); }
+.coins { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.coin-card { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.coin-card .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.coin-card .sym { font: 600 18px var(--f-display); display: inline-flex; align-items: center; gap: 8px; }
+.coin-card .sym i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.coin-card .pick { font-weight: 600; }
+.coin-card .row { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--ink-2); }
+.coin-card .row b { font: 500 13px var(--f-mono); color: var(--ink); }
+@media (max-width: 900px) { .coins { grid-template-columns: 1fr; } }
 .fold-note { color: var(--muted); font-size: 12px; margin-top: 8px; }
 </style>
 
@@ -134,6 +144,16 @@ td.coin { font-size: 12px; }
   </header>
 
   <section class="verdict" id="verdict"></section>
+
+  <section class="panel" id="portPanel" hidden>
+    <div class="panel-head">
+      <div><h2>Each coin, its own strategy</h2><p id="portIntro"></p></div>
+    </div>
+    <div class="coins" id="coinCards"></div>
+    <div class="legend" id="portLegend" style="margin-top:16px"></div>
+    <div class="chart"><canvas id="port" aria-label="Per-coin out-of-sample equity"></canvas></div>
+    <div class="tablewrap" style="margin-top:12px"><table id="picks"></table></div>
+  </section>
 
   <section class="panel">
     <div class="panel-head">
@@ -272,7 +292,7 @@ td.coin { font-size: 12px; }
     const names = Object.keys(R.strategies);
     if (!cur.strat || !R.strategies[cur.strat]) cur.strat = names.filter(n => n !== "baseline_yes")
       .sort((a, b) => R.strategies[b].runs[cur.ex].oos.t_stat - R.strategies[a].runs[cur.ex].oos.t_stat)[0];
-    renderVerdict(); renderBoard(); renderCmp(); renderDetail(); renderCal(); renderNotes();
+    renderVerdict(); renderPortfolio(); renderBoard(); renderCmp(); renderDetail(); renderCal(); renderNotes();
   }
 
   function renderVerdict() {
@@ -304,6 +324,34 @@ td.coin { font-size: 12px; }
         <td class="num">${tfmt(m.t_stat)}</td><td class="num">${pct(r.fold_win).replace(".0", "")}</td>${cur.ex === "maker" ? `<td class="num">${r.diag && r.diag.orders ? pct(r.diag.fill_rate) : "–"}</td>` : ""}
         ${coins.map(k => { const pc = (r.per_coin || {})[k]; return `<td class="num coin ${pc ? cls(pc.pnl) : ""}">${pc && pc.trades ? money(pc.pnl) : "–"}</td>`; }).join("")}
         <td><span class="pill ${c}">${l}</span></td></tr>`; }).join("") + "</tbody>";
+  }
+
+  const COIN_COL = ["--accent", "--accent-2", "--s3"];
+  function renderPortfolio() {
+    const P = DATA.portfolio; $("portPanel").hidden = !P; if (!P) return;
+    const c = C(), ks = Object.keys(P.coins), col = i => tok(COIN_COL[i % 3]);
+    const label = p => p.strategy ? `${NAMES[p.strategy] || p.strategy} · ${p.execution}` : "Sat out";
+    const T = P.total;
+    $("portIntro").innerHTML = `Before each period, every coin picks the strategy, order type and settings with the strongest record on that coin's earlier data, and sits out if nothing reached a t-stat of ${P.min_train_t}. Then it trades the period untouched. Combined: <b class="${cls(T.pnl)}">${money(T.pnl)}</b> on ${T.trades.toLocaleString()} trades, t-stat ${tfmt(T.t_stat)}.`;
+    $("coinCards").innerHTML = ks.map((k, i) => { const v = P.coins[k], m = v.oos, p = v.current || {}; return `<div class="coin-card">
+      <div class="top"><span class="sym"><i style="background:${col(i)}"></i>${COIN(k)}</span><span class="num ${cls(m.pnl)}" style="font:500 18px var(--f-mono)">${money(m.pnl)}</span></div>
+      <div><div class="eyebrow" style="margin-bottom:4px">Latest pick</div><div class="pick">${label(p)}</div><div class="params">${params(p.params)}</div></div>
+      <div class="row"><span>Trades</span><b>${m.trades.toLocaleString()}</b></div>
+      <div class="row"><span>ROI per $ staked</span><b class="${cls(m.roi)}">${m.trades ? spct(m.roi) : "–"}</b></div>
+      <div class="row"><span>t-stat</span><b>${tfmt(m.t_stat)}</b></div>
+      <div class="row"><span>Periods traded / profitable</span><b>${v.folds_traded} / ${Math.round(v.fold_win * v.folds_traded)}</b></div>
+    </div>`; }).join("");
+    $("portLegend").innerHTML = ks.map((k, i) => `<span><i style="background:${col(i)}"></i>${COIN(k)}</span>`).join("") + `<span><i style="background:var(--ink)"></i>All coins combined</span>`;
+    const ds = ks.map((k, i) => ({ label: COIN(k), data: P.coins[k].curve.map(([t, v]) => ({ x: t * 1000, y: v })), borderColor: col(i), borderWidth: 2, pointRadius: 0, pointHoverRadius: 4 }));
+    ds.push({ label: "Combined", data: P.curve.map(([t, v]) => ({ x: t * 1000, y: v })), borderColor: c.ink, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4 });
+    const o = base(c); o.interaction = { mode: "nearest", intersect: false };
+    o.plugins.tooltip.callbacks = { title: i => fmtTime(i[0].parsed.x / 1000), label: i => `${i.dataset.label}: ${money(i.parsed.y, 2)}` };
+    o.scales = { x: axis(c, { type: "linear", ticks: { color: c.muted, maxTicksLimit: 7, callback: v => fmtDate(v / 1000) } }), y: axis(c, { ticks: { color: c.muted, callback: v => money(v) } }) };
+    mk("port", { type: "line", data: { datasets: ds }, options: o, plugins: [zeroLine(c)] });
+    const n = P.coins[ks[0]].picks.length;
+    $("picks").innerHTML = `<thead><tr><th>Period</th>${ks.map(k => `<th>${COIN(k)} pick</th><th class="num">${COIN(k)} P&amp;L</th>`).join("")}</tr></thead><tbody>` +
+      Array.from({ length: n }, (_, j) => { const p0 = P.coins[ks[0]].picks[j]; return `<tr><td class="mono">${fmtDate(p0.start)} – ${fmtDate(p0.end)}</td>` +
+        ks.map(k => { const p = P.coins[k].picks[j]; return `<td><div>${label(p)}</div><div class="params">${params(p.params)}</div></td><td class="num ${cls(p.test_pnl)}">${p.strategy ? money(p.test_pnl) : "–"}</td>`; }).join("") + "</tr>"; }).join("") + "</tbody>";
   }
 
   function renderCmp() {
@@ -419,7 +467,7 @@ td.coin { font-size: 12px; }
   });
   document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-n]");
     if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); const n = r.dataset.n; r.click(); setTimeout(() => document.querySelector(`tr[data-n="${n}"]`)?.focus(), 0); } });
-  const rerender = () => { renderCmp(); renderDetail(); renderCal(); };
+  const rerender = () => { renderPortfolio(); renderCmp(); renderDetail(); renderCal(); };
   try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rerender); } catch (e) {}
   new MutationObserver(rerender).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   renderAll();

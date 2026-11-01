@@ -26,8 +26,9 @@ def main():
     s = sub.add_parser("serve", help="open the dashboard at http://localhost:8050")
     s.add_argument("--port", type=int, default=8050)
     t = sub.add_parser("bot", help="run the trading loop (paper by default)")
-    t.add_argument("--series", default="KXBTC15M")
-    t.add_argument("--strategy", default="fair_value")
+    t.add_argument("--series", nargs="+", default=["KXSOL15M"], help="one or more coins; each runs in its own thread")
+    t.add_argument("--strategy", default="auto",
+                   help="a strategy name, or 'auto' = each coin's latest pick from the backtest")
     t.add_argument("--params", default=None, help='JSON, e.g. \'{"edge":0.1}\'; default = best from backtest')
     t.add_argument("--stake", type=float, default=5.0)
     t.add_argument("--max-daily-loss", type=float, default=50.0)
@@ -47,19 +48,38 @@ def main():
         print(f"dashboard: http://localhost:{a.port}")
         http.server.ThreadingHTTPServer(("", a.port), h).serve_forever()
     elif a.cmd == "bot":
-        params = json.loads(a.params) if a.params else None
-        if params is None:
-            try:
-                r = json.loads((report.OUT / "results.json").read_text())
-                r = r.get("scopes", {}).get(a.series.replace("KX", "").replace("15M", "") + " only") \
-                    or next(iter(r.get("scopes", {"": r}).values()))
-                params = r["strategies"][a.strategy]["runs"][a.execution]["final_params"]
-                print("using backtest-best params:", params)
-            except Exception:
-                params = {}
-        bot.run(a.series, a.strategy, params, a.stake, a.live, a.demo, a.max_daily_loss,
-                execution=a.execution, wait=a.wait)
-
+        import threading
+        try:
+            res = json.loads((report.OUT / "results.json").read_text())
+        except FileNotFoundError:
+            res = {}
+        jobs = []
+        for series in a.series:
+            strategy, execution = a.strategy, a.execution
+            params = json.loads(a.params) if a.params else None
+            if strategy == "auto":
+                pick = ((res.get("portfolio") or {}).get("coins", {}).get(series) or {}).get("current")
+                if not pick or not pick.get("strategy"):
+                    print(f"{series}: no strategy cleared the bar in the backtest, sitting out")
+                    continue
+                strategy, execution, params = pick["strategy"], pick["execution"], pick["params"]
+            elif params is None:
+                scope = res.get("scopes", {}).get(series.replace("KX", "").replace("15M", "") + " only") \
+                    or next(iter(res.get("scopes", {"": res}).values()), {})
+                params = (((scope.get("strategies") or {}).get(strategy) or {}).get("runs", {})
+                          .get(execution, {}).get("final_params", {}))
+            print(f"{series}: {strategy} / {execution} {params}")
+            jobs.append(threading.Thread(target=bot.run, daemon=True, kwargs=dict(
+                series=series, strategy=strategy, params=params, stake=a.stake, live=a.live, demo=a.demo,
+                max_daily_loss=a.max_daily_loss, execution=execution, wait=a.wait)))
+        for j in jobs:
+            j.start()
+        try:
+            for j in jobs:
+                while j.is_alive():
+                    j.join(1)
+        except KeyboardInterrupt:
+            print("stopped")
 
 if __name__ == "__main__":
     main()

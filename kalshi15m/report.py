@@ -90,8 +90,8 @@ def walk_forward(panel: Panel, fn, grid: dict, execution: str, n_folds: int, sta
         tm = metrics(tr)
         diags.append(tr.attrs.get("diag", {}))
         folds.append({"start": int(edges[k]), "end": int(edges[k + 1]), "params": best,
-                      "train_pnl": best_m["pnl"], "test_pnl": tm["pnl"], "test_trades": tm["trades"],
-                      "test_roi": tm["roi"]})
+                      "train_pnl": best_m["pnl"], "train_t": best_m["t_stat"], "train_trades": best_m["trades"],
+                      "test_pnl": tm["pnl"], "test_trades": tm["trades"], "test_roi": tm["roi"], "_trades": tr})
         oos.append(tr)
         if k == n_folds - 1 and len(combos) > 1:
             last_sweep = [{"params": p, "train_pnl": m["pnl"], "train_trades": m["trades"],
@@ -102,7 +102,8 @@ def walk_forward(panel: Panel, fn, grid: dict, execution: str, n_folds: int, sta
     return folds, oos, last_sweep, merge_diag(diags)
 
 
-def evaluate(series_list, n_folds=6, stake=10.0, min_trades=60):
+def evaluate(series_list, n_folds=6, stake=10.0, min_trades=60, keep=None):
+    """keep: optional dict filled with {(strategy, execution): folds incl. their trades}."""
     panels, longs = {}, {}
     for s in series_list:
         print(f"[{s}] building panel ...")
@@ -121,6 +122,9 @@ def evaluate(series_list, n_folds=6, stake=10.0, min_trades=60):
         res["strategies"][name] = {"description": desc, "runs": {}}
         for ex in EXECUTIONS:
             folds, oos, sweep, diag = walk_forward(pooled, fn, grid, ex, n_folds, stake, min_trades)
+            if keep is not None:
+                keep[(name, ex)] = folds
+            folds = [{k: v for k, v in f.items() if k != "_trades"} for f in folds]
             m = metrics(oos)
             per_coin = {s: metrics(oos[oos.series == s]) for s in series_list} if not oos.empty else {}
             by_min = (oos.groupby("minute").agg(trades=("pnl", "size"), pnl=("pnl", "sum"), win=("win", "mean"))
@@ -143,17 +147,72 @@ def evaluate(series_list, n_folds=6, stake=10.0, min_trades=60):
     return res
 
 
-def build(series_list=tuple(SERIES), stake=10.0, n_folds=6, out=None, solo=()):
+def coin_picks(keep: dict, coin: str, min_train_t: float = 2.0):
+    """Walk-forward strategy selection for one coin. At each fold, among every strategy x order
+    type (already tuned on earlier data only), take the one with the best earlier-data t-stat.
+    If none reaches `min_train_t`, sit the fold out. Then trade it on the fold."""
+    n = len(next(iter(keep.values())))
+    picks, trades = [], []
+    for k in range(n):
+        cands = [(name, ex, folds[k]) for (name, ex), folds in keep.items()
+                 if name != "baseline_yes" and folds[k]["train_trades"] >= 60]
+        name, ex, f = max(cands, key=lambda c: c[2]["train_t"]) if cands else (None, None, None)
+        base = next(iter(keep.values()))[k]
+        if f is None or f["train_t"] < min_train_t:
+            picks.append({"start": base["start"], "end": base["end"], "strategy": None, "execution": None,
+                          "params": {}, "train_t": f["train_t"] if f else None, "test_pnl": 0.0, "test_trades": 0})
+            continue
+        picks.append({"start": f["start"], "end": f["end"], "strategy": name, "execution": ex, "params": f["params"],
+                      "train_t": f["train_t"], "train_pnl": f["train_pnl"],
+                      "test_pnl": f["test_pnl"], "test_trades": f["test_trades"]})
+        if not f["_trades"].empty:
+            trades.append(f["_trades"].assign(strategy=name, execution=ex))
+    tr = pd.concat(trades, ignore_index=True) if trades else pd.DataFrame(columns=["ts", "pnl", "win", "cost", "price", "fee"])
+    return picks, tr
+
+
+def portfolio(series_list, n_folds=6, stake=10.0, min_train_t=2.0):
+    """Each coin gets its own strategy, chosen walk-forward. Returns (solo scopes, portfolio summary)."""
+    scopes, coins, all_tr = {}, {}, []
+    for s in series_list:
+        label = s.replace("KX", "").replace("15M", "") + " only"
+        print(f"== {s} on its own ==")
+        keep = {}
+        scopes[label] = evaluate([s], n_folds=n_folds, stake=stake, keep=keep)
+        picks, tr = coin_picks(keep, s, min_train_t)
+        m = metrics(tr)
+        # what each coin would run today: best earlier-data t-stat on ALL data up to now = last fold's pick
+        coins[s] = {"picks": picks, "oos": m, "curve": _curve(tr),
+                    "folds_traded": sum(p["strategy"] is not None for p in picks),
+                    "fold_win": round(float(np.mean([p["test_pnl"] > 0 for p in picks if p["strategy"]] or [0])), 2),
+                    "current": picks[-1] if picks else None,
+                    "recent": (tr.sort_values("ts").tail(20)[["ticker", "ts", "strategy", "execution", "side", "minute",
+                                                              "price", "contracts", "pnl"]].to_dict("records")
+                               if not tr.empty else [])}
+        print(f"  -> {s}: OOS ${m['pnl']} on {m['trades']} trades, t={m['t_stat']}; picks: "
+              + ", ".join(f"{p['strategy']}/{p['execution']}" for p in picks))
+        if not tr.empty:
+            all_tr.append(tr)
+    tot = pd.concat(all_tr, ignore_index=True) if all_tr else pd.DataFrame(columns=["ts", "pnl", "win", "cost", "price", "fee"])
+    return scopes, {"min_train_t": min_train_t, "coins": coins, "total": metrics(tot), "curve": _curve(tot)}
+
+
+def build(series_list=tuple(SERIES), stake=10.0, n_folds=6, out=None, solo=(), per_coin=True):
     """Write the dashboard. `solo` adds single-coin views (e.g. SOL only) next to the pooled one."""
     out_dir = Path(out) if out else OUT
     series_list = [s for s in series_list if (DATA_DIR / f"{s}_markets.csv").exists()]
     scopes = {"All coins" if len(series_list) > 1 else series_list[0].replace("KX", "").replace("15M", "") + " only":
               evaluate(series_list, n_folds=n_folds, stake=stake)}
-    for s in solo:
-        if s in series_list or (DATA_DIR / f"{s}_markets.csv").exists():
-            print(f"== {s} on its own ==")
-            scopes[s.replace("KX", "").replace("15M", "") + " only"] = evaluate([s], n_folds=n_folds, stake=stake)
-    results = {"scopes": scopes} if len(scopes) > 1 else next(iter(scopes.values()))
+    port = None
+    if per_coin and len(series_list) > 1:
+        solo_scopes, port = portfolio(series_list, n_folds=n_folds, stake=stake)
+        scopes.update(solo_scopes)
+    else:
+        for s in solo:
+            if (DATA_DIR / f"{s}_markets.csv").exists():
+                print(f"== {s} on its own ==")
+                scopes[s.replace("KX", "").replace("15M", "") + " only"] = evaluate([s], n_folds=n_folds, stake=stake)
+    results = {"scopes": scopes, "portfolio": port} if len(scopes) > 1 else next(iter(scopes.values()))
     out_dir.mkdir(parents=True, exist_ok=True)
     blob = json.dumps(results, default=_np)
     (out_dir / "results.json").write_text(blob)
