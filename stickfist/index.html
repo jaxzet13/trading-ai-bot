@@ -491,15 +491,15 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .cut.ended video, .cut.ended canvas { filter: brightness(.35) saturate(.6); }
 .cut-bar { position: absolute; left: 0; right: 0; height: 0; background: #000; transition: height .5s cubic-bezier(.2,.8,.2,1); z-index: 2; }
 .cut-bar.t { top: 0; } .cut-bar.b { bottom: 0; }
-.cut.on .cut-bar { height: 11vh; }
-.cut-tag { position: absolute; left: max(28px, 5vw); bottom: calc(11vh + 22px); z-index: 3; display: grid; gap: 2px; opacity: 0; transform: translateX(-40px); transition: opacity .5s .5s, transform .6s .5s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+.cut.on .cut-bar { height: 11vh; } .cut.on .cut-bar.b { height: max(11vh, 96px); }
+.cut-tag { position: absolute; left: max(28px, 5vw); bottom: max(10px, 1.6vh); z-index: 3; display: grid; gap: 2px; opacity: 0; transform: translateX(-40px); transition: opacity .5s .5s, transform .6s .5s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
 .cut.on .cut-tag { opacity: 1; transform: none; }
 .cut-r { font-family: var(--f-mono); font-size: clamp(11px, 1.3vw, 15px); letter-spacing: .4em; text-transform: uppercase; color: var(--rc); }
-.cut-n { font-family: var(--f-display); font-style: italic; font-weight: 700; font-size: clamp(48px, 9vw, 120px); line-height: .9; color: #fff; -webkit-text-stroke: 1px rgba(0,0,0,.35); }
+.cut-n { font-family: var(--f-display); font-style: italic; font-weight: 700; font-size: clamp(34px, 6.4vh, 64px); line-height: .9; color: #fff; -webkit-text-stroke: 1px rgba(0,0,0,.35); }
 .cut-card { position: absolute; z-index: 4; width: min(300px, 62vw, 50vh); animation: cutslam .6s cubic-bezier(.2,1.4,.4,1) both; }
 .cut-card .tcard { --go: 1; }
 @keyframes cutslam { from { transform: scale(2.6) rotate(-8deg); opacity: 0; filter: blur(6px); } to { transform: none; opacity: 1; filter: none; } }
-.cut-cont { position: absolute; z-index: 4; bottom: calc(11vh + 18px); right: max(28px, 5vw); font-family: var(--f-mono); font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: #e9e4d8; animation: blink 1.4s infinite; }
+.cut-cont { position: absolute; z-index: 4; bottom: max(14px, 2.4vh); right: max(28px, 5vw); font-family: var(--f-mono); font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: #e9e4d8; animation: blink 1.4s infinite; }
 @keyframes blink { 50% { opacity: .35; } }
 .cut .cut-skip { position: absolute; z-index: 5; top: calc(11vh + 14px); right: max(16px, 3vw); left: auto; bottom: auto; width: auto; height: auto; justify-self: end; align-self: start; }
 .flash { position: fixed; inset: 0; z-index: 46; pointer-events: none; opacity: 0; background: #fff; }
@@ -589,7 +589,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 @keyframes turnR { from { transform: rotateY(70deg); opacity: .3; } }
 .cm-box { position: relative; background: var(--ash); border: 1px solid var(--line-2); padding: 28px; width: min(860px, 100%); display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 28px; align-items: start; }
 .cm-x { position: absolute; top: 12px; right: 12px; }
-.cm-card .tcard { width: 100%; transition: transform .12s ease-out; will-change: transform; }
+.cm-card .tcard, .cm-card .slab { width: 100%; transition: transform .25s ease-out; will-change: transform; transform-style: preserve-3d; }
 .cm-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .cm-side h2 { font-size: 42px; font-style: italic; }
 .copies { display: grid; gap: 6px; max-height: 260px; overflow-y: auto; }
@@ -603,7 +603,11 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .nw { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--line); } .nw:last-child { border: 0; } .nw .num { color: var(--faint); font-size: 11px; }
 .up { color: var(--good); } .dn { color: var(--bad); } .fl { color: var(--dim); }
 .mk-table-wrap { overflow-x: auto; border: 1px solid var(--line); }
-.mk-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 720px; }
+.mk-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 860px; }
+.vbadge, .lbadge { font-style: normal; font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .14em; padding: 1px 5px; background: #b3121b; color: #fff; }
+.lbadge { background: var(--brass); color: #111; }
+.mk-table .pop { font-size: 12px; color: var(--dim); white-space: nowrap; }
+.nw.lim { background: rgba(194,166,107,.08); }
 .mk-table th { text-align: left; font-family: var(--f-mono); font-weight: 500; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--ash); }
 .mk-table td { padding: 8px 12px; border-bottom: 1px solid var(--line); font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
 .mk-table tbody tr { cursor: pointer; } .mk-table tbody tr:hover { background: #151517; }
@@ -786,7 +790,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 
   <section class="view" id="view-market" hidden>
     <div class="section-head">
-      <div><div class="label">Simulated market · <span id="mkDay">day –</span></div><h2>Market</h2><p class="lede">Raw near-mint prices for every card in Ink &amp; Steel. Prices move once per market day (15 minutes) with scarcity, fighter hype and news. Graded copies trade at a multiple of raw.</p></div>
+      <div><div class="label">Simulated market · <span id="mkDay">day –</span></div><h2>Market</h2><p class="lede">Raw near-mint prices for every card in Ink &amp; Steel. Prices move once per market day (15 minutes). Most cards climb as packs dry up and supply stops growing. Limited events (a card vaulted from packs, a buyout, an error print) send one or two cards up 100–400%. Graded copies trade at a multiple of raw.</p></div>
       <div class="mk-demo"><span class="label">Demo time</span><button class="btn small" data-adv="1">+1 day</button><button class="btn small" data-adv="7">+1 week</button><button class="btn small" data-adv="96">+1 real day</button></div>
     </div>
     <div class="mk-top">
@@ -1026,16 +1030,22 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   // Deterministic from the set's launch, so every reload shows the same history. 1 market day = 15 minutes.
   // =====================================================================
   const MKT_EPOCH = Date.UTC(2026, 10, 1, 0, 0, 0), DAY_MS = 15 * 60 * 1000;
-  const MKT_GROWTH = { C: .8, U: .88, R: 1, H: 1.15, RR: 1.3, UR: 1.75, IR: 2, SIR: 2.9, HR: 2.5 };
-  const MKT_VOL = { C: .007, U: .009, R: .012, H: .016, RR: .018, UR: .022, IR: .02, SIR: .026, HR: .024 };
-  const MKT_T = 700;   // days for most of the scarcity trend to play out (~1 real week)
+  const MKT_GROWTH = { C: 1.35, U: 1.5, R: 1.7, H: 2, RR: 2.3, UR: 3, IR: 3.4, SIR: 5, HR: 4.2 };
+  const MKT_VOL = { C: .0035, U: .0045, R: .006, H: .008, RR: .009, UR: .011, IR: .01, SIR: .013, HR: .012 };
+  const MKT_T = 900;   // days for most of the scarcity trend to play out (~2 real weeks): packs dry up, supply stops growing
+  const PER_PACK = { C: .4, U: .2, R: .05, H: .02, RR: .007, UR: .0025, IR: .003, SIR: .0006, HR: .0004 };   // copies of one card per pack opened, by rarity
+  const LIMITED = [["was vaulted: pulled from every pack", true], ["print run ended early", true], ["holders-only Arena event announced", false], ["a pro player is buying every copy", false], ["error print found in the first wave", false]];
   const MKT_NEWS = [["won the Ink Cup", .2], ["cutscene went viral", .28], ["opened live by a big streamer", .14], ["topped the Arena win rate", .12],
     ["reprint announced", -.16], ["counterfeits reported", -.12], ["nerfed in the Arena", -.1], ["featured in a set trailer", .16]];
   const mktDay = () => Math.max(0, Math.floor((Date.now() - MKT_EPOCH) / DAY_MS) + ((typeof state !== "undefined" && state.dayOffset) || 0));
   function hashStr(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
   function mkRng(seed) { let a = seed || 1; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   const gauss = r => { const u = Math.max(1e-9, r()), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.283185 * v); };
-  const MKT = { upTo: -1, px: {}, y: {}, rng: {}, hype: {}, hy: {}, hrng: {}, news: [] };
+  const MKT = { upTo: -1, px: {}, y: {}, rng: {}, hype: {}, hy: {}, hrng: {}, news: [], lim: [] };
+  const packsOpened = d => Math.round(2400 * 600 * (1 - Math.exp(-Math.max(0, d) / 600)));   // simulated packs opened worldwide by day d (opening slows as the set ages)
+  function limFactor(no, d) { let f = 1; for (const e of MKT.lim) { if (e.no !== no || d < e.d0) continue; const t = d - e.d0; f *= t < e.rise ? 1 + e.A * (t / e.rise) * (t / e.rise) * (3 - 2 * t / e.rise) : 1 + e.A * (.6 + .4 * Math.exp(-(t - e.rise) / 140)); } return f; }
+  const vaultedAt = no => { const e = MKT.lim.find(x => x.no === no && x.vault); return e ? e.d0 : Infinity; };
+  function population(no, d) { const D = d == null ? mktDay() : d, c = CARD_BY_NO[no], frozen = Math.min(D, vaultedAt(no)), copies = Math.max(1, Math.round(packsOpened(frozen) * PER_PACK[c.rar])); return { copies, holders: Math.max(1, Math.round(copies * (.32 + .08 * CR[c.rar].tier))), vaulted: D >= vaultedAt(no) }; }
   function extendMarket(D) {
     if (D <= MKT.upTo) return;
     const fids = [...new Set(CARDS.map(c => c.id))];
@@ -1043,12 +1053,20 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     for (let d = MKT.upTo + 1; d <= D; d++) {
       const er = mkRng(hashStr("news" + d)), shock = {};
       if (d > 3 && er() < .03) { const f = fids[Math.floor(er() * fids.length)], n = MKT_NEWS[Math.floor(er() * MKT_NEWS.length)]; shock[f] = n[1]; MKT.news.push({ d, f, text: n[0], s: n[1] }); }
-      for (const f of fids) { MKT.hy[f] = MKT.hy[f] * .985 + .008 * gauss(MKT.hrng[f]) + (shock[f] || 0); MKT.hype[f][d] = MKT.hy[f]; }
+      { const lr = mkRng(hashStr("lim" + d)), active = MKT.lim.filter(e => d - e.d0 < e.rise + 25).length;
+        if (d === 58 || (d > 70 && active < 2 && lr() < 1 / 24)) {
+          const w = CARDS.map(c => CR[c.rar].tier + 1), tot = w.reduce((a, b) => a + b, 0); let x = lr() * tot, pick = CARDS[0];
+          for (let i = 0; i < CARDS.length; i++) { x -= w[i]; if (x < 0) { pick = CARDS[i]; break; } }
+          if (!MKT.lim.some(e => e.no === pick.no)) { const L = LIMITED[Math.floor(lr() * LIMITED.length)], A = 1 + lr() * 3;
+            MKT.lim.push({ no: pick.no, d0: d, rise: Math.round(14 + lr() * 24), A, vault: L[1], text: L[0] });
+            MKT.news.push({ d, f: pick.id, no: pick.no, text: `${CR[pick.rar].name} ${L[0]}`, s: A, lim: true }); }
+        } }
+      for (const f of fids) { MKT.hy[f] = MKT.hy[f] * .985 + .0025 * gauss(MKT.hrng[f]) + (shock[f] || 0); MKT.hype[f][d] = MKT.hy[f]; }
       const tk = 1 - Math.exp(-d / MKT_T);
       for (const c of CARDS) {
         MKT.y[c.no] = MKT.y[c.no] * .97 + MKT_VOL[c.rar] * gauss(MKT.rng[c.no]);
-        const trend = 1 + (MKT_GROWTH[c.rar] - 1) * tk, beta = .5 + .12 * CR[c.rar].tier;
-        MKT.px[c.no][d] = Math.max(1, Math.round(c.v * trend * Math.exp(MKT.y[c.no] + MKT.hy[c.id] * beta)));
+        const trend = (1 + (MKT_GROWTH[c.rar] - 1) * tk) * (1 + d / 3000), beta = .5 + .12 * CR[c.rar].tier;
+        MKT.px[c.no][d] = Math.max(1, Math.round(c.v * trend * limFactor(c.no, d) * Math.exp(MKT.y[c.no] + MKT.hy[c.id] * beta)));
       }
     }
     MKT.upTo = D;
@@ -1086,7 +1104,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     { id: "express", name: "Express", fee: 1499, days: 1 }
   ];
   const featW = (p, c) => p.feat && p.feat[0] === c.id ? p.feat[1] : 1;
-  const poolR = rar => CARDS.filter(c => c.rar === rar);
+  const poolR = rar => { const all = CARDS.filter(c => c.rar === rar), d = mktDay(); extendMarket(d); const open = all.filter(c => d < vaultedAt(c.no)); return open.length ? open : all; };
   function pickKey(d) { let tot = 0; for (const v of Object.values(d)) tot += v; let x = rand() * tot; for (const [k, v] of Object.entries(d)) { x -= v; if (x < 0) return k; } return Object.keys(d).pop(); }
   function pickCard(p, rar) { const pool = poolR(rar), tot = pool.reduce((a, c) => a + featW(p, c), 0); let x = rand() * tot; for (const c of pool) { x -= featW(p, c); if (x < 0) return c; } return pool[pool.length - 1]; }
   function pullPack(p) {
@@ -1410,15 +1428,15 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const w = idx[Math.max(0, idx.length - 8)]; $("mkIdxCh").innerHTML = `${pctTxt((idx[idx.length - 1] - w) / w)} <small>7 days</small>`;
     $("mkIdxChart").innerHTML = spark(idx, 520, 70, { fill: true, sw: 2 });
     const news = MKT.news.filter(e => e.d <= D).slice(-6).reverse();
-    $("mkNews").innerHTML = news.length ? news.map(e => `<div class="nw"><span class="num">D${e.d}</span><span><b>${esc(BY_ID[e.f].name)}</b> ${esc(e.text)}</span>${pctTxt(e.s)}</div>`).join("") : `<p class="small-print">No news yet. Headlines move a fighter's prices when they hit.</p>`;
+    $("mkNews").innerHTML = news.length ? news.map(e => `<div class="nw${e.lim ? " lim" : ""}"><span class="num">D${e.d}</span><span>${e.lim ? "<i class=\"lbadge\">LIMITED</i> " : ""}<b>${esc(BY_ID[e.f].name)}</b> ${esc(e.text)}</span>${e.lim ? `<span class="up">surging</span>` : pctTxt(e.s)}</div>`).join("") : `<p class="small-print">No news yet.</p>`;
     const mine = new Set(state.vault.map(it => cardOf(it).no));
     let rows = CARDS.map(c => ({ c, p: rawPrice(c.no), d1: pctChange(c.no, 1), d7: pctChange(c.no, 7), d30: pctChange(c.no, 30) }));
     if (mkSort === "move") rows.sort((a, b) => Math.abs(b.d7) - Math.abs(a.d7)); else if (mkSort === "price") rows.sort((a, b) => b.p - a.p); else if (mkSort === "mine") rows = rows.filter(r => mine.has(r.c.no)).sort((a, b) => b.p - a.p);
     document.querySelectorAll("[data-mksort]").forEach(b => b.setAttribute("aria-pressed", b.dataset.mksort === mkSort));
-    $("mkTable").innerHTML = `<thead><tr><th>Card</th><th>Raw NM</th><th>1d</th><th>7d</th><th>30d</th><th>30 days</th><th>IGC 10</th></tr></thead><tbody>` + (rows.length ? rows.map(r => {
+    $("mkTable").innerHTML = `<thead><tr><th>Card</th><th>Raw NM</th><th>1d</th><th>7d</th><th>30d</th><th>30 days</th><th>Copies · holders</th><th>IGC 10</th></tr></thead><tbody>` + (rows.length ? rows.map(r => {
       const f = BY_ID[r.c.id], R = CR[r.c.rar];
       return `<tr data-mkcard="${r.c.no}"><td><span class="mkc"><img src="${portrait(f)}" alt=""><span><b>${esc(f.name)}</b><small><i style="color:${R.col}">${R.sym}</i> ${R.name} · ${r.c.no}${mine.has(r.c.no) ? " · owned" : ""}</small></span></span></td>
-        <td class="num">${money(r.p)}</td><td>${pctTxt(r.d1)}</td><td>${pctTxt(r.d7)}</td><td>${pctTxt(r.d30)}</td><td>${spark(priceHistory(r.c.no, 30), 110, 28)}</td><td class="num">${money(r.p * gradeMult(r.c.rar, 10, false))}</td></tr>`;
+        <td class="num">${money(r.p)}</td><td>${pctTxt(r.d1)}</td><td>${pctTxt(r.d7)}</td><td>${pctTxt(r.d30)}</td><td>${spark(priceHistory(r.c.no, 30), 110, 28)}</td><td class="num pop">${(() => { const P = population(r.c.no); return `${fmt(P.copies)} · ${fmt(P.holders)}${P.vaulted ? ` <i class="vbadge">VAULTED</i>` : ""}`; })()}${(() => { const e = MKT.lim.find(x => x.no === r.c.no && mktDay() - x.d0 < x.rise + 25 && mktDay() >= x.d0); return e ? ` <i class="lbadge">LIMITED</i>` : ""; })()}</td><td class="num">${money(r.p * gradeMult(r.c.rar, 10, false))}</td></tr>`;
     }).join("") : `<tr><td colspan="7" class="small-print">You don't own any cards yet.</td></tr>`) + `</tbody>`;
   }
   function advanceMarket(days) { state.dayOffset = (state.dayOffset || 0) + days; save(); renderAll(); if (cmNo) openCardModal(cmNo); toast(`Market moved ${days} day${days > 1 ? "s" : ""} (demo)`); }
@@ -1503,6 +1521,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     $("cmSide").innerHTML = `<span class="label" style="color:${R.col}">${R.sym} ${R.name} · ${card.no}/${String(SET_SIZE).padStart(3, "0")}</span>
       <h2>${esc(f.name)}</h2>${revealHTML}
       <div class="mk-head"><div><span class="label">Raw near-mint</span><strong class="num">${money(raw)}</strong></div><div class="mk-ch">${pctTxt(pctChange(no, 1))}<small>1d</small> ${pctTxt(pctChange(no, 7))}<small>7d</small> ${pctTxt(pctChange(no, 30))}<small>30d</small></div></div>
+      ${(() => { const P = population(no), e = MKT.lim.find(x => x.no === no && mktDay() >= x.d0); return `<div class="small-print">Population ${fmt(P.copies)} copies · ${fmt(P.holders)} holders${P.vaulted ? " · <b class=\"vbadge\">VAULTED</b> no longer in packs" : ""}${e ? ` · Day ${e.d0}: ${esc(e.text)}` : ""}</div>`; })()}
       <div class="rng">${[30, 90, 365].map(d => `<button data-cmrange="${d}" aria-pressed="${cmRange === d}">${d === 365 ? "1y" : d + "d"}</button>`).join("")}</div>
       ${priceChart(no, cmRange)}
       <table class="ladder"><tr>${ladder.map(([k]) => `<th>${k}</th>`).join("")}</tr><tr>${ladder.map(([, m]) => `<td>${money(raw * m)}</td>`).join("")}</tr></table>
@@ -1513,7 +1532,17 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     if (reveal) { const fl = $("flash"); fl.style.setProperty("--fo", .5); fl.style.background = "#fff"; fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on"); sfx.chime(show.slab && show.slab.g >= 10 ? "legendary" : "rare"); }
   }
   function closeCardModal() { cmNo = null; $("cardModal").hidden = true; setTimeout(showGradeReveal, 300); }
-  $("cardModal").addEventListener("pointermove", e => { const tc = $("cmCard").querySelector(".tcard"); if (!tc) return; const r = tc.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; tc.style.setProperty("--mx", (x * 100).toFixed(1) + "%"); tc.style.setProperty("--my", (y * 100).toFixed(1) + "%"); tc.style.setProperty("--go", "1"); tc.style.transform = `perspective(900px) rotateY(${((x - .5) * 18).toFixed(1)}deg) rotateX(${((.5 - y) * 14).toFixed(1)}deg)`; });
+  $("cardModal").addEventListener("pointermove", e => {
+    const tc = $("cmCard").querySelector(".tcard, .slab"); if (!tc) return;
+    const box = $("cmCard").getBoundingClientRect();
+    const inside = e.clientX >= box.left && e.clientX <= box.right && e.clientY >= box.top && e.clientY <= box.bottom;
+    if (!inside) { tc.style.transform = ""; tc.style.setProperty("--go", "0"); return; }
+    const x = Math.min(1, Math.max(0, (e.clientX - box.left) / box.width)), y = Math.min(1, Math.max(0, (e.clientY - box.top) / box.height));
+    const face = tc.classList.contains("tcard") ? tc : tc.querySelector(".tcard");
+    if (face) { face.style.setProperty("--mx", (x * 100).toFixed(1) + "%"); face.style.setProperty("--my", (y * 100).toFixed(1) + "%"); face.style.setProperty("--go", "1"); }
+    tc.style.transform = `perspective(900px) rotateY(${((x - .5) * 14).toFixed(1)}deg) rotateX(${((.5 - y) * 10).toFixed(1)}deg)`;
+  });
+  $("cmCard").addEventListener("pointerleave", () => { const tc = $("cmCard").querySelector(".tcard, .slab"); if (tc) tc.style.transform = ""; });
   $("cardModal").addEventListener("click", e => { if (e.target === $("cardModal")) closeCardModal(); });
   addEventListener("resize", () => { if (currentTab === "vault" && vaultMode === "binder") renderVault(); });
 
