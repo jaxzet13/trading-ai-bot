@@ -13,3 +13,17 @@ Frozen rule (the parameters the walk-forward picked most recently, fold F6):
 
 Pass if, on the archive only: total P&L > 0 AND t-stat >= 2 (flat 10 contracts) AND at least
 3 of the 5 months are profitable. Anything else is a fail. No re-tuning on the archive.
+
+## Result (run Nov 1 2026, 7,309 SOL markets, Apr 1 - Sep 1 2026, every 2nd archive market)
+
+**FAIL.**
+
+| Execution | P&L ($10/trade) | Trades | t-stat | Flat 10 contracts | Months profitable |
+|---|---|---|---|---|---|
+| maker (the frozen rule) | -$280 | 1,913 | -0.27 | -$77, t = -0.45 | 2 of 5 (Apr, Jun) |
+| taker (for reference) | -$1,165 | 2,088 | -1.19 | -$146, t = -0.79 | 2 of 5 |
+
+Monthly maker P&L: Apr +$177, May -$89, Jun +$686, Jul -$906, Aug -$118.
+Maker diagnostics: 92% fill rate, 1.8c saved per fill, but filled orders won 22.6% vs 26.0% for all
+signals (adverse selection). The +$878 seen on Aug 31 - Nov 1 does not hold up on older data; it is
+most likely luck plus picking SOL after the fact.
