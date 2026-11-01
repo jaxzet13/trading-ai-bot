@@ -8,7 +8,9 @@ if not exist .venv (
   .venv\Scripts\pip install -q -r kalshi15m\requirements.txt
 )
 if not exist data\kalshi15m mkdir data\kalshi15m
-start "kalshi15m live-report" /min cmd /c "for /l %%i in () do (timeout /t 900 /nobreak >nul & .venv\Scripts\python -m kalshi15m live-report >nul 2>&1)"
+start "kalshi15m live-report" /min cmd /c "for /l %%i in () do (timeout /t 20 /nobreak >nul & .venv\Scripts\python -m kalshi15m live-report >nul 2>&1)"
+start "kalshi15m dashboard" /min .venv\Scripts\python -m kalshi15m serve
+echo Live dashboard: http://localhost:8050  (updates every 15 s)
 echo Paper trading started %date% %time%. Log: data\kalshi15m\bot_log.jsonl
 :loop
 .venv\Scripts\python -u -m kalshi15m bot --config kalshi15m\live.json

@@ -4,8 +4,8 @@
 #
 # - installs the Python packages it needs (first run only)
 # - restarts the bot if it crashes or loses the network
-# - refreshes dashboard/index.html every 15 minutes (open it in a browser,
-#   or run `python3 -m kalshi15m serve` and go to http://localhost:8050)
+# - serves a live dashboard at http://localhost:8050 that updates every 15 seconds
+#   (trade data is refreshed every 20 seconds)
 set -u
 cd "$(dirname "$0")/.."
 PY=${PYTHON:-python3}
@@ -21,9 +21,12 @@ mkdir -p data/kalshi15m
 # keep the computer awake on a Mac while this runs
 if command -v caffeinate >/dev/null 2>&1; then caffeinate -dimsw $$ & fi
 
-( while true; do sleep 900; $PY -m kalshi15m live-report >/dev/null 2>&1; done ) &
+( while true; do sleep 20; $PY -m kalshi15m live-report >/dev/null 2>&1; done ) &
+( $PY -m kalshi15m serve >/dev/null 2>&1 ) &
+SERVER=$!
+echo "Live dashboard: http://localhost:8050  (updates every 15 s)"
 REPORT=$!
-trap 'kill $REPORT 2>/dev/null; $PY -m kalshi15m live-report; echo "stopped"; exit 0' INT TERM
+trap 'kill $REPORT $SERVER 2>/dev/null; $PY -m kalshi15m live-report; echo "stopped"; exit 0' INT TERM
 
 echo "Paper trading started $(date). Log: data/kalshi15m/bot_log.jsonl"
 while true; do

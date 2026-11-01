@@ -404,14 +404,16 @@ td.coin { font-size: 12px; }
       B.map(b => row(b, "Current live strategy")).join("") + "</tbody>";
   }
 
+  let LIVE_DATA = typeof LIVE === "undefined" ? null : LIVE, liveSource = "snapshot";
+  function setLive(d, src) { if (!d || (LIVE_DATA && d.generated < LIVE_DATA.generated)) return; LIVE_DATA = d; liveSource = src; renderLive(); fresh(); }
   function renderLive() {
-    const L = typeof LIVE === "undefined" ? null : LIVE; $("livePanel").hidden = !L; if (!L) return;
+    const L = LIVE_DATA; $("livePanel").hidden = !L; if (!L) return;
     const c = C(), ago = t => { const m = Math.round((L.generated - t) / 60); return m < 60 ? `${m} min` : `${(m / 60).toFixed(1)} h`; };
     const since = Math.min(...L.strategies.map(s => s.since || L.generated));
     const running = L.strategies.some(s => !s.stale);
-    $("liveBadge").className = "pill " + (running ? "cand" : "luck"); $("liveBadge").textContent = running ? "Running" : "Not running";
+    $("liveBadge").className = "pill " + (running ? "cand" : "luck"); $("liveBadge").textContent = running ? (liveSource === "snapshot" ? "Running" : "Live") : "Not running";
     const tot = L.strategies.reduce((a, s) => a + s.pnl, 0), n = L.strategies.reduce((a, s) => a + s.settled, 0);
-    $("liveIntro").innerHTML = `Paper trades on the real Kalshi markets: live prices, simulated $${L.stake} orders, real settlements. No money at risk. Running for ${ago(since)}, snapshot ${fmtTime(L.generated)}. So far: <b class="${cls(tot)}">${money(tot, 2)}</b> on ${n} settled trade${n === 1 ? "" : "s"}. It takes hundreds of trades before live results mean anything.`;
+    $("liveIntro").innerHTML = `Paper trades on the real Kalshi markets: live prices, simulated $${L.stake} orders, real settlements. No money at risk. Running for ${ago(since)}. <span id="liveFresh"></span> So far: <b class="${cls(tot)}">${money(tot, 2)}</b> on ${n} settled trade${n === 1 ? "" : "s"}. It takes hundreds of trades before live results mean anything.`;
     $("liveCards").className = "coins" + (L.strategies.length === 2 ? " two" : "");
     $("liveCards").innerHTML = L.strategies.map((s, i) => { const b = s.lab ? { oos: s.lab, diag: {} } : s.backtest, st = s.status, bl = s.lab ? "Holdout test" : "Backtest";
       const lag = s.lags && s.lags.length ? (s.lags.reduce((a, x) => a + x, 0) / s.lags.length).toFixed(1) + "s" : "–";
@@ -591,5 +593,22 @@ td.coin { font-size: 12px; }
   try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rerender); } catch (e) {}
   new MutationObserver(rerender).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   renderAll();
+
+  // ---- live updates: local server polls live.json; the published page listens to its database
+  function fresh() { const el = $("liveFresh"); if (!el || !LIVE_DATA) return;
+    const s = Math.max(0, Math.round(Date.now() / 1000 - LIVE_DATA.generated));
+    el.textContent = `Updated ${s < 90 ? s + " s" : Math.round(s / 60) + " min"} ago${liveSource === "snapshot" ? " (snapshot)" : liveSource === "db" ? " (live feed)" : " (auto-refresh)"}.`; }
+  fresh(); setInterval(fresh, 5000);
+  if (/^https?:$/.test(location.protocol) && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
+    const poll = () => fetch("live.json?" + Date.now()).then(r => r.ok ? r.json() : null).then(d => d && setLive(d, "local")).catch(() => {});
+    poll(); setInterval(poll, 15000);
+  }
+  (async () => {
+    try {
+      const db = window.claude && window.claude.use ? await window.claude.use("db") : null;
+      if (!db) return;
+      db.doc("live/state").onSnapshot(s => { const d = s.data(); if (d && d.strategies) setLive(d, "db"); }, () => {});
+    } catch (e) {}
+  })();
 })();
 </script>
