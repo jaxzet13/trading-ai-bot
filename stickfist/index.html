@@ -955,6 +955,16 @@ h1, h2, h3 { font-family: var(--f-body); font-style: normal !important; font-wei
 .tcard .tc-val.rv { font-family: var(--f-body); font-weight: 700; font-size: 3.1cqi; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
 .tcard.full .tc-val.rv { font-size: 3.4cqi; padding: .6cqi 1.8cqi; }
 .tcard .tc-no, .tcard .tc-bottom .tag { white-space: nowrap; }
+/* card text scales with the card at every size (no fixed minimums), so small binder cards look like big ones */
+.std .tc-sub, .std .tc-foot { font-size: 2.8cqi; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.std .tc-foot { overflow: visible; }
+.std .mv small { font-size: 3cqi; }
+.tcard.full .mv small { font-size: 3cqi; }
+.tcard.full .tc-hp small, .std .tc-pwr small { font-size: .55em; }
+.tcard.full .tc-bottom .tag { font-size: 3cqi; }
+.std .tc-flavor { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.std .tc-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pocket .tcard, .copy .tcard, button .tcard { text-align: left; }
 /* rarity key in the vault */
 .rar-key { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0 0 18px; font-size: 12.5px; color: var(--dim); }
 .rar-key span { display: inline-flex; align-items: center; gap: 6px; }
