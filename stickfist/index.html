@@ -242,7 +242,7 @@ kbd { font-family: var(--f-mono); font-size: 10.5px; border: 1px solid var(--lin
 
 .fight { position: fixed; inset: 0; z-index: 25; background: var(--void); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
   padding: calc(12px + env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
-.fight-canvas-wrap { position: relative; width: min(100%, 1280px, calc((100vh - 100px) * 854 / 480)); border: 1px solid var(--line); background: #050506; }
+.fight-canvas-wrap { position: relative; width: min(100%, 1280px, calc((100vh - 100px) * 16 / 9)); border: 1px solid var(--line); background: #050506; }
 .fight:focus { outline: none; }
 .films { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; max-height: 560px; overflow-y: auto; }
 .film { border: 1px solid var(--line); background: var(--slate); padding: 8px 8px 10px; display: flex; flex-direction: column; gap: 3px; text-align: left; min-width: 0; }
@@ -255,7 +255,7 @@ kbd { font-family: var(--f-mono); font-size: 10.5px; border: 1px solid var(--lin
 .film.locked { opacity: .38; }
 .film.locked img { filter: grayscale(1) brightness(.7); }
 .film.locked .fno { color: var(--faint); }
-.fight-canvas-wrap video { display: block; width: 100%; aspect-ratio: 854 / 480; background: #c4c4c1; }
+.fight-canvas-wrap canvas { display: block; width: 100%; aspect-ratio: 16 / 9; background: #c4c4c1; }
 .fight-top { width: min(100%, 1000px); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .fight-pad { display: flex; gap: 8px; width: min(100%, 620px); }
 .fight-pad button { flex: 1; border: 1px solid var(--line-2); background: var(--slate); padding: 16px 6px; font-family: var(--f-mono); font-size: 13px; letter-spacing: .2em; text-transform: uppercase; touch-action: manipulation; user-select: none; -webkit-user-select: none; transition: background .1s; }
@@ -353,8 +353,9 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .st-tray .mini { width: 62px; animation: mini .4s cubic-bezier(.2,1.3,.4,1) both; }
 @keyframes mini { from { transform: translateY(30px) scale(.6); opacity: 0; } }
 .cut { position: fixed; inset: 0; z-index: 28; background: #000; display: grid; place-items: center; overflow: hidden; cursor: pointer; }
-.cut video { width: 100%; height: 100%; object-fit: contain; transition: filter .5s, opacity .5s; }
-.cut.ended video { filter: brightness(.35) saturate(.6); }
+.cut video, .cut canvas { width: 100%; height: 100%; object-fit: contain; transition: filter .5s, opacity .5s; }
+.cut canvas { width: min(100vw, calc(100vh * 16 / 9)); height: auto; aspect-ratio: 16 / 9; }
+.cut.ended video, .cut.ended canvas { filter: brightness(.35) saturate(.6); }
 .cut-bar { position: absolute; left: 0; right: 0; height: 0; background: #000; transition: height .5s cubic-bezier(.2,.8,.2,1); z-index: 2; }
 .cut-bar.t { top: 0; } .cut-bar.b { bottom: 0; }
 .cut.on .cut-bar { height: 11vh; }
@@ -529,7 +530,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 
   <section class="view" id="view-arena" hidden>
     <div class="section-head">
-      <div><div class="label">Free to play</div><h2>Fight films</h2><p class="lede">Every matchup is a recorded fight film. Pick your fighter, pick an opponent you have a film against, and watch it. Each film has one winner, shown on the tile before you watch. A win pays tokens by opponent rarity.</p></div>
+      <div><div class="label">Free to play</div><h2>Fight films</h2><p class="lede">Pick your fighter and an opponent and watch the fight. Every fight is choreographed fresh, and the winner is rolled from the two fighters' stats (win chance shown on each opponent). A win pays tokens by opponent rarity.</p></div>
       <div class="record" id="arenaRecord"></div>
     </div>
     <div class="arena-setup">
@@ -578,7 +579,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
         <li>Rolls use your browser's cryptographic random generator. Odds never change with what you've spent or pulled.</li></ul></div>
       <div class="panel"><h3>Currency</h3><ul>
         <li>Balances and prices are shown in demo dollars. Larger deposits include a bonus.</li>
-        <li>Tokens come only from fight films. Each film is a fixed recording with one winner, shown before you watch. A win pays 10 to 100 tokens by opponent rarity; a loss pays 3.</li>
+        <li>Tokens come only from Arena fights. The winner is rolled from the two fighters' stats (win chance shown on each opponent), then the fight plays out. A win pays 10 to 100 tokens by opponent rarity; a loss pays 3.</li>
         <li>Every card sells back instantly for 90% of its value. Sketch cards are valued at 10% of foil.</li>
         <li>Every pulled card gets a grade from 6 to 10. Grade multiplies the card's base value: 6 ×0.5 (18%), 7 ×0.75 (24%), 8 ×1 (26%), 9 ×1.5 (20%), 10 ×2.5 (12%).</li>
         <li>Hit rate is the share of packs whose cards sell back for at least the pack price, from 3,000 simulated openings with the published odds.</li>
@@ -614,7 +615,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   <div class="st-summary" id="stSummary" hidden></div>
 </div>
 <div class="cut" id="cut" hidden>
-  <video id="cutVideo" playsinline preload="auto"></video>
+  <video id="cutVideo" playsinline preload="auto"></video><canvas id="cutCanvas" width="1280" height="720" hidden></canvas>
   <div class="cut-bar t"></div><div class="cut-bar b"></div>
   <div class="cut-tag"><span id="cutRarity" class="cut-r">Rare pull · cutscene</span><span id="cutName" class="cut-n">Ronin</span></div>
   <div class="cut-card" id="cutCard" hidden></div>
@@ -626,7 +627,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 <!-- Fight -->
 <div class="fight" id="fight" tabindex="-1" hidden>
   <div class="fight-top"><span class="label" id="fightLabel">Film</span><span style="display:flex;gap:8px"><button class="btn small ghost" id="fightSkip">Skip · Space</button><button class="btn small ghost" id="quitFight">Leave</button></span></div>
-  <div class="fight-canvas-wrap"><video id="fightVideo" playsinline preload="auto" aria-label="Fight film"></video><div class="result" id="result" hidden></div></div>
+  <div class="fight-canvas-wrap"><canvas id="fightCanvas" width="1280" height="720" aria-label="Fight"></canvas><div class="result" id="result" hidden></div></div>
 </div>
 
 <!-- Store -->
@@ -690,13 +691,11 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 
   const BUNDLES = [{ id: "b1", usd: 4.99, coins: 500, bonus: 0 }, { id: "b2", usd: 9.99, coins: 1000, bonus: 100 }, { id: "b3", usd: 24.99, coins: 2500, bonus: 400 }, { id: "b4", usd: 99.99, coins: 10000, bonus: 2000 }];
 
-  // Fight films: AI-generated clips traced into flat shapes (see the motion kit), played back as video. The film decides the winner.
+  // Fight films: every matchup needs two traced films, one where each fighter wins. The winner is rolled from the fighters'
+  // stats before the film plays, then that ending is shown. A matchup unlocks only once both endings exist.
+  // Footage used for pull cutscenes is never used as a fight.
   const FILMS = [
-    { no: "01", a: "ronin", b: "shiv", title: "The Samurai", src: "films/katana.mp4", winner: "ronin" },
-    { no: "02", a: "reaver", b: "bulwark", title: "Shield Breaker", src: "films/axes.mp4", winner: "reaver" },
-    { no: "03", a: "knuckles", b: "colossus", title: "Giant Killer", src: "films/giant.mp4", winner: "knuckles" },
-    { no: "04", a: "reaper", b: "breaker", title: "Brawl", src: "films/brawl.mp4", winner: "reaper" },
-    { no: "05", a: "pike", b: "twinblade", title: "Two on One", src: "films/twoonone.mp4", winner: "pike" }
+    // { no: "01", a: "ronin", b: "breaker", title: "…", takes: { ronin: "films/ronin_breaker_A.mp4", breaker: "films/ronin_breaker_B.mp4" } },
   ];
   const REWARD = { common: 10, rare: 20, epic: 35, legendary: 60, secret: 100 };
   const LOSS_REWARD = 3;
@@ -1005,7 +1004,9 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   }
 
   // ---------- Arena (fight films) ----------
-  const filmFor = (x, y) => FILMS.find(m => (m.a === x && m.b === y) || (m.a === y && m.b === x));
+  const filmFor = (x, y) => x && y && x !== y && BY_ID[x] && BY_ID[y] ? { no: "", title: `${BY_ID[x].name} vs ${BY_ID[y].name}` } : null;
+  const powerOf = f => f.atk + f.spd + f.def;
+  const winChance = (m, o) => Math.max(.15, Math.min(.85, .5 + (powerOf(m) - powerOf(o)) * .035));
   let pickFighter = "loaner", pickOpp = null;
   function arenaRoster() {
     const best = new Map();
@@ -1016,15 +1017,15 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const roster = arenaRoster();
     if (pickFighter !== "loaner" && !roster.some(it => it.id === pickFighter)) pickFighter = "loaner";
     const myId = pickFighter === "loaner" ? "knuckles" : pickFighter, me = BY_ID[myId];
-    const tile = (key, f, tag, col) => `<button class="fp" data-pick="${key}" aria-pressed="${pickFighter === key}">${figImg(f)}<span class="n">${esc(f.name)}</span><span class="st">${esc(f.title)} · ${FILMS.filter(m => m.a === f.id || m.b === f.id).length} films</span><span class="tag" style="color:${col}">${tag}</span></button>`;
+    const tile = (key, f, tag, col) => `<button class="fp" data-pick="${key}" aria-pressed="${pickFighter === key}">${figImg(f)}<span class="n">${esc(f.name)}</span><span class="st">${esc(f.title)} · A${f.atk} S${f.spd} D${f.def}</span><span class="tag" style="color:${col}">${tag}</span></button>`;
     $("fighterPick").innerHTML = tile("loaner", BY_ID.knuckles, "Loaner", "#8d897f") + roster.filter(it => it.id !== "knuckles" || true).map(it => { const f = BY_ID[it.id]; return tile(it.id, f, (it.ed === "sketch" ? "Sketch " : "") + RLABEL[f.r], RCOLOR[f.r]); }).join("");
     const opps = FIGHTERS.filter(f => f.id !== myId).map(f => ({ f, film: filmFor(myId, f.id) })).sort((x, y) => (x.film ? 0 : 1) - (y.film ? 0 : 1) || RARITIES.indexOf(x.f.r) - RARITIES.indexOf(y.f.r));
     if (!pickOpp || !filmFor(myId, pickOpp)) { const first = opps.find(o => o.film); pickOpp = first ? first.f.id : null; }
     $("filmPick").innerHTML = opps.map(({ f, film }) => film
-      ? `<button class="film" data-opp="${f.id}" aria-pressed="${pickOpp === f.id}">${figImg(f)}<span class="fno">FILM No. ${film.no}</span><b>${esc(f.name)}</b><span class="ft">“${esc(film.title)}”</span><span class="fw">${film.winner === myId ? `You win · +${REWARD[f.r]} tokens` : `You lose · +${LOSS_REWARD} tokens`}</span></button>`
+      ? `<button class="film" data-opp="${f.id}" aria-pressed="${pickOpp === f.id}">${figImg(f)}<span class="fno">${esc(f.title || "")}</span><b>${esc(f.name)}</b><span class="ft">“${esc(film.title)}”</span><span class="fw">Win ${Math.round(winChance(me, f) * 100)}% · +${REWARD[f.r]} tokens</span></button>`
       : `<div class="film locked" title="No fight film exists for this matchup yet">${figImg(f)}<span class="fno">NO FILM YET</span><b>${esc(f.name)}</b><span class="ft">Locked</span></div>`).join("");
     const fm = pickOpp && filmFor(myId, pickOpp);
-    $("startFight").disabled = !fm; $("startFight").textContent = fm ? `Watch film No. ${fm.no} · ${me.name} vs ${BY_ID[pickOpp].name}` : "No films for this fighter yet";
+    $("startFight").disabled = !fm; $("startFight").textContent = fm ? `Fight · ${me.name} vs ${BY_ID[pickOpp].name}` : "Pick an opponent";
     $("arenaRecord").innerHTML = `<div><span class="label">Wins</span><strong>${state.s.wins}</strong></div><div><span class="label">Losses</span><strong>${state.s.losses}</strong></div><div><span class="label">Tokens</span><strong style="color:var(--token)">${fmt(state.tokens)}</strong></div>`;
   }
 
@@ -1321,7 +1322,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       if (!SS || SS.phase !== "stack") return;
       el.querySelector(".tcard").style.setProperty("--go", "1");
       const done = () => { if (!SS || SS.phase !== "stack") return; SS.busy = false; $("stHint").textContent = SS.idx < SS.items.length - 1 ? "Click again for the next card · Space" : "Click to see your result · Space"; };
-      const after = () => (CUTSCENES[f.id] && it.ed !== "sketch") ? setTimeout(() => playCutscene(it, done), 650) : done();
+      const after = () => hasCutscene(it) ? setTimeout(() => playCutscene(it, done), 650) : done();
       if (it.g) { $("stHint").textContent = "Grading…"; gradeRoll(el, it, after); } else after();
     }, 900);
   }
@@ -1359,6 +1360,8 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   // ---------- Cutscenes: rare+ fighters that have one play it right after the pull ----------
   const CUTSCENES = { ronin: "films/cut_ronin.mp4", reaver: "films/cut_reaver.mp4", reaper: "films/cut_reaper.mp4" };
   let CUT = null;
+  const hasCutscene = it => it.ed !== "sketch" && RARITIES.indexOf(BY_ID[it.id].r) >= 1;
+  const DUMMY = () => Object.assign({}, BY_ID.knuckles, { id: "dummy", name: "Sparring dummy", body: "#434343", acc: "none" });
   function playCutscene(it, done) {
     const f = BY_ID[it.id], box = $("cut"), v = $("cutVideo");
     CUT = { it, done, phase: "play" };
@@ -1367,8 +1370,17 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     $("cutName").textContent = f.name;
     $("cutCard").innerHTML = cardHTML(it); $("cutCard").hidden = true; $("cutCont").hidden = true;
     box.hidden = false; void box.offsetWidth; box.classList.add("on");
-    v.src = CUTSCENES[f.id]; v.currentTime = 0; v.muted = !!state.muted;
-    const pr = v.play(); if (pr && pr.catch) pr.catch(() => { v.muted = true; v.play().catch(() => endCutscene()); });
+    const cv = $("cutCanvas");
+    if (CUTSCENES[f.id]) {
+      v.hidden = false; cv.hidden = true;
+      v.src = CUTSCENES[f.id]; v.currentTime = 0; v.muted = !!state.muted;
+      v.onerror = () => { if (CUT && CUT.phase === "play") inkCut(); };
+      const pr = v.play(); if (pr && pr.catch) pr.catch(() => { v.muted = true; v.play().catch(() => inkCut()); });
+    } else inkCut();
+    function inkCut() {
+      v.hidden = true; cv.hidden = false;
+      CUT.ink = createInkPlayer(cv, buildFight(f, DUMMY(), "a", Math.random(), "pull"), { sfx: playSfx, onEnd: () => endCutscene() });
+    }
   }
   function endCutscene() {
     if (!CUT || CUT.phase !== "play") return;
@@ -1381,7 +1393,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   }
   function closeCutscene() {
     if (!CUT) return; if (CUT.phase === "play") { endCutscene(); return; }
-    const d = CUT.done; CUT = null; const box = $("cut"); box.hidden = true; box.classList.remove("on", "ended"); $("cutVideo").removeAttribute("src"); d && d();
+    const d = CUT.done; CUT = null; const box = $("cut"); box.hidden = true; $("cutCanvas").hidden = true; box.classList.remove("on", "ended"); $("cutVideo").removeAttribute("src"); d && d();
   }
 
   function showTitle(f, it, val, pending) {
@@ -1441,7 +1453,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       <div class="fan">${items.slice().reverse().map(cardHTML).join("")}</div>
       <div class="sum-lines"><span>Card value <b>${money(total)}</b></span><span>Instant sell-back <b>${money(sell)}</b></span><span>Pack hit rate <b>${p.cur === "coin" ? Math.round(hitRate(p) * 100) + "%" : "–"}</b></span></div>
       <div class="sum-btns"><button class="btn" id="sumSell">Sell all · ${money(sell)}</button><button class="btn brass" id="sumKeep">Keep in vault</button>
-        ${items.some(x => CUTSCENES[x.id] && x.ed !== "sketch") ? `<button class="btn ghost" id="sumReplay">Replay cutscene</button>` : ""}<button class="btn ghost" id="sumAgain">${can ? `Open another · ${priceTxt(p)}` : p.cur === "coin" ? "Add funds" : "Not enough tokens"}</button></div>
+        ${items.some(hasCutscene) ? `<button class="btn ghost" id="sumReplay">Replay cutscene</button>` : ""}<button class="btn ghost" id="sumAgain">${can ? `Open another · ${priceTxt(p)}` : p.cur === "coin" ? "Add funds" : "Not enough tokens"}</button></div>
     </div>`;
     if (hit) { sfx.chime("epic"); const c = { x: innerWidth / 2, y: innerHeight * .3 }; fx.confetti(c.x, c.y, 90, ["#8cbf94", "#e6d3a3", "#e9e4d8"]); }
     $("stSummary").hidden = false;
@@ -1745,23 +1757,389 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
   const kitOf = F => KIT[F.wpn === "none" ? "fists" : F.wpn];
 
 
+  // =====================================================================
+  // INK FIGHTS — animated in the motion-kit look: flat light-grey paper, flat solid stickmen, static wide camera,
+  // drawings held on twos (12 per second), ink crescents with a white inner edge and red rim, flat red blood shapes,
+  // grey brush dust, red-and-black spike bursts, a black close-up cutscene before finishers. No gradients, glow or lines.
+  // =====================================================================
+  const INK_PAPER = "#c4c4c1", INK_SHADOW = "#b1b1ae", INK_BLACK = "#0d0d0e", INK_ENEMY = "#434343", INK_RED = "#8c161e", INK_RED2 = "#c4232b";
+  const DRAW_FPS = 12;
+
+  function evalTrack(moves, t) {
+    let s = { pose: CP[moves[0].pose].p, w: CP[moves[0].pose].w, w2: CP[moves[0].pose].w2, x: moves[0].x || 0, y: moves[0].y || 0, rot: moves[0].rot || 0, facing: moves[0].facing || 1, active: null };
+    for (let i = 1; i < moves.length; i++) {
+      const m = moves[i]; if (m.at > t) break;
+      const next = moves[i + 1];
+      const end = next && next.at <= t ? next.at : t;
+      const k = m.dur > 0 ? clamp01((end - m.at) / m.dur) : 1, e = (easeF[m.ease || "o"])(k);
+      const P = m.pose ? CP[m.pose] : null, tp = P ? P.p : s.pose;
+      const pose = s.pose.map((pt, j) => [lerp(pt[0], tp[j][0], e), lerp(pt[1], tp[j][1], e)]);
+      const tw = P ? P.w : s.w, tw2 = P && P.w2 != null ? P.w2 : (s.w2 != null ? s.w2 : tw + 18);
+      s = { pose, w: lerpAng(s.w, tw, e), w2: lerpAng(s.w2 != null ? s.w2 : s.w + 18, tw2, e), x: m.x != null ? lerp(s.x, m.x, e) : s.x, y: m.y != null ? lerp(s.y, m.y, e) : s.y,
+        rot: m.rot != null ? lerp(s.rot, m.rot, e) : s.rot, facing: m.facing || s.facing, active: k < 1 || (t - (m.at + m.dur)) < .09 ? m : null };
+    }
+    return s;
+  }
+  function seeded(seed) { let s = Math.floor(seed * 2147483646) + 1; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+
+  // ---------- Choreography ----------
+  // mode "fight": full fight, winner decided by the caller. mode "pull": the pulled fighter's finisher on a grey sparring dummy.
+  function buildFight(FA, FB, winner, seed, mode) {
+    const S = { tracks: { a: [], b: [] }, ev: [], F: { a: FA, b: FB }, end: 0 };
+    const R = seeded(seed || Math.random());
+    const cur = { a: { x: 420, facing: 1 }, b: { x: 860, facing: -1 } };
+    const sc = w => (S.F[w].scale || 1);
+    const clampX = x => Math.max(300, Math.min(CW - 300, x));
+    const mv = (w, at, dur, pose, o) => { o = o || {}; if (o.x != null) o.x = clampX(o.x); const m = Object.assign({ at, dur, pose }, o); if (o.x != null) cur[w].x = o.x; if (o.facing) cur[w].facing = o.facing; S.tracks[w].push(m); };
+    const ev = (at, type, o) => S.ev.push(Object.assign({ at, type }, o || {}));
+    const other = w => w === "a" ? "b" : "a";
+    const chest = (w, h) => ({ x: cur[w].x, y: GROUND - (h || 58) * S0 * sc(w) });
+    const reach = w => kitOf(S.F[w]).reach * S0 / 1.55 * (sc(w) > 1 ? 1.6 : 1);
+    const L = winner === "a" ? "b" : "a", Wn = winner;
+    if (sc("a") > 1) cur.a.x = 330; if (sc("b") > 1) cur.b.x = 950;
+    mv("a", 0, 0, "stance", { x: cur.a.x, y: 0, facing: 1 }); mv("b", 0, 0, "stance", { x: cur.b.x, y: 0, facing: -1 });
+
+    function react(at, d, outcome, power) {
+      const dir = -cur[d].facing; power = power || 1; const p = chest(d);
+      if (outcome === "miss") {
+        mv(d, at - .14, .14, R() < .5 ? "crouch" : "jump", { x: cur[d].x + dir * 80, y: R() < .5 ? 0 : -40, ease: "o" });
+        mv(d, at + .2, .2, "stance", { y: 0, ease: "o" }); ev(at, "sfx", { s: "whoosh" });
+      } else if (outcome === "block") {
+        mv(d, at - .14, .1, "guard", {}); mv(d, at, .18, "guard", { x: cur[d].x + dir * 50 * power });
+        ev(at, "clash", { x: p.x - dir * 24, y: p.y - 16 }); ev(at, "sfx", { s: "clang" }); ev(at, "hold", { d: .08 });
+        ev(at, "dust", { x: cur[d].x, y: GROUND, n: 4 });
+        mv(d, at + .32, .2, "stance", {});
+      } else {
+        mv(d, at, .12, "hurt", { x: cur[d].x + dir * 70 * power, ease: "snap" });
+        ev(at, "blood", { x: p.x, y: p.y, dir, n: Math.round(18 * power) }); ev(at, "sfx", { s: "hit" }); ev(at, "hold", { d: .1 * power });
+        ev(at, "dust", { x: cur[d].x, y: GROUND, n: 5 });
+        mv(d, at + .3, .24, "stance", {});
+      }
+    }
+    function attack(t, a, d, outcome, heavy) {
+      const K = kitOf(S.F[a]), F = S.F[a], dirA = cur[a].facing;
+      if (!K.ranged) {
+        const want = cur[d].x - dirA * reach(a);
+        if (Math.abs(cur[a].x - want) > 24) { mv(a, t, .18, "dash", { x: want, ease: "io" }); ev(t, "dust", { x: cur[a].x, y: GROUND, n: 3 }); ev(t, "sfx", { s: "whoosh" }); t += .18; }
+      }
+      const wind = K.wind[1] * (heavy ? 1.5 : 1) * (sc(a) > 1 ? 1.4 : 1);
+      mv(a, t, wind, K.wind[0], {}); t += wind;
+      if (F.wpn === "none") {
+        mv(a, t, .06, "jab", { x: cur[a].x + dirA * 14, ease: "snap" }); mv(a, t + .1, .05, "windSide", {}); mv(a, t + .15, .07, "cross", { x: cur[a].x + dirA * 10, ease: "snap" });
+        ev(t + .05, "sfx", { s: "slash" }); t += .15;
+      } else if (F.wpn === "shield") {
+        mv(a, t, .08, "guard", { x: cur[a].x + dirA * 50, ease: "snap" }); ev(t, "sfx", { s: "whoosh" });
+      } else {
+        mv(a, t, K.strike[1], K.strike[0], { x: cur[a].x + dirA * (K.fx === "thrust" ? 44 : 22), smear: K.smear, ease: "snap" }); ev(t, "sfx", { s: "slash" });
+      }
+      const hitAt = t + .04;
+      if (K.ranged) {
+        const from = { x: cur[a].x + dirA * 50 * S0 / 1.55, y: GROUND - 76 * S0 }, to = chest(d);
+        ev(t, "orb", { x0: from.x, y0: from.y, x1: to.x, y1: to.y, d: .3, c: F.void ? INK_BLACK : (F.glow || "#6fd3ff"), big: heavy });
+        react(t + .3, d, outcome, heavy ? 1.3 : 1); mv(a, t + .2, .3, "stance", {});
+        return t + .75;
+      }
+      if (K.fx === "smash") { ev(hitAt, "crack", { x: cur[a].x + dirA * 62 * S0 / 1.55 * sc(a), w: 150 * sc(a) }); ev(hitAt, "dust", { x: cur[a].x + dirA * 70, y: GROUND, n: 12 }); ev(hitAt, "sfx", { s: "boom", v: .6 }); }
+      if (heavy && K.smear) ev(hitAt, "crescent", { x: chest(d).x, y: chest(d).y, r: 120, f: dirA, d: .34 });
+      react(hitAt, d, outcome, heavy ? 1.3 : 1);
+      mv(a, t + .22, .26, "stance", { x: cur[a].x - dirA * 10 });
+      return t + .6;
+    }
+    function launch(t, d, dir, power) {
+      const base = cur[d].x, heavy = sc(d) > 1, pw = heavy ? power * .45 : power;
+      const landX = clampX(base + dir * 240 * pw);
+      mv(d, t, .3, "launched", { x: base + (landX - base) * .6, y: -170 * pw, rot: 230, ease: "o" });
+      mv(d, t + .3, .36, "launched", { x: landX, y: 0, rot: 360, ease: "i" });
+      const land = t + .66; mv(d, land, .12, "down", { y: 0, rot: 0 });
+      ev(land, "dust", { x: landX, y: GROUND, n: heavy ? 22 : 14 }); ev(land, "sfx", { s: "hit" }); ev(land, "pool", { x: landX, w: 120 });
+      return land;
+    }
+    function cutscene(t, w, d) { ev(t, "cut", { who: w, d }); ev(t, "sfx", { s: "charge", d: d * .8 }); ev(t + d - .25, "slashframe", { d: .25 }); ev(t + d - .25, "sfx", { s: "slash" }); return t + d; }
+    function finishBurst(t, d, dir, big) {
+      const p = chest(d);
+      ev(t, "crescent", { x: p.x, y: p.y, r: big ? 230 : 180, f: dir, d: .5 }); ev(t, "spikes", { x: p.x, y: p.y, d: .5, r: big ? 260 : 200 });
+      ev(t, "blood", { x: p.x, y: p.y, dir, n: 44 }); ev(t, "hold", { d: .22 }); ev(t, "impact", { d: .09 }); ev(t, "sfx", { s: "boom", v: 1.1 });
+    }
+    const SPECIAL = {
+      iaido(t, w, l) {
+        mv(w, t, .35, "charge", {}); ev(t, "dust", { x: cur[w].x, y: GROUND, n: 6 }); t += .35;
+        t = cutscene(t, w, 1.1);
+        const dir = cur[w].facing, x1 = cur[l].x + dir * 170;
+        mv(w, t, .05, "slashDown", { x: x1, smear: true, ease: "lin" }); mv(l, t + .05, .1, "hurt", {});
+        finishBurst(t + .06, l, dir, true);
+        return launch(t + .1, l, dir, 1);
+      },
+      whirl(t, w, l) {
+        const dir = cur[w].facing;
+        for (let i = 0; i < 3; i++) {
+          mv(w, t, .17, "spin", { x: cur[l].x - dir * (110 - i * 20), rot: 360 * (i + 1), smear: true, ease: "lin" });
+          ev(t + .08, "vortex", { x: cur[w].x, y: GROUND - 62 * S0, r: 120, d: .2 }); ev(t + .1, "blood", { x: cur[l].x, y: GROUND - 64 * S0, dir, n: 10 }); ev(t + .1, "sfx", { s: "slash" });
+          mv(l, t + .1, .08, i % 2 ? "hurt" : "crouch", { x: cur[l].x + dir * 16 }); t += .17;
+        }
+        mv(w, t, .2, "jump", { y: -130, rot: 0 }); t += .2;
+        t = cutscene(t, w, .9);
+        mv(w, t, .1, "slashDown", { y: 0, x: cur[l].x - dir * 70, smear: true, ease: "i" }); t += .1;
+        finishBurst(t, l, dir, true); return launch(t, l, dir, 1);
+      },
+      skewer(t, w, l) {
+        const dir = cur[w].facing;
+        mv(w, t, .35, "windSide", { x: cur[w].x - dir * 30 }); t += .35;
+        t = cutscene(t, w, .9);
+        mv(w, t, .06, "thrust", { x: cur[l].x - dir * 150, ease: "lin" }); t += .06;
+        finishBurst(t, l, dir, false); return launch(t, l, dir, 1.35);
+      },
+      quake(t, w, l) {
+        const dir = cur[w].facing, big = sc(w) > 1;
+        mv(w, t, .26, "jump", { y: big ? -110 : -220, x: cur[w].x + dir * 40 }); mv(w, t + .26, .2, "windHigh", { y: big ? -130 : -240 }); ev(t, "sfx", { s: "whoosh" }); t += .46;
+        t = cutscene(t, w, .8);
+        mv(w, t, .1, "smash", { y: 0, x: cur[l].x - dir * reach(w) * .7, smear: true, ease: "i" }); t += .1;
+        ev(t, "crack", { x: cur[l].x, w: big ? 520 : 340 }); ev(t, "dust", { x: cur[l].x, y: GROUND, n: 30 });
+        finishBurst(t, l, dir, true); return launch(t, l, dir, 1.2);
+      },
+      reap(t, w, l) {
+        const dir = cur[w].facing, lx = cur[l].x;
+        mv(w, t, .3, "charge", {}); t += .3;
+        t = cutscene(t, w, 1.1);
+        mv(w, t, .26, "jump", { y: -220, x: lx, rot: 180, ease: "o" });
+        mv(w, t + .26, .18, "windSide", { y: -60, x: lx + dir * 150, rot: 360, facing: -dir, ease: "i" }); t += .44;
+        mv(w, t, .1, "slashSide", { y: 0, rot: 360, smear: true, ease: "snap" });
+        finishBurst(t, l, -dir, true); return launch(t, l, dir, 1.1);
+      },
+      beam(t, w, l) {
+        const dir = cur[w].facing, col = S.F[w].void ? INK_BLACK : (S.F[w].glow || "#6fd3ff");
+        mv(w, t, .3, "cast", {}); t += .3;
+        t = cutscene(t, w, .9);
+        const hx = cur[w].x + dir * 52 * S0 / 1.55, hy = GROUND - 80 * S0;
+        ev(t, "beam", { x0: hx, y0: hy, x1: hx + dir * 1400, y1: hy + 6, d: .6, c: col, inv: !!S.F[w].void }); ev(t, "sfx", { s: "boom", v: 1 });
+        finishBurst(t + .05, l, dir, false); mv(w, t + .6, .3, "stance", {});
+        return launch(t + .1, l, dir, 1.4);
+      },
+      flurry(t, w, l) {
+        const dir = cur[w].facing;
+        mv(w, t, .15, "dash", { x: cur[l].x - dir * 62 }); t += .15;
+        for (let i = 0; i < 7; i++) {
+          mv(w, t, .05, i % 2 ? "cross" : "jab", { x: cur[w].x + dir * 3, ease: "snap" });
+          const p = chest(l); ev(t + .03, "star", { x: p.x - dir * 12 + (R() - .5) * 20, y: p.y + (R() - .5) * 40 }); ev(t + .03, "sfx", { s: "hit" });
+          if (i % 2) ev(t + .03, "blood", { x: p.x, y: p.y, dir, n: 5 });
+          mv(l, t + .03, .05, i % 2 ? "hurt" : "crouch", { x: cur[l].x + dir * 6 }); t += .075;
+        }
+        mv(w, t, .08, "windSide", {}); t += .1;
+        t = cutscene(t, w, .8);
+        mv(w, t, .08, "uppercut", { ease: "snap" });
+        finishBurst(t + .05, l, dir, false); return launch(t + .05, l, dir, 1.15);
+      },
+      flash(t, w, l) {
+        const lx = cur[l].x;
+        mv(w, t, .25, "crouch", {}); t += .25;
+        t = cutscene(t, w, .8);
+        for (const [x, f] of [[lx + 130, -1], [lx - 120, 1], [lx + 90, -1]]) {
+          mv(w, t, .04, "slashSide", { x, facing: f, smear: true, ease: "lin" });
+          ev(t + .02, "crescent", { x: lx, y: GROUND - 60 * S0, r: 110, f, d: .3 }); ev(t + .02, "sfx", { s: "slash" }); ev(t + .02, "blood", { x: lx, y: GROUND - 64 * S0, dir: f, n: 10 });
+          t += .16;
+        }
+        mv(w, t, .2, "victory", { facing: lx > cur[w].x ? 1 : -1 });
+        finishBurst(t + .2, l, 1, false);
+        mv(l, t + .25, .25, "crouch", {}); mv(l, t + .5, .2, "down", { ease: "i" });
+        ev(t + .7, "dust", { x: lx, y: GROUND, n: 12 }); ev(t + .7, "pool", { x: lx, w: 120 });
+        return t + .7;
+      }
+    };
+    const specialOf = F => F.wpn === "shield" ? "flurry" : kitOf(F).special;
+
+    let t = .5;
+    if (mode !== "pull") {
+      const ranged = kitOf(FA).ranged || kitOf(FB).ranged;
+      if (!ranged) {
+        const gap = (reach("a") + reach("b")) / 2;
+        mv("a", t, .26, "dash", { x: 640 - gap * .5 }); mv("b", t, .26, "dash", { x: 640 + gap * .5 }); ev(t, "sfx", { s: "whoosh" }); t += .26;
+        for (const w of ["a", "b"]) mv(w, t, .12, kitOf(S.F[w]).wind[0], {}); t += .12;
+        for (const w of ["a", "b"]) { const K = kitOf(S.F[w]); mv(w, t, .08, K.strike[0], { smear: K.smear, ease: "snap", x: cur[w].x + cur[w].facing * 10 }); }
+        ev(t + .04, "clash", { x: 640, y: GROUND - 82 * S0 }); ev(t + .04, "hold", { d: .16 }); ev(t + .04, "sfx", { s: "clang" }); ev(t + .04, "dust", { x: 640, y: GROUND, n: 10 });
+        t += .12; for (const w of ["a", "b"]) mv(w, t, .24, "guard", { x: cur[w].x - cur[w].facing * 90 });
+        t += .3; for (const w of ["a", "b"]) mv(w, t, .2, "stance", {}); t += .25;
+      } else { const caster = kitOf(FA).ranged ? "a" : "b"; t = attack(t, caster, other(caster), "block", false) + .1; }
+      // Exchanges: the seed shapes how the fight goes, so no two fights look the same.
+      const rounds = 2 + Math.floor(R() * 2);
+      for (let i = 0; i < rounds; i++) {
+        const atk = R() < .5 ? L : Wn, def = other(atk), roll = R();
+        const out = roll < .35 ? "miss" : roll < .65 ? "block" : "hit";
+        t = attack(t, atk, def, out, R() < .25);
+        if (out === "miss" || (out === "block" && R() < .5)) t = attack(t - .05, def, atk, R() < .6 ? "hit" : "block", false);
+        t += .05;
+      }
+      mv(L, t, .35, "charge", {}); ev(t, "dust", { x: cur[L].x, y: GROUND, n: 6 }); t += .38;
+      t = attack(t, L, Wn, "block", true) + .2;
+    } else {
+      // sparring dummy rushes in, the pulled fighter finishes it
+      mv(L, t, .3, "dash", { x: cur[Wn].x + cur[Wn].facing * (reach(Wn) + 40) }); ev(t, "sfx", { s: "whoosh" }); t += .32;
+      mv(L, t, .1, "windHigh", {}); t += .12;
+    }
+    const land = SPECIAL[specialOf(S.F[Wn])](t, Wn, L);
+    const wf = cur[L].x > cur[Wn].x ? 1 : -1;
+    mv(Wn, land + .3, .4, "victory", { facing: wf, y: 0, rot: 0 });
+    S.end = land + (mode === "pull" ? 1.3 : 1.8);
+    ev(S.end, "end", {});
+    S.ev.sort((x, y) => x.at - y.at); for (const w of ["a", "b"]) S.tracks[w].sort((x, y) => x.at - y.at);
+    return S;
+  }
+
+  // ---------- Player (draws on twos, static camera) ----------
+  function createInkPlayer(canvas, S, hooks) {
+    const c = canvas.getContext("2d");
+    const P = { st: 0, hold: 0, evi: 0, done: false, parts: [], decals: [], fx: [], cut: null, slashF: null, impact: 0, acc: 0, real: 0 };
+    const rnd = Math.random;
+    const look = w => { const F = S.F[w]; return F; };
+    function fire(e) {
+      switch (e.type) {
+        case "sfx": hooks.sfx && hooks.sfx(e); break;
+        case "hold": P.hold = Math.max(P.hold, e.d); break;
+        case "impact": P.impact = Math.max(P.impact, e.d); break;
+        case "cut": P.cut = { who: e.who, t0: P.real, d: e.d }; P.hold = Math.max(P.hold, e.d); break;
+        case "slashframe": P.slashF = { t0: P.real, d: e.d }; break;
+        case "blood": for (let i = 0; i < e.n; i++) { const a = (e.dir > 0 ? 0 : Math.PI) + (rnd() - .5) * 1.4 - (e.dir > 0 ? .25 : -.25), v = 180 + rnd() * 620; P.parts.push({ k: "blood", x: e.x, y: e.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 180 * rnd(), r: 3 + rnd() * 7, rot: rnd() * 6, life: 2 }); } break;
+        case "dust": for (let i = 0; i < e.n; i++) P.parts.push({ k: "dust", x: e.x + (rnd() - .5) * 90, y: e.y - rnd() * 20, vx: (rnd() - .5) * 260, vy: -rnd() * 60, r: 12 + rnd() * 26, grow: 30 + rnd() * 40, life: .6 + rnd() * .5, shade: rnd() < .5 ? "#a4a4a1" : "#8f8f8c", seed: rnd() * 99 }); break;
+        case "clash": P.fx.push({ k: "star", x: e.x, y: e.y, big: true, life: .25 }); break;
+        case "star": P.fx.push({ k: "star", x: e.x, y: e.y, life: .17 }); break;
+        case "crescent": P.fx.push({ k: "crescent", x: e.x, y: e.y, r: e.r, f: e.f, life: e.d, max: e.d }); break;
+        case "vortex": P.fx.push({ k: "vortex", x: e.x, y: e.y, r: e.r, life: e.d, max: e.d }); break;
+        case "spikes": P.fx.push({ k: "spikes", x: e.x, y: e.y, r: e.r, life: e.d, max: e.d, seed: rnd() * 999 }); break;
+        case "orb": P.fx.push({ k: "orb", x0: e.x0, y0: e.y0, x1: e.x1, y1: e.y1, c: e.c, life: e.d, max: e.d, big: e.big }); break;
+        case "beam": P.fx.push({ k: "beam", x0: e.x0, y0: e.y0, x1: e.x1, y1: e.y1, c: e.c, inv: e.inv, life: e.d, max: e.d }); break;
+        case "crack": P.decals.push({ k: "crack", x: e.x, w: e.w, seed: rnd() * 999 }); break;
+        case "pool": P.decals.push({ k: "pool", x: e.x, w: e.w, seed: rnd() * 999 }); break;
+        case "end": P.done = true; hooks.onEnd && hooks.onEnd(); break;
+      }
+    }
+    function tick(dt) {   // one drawing step: particles and effects move once per drawing
+      for (const p of P.parts) {
+        p.life -= dt;
+        if (p.k === "blood") { p.vy += 1500 * dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.y > GROUND) { p.life = 0; if (rnd() < .6) P.decals.push({ k: "drop", x: p.x, r: p.r * 1.5 + 2 }); } }
+        else { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .85; p.r += p.grow * dt; }
+      }
+      P.parts = P.parts.filter(p => p.life > 0);
+      for (const f of P.fx) f.life -= dt; P.fx = P.fx.filter(f => f.life > 0);
+    }
+    P.update = dt => {
+      P.real += dt;
+      if (P.hold > 0) { P.hold -= dt; }
+      else { P.st = Math.min(S.end + .3, P.st + dt); while (P.evi < S.ev.length && S.ev[P.evi].at <= P.st) fire(S.ev[P.evi++]); }
+      P.acc += dt; const step = 1 / DRAW_FPS; while (P.acc >= step) { P.acc -= step; if (P.hold <= 0 || P.cut) tick(step); }
+      if (P.impact > 0) P.impact -= dt;
+      if (P.cut && P.real - P.cut.t0 > P.cut.d) P.cut = null;
+      if (P.slashF && P.real - P.slashF.t0 > P.slashF.d) P.slashF = null;
+    };
+    P.skip = () => { while (P.evi < S.ev.length) { const e = S.ev[P.evi++]; if (["pool", "crack", "end"].includes(e.type)) fire(e); } P.st = S.end; P.parts = []; P.fx = []; P.cut = null; P.slashF = null; P.hold = 0; };
+
+    function fit() { const d = Math.min(window.devicePixelRatio || 1, 2), w = canvas.clientWidth || CW, pw = Math.round(w * d), ph = Math.round(pw * CH / CW); if (canvas.width !== pw || canvas.height !== ph) { canvas.width = pw; canvas.height = ph; } return canvas.width / CW; }
+    const stateAt = (w, t) => evalTrack(S.tracks[w], t);
+    function inkCrescentPath(outer, inner) { c.beginPath(); c.moveTo(outer[0][0], outer[0][1]); for (const p of outer) c.lineTo(p[0], p[1]); for (let i = inner.length - 1; i >= 0; i--) c.lineTo(inner[i][0], inner[i][1]); c.closePath(); c.fill(); }
+    function drawSmear(w, tNow) {
+      const st = stateAt(w, tNow), m = st.active; if (!m || !m.smear) return;
+      const F = S.F[w], K = kitOf(F), len = (K.tip || 60), N = 8, outer = [], inner = [];
+      const t0 = Math.max(m.at - .04, tNow - 2 / DRAW_FPS);
+      for (let i = 0; i <= N; i++) { const s = stateAt(w, lerp(t0, tNow, i / N)); outer.push(weaponTip(s, F, len * 1.06)); inner.push(weaponTip(s, F, len * .45)); }
+      const span = Math.hypot(outer[0][0] - outer[N][0], outer[0][1] - outer[N][1]); if (span < 40) return;
+      const thin = k => inner.map((p, i) => [lerp(outer[i][0], p[0], k * Math.sin(i / N * Math.PI * .95 + .05)), lerp(outer[i][1], p[1], k * Math.sin(i / N * Math.PI * .95 + .05))]);
+      c.fillStyle = INK_RED; inkCrescentPath(outer.map((p, i) => [p[0] + (p[0] - inner[i][0]) * .07, p[1] + (p[1] - inner[i][1]) * .07]), thin(1));
+      c.fillStyle = INK_BLACK; inkCrescentPath(outer, thin(1));
+      c.fillStyle = "#f2f2ef"; inkCrescentPath(thin(.7), thin(1));
+    }
+    function crescentFx(f) {
+      const r = f.r, sweep = 2.4, from = -1.25, to = from + sweep;
+      c.save(); c.translate(f.x, f.y); c.scale(f.f, 1); c.translate(-r * .78, r * .1);
+      c.fillStyle = INK_RED; c.beginPath(); c.arc(0, 0, r * 1.08, from, to); c.arc(-r * .14, r * .02, r * .86, to, from, true); c.closePath(); c.fill();
+      c.fillStyle = INK_BLACK; c.beginPath(); c.arc(0, 0, r, from, to); c.arc(-r * .14, r * .02, r * .86, to, from, true); c.closePath(); c.fill();
+      c.fillStyle = "#f2f2ef"; c.beginPath(); c.arc(-r * .1, r * .015, r * .9, from, to); c.arc(-r * .14, r * .02, r * .86, to, from, true); c.closePath(); c.fill();
+      c.restore();
+    }
+    function blob(x, y, r, seed, n) { let s = seed; const q = () => (s = (s * 9301 + 49297) % 233280) / 233280; c.beginPath(); const k = n || 9; for (let i = 0; i <= k; i++) { const a = i / k * Math.PI * 2, rr = r * (.72 + q() * .45); i ? c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr * .8) : c.moveTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr * .8); } c.closePath(); c.fill(); }
+    function bodyFor(w) {
+      const F = S.F[w], o = S.F[other(w)];
+      // the kit's palette: one fighter in solid black, the other in flat dark grey (unless a fighter has its own colour)
+      if (F.body === "#121214" || F.body === "#0e0e10") { if (w === "b" && (o.body === "#121214" || o.body === "#0e0e10")) return Object.assign({}, F, { body: INK_ENEMY, cloak: F.cloak ? "#2a2a2a" : F.cloak }); return Object.assign({}, F, { body: INK_BLACK }); }
+      if (F.id === "reaper") return Object.assign({}, F, { body: INK_RED, cloak: INK_BLACK });
+      return F;
+    }
+    function other(w) { return w === "a" ? "b" : "a"; }
+    function drawCut(k) {
+      // black close-up: the winner's head and shoulders, rim-lit in white, weapon sliding past
+      const F = S.F[P.cut.who];
+      c.fillStyle = "#000"; c.fillRect(0, 0, CW, CH);
+      const cx = CW * .46, cy = CH * .62, R = CH * .32, step = Math.floor(k * 8) / 8;
+      c.fillStyle = "#e8e8e5"; c.beginPath(); c.arc(cx, cy, R + 10, 0, 7); c.fill(); c.beginPath(); c.moveTo(cx - R * 1.5, CH); c.quadraticCurveTo(cx - R * .9, cy + R * .7, cx - R * .45, cy + R * .8); c.lineTo(cx + R * .45, cy + R * .8); c.quadraticCurveTo(cx + R * .9, cy + R * .7, cx + R * 1.5, CH); c.closePath(); c.fill();
+      c.fillStyle = F.id === "reaper" ? INK_RED : (F.body === "#8fd0e3" || F.body === "#efebe2" ? F.body : "#000"); c.beginPath(); c.arc(cx, cy, R, 0, 7); c.fill(); c.beginPath(); c.moveTo(cx - R * 1.45, CH + 10); c.quadraticCurveTo(cx - R * .9, cy + R * .75, cx - R * .42, cy + R * .86); c.lineTo(cx + R * .42, cy + R * .86); c.quadraticCurveTo(cx + R * .9, cy + R * .75, cx + R * 1.45, CH + 10); c.closePath(); c.fill();
+      if (F.acc === "cloak") { c.fillStyle = INK_BLACK; c.beginPath(); c.arc(cx, cy, R * 1.12, Math.PI * .95, Math.PI * 2.05); c.lineTo(cx + R * 1.3, cy + R * .5); c.lineTo(cx - R * 1.3, cy + R * .5); c.closePath(); c.fill(); c.strokeStyle = "#e8e8e5"; c.lineWidth = 8; c.stroke(); }
+      if (F.acc === "headband" || F.acc === "cape") { c.fillStyle = F.accent; c.fillRect(cx - R, cy - R * .38, R * 2, R * .2); c.beginPath(); c.moveTo(cx + R * .9, cy - R * .3); c.lineTo(cx + R * 1.9, cy - R * .6 + Math.sin(step * 9) * 14); c.lineTo(cx + R * 1.8, cy - R * .2); c.closePath(); c.fill(); }
+      if (F.wpn && F.wpn !== "none") {   // the weapon slides through the frame
+        const wx = lerp(CW * .95, CW * .62, easeF.o(step)), wy = lerp(-CH * .1, CH * .28, easeF.o(step));
+        c.save(); c.translate(wx, wy); c.rotate(F.wpn === "katana" || F.wpn === "knife" ? 2.1 : 1.9); c.scale(5.2, 5.2); FLAT = true; WPN[F.wpn](c, F, null); FLAT = false; c.restore();
+      }
+    }
+    function drawSlashFrame(k) {
+      c.fillStyle = "#000"; c.fillRect(0, 0, CW, CH);
+      const x = lerp(-CW * .2, CW * .65, Math.min(1, Math.floor(k * 4) / 3));
+      c.fillStyle = INK_RED2; c.beginPath(); let s = 7; const q = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+      c.moveTo(-40, -20); c.lineTo(x, -20); for (let y = 0; y <= CH + 40; y += 30) c.lineTo(x + (q() - .5) * 160 - y * .15, y); c.lineTo(-40, CH + 40); c.closePath(); c.fill();
+      c.fillStyle = "#000"; for (let i = 0; i < 9; i++) { const y = q() * CH; c.beginPath(); c.moveTo(-40, y); c.lineTo(x * (.4 + q() * .5), y + 6 + q() * 10); c.lineTo(-40, y + 18 + q() * 26); c.closePath(); c.fill(); }
+    }
+
+    P.draw = () => {
+      const k = fit();
+      c.setTransform(k, 0, 0, k, 0, 0);
+      if (P.cut) { drawCut((P.real - P.cut.t0) / P.cut.d); if (P.slashF) drawSlashFrame((P.real - P.slashF.t0) / P.slashF.d); return; }
+      if (P.slashF) { drawSlashFrame((P.real - P.slashF.t0) / P.slashF.d); return; }
+      const td = Math.floor(P.st * DRAW_FPS) / DRAW_FPS;   // drawings held on twos
+      const impact = P.impact > 0;
+      c.fillStyle = impact ? "#000" : INK_PAPER; c.fillRect(0, 0, CW, CH);
+      const Z = 1.42, GS = 652;   // static wide shot, framed so the fighters stand about 40% of the frame tall
+      c.setTransform(k * Z, 0, 0, k * Z, k * (640 - 640 * Z), k * (GS - GROUND * Z));
+      FLAT = true;
+      if (!impact) {
+        for (const d of P.decals) {
+          if (d.k === "crack") { c.fillStyle = "#8a8a87"; let s = d.seed; const q = () => (s = (s * 9301 + 49297) % 233280) / 233280; for (let b = 0; b < 8; b++) { c.beginPath(); let x = d.x, y = GROUND + 2; c.moveTo(x, y - 3); const dir = b % 2 ? 1 : -1; for (let i = 0; i < 5; i++) { x += dir * d.w / 10 * (.6 + q()); y += (q() - .4) * 7; c.lineTo(x, y - 2); } for (let i = 0; i < 5; i++) { c.lineTo(x - dir * 4, y + 3); x -= dir * d.w / 10 * .9; } c.closePath(); c.fill(); } }
+          else if (d.k === "pool") { c.fillStyle = INK_RED; blob(d.x, GROUND + 4, d.w * .45, d.seed, 12); }
+          else { c.fillStyle = INK_RED; c.beginPath(); c.ellipse(d.x, GROUND + 3, d.r, d.r * .32, 0, 0, 7); c.fill(); }
+        }
+        for (const w of ["a", "b"]) { const s = stateAt(w, td), air = Math.min(1, -s.y / 260), F = S.F[w]; c.fillStyle = INK_SHADOW; c.beginPath(); c.ellipse(s.x, GROUND + 3, 52 * (F.scale || 1) * (1 - air * .4), 9 * (1 - air * .5), 0, 0, 7); c.fill(); }
+        for (const p of P.parts) if (p.k === "dust") { c.fillStyle = p.shade; blob(p.x, p.y, p.r * Math.min(1, p.life * 2.5), p.seed, 8); }
+        for (const f of P.fx) if (f.k === "vortex") { c.save(); c.translate(f.x, f.y); c.fillStyle = INK_RED; c.beginPath(); c.ellipse(0, 0, f.r * 1.12, f.r * .5, 0, 0, 7); c.ellipse(0, 0, f.r * .8, f.r * .32, 0, 0, 7, true); c.fill("evenodd"); c.fillStyle = INK_BLACK; c.beginPath(); c.ellipse(0, 0, f.r * 1.05, f.r * .46, 0, 0, 7); c.ellipse(0, 0, f.r * .84, f.r * .34, 0, 0, 7, true); c.fill("evenodd"); c.fillStyle = "#f2f2ef"; c.beginPath(); c.ellipse(0, 0, f.r * .86, f.r * .35, 0, 0, 7); c.ellipse(0, 0, f.r * .8, f.r * .32, 0, 0, 7, true); c.fill("evenodd"); c.restore(); }
+      }
+      const order = ["a", "b"]; const sa = stateAt("a", td); if (sa.active && /slash|thrust|smash|jab|cross|spin|uppercut/.test(sa.active.pose || "")) order.reverse();
+      for (const w of order) {
+        const s = stateAt(w, td);
+        if (!impact) drawSmear(w, td);
+        drawFighter(c, bodyFor(w), s, { time: td, noShadow: true, sil: impact ? "#f2f2ef" : null });
+      }
+      if (!impact) {
+        for (const f of P.fx) {
+          if (f.k === "crescent") crescentFx(f);
+          if (f.k === "star") { c.save(); c.translate(f.x, f.y); const r = f.big ? 46 : 28; c.fillStyle = INK_BLACK; c.beginPath(); for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6, rr = i % 2 ? r * .3 : r * 1.15; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } c.closePath(); c.fill(); c.fillStyle = "#f2f2ef"; c.beginPath(); for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6, rr = i % 2 ? r * .22 : r; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } c.closePath(); c.fill(); c.restore(); }
+          if (f.k === "spikes") { const g = Math.min(1, (1 - f.life / f.max) * 3 + .35); let s = f.seed; const q = () => (s = (s * 9301 + 49297) % 233280) / 233280; for (const [col, rk] of [[INK_BLACK, 1], [INK_RED2, .72], ["#f2f2ef", .3]]) { c.fillStyle = col; c.beginPath(); for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2 + q() * .2, rr = f.r * rk * g * (.5 + q() * .7); c.lineTo(f.x + Math.cos(a) * rr, f.y + Math.sin(a) * rr * .8); const a2 = a + Math.PI / 18; c.lineTo(f.x + Math.cos(a2) * rr * .3, f.y + Math.sin(a2) * rr * .3 * .8); } c.closePath(); c.fill(); } }
+          if (f.k === "orb") { const kk = Math.min(1, Math.floor((1 - f.life / f.max) * 6) / 5), x = lerp(f.x0, f.x1, kk), y = lerp(f.y0, f.y1, kk), r = f.big ? 22 : 15; c.fillStyle = INK_BLACK; c.beginPath(); c.arc(x, y, r + 4, 0, 7); c.fill(); c.fillStyle = f.c; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.fillStyle = "#f2f2ef"; c.beginPath(); c.arc(x - r * .3, y - r * .3, r * .35, 0, 7); c.fill(); }
+          if (f.k === "beam") { const wdt = 70; c.fillStyle = f.inv ? "#f2f2ef" : INK_BLACK; c.beginPath(); c.moveTo(f.x0, f.y0 - wdt / 2 - 6); c.lineTo(f.x1, f.y1 - wdt / 2 - 14); c.lineTo(f.x1, f.y1 + wdt / 2 + 14); c.lineTo(f.x0, f.y0 + wdt / 2 + 6); c.closePath(); c.fill(); c.fillStyle = f.c; c.beginPath(); c.moveTo(f.x0, f.y0 - wdt / 2); c.lineTo(f.x1, f.y1 - wdt / 2 - 8); c.lineTo(f.x1, f.y1 + wdt / 2 + 8); c.lineTo(f.x0, f.y0 + wdt / 2); c.closePath(); c.fill(); c.fillStyle = f.inv ? INK_BLACK : "#f2f2ef"; c.fillRect(Math.min(f.x0, f.x1), f.y0 - 9, Math.abs(f.x1 - f.x0), 18); }
+        }
+        for (const p of P.parts) if (p.k === "blood") { c.fillStyle = INK_RED; c.save(); c.translate(p.x, p.y); c.rotate(Math.atan2(p.vy, p.vx)); c.beginPath(); c.ellipse(0, 0, p.r * 1.6, p.r * .7, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-p.r * 1.2, -p.r * .4); c.lineTo(-p.r * 4, 0); c.lineTo(-p.r * 1.2, p.r * .4); c.fill(); c.restore(); }
+      }
+      FLAT = false;
+    };
+    return P;
+  }
+
   // ---------- Watching a film ----------
   let fight = null, fightInfo = null;
   function startFight() {
     const myId = pickFighter === "loaner" ? "knuckles" : pickFighter, me = BY_ID[myId], opp = BY_ID[pickOpp], film = filmFor(myId, pickOpp);
     if (!film || !opp) return;
-    fightInfo = { me, opp, film, won: film.winner === myId };
-    const v = $("fightVideo");
-    v.src = film.src; v.currentTime = 0; v.muted = !!state.muted;
-    fight = { done: false, skip() { if (!v.duration) return; v.currentTime = Math.max(0, v.duration - .05); } };
-    $("fightLabel").textContent = `Film No. ${film.no} · ${me.name} vs ${opp.name} · “${film.title}”`;
+    const won = rand() < winChance(me, opp);
+    fightInfo = { me, opp, film, won };
+    sfx.unlock();
+    const S = buildFight(me, opp, won ? "a" : "b", rand(), "fight"); fight = createInkPlayer($("fightCanvas"), S, { sfx: playSfx, onEnd: () => { if (fight) { fight.done = true; endFight(); } } });
+    $("fightLabel").textContent = `${me.name} vs ${opp.name} · win chance ${Math.round(winChance(me, opp) * 100)}%`;
     $("result").hidden = true; $("fightSkip").hidden = false; $("fight").hidden = false;
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     $("fight").focus({ preventScroll: true });
-    const p = v.play(); if (p && p.catch) p.catch(() => { v.muted = true; v.play().catch(() => {}); });
   }
-  $("fightVideo").addEventListener("ended", () => { if (fight) { fight.done = true; endFight(); } });
-  $("fightVideo").addEventListener("error", () => { if (fight && !fight.done) { fight.done = true; $("fightLabel").textContent = "This film could not be loaded."; } });
+  function playSfx(e) { if (e.s === "boom") sfx.boom(e.v || 1); else if (e.s === "charge") sfx.charge(e.d || .5, "epic"); else if (e.s === "chime") sfx.chime(e.r || "rare"); else if (sfx[e.s]) sfx[e.s](); }
   function endFight() {
     if (!fightInfo || fightInfo.paid) return; fightInfo.paid = true;
     const { won, opp, me, film } = fightInfo, gain = won ? REWARD[opp.r] : LOSS_REWARD;
@@ -1770,18 +2148,20 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
     const enough = state.tokens >= PACK_BY_ID.sketch.price;
     setTimeout(() => {
       if (!fightInfo) return;
-      $("result").innerHTML = `<div class="result-box"><span class="label">Film No. ${film.no} · “${esc(film.title)}”</span><h2 class="${won ? "win" : "lose"}">${won ? "Victory" : "Defeated"}</h2><div class="gain">+${gain} ${ico("token")}</div>
+      $("result").innerHTML = `<div class="result-box"><span class="label">${esc(me.name)} vs ${esc(opp.name)}</span><h2 class="${won ? "win" : "lose"}">${won ? "Victory" : "Defeated"}</h2><div class="gain">+${gain} ${ico("token")}</div>
         <p class="small-print">${won ? `${esc(me.name)} took down ${esc(opp.name)}.` : `${esc(opp.name)} took this one. A loss still pays ${LOSS_REWARD} tokens.`} You hold ${fmt(state.tokens)} tokens.</p>
-        <div class="btns"><button class="btn brass" id="rematch">Run it back</button><button class="btn" id="leaveFight">Leave</button>${enough ? `<button class="btn" id="toSketch">Open Sketchbook</button>` : ""}</div></div>`;
+        <div class="btns"><button class="btn brass" id="rematch">Rematch</button><button class="btn" id="leaveFight">Leave</button>${enough ? `<button class="btn" id="toSketch">Open Sketchbook</button>` : ""}</div></div>`;
       $("result").hidden = false; $("fightSkip").hidden = true; $("rematch").focus();
     }, 900);
   }
-  function closeFight() { const v = $("fightVideo"); v.pause(); $("fight").hidden = true; fight = null; fightInfo = null; }
+  function closeFight() { $("fight").hidden = true; fight = null; fightInfo = null; }
 
   // ---------- Main loop ----------
   let lastT = performance.now();
   function frame(now) {
     const dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
+    if (fight && !$("fight").hidden && !fight.done) { fight.update(dt); fight.draw(); }
+    if (CUT && CUT.ink && CUT.phase === "play") { CUT.ink.update(dt); CUT.ink.draw(); }
     if (!stage.hidden) fx.step(dt);
     requestAnimationFrame(frame);
   }
@@ -1821,7 +2201,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
       case "stMute": state.muted = !state.muted; save(); setMuteIcon(); break;
       case "sumSell": { const g = sellUids(SS.items.map(i => i.uid), `Sold back a ${SS.pack.name} pull`); closeStage(); toast(`Sold for ${money(g)}`); break; }
       case "sumKeep": closeStage(); toast("Kept in your vault"); break;
-      case "sumReplay": { const it = SS.items.find(x => CUTSCENES[x.id] && x.ed !== "sketch"); if (it) playCutscene(it, null); break; }
+      case "sumReplay": { const it = SS.items.find(hasCutscene); if (it) playCutscene(it, null); break; }
       case "sumAgain": { const id = SS.pack.id; closeStage(); buy(id); break; }
       case "startFight": case "rematch": startFight(); break;
       case "leaveFight": case "quitFight": closeFight(); break;
