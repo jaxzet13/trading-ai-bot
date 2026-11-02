@@ -1586,6 +1586,20 @@ form.scan-opt { cursor: default; }
 .lim-FB.std .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, #0b171d, #04080a 70%); }
 .lim-VN.std .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, #121c0a, #070a04 70%); }
 .cm-line { margin: -4px 0 10px; color: var(--t2); font-size: 15px; font-style: italic; line-height: 1.45; max-width: 46ch; }
+/* ===== MATURE v1: price tape, 18+ mark, no level badge ===== */
+.mark .r18 { font-style: normal; font-size: 9.5px; font-weight: 800; letter-spacing: .04em; color: var(--t2); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 4px; margin-left: 2px; line-height: 1.2; }
+.wallet .lv { display: none !important; }
+.ticker { border-top: 1px solid var(--rule); overflow: hidden; white-space: nowrap; -webkit-mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent); mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent); }
+.tk-track { display: inline-flex; padding: 7px 0; animation: tkroll 80s linear infinite; font-size: 12.5px; }
+.ticker:hover .tk-track { animation-play-state: paused; }
+.tk { display: inline-flex; gap: 8px; align-items: baseline; padding-right: 30px; color: var(--t2); font-variant-numeric: tabular-nums; }
+.tk b { color: var(--t1); font-weight: 700; }
+.tk i { font-style: normal; color: var(--t3); font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; }
+.hero h1 { font-size: clamp(64px, 8.2vw, 124px); line-height: .82; }
+@media (max-width: 720px) { .hero h1 { font-size: clamp(60px, 21vw, 96px); } }
+.tk .up { color: var(--up); } .tk .dn { color: var(--down); } .tk .fl { color: var(--t3); }
+@keyframes tkroll { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .tk-track { animation: none; } .ticker { overflow-x: auto; } }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -1604,7 +1618,7 @@ form.scan-opt { cursor: default; }
   <div class="gate-box" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
     <svg><use href="#i-sigil"/></svg>
     <h2 id="gateTitle">Members only. 18+.</h2>
-    <p>This is a demo. Every coin here is simulated and nothing is ever charged. A real-money version would verify your ID before your first pack.</p>
+    <p>STIXX cards contain explicit language and violence. This is a demo: every coin here is simulated and nothing is ever charged. A real-money version would verify your ID before your first pack.</p>
     <label for="ageCheck"><input type="checkbox" id="ageCheck"> I'm 18 or older, and I understand this demo uses simulated currency.</label>
     <button class="btn brass big" id="gateEnter" disabled>Enter the vault</button>
   </div>
@@ -1612,7 +1626,7 @@ form.scan-opt { cursor: default; }
 
 <header class="top">
   <div class="wrap">
-    <a class="mark" href="#packs"><svg><use href="#i-sigil"/></svg><span>STIXX</span></a>
+    <a class="mark" href="#packs"><svg><use href="#i-sigil"/></svg><span>STIXX</span><em class="r18" title="Explicit language and violence">18+</em></a>
     <nav class="tabs" aria-label="Sections">
       <a href="#packs" data-tab="packs">Packs</a>
       <a href="#arena" data-tab="arena">Arena</a>
@@ -1631,28 +1645,29 @@ form.scan-opt { cursor: default; }
     </div>
   </div>
   <div class="notice"><div class="wrap"><span>Simulated currency · demo build</span><span>Shown in demo dollars</span><span>Instant sell-back at 90% of market</span><span id="mktTick">Market day –</span></div></div>
+  <div class="ticker" aria-label="Card prices today"><div class="tk-track" id="tkTrack"></div></div>
 </header>
 
 <main class="wrap">
   <section class="view" id="view-packs">
     <div class="hero">
       <div>
-        <div class="label">STIXX trading cards</div>
-        <h1>Series II</h1>
-        <p class="lede">Real trading cards with a digital twin. Every STIXX card has a code on the back: scan it and that exact card lands in your vault. <span id="heroCount">0</span> fighters, <span id="heroPacks">0</span> packs, and limited drops you can only get in stores.</p>
+        <div class="label">STIXX · Series II · 18+</div>
+        <h1>Pull.<br>Grade.<br>Flip.</h1>
+        <p class="lede">Explicit, numbered fight cards in short print runs. Scan yours to prove it's real, track what it's worth, and sell it with its history attached. <span id="heroCount">0</span> fighters, <span id="heroPacks">0</span> packs, and store-only drops that never get reprinted.</p>
         <div class="ctas"><button class="btn brass big" data-scanopen="1"><svg class="ico"><use href="#i-qr"/></svg>Scan a card</button><a class="btn big" href="#all-packs">Browse packs</a><button class="btn ghost big" data-buy="lastframe" id="heroOpen">Open the featured pack</button></div>
         <div class="facts">
           <div><span class="label">Top chase</span><strong id="heroChase">–</strong></div>
-          <div><span class="label">Your best pull</span><strong id="heroBest">–</strong></div>
-          <div><span class="label">Daily pack</span><button class="btn small" id="dailyBtn">Claim free pack</button></div>
+          <div><span class="label">Your collection</span><strong id="heroBest">–</strong></div>
+          <div><span class="label">Daily drop</span><button class="btn small" id="dailyBtn">Claim free pack</button></div>
         </div>
       </div>
       <div class="showcase" id="showcase"></div>
     </div>
 
     <div class="how" aria-label="How real cards work">
-      <div><span class="how-n">1</span><b>Buy a pack</b><p>Pick one up in a store, or open a digital pack here.</p></div>
-      <div><span class="how-n">2</span><b>Scan the back of each card</b><p>Your phone's camera opens STIXX and adds that exact copy, serial number and all.</p></div>
+      <div><span class="how-n">1</span><b>Rip a pack</b><p>Grab one in a store or open a digital pack here. Store-only drops are never reprinted.</p></div>
+      <div><span class="how-n">2</span><b>Scan it in</b><p>Your phone's camera reads the code on the back and adds that exact copy, serial number and all.</p></div>
       <div><span class="how-n">3</span><b>Own it. Flip it.</b><p>Each physical card can be claimed by one person. Sold one? Release it from your vault and the buyer scans it next, with its owner history attached.</p></div>
     </div>
 
@@ -2428,8 +2443,8 @@ form.scan-opt { cursor: default; }
     const p = PACK_BY_ID.lastframe, chase = chaseOf(p), chaseF = BY_ID[chase.id];
     $("heroCount").textContent = FIGHTERS.length; $("heroPacks").textContent = PACKS.length;
     $("heroChase").textContent = `${chaseF.name} ${CR[chase.rar].name} · ${money(cardBaseValue(chase))}`;
-    const best = state.s.best ? BY_ID[state.s.best.id] : null;
-    $("heroBest").textContent = best ? `${best.name} · ${money(state.s.best.val || best.v)}` : "Nothing yet";
+    const worth = state.vault.reduce((t, it) => t + itemVal(it), 0);
+    $("heroBest").textContent = state.vault.length ? `${money(worth)} · ${state.vault.length} card${state.vault.length > 1 ? "s" : ""}` : "Nothing yet";
     $("heroOpen").innerHTML = state.coins >= p.price ? `Open ${esc(p.name)} <span class="pr">${money(p.price)}</span>` : `Featured: ${esc(p.name)}`;
     const left = (state.lastFree || 0) + DAY - Date.now();
     const db = $("dailyBtn"); db.disabled = left > 0;
@@ -2708,7 +2723,16 @@ form.scan-opt { cursor: default; }
     $("arenaRecord").innerHTML = `<div><span class="label">Wins</span><strong>${state.s.wins}</strong></div><div><span class="label">Losses</span><strong>${state.s.losses}</strong></div><div><span class="label">Tokens</span><strong style="color:var(--token)">${fmt(state.tokens)}</strong></div>`;
   }
 
-  function renderAll() { refreshPackPrices(); renderMarket(); renderTick(); checkGrading(); renderWallet(); renderHero(); renderShelf(); renderVault(); renderLedger(); renderTerms(); renderArena(); }
+  // price tape across the top: the day's biggest movers
+  let tkDay = -1;
+  function renderTicker() {
+    const D = mktDay(); if (tkDay === D) return; tkDay = D;
+    const rows = CARDS.filter(c => c.rar !== "C" && (!c.set || D >= LSETS[c.set].release)).map(c => ({ c, px: rawPrice(c.no), ch: pctChange(c.no, 1) }))
+      .filter(r => r.px).sort((a, b) => Math.abs(b.ch) - Math.abs(a.ch)).slice(0, 18);
+    const html = rows.map(r => `<span class="tk"><b>${esc(BY_ID[r.c.id].name)}</b><i>${esc(crOf(r.c).name)}</i><span class="num">${money(r.px)}</span>${pctTxt(r.ch)}</span>`).join("");
+    $("tkTrack").innerHTML = html + html;
+  }
+  function renderAll() { refreshPackPrices(); renderMarket(); renderTick(); renderTicker(); checkGrading(); renderWallet(); renderHero(); renderShelf(); renderVault(); renderLedger(); renderTerms(); renderArena(); }
 
   // =====================================================================
   // TABS
@@ -3394,7 +3418,7 @@ form.scan-opt { cursor: default; }
       return;
     }
     const head = `<div class="big num">${money(total)}</div><span class="small-print">${items.length} cards worth ${money(total)} · sell back now for ${money(sell)}${paid ? ` on a ${money(paid)} pack` : ""}</span>${hit && paid ? `<span class="paid-off">Paid off · ${Math.round(sell / paid * 100)}% back</span>` : ""}`;
-    const lv = SS.levelUp ? `<div class="lvup">Level ${SS.levelUp.level} · +${money(SS.levelUp.bonus)} bonus added</div>` : "";
+    const lv = SS.levelUp ? `<div class="lvup">Volume tier ${SS.levelUp.level} · +${money(SS.levelUp.bonus)} bonus added</div>` : "";
     $("stSummary").innerHTML = `<div class="sum-in">
       <div class="sum-head"><span class="label">${esc(p.name)} · best pull <b style="color:${bestR.col}">${esc(BY_ID[bestIt.id].name)}, ${esc(bestR.name)}</b></span>${head}</div>${lv}
       <div class="fan">${items.map((x, i) => `<div class="fan-c${i === bestI ? " best" : ""}" style="--c:${crOf(cardOf(x)).col};--i:${i}">${cardHTML(x)}</div>`).join("")}</div>
