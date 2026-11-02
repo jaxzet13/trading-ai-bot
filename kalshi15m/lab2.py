@@ -141,6 +141,9 @@ def panel(series, where="search"):
     elif where == "archive":
         with _source(ARCH, "candles.part"):
             p = B.Panel(B.build_panel(series))
+        f = FRESH / f"{series}_markets.csv"
+        if f.exists():  # keep archive and fresh sets disjoint (DOGE/ZEC fresh sets start ~Sep 1)
+            p = p.subset(p.open_ts < pd.read_csv(f, usecols=["open_ts"]).open_ts.min())
     else:
         with _source(FRESH):
             p = B.Panel(B.build_panel(series))
