@@ -1077,7 +1077,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 /* revealed card: lifts toward you and gets a soft glow in its rarity colour */
 .sc.glowing .tilt { box-shadow: 0 0 calc(14px + var(--gr, .4) * 38px) calc(var(--gr, .4) * 6px) color-mix(in srgb, var(--c) 75%, transparent), 0 24px 50px rgba(0,0,0,.6); animation: rglow 2.6s ease-in-out infinite; }
 @keyframes rglow { 50% { box-shadow: 0 0 calc(20px + var(--gr, .4) * 56px) calc(var(--gr, .4) * 10px) color-mix(in srgb, var(--c) 85%, transparent), 0 24px 50px rgba(0,0,0,.6); } }
-.sc.settled { transform: translate(0, -2%) scale(1.07); }
+.sc.settled { transform: translate(0, 2%) scale(1.05); }
 .sc.settled::after { content: ""; position: absolute; left: 8%; right: 8%; bottom: -9%; height: 7%; border-radius: 50%; pointer-events: none;
   background: radial-gradient(ellipse, color-mix(in srgb, var(--c) 55%, transparent), transparent 70%); filter: blur(6px); opacity: calc(.4 + var(--gr, .4) * .6); }
 .st-tray .mini .tcard { box-shadow: 0 0 10px 1px color-mix(in srgb, var(--c, #888) 70%, transparent); }
@@ -1113,6 +1113,60 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .std.cr-H:not(.lim) .tc-face::before { opacity: .22 !important; }
 /* sweep of white light every few seconds */
 .tcard.std.cr-H:not(.lim)::after { background-image: linear-gradient(105deg, transparent 36%, rgba(255,255,255,.75) 47%, rgba(200,230,255,.3) 53%, transparent 62%) !important; mix-blend-mode: overlay; animation-duration: 3.4s !important; }
+
+/* ===================== OPENING v2 ===================== */
+/* stage: a spotlight from above in the pack's colour, a lit floor, slow dust in the light */
+.stage { --pa: #e9e4d8; background: radial-gradient(ellipse at 50% 46%, #1b1b1e 0%, #0b0b0d 52%, #040405 100%); }
+.st-spot { position: absolute; left: 50%; top: -12%; width: min(900px, 120vw); height: 112%; transform: translateX(-50%); pointer-events: none; z-index: 0;
+  background: radial-gradient(ellipse 34% 62% at 50% 0%, rgba(255,255,255,.10), transparent 70%), conic-gradient(from 168deg at 50% 0%, transparent 0deg, rgba(255,255,255,.06) 8deg, rgba(255,255,255,.075) 12deg, rgba(255,255,255,.06) 16deg, transparent 24deg);
+  -webkit-mask: linear-gradient(#000 40%, transparent 92%); mask: linear-gradient(#000 40%, transparent 92%); }
+.st-spot::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 30% 40% at 50% 55%, var(--pa), transparent 70%); opacity: .13; mix-blend-mode: screen; }
+.st-floor { position: absolute; left: 50%; top: 77%; width: min(560px, 80vw); height: 90px; transform: translateX(-50%); border-radius: 50%; pointer-events: none; z-index: 0;
+  background: radial-gradient(ellipse, rgba(255,255,255,.09), transparent 68%); filter: blur(4px); }
+.st-dust { position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .55;
+  background-image: radial-gradient(circle, rgba(255,255,255,.55) 0 1px, transparent 1.6px), radial-gradient(circle, rgba(255,255,255,.35) 0 1px, transparent 1.6px), radial-gradient(circle, rgba(255,255,255,.25) 0 .8px, transparent 1.4px);
+  background-size: 210px 230px, 330px 290px, 150px 170px; background-position: 13px 40px, 90px 10px, 40px 120px;
+  -webkit-mask: radial-gradient(ellipse 30% 55% at 50% 40%, #000, transparent 75%); mask: radial-gradient(ellipse 30% 55% at 50% 40%, #000, transparent 75%); animation: dust 26s linear infinite; }
+@keyframes dust { to { background-position: 13px -190px, 90px -280px, 40px -50px; } }
+
+/* pack: drops in, then floats in the light with a coloured rim */
+.st-pack.enter { animation: packin .95s cubic-bezier(.2,1.25,.35,1) both; }
+@keyframes packin { 0% { transform: translateY(-70vh) rotate(-8deg) scale(.9); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; } }
+.st-pack:not(.drop):not(.enter) { animation: packfloat 3.6s ease-in-out infinite; }
+@keyframes packfloat { 50% { translate: 0 -9px; } }
+.st-pack .pk { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--pa) 45%, transparent)) drop-shadow(0 30px 30px rgba(0,0,0,.7)); }
+@supports not (color: color-mix(in srgb, red 50%, blue)) { .st-pack .pk { filter: drop-shadow(0 0 14px var(--pa)) drop-shadow(0 30px 30px rgba(0,0,0,.7)); } }
+
+/* card back: a silver hairline edge, a soft white halo so it stands off the black, the mark glows */
+.sc .cback { box-shadow: 0 0 0 1.5px rgba(255,255,255,.45), 0 0 26px 4px rgba(255,255,255,.30), 0 0 70px 14px rgba(255,255,255,.12), 0 22px 40px rgba(0,0,0,.7); }
+.sc .cback .in { box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), inset 0 0 40px rgba(255,255,255,.04); background: radial-gradient(ellipse at 50% 38%, #141416, #000 70%); }
+.sc .cback .in::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.10) 47%, rgba(255,255,255,.02) 53%, transparent 62%); background-size: 300% 100%; animation: csweep 4.5s ease-in-out infinite; }
+.sc .cback svg.xmark { filter: drop-shadow(0 0 6px rgba(255,255,255,.75)) drop-shadow(0 0 16px rgba(255,255,255,.35)); }
+.sc.top:not(.flipped) .cback { animation: backbreath 2.8s ease-in-out infinite; }
+@keyframes backbreath { 50% { box-shadow: 0 0 0 1.5px rgba(255,255,255,.65), 0 0 38px 8px rgba(255,255,255,.42), 0 0 100px 22px rgba(255,255,255,.16), 0 22px 40px rgba(0,0,0,.7); } }
+.sc.top:not(.flipped) .tilt { animation: cardfloat 3.2s ease-in-out infinite; }
+.sc.top.charging .tilt, .sc.top.charging .cback { animation: none; }
+@keyframes cardfloat { 50% { translate: 0 -6px; } }
+
+.sc .cback::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; padding: 1.5px;
+  background: linear-gradient(135deg, rgba(255,255,255,.9), rgba(255,255,255,.15) 30%, rgba(255,255,255,.6) 50%, rgba(255,255,255,.1) 70%, rgba(255,255,255,.8));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+/* flip: a shockwave ring and a horizontal light streak in the rarity colour */
+.flipring { position: absolute; left: 50%; top: 50%; width: 40%; aspect-ratio: 1; border-radius: 50%; pointer-events: none; z-index: 30;
+  transform: translate(-50%, -50%) scale(.2); border: 3px solid var(--c); box-shadow: 0 0 24px var(--c), inset 0 0 24px var(--c); opacity: 0; animation: flipring .9s cubic-bezier(.15,.7,.3,1) forwards; }
+.flipring.r2 { border-width: 1.5px; }
+@keyframes flipring { 0% { opacity: .95; transform: translate(-50%, -50%) scale(.2); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(4.2); } }
+.flipstreak { position: absolute; left: 50%; top: 50%; width: 380%; height: 3px; pointer-events: none; z-index: 30; transform: translate(-50%, -50%) scaleX(0);
+  background: linear-gradient(90deg, transparent, var(--c) 30%, #fff 50%, var(--c) 70%, transparent); box-shadow: 0 0 18px var(--c); animation: flipstreak .7s cubic-bezier(.2,.8,.3,1) forwards; }
+@keyframes flipstreak { 0% { transform: translate(-50%, -50%) scaleX(0); opacity: 1; } 55% { transform: translate(-50%, -50%) scaleX(1); opacity: .9; } 100% { transform: translate(-50%, -50%) scaleX(1.1) scaleY(.2); opacity: 0; } }
+/* the flip itself: anticipation squash, then an overshooting spin */
+.sc .flip-inner { transition: transform .7s cubic-bezier(.3,1.45,.45,1); }
+.sc.flipped .tilt { animation: flippop .7s cubic-bezier(.2,1.3,.4,1); }
+@keyframes flippop { 0% { scale: 1; } 15% { scale: .94; } 55% { scale: 1.1; } 100% { scale: 1; } }
+/* dismissed cards fly down into the tray instead of off to the side */
+.sc.gone { transform: translate(0, 55vh) scale(.22) rotate(-6deg); opacity: 0; transition: transform .55s cubic-bezier(.5,0,.75,0), opacity .5s .1s; }
+@media (prefers-reduced-motion: reduce) { .st-dust, .st-pack, .sc .tilt, .sc .cback, .sc .cback .in::after, .flipring, .flipstreak { animation: none !important; } }
 /* ===================== MINIMAL SKIN =====================
    The site steps back so the cards are the only colourful thing on the page:
    neutral greys, flat surfaces, no textures, glows or gold. Card styles (.tcard) are untouched. */
@@ -1426,6 +1480,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
 
 <!-- Opening stage -->
 <div class="stage" id="stage" tabindex="-1" hidden>
+  <div class="st-spot"></div><div class="st-floor"></div><div class="st-dust"></div>
   <div class="rays" id="rays"></div><canvas id="aura"></canvas>
   <canvas id="fx"></canvas>
   <div class="st-bar">
@@ -2436,6 +2491,9 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     fx.clear();
     setMuteIcon();
     const sp = $("stPack");
+    stage.style.setProperty("--pa", p.acc);
+    sp.classList.add("enter"); setTimeout(() => sp.classList.remove("enter"), 1100);
+    sfx.whoosh();
     sp.addEventListener("pointerdown", onPackDown);
   }
   function updateTotal(add) {
@@ -2683,6 +2741,8 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     const f = BY_ID[it.id], r = rarOf(it), RC = CR[r] || CR.C, val = itemVal(it);
     el.classList.add("flipped");
     sfx.snap();
+    { const box = $("stBox"), col = it.rh && RC.tier < 2 ? "#cfe9ff" : RC.col;
+      for (const [cls, d] of [["flipring", 0], ["flipring r2", 90], ["flipstreak", 0]]) { const ring = document.createElement("div"); ring.className = cls; ring.style.setProperty("--c", col); ring.style.animationDelay = d + "ms"; box.appendChild(ring); setTimeout(() => ring.remove(), 1300); } }
     setTimeout(() => {
       if (!SS || SS.phase !== "stack") return;
       stage.classList.remove("dim");
