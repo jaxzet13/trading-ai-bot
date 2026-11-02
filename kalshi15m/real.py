@@ -129,6 +129,20 @@ def sign(key, ts_ms: str, method: str, path: str) -> str:
     return base64.b64encode(sig).decode()
 
 
+def _key_file_from_env(text: str) -> str:
+    """For hosted runs where the key arrives as an env var (KALSHI_PRIVATE_KEY = the PEM text, with real
+    or literal \\n line breaks, or base64 of the PEM). Written once to a private file outside the repo."""
+    import tempfile
+    text = text.strip().replace("\\n", "\n")
+    if "BEGIN" not in text:
+        text = base64.b64decode(text).decode()
+    fd, path = tempfile.mkstemp(prefix="kalshi_", suffix=".pem")
+    with os.fdopen(fd, "w") as f:
+        f.write(text if text.endswith("\n") else text + "\n")
+    os.chmod(path, 0o600)
+    return path
+
+
 class KalshiAPI:
     """Minimal Kalshi Trade API v2 client. Public calls work without a key."""
 
@@ -143,6 +157,8 @@ class KalshiAPI:
     @classmethod
     def from_env(cls, base: str, **kw):
         kid, kp = os.getenv("KALSHI_KEY_ID"), os.getenv("KALSHI_PRIVATE_KEY_PATH")
+        if kid and not kp and os.getenv("KALSHI_PRIVATE_KEY"):
+            kp = _key_file_from_env(os.environ["KALSHI_PRIVATE_KEY"])
         if not kid or not kp:
             raise SystemExit("Set the env vars KALSHI_KEY_ID and KALSHI_PRIVATE_KEY_PATH (see REAL_MONEY.md).")
         if not Path(kp).expanduser().is_file():
