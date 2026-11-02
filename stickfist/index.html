@@ -1167,6 +1167,17 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 /* dismissed cards fly down into the tray instead of off to the side */
 .sc.gone { transform: translate(0, 55vh) scale(.22) rotate(-6deg); opacity: 0; transition: transform .55s cubic-bezier(.5,0,.75,0), opacity .5s .1s; }
 @media (prefers-reduced-motion: reduce) { .st-dust, .st-pack, .sc .tilt, .sc .cback, .sc .cback .in::after, .flipring, .flipstreak { animation: none !important; } }
+
+/* ===== FLIP v3: edge-on turn that works in every browser, fast ===== */
+.sc .tilt { perspective: 1100px; }
+.sc.flipped .tilt { animation: none; }
+.sc.flipA .flip-inner { animation: flipA .15s cubic-bezier(.55,0,.9,.4) forwards; transition: none; }
+@keyframes flipA { from { transform: rotateY(0deg); } to { transform: rotateY(90deg) scale(1.04); } }
+.sc.flipB .flip-inner { animation: flipB .32s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes flipB { from { transform: rotateY(-90deg) scale(1.06); } to { transform: rotateY(0deg) scale(1); } }
+.sc.flipA .face.front { visibility: hidden; }
+.sc.gone { transition: transform .38s cubic-bezier(.5,0,.75,0), opacity .3s .08s; }
+.st-pack.enter { animation-duration: .7s; }
 /* ===================== MINIMAL SKIN =====================
    The site steps back so the cards are the only colourful thing on the page:
    neutral greys, flat surfaces, no textures, glows or gold. Card styles (.tcard) are untouched. */
@@ -2574,8 +2585,8 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
       buildStack();
       sp.classList.add("drop");
       sfx.whoosh();
-    }, 380);
-    setTimeout(() => { if (!SS || SS.phase !== "opening") return; SS.phase = "stack"; $("stHint").textContent = "Click the card to reveal · Space"; if (SS.queued) { SS.queued = false; advance(); } }, 1000);
+    }, 260);
+    setTimeout(() => { if (!SS || SS.phase !== "opening") return; SS.phase = "stack"; $("stHint").textContent = "Click the card to reveal · Space"; if (SS.queued) { SS.queued = false; advance(); } }, 640);
   }
 
   // --- stack ---
@@ -2587,7 +2598,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
         <div class="tilt"><div class="flip-inner"><div class="face back"><div class="cback"><div class="in"><svg class="xmark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="9.5" r="1.6" fill="currentColor"/><path d="M11 15 L29 33 M29 15 L11 33" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg><span class="t">STIXX</span></div><span class="leak"></span><span class="crk"></span></div></div><div class="face front">${cardHTML(it, !!it.g)}</div></div></div></div>`;
     }).join("");
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      st.querySelectorAll(".sc").forEach((el, i) => setTimeout(() => { el.classList.remove("rise"); sfx.deal(); }, 120 + i * 110));
+      st.querySelectorAll(".sc").forEach((el, i) => setTimeout(() => { el.classList.remove("rise"); sfx.deal(); }, 60 + i * 70));
       markTop();
     }));
   }
@@ -2595,7 +2606,8 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
   function markTop() { const el = scEl(SS.idx); if (el) el.classList.add("top"); }
 
   function advance() {
-    if (!SS || SS.busy) return;
+    if (!SS) return;
+    if (SS.busy) { if (SS.phase === "stack" && !document.querySelector("#stStack .sc.charging")) SS.queued = true; return; }
     if (SS.phase === "pack") { autoTear(); return; }
     if (SS.phase === "opening") { SS.queued = true; return; }
     if (SS.phase !== "stack") return;
@@ -2739,12 +2751,13 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
 
   function flipNow(el, it) {
     const f = BY_ID[it.id], r = rarOf(it), RC = CR[r] || CR.C, val = itemVal(it);
-    el.classList.add("flipped");
+    el.classList.add("flipA");
     sfx.snap();
     { const box = $("stBox"), col = it.rh && RC.tier < 2 ? "#cfe9ff" : RC.col;
-      for (const [cls, d] of [["flipring", 0], ["flipring r2", 90], ["flipstreak", 0]]) { const ring = document.createElement("div"); ring.className = cls; ring.style.setProperty("--c", col); ring.style.animationDelay = d + "ms"; box.appendChild(ring); setTimeout(() => ring.remove(), 1300); } }
+      for (const [cls, d] of [["flipring", 0], ["flipring r2", 90], ["flipstreak", 0]]) { const ring = document.createElement("div"); ring.className = cls; ring.style.setProperty("--c", col); ring.style.animationDelay = (d + 130) + "ms"; box.appendChild(ring); setTimeout(() => ring.remove(), 1300); } }
     setTimeout(() => {
       if (!SS || SS.phase !== "stack") return;
+      el.classList.remove("flipA"); el.classList.add("flipped", "settled", "flipB"); el.querySelector(".tcard").style.setProperty("--go", "1");
       stage.classList.remove("dim");
       const tilt = el.querySelector(".tilt"); tilt.style.setProperty("--g", RC.tier < 2 ? (it.rh ? ".2" : "0") : RC.tier < 4 ? ".3" : ".55");
       el.style.setProperty("--c", it.rh && RC.tier < 2 ? "#cfe9ff" : RC.col);
@@ -2767,14 +2780,14 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
       const base = it.g ? cardBaseValue(cardOf(it), it.ed, it.rh) : val;
       showTitle(f, it, base, !!it.g);
       updateTotal(base);
-    }, 260);
+    }, 150);
     setTimeout(() => {
       if (!SS || SS.phase !== "stack") return;
-      el.querySelector(".tcard").style.setProperty("--go", "1"); el.classList.add("settled");
-      const done = () => { if (!SS || SS.phase !== "stack") return; SS.busy = false; $("stHint").textContent = SS.idx < SS.items.length - 1 ? "Click again for the next card · Space" : "Click to see your result · Space"; };
+      el.classList.remove("flipB");
+      const done = () => { if (!SS || SS.phase !== "stack") return; SS.busy = false; if (SS.queued) { SS.queued = false; setTimeout(advance, 40); return; } $("stHint").textContent = SS.idx < SS.items.length - 1 ? "Click again for the next card · Space" : "Click to see your result · Space"; };
       const after = () => hasCutscene(it) && !(SS.cutDone && SS.cutDone[it.uid]) ? setTimeout(() => playCutscene(it, done), 650) : done();
       if (it.g) { $("stHint").textContent = "Grading…"; gradeRoll(el, it, after); } else after();
-    }, 900);
+    }, 470);
   }
 
   function gradeRoll(el, it, done) {
@@ -2871,8 +2884,8 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     setTimeout(() => {
       if (!SS || SS.phase !== "stack") return; SS.busy = false;
       if (SS.idx >= SS.items.length) showSummary();
-      else { markTop(); $("stHint").textContent = "Click the card to reveal · Space"; }
-    }, 380);
+      else { markTop(); $("stHint").textContent = "Click the card to reveal · Space"; if (SS.queued) { SS.queued = false; setTimeout(advance, 30); } }
+    }, 200);
   }
 
   function shake(px, ms) {
