@@ -4,14 +4,68 @@
   "max_daily_loss": 50.0,
   "max_trades_per_day": 150,
   "strategies": [
-    {"series": "KXHYPE15M", "strategy": "fair_value", "execution": "taker", "poll": "minute",
-     "params": {"start": 2, "end": 13, "edge": 0.12, "vol_mult": 1.0},
-     "why": "Strategy lab winner: +$2,193 on 770 holdout trades (t=3.43), 9 of 9 weeks positive. Edge disappears with a 1-minute delay, so this tests whether it survives real latency."},
-    {"series": "KXNEAR15M", "strategy": "fair_value", "execution": "taker", "poll": "minute",
-     "params": {"start": 2, "end": 13, "edge": 0.12, "vol_mult": 1.0},
-     "why": "Strategy lab: +$1,307 on 811 holdout trades (t=2.53), 8 of 9 weeks positive. Also latency-sensitive."},
-    {"series": "KXETH15M", "strategy": "reversal_z", "execution": "maker",
-     "params": {"minute": 2, "min_z": 1.5, "max_price": 0.55},
-     "why": "Earlier pick: +$74 on 74 holdout trades (t=0.62). Kept for comparison."}
+    {
+      "series": "KXHYPE15M",
+      "strategy": "fair_value",
+      "execution": "taker",
+      "poll": "minute",
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.12,
+        "vol_mult": 1.0
+      },
+      "why": "Holdout +$2,193/770 trades (t=3.43), but no archive to blind-test and weak in the newest data. On watch: drop if live stays weak after ~200 trades."
+    },
+    {
+      "series": "KXNEAR15M",
+      "strategy": "fair_value",
+      "execution": "taker",
+      "poll": "minute",
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.12,
+        "vol_mult": 1.0
+      },
+      "why": "Passed two blind tests: Oct 17-Nov 1 holdout +$1,307/811 trades (t=2.53) and Jul-Aug archive +$3,099/1,782 trades (t=3.83). Latency-sensitive."
+    },
+    {
+      "series": "KXDOGE15M",
+      "strategy": "fair_value",
+      "execution": "taker",
+      "poll": "minute",
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.12,
+        "vol_mult": 1.0
+      },
+      "why": "Strongest find: never-used Sep 1-Nov 2 data +$6,602 on 2,996 trades (t=5.65, 10/10 weeks up) and Apr-Aug archive +$1,724 (t=3.16), frozen NEAR rule, $10/trade."
+    },
+    {
+      "series": "KXZEC15M",
+      "strategy": "fair_value",
+      "execution": "taker",
+      "poll": "minute",
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.12,
+        "vol_mult": 1.0
+      },
+      "why": "Probation: never-used Sep 1-Nov 2 data +$3,187 on 1,978 trades (t=2.86), but over half the profit is from sub-10c long shots."
+    },
+    {
+      "series": "KXETH15M",
+      "strategy": "reversal_z",
+      "execution": "maker",
+      "params": {
+        "minute": 2,
+        "min_z": 1.5,
+        "max_price": 0.55
+      },
+      "why": "Earlier pick: +$74 on 74 holdout trades (t=0.62). Kept for comparison."
+    }
   ]
 }

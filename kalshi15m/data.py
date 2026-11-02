@@ -26,6 +26,8 @@ SERIES = {  # Kalshi series ticker -> Coinbase product
     "KXHYPE15M": "HYPE-USD",
     "KXBNB15M": "BNB-USD",
     "KXNEAR15M": "NEAR-USD",
+    "KXDOGE15M": "DOGE-USD",
+    "KXZEC15M": "ZEC-USD",
 }
 CORE = ("KXBTC15M", "KXETH15M", "KXSOL15M")
 

@@ -7,7 +7,7 @@
 /* Layout: one working column; summary strip -> leaderboard -> selected-strategy detail grid. */
 :root {
   --bg: #f4f6f8; --surface: #ffffff; --ink: #11161c; --ink-2: #4a5562; --muted: #7f8a96;
-  --line: #dfe4ea; --grid: #e9edf1; --accent: #2a78d6; --accent-2: #eb6834; --s3: #1baf7a;
+  --line: #dfe4ea; --grid: #e9edf1; --accent: #2a78d6; --accent-2: #eb6834; --s3: #1baf7a; --s4: #c98500; --s5: #d55181;
   --good: #0a7d0a; --good-bg: #e3f3e3; --bad: #c43333; --bad-bg: #fbe7e7;
   --warn: #8a5a00; --warn-bg: #fdf1d8; --chip: #eef2f6;
   --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
@@ -16,12 +16,12 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0f1317; --surface: #171c22; --ink: #eef1f4; --ink-2: #b4bdc7; --muted: #7f8a96;
-  --line: #29313a; --grid: #222930; --accent: #3987e5; --accent-2: #d95926; --s3: #199e70;
+  --line: #29313a; --grid: #222930; --accent: #3987e5; --accent-2: #d95926; --s3: #199e70; --s4: #eda100; --s5: #e87ba4;
   --good: #3fbf3f; --good-bg: #143019; --bad: #ec6b6b; --bad-bg: #3a1a1a;
   --warn: #f0b84a; --warn-bg: #352a12; --chip: #212830; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #0f1317; --surface: #171c22; --ink: #eef1f4; --ink-2: #b4bdc7; --muted: #7f8a96;
-  --line: #29313a; --grid: #222930; --accent: #3987e5; --accent-2: #d95926; --s3: #199e70;
+  --line: #29313a; --grid: #222930; --accent: #3987e5; --accent-2: #d95926; --s3: #199e70; --s4: #eda100; --s5: #e87ba4;
   --good: #3fbf3f; --good-bg: #143019; --bad: #ec6b6b; --bad-bg: #3a1a1a;
   --warn: #f0b84a; --warn-bg: #352a12; --chip: #212830; color-scheme: dark; }
 
@@ -384,7 +384,7 @@ td.coin { font-size: 12px; }
         <td><span class="pill ${c}">${l}</span></td></tr>`; }).join("") + "</tbody>";
   }
 
-  const COIN_COL = ["--accent", "--accent-2", "--s3"];
+  const COIN_COL = ["--accent", "--accent-2", "--s3", "--s4", "--s5", "--accent"];
   let labKey = null;
   function renderLab() {
     const L = typeof LAB === "undefined" ? null : LAB; $("labPanel").hidden = !L; if (!L) return;
