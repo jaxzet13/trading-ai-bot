@@ -897,9 +897,9 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .std.cr-C:not(.lim) .tc-flavor { border-left-color: #8a8a8a; }
 .std.cr-C:not(.lim) .tc-val { background: #3a3a3a; color: #efebe2; }
 
-.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-face { color: #eee9e0; background: var(--grain), radial-gradient(circle at 82% 10%, var(--sa) 0 10cqi, color-mix(in srgb, var(--sa) 35%, transparent) 10.4cqi, transparent 22cqi), radial-gradient(ellipse at 30% 20%, var(--sc), var(--sb) 70%); }
+.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-face { color: #eee9e0; background: var(--grain), radial-gradient(circle at 82% 10%, var(--sa) 0 10cqi, var(--sa35) 10.4cqi, transparent 22cqi), radial-gradient(ellipse at 30% 20%, var(--sc), var(--sb) 70%); }
 .std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-face::after { filter: invert(1); opacity: .5; }
-.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-wash { background: radial-gradient(ellipse, color-mix(in srgb, var(--sa) 50%, transparent), transparent 70%); }
+.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-wash { background: radial-gradient(ellipse, var(--sa35), transparent 70%); }
 .std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-artwrap { background: var(--sa); }
 .std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-sub, .std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-vert { color: rgba(238,233,224,.55); }
 .std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .mv { border-bottom-color: rgba(238,233,224,.15); }
@@ -907,14 +907,14 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-pwr { background: var(--sb); box-shadow: inset 0 0 0 .5cqi var(--sa); color: #fff; }
 .std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-flavor { border-left-color: var(--sa); }
 .std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .tc-val, .std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) .rseal { background: var(--sa); color: var(--sv, #fff); }
-.tcard.std.cr-U:not(.lim) { --sa: #3f9b6b; --sb: #050c08; --sc: #10241a; background: linear-gradient(135deg, #0f3a24, #04100a 40%, #1e5e3c 70%, #04100a); }
-.tcard.std.cr-R:not(.lim) { --sa: #3f7fe0; --sb: #04070f; --sc: #0d1838; background: linear-gradient(135deg, #10275e, #02050d 40%, #2a5bb8 70%, #02050d); }
+.tcard.std.cr-U:not(.lim) { --sa: #3f9b6b; --sa35: rgba(63,155,107,.35); --sb: #050c08; --sc: #10241a; background: linear-gradient(135deg, #0f3a24, #04100a 40%, #1e5e3c 70%, #04100a); }
+.tcard.std.cr-R:not(.lim) { --sa: #3f7fe0; --sa35: rgba(63,127,224,.35); --sb: #04070f; --sc: #0d1838; background: linear-gradient(135deg, #10275e, #02050d 40%, #2a5bb8 70%, #02050d); }
 /* Foil Rare: steel stock, moving silver-foil frame, holo art */
 .tcard.std.cr-H:not(.lim) { --sa: #c9ced6; --sb: #0b0c0e; --sc: #22252b; --sv: #111; background: linear-gradient(115deg, #6d727c, #f4f6f9 18%, #8a8f99 34%, #ffffff 50%, #7d828d 66%, #e7eaee 82%, #6d727c); background-size: 240% 240%; background-position: var(--mx) var(--my); }
 .std.cr-H:not(.lim) .tc-artwrap { background: linear-gradient(115deg, #8a8f99, #fff, #8a8f99); }
 .std.cr-H:not(.lim) .tc-name { background: linear-gradient(100deg, #b9bec6, #ffffff 40%, #9aa0aa 70%, #f4f6f9); -webkit-background-clip: text; background-clip: text; color: transparent; }
 /* Signature: black stock, gold foil frame and gold name */
-.tcard.std.cr-RR:not(.lim) { --sa: #d4a53a; --sb: #070604; --sc: #1e1910; --sv: #141008; background: linear-gradient(115deg, #7a5600, #ffe58a 20%, #b8860b 38%, #fff2b8 52%, #9c7208 70%, #ffd966 86%, #7a5600); background-size: 240% 240%; background-position: var(--mx) var(--my); }
+.tcard.std.cr-RR:not(.lim) { --sa: #d4a53a; --sa35: rgba(212,165,58,.35); --sb: #070604; --sc: #1e1910; --sv: #141008; background: linear-gradient(115deg, #7a5600, #ffe58a 20%, #b8860b 38%, #fff2b8 52%, #9c7208 70%, #ffd966 86%, #7a5600); background-size: 240% 240%; background-position: var(--mx) var(--my); }
 .std.cr-RR:not(.lim) .tc-artwrap { background: linear-gradient(115deg, #9c7208, #ffe58a, #9c7208); }
 .std.cr-RR:not(.lim) .tc-name { background: linear-gradient(100deg, #c9930f, #fff2b8 40%, #b8860b 70%, #ffe58a); -webkit-background-clip: text; background-clip: text; color: transparent; }
 /* reverse foil keeps its holo border on any stock */
@@ -1051,6 +1051,68 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .lim-FB .tc-ring { background: conic-gradient(from 0deg, transparent, rgba(120,210,255,.0), rgba(120,210,255,.75), rgba(230,248,255,.95), rgba(120,210,255,.75), transparent 30%, transparent 55%, rgba(120,210,255,.6) 75%, transparent 90%); }
 .lim-VN .tc-ring { background: conic-gradient(from 0deg, transparent, rgba(150,240,60,.0), rgba(150,240,60,.75), rgba(230,255,200,.95), rgba(150,240,60,.75), transparent 30%, transparent 55%, rgba(150,240,60,.6) 75%, transparent 90%); }
 .lim-FB.std .tc-art img, .lim-VN.std .tc-art img { filter: grayscale(1) contrast(1.6) brightness(1.3); }
+
+/* ===================== OPENING: rip and reveal ===================== */
+.st-box { width: min(340px, 78vw, calc((100vh - 330px) * 5 / 7)); }
+/* the pack swells and leans as you tear, light leaks out of the cut */
+.st-pack .pk { transform: scale(calc(1 + var(--t) * .045)) rotate(calc(var(--t) * -1.2deg)); }
+.pk .tearglow { position: absolute; left: 0; top: 13%; height: 0; width: calc(var(--t) * 100%); z-index: 5; pointer-events: none;
+  box-shadow: 0 0 calc(10px + var(--t) * 34px) calc(2px + var(--t) * 8px) var(--pk-acc), 0 0 calc(var(--t) * 70px) calc(var(--t) * 16px) color-mix(in srgb, var(--pk-acc) 50%, transparent); opacity: calc(.4 + var(--t) * .6); }
+.pk .tearfill { height: 2px; background: linear-gradient(90deg, #fff, #fff 92%, var(--pk-acc)); }
+.pk .tearfill::after { content: ""; position: absolute; right: -6px; top: -5px; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 0 14px 6px var(--pk-acc), 0 0 4px 1px #fff; opacity: calc(var(--t) * 4); }
+.pk-body::after { box-shadow: inset 0 calc(var(--t) * 40px) calc(var(--t) * 50px) calc(var(--t) * -10px) color-mix(in srgb, var(--pk-acc) 70%, transparent); }
+/* the moment it rips: a tiny hit-stop pop, then a light beam out of the opening */
+.st-pack .pk.ripped { animation: rippop .32s cubic-bezier(.2,1.6,.4,1); }
+@keyframes rippop { 0% { transform: scale(1.06); } 35% { transform: scale(1.11) rotate(-1.5deg); } 100% { transform: scale(1.02); } }
+.pk .beam { position: absolute; left: 6%; right: 6%; bottom: 87%; height: 0; z-index: 6; pointer-events: none; opacity: 0;
+  background: linear-gradient(0deg, #fff, color-mix(in srgb, var(--pk-acc) 80%, #fff) 20%, transparent); filter: blur(6px); }
+.pk.ripped .beam { animation: beam .9s ease-out forwards; }
+@keyframes beam { 0% { height: 0; opacity: 1; } 30% { height: 120%; opacity: .95; } 100% { height: 170%; opacity: 0; } }
+.st-pack .pk-top.fly { animation: fly2 .8s cubic-bezier(.15,.75,.3,1) forwards; }
+@keyframes fly2 { 0% { transform: rotate(-9deg) translateY(-8px); } 18% { transform: translate(20px, -40px) rotate(-4deg); } 100% { transform: translate(220px, -340px) rotate(70deg); opacity: 0; } }
+/* cards come up out of the pack, not just fade in */
+.sc.rise { transform: translateY(48%) scale(.86); opacity: 0; }
+.sc { transition: transform .62s cubic-bezier(.16,1.15,.3,1), opacity .4s; }
+
+/* revealed card: lifts toward you and gets a soft glow in its rarity colour */
+.sc.glowing .tilt { box-shadow: 0 0 calc(14px + var(--gr, .4) * 38px) calc(var(--gr, .4) * 6px) color-mix(in srgb, var(--c) 75%, transparent), 0 24px 50px rgba(0,0,0,.6); animation: rglow 2.6s ease-in-out infinite; }
+@keyframes rglow { 50% { box-shadow: 0 0 calc(20px + var(--gr, .4) * 56px) calc(var(--gr, .4) * 10px) color-mix(in srgb, var(--c) 85%, transparent), 0 24px 50px rgba(0,0,0,.6); } }
+.sc.settled { transform: translate(0, -2%) scale(1.07); }
+.sc.settled::after { content: ""; position: absolute; left: 8%; right: 8%; bottom: -9%; height: 7%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--c) 55%, transparent), transparent 70%); filter: blur(6px); opacity: calc(.4 + var(--gr, .4) * .6); }
+.st-tray .mini .tcard { box-shadow: 0 0 10px 1px color-mix(in srgb, var(--c, #888) 70%, transparent); }
+@media (prefers-reduced-motion: reduce) { .sc.glowing .tilt, .pk.ripped .beam, .st-pack .pk.ripped { animation: none; } }
+
+/* ===================== FOIL RARE v3: real holo foil =====================
+   Deep space-blue stock. The whole card is a prismatic foil that shifts with the pointer and on its own;
+   the art window gets a cosmos-holo pattern like a real holo rare; name is solid white with a rainbow halo. */
+.tcard.std.cr-H:not(.lim) { --gl: rgba(170,200,255,.75); padding: 2.4%;
+  background: linear-gradient(115deg, #ff7eb9, #ffe27a 12%, #7dffcf 24%, #7ac8ff 36%, #c79bff 48%, #ff7eb9 60%, #ffe27a 72%, #7dffcf 84%, #7ac8ff);
+  background-size: 400% 400%; background-position: var(--mx) var(--my); animation: rpulse 2.6s ease-in-out infinite, foilslide 8s linear infinite; }
+@keyframes foilslide { to { background-position: 400% 400%; } }
+.std.cr-H:not(.lim) .tc-face { color: #f2f5ff; background: radial-gradient(circle at 82% 10%, #6fa8ff 0 10cqi, rgba(111,168,255,.35) 10.4cqi, transparent 22cqi), radial-gradient(ellipse at 30% 15%, #1a2550, #070a1a 70%) !important; }
+.std.cr-H:not(.lim) .tc-face::after { filter: invert(1); opacity: .45; }
+.std.cr-H:not(.lim) .tc-name { background: none !important; -webkit-background-clip: border-box !important; background-clip: border-box !important; color: #fff !important; animation: none !important;
+  text-shadow: 0 0 1.4cqi rgba(255,255,255,.9), 0 0 3cqi #7ac8ff, 0 0 5cqi #c79bff; }
+.std.cr-H:not(.lim) .tc-sub, .std.cr-H:not(.lim) .tc-vert { color: rgba(220,230,255,.6); }
+.std.cr-H:not(.lim) .mv { border-bottom-color: rgba(200,215,255,.18); }
+.std.cr-H:not(.lim) .mv .cost { color: #9fd0ff; }
+.std.cr-H:not(.lim) .tc-pwr { background: #070a1a; color: #fff; box-shadow: inset 0 0 0 .5cqi #9fd0ff, 0 0 2cqi rgba(159,208,255,.7); }
+.std.cr-H:not(.lim) .tc-flavor { border-left-color: #9fd0ff; }
+.std.cr-H:not(.lim) .tc-val, .std.cr-H:not(.lim) .rseal { background: linear-gradient(100deg, #ff7eb9, #ffe27a, #7dffcf, #7ac8ff, #c79bff); color: #0b0d1a; }
+.std.cr-H:not(.lim) .tc-artwrap { background: linear-gradient(115deg, #ff7eb9, #ffe27a, #7dffcf, #7ac8ff, #c79bff, #ff7eb9); background-size: 300% 300%; animation: foilslide 6s linear infinite; padding: 1.2cqi; }
+/* holo over the art: rainbow diffraction bands + a starfield sparkle, moving with the pointer */
+.std.cr-H:not(.lim) .tc-art .tc-holo { opacity: .55 !important; mix-blend-mode: color-dodge;
+  background: repeating-linear-gradient(115deg, rgba(255,0,128,.0) 0%, rgba(255,90,160,.55) 3%, rgba(255,230,120,.55) 6%, rgba(120,255,200,.55) 9%, rgba(120,190,255,.55) 12%, rgba(200,140,255,.55) 15%, rgba(255,0,128,0) 18%),
+    radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.5), transparent 40%) !important;
+  background-size: 260% 260%, 100% 100% !important; background-position: var(--mx) var(--my), 0 0 !important; animation: foilmove 6s linear infinite; }
+.std.cr-H:not(.lim) .tc-art::before { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none; mix-blend-mode: screen; opacity: .9;
+  background-image: radial-gradient(circle, #fff 0 .35cqi, transparent .7cqi), radial-gradient(circle, #cfe8ff 0 .25cqi, transparent .55cqi), radial-gradient(circle, #ffd6ef 0 .3cqi, transparent .6cqi);
+  background-size: 13cqi 11cqi, 19cqi 17cqi, 23cqi 13cqi; background-position: 2cqi 3cqi, 8cqi 6cqi, 5cqi 9cqi; animation: twinkle 1.8s ease-in-out infinite alternate; }
+/* prismatic sheen over the whole face */
+.std.cr-H:not(.lim) .tc-face::before { opacity: .22 !important; }
+/* sweep of white light every few seconds */
+.tcard.std.cr-H:not(.lim)::after { background-image: linear-gradient(105deg, transparent 36%, rgba(255,255,255,.75) 47%, rgba(200,230,255,.3) 53%, transparent 62%) !important; mix-blend-mode: overlay; animation-duration: 3.4s !important; }
 /* ===================== MINIMAL SKIN =====================
    The site steps back so the cards are the only colourful thing on the page:
    neutral greys, flat surfaces, no textures, glows or gold. Card styles (.tcard) are untouched. */
@@ -1877,7 +1939,9 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     return {
       unlock() { ctx(); },
       tick() { nz(.035, "bandpass", 2600 + rand() * 1800, 3500, .22, 2.5); },
-      rip() { nz(.42, "bandpass", 900, 5200, .55, .9); nz(.25, "highpass", 3000, 7000, .2); tone(140, .25, "sine", .25, 0, 60); },
+      tear(t) { nz(.05, "bandpass", 1400 + t * 3800 + rand() * 500, 4200 + t * 2500, .18 + t * .14, 3); if (rand() < .35) nz(.02, "highpass", 5000, 8000, .08); },
+      pop() { tone(520, .09, "triangle", .12, 0, 880); nz(.06, "highpass", 3000, 6000, .1); },
+      rip() { nz(.42, "bandpass", 900, 5200, .55, .9); nz(.25, "highpass", 3000, 7000, .2); nz(.7, "lowpass", 2400, 200, .35, .8); tone(140, .35, "sine", .35, 0, 50); tone(1200, .5, "sine", .06, .08, 2400); },
       whoosh() { nz(.45, "lowpass", 300, 2400, .28, .7); },
       snap() { nz(.05, "highpass", 2500, 5000, .3); tone(1800, .04, "square", .03); },
       deal() { nz(.08, "bandpass", 1500, 900, .18, 1.5); },
@@ -2363,7 +2427,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     $("stName").textContent = p.name;
     updateTotal(0);
     $("stTitle").className = "st-title"; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("rays").classList.remove("on");
-    $("stBox").innerHTML = `<div class="st-pack" id="stPack">${packHTML(p).replace('<div class="sheen"></div>', '<div class="sheen"></div><div class="tearline"></div><div class="tearfill"></div>')}<div class="grabhint" id="grabHint">DRAG →</div></div><div class="st-stack" id="stStack"></div>`;
+    $("stBox").innerHTML = `<div class="st-pack" id="stPack">${packHTML(p).replace('<div class="sheen"></div>', '<div class="sheen"></div><div class="tearline"></div><div class="tearfill"></div><div class="tearglow"></div><div class="beam"></div>')}<div class="grabhint" id="grabHint">DRAG →</div></div><div class="st-stack" id="stStack"></div>`;
     $("stHint").textContent = "Drag across the top edge to tear it open · or press Space";
     stage.classList.remove("dim");
     stage.hidden = false;
@@ -2393,10 +2457,11 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
   function setTear(t) {
     if (!SS || SS.phase !== "pack") return;
     t = Math.max(SS.tear, Math.min(1, t));
-    if (Math.floor(t * 28) > Math.floor(SS.tear * 28)) {
-      sfx.tick();
+    if (Math.floor(t * 40) > Math.floor(SS.tear * 40)) {
+      sfx.tear(t);
+      if (navigator.vibrate) try { navigator.vibrate(6 + Math.round(t * 10)); } catch (_) {}
       const pk = $("stPack").querySelector(".pk"), c = center(pk);
-      fx.burst(c.l + c.w * t, c.t + c.h * .13, 3, ["#fff", SS.pack.acc], 220);
+      fx.burst(c.l + c.w * t, c.t + c.h * .13, 2 + Math.round(t * 4), ["#fff", SS.pack.acc, SS.pack.acc], 180 + t * 160);
     }
     SS.tear = t;
     $("stPack").querySelector(".pk").style.setProperty("--t", t.toFixed(3));
@@ -2438,6 +2503,9 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     const sp = $("stPack"), pk = sp.querySelector(".pk"), c = center(pk);
     pk.classList.remove("shudder");
     sfx.rip();
+    if (navigator.vibrate) try { navigator.vibrate([25, 30, 70]); } catch (_) {}
+    pk.classList.add("ripped");
+    sp.style.setProperty("--acc", SS.pack.acc);
     pk.querySelector(".pk-top").classList.add("fly");
     pk.querySelector(".tearfill").style.opacity = "0";
     fx.confetti(c.x, c.t + c.h * .13, 70, [SS.pack.acc, "#e9e4d8", "#9b9b9b", "#c2a66b"]);
@@ -2619,6 +2687,9 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
       if (!SS || SS.phase !== "stack") return;
       stage.classList.remove("dim");
       const tilt = el.querySelector(".tilt"); tilt.style.setProperty("--g", RC.tier < 2 ? (it.rh ? ".2" : "0") : RC.tier < 4 ? ".3" : ".55");
+      el.style.setProperty("--c", it.rh && RC.tier < 2 ? "#cfe9ff" : RC.col);
+      el.style.setProperty("--gr", [.35, .45, .6, .7, .8, .9, 1, 1][RC.tier] || .35);
+      el.classList.add("glowing"); sfx.pop();
       const c = center(el);
       const big = RC.tier < 2 ? (it.rh ? 1 : 0) : RC.tier === 2 ? 1 : RC.tier <= 4 ? 2 : RC.tier === 5 ? 3 : 4;
       if (!big) { fx.dust(c.x, c.y, 14); sfx.chime("common"); }
@@ -2735,7 +2806,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     el.classList.remove("top"); el.classList.add("gone");
     sfx.whoosh();
     { const t = $("stTitle"); t.classList.remove("slam"); t.classList.add("fade"); } $("rays").classList.remove("on");
-    const mini = document.createElement("div"); mini.className = "mini"; mini.innerHTML = cardHTML(it); $("stTray").appendChild(mini);
+    const mini = document.createElement("div"); mini.className = "mini"; mini.style.setProperty("--c", (CR[rarOf(it)] || CR.C).col); mini.innerHTML = cardHTML(it); $("stTray").appendChild(mini);
     SS.idx++;
     setTimeout(() => {
       if (!SS || SS.phase !== "stack") return; SS.busy = false;
