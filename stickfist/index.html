@@ -1548,6 +1548,7 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
 .retail-tag { position: absolute; z-index: 4; top: 12px; left: 12px; font-size: 11.5px; font-weight: 800; letter-spacing: .04em; color: #0c0d10; background: var(--t1); border-radius: 999px; padding: 4px 10px; }
 .tile .btn[data-scanopen] .ico { width: 18px; height: 18px; }
 .pocket.phys::before { content: "Physical"; position: absolute; z-index: 4; left: 50%; bottom: -9px; transform: translateX(-50%); font-size: 10.5px; font-weight: 800; letter-spacing: .03em; color: #0c0d10; background: var(--t1); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+.btn.small.arm { background: var(--down, #e5484d); color: #fff; border-color: transparent; }
 .ppill { font-size: 11.5px; font-weight: 800; color: #0c0d10; background: var(--t1); border-radius: 999px; padding: 2px 8px; margin-right: 6px; }
 .copy.phys { border-color: #3a3f48 !important; }
 .scan-box { max-width: 700px; }
@@ -1643,7 +1644,7 @@ form.scan-opt { cursor: default; }
     <div class="how" aria-label="How real cards work">
       <div><span class="how-n">1</span><b>Buy a pack</b><p>Pick one up in a store, or open a digital pack here.</p></div>
       <div><span class="how-n">2</span><b>Scan the back of each card</b><p>Your phone's camera opens STIXX and adds that exact copy, serial number and all.</p></div>
-      <div><span class="how-n">3</span><b>It's yours, verified</b><p>Each physical card can be added once. Store-only packs also carry a code card that unlocks the digital rip.</p></div>
+      <div><span class="how-n">3</span><b>Own it. Flip it.</b><p>Each physical card can be claimed by one person. Sold one? Release it from your vault and the buyer scans it next, with its owner history attached.</p></div>
     </div>
 
     <div id="hitsWrap" hidden style="display:flex;flex-direction:column;gap:18px"><div class="section-head"><div><h2>Best pulls</h2></div><span class="small-print">Your six most valuable cards</span></div><div class="hits" id="hitsRow"></div></div>
@@ -1732,14 +1733,14 @@ form.scan-opt { cursor: default; }
     <div class="rules">
       <div class="panel"><h3>Rarity</h3><div class="table-wrap"><table class="odds" id="valueTable"></table></div></div>
       <div class="panel"><h3>Pulls</h3><ul>
-        <li>Every booster holds 5 cards: 2 commons, 1 uncommon, a reverse-foil slot (which can instead hold an Illustration or a Masterwork), and the rare slot. Each slot rolls with the odds printed on the pack.</li>
+        <li>Every booster holds 5 cards: 2 commons, 1 uncommon, a reverse-foil slot (which can instead hold a Full Art or a Masterwork), and the rare slot. Each slot rolls with the odds printed on the pack.</li>
         <li>Inside a rarity, every fighter is equally likely, except a pack's featured fighter, whose boost is printed on the pack.</li>
         <li>Rolls use your browser's cryptographic random generator. Odds never change with what you've spent or pulled.</li></ul></div>
       <div class="panel"><h3>Currency</h3><ul>
         <li>Balances and prices are shown in demo dollars. Larger deposits include a bonus.</li>
         <li>Tokens come only from Arena fights. The winner is rolled from the two fighters' stats (win chance shown on each opponent), then the fight plays out. A win pays 10 to 100 tokens by opponent rarity; a loss pays 3.</li>
         <li>Card values come from the simulated market: each card has a raw near-mint price that moves once per market day (15 minutes) with scarcity, fighter hype and news. Sell-back is 90% of today's price. Sketch cards are valued at 10% of foil.</li>
-        <li>Limited packs (Bloodmoon, Gold Scroll) hold 3 cards: a common, an uncommon and one limited-edition card (84% base, 14% Ultra, 2% super rare). Each has a print run of 5,000 packs sold over a short window and is never reprinted; once sold out its cards only trade on the market and their trend steepens.</li>
+        <li>Limited packs (Bloodmoon, Gold Scroll) hold 3 cards: a common, an uncommon and one limited-edition card (76% base, 20% Chrome, 4% top chase). Each has a print run of 5,000 packs sold over a short window and is never reprinted; once sold out its cards only trade on the market and their trend steepens.</li>
         <li>Packs never sell below their launch price. When the cards inside appreciate, the pack price rises with them.</li>
         <li>Every card is pulled with a hidden condition (centering, corners, edges, surface, 6–10). Ink Grading Co. reveals it for a fee and seals the card in a slab. Graded value is a multiple of raw: 10 is worth 1.6× (commons) to 6× (Masterwork), Black Label (four perfect 10s) doubles that, 9 is worth a little more than raw, 8 and below less.</li>
         <li>Every pulled card gets a grade from 6 to 10. Grade multiplies the card's base value: 6 ×0.5 (18%), 7 ×0.75 (24%), 8 ×1 (26%), 9 ×1.5 (20%), 10 ×2.5 (12%).</li>
@@ -1840,8 +1841,8 @@ form.scan-opt { cursor: default; }
     R:   { name: "Rare", sym: "★", col: "#4f8fe6", tier: 2, build: .45 },
     H:   { name: "Foil Rare", sym: "★", col: "#5fc8ff", tier: 3, build: .9 },
     RR:  { name: "Signature", sym: "★★", col: "#9b62f0", tier: 4, build: 1.2 },
-    UR:  { name: "Ultra", sym: "★★", col: "#d4d8e0", tier: 5, build: 1.6 },
-    IR:  { name: "Illustration", sym: "★", col: "#e4ae3a", tier: 5, build: 1.5 },
+    UR:  { name: "Chrome", sym: "★★", col: "#d4d8e0", tier: 5, build: 1.6 },
+    IR:  { name: "Full Art", sym: "★", col: "#e4ae3a", tier: 5, build: 1.5 },
     SIR: { name: "Masterwork", sym: "★★", col: "#f04f9a", tier: 6, build: 2.4 },
     HR:  { name: "Gilded", sym: "★★★", col: "#f5c542", tier: 7, build: 2.6 }
   };
@@ -1862,13 +1863,13 @@ form.scan-opt { cursor: default; }
   // Limited sets: small print runs sold for a short window, each with its own card style.
   const LSETS = {
     BM: { name: "Bloodmoon", release: 60, run: 5000, window: 380, col: "#d8202c",
-      r: { R: { name: "Bloodmoon", sym: "◐", col: "#e2414b" }, UR: { name: "Bloodmoon Ultra", sym: "◐◐", col: "#ff5a64" }, SIR: { name: "Crimson Eclipse", sym: "●", col: "#ff2a36" } } },
+      r: { R: { name: "Bloodmoon", sym: "◐", col: "#e2414b" }, UR: { name: "Bloodmoon Chrome", sym: "◐◐", col: "#ff5a64" }, SIR: { name: "Crimson Eclipse", sym: "●", col: "#ff2a36" } } },
     GS: { name: "Gold Scroll", release: 78, run: 5000, window: 380, col: "#e4ae3a",
       r: { R: { name: "Scroll", sym: "◇", col: "#c9a04a" }, UR: { name: "Brocade", sym: "✦✦", col: "#f0c75e" }, SIR: { name: "Gold Screen", sym: "✦✦✦", col: "#ffd76a" } } },
     FB: { name: "Frostbite", release: 86, run: 5000, window: 300, col: "#3fb6f0",
-      r: { R: { name: "Frostbite", sym: "✧", col: "#6fcaf5" }, UR: { name: "Frostbite Ultra", sym: "✧✧", col: "#8fdcff" }, SIR: { name: "Absolute Zero", sym: "✦", col: "#c8f0ff" } } },
+      r: { R: { name: "Frostbite", sym: "✧", col: "#6fcaf5" }, UR: { name: "Frostbite Chrome", sym: "✧✧", col: "#8fdcff" }, SIR: { name: "Absolute Zero", sym: "✦", col: "#c8f0ff" } } },
     VN: { name: "Venom", release: 88, run: 5000, window: 300, col: "#7ad61f",
-      r: { R: { name: "Venom", sym: "◉", col: "#8be23a" }, UR: { name: "Venom Ultra", sym: "◉◉", col: "#a6ff3b" }, SIR: { name: "Plague Eclipse", sym: "✹", col: "#c8ff5a" } } }
+      r: { R: { name: "Venom", sym: "◉", col: "#8be23a" }, UR: { name: "Venom Chrome", sym: "◉◉", col: "#a6ff3b" }, SIR: { name: "Patient Zero", sym: "✹", col: "#c8ff5a" } } }
   };
   const LIM_ODDS = { R: 76, UR: 20, SIR: 4 };
   [["BM1", "shiv", "R", 300], ["BM2", "lash", "R", 320], ["BM3", "umbra", "R", 340], ["BM4", "kusari", "UR", 1500, "bm_kusari"], ["BM5", "chrono", "UR", 1600, "bm_chrono"], ["BM6", "phantom", "SIR", 9000, "bm_phantom"],
@@ -1883,46 +1884,46 @@ form.scan-opt { cursor: default; }
   const TYPES = { chain: { name: "Chain", col: "#d4a5a5" }, time: { name: "Time", col: "#e8c3c3" }, fist: { name: "Fist", col: "#cdbd9f" }, blade: { name: "Blade", col: "#e2a3a0" }, guard: { name: "Guard", col: "#aebdcb" }, reach: { name: "Reach", col: "#bcd29b" }, blunt: { name: "Blunt", col: "#e5c77f" }, arcane: { name: "Arcane", col: "#a5dbe9" }, shadow: { name: "Shadow", col: "#bf9cc1" }, royal: { name: "Royal", col: "#eed689" }, void: { name: "Void", col: "#cfcfcf" } };
   const FTYPE = { bo: "reach", lash: "chain", snap: "fist", fletch: "reach", kusari: "chain", phantom: "shadow", umbra: "shadow", chrono: "time", knuckles: "fist", shiv: "blade", bulwark: "guard", pike: "reach", ronin: "blade", reaver: "blade", breaker: "blunt", arcanist: "arcane", twinblade: "blade", reaper: "shadow", colossus: "blunt", shogun: "royal", null: "void" };
   const MOVES = {
-    bo: [["Sweep", 30], ["Six Down", 70]], lash: [["Crack", 40], ["Red End", 90, "Burns through shields."]], snap: [["Rattle", 30], ["Pink Spiral", 100]],
-    fletch: [["Loose", 50], ["Arrow Rain", 130, "Hits everything on the field."]], kusari: [["Hook", 60], ["Blood Geyser", 140]],
-    phantom: [["Ribbon Cut", 80], ["Vanish", 170, "Can't be hit next turn."]], umbra: [["Mirror Step", 70], ["Swallow", 160, "Takes the shadow's strength."]],
-    chrono: [["Freeze Frame", "", "Opponent loses a turn."], ["Nine Seconds", 230]],
-    knuckles: [["Jab-Jab", 20], ["Haymaker", 60]], shiv: [["Quick Cut", 20], ["Backstab", 50]], bulwark: [["Shield Wall", "", "Takes 30 less damage next turn."], ["Shield Bash", 40]],
-    pike: [["Keep Away", 30], ["Long Thrust", 60]], ronin: [["Iaido", 90, "Strikes first."]], reaver: [["Twin Chop", 40], ["Whirlwind", 80]],
-    breaker: [["Groundbreaker", 100, "Shakes the whole arena."]], arcanist: [["Rune Bolt", 50], ["Page Turner", 110]], twinblade: [["Cross Cut", 60], ["Mirror Dance", 120]],
-    reaper: [["Harvest", 160, "Ends it."]], colossus: [["Stomp", 80], ["Cataclysm", 200]], shogun: [["Gold Draw", 220, "The last thing they see."]], null: [["Unwrite", 250, "Erases a page of the fight."]]
+    bo: [["Sweep", 30], ["Six Down", 70]], lash: [["Crack", 40], ["Brand", 90, "Burns through shields."]], snap: [["Pop", 30], ["Lights Out", 100]],
+    fletch: [["Dead Aim", 50], ["Volley", 130, "Hits everything on the field."]], kusari: [["Hook", 60], ["Bleed Out", 140]],
+    phantom: [["Cheap Shot", 80], ["Vanish", 170, "Can't be hit next turn."]], umbra: [["Shadowbox", 70], ["Blackout", 160, "Steals their strength."]],
+    chrono: [["Dead Air", "", "They lose a turn."], ["Nine Seconds", 230]],
+    knuckles: [["One-Two", 20], ["Haymaker", 60]], shiv: [["Nick", 20], ["Backstab", 50]], bulwark: [["Turtle Up", "", "Takes 30 less damage next turn."], ["Shield Bash", 40]],
+    pike: [["Jab", 30], ["Run Through", 60]], ronin: [["Iaido", 90, "Strikes first."]], reaver: [["Hack", 40], ["Grinder", 80]],
+    breaker: [["Cave In", 100, "Shakes the whole arena."]], arcanist: [["Cold Read", 50], ["Last Rites", 110]], twinblade: [["X-Cut", 60], ["Shred", 120]],
+    reaper: [["Harvest", 160, "Ends it."]], colossus: [["Stomp", 80], ["Flatline", 200]], shogun: [["Gold Draw", 220, "The last thing they see."]], null: [["Redact", 250, "Wipes their last move."]]
   };
   const chimeKey = rar => { const t = (CR[rar] || CR.C).tier; return t <= 1 ? "common" : t === 2 ? "rare" : t <= 4 ? "epic" : t === 5 ? "legendary" : "secret"; };
   const BUYBACK = 0.90, SKETCH_MULT = 0.10, SIGNUP_BONUS = 300, COINS_PER_USD = 100;
 
   const FX_ = (id, name, r, v, atk, spd, def, look, trait) => Object.assign({ id, name, r, v, atk, spd, def, trait }, look);
   const FIGHTERS = [
-    FX_("knuckles", "Knuckles", "common", 10, 4, 6, 3, { wpn: "none", body: "#121214", accent: "#efe9dc", acc: "wraps", c: "#8d897f", title: "Bare hands", sig: "stance" }, "Brings nothing to a knife fight. Wins anyway."),
-    FX_("shiv", "Shiv", "common", 12, 5, 7, 2, { wpn: "knife", body: "#121214", accent: "#7a808c", acc: "headband", c: "#7a808c", title: "Knife", sig: "stance" }, "Fast hands, short blade."),
-    FX_("bulwark", "Bulwark", "common", 11, 3, 3, 8, { wpn: "shield", body: "#121214", accent: "#8a8a86", acc: "none", c: "#8a8a86", title: "Round shield", sig: "guard" }, "Hides behind a door he tore off a castle."),
-    FX_("pike", "Pike", "common", 13, 5, 4, 4, { wpn: "spear", body: "#121214", accent: "#9a6a2a", acc: "none", c: "#9a6a2a", title: "Spear", sig: "stance" }, "Keeps you exactly one spear away."),
+    FX_("knuckles", "Stitch", "common", 10, 4, 6, 3, { wpn: "none", body: "#121214", accent: "#efe9dc", acc: "wraps", c: "#8d897f", title: "Bare hands", sig: "stance" }, "Fights for rent money."),
+    FX_("shiv", "Switch", "common", 12, 5, 7, 2, { wpn: "knife", body: "#121214", accent: "#7a808c", acc: "headband", c: "#7a808c", title: "Knife", sig: "stance" }, "Closer than you want him."),
+    FX_("bulwark", "Brick", "common", 11, 3, 3, 8, { wpn: "shield", body: "#121214", accent: "#8a8a86", acc: "none", c: "#8a8a86", title: "Round shield", sig: "guard" }, "You go through him or you go home."),
+    FX_("pike", "Rook", "common", 13, 5, 4, 4, { wpn: "spear", body: "#121214", accent: "#9a6a2a", acc: "none", c: "#9a6a2a", title: "Spear", sig: "stance" }, "Holds the line. Every time."),
     FX_("ronin", "Ronin", "rare", 50, 7, 6, 4, { wpn: "katana", body: "#121214", accent: "#c4232b", acc: "headband", c: "#c4232b", title: "Katana", sig: "stance" }, "Draws once. Cuts once."),
-    FX_("reaver", "Reaver", "rare", 55, 7, 5, 5, { wpn: "axe", twin: true, body: "#121214", accent: "#d0702a", acc: "scarf", c: "#d0702a", title: "Twin axes", sig: "spin" }, "Two axes, no plan."),
-    FX_("breaker", "Breaker", "rare", 45, 8, 2, 6, { wpn: "hammer", body: "#121214", accent: "#c9a227", acc: "none", c: "#c9a227", title: "Sledgehammer", sig: "victory" }, "Every swing leaves a crater."),
-    FX_("arcanist", "Arcanist", "epic", 150, 7, 5, 5, { wpn: "book", body: "#8fd0e3", outline: "#1d3a44", accent: "#6fd3ff", glow: "#6fd3ff", cover: "#4a2c1a", acc: "none", c: "#6fd3ff", title: "Spellbook", sig: "cast" }, "Reads one page. You don't get to read the rest."),
-    FX_("twinblade", "Twinblade", "epic", 185, 8, 8, 4, { wpn: "katana", twin: true, body: "#121214", accent: "#e9e4d8", acc: "scarf", c: "#bdb7aa", title: "Twin katanas", sig: "spin" }, "Two edges, one rhythm."),
+    FX_("reaver", "Butcher", "rare", 55, 7, 5, 5, { wpn: "axe", twin: true, body: "#121214", accent: "#d0702a", acc: "scarf", c: "#d0702a", title: "Twin axes", sig: "spin" }, "Clocks in. Clocks out."),
+    FX_("breaker", "Sledge", "rare", 45, 8, 2, 6, { wpn: "hammer", body: "#121214", accent: "#c9a227", acc: "none", c: "#c9a227", title: "Sledgehammer", sig: "victory" }, "Leaves the floor in pieces."),
+    FX_("arcanist", "Grimm", "epic", 150, 7, 5, 5, { wpn: "book", body: "#121214", accent: "#9cc3d4", glow: "#9cc3d4", cover: "#0c0c0d", acc: "none", c: "#7fa6b8", title: "Spellbook", sig: "cast" }, "Already read how this ends."),
+    FX_("twinblade", "Vandal", "epic", 185, 8, 8, 4, { wpn: "katana", twin: true, body: "#121214", accent: "#e9e4d8", acc: "scarf", c: "#bdb7aa", title: "Twin katanas", sig: "spin" }, "Two edges, one rhythm."),
     FX_("reaper", "Reaper", "legendary", 810, 10, 7, 6, { wpn: "scythe", body: "#121214", accent: "#9e1b22", cloak: "#2a0a0d", eye: "#e8473f", acc: "cloak", c: "#9e1b22", title: "Scythe", sig: "victory" }, "Shows up when the fight's already over."),
-    FX_("colossus", "Colossus", "legendary", 700, 10, 2, 10, { wpn: "hammer", body: "#4b4b52", accent: "#8a6a3a", acc: "none", bulk: true, scale: 1.9, c: "#7a7a82", title: "Giant hammer", sig: "victory" }, "Three meters of bad news."),
+    FX_("colossus", "Tank", "legendary", 700, 10, 2, 10, { wpn: "hammer", body: "#4b4b52", accent: "#8a6a3a", acc: "none", bulk: true, scale: 1.9, c: "#7a7a82", title: "Giant hammer", sig: "victory" }, "Doesn't run. Doesn't need to."),
     FX_("shogun", "Shogun", "secret", 4200, 10, 9, 9, { wpn: "katana", gold: true, body: "#0e0e10", accent: "#e4ae3a", cloak: "#2a2008", acc: "cape", c: "#e4ae3a", title: "Gold katana", sig: "stance" }, "The last sword anyone sees."),
-    FX_("bo", "Bo", "common", 9, 4, 5, 5, { wpn: "staff", body: "#121214", accent: "#8a5a2b", acc: "none", c: "#8a5a2b", title: "Bo staff", sig: "stance" }, "Fought six knives. Brought one stick."),
-    FX_("lash", "Lash", "rare", 48, 7, 5, 3, { wpn: "chain", body: "#121214", accent: "#c4232b", acc: "none", c: "#c4232b", title: "Chain whip", sig: "windSide" }, "Ten feet of reach and a red-hot end."),
-    FX_("snap", "Snap", "rare", 50, 6, 8, 3, { wpn: "nunchaku", body: "#121214", accent: "#e0479a", acc: "none", c: "#e0479a", title: "Nunchaku", sig: "stance" }, "You hear it before you see it."),
-    FX_("fletch", "Fletch", "epic", 160, 8, 6, 3, { wpn: "bow", body: "#121214", accent: "#8a6a3a", glow: "#0d0d0e", acc: "none", c: "#8a8f99", title: "Longbow", sig: "cast" }, "One arrow to start it. A thousand to end it."),
+    FX_("bo", "Deacon", "common", 9, 4, 5, 5, { wpn: "staff", body: "#121214", accent: "#8a5a2b", acc: "none", c: "#8a5a2b", title: "Bo staff", sig: "stance" }, "Six on one. Walked out."),
+    FX_("lash", "Lash", "rare", 48, 7, 5, 3, { wpn: "chain", body: "#121214", accent: "#c4232b", acc: "none", c: "#c4232b", title: "Chain whip", sig: "windSide" }, "Ten feet of chain. All of it hot."),
+    FX_("snap", "Static", "rare", 50, 6, 8, 3, { wpn: "nunchaku", body: "#121214", accent: "#d9d4c7", acc: "none", c: "#9a968c", title: "Nunchaku", sig: "stance" }, "You hear it first."),
+    FX_("fletch", "Longshot", "epic", 160, 8, 6, 3, { wpn: "bow", body: "#121214", accent: "#8a6a3a", glow: "#0d0d0e", acc: "none", c: "#8a8f99", title: "Longbow", sig: "cast" }, "One to start it. A thousand to end it."),
     FX_("kusari", "Kusari", "epic", 170, 8, 7, 4, { wpn: "sickle", body: "#121214", accent: "#c4232b", acc: "none", c: "#c4232b", title: "Chain sickle", sig: "windSide" }, "The chain decides where you stand."),
     FX_("phantom", "Phantom", "legendary", 700, 9, 10, 4, { wpn: "knife", twin: true, body: "#121214", accent: "#0d0d0e", cloak: "#0d0d0e", acc: "cape", c: "#b3121b", title: "Twin daggers", sig: "dash" }, "Gone before the cape lands."),
     FX_("umbra", "Umbra", "legendary", 650, 8, 8, 8, { wpn: "knife", body: "#121214", accent: "#434343", acc: "none", c: "#434343", title: "Knife & shadow", sig: "stance" }, "Fights the only one who knows all his moves."),
-    FX_("chrono", "Chrono", "secret", 3500, 9, 10, 9, { wpn: "knife", body: "#efebe2", outline: "#b3121b", accent: "#b3121b", acc: "none", c: "#b3121b", title: "Stopped time", sig: "slashSide" }, "Nine seconds. Nobody else gets to move."),
+    FX_("chrono", "Nine", "secret", 3500, 9, 10, 9, { wpn: "knife", body: "#efebe2", outline: "#b3121b", accent: "#b3121b", acc: "none", c: "#b3121b", title: "Stopped time", sig: "slashSide" }, "Nine seconds. Nobody else moves."),
     FX_("null", "Null", "secret", 3000, 9, 10, 9, { wpn: "book", void: true, body: "#efebe2", outline: "#0a0a0b", accent: "#0a0a0b", glow: "#ffffff", cover: "#0a0a0b", acc: "none", c: "#3a3a3e", title: "Void book", sig: "cast" }, "Not on any checklist.")
   ];
   const BY_ID = Object.fromEntries(FIGHTERS.map(f => [f.id, f]));
   // Every card is its own fighter. Cards that reuse an original fighter's look get their own name; they keep that
   // fighter's stats, moves, art pose and cutscene through .base.
-  const VARIANTS = {"FB1":["rime","Rime"],"FB2":["sleet","Sleet"],"FB3":["hailshot","Hailshot"],"FB4":["shardblade","Shardblade"],"FB5":["blizzard","Blizzard"],"FB6":["whiteout","Whiteout"],"VN1":["corrode","Corrode"],"VN2":["mire","Mire"],"VN3":["hex","Hex"],"VN4":["viper","Viper"],"VN5":["acid","Acid"],"VN6":["plague","Plague"],"021":["mourne","Mourne"],"022":["monolith","Monolith"],"023":["daimyo","Daimyo"],"024":["cipher","Cipher"],"026":["kensei","Kensei"],"027":["havoc","Havoc"],"028":["glyph","Glyph"],"029":["gemini","Gemini"],"030":["quiver","Quiver"],"031":["rattle","Rattle"],"032":["brickfist","Brickfist"],"033":["stiletto","Stiletto"],"034":["aegis","Aegis"],"035":["lancer","Lancer"],"036":["sensei","Sensei"],"037":["cinder","Cinder"],"038":["harvester","Harvester"],"039":["oblivion","Oblivion"],"040":["emperor","Emperor"],"041":["gyre","Gyre"],"042":["wraith","Wraith"],"043":["eclipse","Eclipse"],"044":["sunblade","Sunblade"],"045":["epoch","Epoch"],"046":["quake","Quake"],"047":["doppel","Doppel"],"BM1":["bloodfang","Bloodfang"],"BM2":["thorn","Thorn"],"BM3":["penumbra","Penumbra"],"BM4":["vein","Vein"],"BM5":["hourglass","Hourglass"],"BM6":["nightfall","Nightfall"],"GS1":["willow","Willow"],"GS2":["crane","Crane"],"GS3":["rampart","Rampart"],"GS4":["regent","Regent"],"GS5":["heron","Heron"],"GS6":["tsunami","Tsunami"]};
+  const VARIANTS = {"FB1":["rime","Rime"],"FB2":["sleet","Sleet"],"FB3":["hailshot","Hailshot"],"FB4":["shardblade","Icepick"],"FB5":["blizzard","Blizzard"],"FB6":["whiteout","Whiteout"],"VN1":["corrode","Corrode"],"VN2":["mire","Mire"],"VN3":["hex","Hex"],"VN4":["viper","Viper"],"VN5":["acid","Acid"],"VN6":["plague","Plague"],"021":["mourne","Mourne"],"022":["monolith","Monolith"],"023":["daimyo","Daimyo"],"024":["cipher","Cipher"],"026":["kensei","Kensei"],"027":["havoc","Havoc"],"028":["glyph","Omen"],"029":["gemini","Jinx"],"030":["quiver","Deadeye"],"031":["rattle","Riot"],"032":["brickfist","Mauler"],"033":["stiletto","Stiletto"],"034":["aegis","Lockdown"],"035":["lancer","Skewer"],"036":["sensei","Hermit"],"037":["cinder","Cinder"],"038":["harvester","Harvester"],"039":["oblivion","Oblivion"],"040":["emperor","Warlord"],"041":["gyre","Shackle"],"042":["wraith","Wraith"],"043":["eclipse","Eclipse"],"044":["sunblade","Kingpin"],"045":["epoch","Zero Hour"],"046":["quake","Quake"],"047":["doppel","Mimic"],"BM1":["bloodfang","Bloodfang"],"BM2":["thorn","Thorn"],"BM3":["penumbra","Penumbra"],"BM4":["vein","Vein"],"BM5":["hourglass","Hourglass"],"BM6":["nightfall","Nightfall"],"GS1":["willow","Willow"],"GS2":["crane","Crane"],"GS3":["rampart","Rampart"],"GS4":["regent","Regent"],"GS5":["heron","Heron"],"GS6":["tsunami","Tsunami"]};
   for (const c of CARDS) { const v = VARIANTS[c.no]; if (!v) continue; const b = BY_ID[c.id]; const f = Object.assign({}, b, { id: v[0], name: v[1], base: b.id }); FIGHTERS.push(f); BY_ID[f.id] = f; c.id = f.id; }
   const baseOf = id => (BY_ID[id] && BY_ID[id].base) || id;
 
@@ -2561,9 +2562,9 @@ form.scan-opt { cursor: default; }
     const copyRow = it => {
       const tag = it.slab ? `<span class="gpill${it.slab.black ? " bl" : ""}">IGC ${it.slab.g}</span>` : it.grading ? `<span class="gpill wait">At IGC · day ${it.grading.due}</span>` : `<span class="small-print">${condLine(it)}</span>`;
       const gain = itemVal(it) - costOf(it);
-      return `<div class="copy${it.phys ? " phys" : ""}"><div class="cp-l"><span>${it.phys ? `<b class="ppill">Physical</b> #${String(it.serial).padStart(6, "0")}` : `No. ${String(it.serial).padStart(4, "0")}`}${it.rh ? " · Reverse Foil" : ""}${it.ed === "sketch" ? " · Sketch" : ""}</span>${it.phys ? `<span class="small-print">Scanned ${new Date(it.t).toLocaleDateString()} · code ${esc(it.code)}</span>` : tag}</div>
+      return `<div class="copy${it.phys ? " phys" : ""}"><div class="cp-l"><span>${it.phys ? `<b class="ppill">Physical</b> #${String(it.serial).padStart(6, "0")}` : `No. ${String(it.serial).padStart(4, "0")}`}${it.rh ? " · Reverse Foil" : ""}${it.ed === "sketch" ? " · Sketch" : ""}</span>${it.phys ? `<span class="small-print">Scanned ${new Date(it.t).toLocaleDateString()} · ${ordinal(it.owners || 1)} owner · code ${esc(it.code)}</span>` : tag}</div>
         <div class="cp-v"><span class="num">${money(itemVal(it))}</span><small class="${gain >= 0 ? "up" : "dn"}">${gain >= 0 ? "+" : "−"}${money(Math.abs(gain))} since pulled</small></div>
-        <div class="cp-a">${it.phys ? `<span class="small-print">You hold this card</span>` : ""}${!it.phys && !it.slab && !it.grading && it.ed !== "sketch" ? `<button class="btn small" data-gradeopen="${it.uid}">Grade</button>` : ""}${it.grading || it.phys ? "" : `<button class="btn small" data-sell="${it.uid}">Sell ${money(itemSell(it))}</button>`}</div></div>
+        <div class="cp-a">${it.phys ? `<button class="btn small ghost" data-release="${it.uid}">Transfer</button>` : ""}${!it.phys && !it.slab && !it.grading && it.ed !== "sketch" ? `<button class="btn small" data-gradeopen="${it.uid}">Grade</button>` : ""}${it.grading || it.phys ? "" : `<button class="btn small" data-sell="${it.uid}">Sell ${money(itemSell(it))}</button>`}</div></div>
         <div class="gradeform" id="gf-${it.uid}" hidden>${IGC_TIERS.map(T => `<button class="btn small" data-grade="${it.uid}" data-tier="${T.id}">${T.name} · ${money(T.fee)} · ${T.days}d</button>`).join("")}<span class="small-print">Raw ${money(itemVal(it))} → IGC 10 would be ${money(itemVal(it) * gradeMult(card.rar, 10))}, IGC 8 ${money(itemVal(it) * gradeMult(card.rar, 8))}.</span></div>`;
     };
     let revealHTML = "";
@@ -2771,14 +2772,42 @@ form.scan-opt { cursor: default; }
     try {
       const snap = await ref.get(), d = snap.exists ? (snap.data() || {}) : null;
       if (d && d.by && d.by !== uid) return { ok: false, why: "taken" };
-      if (d && d.by === uid) return { ok: true, shared: true };
+      if (d && d.by === uid) return { ok: true, shared: true, owners: d.owners || 1 };
       const lease = await ref.acquire({ holder: uid || "viewer", ttlMs: 4000 });
       if (!lease.acquired) return { ok: false, why: "busy" };
       const again = await ref.get(), d2 = again.exists ? (again.data() || {}) : null;
       if (d2 && d2.by && d2.by !== uid) return { ok: false, why: "taken" };
-      await ref.set({ by: uid, what, at: Date.now() });
+      const owners = ((d2 && d2.owners) || 0) + 1;
+      await ref.set({ by: uid, what, at: Date.now(), owners });
+      return { ok: true, shared: true, owners };
+    } catch (e) { return { ok: true, shared: false }; }
+  }
+  // hand a physical card on: frees its code so the next owner can scan it
+  async function registryRelease(code) {
+    const db = await withTimeout(DBP = DBP || capUse("db"), 4000, null); if (!db) return { ok: true, shared: false };
+    const user = await withTimeout(USERP = USERP || capUse("user"), 3000, null);
+    const uid = user ? await withTimeout(user.id(), 3000, null) : null;
+    try {
+      const ref = db.doc("claims/" + code), snap = await ref.get(), d = snap.exists ? (snap.data() || {}) : null;
+      if (d && d.by && d.by !== uid) return { ok: false };
+      await ref.set({ by: "", what: d ? d.what || "" : "", at: Date.now(), owners: (d && d.owners) || 1, released: Date.now() });
       return { ok: true, shared: true };
     } catch (e) { return { ok: true, shared: false }; }
+  }
+  const ordinal = n => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
+  let releasing = null;
+  async function releaseCard(uid, btn) {
+    const it = state.vault.find(x => x.uid === uid && x.phys); if (!it) return;
+    if (releasing !== uid) { releasing = uid; btn.textContent = "Tap again to release"; btn.classList.add("arm"); setTimeout(() => { if (releasing === uid) { releasing = null; if (btn.isConnected) { btn.textContent = "Transfer"; btn.classList.remove("arm"); } } }, 3500); return; }
+    releasing = null; btn.disabled = true; btn.textContent = "Releasing…";
+    const r = await withTimeout(registryRelease(it.code), 7000, { ok: true, shared: false });
+    if (!r.ok) { btn.disabled = false; btn.textContent = "Transfer"; toast("This card is registered to someone else"); return; }
+    state.vault = state.vault.filter(x => x.uid !== uid);
+    if (state.claimed) delete state.claimed[it.code];
+    const f = BY_ID[it.id];
+    log(`Released ${f ? f.name : "card"} #${String(it.serial).padStart(6, "0")} to a new owner`, 0, "coin");
+    snap(); save(); renderAll();
+    toast("Released. The new owner can scan it now");
   }
   function scanMsg(text, kind) { const el = $("scanStatus"); el.textContent = text || ""; el.className = "scan-status" + (kind ? " " + kind : ""); }
   function renderScanRecent() {
@@ -2808,7 +2837,7 @@ form.scan-opt { cursor: default; }
     sfx.unlock();
     if (r.kind === "pack") { save(); buy(r.pack.id, true, r.code); return true; }
     const card = r.card, f = BY_ID[card.id];
-    const item = { uid: "phys-" + r.code, id: f.id, cno: card.no, rar: card.rar, rh: false, slot: "SCAN", serial: r.serial, t: Date.now(), pack: RETAIL_KEY[card.set] || "scan", ed: "foil", val: cardBaseValue(card, "foil", false), day: mktDay(), phys: true, code: r.code };
+    const item = { uid: "phys-" + r.code, id: f.id, cno: card.no, rar: card.rar, rh: false, slot: "SCAN", serial: r.serial, t: Date.now(), pack: RETAIL_KEY[card.set] || "scan", ed: "foil", val: cardBaseValue(card, "foil", false), day: mktDay(), phys: true, code: r.code, owners: reg.owners || 1 };
     state.vault.push(item);
     if (!state.s.best || item.val > (state.s.best.val || 0)) state.s.best = { id: f.id, cno: card.no, serial: item.serial, val: item.val };
     state.hits = (state.hits || []).concat([Object.assign({}, item)]).sort((a, b) => b.val - a.val).slice(0, 12);
@@ -4122,6 +4151,7 @@ form.scan-opt { cursor: default; }
     if (t.matches("[data-open-store]")) { openStore(); return; }
     if (t.dataset.scanopen) { openScan(PACK_BY_ID[t.dataset.scanopen] || null); return; }
     if (t.dataset.buy) { buy(t.dataset.buy); return; }
+    if (t.dataset.release) { releaseCard(t.dataset.release, t); return; }
     if (t.dataset.sell) { const g = sellUids([t.dataset.sell]); if (g) toast(`Sold for ${money(g)}`); return; }
     if (t.dataset.guides) { $("cmCard").classList.toggle("printguides"); return; }
     if (t.dataset.adv) { advanceMarket(+t.dataset.adv); return; }
