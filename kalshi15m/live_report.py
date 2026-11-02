@@ -133,6 +133,16 @@ def summarise() -> dict:
                 pass
     events = settle_open(events)
     events.sort(key=lambda x: x.get("ts", 0))
+    # the bot and settle_open can both settle the same market; count each settlement once
+    seen, deduped = set(), []
+    for x in events:
+        if x.get("event") == "settle":
+            k = (x.get("series"), x.get("ticker"))
+            if k in seen:
+                continue
+            seen.add(k)
+        deduped.append(x)
+    events = deduped
     events = enrich(events)
     try:
         status = json.loads(STATUS.read_text())
