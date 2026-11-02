@@ -389,15 +389,15 @@ td.coin { font-size: 12px; }
   function renderLab() {
     const L = typeof LAB === "undefined" ? null : LAB; $("labPanel").hidden = !L; if (!L) return;
     const keys = Object.keys(L); if (!labKey || !L[labKey]) labKey = keys[0];
-    const lbl = { m15: "15-minute", hourly: "Hourly" };
+    const lbl = { m15: "15-minute", hourly: "Hourly", blind: "Blind tests" };
     $("labSeg").innerHTML = keys.length > 1 ? keys.map(k => `<button type="button" aria-pressed="${k === labKey}" data-lab="${k}">${lbl[k] || k}</button>`).join("") : "";
     const R = L[labKey], F = R.finals || [], B = R.benchmarks || [];
     const coins = Object.keys(R.coins || {}).map(COIN).join(", ");
     const nPass = F.filter(f => f.passed).length, nStrict = F.filter(f => f.passed_strict).length;
-    $("labIntro").innerHTML = `Searched ${R.n_strategies} strategy types (${R.n_combos.toLocaleString()} parameter sets each run as taker and maker) on ${coins}, one coin at a time, pooled, and by time of day. The last ${R.holdout_days || "few"} days (from ${fmtDate(R.holdout_start)}) were locked away and only used once, at the end. Trying this many things makes some look good by luck, so a strategy only counts if it also wins on the locked days.`;
+    if (R.intro) $("labIntro").textContent = R.intro; else $("labIntro").innerHTML = `Searched ${R.n_strategies} strategy types (${R.n_combos.toLocaleString()} parameter sets each run as taker and maker) on ${coins}, one coin at a time, pooled, and by time of day. The last ${R.holdout_days || "few"} days (from ${fmtDate(R.holdout_start)}) were locked away and only used once, at the end. Trying this many things makes some look good by luck, so a strategy only counts if it also wins on the locked days.`;
     $("labStats").innerHTML = `
       <div><div class="eyebrow">Result</div><div class="big">${nStrict ? `${nStrict} passed` : nPass ? `${nPass} passed the basic bar, none the strict one` : "Nothing passed the final exam"}</div></div>
-      <div class="stat"><div class="eyebrow">Walk-forwards run</div><div class="v">${R.n_search.toLocaleString()}</div><div class="s">${R.n_positive.toLocaleString()} made money out of sample</div></div>
+      <div class="stat"><div class="eyebrow">${R.intro ? "Blind tests run" : "Walk-forwards run"}</div><div class="v">${R.n_search.toLocaleString()}</div><div class="s">${R.n_positive.toLocaleString()} made money out of sample</div></div>
       <div class="stat"><div class="eyebrow">Shortlisted</div><div class="v">${F.length}</div><div class="s">t ≥ 1.5 before the final exam</div></div>
       <div class="stat"><div class="eyebrow">Strict bar</div><div class="v">t ≥ ${R.t_bar_strict}</div><div class="s">corrected for ${F.length} tests</div></div>`;
     const row = (x, tag) => { const h = x.holdout, st = x.passed_strict ? ["cand", "Passed"] : x.passed ? ["prom", "Basic pass"] : tag ? ["luck", tag] : h.pnl > 0 ? ["luck", "Positive, not significant"] : ["loses", "Failed"];

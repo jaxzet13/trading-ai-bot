@@ -216,6 +216,28 @@ def lab_summary():
         out[key]["n_search"] = len(search)
         out[key]["n_positive"] = sum(1 for x in search if x["oos"]["pnl"] > 0)
         out[key]["top"] = sorted(search, key=lambda x: -x["oos"]["t_stat"])[:15]
+    f = OUT.parent / "data" / "lab" / "lab2_results.json"
+    if f.exists():
+        r = json.loads(f.read_text())
+        fr = r.get("frozen_rule", {})
+        params = {k: fr[k] for k in ("start", "end", "edge", "vol_mult") if k in fr}
+        finals = []
+        for label, part in (("Apr-Aug archive", "archive"), ("Newest data, never used", "fresh")):
+            for coin, d in (r.get(part) or {}).items():
+                m = d.get("frozen") or {}
+                if not m.get("trades"):
+                    continue
+                finals.append({"scope": coin, "strategy": "fair_value", "execution": "taker",
+                               "params": {"test": label, "dates": f"{str(d.get('from'))[:10]} to {str(d.get('to'))[:10]}"},
+                               "holdout": {"pnl": m.get("pnl", 0), "trades": m.get("trades", 0),
+                                           "win_rate": m.get("win_rate", 0), "t_stat": m.get("t_stat", 0)},
+                               "passed": bool(m.get("pnl", 0) > 0 and m.get("t_stat", 0) >= 2),
+                               "passed_strict": bool(m.get("pnl", 0) > 0 and m.get("t_stat", 0) >= 2.71)})
+        finals.sort(key=lambda x: -x["holdout"]["t_stat"])
+        out["blind"] = {"generated": r.get("generated"), "finals": finals, "benchmarks": [], "coins": {},
+                        "t_bar_strict": 2.71, "n_search": len(finals), "n_positive": sum(x["holdout"]["pnl"] > 0 for x in finals),
+                        "n_strategies": 1, "n_combos": 1, "holdout_start": None,
+                        "intro": "The exact live rule (fair value, edge 12c, buy at the ask, $10 per trade), frozen and run on data that no test or tuning had ever touched: Kalshi's Apr-Aug archive, and markets the earlier searches never saw. Nothing was re-tuned. Pass = profit and t-stat of at least 2; strict pass = t-stat of at least 2.71."}
     return out or None
 
 
