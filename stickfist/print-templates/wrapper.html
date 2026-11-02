@@ -1,0 +1,40 @@
+<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;background:#000}
+.w{position:relative;width:1800px;height:2900px;overflow:hidden;color:#f2f2f0;font-family:Manrope,sans-serif;
+  background:linear-gradient(115deg,#050506 0%,#111114 30%,#060607 48%,#16161a 62%,#050506 80%,#0d0d10 100%)}
+.w::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.025) 0 2px,transparent 2px 9px)}
+.crimp{position:absolute;left:0;right:0;height:300px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 4px,transparent 4px 16px),#0a0a0c}
+.crimp.t{top:0}.crimp.b{bottom:0}
+.crimp::after{content:"";position:absolute;left:0;right:0;height:3px;background:var(--a);opacity:.7}
+.crimp.t::after{bottom:0}.crimp.b::after{top:0}
+.glow{position:absolute;left:50%;top:40%;width:1500px;height:1500px;transform:translate(-50%,-50%);background:radial-gradient(circle,var(--a2),transparent 62%)}
+.band{position:absolute;top:300px;bottom:300px;left:150px;width:46px;background:linear-gradient(180deg,var(--a),var(--a3))}
+.frame{position:absolute;left:260px;right:110px;top:420px;bottom:420px;border:2px solid rgba(255,255,255,.16);border-radius:20px}
+svg.mk{position:absolute;left:calc(50% + 75px);top:36%;width:400px;transform:translate(-50%,-50%);filter:drop-shadow(0 0 30px rgba(255,255,255,.6)) drop-shadow(0 0 90px var(--a))}
+.nm{position:absolute;left:260px;right:110px;top:55%;text-align:center;font-weight:600;font-size:150px;letter-spacing:.5em;text-indent:.5em}
+.sub{position:absolute;left:260px;right:110px;top:63.5%;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:62px;letter-spacing:.35em;text-indent:.35em;color:var(--a)}
+.ln{position:absolute;left:520px;right:370px;top:69.5%;height:4px;background:linear-gradient(90deg,transparent,var(--a),transparent)}
+.ed{position:absolute;left:260px;right:110px;top:72.5%;text-align:center;font-size:46px;letter-spacing:.3em;text-indent:.3em;color:#a0a09c}
+.tag{position:absolute;left:50%;top:330px;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:40px;letter-spacing:.35em;color:#0b0b0c;background:var(--a);padding:14px 34px;border-radius:6px;white-space:nowrap}
+/* back */
+.bk .k{position:absolute;left:300px;right:200px;top:820px;display:grid;gap:44px;font-size:60px;letter-spacing:.12em;color:#d8d8d4}
+.bk .k span{display:flex;align-items:center;gap:40px}.bk .k i{width:56px;height:56px;border-radius:12px;display:inline-block}
+.bk .h{position:absolute;left:300px;top:560px;font-family:'IBM Plex Mono',monospace;font-size:50px;letter-spacing:.35em;color:#8a8a86}
+.bk .c{position:absolute;left:300px;right:200px;bottom:520px;font-family:'IBM Plex Mono',monospace;font-size:44px;letter-spacing:.2em;line-height:1.8;color:#8a8a86}
+.bk .c b{color:var(--a);font-weight:500}
+.bk svg.mk2{position:absolute;right:220px;top:520px;width:150px;filter:drop-shadow(0 0 16px rgba(255,255,255,.5))}
+</style></head><body><div class="w" id="w"></div>
+<script>
+const Q=new URLSearchParams(location.search), set=Q.get('set')||'all', side=Q.get('side')||'front';
+const S={all:{a:'#e6e6e3',a2:'rgba(255,255,255,.12)',a3:'#7a7a78',sub:'LIMITED SERIES',ed:'3 CARDS · ONE LIMITED HIT',tag:'BLOODMOON · FROSTBITE · VENOM'},
+ BM:{a:'#ff3b47',a2:'rgba(224,32,45,.32)',a3:'#7a0910',sub:'BLOODMOON',ed:'3 CARDS · LIMITED EDITION',tag:'5,000 PACKS · NEVER REPRINTED'},
+ FB:{a:'#5cc4f5',a2:'rgba(63,182,240,.30)',a3:'#0c4f70',sub:'FROSTBITE',ed:'3 CARDS · LIMITED EDITION',tag:'5,000 PACKS · NEVER REPRINTED'},
+ VN:{a:'#8be23a',a2:'rgba(122,214,31,.28)',a3:'#2d5a0a',sub:'VENOM',ed:'3 CARDS · LIMITED EDITION',tag:'5,000 PACKS · NEVER REPRINTED'}}[set];
+const w=document.getElementById('w'); ['a','a2','a3'].forEach(k=>w.style.setProperty('--'+k,S[k]));
+const X=c=>`<svg class="${c}" viewBox="0 0 40 40"><circle cx="20" cy="9.5" r="1.6" fill="#fff"/><path d="M11 15 L29 33 M29 15 L11 33" stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg>`;
+let h='<div class="crimp t"></div><div class="crimp b"></div><div class="band"></div>';
+if(side==='front') h+=`<div class="glow"></div><div class="frame"></div><div class="tag">${S.tag}</div>${X('mk')}<div class="nm">STIXX</div><div class="sub">${S.sub}</div><div class="ln"></div><div class="ed">${S.ed}</div>`;
+else { w.classList.add('bk'); h+=`<div class="h">RARITY</div>${X('mk2')}<div class="k">`+[['#9b9b9b','COMMON'],['#3f9b6b','UNCOMMON'],['#3f7fe0','RARE'],['#9fd0ff','FOIL RARE'],['#d4a53a','SIGNATURE'],['#e6e6e3','ULTRA'],['#ff4d8d','MASTERWORK'],['#f5c542','GILDED']].map(([c,n])=>`<span><i style="background:${c}"></i>${n}</span>`).join('')+`</div><div class="c"><b>${S.sub}</b><br>${S.ed}<br>STIXX TRADING CARD GAME</div>`; }
+w.innerHTML=h;
+</script></body></html>
