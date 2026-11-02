@@ -1533,11 +1533,55 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
   .fan { flex-wrap: wrap !important; }
 }
 @media (prefers-reduced-motion: reduce) { .view:not([hidden]), .fan-c, .toast, #dailyBtn::before { animation: none !important; } }
+
+/* ===================== REAL CARDS ===================== */
+.scan-btn { display: inline-flex; align-items: center; gap: 7px; font-family: var(--f-ui); font-size: 14px; font-weight: 800; color: #0c0d10; background: var(--t1); border: 0; border-radius: 999px; padding: 7px 14px 7px 11px; transition: transform .08s, background .15s; }
+.scan-btn:hover { background: #fff; } .scan-btn:active { transform: scale(.96); }
+.scan-btn .ico { width: 17px; height: 17px; }
+.hero .ctas .btn .ico { width: 18px; height: 18px; }
+.how { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--rule); border-radius: 18px; overflow: hidden; }
+.how > div { padding: 22px 22px 24px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.how > div + div { border-left: 1px solid var(--rule); }
+.how b { font-size: 17px; font-weight: 800; }
+.how p { margin: 0; color: var(--t2); font-size: 14.5px; line-height: 1.5; }
+.how-n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #0c0d10; background: var(--t1); margin-bottom: 6px; }
+.retail-tag { position: absolute; z-index: 4; top: 12px; left: 12px; font-size: 11.5px; font-weight: 800; letter-spacing: .04em; color: #0c0d10; background: var(--t1); border-radius: 999px; padding: 4px 10px; }
+.tile .btn[data-scanopen] .ico { width: 18px; height: 18px; }
+.pocket.phys::before { content: "Physical"; position: absolute; z-index: 4; left: 50%; bottom: -9px; transform: translateX(-50%); font-size: 10.5px; font-weight: 800; letter-spacing: .03em; color: #0c0d10; background: var(--t1); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+.ppill { font-size: 11.5px; font-weight: 800; color: #0c0d10; background: var(--t1); border-radius: 999px; padding: 2px 8px; margin-right: 6px; }
+.copy.phys { border-color: #3a3f48 !important; }
+.scan-box { max-width: 700px; }
+.scan-box .lede { margin-top: 6px; }
+.scan-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.scan-opt { display: grid; gap: 6px; align-content: start; padding: 18px; border: 1px solid var(--rule); border-radius: 14px; background: var(--g2); cursor: pointer; transition: border-color .15s, background .15s; min-width: 0; }
+.scan-opt:hover { border-color: #3a3f48; }
+.scan-opt b { font-size: 15.5px; font-weight: 800; }
+.scan-opt span { color: var(--t2); font-size: 13.5px; }
+.scan-opt > .ico { width: 28px; height: 28px; margin-bottom: 4px; }
+.scan-opt input[type=file] { font-size: 13px; color: var(--t2); margin-top: 6px; max-width: 100%; }
+form.scan-opt { cursor: default; }
+.scan-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.scan-row input { flex: 1 1 150px; }
+.scan-row .btn { flex: none; }
+.fan-c.phys-c::after { content: "Physical"; }
+.sum-btns .btn .ico { width: 17px; height: 17px; }
+.scan-row input { flex: 1; min-width: 0; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; color: var(--t1); background: var(--g0); border: 1px solid var(--rule-2); border-radius: 10px; padding: 10px 12px; }
+.scan-row input:focus { outline: 2px solid var(--t1); outline-offset: 1px; }
+.scan-status { min-height: 22px; margin-top: 14px; font-size: 14px; font-weight: 600; color: var(--t2); }
+.scan-status.bad { color: var(--down); }
+.scan-recent { display: grid; gap: 6px; margin-top: 8px; }
+.sr-row { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--rule); font-size: 14px; }
+@media (max-width: 760px) {
+  .how { grid-template-columns: 1fr; } .how > div + div { border-left: 0; border-top: 1px solid var(--rule); }
+  .scan-grid { grid-template-columns: 1fr; }
+  .scan-btn span { display: none; } .scan-btn { padding: 8px; }
+}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <symbol id="i-sigil" viewBox="0 0 40 40"><circle cx="20" cy="8.2" r="2.7" fill="currentColor"/><path d="M10.5 14.5 L29.5 33.5 M29.5 14.5 L10.5 33.5" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="i-qr" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1"/></g><g fill="currentColor"><rect x="14" y="14" width="3" height="3"/><rect x="17.5" y="17.5" width="3" height="3"/><rect x="14" y="18.5" width="2" height="2"/><rect x="18.5" y="14" width="2" height="2"/></g></symbol>
     <symbol id="i-coin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5 21.5 12 12 21.5 2.5 12Z"/></g><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
     <symbol id="i-token" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5 20.5 7.3v9.4L12 21.5 3.5 16.7V7.3Z"/><path d="M12 8v8M8.5 10l7 4M15.5 10l-7 4"/></g></symbol>
     <symbol id="i-sound" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></g></symbol>
@@ -1568,7 +1612,8 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
       <a href="#terms" data-tab="terms">Odds</a>
     </nav>
     <div class="wallet">
-      <span class="demo-pill" title="Everything here uses simulated money">Demo</span>
+      <button class="scan-btn" data-scanopen="1" aria-label="Scan a card"><svg class="ico"><use href="#i-qr"/></svg><span>Scan</span></button>
+      <span class="demo-pill" title="Coins here are simulated money">Demo</span>
       <span class="bal c" title="Demo balance"><span id="balCoins">$0.00</span></span>
       <span class="bal t" title="Fight tokens"><svg class="ico"><use href="#i-token"/></svg><span id="balTokens">0</span></span>
       <button class="addc" data-open-store aria-label="Add funds">+</button>
@@ -1584,8 +1629,8 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
       <div>
         <div class="label">STIXX trading cards</div>
         <h1>Series II</h1>
-        <p class="lede"><span id="heroCount">0</span> stick fighters across nine rarities, <span id="heroPacks">0</span> packs and four limited drops. Big pulls come with their own fight scene. Keep the cards, grade them, or sell them back on the spot.</p>
-        <div class="ctas"><a class="btn brass big" href="#all-packs">Browse packs</a><button class="btn ghost big" data-buy="lastframe" id="heroOpen">Open the featured pack</button></div>
+        <p class="lede">Real trading cards with a digital twin. Every STIXX card has a code on the back: scan it and that exact card lands in your vault. <span id="heroCount">0</span> fighters, <span id="heroPacks">0</span> packs, and limited drops you can only get in stores.</p>
+        <div class="ctas"><button class="btn brass big" data-scanopen="1"><svg class="ico"><use href="#i-qr"/></svg>Scan a card</button><a class="btn big" href="#all-packs">Browse packs</a><button class="btn ghost big" data-buy="lastframe" id="heroOpen">Open the featured pack</button></div>
         <div class="facts">
           <div><span class="label">Top chase</span><strong id="heroChase">–</strong></div>
           <div><span class="label">Your best pull</span><strong id="heroBest">–</strong></div>
@@ -1593,6 +1638,12 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
         </div>
       </div>
       <div class="showcase" id="showcase"></div>
+    </div>
+
+    <div class="how" aria-label="How real cards work">
+      <div><span class="how-n">1</span><b>Buy a pack</b><p>Pick one up in a store, or open a digital pack here.</p></div>
+      <div><span class="how-n">2</span><b>Scan the back of each card</b><p>Your phone's camera opens STIXX and adds that exact copy, serial number and all.</p></div>
+      <div><span class="how-n">3</span><b>It's yours, verified</b><p>Each physical card can be added once. Store-only packs also carry a code card that unlocks the digital rip.</p></div>
     </div>
 
     <div id="hitsWrap" hidden style="display:flex;flex-direction:column;gap:18px"><div class="section-head"><div><h2>Best pulls</h2></div><span class="small-print">Your six most valuable cards</span></div><div class="hits" id="hitsRow"></div></div>
@@ -1604,6 +1655,7 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
         <button data-filter="low">Under $1</button>
         <button data-filter="mid">$1 – $10</button>
         <button data-filter="high">$10+</button>
+        <button data-filter="retail">In stores</button>
         <button data-filter="limited">Limited</button>
         <button data-filter="token">Tokens</button>
         <span class="spacer"></span>
@@ -1631,6 +1683,7 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
       <div class="vmode" role="group" aria-label="View"><button data-vmode="binder" aria-pressed="true">Binder</button><button data-vmode="list" aria-pressed="false">List</button></div>
       <div class="stat"><span class="label">Collected</span><strong id="vStatSet">0/0</strong></div>
       <div class="stat"><span class="label">Cards</span><strong id="vStatCount">0</strong></div>
+      <div class="stat"><span class="label">Physical</span><strong id="vStatPhys">0</strong></div>
       <div class="stat"><span class="label">Card value</span><strong id="vStatValue">0</strong></div>
       <div class="stat"><span class="label">Sell-back</span><strong id="vStatBuy">0</strong></div>
       <div class="stat"><span class="label">Top card</span><strong id="vStatUsd">$0.00</strong></div>
@@ -1746,6 +1799,18 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
     <div class="bundles" id="bundles"></div>
     <div class="checkout" id="checkout"></div>
     <p class="small-print">Demo checkout. No card is charged and no payment details are collected.</p>
+  </div>
+</div>
+<div class="modal" id="scan" hidden>
+  <div class="modal-box scan-box" role="dialog" aria-modal="true" aria-labelledby="scanTitle">
+    <div class="modal-head"><div><div class="label" id="scanKicker">Real cards</div><h2 id="scanTitle">Scan a card</h2></div><button class="x" id="closeScan" aria-label="Close">×</button></div>
+    <p class="lede" id="scanIntro">Every STIXX card has a QR code on the back. Point your phone's camera at it and the card is added here. Store-only packs also include a code card for the digital rip.</p>
+    <div class="scan-grid">
+      <label class="scan-opt" for="scanPhoto"><svg class="ico"><use href="#i-qr"/></svg><b>Use a photo of the code</b><span>Take a photo of the QR on the back, or pick one from your camera roll.</span><input type="file" id="scanPhoto" accept="image/*" capture="environment"></label>
+      <form class="scan-opt" id="scanForm" autocomplete="off"><b>Type the code</b><span>It's printed under the QR, like BM04-000123-K7QX.</span><div class="scan-row"><label class="sr" for="scanCode">Card or pack code</label><input id="scanCode" spellcheck="false" autocapitalize="characters" placeholder="BM04-000123-K7QX"><button class="btn brass" type="submit">Add</button></div></form>
+    </div>
+    <div class="scan-status" id="scanStatus" role="status" aria-live="polite"></div>
+    <div class="scan-recent" id="scanRecent"></div>
   </div>
 </div>
 <div class="modal" id="cardModal" hidden>
@@ -1881,6 +1946,40 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
     P({ id: "sketch2", chase: "reaper", no: "T2", name: "Sketch Vault", cur: "token", price: 120, n: 5, ed: "sketch", a: "#141a19", b: "#22302d", acc: "#6fb7a8", fig: "reaver", rh: { RH: 90, IR: 8.5, SIR: 1.5 }, rare: { R: 50, H: 32, RR: 13, UR: 4, HR: 1 } })
   ];
   const PACK_BY_ID = Object.fromEntries(PACKS.map(p => [p.id, p]));
+  // =====================================================================
+  // REAL CARDS. Packs sold in stores can't be bought with coins: their cards are added by scanning the code
+  // printed on the back of each physical card, and each pack carries a code card that unlocks its digital rip.
+  // Codes: card  BM04-000123-K7QX (set + card number, copy serial, check)   pack  PK-BM-000045-K7QX
+  // A QR on the card links to the app with the code in the hash (#c-<code> or #p-<code>).
+  // =====================================================================
+  const APP_URL = "https://claude.ai/artifact/MxwbGSTzj1gYFmDX3NdpZC";
+  const RETAIL_KEY = { BM: "bloodmoon", FB: "frostbite", VN: "venom" };
+  for (const id of Object.values(RETAIL_KEY)) if (PACK_BY_ID[id]) PACK_BY_ID[id].retail = true;
+  const CODE_SALT = "stixx-s2-ink", B32 = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const fnv = str => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h >>> 0; };
+  const codeCheck = payload => { let h = fnv(CODE_SALT + payload), out = ""; for (let i = 0; i < 4; i++) { out += B32[h % 32]; h = Math.floor(h / 32); } return out; };
+  const cardCodeBase = card => card.set ? card.set + card.no.slice(2).padStart(2, "0") : "IS" + card.no;
+  const cardCode = (card, serial) => { const pl = `${cardCodeBase(card)}-${String(serial).padStart(6, "0")}`; return `${pl}-${codeCheck(pl)}`; };
+  const packCode = (key, serial) => { const pl = `PK-${key}-${String(serial).padStart(6, "0")}`; return `${pl}-${codeCheck(pl)}`; };
+  function parseCode(raw) {
+    const s = String(raw || "").toUpperCase().replace(/\s+/g, "");
+    let m = s.match(/PK-([A-Z]{2})-(\d{6})-([A-Z0-9]{4})/);
+    if (m) {
+      const pl = `PK-${m[1]}-${m[2]}`, pack = PACK_BY_ID[RETAIL_KEY[m[1]]];
+      if (!pack) return { error: "That pack code isn't for a STIXX store pack." };
+      if (codeCheck(pl) !== m[3]) return { error: "That code doesn't check out. Look at the letters again (no O or I in codes)." };
+      return { kind: "pack", pack, serial: +m[2], code: `${pl}-${m[3]}` };
+    }
+    m = s.match(/(IS\d{3}|[A-Z]{2}\d{2})-(\d{6})-([A-Z0-9]{4})/);
+    if (m) {
+      const pl = `${m[1]}-${m[2]}`, no = m[1].startsWith("IS") ? m[1].slice(2) : m[1].slice(0, 2) + parseInt(m[1].slice(2), 10), card = CARD_BY_NO[no];
+      if (!card) return { error: "That code isn't for a card in this set." };
+      if (codeCheck(pl) !== m[3]) return { error: "That code doesn't check out. Look at the letters again (no O or I in codes)." };
+      if (+m[2] < 1) return { error: "That serial number isn't valid." };
+      return { kind: "card", card, serial: +m[2], code: `${pl}-${m[3]}` };
+    }
+    return { error: "No STIXX code found. Card codes look like BM04-000123-K7QX." };
+  }
 
   const BUNDLES = [{ id: "b1", usd: 4.99, coins: 500, bonus: 0 }, { id: "b2", usd: 9.99, coins: 1000, bonus: 100 }, { id: "b3", usd: 24.99, coins: 2500, bonus: 400 }, { id: "b4", usd: 99.99, coins: 10000, bonus: 2000 }];
 
@@ -1900,7 +1999,7 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
   function rollGrade() { let x = rand(); for (const g of GRADES) { x -= g.p; if (x < 0) return g.g; } return 8; }
   const itemVal = it => { const c = cardOf(it); let v = cardBaseValue(c, it.ed, it.rh); if (it.slab) v = v * gradeMult(c.rar, it.slab.g, it.slab.black); return Math.max(1, Math.round(v)); };
   const costOf = it => it.val != null ? it.val : itemVal(it);
-  const itemSell = it => Math.max(1, Math.floor(itemVal(it) * BUYBACK));
+  const itemSell = it => it.phys ? 0 : Math.max(1, Math.floor(itemVal(it) * BUYBACK));
   const money = c => "$" + (c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const priceTxt = p => p.cur === "coin" ? money(p.price) : "⬡" + p.price.toLocaleString("en-US");
   const LEVEL_XP = n => 250 * n * (n + 1) / 2;
@@ -2273,15 +2372,15 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
     const limBar = ls ? `<div class="limbar"><div class="lb-top"><b>LIMITED</b><span>${fmt(ls.sold)} / ${fmt(ls.L.run)} sold</span></div><i><b style="width:${(ls.sold / ls.L.run * 100).toFixed(1)}%"></b></i><span class="small-print">${ls.open ? `${fmt(ls.left)} packs left · never reprinted` : ls.soon ? "Coming soon" : "Sold out · cards now trade on the market only"}</span></div>` : "";
     return `<article class="tile${p.lim ? " limited lt-" + p.lim : ""}">
       <span class="no">No. ${p.no}</span><span class="cnt">${p.lim ? "3 cards" : "5 cards"}</span>
-      <div class="stagebox"><div class="peek">${cardHTML({ id: chase.id, cno: chase.no, rar: chase.rar, serial: 0, ed: p.ed, val: cardBaseValue(chase, p.ed, false) })}</div>${packHTML(p)}</div>
-      <div class="row"><h3>${esc(p.name)}</h3><span class="price${p.cur === "token" ? " tok" : ""}">${priceTxt(p)}</span></div>
+      <div class="stagebox">${p.retail ? `<span class="retail-tag">Store only</span>` : ""}<div class="peek">${cardHTML({ id: chase.id, cno: chase.no, rar: chase.rar, serial: 0, ed: p.ed, val: cardBaseValue(chase, p.ed, false) })}</div>${packHTML(p)}</div>
+      <div class="row"><h3>${esc(p.name)}</h3><span class="price${p.cur === "token" ? " tok" : ""}">${p.retail ? "In stores" : priceTxt(p)}</span></div>
       ${limBar}<div class="chase"><span style="color:${crOf(chase).col}">${crOf(chase).sym}</span> <b>${esc(chaseF.name)}</b> · ${oneIn(ch)} packs</div>
       <div class="meta">
         <span>Hit rate</span><span>${p.cur === "coin" ? Math.round(hitRate(p) * 100) + "% of packs" : "–"}</span>
         <span>Average sell-back</span><span>${p.cur === "coin" ? Math.round(ev * BUYBACK / p.price * 100) + "% of price" : money(ev * BUYBACK)}</span>
       </div>
       <details><summary>Pack odds</summary><table class="odds">${p.lim ? `<thead><tr><th>3 cards: ● ◆ + 1 ${esc(LSETS[p.lim].name)} card</th><th>Avg value</th><th>Chance</th></tr></thead><tbody>${Object.entries(LIM_ODDS).map(([k, v]) => { const pool = poolSet(p.lim, k), R = crOf(pool[0]); return `<tr><td><b style="color:${R.col}">${R.sym}</b> ${R.name}</td><td>${money(pool.reduce((a, c) => a + cardBaseValue(c), 0) / pool.length)}</td><td>${v}%</td></tr>`; }).join("")}</tbody>` : `<thead><tr><th>5 cards: ● ● ◆ + slot 4 + slot 5</th><th>Avg value</th><th>Chance</th></tr></thead><tbody>${rows(p.rh, "Slot 4 · reverse foil slot")}${rows(p.rare, "Slot 5 · rare slot")}</tbody>`}</table></details>
-      <button class="btn ${can && (!ls || ls.open) ? "brass" : ""}" data-buy="${p.id}" ${(!can && p.cur === "token") || (ls && !ls.open) ? "disabled" : ""}>${btn}</button>
+      ${p.retail ? `<button class="btn" data-scanopen="${p.id}"><span>Scan a pack code</span><svg class="ico"><use href="#i-qr"/></svg></button>` : `<button class="btn ${can && (!ls || ls.open) ? "brass" : ""}" data-buy="${p.id}" ${(!can && p.cur === "token") || (ls && !ls.open) ? "disabled" : ""}>${btn}</button>`}
     </article>`;
   }
   function renderShelf() {
@@ -2296,6 +2395,7 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
     else list.sort((a, b) => packEV(b) / b.price - packEV(a) / a.price);
     list.sort((a, b) => (b.lim ? 1 : 0) - (a.lim ? 1 : 0));
     if (shelfFilter === "limited") list = list.filter(p => p.lim);
+    if (shelfFilter === "retail") list = list.filter(p => p.retail);
     $("packGrid").innerHTML = list.map(tileHTML).join("");
     document.querySelectorAll("#filters [data-filter]").forEach(b => b.setAttribute("aria-pressed", b.dataset.filter === shelfFilter));
   }
@@ -2324,7 +2424,7 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
     else if (sort === "set") items.sort((a, b) => cardOf(a).no.localeCompare(cardOf(b).no) || (a.rh ? 1 : 0) - (b.rh ? 1 : 0));
     else items.sort((a, b) => b.serial - a.serial);
     const sell = vaultSellCoins();
-    $("vStatCount").textContent = items.length; $("vStatValue").textContent = money(items.reduce((s, it) => s + val(it), 0));
+    $("vStatCount").textContent = items.length; $("vStatPhys").textContent = items.filter(it => it.phys).length; $("vStatValue").textContent = money(items.reduce((s, it) => s + val(it), 0));
     $("vStatBuy").textContent = money(sell); $("vStatUsd").textContent = items.length ? money(Math.max(...items.map(val))) : "–";
     $("sellCommons").disabled = !items.some(it => rarOf(it) === "C" && !it.rh && it.ed !== "sketch");
     $("sellSketch").disabled = !items.some(it => it.ed === "sketch");
@@ -2432,7 +2532,7 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
     const copies = copiesOf(card.no), R = crOf(card), f = BY_ID[card.id];
     if (!copies.length) return `<div class="pocket empty-p" title="${esc(f.name)} · ${R.name} · not collected"><div class="ghostcard"><img src="${portrait(f)}" alt="" draggable="false"></div><span class="pn">${card.no}</span><span class="pr" style="color:${R.col}">${R.sym}</span></div>`;
     const best = copies[0], cut = copies.some(hasCutscene);
-    return `<button class="pocket${best.slab ? " slabbed" : ""}" data-pocket="${card.no}" aria-label="${esc(f.name)}, ${R.name}, ${copies.length} owned">${best.slab ? slabHTML(best) : cardHTML(best)}${best.grading ? `<span class="atigc">AT IGC</span>` : ""}${copies.length > 1 ? `<span class="pc">×${copies.length}</span>` : ""}${cut ? `<span class="pplay" title="Has a cutscene">▶</span>` : ""}</button>`;
+    return `<button class="pocket${best.slab ? " slabbed" : ""}${copies.some(c => c.phys) ? " phys" : ""}" data-pocket="${card.no}" aria-label="${esc(f.name)}, ${R.name}, ${copies.length} owned">${best.slab ? slabHTML(best) : cardHTML(best)}${best.grading ? `<span class="atigc">AT IGC</span>` : ""}${copies.length > 1 ? `<span class="pc">×${copies.length}</span>` : ""}${cut ? `<span class="pplay" title="Has a cutscene">▶</span>` : ""}</button>`;
   }
   function renderBinder(items) {
     const pages = [], groups = [CARDS.filter(c => !c.set), ...Object.keys(LSETS).map(k => CARDS.filter(c => c.set === k))];
@@ -2461,9 +2561,9 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
     const copyRow = it => {
       const tag = it.slab ? `<span class="gpill${it.slab.black ? " bl" : ""}">IGC ${it.slab.g}</span>` : it.grading ? `<span class="gpill wait">At IGC · day ${it.grading.due}</span>` : `<span class="small-print">${condLine(it)}</span>`;
       const gain = itemVal(it) - costOf(it);
-      return `<div class="copy"><div class="cp-l"><span>No. ${String(it.serial).padStart(4, "0")}${it.rh ? " · Reverse Foil" : ""}${it.ed === "sketch" ? " · Sketch" : ""}</span>${tag}</div>
+      return `<div class="copy${it.phys ? " phys" : ""}"><div class="cp-l"><span>${it.phys ? `<b class="ppill">Physical</b> #${String(it.serial).padStart(6, "0")}` : `No. ${String(it.serial).padStart(4, "0")}`}${it.rh ? " · Reverse Foil" : ""}${it.ed === "sketch" ? " · Sketch" : ""}</span>${it.phys ? `<span class="small-print">Scanned ${new Date(it.t).toLocaleDateString()} · code ${esc(it.code)}</span>` : tag}</div>
         <div class="cp-v"><span class="num">${money(itemVal(it))}</span><small class="${gain >= 0 ? "up" : "dn"}">${gain >= 0 ? "+" : "−"}${money(Math.abs(gain))} since pulled</small></div>
-        <div class="cp-a">${!it.slab && !it.grading && it.ed !== "sketch" ? `<button class="btn small" data-gradeopen="${it.uid}">Grade</button>` : ""}${it.grading ? "" : `<button class="btn small" data-sell="${it.uid}">Sell ${money(itemSell(it))}</button>`}</div></div>
+        <div class="cp-a">${it.phys ? `<span class="small-print">You hold this card</span>` : ""}${!it.phys && !it.slab && !it.grading && it.ed !== "sketch" ? `<button class="btn small" data-gradeopen="${it.uid}">Grade</button>` : ""}${it.grading || it.phys ? "" : `<button class="btn small" data-sell="${it.uid}">Sell ${money(itemSell(it))}</button>`}</div></div>
         <div class="gradeform" id="gf-${it.uid}" hidden>${IGC_TIERS.map(T => `<button class="btn small" data-grade="${it.uid}" data-tier="${T.id}">${T.name} · ${money(T.fee)} · ${T.days}d</button>`).join("")}<span class="small-print">Raw ${money(itemVal(it))} → IGC 10 would be ${money(itemVal(it) * gradeMult(card.rar, 10))}, IGC 8 ${money(itemVal(it) * gradeMult(card.rar, 8))}.</span></div>`;
     };
     let revealHTML = "";
@@ -2592,6 +2692,11 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
   let currentTab = "packs";
   function showTab() {
     let h = location.hash.slice(1);
+    if (/^[cp]-/i.test(h)) {
+      const code = h.slice(2); location.hash = "vault";
+      if (state.ageOK) setTimeout(() => redeem(code), 250); else { state.pendingCode = code; save(); }
+      return;
+    }
     const anchor = h === "all-packs";
     if (anchor) h = "packs";
     currentTab = TABS.includes(h) ? h : "packs";
@@ -2607,14 +2712,14 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
   // every copy beyond the best one of each card (graded slab first, then highest value); reverse foils and sketches count as their own cards
   function dupeUids() {
     const by = {};
-    for (const it of state.vault) { if (!it || it.grading) continue; const k = it.cno + (it.rh ? "r" : "") + (it.ed === "sketch" ? "s" : ""); (by[k] = by[k] || []).push(it); }
+    for (const it of state.vault) { if (!it || it.grading || it.phys) continue; const k = it.cno + (it.rh ? "r" : "") + (it.ed === "sketch" ? "s" : ""); (by[k] = by[k] || []).push(it); }
     const out = [];
     for (const list of Object.values(by)) { if (list.length < 2) continue; list.sort((a, b) => (b.slab ? 1 : 0) - (a.slab ? 1 : 0) || itemVal(b) - itemVal(a)); out.push(...list.slice(1).map(it => it.uid)); }
     return out;
   }
   function sellUids(uids, label) {
     const set = new Set(uids); let got = 0, n = 0;
-    state.vault = state.vault.filter(it => { if (set.has(it.uid) && !it.grading) { got += itemSell(it); n++; return false; } return true; });
+    state.vault = state.vault.filter(it => { if (set.has(it.uid) && !it.grading && !it.phys) { got += itemSell(it); n++; return false; } return true; });
     if (!n) return 0;
     state.coins += got; state.s.coinsFromSales += got;
     log(label || `Sold back ${n} fighter${n > 1 ? "s" : ""}`, got, "coin");
@@ -2622,14 +2727,15 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
   }
 
   const limState = p => { const L = LSETS[p.lim], d = mktDay(), sold = limSold(p.lim); return { L, sold, left: Math.max(0, L.run - sold), open: d >= L.release && sold < L.run, soon: d < L.release }; };
-  function buy(packId, free) {
+  function buy(packId, free, viaCode) {
     const p = PACK_BY_ID[packId]; if (!p) return;
-    if (p.lim) { const st = limState(p); if (!st.open) { toast(st.soon ? `${p.name} releases on market day ${st.L.release}` : `${p.name} is sold out`); return; } state.limBought = state.limBought || {}; state.limBought[p.lim] = (state.limBought[p.lim] || 0) + 1; }
+    if (p.retail && !viaCode) { openScan(p); return; }
+    if (p.lim && !viaCode) { const st = limState(p); if (!st.open) { toast(st.soon ? `${p.name} releases on market day ${st.L.release}` : `${p.name} is sold out`); return; } state.limBought = state.limBought || {}; state.limBought[p.lim] = (state.limBought[p.lim] || 0) + 1; }
     if (!free && p.cur === "coin" && state.coins < p.price) { openStore(p.price - state.coins); return; }
     if (!free && p.cur === "token" && state.tokens < p.price) { toast(`Win ${fmt(p.price - state.tokens)} more tokens in the Arena`); return; }
     sfx.unlock();
     let levelUp = null;
-    if (free) { state.lastFree = Date.now(); }
+    if (free && !viaCode) { state.lastFree = Date.now(); }
     else if (p.cur === "coin") {
       state.coins -= p.price; state.s.coinsOnPacks += p.price;
       const before = levelOf(state.s.xp || 0); state.s.xp = (state.s.xp || 0) + p.price; const after = levelOf(state.s.xp);
@@ -2647,10 +2753,97 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
     state.s.packs++;
     const sellTotal = items.reduce((s, it) => s + itemSell(it), 0);
     if (p.cur === "coin" && sellTotal >= p.price) state.s.packHits = (state.s.packHits || 0) + 1;
-    log(free ? `Daily free ${p.name}` : `Opened ${p.name}`, free ? 0 : -p.price, p.cur);
+    log(viaCode ? `Redeemed a ${p.name} pack code` : free ? `Daily free ${p.name}` : `Opened ${p.name}`, free ? 0 : -p.price, p.cur);
     snap(); save(); renderAll();
-    openStage(p, items, { free: !!free, levelUp });
+    openStage(p, items, { free: !!free, levelUp, code: viaCode || null });
   }
+
+  // ---------- Scanner ----------
+  const capUse = name => (window.claude && typeof window.claude.use === "function") ? Promise.resolve(window.claude.use(name)).catch(() => null) : Promise.resolve(null);
+  const withTimeout = (pr, ms, fallback) => Promise.race([pr, new Promise(r => setTimeout(() => r(fallback), ms))]);
+  let DBP = null, USERP = null;
+  // one claim per physical card or pack code, across everyone who uses this app (shared store when available)
+  async function registryClaim(code, what) {
+    const db = await withTimeout(DBP = DBP || capUse("db"), 4000, null); if (!db) return { ok: true, shared: false };
+    const user = await withTimeout(USERP = USERP || capUse("user"), 3000, null);
+    const uid = user ? await withTimeout(user.id(), 3000, null) : null;
+    let ref; try { ref = db.doc("claims/" + code); } catch (e) { return { ok: true, shared: false }; }
+    try {
+      const snap = await ref.get(), d = snap.exists ? (snap.data() || {}) : null;
+      if (d && d.by && d.by !== uid) return { ok: false, why: "taken" };
+      if (d && d.by === uid) return { ok: true, shared: true };
+      const lease = await ref.acquire({ holder: uid || "viewer", ttlMs: 4000 });
+      if (!lease.acquired) return { ok: false, why: "busy" };
+      const again = await ref.get(), d2 = again.exists ? (again.data() || {}) : null;
+      if (d2 && d2.by && d2.by !== uid) return { ok: false, why: "taken" };
+      await ref.set({ by: uid, what, at: Date.now() });
+      return { ok: true, shared: true };
+    } catch (e) { return { ok: true, shared: false }; }
+  }
+  function scanMsg(text, kind) { const el = $("scanStatus"); el.textContent = text || ""; el.className = "scan-status" + (kind ? " " + kind : ""); }
+  function renderScanRecent() {
+    const list = (state.scans || []).slice(0, 5);
+    $("scanRecent").innerHTML = list.length ? `<div class="label">Recently added</div>` + list.map(x => { const c = x.kind === "card" ? CARD_BY_NO[x.no] : null; const nm = c ? `${BY_ID[c.id].name}, ${crOf(c).name}` : `${(PACK_BY_ID[x.no] || {}).name || "Pack"} pack code`; return `<div class="sr-row"><span>${esc(nm)}</span><span class="small-print">${esc(x.code)}</span></div>`; }).join("") : "";
+  }
+  function openScan(pack) {
+    $("scanTitle").textContent = pack ? `Scan your ${pack.name} pack` : "Scan a card";
+    $("scanKicker").textContent = pack ? "Store-only pack" : "Real cards";
+    $("scanIntro").textContent = pack ? `${pack.name} packs are only sold in stores. Scan the code card inside the pack to open its digital rip, then scan the back of each card to add the physical cards.` : "Every STIXX card has a QR code on the back. Point your phone's camera at it and the card is added here. Store-only packs also include a code card for the digital rip.";
+    scanMsg(""); renderScanRecent(); $("scan").hidden = false; setTimeout(() => $("scanCode").focus({ preventScroll: true }), 60);
+  }
+  let redeeming = false;
+  async function redeem(raw) {
+    if (redeeming) return false;
+    const r = parseCode(raw);
+    if (r.error) { scanMsg(r.error, "bad"); return false; }
+    state.claimed = state.claimed || {};
+    if (state.claimed[r.code]) { scanMsg(r.kind === "card" ? "That card is already in your vault." : "That pack code has already been used.", "bad"); return false; }
+    redeeming = true; scanMsg("Checking the code…");
+    const reg = await withTimeout(registryClaim(r.code, r.kind === "card" ? r.card.no : r.pack.id), 7000, { ok: true, shared: false });
+    redeeming = false;
+    if (!reg.ok) { scanMsg(reg.why === "taken" ? "Someone else already added this card. Each physical card can be added once." : "This code is being added somewhere else right now. Try again in a few seconds.", "bad"); return false; }
+    state.claimed[r.code] = Date.now();
+    state.scans = [{ code: r.code, kind: r.kind, no: r.kind === "card" ? r.card.no : r.pack.id, t: Date.now() }].concat(state.scans || []).slice(0, 40);
+    $("scan").hidden = true; $("scanCode").value = "";
+    sfx.unlock();
+    if (r.kind === "pack") { save(); buy(r.pack.id, true, r.code); return true; }
+    const card = r.card, f = BY_ID[card.id];
+    const item = { uid: "phys-" + r.code, id: f.id, cno: card.no, rar: card.rar, rh: false, slot: "SCAN", serial: r.serial, t: Date.now(), pack: RETAIL_KEY[card.set] || "scan", ed: "foil", val: cardBaseValue(card, "foil", false), day: mktDay(), phys: true, code: r.code };
+    state.vault.push(item);
+    if (!state.s.best || item.val > (state.s.best.val || 0)) state.s.best = { id: f.id, cno: card.no, serial: item.serial, val: item.val };
+    state.hits = (state.hits || []).concat([Object.assign({}, item)]).sort((a, b) => b.val - a.val).slice(0, 12);
+    log(`Scanned ${f.name} #${String(r.serial).padStart(6, "0")}`, 0, "coin");
+    snap(); save(); renderAll();
+    const sleeve = PACK_BY_ID[RETAIL_KEY[card.set]] || PACK_BY_ID.ink;
+    openStage(sleeve, [item], { free: true, scan: true });
+    $("stHint").textContent = "Opening…";
+    setTimeout(() => { if (SS && SS.phase === "pack") autoTear(); }, 650);
+    return true;
+  }
+  let jsqrP = null;
+  const loadJsQR = () => jsqrP || (jsqrP = new Promise((res, rej) => {
+    if (window.jsQR) return res(window.jsQR);
+    const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+    sc.onload = () => window.jsQR ? res(window.jsQR) : rej(new Error("jsQR")); sc.onerror = () => { jsqrP = null; rej(new Error("load")); }; document.head.appendChild(sc);
+  }));
+  async function decodePhoto(file) {
+    if (!file) return;
+    scanMsg("Reading the photo…");
+    try {
+      const jsQR = await loadJsQR(), bmp = await createImageBitmap(file);
+      for (const max of [1200, 1800, 800, 2600]) {
+        const k = Math.min(1, max / Math.max(bmp.width, bmp.height)), w = Math.max(1, Math.round(bmp.width * k)), h = Math.max(1, Math.round(bmp.height * k));
+        const cv = document.createElement("canvas"); cv.width = w; cv.height = h; const cx = cv.getContext("2d", { willReadFrequently: true }); cx.drawImage(bmp, 0, 0, w, h);
+        const q = jsQR(cx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: "attemptBoth" });
+        if (q && q.data) { return redeem(q.data); }
+      }
+      scanMsg("Couldn't find a QR code in that photo. Fill the frame with the code and try again, or type the code.", "bad");
+    } catch (e) { scanMsg("Couldn't read that photo. Type the code printed under the QR instead.", "bad"); }
+  }
+  $("scanForm").addEventListener("submit", e => { e.preventDefault(); const v = $("scanCode").value.trim(); if (!v) { scanMsg("Type the code printed under the QR.", "bad"); return; } redeem(v); });
+  $("scanPhoto").addEventListener("change", e => { const f = e.target.files && e.target.files[0]; decodePhoto(f); e.target.value = ""; });
+  $("closeScan").addEventListener("click", () => { $("scan").hidden = true; });
+  $("scan").addEventListener("click", e => { if (e.target.id === "scan") $("scan").hidden = true; });
 
   // ---------- Store ----------
   let pickBundle = "b2";
@@ -2711,7 +2904,7 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
   function center(el) { const r = el.getBoundingClientRect(), s = stage.getBoundingClientRect(); return { x: r.left + r.width / 2 - s.left, y: r.top + r.height / 2 - s.top, w: r.width, h: r.height, l: r.left - s.left, t: r.top - s.top }; }
 
   function openStage(p, items, extra) {
-    SS = { pack: p, items, free: extra && extra.free, levelUp: extra && extra.levelUp, crossed: false, idx: 0, phase: "pack", tear: 0, total: 0, busy: false, drag: null };
+    SS = { pack: p, items, free: extra && extra.free, levelUp: extra && extra.levelUp, scan: extra && extra.scan, code: extra && extra.code, crossed: false, idx: 0, phase: "pack", tear: 0, total: 0, busy: false, drag: null };
     $("stName").textContent = p.name;
     updateTotal(0);
     $("stTitle").className = "st-title"; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("rays").classList.remove("on");
@@ -3137,13 +3330,23 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
     const paid = SS.free ? 0 : p.cur === "coin" ? p.price : 0;
     const result = p.cur === "coin" ? sell - paid : null, hit = result !== null && result >= 0;
     const bestI = items.reduce((bi, it, i) => itemVal(it) > itemVal(items[bi]) ? i : bi, 0), bestIt = items[bestI], bestR = crOf(cardOf(bestIt));
+    if (SS.scan) {
+      const it = items[0], c = cardOf(it), R = crOf(c);
+      $("stSummary").innerHTML = `<div class="sum-in">
+        <div class="sum-head"><span class="label">Physical card verified</span><div class="big num">${esc(BY_ID[it.id].name)}</div><span class="small-print"><b style="color:${R.col}">${R.sym} ${esc(R.name)}</b> · copy #${String(it.serial).padStart(6, "0")} · worth ${money(itemVal(it))}</span></div>
+        <div class="fan"><div class="fan-c best phys-c" style="--c:${R.col};--i:0">${cardHTML(it)}</div></div>
+        <div class="sum-btns"><button class="btn brass" id="sumKeep">Done</button><button class="btn" id="sumScan"><svg class="ico"><use href="#i-qr"/></svg>Scan another</button></div></div>`;
+      $("stSummary").hidden = false; SS.sumAt = performance.now(); $("stHint").textContent = "";
+      const c0 = { x: innerWidth / 2, y: innerHeight * .3 }; fx.confetti(c0.x, c0.y, 70, [R.col, "#ffffff", "#e9e4d8"]); sfx.chime(chimeKey(c.rar));
+      return;
+    }
     const head = `<div class="big num">${money(total)}</div><span class="small-print">${items.length} cards worth ${money(total)} · sell back now for ${money(sell)}${paid ? ` on a ${money(paid)} pack` : ""}</span>${hit && paid ? `<span class="paid-off">Paid off · ${Math.round(sell / paid * 100)}% back</span>` : ""}`;
     const lv = SS.levelUp ? `<div class="lvup">Level ${SS.levelUp.level} · +${money(SS.levelUp.bonus)} bonus added</div>` : "";
     $("stSummary").innerHTML = `<div class="sum-in">
       <div class="sum-head"><span class="label">${esc(p.name)} · best pull <b style="color:${bestR.col}">${esc(BY_ID[bestIt.id].name)}, ${esc(bestR.name)}</b></span>${head}</div>${lv}
       <div class="fan">${items.map((x, i) => `<div class="fan-c${i === bestI ? " best" : ""}" style="--c:${crOf(cardOf(x)).col};--i:${i}">${cardHTML(x)}</div>`).join("")}</div>
       <div class="sum-btns"><button class="btn" id="sumSell">Sell all <span class="pr">${money(sell)}</span></button><button class="btn brass" id="sumKeep">Keep all</button>
-        ${items.some(hasCutscene) ? `<button class="btn ghost" id="sumReplay">Replay cutscene</button>` : ""}<button class="btn ghost" id="sumAgain">${can ? `Open another <span class="pr">${priceTxt(p)}</span>` : p.cur === "coin" ? "Add funds" : "Not enough tokens"}</button></div>
+        ${items.some(hasCutscene) ? `<button class="btn ghost" id="sumReplay">Replay cutscene</button>` : ""}${SS.code ? `<button class="btn ghost" id="sumScan"><svg class="ico"><use href="#i-qr"/></svg>Scan another code</button>` : ""}<button class="btn ghost" id="sumAgain"${SS.code ? " hidden" : ""}>${can ? `Open another <span class="pr">${priceTxt(p)}</span>` : p.cur === "coin" ? "Add funds" : "Not enough tokens"}</button></div>
     </div>`;
     if (hit) { sfx.chime("epic"); const c = { x: innerWidth / 2, y: innerHeight * .3 }; fx.confetti(c.x, c.y, 90, ["#8cbf94", "#e6d3a3", "#e9e4d8"]); }
     $("stSummary").hidden = false;
@@ -3909,6 +4112,7 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
       return;
     }
     if (k === "escape" && !$("store").hidden) $("store").hidden = true;
+    if (k === "escape" && !$("scan").hidden) $("scan").hidden = true;
     if (k === "escape" && !$("cardModal").hidden) closeCardModal();
     if (currentTab === "vault" && vaultMode === "binder" && $("cardModal").hidden && $("store").hidden && (k === "arrowright" || k === "arrowleft")) { const n = document.querySelector(`[data-bnav="${k === "arrowright" ? 1 : -1}"]`); if (n && !n.disabled) turnBinder(k === "arrowright" ? 1 : -1); }
   });
@@ -3916,6 +4120,7 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
     const t = e.target.closest("button, [data-open-store]"); if (!t) return;
     if (/^sum/.test(t.id) && SS && SS.sumAt && performance.now() - SS.sumAt < 600) return;
     if (t.matches("[data-open-store]")) { openStore(); return; }
+    if (t.dataset.scanopen) { openScan(PACK_BY_ID[t.dataset.scanopen] || null); return; }
     if (t.dataset.buy) { buy(t.dataset.buy); return; }
     if (t.dataset.sell) { const g = sellUids([t.dataset.sell]); if (g) toast(`Sold for ${money(g)}`); return; }
     if (t.dataset.guides) { $("cmCard").classList.toggle("printguides"); return; }
@@ -3937,7 +4142,8 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
       case "stSkip": if (SS && SS.phase !== "summary") { if (SS.phase === "pack") { SS.phase = "opening"; } skipAll(); } break;
       case "stMute": state.muted = !state.muted; save(); setMuteIcon(); break;
       case "sumSell": { const g = sellUids(SS.items.map(i => i.uid), `Sold back a ${SS.pack.name} pull`); closeStage(); toast(`Sold for ${money(g)}`); break; }
-      case "sumKeep": closeStage(); toast("Kept in your vault"); break;
+      case "sumKeep": { const sc = SS && SS.scan; closeStage(); toast(sc ? "Added to your vault" : "Kept in your vault"); break; }
+      case "sumScan": closeStage(); openScan(); break;
       case "sumReplay": { const it = SS.items.find(hasCutscene); if (it) playCutscene(it, null); break; }
       case "sumAgain": { const id = SS.pack.id; closeStage(); buy(id); break; }
       case "startFight": case "rematch": startFight(); break;
@@ -3947,7 +4153,7 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
       case "closeStore": $("store").hidden = true; break;
       case "closeCard": closeCardModal(); break;
       case "payBtn": pay(); break;
-      case "sellCommons": { const u = state.vault.filter(it => rarOf(it) === "C" && !it.rh && it.ed !== "sketch").map(it => it.uid); const g = sellUids(u, `Sold back ${u.length} commons`); if (g) toast(`Sold ${u.length} commons for ${money(g)}`); break; }
+      case "sellCommons": { const u = state.vault.filter(it => rarOf(it) === "C" && !it.rh && it.ed !== "sketch" && !it.phys).map(it => it.uid); const g = sellUids(u, `Sold back ${u.length} commons`); if (g) toast(`Sold ${u.length} commons for ${money(g)}`); break; }
       case "sellDupes": { const u = dupeUids(); const g = sellUids(u, `Sold back ${u.length} duplicate${u.length > 1 ? "s" : ""}`); if (g) toast(`Sold ${u.length} duplicate${u.length > 1 ? "s" : ""} for ${money(g)}`); break; }
       case "sellSketch": { const u = state.vault.filter(it => it.ed === "sketch").map(it => it.uid); const g = sellUids(u, `Sold back ${u.length} sketches`); if (g) toast(`Sold ${u.length} sketches for ${money(g)}`); break; }
       case "resetBtn": resetDemo(t); break;
@@ -3966,8 +4172,9 @@ table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: non
   }
   function grantSignup() { state.coins += SIGNUP_BONUS; state.s.freeCoins += SIGNUP_BONUS; log("Signup bonus", SIGNUP_BONUS, "coin"); snap(); }
   $("ageCheck").addEventListener("change", e => { $("gateEnter").disabled = !e.target.checked; });
-  $("gateEnter").addEventListener("click", () => { state.ageOK = true; if (!state.history.length) grantSignup(); save(); renderAll(); $("gate").hidden = true; toast(`${money(SIGNUP_BONUS)} signup bonus added`); });
+  $("gateEnter").addEventListener("click", () => { state.ageOK = true; if (state.pendingCode) { const pc = state.pendingCode; delete state.pendingCode; setTimeout(() => redeem(pc), 400); } if (!state.history.length) grantSignup(); save(); renderAll(); $("gate").hidden = true; toast(`${money(SIGNUP_BONUS)} signup bonus added`); });
 
+  window.STIXX_PRINT = { cardHTML, cardCode, packCode, parseCode, CARD_BY_NO, PACK_BY_ID, CARDS, APP_URL, RETAIL_KEY };
   renderAll(); showTab();
   let lastDay = mktDay();
   setInterval(() => { renderTick(); const d = mktDay(); if (d !== lastDay && stage.hidden && $("cut").hidden) { lastDay = d; renderAll(); if (cmNo && $("cardModal").hidden === false) openCardModal(cmNo); } if (currentTab === "packs" && stage.hidden && Date.now() % 60000 < 1000) renderHero(); }, 1000);
