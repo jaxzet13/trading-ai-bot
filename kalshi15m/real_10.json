@@ -1,0 +1,25 @@
+{
+  "_note": "REAL-MONEY settings for a $10 starter account (python -m kalshi15m real --config kalshi15m/real_10.json). Same frozen NEAR strategy as real.json; smaller bets and tighter stops.",
+  "series": "KXNEAR15M",
+  "strategy": "fair_value",
+  "execution": "taker",
+  "poll": "minute",
+  "params": {
+    "start": 2,
+    "end": 13,
+    "edge": 0.12,
+    "vol_mult": 1.0
+  },
+  "limits": {
+    "stake_usd": 1.0,
+    "max_contracts_per_order": 10,
+    "max_daily_loss_usd": 4.0,
+    "max_trades_per_day": 60,
+    "max_open_positions": 1,
+    "min_balance_usd": 4.0,
+    "max_price": 0.95,
+    "min_price": 0.03,
+    "max_data_age_s": 5.0,
+    "max_decision_lag_s": 5.0
+  }
+}

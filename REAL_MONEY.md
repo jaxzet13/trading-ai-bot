@@ -225,3 +225,14 @@ timestamp, and decisions are timed to the minute.
 | `data/kalshi15m/real_log.jsonl` | every decision, order, fill and settlement (JSON lines; separate from the paper log) |
 | `data/kalshi15m/real_console.log` | screen output |
 | `tests/test_real.py` | offline tests (`python tests/test_real.py`) |
+
+## Starting with $10
+
+`kalshi15m/real.json` assumes more than $10 in the account (it stops if the balance falls under $10). For a
+$10 test use `kalshi15m/real_10.json`: same frozen NEAR rule, $1 per bet, at most $4 lost per day, and it
+stops for good if the balance drops under $4. Add `--config kalshi15m/real_10.json` to every command:
+
+```bash
+.venv/bin/python -m kalshi15m real check --live --config kalshi15m/real_10.json
+bash scripts/run_real.sh --live --config kalshi15m/real_10.json
+```
