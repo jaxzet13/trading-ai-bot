@@ -28,6 +28,8 @@ def main():
     lb = sub.add_parser("lab", help="search every strategy x coin x order type, judge on a locked holdout")
     lb.add_argument("--series", nargs="+", default=None)
     lb.add_argument("--workers", type=int, default=4)
+    l2 = sub.add_parser("lab2", help="blind archive / fresh tests of the frozen fair_value rule + variants")
+    l2.add_argument("args", nargs="*", help="download-archive [SERIES:EVERY ...] | download-fresh [SERIES ...] | probe | run")
     sub.add_parser("live-report", help="refresh the dashboard with the live paper-trading log")
     hr = sub.add_parser("hourly", help="hourly crypto markets: download, walk-forward search, locked holdout")
     hr.add_argument("--series", nargs="+", default=None)
@@ -60,6 +62,9 @@ def main():
     elif a.cmd == "lab":
         from . import lab
         lab.main(a.series, a.workers)
+    elif a.cmd == "lab2":
+        from . import lab2
+        lab2.main(a.args)
     elif a.cmd == "hourly":
         from . import hourly
         hourly.main(a.series, a.workers, a.days, a.skip_download)

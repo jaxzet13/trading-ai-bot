@@ -327,22 +327,28 @@ FROZEN_X = {"start": 2, "end": 13, "edge": 0.12, "vol": "60"}
 CANDIDATES = ["rel30", "recent1_full"]
 
 
-def judge(res, panels, candidates):
-    """Run the chosen candidates ONCE on archive + fresh."""
-    k = len(candidates) * 2  # NEAR, BNB-style tests counted per candidate x blind set
-    t_bar = round(NormalDist().inv_cdf(1 - 0.05 / max(1, res["n_variants_tried"])), 2)
+def judge(res, panels, candidates=None):
+    """Run the pre-registered candidates ONCE on the blind sets (archive, fresh) and, for reference,
+    the old holdout (used to pick the frozen rule, never used for the variants)."""
+    candidates = candidates or CANDIDATES
+    n_tests = len(VARIANTS) - 1
+    res["t_bar_bonferroni"] = round(NormalDist().inv_cdf(1 - 0.05 / n_tests), 2)
     res["candidates"] = {}
-    for name in candidates:
+    for name in ["frozen"] + candidates:
         kw = {**FROZEN_X, **VARIANTS[name]}
-        out = {"params": kw, "archive": {}, "fresh": {}}
+        out = {"params": kw}
         for (where, s), p in panels.items():
-            if where not in ("archive", "fresh"):
+            if where == "search":
                 continue
             tr = _run(p, fv_x, **kw)
-            out[where][s] = summarize(tr, monthly=(where == "archive"))
-            out[where][s]["delay1"] = summarize(_run(p, fv_x, lag=1, **kw))
+            r = summarize(tr, monthly=(where == "archive"))
+            r["delay1"] = summarize(_run(p, fv_x, lag=1, **kw))
+            out.setdefault(where, {})[s] = r
         res["candidates"][name] = out
-    res["t_bar_bonferroni"] = t_bar
+        for where in ("archive", "fresh", "oldhold"):
+            print(f"CAND {name:13s} {where:8s} " + "  ".join(
+                f"{s[2:-3]} ${v.get('pnl')} n={v.get('trades')} t={v.get('t_stat')}" for s, v in out.get(where, {}).items()),
+                flush=True)
     return res
 
 
@@ -359,6 +365,9 @@ def main(argv):
         print(json.dumps(probe(), indent=1))
     elif cmd == "run":
         res, panels = run_all()
+        for s in ("KXNEAR15M", "KXHYPE15M", "KXBNB15M"):
+            panels[("oldhold", s)] = panel(s, "oldhold")
+        judge(res, panels)
         OUT.mkdir(parents=True, exist_ok=True)
         (OUT / "lab2_results.json").write_text(json.dumps(res, indent=1, default=str))
         print(f"-> {OUT / 'lab2_results.json'}")
