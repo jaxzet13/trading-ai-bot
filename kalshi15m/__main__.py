@@ -94,14 +94,19 @@ def main():
         except FileNotFoundError:
             res = {}
         jobs = []
+        from .lab import _register_sessions
+        _register_sessions()  # session-limited variants like fair_value@asia
         if a.config:
             cfg = json.loads(open(a.config).read())
             for e in cfg["strategies"]:
-                print(f"{e['series']}: {e['strategy']} / {e['execution']} {e['params']}")
+              pooled = isinstance(e["series"], list)
+              for ser in (e["series"] if pooled else [e["series"]]):
+                sid = f"{e.get('id', 'ALL')}|{ser}" if pooled else e.get("id")
+                print(f"{sid or ser}: {e['strategy']} / {e['execution']} {e['params']}")
                 jobs.append(threading.Thread(target=bot.run, daemon=True, kwargs=dict(
-                    series=e["series"], strategy=e["strategy"], params=e["params"], stake=cfg.get("stake", a.stake),
+                    series=ser, strategy=e["strategy"], params=e["params"], stake=cfg.get("stake", a.stake),
                     live=a.live, demo=a.demo, max_daily_loss=cfg.get("max_daily_loss", a.max_daily_loss), max_trades_per_day=cfg.get("max_trades_per_day", 40),
-                    execution=e["execution"], wait=e.get("wait", a.wait), poll=e.get("poll", 5))))
+                    execution=e["execution"], wait=e.get("wait", a.wait), poll=e.get("poll", 5), sid=sid)))
         for series in ([] if a.config else a.series):
             strategy, execution = a.strategy, a.execution
             params = json.loads(a.params) if a.params else None

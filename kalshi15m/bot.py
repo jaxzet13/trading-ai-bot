@@ -57,6 +57,11 @@ class Kalshi:
         return r.json()
 
     def open_market(self, series: str):
+        if not self.key:
+            return _cached(("mkt", self.base, series), lambda: self._open_market(series))
+        return self._open_market(series)
+
+    def _open_market(self, series: str):
         ms = self.req("GET", "/markets", params={"series_ticker": series, "status": "open"}).get("markets", [])
         return min(ms, key=lambda m: m["close_time"]) if ms else None
 
@@ -80,7 +85,27 @@ class Kalshi:
         return self.req("DELETE", f"/portfolio/orders/{order_id}")
 
 
+_CACHE, _CACHE_LOCK = {}, __import__("threading").Lock()
+
+
+def _cached(key, fn, ttl=4.0):
+    """Share one fetch between strategy threads watching the same coin (fewer API calls, same data)."""
+    with _CACHE_LOCK:
+        lk = _CACHE.setdefault(("lock", key), __import__("threading").Lock())
+    with lk:
+        hit = _CACHE.get(key)
+        if hit and time.time() - hit[0] < ttl:
+            return hit[1]
+        v = fn()
+        _CACHE[key] = (time.time(), v)
+        return v
+
+
 def _spot_and_vol(product: str):
+    return _cached(("spot", product), lambda: _spot_and_vol_raw(product))
+
+
+def _spot_and_vol_raw(product: str):
     d = requests.get(f"{COINBASE}/products/{product}/candles", params={"granularity": 60}, timeout=10).json()
     closes = np.array([c[4] for c in sorted(d)])
     lr = np.diff(np.log(closes))
@@ -93,9 +118,13 @@ def _ts(s): return int(datetime.fromisoformat(s.replace("Z", "+00:00")).timestam
 
 
 def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=False, demo=False,
-        max_daily_loss=50.0, max_trades_per_day=40, poll=5, execution="taker", wait=2, improve=0.01):
+        max_daily_loss=50.0, max_trades_per_day=40, poll=5, execution="taker", wait=2, improve=0.01, sid=None):
+    if strategy not in STRATEGIES and "@" in strategy:
+        from .lab import _register_sessions
+        _register_sessions()
     fn = STRATEGIES[strategy][0]
-    tag = {"series": series, "strategy": strategy, "execution": execution, "params": params}
+    sid = sid or series  # one id per config entry, so several strategies can share a coin
+    tag = {"series": series, "sid": sid, "strategy": strategy, "execution": execution, "params": params}
     log = lambda d: _log({**d, **tag})
     params = params or {}
     base = DEMO if demo else PROD
@@ -117,7 +146,7 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                 e = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if e.get("series") == series and e.get("event") in ("buy", "rest", "fill") and e.get("ts", 0) > time.time() - 3600:
+            if e.get("sid", e.get("series")) == sid and e.get("event") in ("buy", "rest", "fill") and e.get("ts", 0) > time.time() - 3600:
                 traded.add(e["ticker"])
     pending = {}  # resting maker orders: ticker -> order info
     while True:
@@ -173,6 +202,7 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                          "traded": cur in traded})
                 cur, seen, max_gap = m["ticker"], set(), -1.0
                 P = {f: np.full((1, 14), np.nan) for f in FIELDS}
+                P["hour"] = np.full((1, 14), float((_ts(m["open_time"]) % 86400) // 3600))
             open_ts = _ts(m["open_time"])
             minute = int((time.time() - open_ts) // 60)
             if minute < 1 or minute > 14 or minute in seen:
@@ -194,7 +224,7 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
             if np.isfinite(pm) and np.isfinite(P["yes_ask"][0, j]) and np.isfinite(P["no_ask"][0, j]):
                 max_gap = max(max_gap, pm - P["yes_ask"][0, j], (1 - pm) - P["no_ask"][0, j])
             seen.add(minute)
-            _status(series, {"ticker": cur, "minute": minute, "spot": spot, "strike": strike, "yes_bid": yb,
+            _status(sid, {"series": series, "ticker": cur, "minute": minute, "spot": spot, "strike": strike, "yes_bid": yb,
                              "yes_ask": ya, "model": float(P["p_model"][0, j]) if np.isfinite(P["p_model"][0, j]) else None,
                              "strategy": strategy, "execution": execution, "mode": mode,
                              "day_pnl": day_pnl, "open": list(open_pos), "resting": list(pending),

@@ -438,7 +438,7 @@ td.coin { font-size: 12px; }
     $("liveCards").innerHTML = L.strategies.map((s, i) => { const b = s.lab ? { oos: s.lab, diag: {} } : s.backtest, st = s.status, bl = s.lab ? "Holdout test" : "Backtest";
       const lag = s.lags && s.lags.length ? (s.lags.reduce((a, x) => a + x, 0) / s.lags.length).toFixed(1) + "s" : "–";
       return `<div class="coin-card">
-      <div class="top"><span class="sym"><i style="background:${tok(COIN_COL[i + 1])}"></i>${COIN(s.series)} · ${s.name}</span><span class="num ${cls(s.pnl)}" style="font:500 18px var(--f-mono)">${money(s.pnl, 2)}</span></div>
+      <div class="top"><span class="sym"><i style="background:${tok(COIN_COL[i % 5 + 1])}"></i>${s.label || COIN(s.series) + " · " + s.name}</span><span class="num ${cls(s.pnl)}" style="font:500 18px var(--f-mono)">${money(s.pnl, 2)}</span></div>
       <div class="params">${s.execution} · ${params(s.params)}</div>
       <div class="sdesc" style="max-width:none">${s.why}</div>
       <div class="kv" style="grid-template-columns:auto 1fr 1fr;margin-top:4px">
@@ -457,21 +457,22 @@ td.coin { font-size: 12px; }
       <div class="now">${st ? (() => { const left = st.close_ts ? Math.max(0, Math.round((st.close_ts - L.generated) / 60)) : 15 - st.minute;
         const mid = st.yes_bid > 0 && st.yes_ask < 1 ? (st.yes_bid + st.yes_ask) / 2 : null, d = st.strike ? (st.spot / st.strike - 1) * 100 : null;
         return `<div class="eyebrow">${s.stale ? "Last seen" : "Right now"} · market closing ${st.close_ts ? hm(st.close_ts) : ""}</div>
-          <div class="now-line"><b>${COIN(s.series)} ${usd(st.spot)}</b> vs target <b>${usd(st.strike)}</b> <span class="${d >= 0 ? "pos" : "neg"}">(${d != null ? (d >= 0 ? "+" : "") + d.toFixed(3) + "%" : ""})</span> · ${left} min left</div>
+          <div class="now-line"><b>${COIN(st.series || s.series)} ${usd(st.spot)}</b> vs target <b>${usd(st.strike)}</b> <span class="${d >= 0 ? "pos" : "neg"}">(${d != null ? (d >= 0 ? "+" : "") + d.toFixed(3) + "%" : ""})</span> · ${left} min left</div>
           <div class="live-state">Chance it finishes UP: market ${mid != null ? pct(mid) : "–"}, model ${st.model != null ? pct(st.model) : "–"}. ${s.execution === "taker" && s.params && s.params.edge ? `Bets when they differ by ${Math.round(s.params.edge * 100)}¢ or more.` : ""}</div>`; })() : `<div class="live-state">Waiting for the first market</div>`}
-        ${(s.holding || []).map(h => `<div class="holding">Holding: <b>bet ${dirWord(h.side)}</b>, ${betText({ ...h, series: s.series })}. ${h.n} × ${cents(h.price)} (wins ${money(h.n * (1 - h.price), 2)}, risks ${money(h.n * h.price, 2)})</div>`).join("")}
+        ${(s.holding || []).map(h => `<div class="holding">Holding: <b>bet ${dirWord(h.side)}</b>, ${betText({ ...h, series: h.series || s.series })}. ${h.n} × ${cents(h.price)} (wins ${money(h.n * (1 - h.price), 2)}, risks ${money(h.n * h.price, 2)})</div>`).join("")}
       </div>
     </div>`; }).join("");
-    $("btLegend").innerHTML = L.strategies.map((s, i) => `<span><i style="background:${tok(COIN_COL[i + 1])}"></i>${COIN(s.series)} ${s.name}</span>`).join("");
+    $("btLegend").innerHTML = L.strategies.map((s, i) => `<span><i style="background:${tok(COIN_COL[i % 5 + 1])}"></i>${s.label || COIN(s.series) + " " + s.name}</span>`).join("");
     const o = base(c); o.interaction = { mode: "nearest", intersect: false };
     o.plugins.tooltip.callbacks = { title: i => fmtTime(i[0].parsed.x / 1000), label: i => `${i.dataset.label}: ${money(i.parsed.y, 2)}` };
     o.scales = { x: axis(c, { type: "linear", ticks: { color: c.muted, maxTicksLimit: 6, callback: v => fmtDate(v / 1000) } }), y: axis(c, { ticks: { color: c.muted, callback: v => money(v) } }) };
     const btc = s => (s.lab && s.lab.curve && s.lab.curve.length ? s.lab.curve : s.backtest ? s.backtest.curve : []);
-    mk("bt", { type: "line", data: { datasets: L.strategies.map((s, i) => ({ s, i })).filter(x => btc(x.s).length).map(({ s, i }) => ({ label: COIN(s.series), data: btc(s).map(([t, v]) => ({ x: t * 1000, y: v })),
-      borderColor: tok(COIN_COL[i + 1]), borderWidth: 2, pointRadius: 0, pointHoverRadius: 4 })) }, options: o, plugins: [zeroLine(c)] });
+    mk("bt", { type: "line", data: { datasets: L.strategies.map((s, i) => ({ s, i })).filter(x => btc(x.s).length).map(({ s, i }) => ({ label: s.label || COIN(s.series), data: btc(s).map(([t, v]) => ({ x: t * 1000, y: v })),
+      borderColor: tok(COIN_COL[i % 5 + 1]), borderWidth: 2, pointRadius: 0, pointHoverRadius: 4 })) }, options: o, plugins: [zeroLine(c)] });
     const ev = [...L.events].filter(e => e.event !== "watched").reverse();
-    $("liveLog").innerHTML = ev.length ? `<thead><tr><th>Time</th><th>Coin</th><th>What happened</th><th class="num">P&amp;L</th></tr></thead><tbody>` +
-      ev.map(e => `<tr><td class="mono">${hm(e.ts)}</td><td class="mono">${COIN(e.series)}</td><td style="min-width:260px">${describe(e)}</td>
+    const LBL = Object.fromEntries(L.strategies.map(s => [s.id, s.label || COIN(s.series) + " " + s.name]));
+    $("liveLog").innerHTML = ev.length ? `<thead><tr><th>Time</th><th>Coin</th><th>Strategy</th><th>What happened</th><th class="num">P&amp;L</th></tr></thead><tbody>` +
+      ev.map(e => `<tr><td class="mono">${hm(e.ts)}</td><td class="mono">${COIN(e.series)}</td><td class="mono">${LBL[e.sid] || LBL[(e.sid || "").split("|")[0]] || LBL[e.series] || e.strategy || ""}</td><td style="min-width:260px">${describe(e)}</td>
         <td class="num ${e.pnl != null ? cls(e.pnl) : ""}">${e.pnl != null ? money(e.pnl, 2) : ""}</td></tr>`).join("") + "</tbody>"
       : `<tbody><tr><td class="empty">No orders yet. The strategies only trade when their conditions are met, which can take a while.</td></tr></tbody>`;
   }

@@ -49,10 +49,11 @@ def settle_open(events: list) -> list:
     """Settle paper fills the bot never got to settle (e.g. it stopped mid-market), using
     Kalshi's real result. Appends the settle events to the log so it only happens once."""
     import requests
-    settled = {e["ticker"] for e in events if e["event"] == "settle"}
+    sid = lambda e: e.get("sid", e.get("series"))
+    settled = {(sid(e), e["ticker"]) for e in events if e["event"] == "settle"}
     new = []
     for e in events:
-        if e["event"] not in ("fill", "buy") or e["ticker"] in settled:
+        if e["event"] not in ("fill", "buy") or (sid(e), e["ticker"]) in settled:
             continue
         try:
             m = requests.get(f"https://api.elections.kalshi.com/trade-api/v2/markets/{e['ticker']}",
@@ -66,10 +67,10 @@ def settle_open(events: list) -> list:
         fee = kalshi_fee(e["price"], e["n"], rate=rate)
         pnl = e["n"] * ((res == e["side"]) - e["price"]) - fee
         new.append({"event": "settle", "ticker": e["ticker"], "result": res, "pnl": round(pnl, 4),
-                    "side": e["side"], "price": e["price"], "series": e["series"], "strategy": e["strategy"],
+                    "side": e["side"], "price": e["price"], "series": e["series"], "sid": sid(e), "strategy": e["strategy"],
                     "execution": e.get("execution"), "params": e.get("params"), "settled_by": "report",
                     "ts": int(datetime_close(m))})
-        settled.add(e["ticker"])
+        settled.add((sid(e), e["ticker"]))
     if new:
         with LOG.open("a") as f:
             for x in new:
@@ -152,7 +153,8 @@ def summarise() -> dict:
             continue
         rate = TAKER_RATE if x["event"] == "buy" else MAKER_RATE
         pnl = x["n"] * ((res == x["side"]) - x["price"]) - kalshi_fee(x["price"], x["n"], rate=rate)
-        synth.append({"event": "settle", "ticker": x["ticker"], "series": x["series"], "side": x["side"],
+        synth.append({"event": "settle", "ticker": x["ticker"], "series": x["series"],
+                      "sid": x.get("sid", x["series"]), "side": x["side"],
                       "price": x["price"], "n": x["n"], "result": res, "pnl": round(pnl, 4),
                       "strike": c.get("strike"), "final": c.get("final"), "close_ts": c.get("close_ts"),
                       "ts": c.get("close_ts") or x["ts"], "fill_ts": x["ts"]})
@@ -169,7 +171,12 @@ def summarise() -> dict:
     out = {"generated": now, "stake": cfg.get("stake"), "strategies": []}
     for e in cfg["strategies"]:
         s = e["series"]
-        ev = [x for x in events if x.get("series") == s]
+        pooled = isinstance(s, list)  # one rule run on several coins, reported as one strategy
+        sid = e.get("id", "ALL" if pooled else s)
+        members = {f"{sid}|{c}" for c in s} if pooled else {sid}
+        if pooled:
+            s = "ALL"
+        ev = [x for x in events if x.get("sid", x.get("series")) in members]
         starts = [x["ts"] for x in ev if x["event"] == "start"]
         fills = [x for x in ev if x["event"] in ("fill", "buy")]
         settles = [x for x in ev if x["event"] == "settle"]
@@ -179,9 +186,10 @@ def summarise() -> dict:
         for x in settles:
             cum += x["pnl"]
             pnl_curve.append([x["ts"], round(cum, 2)])
-        st = status.get(s)
+        sts = [status[m] for m in members if m in status]
+        st = max(sts, key=lambda x: x.get("ts", 0)) if sts else None
         out["strategies"].append({
-            "series": s, "strategy": e["strategy"], "name": NAMES.get(e["strategy"], e["strategy"]),
+            "id": sid, "label": e.get("label"), "series": s, "strategy": e["strategy"], "name": NAMES.get(e["strategy"], e["strategy"]),
             "execution": e["execution"], "params": e["params"], "why": e.get("why", ""),
             "since": min(starts) if starts else None,
             "orders": sum(x["event"] == "rest" for x in ev) + sum(x["event"] == "buy" for x in ev),
@@ -189,11 +197,11 @@ def summarise() -> dict:
             "settled": len(settles), "wins": sum(x["pnl"] > 0 for x in settles),
             "pnl": round(sum(x["pnl"] for x in settles), 2), "curve": pnl_curve,
             "open": [x["ticker"] for x in fills if x["ts"] not in settled_fills],
-            "holding": [{k: x.get(k) for k in ("ticker", "side", "n", "price", "strike", "close_ts", "model", "spot")}
+            "holding": [{k: x.get(k) for k in ("ticker", "series", "side", "n", "price", "strike", "close_ts", "model", "spot")}
                         for x in fills if x["ts"] not in settled_fills],
             "status": st, "stale": (not st) or now - st.get("ts", 0) > 180,
             "backtest": _backtest(results, s, e["strategy"], e["execution"]),
-            "lab": _lab_holdout(s, e["strategy"], e["execution"]),
+            "lab": _lab_holdout(e.get("lab_scope", s), e["strategy"], e["execution"]),
             "lags": [x.get("lag_s") for x in ev if x["event"] == "buy" and x.get("lag_s") is not None],
             "watched": sum(x["event"] == "watched" for x in ev),
             "near": sorted(([x["ticker"], x["max_gap"]] for x in ev if x["event"] == "watched"), key=lambda t: t[0])[-12:],
