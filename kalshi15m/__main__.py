@@ -8,6 +8,10 @@ from . import bot, data, report
 
 
 def main():
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] in ("real", "real-report"):   # own argument parsers
+        from . import real
+        raise SystemExit(real.main(sys.argv[2:]) if sys.argv[1] == "real" else real.report(sys.argv[2:]))
     ap = argparse.ArgumentParser(prog="kalshi15m")
     sub = ap.add_subparsers(dest="cmd", required=True)
     d = sub.add_parser("download", help="fetch historical Kalshi + spot data")
@@ -31,6 +35,12 @@ def main():
     l2 = sub.add_parser("lab2", help="blind archive / fresh tests of the frozen fair_value rule + variants")
     l2.add_argument("args", nargs="*", help="download-archive [SERIES:EVERY ...] | download-fresh [SERIES ...] | probe | run")
     sub.add_parser("live-report", help="refresh the dashboard with the live paper-trading log")
+    rl = sub.add_parser("real", help="REAL-MONEY runner for KXNEAR15M fair_value (see REAL_MONEY.md); --demo by default",
+                        add_help=False)
+    rl.add_argument("args", nargs=argparse.REMAINDER, help="[check] [--demo|--live] [--dry-run] [--minutes N]")
+    rr = sub.add_parser("real-report", help="P&L of the real-money runner from its log (+ Kalshi settlements)",
+                        add_help=False)
+    rr.add_argument("args", nargs=argparse.REMAINDER, help="[--demo|--live] to cross-check with Kalshi")
     hr = sub.add_parser("hourly", help="hourly crypto markets: download, walk-forward search, locked holdout")
     hr.add_argument("--series", nargs="+", default=None)
     hr.add_argument("--days", type=int, default=45)
@@ -68,6 +78,12 @@ def main():
     elif a.cmd == "hourly":
         from . import hourly
         hourly.main(a.series, a.workers, a.days, a.skip_download)
+    elif a.cmd == "real":
+        from . import real
+        raise SystemExit(real.main(a.args))
+    elif a.cmd == "real-report":
+        from . import real
+        raise SystemExit(real.report(a.args))
     elif a.cmd == "live-report":
         from . import live_report
         live_report.build()
