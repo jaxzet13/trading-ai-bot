@@ -110,6 +110,15 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
 
     P, seen, traded, cur, day, day_pnl, day_trades, open_pos = None, set(), set(), None, None, 0.0, 0, {}
     max_gap = -1.0
+    # remember markets already traded before a restart (one bet per market, like the backtest)
+    if LOG.exists():
+        for line in LOG.read_text().splitlines():
+            try:
+                e = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if e.get("series") == series and e.get("event") in ("buy", "rest", "fill") and e.get("ts", 0) > time.time() - 3600:
+                traded.add(e["ticker"])
     pending = {}  # resting maker orders: ticker -> order info
     while True:
         try:

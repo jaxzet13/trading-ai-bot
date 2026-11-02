@@ -133,17 +133,30 @@ def summarise() -> dict:
                 pass
     events = settle_open(events)
     events.sort(key=lambda x: x.get("ts", 0))
-    # the bot and settle_open can both settle the same market; count each settlement once
-    seen, deduped = set(), []
-    for x in events:
-        if x.get("event") == "settle":
-            k = (x.get("series"), x.get("ticker"))
-            if k in seen:
-                continue
-            seen.add(k)
-        deduped.append(x)
-    events = deduped
+
     events = enrich(events)
+    # P&L comes from each fill and Kalshi's final result (one settlement per fill), not from
+    # the bot's own settle messages, which can be duplicated or missing after a restart
+    try:
+        cache = json.loads(_MCACHE.read_text())
+    except Exception:
+        cache = {}
+    real = [x for x in events if x.get("event") != "settle"]
+    synth = []
+    for x in real:
+        if x.get("event") not in ("buy", "fill"):
+            continue
+        c = cache.get(x["ticker"]) or {}
+        res = c.get("result")
+        if res not in ("yes", "no"):
+            continue
+        rate = TAKER_RATE if x["event"] == "buy" else MAKER_RATE
+        pnl = x["n"] * ((res == x["side"]) - x["price"]) - kalshi_fee(x["price"], x["n"], rate=rate)
+        synth.append({"event": "settle", "ticker": x["ticker"], "series": x["series"], "side": x["side"],
+                      "price": x["price"], "n": x["n"], "result": res, "pnl": round(pnl, 4),
+                      "strike": c.get("strike"), "final": c.get("final"), "close_ts": c.get("close_ts"),
+                      "ts": c.get("close_ts") or x["ts"], "fill_ts": x["ts"]})
+    events = sorted(real + synth, key=lambda x: x.get("ts", 0))
     try:
         status = json.loads(STATUS.read_text())
     except Exception:
@@ -161,6 +174,7 @@ def summarise() -> dict:
         fills = [x for x in ev if x["event"] in ("fill", "buy")]
         settles = [x for x in ev if x["event"] == "settle"]
         settled = {x["ticker"] for x in settles}
+        settled_fills = {x.get("fill_ts") for x in settles}
         pnl_curve, cum = [], 0.0
         for x in settles:
             cum += x["pnl"]
@@ -174,9 +188,9 @@ def summarise() -> dict:
             "fills": len(fills), "expired": sum(x["event"] == "expired" for x in ev),
             "settled": len(settles), "wins": sum(x["pnl"] > 0 for x in settles),
             "pnl": round(sum(x["pnl"] for x in settles), 2), "curve": pnl_curve,
-            "open": [x["ticker"] for x in fills if x["ticker"] not in settled],
+            "open": [x["ticker"] for x in fills if x["ts"] not in settled_fills],
             "holding": [{k: x.get(k) for k in ("ticker", "side", "n", "price", "strike", "close_ts", "model", "spot")}
-                        for x in fills if x["ticker"] not in settled],
+                        for x in fills if x["ts"] not in settled_fills],
             "status": st, "stale": (not st) or now - st.get("ts", 0) > 180,
             "backtest": _backtest(results, s, e["strategy"], e["execution"]),
             "lab": _lab_holdout(s, e["strategy"], e["execution"]),
