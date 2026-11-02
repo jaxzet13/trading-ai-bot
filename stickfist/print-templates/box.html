@@ -19,12 +19,13 @@ html,body{margin:0;background:#000}
 .stripe{position:absolute;left:0;right:0;height:14px}
 .s .k{display:grid;gap:26px;font-size:38px;letter-spacing:.12em;color:#cfcfcb;text-align:left}
 .s .k span{display:flex;align-items:center;gap:26px} .s .k i{width:34px;height:34px;border-radius:8px;display:inline-block}
+.age{position:absolute;border:4px solid #e6e6e3;color:#e6e6e3;font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600;letter-spacing:.06em;text-align:center;line-height:1.25}.age small{display:block;font-weight:400;letter-spacing:.18em;opacity:.8}
 </style></head><body>
 <div class="box" id="box">
  <div class="p s" id="L"></div>
  <div class="p c"><div class="glow"></div><div class="frame"></div>
   <svg viewBox="0 0 40 40"><circle cx="20" cy="9.5" r="1.6" fill="#fff"/><path d="M11 15 L29 33 M29 15 L11 33" stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg>
-  <div class="nm">STIXX</div><div class="sub" id="sub"></div><div class="ln"></div><div class="ed" id="ed"></div></div>
+  <div class="nm">STIXX</div><div class="sub" id="sub"></div><div class="ln"></div><div class="ed" id="ed"></div><div class="age" style="right:180px;bottom:190px;font-size:58px;padding:12px 20px">18+<small style="font-size:20px">EXPLICIT</small></div></div>
  <div class="p s" id="R"></div>
 </div>
 <script>
@@ -37,6 +38,6 @@ const box=document.getElementById('box'); box.style.setProperty('--a',S.a); box.
 sub.textContent=S.sub; ed.textContent=S.ed;
 const mk='<svg class="mk" viewBox="0 0 40 40"><circle cx="20" cy="9.5" r="1.6" fill="#fff"/><path d="M11 15 L29 33 M29 15 L11 33" stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg>';
 L.innerHTML=mk+'<div class="v">STIXX</div><div class="t">TRADING<br>CARD GAME</div>';
-R.innerHTML='<div class="k">'+[['#9b9b9b','COMMON'],['#3f9b6b','UNCOMMON'],['#3f7fe0','RARE'],['#9fd0ff','FOIL RARE'],['#d4a53a','SIGNATURE'],['#ff4d8d','MYTHIC']].map(([c,n])=>`<span><i style="background:${c}"></i>${n}</span>`).join('')+'</div><div class="t"><b>'+S.sub+'</b><br>COLLECT · RIP · FIGHT</div>';
+R.innerHTML='<div class="k">'+[['#9b9b9b','COMMON'],['#3f9b6b','UNCOMMON'],['#3f7fe0','RARE'],['#9fd0ff','FOIL RARE'],['#d4a53a','SIGNATURE'],['#ff4d8d','MYTHIC']].map(([c,n])=>`<span><i style="background:${c}"></i>${n}</span>`).join('')+'</div><div class="t"><b>'+S.sub+'</b><br>COLLECT · RIP · FIGHT<br><br>18+ ONLY<br>EXPLICIT LANGUAGE</div>';
 S.stripes.forEach((c,i)=>{const d=document.createElement('div');d.className='stripe';d.style.background=c;d.style.bottom=(200+i*24)+'px';d.style.left='30%';d.style.right='30%';d.style.height='8px';d.style.borderRadius='4px';document.querySelector('.c').appendChild(d);});
 </script></body></html>

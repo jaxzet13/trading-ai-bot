@@ -16,11 +16,11 @@ for (const d of ["fronts", "backs", "packcodes", "_raw"]) fs.mkdirSync(path.join
 
 const BACK = (qrSvg, code) => `<div class="c">
   <svg class="mk" viewBox="0 0 40 40"><circle cx="20" cy="9.5" r="1.6" fill="#fff"/><path d="M11 15 L29 33 M29 15 L11 33" stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg>
-  <div class="nm">STIXX</div>${qrSvg ? `<div class="qr">${qrSvg}</div><div class="code">${code}</div>` : ""}</div>`;
+  <div class="nm">STIXX</div>${qrSvg ? `<div class="qr">${qrSvg}</div><div class="code">${code}</div>` : ""}<div class="age18">18+</div></div>`;
 const CODECARD = (qrSvg, code, pack) => `<div class="c cc" style="--a:${pack.acc}">
   <div class="k">DIGITAL PACK CODE</div><div class="pn">${pack.name.toUpperCase()}</div>
   <div class="qr big">${qrSvg}</div><div class="code">${code}</div>
-  <div class="how">Scan to open this pack's digital rip in STIXX.<br>One use. Scan the back of each card to add the cards.</div>
+  <div class="how">Scan to open this pack's digital rip in STIXX.<br>One use. Scan the back of each card to add the cards.<br>18+ only. Explicit language.</div>
   <svg class="mk sm" viewBox="0 0 40 40"><circle cx="20" cy="9.5" r="1.6" fill="#fff"/><path d="M11 15 L29 33 M29 15 L11 33" stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg></div>`;
 const CSS = `html,body{margin:0;background:#000}
 .c{position:relative;width:1650px;height:2250px;background:#000;color:#f2f2f0;font-family:Manrope,Arial,sans-serif;overflow:hidden}
@@ -28,6 +28,7 @@ const CSS = `html,body{margin:0;background:#000}
 .nm{position:absolute;left:0;right:0;top:47.5%;text-align:center;font-size:54px;font-weight:600;letter-spacing:.9em;text-indent:.9em;color:#e6e6e3}
 .qr{position:absolute;left:50%;top:60%;width:430px;height:430px;transform:translateX(-50%);background:#fff;border-radius:28px;padding:34px;box-sizing:border-box}
 .qr svg{width:100%;height:100%;display:block}
+.age18{position:absolute;left:0;right:0;top:90%;text-align:center;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:42px;font-weight:600;letter-spacing:.3em;color:#a3a39f}
 .code{position:absolute;left:0;right:0;top:82.5%;text-align:center;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:46px;letter-spacing:.08em;color:#e6e6e3}
 .cc .k{position:absolute;left:0;right:0;top:12%;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:44px;letter-spacing:.3em;text-indent:.3em;color:var(--a)}
 .cc .pn{position:absolute;left:0;right:0;top:17.5%;text-align:center;font-weight:800;font-size:150px;letter-spacing:.02em;color:#fff}

@@ -1577,6 +1577,15 @@ form.scan-opt { cursor: default; }
   .scan-grid { grid-template-columns: 1fr; }
   .scan-btn span { display: none; } .scan-btn { padding: 8px; }
 }
+/* ===== ADULT v1: clean keyline instead of the brush frame, no sun blob, straight badges ===== */
+.std .tc-face::after { background: none !important; filter: none !important; opacity: .3 !important; inset: 2.4cqi; border: .3cqi solid currentColor; border-radius: 1.2cqi; }
+.std .tc-pwr { transform: none; border-radius: .5cqi; }
+.std:is(.cr-U, .cr-R, .cr-RR):not(.lim) .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, var(--sc), var(--sb) 70%); }
+.tcard.std.cr-H:not(.lim) .tc-face { background: radial-gradient(ellipse at 30% 15%, #1a2550, #070a1a 70%) !important; }
+.lim-BM.std .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, #1c0a0b, #0a0405 70%); }
+.lim-FB.std .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, #0b171d, #04080a 70%); }
+.lim-VN.std .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, #121c0a, #070a04 70%); }
+.cm-line { margin: -4px 0 10px; color: var(--t2); font-size: 15px; font-style: italic; line-height: 1.45; max-width: 46ch; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -1884,41 +1893,41 @@ form.scan-opt { cursor: default; }
   const TYPES = { chain: { name: "Chain", col: "#d4a5a5" }, time: { name: "Time", col: "#e8c3c3" }, fist: { name: "Fist", col: "#cdbd9f" }, blade: { name: "Blade", col: "#e2a3a0" }, guard: { name: "Guard", col: "#aebdcb" }, reach: { name: "Reach", col: "#bcd29b" }, blunt: { name: "Blunt", col: "#e5c77f" }, arcane: { name: "Arcane", col: "#a5dbe9" }, shadow: { name: "Shadow", col: "#bf9cc1" }, royal: { name: "Royal", col: "#eed689" }, void: { name: "Void", col: "#cfcfcf" } };
   const FTYPE = { bo: "reach", lash: "chain", snap: "fist", fletch: "reach", kusari: "chain", phantom: "shadow", umbra: "shadow", chrono: "time", knuckles: "fist", shiv: "blade", bulwark: "guard", pike: "reach", ronin: "blade", reaver: "blade", breaker: "blunt", arcanist: "arcane", twinblade: "blade", reaper: "shadow", colossus: "blunt", shogun: "royal", null: "void" };
   const MOVES = {
-    bo: [["Sweep", 30], ["Six Down", 70]], lash: [["Crack", 40], ["Brand", 90, "Burns through shields."]], snap: [["Pop", 30], ["Lights Out", 100]],
-    fletch: [["Dead Aim", 50], ["Volley", 130, "Hits everything on the field."]], kusari: [["Hook", 60], ["Bleed Out", 140]],
-    phantom: [["Cheap Shot", 80], ["Vanish", 170, "Can't be hit next turn."]], umbra: [["Shadowbox", 70], ["Blackout", 160, "Steals their strength."]],
-    chrono: [["Dead Air", "", "They lose a turn."], ["Nine Seconds", 230]],
-    knuckles: [["One-Two", 20], ["Haymaker", 60]], shiv: [["Nick", 20], ["Backstab", 50]], bulwark: [["Turtle Up", "", "Takes 30 less damage next turn."], ["Shield Bash", 40]],
-    pike: [["Jab", 30], ["Run Through", 60]], ronin: [["Iaido", 90, "Strikes first."]], reaver: [["Hack", 40], ["Grinder", 80]],
-    breaker: [["Cave In", 100, "Shakes the whole arena."]], arcanist: [["Cold Read", 50], ["Last Rites", 110]], twinblade: [["X-Cut", 60], ["Shred", 120]],
-    reaper: [["Harvest", 160, "Ends it."]], colossus: [["Stomp", 80], ["Flatline", 200]], shogun: [["Gold Draw", 220, "The last thing they see."]], null: [["Redact", 250, "Wipes their last move."]]
+    bo: [["Kneecap", 30], ["Six Down", 70]], lash: [["Flay", 40], ["Brand", 90, "Burns through shields. Leaves a mark."]], snap: [["Pop", 30], ["Lights Out", 100]],
+    fletch: [["Headshot", 50], ["Volley", 130, "Hits every fucker on the field."]], kusari: [["Hook", 60], ["Bleed Out", 140]],
+    phantom: [["Cheap Shot", 80], ["Vanish", 170, "Can't be hit next turn. Good luck."]], umbra: [["Shadowbox", 70], ["Blackout", 160, "Steals their strength."]],
+    chrono: [["Dead Air", "", "They lose a turn. Tough shit."], ["Nine Seconds", 230]],
+    knuckles: [["One-Two", 20], ["Curb Stomp", 60]], shiv: [["Shank", 20], ["Open Him Up", 50]], bulwark: [["Turtle Up", "", "Takes 30 less damage next turn."], ["Teeth First", 40]],
+    pike: [["Poke Holes", 30], ["Run Through", 60]], ronin: [["Iaido", 90, "Strikes first."]], reaver: [["Hack", 40], ["Meat Grinder", 80]],
+    breaker: [["Cave In", 100, "Breaks the floor and whoever's on it."]], arcanist: [["Cold Read", 50], ["Last Rites", 110]], twinblade: [["X-Cut", 60], ["Shred", 120]],
+    reaper: [["Harvest", 160, "Ends it."]], colossus: [["Flatten", 80], ["Flatline", 200]], shogun: [["Gold Draw", 220, "The last thing they see."]], null: [["Redact", 250, "Wipes their last move like it never fucking happened."]]
   };
   const chimeKey = rar => { const t = (CR[rar] || CR.C).tier; return t <= 1 ? "common" : t === 2 ? "rare" : t <= 4 ? "epic" : t === 5 ? "legendary" : "secret"; };
   const BUYBACK = 0.90, SKETCH_MULT = 0.10, SIGNUP_BONUS = 300, COINS_PER_USD = 100;
 
   const FX_ = (id, name, r, v, atk, spd, def, look, trait) => Object.assign({ id, name, r, v, atk, spd, def, trait }, look);
   const FIGHTERS = [
-    FX_("knuckles", "Stitch", "common", 10, 4, 6, 3, { wpn: "none", body: "#121214", accent: "#efe9dc", acc: "wraps", c: "#8d897f", title: "Bare hands", sig: "stance" }, "Fights for rent money."),
-    FX_("shiv", "Switch", "common", 12, 5, 7, 2, { wpn: "knife", body: "#121214", accent: "#7a808c", acc: "headband", c: "#7a808c", title: "Knife", sig: "stance" }, "Closer than you want him."),
-    FX_("bulwark", "Brick", "common", 11, 3, 3, 8, { wpn: "shield", body: "#121214", accent: "#8a8a86", acc: "none", c: "#8a8a86", title: "Round shield", sig: "guard" }, "You go through him or you go home."),
-    FX_("pike", "Rook", "common", 13, 5, 4, 4, { wpn: "spear", body: "#121214", accent: "#9a6a2a", acc: "none", c: "#9a6a2a", title: "Spear", sig: "stance" }, "Holds the line. Every time."),
-    FX_("ronin", "Ronin", "rare", 50, 7, 6, 4, { wpn: "katana", body: "#121214", accent: "#c4232b", acc: "headband", c: "#c4232b", title: "Katana", sig: "stance" }, "Draws once. Cuts once."),
-    FX_("reaver", "Butcher", "rare", 55, 7, 5, 5, { wpn: "axe", twin: true, body: "#121214", accent: "#d0702a", acc: "scarf", c: "#d0702a", title: "Twin axes", sig: "spin" }, "Clocks in. Clocks out."),
-    FX_("breaker", "Sledge", "rare", 45, 8, 2, 6, { wpn: "hammer", body: "#121214", accent: "#c9a227", acc: "none", c: "#c9a227", title: "Sledgehammer", sig: "victory" }, "Leaves the floor in pieces."),
-    FX_("arcanist", "Grimm", "epic", 150, 7, 5, 5, { wpn: "book", body: "#121214", accent: "#9cc3d4", glow: "#9cc3d4", cover: "#0c0c0d", acc: "none", c: "#7fa6b8", title: "Spellbook", sig: "cast" }, "Already read how this ends."),
-    FX_("twinblade", "Vandal", "epic", 185, 8, 8, 4, { wpn: "katana", twin: true, body: "#121214", accent: "#e9e4d8", acc: "scarf", c: "#bdb7aa", title: "Twin katanas", sig: "spin" }, "Two edges, one rhythm."),
-    FX_("reaper", "Reaper", "legendary", 810, 10, 7, 6, { wpn: "scythe", body: "#121214", accent: "#9e1b22", cloak: "#2a0a0d", eye: "#e8473f", acc: "cloak", c: "#9e1b22", title: "Scythe", sig: "victory" }, "Shows up when the fight's already over."),
-    FX_("colossus", "Tank", "legendary", 700, 10, 2, 10, { wpn: "hammer", body: "#4b4b52", accent: "#8a6a3a", acc: "none", bulk: true, scale: 1.9, c: "#7a7a82", title: "Giant hammer", sig: "victory" }, "Doesn't run. Doesn't need to."),
-    FX_("shogun", "Shogun", "secret", 4200, 10, 9, 9, { wpn: "katana", gold: true, body: "#0e0e10", accent: "#e4ae3a", cloak: "#2a2008", acc: "cape", c: "#e4ae3a", title: "Gold katana", sig: "stance" }, "The last sword anyone sees."),
-    FX_("bo", "Deacon", "common", 9, 4, 5, 5, { wpn: "staff", body: "#121214", accent: "#8a5a2b", acc: "none", c: "#8a5a2b", title: "Bo staff", sig: "stance" }, "Six on one. Walked out."),
-    FX_("lash", "Lash", "rare", 48, 7, 5, 3, { wpn: "chain", body: "#121214", accent: "#c4232b", acc: "none", c: "#c4232b", title: "Chain whip", sig: "windSide" }, "Ten feet of chain. All of it hot."),
-    FX_("snap", "Static", "rare", 50, 6, 8, 3, { wpn: "nunchaku", body: "#121214", accent: "#d9d4c7", acc: "none", c: "#9a968c", title: "Nunchaku", sig: "stance" }, "You hear it first."),
-    FX_("fletch", "Longshot", "epic", 160, 8, 6, 3, { wpn: "bow", body: "#121214", accent: "#8a6a3a", glow: "#0d0d0e", acc: "none", c: "#8a8f99", title: "Longbow", sig: "cast" }, "One to start it. A thousand to end it."),
-    FX_("kusari", "Kusari", "epic", 170, 8, 7, 4, { wpn: "sickle", body: "#121214", accent: "#c4232b", acc: "none", c: "#c4232b", title: "Chain sickle", sig: "windSide" }, "The chain decides where you stand."),
-    FX_("phantom", "Phantom", "legendary", 700, 9, 10, 4, { wpn: "knife", twin: true, body: "#121214", accent: "#0d0d0e", cloak: "#0d0d0e", acc: "cape", c: "#b3121b", title: "Twin daggers", sig: "dash" }, "Gone before the cape lands."),
-    FX_("umbra", "Umbra", "legendary", 650, 8, 8, 8, { wpn: "knife", body: "#121214", accent: "#434343", acc: "none", c: "#434343", title: "Knife & shadow", sig: "stance" }, "Fights the only one who knows all his moves."),
-    FX_("chrono", "Nine", "secret", 3500, 9, 10, 9, { wpn: "knife", body: "#efebe2", outline: "#b3121b", accent: "#b3121b", acc: "none", c: "#b3121b", title: "Stopped time", sig: "slashSide" }, "Nine seconds. Nobody else moves."),
-    FX_("null", "Null", "secret", 3000, 9, 10, 9, { wpn: "book", void: true, body: "#efebe2", outline: "#0a0a0b", accent: "#0a0a0b", glow: "#ffffff", cover: "#0a0a0b", acc: "none", c: "#3a3a3e", title: "Void book", sig: "cast" }, "Not on any checklist.")
+    FX_("knuckles", "Stitch", "common", 10, 4, 6, 3, { wpn: "none", body: "#121214", accent: "#efe9dc", acc: "wraps", c: "#8d897f", title: "Bare hands", sig: "stance" }, "Rent's due Friday. Somebody's getting fucked up."),
+    FX_("shiv", "Switch", "common", 12, 5, 7, 2, { wpn: "knife", body: "#121214", accent: "#7a808c", acc: "headband", c: "#7a808c", title: "Knife", sig: "stance" }, "By the time you see the blade, you're already leaking."),
+    FX_("bulwark", "Brick", "common", 11, 3, 3, 8, { wpn: "shield", body: "#121214", accent: "#8a8a86", acc: "none", c: "#8a8a86", title: "Round shield", sig: "guard" }, "You go through him or you go the fuck home."),
+    FX_("pike", "Rook", "common", 13, 5, 4, 4, { wpn: "spear", body: "#121214", accent: "#9a6a2a", acc: "none", c: "#9a6a2a", title: "Spear", sig: "stance" }, "Holds the line. Breaks whoever crosses it."),
+    FX_("ronin", "Ronin", "rare", 50, 7, 6, 4, { wpn: "katana", body: "#121214", accent: "#c4232b", acc: "headband", c: "#c4232b", title: "Katana", sig: "stance" }, "Draws once. Cuts once. Never says shit about it."),
+    FX_("reaver", "Butcher", "rare", 55, 7, 5, 5, { wpn: "axe", twin: true, body: "#121214", accent: "#d0702a", acc: "scarf", c: "#d0702a", title: "Twin axes", sig: "spin" }, "Clocks in. Clocks out. Hoses down the floor."),
+    FX_("breaker", "Sledge", "rare", 45, 8, 2, 6, { wpn: "hammer", body: "#121214", accent: "#c9a227", acc: "none", c: "#c9a227", title: "Sledgehammer", sig: "victory" }, "No warning shots. Just dental bills."),
+    FX_("arcanist", "Grimm", "epic", 150, 7, 5, 5, { wpn: "book", body: "#121214", accent: "#9cc3d4", glow: "#9cc3d4", cover: "#0c0c0d", acc: "none", c: "#7fa6b8", title: "Spellbook", sig: "cast" }, "Already read how this ends. Spoiler: you're fucked."),
+    FX_("twinblade", "Vandal", "epic", 185, 8, 8, 4, { wpn: "katana", twin: true, body: "#121214", accent: "#e9e4d8", acc: "scarf", c: "#bdb7aa", title: "Twin katanas", sig: "spin" }, "Two blades. Zero fucks."),
+    FX_("reaper", "Reaper", "legendary", 810, 10, 7, 6, { wpn: "scythe", body: "#121214", accent: "#9e1b22", cloak: "#2a0a0d", eye: "#e8473f", acc: "cloak", c: "#9e1b22", title: "Scythe", sig: "victory" }, "Shows up when the fight's over. Collects anyway."),
+    FX_("colossus", "Tank", "legendary", 700, 10, 2, 10, { wpn: "hammer", body: "#4b4b52", accent: "#8a6a3a", acc: "none", bulk: true, scale: 1.9, c: "#7a7a82", title: "Giant hammer", sig: "victory" }, "Doesn't run. Doesn't need to. Doesn't fucking stop."),
+    FX_("shogun", "Shogun", "secret", 4200, 10, 9, 9, { wpn: "katana", gold: true, body: "#0e0e10", accent: "#e4ae3a", cloak: "#2a2008", acc: "cape", c: "#e4ae3a", title: "Gold katana", sig: "stance" }, "Owns the city. Rents you the air."),
+    FX_("bo", "Deacon", "common", 9, 4, 5, 5, { wpn: "staff", body: "#121214", accent: "#8a5a2b", acc: "none", c: "#8a5a2b", title: "Bo staff", sig: "stance" }, "Six on one. Walked out. Didn't spill his drink."),
+    FX_("lash", "Lash", "rare", 48, 7, 5, 3, { wpn: "chain", body: "#121214", accent: "#c4232b", acc: "none", c: "#c4232b", title: "Chain whip", sig: "windSide" }, "Ten feet of hot chain. The scars are free."),
+    FX_("snap", "Static", "rare", 50, 6, 8, 3, { wpn: "nunchaku", body: "#121214", accent: "#d9d4c7", acc: "none", c: "#9a968c", title: "Nunchaku", sig: "stance" }, "You hear it first. Then nothing for a week."),
+    FX_("fletch", "Longshot", "epic", 160, 8, 6, 3, { wpn: "bow", body: "#121214", accent: "#8a6a3a", glow: "#0d0d0e", acc: "none", c: "#8a8f99", title: "Longbow", sig: "cast" }, "Never misses. Never met you. Doesn't give a shit."),
+    FX_("kusari", "Kusari", "epic", 170, 8, 7, 4, { wpn: "sickle", body: "#121214", accent: "#c4232b", acc: "none", c: "#c4232b", title: "Chain sickle", sig: "windSide" }, "The chain decides where you stand. Then where you drop."),
+    FX_("phantom", "Phantom", "legendary", 700, 9, 10, 4, { wpn: "knife", twin: true, body: "#121214", accent: "#0d0d0e", cloak: "#0d0d0e", acc: "cape", c: "#b3121b", title: "Twin daggers", sig: "dash" }, "Gone before the cape lands. So's your wallet."),
+    FX_("umbra", "Umbra", "legendary", 650, 8, 8, 8, { wpn: "knife", body: "#121214", accent: "#434343", acc: "none", c: "#434343", title: "Knife & shadow", sig: "stance" }, "Fights the only one who knows all his moves. Still wins, the bastard."),
+    FX_("chrono", "Nine", "secret", 3500, 9, 10, 9, { wpn: "knife", body: "#efebe2", outline: "#b3121b", accent: "#b3121b", acc: "none", c: "#b3121b", title: "Stopped time", sig: "slashSide" }, "Nine seconds. Plenty of time to ruin your life."),
+    FX_("null", "Null", "secret", 3000, 9, 10, 9, { wpn: "book", void: true, body: "#efebe2", outline: "#0a0a0b", accent: "#0a0a0b", glow: "#ffffff", cover: "#0a0a0b", acc: "none", c: "#3a3a3e", title: "Void book", sig: "cast" }, "Not on any checklist. Not on any record. Not your problem, until it is.")
   ];
   const BY_ID = Object.fromEntries(FIGHTERS.map(f => [f.id, f]));
   // Every card is its own fighter. Cards that reuse an original fighter's look get their own name; they keep that
@@ -1926,6 +1935,21 @@ form.scan-opt { cursor: default; }
   const VARIANTS = {"FB1":["rime","Rime"],"FB2":["sleet","Sleet"],"FB3":["hailshot","Hailshot"],"FB4":["shardblade","Icepick"],"FB5":["blizzard","Blizzard"],"FB6":["whiteout","Whiteout"],"VN1":["corrode","Corrode"],"VN2":["mire","Mire"],"VN3":["hex","Hex"],"VN4":["viper","Viper"],"VN5":["acid","Acid"],"VN6":["plague","Plague"],"021":["mourne","Mourne"],"022":["monolith","Monolith"],"023":["daimyo","Daimyo"],"024":["cipher","Cipher"],"026":["kensei","Kensei"],"027":["havoc","Havoc"],"028":["glyph","Omen"],"029":["gemini","Jinx"],"030":["quiver","Deadeye"],"031":["rattle","Riot"],"032":["brickfist","Mauler"],"033":["stiletto","Stiletto"],"034":["aegis","Lockdown"],"035":["lancer","Skewer"],"036":["sensei","Hermit"],"037":["cinder","Cinder"],"038":["harvester","Harvester"],"039":["oblivion","Oblivion"],"040":["emperor","Warlord"],"041":["gyre","Shackle"],"042":["wraith","Wraith"],"043":["eclipse","Eclipse"],"044":["sunblade","Kingpin"],"045":["epoch","Zero Hour"],"046":["quake","Quake"],"047":["doppel","Mimic"],"BM1":["bloodfang","Bloodfang"],"BM2":["thorn","Thorn"],"BM3":["penumbra","Penumbra"],"BM4":["vein","Vein"],"BM5":["hourglass","Hourglass"],"BM6":["nightfall","Nightfall"],"GS1":["willow","Willow"],"GS2":["crane","Crane"],"GS3":["rampart","Rampart"],"GS4":["regent","Regent"],"GS5":["heron","Heron"],"GS6":["tsunami","Tsunami"]};
   for (const c of CARDS) { const v = VARIANTS[c.no]; if (!v) continue; const b = BY_ID[c.id]; const f = Object.assign({}, b, { id: v[0], name: v[1], base: b.id }); FIGHTERS.push(f); BY_ID[f.id] = f; c.id = f.id; }
   const baseOf = id => (BY_ID[id] && BY_ID[id].base) || id;
+  // Each card's own line. Cards not listed use their fighter's line.
+  const LINES = {
+    "021": "Sends flowers. After.", "022": "Six hundred pounds of bad decisions.", "023": "Takes a cut of every fight in this city. Including yours.", "024": "No name. No prints. No fucking idea.",
+    "026": "Trained thirty years to end you in one second.", "027": "The last bar he walked into is a parking lot now.", "028": "If you're reading this, it's already too late.", "029": "Bad luck with two handles.",
+    "030": "Gets paid by the head.", "031": "Starts the fight. Skips the bar tab.", "032": "Bare knuckles. Broken hands. Zero regrets.", "033": "Smiles like a promise. Cuts like a debt.",
+    "034": "Nobody gets past. Nobody tries twice.", "035": "Long reach. Short fucking temper.", "036": "Came down the mountain to whoop your ass.", "037": "Leaves marks you'll be explaining for years.",
+    "038": "Business is good.", "039": "Ask what happened to the last guy. Oh wait, you can't.", "040": "Every street. Every corner. Every goddamn dollar.", "041": "You're not leaving. Sit down.",
+    "042": "Was in the room the whole time.", "043": "Turns the lights off. Permanently.", "044": "Doesn't fight. Pays people who do. Fights anyway.", "045": "Time's up, motherfucker.",
+    "046": "Floors are a suggestion.", "047": "Does your moves better than you. Fuck that guy.",
+    "BM1": "Bites first. Doesn't let go.", "BM2": "Pretty from across the room. Bleeding up close.", "BM3": "Half shadow. All problem.", "BM4": "Finds the vein on the first try.", "BM5": "Your time's up. His just started.", "BM6": "When the moon goes red, lock your goddamn door.",
+    "GS1": "Bends. Never breaks. Breaks you.", "GS2": "Stands on one leg. Still kicks your ass.", "GS3": "The wall your whole crew couldn't get over.", "GS4": "Old money. Older blade.", "GS5": "Patient as hell. Then one shot.", "GS6": "Pulls back first. Then takes the whole coast.",
+    "FB1": "Cold hands. Colder heart. Your nose, broken.", "FB2": "Hits like bad weather. Doesn't let up.", "FB3": "Rains on everybody's parade. On purpose.", "FB4": "Cold steel. Warm blood.", "FB5": "Can't see shit. That's the point.", "FB6": "Nobody finds the bodies till spring.",
+    "VN1": "Rots whatever he touches. Started with his own life.", "VN2": "Step in. Don't get out.", "VN3": "Cursed you on sight. Nothing personal.", "VN4": "Bites once. Once is plenty.", "VN5": "Eats through steel. You're softer.", "VN6": "Patient zero. You're patient one."
+  };
+  const lineOf = card => LINES[card.no] || (BY_ID[card.id] && BY_ID[card.id].trait) || "";
 
   const P = (o) => o;
   const PACKS = [
@@ -2253,7 +2277,7 @@ form.scan-opt { cursor: default; }
         <div class="tc-sub">${esc(f.title)} · ${T.name} · ${card.set ? esc(LSETS[card.set].name) : SET_NAME}</div>
         <div class="tc-artwrap"><div class="tc-art">${art}<div class="tc-holo"></div></div></div>${ltag}
         <div class="tc-moves">${tech}</div>
-        <div class="tc-flavor">${esc(f.trait)}</div>
+        <div class="tc-flavor">${esc(lineOf(card))}</div>
         <div class="tc-foot"><span class="tc-no">${sid}</span><span class="rseal" title="${R.name}">${R.sym}</span>${item.rh ? `<span class="rhb">REVERSE FOIL</span>` : ""}<span class="tc-val rv">${esc(R.name)}</span></div>
         ${stamp}</div><div class="glare"></div></div>`;
     return `<div class="${cls}" style="--tc:${T.col};--rc:${R.col}"><div class="tc-face">
@@ -2570,7 +2594,7 @@ form.scan-opt { cursor: default; }
     let revealHTML = "";
     if (reveal && show.slab) { const sb = show.slab.sub; revealHTML = `<div class="greveal"><div class="label">IGC results · cert ${show.slab.cert}</div><div class="subs">${[["Centering", sb.cen], ["Corners", sb.cor], ["Edges", sb.edg], ["Surface", sb.sur]].map(([k, v], n) => `<div style="animation-delay:${.15 + n * .25}s"><span>${k}</span><b>${v}</b></div>`).join("")}</div><div class="gfinal" style="animation-delay:1.3s">${show.slab.black ? "BLACK LABEL " : ""}${GRADE_NAME[show.slab.g]} <b>${show.slab.g}</b></div><div class="small-print">Now worth ${money(itemVal(show))} (raw ${money(cardBaseValue(card, show.ed, show.rh))}).</div></div>`; }
     $("cmSide").innerHTML = `<span class="label" style="color:${R.col}">${R.sym} ${R.name} · ${card.set ? LSETS[card.set].name + " " + card.no : card.no + "/" + String(SET_SIZE).padStart(3, "0")}</span>
-      <h2>${esc(f.name)}</h2>${revealHTML}
+      <h2>${esc(f.name)}</h2><p class="cm-line">${esc(lineOf(card))}</p>${revealHTML}
       <div class="mk-head"><div><span class="label">Raw near-mint</span><strong class="num">${money(raw)}</strong></div><div class="mk-ch">${pctTxt(pctChange(no, 1))}<small>1d</small> ${pctTxt(pctChange(no, 7))}<small>7d</small> ${pctTxt(pctChange(no, 30))}<small>30d</small></div></div>
       ${(() => { const P = population(no), e = MKT.lim.find(x => x.no === no && mktDay() >= x.d0); return `<div class="small-print">Population ${fmt(P.copies)} copies · ${fmt(P.holders)} holders${P.vaulted ? " · <b class=\"vbadge\">VAULTED</b> no longer in packs" : ""}${e ? ` · Day ${e.d0}: ${esc(e.text)}` : ""}</div>`; })()}
       <div class="rng">${[30, 90, 365].map(d => `<button data-cmrange="${d}" aria-pressed="${cmRange === d}">${d === 365 ? "1y" : d + "d"}</button>`).join("")}</div>
