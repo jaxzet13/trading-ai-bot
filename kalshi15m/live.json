@@ -31,6 +31,19 @@
       "why": "Passed two blind tests: Oct 17-Nov 1 holdout +$1,307/811 trades (t=2.53) and Jul-Aug archive +$3,099/1,782 trades (t=3.83). Latency-sensitive."
     },
     {
+      "series": "KXDOGE15M",
+      "strategy": "fair_value",
+      "execution": "taker",
+      "poll": "minute",
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.12,
+        "vol_mult": 1.0
+      },
+      "why": "Passed the full backtest (Oct 18-Nov 2 final exam +$2,260 on 968 trades, t=3.67, strict bar 3.21) and the Apr-Aug archive blind test (t=3.16). Same rule as NEAR."
+    },
+    {
       "series": "KXETH15M",
       "strategy": "reversal_z",
       "execution": "maker",
