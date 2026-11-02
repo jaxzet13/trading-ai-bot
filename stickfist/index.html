@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Permanent+Marker&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
 /* Layout: an unmarked vault. Charcoal ground with film grain, one brass accent, serif names, mono numbers. Color only appears on the cards themselves. Single dark theme by choice. */
 :root {
@@ -1320,11 +1320,224 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
 .cback .in::before { display: none; }
 .cback svg.xmark { width: 15%; color: #f2f2f0; margin-top: -10%; }
 .cback .t { bottom: 17%; font-family: var(--f-body); font-weight: 600; font-size: 3.3cqi; letter-spacing: .9em; text-indent: .9em; color: #bdbdba; }
+
+/* ===================================================================================
+   STIXX v3 — the card-shop counter.
+   Cool graphite glass, one type family: Archivo condensed heavy caps for titles (trading-card box type),
+   Archivo for everything else, tabular numbers. No tracked mono labels, no gold, no glow on the chrome.
+   The cards are the only colour on the page. Single dark theme by choice.
+   =================================================================================== */
+:root {
+  --g0: #0c0d10; --g1: #121418; --g2: #181b20; --g3: #20242a; --rule: #272b32; --rule-2: #343942;
+  --t1: #eef0f3; --t2: #a6abb5; --t3: #6f747f; --up: #3fd08f; --down: #ff6b5e;
+  --f-ui: "Archivo", "Helvetica Neue", Arial, system-ui, sans-serif;
+  /* the old tokens now point at the new system */
+  --void: var(--g0); --ash: var(--g1); --slate: var(--g2); --raise: var(--g3); --line: var(--rule); --line-2: var(--rule-2);
+  --bone: var(--t1); --dim: var(--t2); --faint: var(--t3); --brass: var(--t1); --brass-hi: #ffffff; --brass-lo: var(--rule-2);
+  --token: #9fd7c9; --good: var(--up); --bad: var(--down);
+  --f-display: var(--f-ui); --f-body: var(--f-ui); --f-mono: var(--f-ui);
+  color-scheme: dark;
+}
+/* cards, slabs, packs and card backs keep their own type and palette */
+.tcard, .slab, .pk, .cback { --f-display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif; --f-body: "Manrope", system-ui, sans-serif; --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --void: #09090a; --ash: #111113; --slate: #18181b; --raise: #202024; --line: #2b2b30; --line-2: #3a3a40; --bone: #e9e4d8; --dim: #8d897f; --faint: #5d5a54; --brass: #c2a66b; --brass-hi: #e6d3a3; --brass-lo: #7d6a43; --token: #6fb7a8; --good: #8cbf94; --bad: #cf7a6c; }
+html, body { background: var(--g0); }
+body { font-family: var(--f-ui); font-size: 15px; line-height: 1.5; letter-spacing: 0; color: var(--t1); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+::selection { background: #fff; color: #000; }
+:focus-visible { outline: 2px solid var(--t1); outline-offset: 3px; border-radius: 6px; }
+
+/* type */
+h1, h2, h3 { font-family: var(--f-ui); font-style: normal !important; letter-spacing: 0; }
+.view h2, .modal-head h2 { font-stretch: 72%; font-weight: 800; text-transform: uppercase; font-size: clamp(34px, 4.6vw, 54px); line-height: .9; letter-spacing: -.005em; }
+.tile h3, .panel h3, .chart-panel h3 { font-weight: 700; font-size: 17px; letter-spacing: -.005em; }
+.label { font-family: var(--f-ui); font-size: 12.5px; font-weight: 600; letter-spacing: .01em; text-transform: none; color: var(--t3); }
+.lede { color: var(--t2); font-size: 16px; line-height: 1.55; max-width: 60ch; margin-top: 14px; }
+.small-print { color: var(--t3); font-size: 13px; }
+.num, .kpi strong, .toolbar .stat strong, .bal, .st-total b { font-family: var(--f-ui); font-weight: 700; letter-spacing: -.01em; }
+
+/* layout rhythm */
+main { padding-block: 44px 140px; }
+.view { gap: 80px; }
+main > section > div + div, .view > div + div { margin-top: 0; }
+.view:not([hidden]) { animation: viewin .32s cubic-bezier(.2,.8,.2,1); }
+@keyframes viewin { from { opacity: .001; transform: translateY(8px); } }
+.section-head { align-items: flex-end; gap: 10px 24px; }
+.section-head .small-print { padding-bottom: 6px; }
+
+/* header */
+.top { background: rgba(12,13,16,.86); backdrop-filter: saturate(1.4) blur(14px); -webkit-backdrop-filter: saturate(1.4) blur(14px); border-bottom: 1px solid var(--rule); }
+.top .wrap { padding-block: 14px; gap: 10px 28px; }
+.notice { display: none; }
+.mark { gap: 10px; }
+.mark svg { width: 22px; height: 22px; color: var(--t1); }
+.mark span { font-family: var(--f-ui); font-stretch: 125%; font-weight: 800; font-size: 16px; letter-spacing: .1em; }
+nav.tabs { gap: 4px; }
+nav.tabs a { font-size: 14px; font-weight: 600; letter-spacing: 0; color: var(--t2); padding: 7px 12px; border: 0; border-radius: 999px; transition: background .15s, color .15s; }
+nav.tabs a:hover { color: var(--t1); background: var(--g2); }
+nav.tabs a[aria-current="page"] { color: #0c0d10; background: var(--t1); }
+nav.tabs .count { font-family: var(--f-ui); font-size: 12px; font-weight: 700; color: inherit; opacity: .55; margin-left: 6px; }
+.wallet { gap: 12px; }
+.demo-pill { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--t3); border: 1px solid var(--rule-2); border-radius: 999px; padding: 3px 8px; }
+.bal { font-size: 15px; }
+.bal.c, .bal.t { color: var(--t1); }
+.bal.t { color: var(--token); }
+.tick-up { animation: tickup .7s ease-out; } .tick-down { animation: tickdown .7s ease-out; }
+@keyframes tickup { 0% { color: var(--up); text-shadow: 0 0 14px rgba(63,208,143,.6); } 100% { color: inherit; } }
+@keyframes tickdown { 0% { color: var(--down); } 100% { color: inherit; } }
+.addc { border: 1px solid var(--rule-2); color: var(--t1); width: 28px; height: 28px; font-size: 17px; transition: background .15s, color .15s, transform .1s; }
+.addc:hover { background: var(--t1); color: #0c0d10; border-color: var(--t1); }
+.addc:active { transform: scale(.92); }
+.lv { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0; color: var(--t2); }
+.lvtrack { height: 4px !important; border-radius: 4px; background: var(--g3) !important; overflow: hidden; }
+.lvtrack i { background: var(--t1) !important; border-radius: 4px; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+
+/* buttons: solid, tactile */
+.btn { font-family: var(--f-ui); font-size: 14px; font-weight: 700; letter-spacing: 0; text-transform: none; border-radius: 10px; padding: 11px 18px; min-height: 44px; border: 1px solid var(--rule-2); background: var(--g2); color: var(--t1);
+  transition: background .15s, border-color .15s, color .15s, transform .08s, box-shadow .15s; }
+.btn:hover { background: var(--g3); border-color: #444a54; }
+.btn:active:not([disabled]) { transform: translateY(1px) scale(.985); }
+.btn.brass { background: var(--t1); border-color: var(--t1); color: #0c0d10; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 6px 18px rgba(0,0,0,.35); }
+.btn.brass:hover { background: #fff; border-color: #fff; }
+.btn.ghost { background: transparent; }
+.btn.big { font-size: 15px; padding: 14px 22px; min-height: 50px; border-radius: 12px; }
+.btn.small { font-size: 13px; padding: 7px 12px; min-height: 34px; border-radius: 8px; }
+.btn .pr { margin-left: 4px; padding-left: 12px; border-left: 1px solid currentColor; border-left-color: color-mix(in srgb, currentColor 25%, transparent); opacity: .85; font-weight: 700; }
+.btn[disabled] { opacity: .4; }
+
+/* hero */
+.hero { min-height: 0; padding-block: 24px 8px; gap: 32px; align-items: center; }
+.hero h1 { white-space: nowrap; font-family: var(--f-ui); font-stretch: 66%; font-weight: 900; text-transform: uppercase; font-size: clamp(72px, 9.4vw, 138px); line-height: .8; letter-spacing: -.02em; margin-top: 14px; }
+.hero h1 b { color: inherit; }
+.hero .lede { font-size: 17px; max-width: 46ch; margin-top: 22px; }
+.hero .ctas { margin-top: 28px; gap: 10px; }
+.hero .facts { margin-top: 40px; gap: 0; border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 620px; }
+.hero .facts > div { padding: 14px 16px; gap: 4px; min-width: 0; }
+.hero .facts > div + div { border-left: 1px solid var(--rule); }
+.hero .facts strong { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+.hero .facts > div:last-child .label { display: block; }
+#dailyBtn { width: 100%; }
+#dailyBtn:not([disabled])::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--up); box-shadow: 0 0 0 4px rgba(63,208,143,.18); animation: dot 1.6s ease-in-out infinite; }
+@keyframes dot { 50% { box-shadow: 0 0 0 7px rgba(63,208,143,.0); } }
+.showcase { height: 540px; }
+.showcase::before { width: 74%; background: radial-gradient(circle, rgba(255,255,255,.07), transparent 66%); }
+.showcase .caption .label { color: var(--t3); font-size: 12.5px; }
+.showcase .caption .small-print { color: var(--t2); }
+.showcase .sc-pack { width: 250px; }
+.showcase .sc-card { width: 210px; }
+
+/* best pulls */
+.hits { gap: 26px; padding: 18px 4px 22px 12px; }
+.hit .rank { top: -12px; left: -4px; background: var(--t1); color: #0c0d10; font-family: var(--f-ui); font-weight: 800; box-shadow: 0 4px 12px rgba(0,0,0,.5); }
+.hit figcaption b { font-size: 15px; font-weight: 700; }
+.hit figcaption .v { font-family: var(--f-ui); font-weight: 700; }
+.hit .tcard, .tile .peek .tcard, .showcase .tcard, .fan .tcard { animation-play-state: paused; }
+.hit .tcard::before, .fan .tcard::before, .showcase .tcard::before, .tile .tcard::before { display: none !important; }
+.hit .tcard { box-shadow: 0 14px 30px rgba(0,0,0,.55) !important; transition: transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s !important; }
+.hit:hover .tcard { box-shadow: 0 0 0 1px rgba(255,255,255,.18), 0 0 30px 2px var(--gl, rgba(255,255,255,.15)), 0 22px 44px rgba(0,0,0,.7) !important; }
+.hit:hover .tcard, .showcase:hover .tcard { animation-play-state: running; }
+
+/* pack shelf */
+.filters { border-bottom: 0; padding-bottom: 0; gap: 6px; }
+.filters button { font-family: var(--f-ui); font-size: 13.5px; font-weight: 600; letter-spacing: 0; color: var(--t2); padding: 7px 14px; border: 1px solid var(--rule); border-radius: 999px; transition: background .15s, color .15s, border-color .15s; }
+.filters button:hover { color: var(--t1); border-color: var(--rule-2); }
+.filters button[aria-pressed="true"] { color: #0c0d10; background: var(--t1); border-color: var(--t1); }
+.filters select { font-family: var(--f-ui); font-size: 13.5px; font-weight: 600; background: var(--g1); border: 1px solid var(--rule); border-radius: 999px; padding: 7px 14px; color: var(--t1); }
+.pack-grid { gap: 40px 22px; }
+.tile { gap: 10px; }
+.tile .stagebox { height: 310px; border-radius: 18px; background: radial-gradient(ellipse at 50% 38%, #1e2127, #121418 72%); border: 1px solid #1d2026; perspective: 900px; transition: border-color .2s; }
+.tile:hover .stagebox { border-color: #2c3038; }
+.tile .stagebox .pk { transition: transform .35s cubic-bezier(.2,.8,.2,1); transform: rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg)) translateY(var(--ty, 0px)); }
+.tile:hover .stagebox .pk { --ty: -8px; }
+.tile h3 { font-size: 17px; font-weight: 700; }
+.tile .price { font-family: var(--f-ui); font-size: 16px; font-weight: 700; color: var(--t1); }
+.tile .chase { font-size: 13px; color: var(--t2); }
+.tile .chase b { color: var(--t1); font-weight: 700; }
+.tile .btn { justify-content: space-between; }
+.tile .btn .pr { border-left: 0; padding-left: 0; }
+.tile.limited h3 { color: var(--t1); }
+.limbar .lb-top { font-family: var(--f-ui); font-size: 12px; letter-spacing: 0; font-weight: 600; color: var(--t2); }
+.limbar .lb-top b { letter-spacing: .04em; font-weight: 800; }
+.limbar i { height: 5px; border-radius: 5px; overflow: hidden; background: var(--g3); }
+.limbar i b { border-radius: 5px; }
+.pk .pk-name { font-family: var(--f-ui) !important; font-stretch: 72%; font-weight: 800; text-transform: uppercase; font-size: 1.75em; line-height: .88; letter-spacing: 0; }
+.pk .pk-no, .pk .pk-sub, .pk .pk-lim { font-family: var(--f-ui) !important; letter-spacing: .08em; font-weight: 700; }
+.pk { --f-ui: "Archivo", "Helvetica Neue", Arial, sans-serif; }
+
+/* panels, toolbars, tables */
+.panel { background: var(--g1); border: 1px solid var(--rule); border-radius: 16px; padding: 22px; }
+.kpis { background: var(--rule); border: 1px solid var(--rule); border-radius: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+@media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+.kpi { background: var(--g1); padding: 18px 20px; }
+.kpi strong { font-size: 28px; font-stretch: 85%; }
+.kpi small { color: var(--t3); font-size: 12.5px; letter-spacing: 0; }
+.toolbar { border-color: var(--rule); padding: 16px 0; gap: 14px 34px; }
+.toolbar .stat strong { font-size: 20px; }
+.mk-table-wrap { border: 1px solid var(--rule); border-radius: 16px; background: var(--g1); }
+.mk-table th { font-family: var(--f-ui); font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--t3); }
+.mk-table td { font-family: var(--f-ui); font-variant-numeric: tabular-nums; border-bottom-color: var(--rule); }
+.mk-table tbody tr { transition: background .12s; } .mk-table tbody tr:hover { background: var(--g2); }
+table.odds th { font-family: var(--f-ui); letter-spacing: 0; text-transform: none; font-size: 12px; font-weight: 600; }
+.vmode button, .seg button { font-family: var(--f-ui); letter-spacing: 0; text-transform: none; font-weight: 700; }
+
+/* binder: a matte sleeve page, cards pop out on hover */
+.book { background: #101215; border: 1px solid var(--rule); border-radius: 20px; }
+.pocket { background: rgba(255,255,255,.018); box-shadow: inset 0 0 0 1px rgba(255,255,255,.045); border-radius: 10px; transition: transform .22s cubic-bezier(.2,.8,.2,1); }
+.pocket:not(.empty-p):not(.blank):hover { transform: translateY(-6px) scale(1.03); }
+.pocket .pn { font-family: var(--f-ui); font-weight: 700; letter-spacing: .04em; color: rgba(238,240,243,.28); font-size: 14px; }
+.pfoot { font-family: var(--f-ui); letter-spacing: .02em; text-transform: none; font-size: 12.5px; font-weight: 600; color: var(--t3); }
+.rar-key { color: var(--t2); }
+.toolbar .stat:first-child { position: relative; padding-bottom: 8px; }
+
+/* modal */
+.modal, .cm-box { border-radius: 20px !important; }
+.cm-box { background: var(--g1) !important; border: 1px solid var(--rule) !important; }
+.copy { border-radius: 12px !important; background: var(--g2) !important; border-color: var(--rule) !important; }
+.x { border-radius: 999px !important; }
+
+/* toast */
+.toast { background: var(--t1); color: #0c0d10; font-family: var(--f-ui); font-weight: 700; font-size: 14px; letter-spacing: 0; border-radius: 999px; padding: 12px 20px; box-shadow: 0 12px 32px rgba(0,0,0,.5); animation: toastin .32s cubic-bezier(.2,1.3,.4,1); }
+@keyframes toastin { from { transform: translate(-50%, 16px) scale(.96); opacity: 0; } }
+
+/* opening stage chrome */
+.st-bar .pname { font-family: var(--f-ui); font-style: normal; font-stretch: 72%; font-weight: 800; text-transform: uppercase; font-size: 22px; letter-spacing: 0; }
+.st-total { font-family: var(--f-ui); font-size: 13px; letter-spacing: 0; color: var(--t3); }
+.st-total b { font-size: 20px; color: var(--t1); }
+.st-total .pct { font-weight: 700; }
+.st-hint { font-family: var(--f-ui); font-size: 13px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--t3); }
+.st-title .rw { font-family: var(--f-ui); font-size: 13px; font-weight: 800; letter-spacing: .14em; }
+.st-title .nm { font-family: var(--f-ui); font-style: normal; font-stretch: 70%; font-weight: 900; text-transform: uppercase; font-size: clamp(44px, 7vw, 84px); line-height: .9; letter-spacing: -.01em; }
+.st-title .vl { font-family: var(--f-ui); font-weight: 700; color: var(--t2); font-size: clamp(16px, 2vw, 20px); }
+
+/* pack summary: the pulls first */
+.sum-head { gap: 6px !important; }
+.sum-head .label { font-size: 14px; color: var(--t2); }
+.sum-head .big { font-family: var(--f-ui) !important; font-stretch: 75%; font-weight: 900; font-size: clamp(56px, 9vw, 104px) !important; line-height: .9; letter-spacing: -.02em; color: var(--t1) !important; }
+.paid-off { display: inline-block; margin-top: 6px; font-size: 13px; font-weight: 800; color: #062014; background: var(--up); border-radius: 999px; padding: 5px 12px; }
+.lvup { font-family: var(--f-ui) !important; letter-spacing: .02em !important; text-transform: none !important; font-weight: 700; border-radius: 999px !important; border-color: var(--rule-2) !important; font-size: 13px !important; }
+.fan { gap: 14px !important; align-items: flex-end; }
+.fan-c { position: relative; flex: none; animation: fanin2 .55s cubic-bezier(.2,1.25,.4,1) both; animation-delay: calc(var(--i) * 70ms); }
+.fan-c .tcard { animation: none !important; width: min(168px, 17vw); }
+.fan-c.best .tcard { width: min(196px, 20vw); box-shadow: 0 0 0 1px rgba(255,255,255,.25), 0 0 34px 4px var(--c), 0 20px 40px rgba(0,0,0,.6) !important; }
+.fan-c.best::after { content: "Best pull"; position: absolute; left: 50%; top: -30px; transform: translateX(-50%); font-size: 12px; font-weight: 800; white-space: nowrap; color: #0c0d10; background: var(--t1); border-radius: 999px; padding: 4px 10px; }
+@keyframes fanin2 { from { transform: translateY(40px) scale(.9); opacity: 0; } }
+.sum-btns { gap: 10px !important; }
+@media (max-width: 760px) {
+  .showcase { overflow: hidden; height: 440px; margin-inline: -16px; }
+  .showcase .sc-pack { width: 200px; } .showcase .sc-card { width: 160px; transform: translate(70px, -10px) rotate(9deg); }
+  .hero h1 { font-size: clamp(76px, 24vw, 120px); }
+  .hero .facts { grid-template-columns: 1fr; }
+  .hero .facts > div + div { border-left: 0; border-top: 1px solid var(--rule); }
+  .view { gap: 56px; }
+  .demo-pill { display: none; }
+  .fan-c .tcard { width: 30vw; } .fan-c.best .tcard { width: 34vw; }
+  .fan { flex-wrap: wrap !important; }
+}
+@media (prefers-reduced-motion: reduce) { .view:not([hidden]), .fan-c, .toast, #dailyBtn::before { animation: none !important; } }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <symbol id="i-sigil" viewBox="0 0 40 40"><g fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 2 38 20 20 38 2 20Z"/><circle cx="20" cy="20" r="7.5"/><path d="M20 6v28M8.5 20h23"/></g><circle cx="20" cy="20" r="2.2" fill="currentColor"/></symbol>
+    <symbol id="i-sigil" viewBox="0 0 40 40"><circle cx="20" cy="8.2" r="2.7" fill="currentColor"/><path d="M10.5 14.5 L29.5 33.5 M29.5 14.5 L10.5 33.5" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" fill="none"/></symbol>
     <symbol id="i-coin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5 21.5 12 12 21.5 2.5 12Z"/></g><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
     <symbol id="i-token" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5 20.5 7.3v9.4L12 21.5 3.5 16.7V7.3Z"/><path d="M12 8v8M8.5 10l7 4M15.5 10l-7 4"/></g></symbol>
     <symbol id="i-sound" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></g></symbol>
@@ -1355,6 +1568,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
       <a href="#terms" data-tab="terms">Odds</a>
     </nav>
     <div class="wallet">
+      <span class="demo-pill" title="Everything here uses simulated money">Demo</span>
       <span class="bal c" title="Demo balance"><span id="balCoins">$0.00</span></span>
       <span class="bal t" title="Fight tokens"><svg class="ico"><use href="#i-token"/></svg><span id="balTokens">0</span></span>
       <button class="addc" data-open-store aria-label="Add funds">+</button>
@@ -1368,23 +1582,23 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
   <section class="view" id="view-packs">
     <div class="hero">
       <div>
-        <div class="label">Series II · <span id="heroCount">0</span> fighters · <span id="heroPacks">0</span> packs</div>
-        <h1 style="margin-top:18px">Rip a pack.<br>Pull a fighter.</h1>
-        <p class="lede">59 fighters, from ● Common to ★★★ Gilded. The rarest pull ends on a cutscene.</p>
+        <div class="label">STIXX trading cards</div>
+        <h1>Series II</h1>
+        <p class="lede"><span id="heroCount">0</span> stick fighters across nine rarities, <span id="heroPacks">0</span> packs and four limited drops. Big pulls come with their own fight scene. Keep the cards, grade them, or sell them back on the spot.</p>
         <div class="ctas"><a class="btn brass big" href="#all-packs">Browse packs</a><button class="btn ghost big" data-buy="lastframe" id="heroOpen">Open the featured pack</button></div>
         <div class="facts">
           <div><span class="label">Top chase</span><strong id="heroChase">–</strong></div>
           <div><span class="label">Your best pull</span><strong id="heroBest">–</strong></div>
-          <div><span class="label">Daily</span><button class="btn small" id="dailyBtn">Claim daily free pack</button></div>
+          <div><span class="label">Daily pack</span><button class="btn small" id="dailyBtn">Claim free pack</button></div>
         </div>
       </div>
       <div class="showcase" id="showcase"></div>
     </div>
 
-    <div id="hitsWrap" hidden style="display:flex;flex-direction:column;gap:18px"><div class="section-head"><div><div class="label">Your top hits</div><h2>Best pulls</h2></div></div><div class="hits" id="hitsRow"></div></div>
+    <div id="hitsWrap" hidden style="display:flex;flex-direction:column;gap:18px"><div class="section-head"><div><h2>Best pulls</h2></div><span class="small-print">Your six most valuable cards</span></div><div class="hits" id="hitsRow"></div></div>
 
     <div id="all-packs" style="display:flex;flex-direction:column;gap:22px">
-      <div class="section-head"><div><div class="label">The shelf</div><h2>Packs</h2></div></div>
+      <div class="section-head"><div><h2>Packs</h2></div></div>
       <div class="filters" id="filters">
         <button data-filter="all" aria-pressed="true">All</button>
         <button data-filter="low">Under $1</button>
@@ -1402,17 +1616,17 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
 
   <section class="view" id="view-arena" hidden>
     <div class="section-head">
-      <div><div class="label">Free to play</div><h2>Fight films</h2><p class="lede">Pick your fighter and an opponent and watch the fight. Every fight is choreographed fresh, and the winner is rolled from the two fighters' stats (win chance shown on each opponent). A win pays tokens by opponent rarity.</p></div>
+      <div><div class="label">Free to play</div><h2>Arena</h2><p class="lede">Pick your fighter and an opponent and watch the fight. Every fight is choreographed fresh, and the winner is rolled from the two fighters' stats (win chance shown on each opponent). A win pays tokens by opponent rarity.</p></div>
       <div class="record" id="arenaRecord"></div>
     </div>
     <div class="arena-setup">
-      <div class="panel"><div class="label">I · Your fighter</div><div class="fighter-pick" id="fighterPick"></div></div>
-      <div class="panel"><div class="label">II · Films</div><div class="films" id="filmPick"></div><button class="btn brass big" id="startFight">Watch</button></div>
+      <div class="panel"><div class="label">Your fighter</div><div class="fighter-pick" id="fighterPick"></div></div>
+      <div class="panel"><div class="label">Opponent</div><div class="films" id="filmPick"></div><button class="btn brass big" id="startFight">Watch</button></div>
     </div>
   </section>
 
   <section class="view" id="view-vault" hidden>
-    <div class="section-head"><div><div class="label">Holdings</div><h2>Binder</h2><p class="lede">Your binder, in set order. Open any card to see every copy you own, sell it, or replay its cutscene.</p></div></div>
+    <div class="section-head"><div><h2>Vault</h2><p class="lede">Every card you own, in set order. Tap a card to see your copies, grade one, sell it, or replay its fight scene.</p></div></div>
     <div class="toolbar">
       <div class="vmode" role="group" aria-label="View"><button data-vmode="binder" aria-pressed="true">Binder</button><button data-vmode="list" aria-pressed="false">List</button></div>
       <div class="stat"><span class="label">Collected</span><strong id="vStatSet">0/0</strong></div>
@@ -1447,7 +1661,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
   </section>
 
   <section class="view" id="view-ledger" hidden>
-    <div class="section-head"><div><div class="label">In and out</div><h2>Ledger</h2><p class="lede">What you've put in, what you hold, and what the house has made.</p></div><button class="btn brass" data-open-store>Buy coins</button></div>
+    <div class="section-head"><div><h2>Ledger</h2><p class="lede">What you've put in, what you hold, and what the house has made.</p></div><button class="btn brass" data-open-store>Buy coins</button></div>
     <div class="kpis" id="kpis"></div>
     <div class="panel chart-panel"><div class="section-head"><h3>Net, over time</h3><span class="label" id="chartNote"></span></div><div id="chart"></div></div>
     <div class="two-col">
@@ -1461,7 +1675,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
   </section>
 
   <section class="view" id="view-terms" hidden>
-    <div class="section-head"><div><div class="label">Nothing hidden</div><h2>Odds &amp; terms</h2></div></div>
+    <div class="section-head"><div><h2>Odds &amp; terms</h2><p class="lede">Exact pull rates for every pack, how prices move, and how grading works.</p></div></div>
     <div class="rules">
       <div class="panel"><h3>Rarity</h3><div class="table-wrap"><table class="odds" id="valueTable"></table></div></div>
       <div class="panel"><h3>Pulls</h3><ul>
@@ -1757,7 +1971,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
   const SUBG = [[10, .12], [9.5, .3], [9, .28], [8.5, .15], [8, .08], [7.5, .04], [7, .02], [6, .01]];
   function rollSub(r) { let x = r(); for (const [g, p] of SUBG) { x -= p; if (x < 0) return g; } return 9; }
   function rollCondition() { const r = () => rand(); return { cen: rollSub(r), cor: rollSub(r), edg: rollSub(r), sur: rollSub(r) }; }
-  const condOf = it => { if (!it.cond) { const r = mkRng(hashStr("cond" + it.uid)); it.cond = { cen: rollSub(r), cor: rollSub(r), edg: rollSub(r), sur: rollSub(r) }; } return it.cond; };
+  const condOf = it => { if (!it.cond || typeof it.cond !== "object" || it.cond.cen == null) { const r = mkRng(hashStr("cond" + it.uid)); it.cond = { cen: rollSub(r), cor: rollSub(r), edg: rollSub(r), sur: rollSub(r) }; } return it.cond; };
   const CENTER_TXT = { 10: "50/50", 9.5: "54/46", 9: "58/42", 8.5: "61/39", 8: "64/36", 7.5: "68/32", 7: "72/28", 6: "78/22" };
   function finalGrade(s) {
     const v = [s.cen, s.cor, s.edg, s.sur], avg = v.reduce((a, b) => a + b, 0) / 4, lo = Math.min(...v);
@@ -2040,14 +2254,22 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
   // RENDER: shelf
   // =====================================================================
   let shelfFilter = "all";
-  function renderWallet() { $("balCoins").textContent = money(state.coins); { const xp = state.s.xp || 0, L = levelOf(xp), a = LEVEL_XP(L), b = LEVEL_XP(L + 1); $("lvl").textContent = "LV " + L; $("lvlBar").style.width = ((xp - a) / (b - a) * 100).toFixed(1) + "%"; } $("balTokens").textContent = fmt(state.tokens); $("vaultCount").textContent = state.vault.length; }
+  function renderWallet() { tickNum($("balCoins"), state.coins, money); { const xp = state.s.xp || 0, L = levelOf(xp), a = LEVEL_XP(L), b = LEVEL_XP(L + 1); $("lvl").textContent = "Lv " + L; $("lvlBar").style.width = ((xp - a) / (b - a) * 100).toFixed(1) + "%"; } $("balTokens").textContent = fmt(state.tokens); $("vaultCount").textContent = state.vault.length; }
 
+  // counts a number up or down to its new value and flashes the direction
+  function tickNum(el, to, fmtFn) {
+    const from = el.dataset.v == null ? to : +el.dataset.v; el.dataset.v = to;
+    if (from === to || reduceMotion()) { el.textContent = fmtFn(to); return; }
+    el.classList.remove("tick-up", "tick-down"); void el.offsetWidth; el.classList.add(to > from ? "tick-up" : "tick-down");
+    const t0 = performance.now(), dur = 520;
+    (function f(now) { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmtFn(Math.round(from + (to - from) * e)); if (k < 1) requestAnimationFrame(f); })(t0);
+  }
   function tileHTML(p) {
     const ev = packEV(p), chase = chaseOf(p), ch = chanceOf(p, chase), chaseF = BY_ID[chase.id];
     const have = p.cur === "coin" ? state.coins : state.tokens, can = have >= p.price;
     const rows = (d, label) => { const tot = Object.values(d).reduce((a, b) => a + b, 0); return `<tr><th colspan="3">${label}</th></tr>` + Object.entries(d).map(([k, v]) => `<tr><td>${k === "RH" ? "Reverse Foil" : `<b style="color:${CR[k].col}">${CR[k].sym}</b> ${CR[k].name}`}</td><td>${k === "RH" ? "" : money(meanR(p, k))}</td><td>${+(v / tot * 100).toFixed(2)}%</td></tr>`).join(""); };
     const ls = p.lim ? limState(p) : null;
-    const btn = ls && !ls.open ? (ls.soon ? `Releases day ${ls.L.release}` : "Sold out") : can ? `Open · ${priceTxt(p)}` : p.cur === "coin" ? "Add funds" : `${fmt(p.price - have)} tokens short`;
+    const btn = ls && !ls.open ? (ls.soon ? `Releases day ${ls.L.release}` : "Sold out") : can ? `Open pack <span class="pr">${priceTxt(p)}</span>` : p.cur === "coin" ? "Add funds" : `${fmt(p.price - have)} tokens short`;
     const limBar = ls ? `<div class="limbar"><div class="lb-top"><b>LIMITED</b><span>${fmt(ls.sold)} / ${fmt(ls.L.run)} sold</span></div><i><b style="width:${(ls.sold / ls.L.run * 100).toFixed(1)}%"></b></i><span class="small-print">${ls.open ? `${fmt(ls.left)} packs left · never reprinted` : ls.soon ? "Coming soon" : "Sold out · cards now trade on the market only"}</span></div>` : "";
     return `<article class="tile${p.lim ? " limited lt-" + p.lim : ""}">
       <span class="no">No. ${p.no}</span><span class="cnt">${p.lim ? "3 cards" : "5 cards"}</span>
@@ -2083,10 +2305,10 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     $("heroChase").textContent = `${chaseF.name} ${CR[chase.rar].name} · ${money(cardBaseValue(chase))}`;
     const best = state.s.best ? BY_ID[state.s.best.id] : null;
     $("heroBest").textContent = best ? `${best.name} · ${money(state.s.best.val || best.v)}` : "Nothing yet";
-    $("heroOpen").textContent = state.coins >= p.price ? `Open ${p.name} · ${money(p.price)}` : `Featured: ${p.name}`;
+    $("heroOpen").innerHTML = state.coins >= p.price ? `Open ${esc(p.name)} <span class="pr">${money(p.price)}</span>` : `Featured: ${esc(p.name)}`;
     const left = (state.lastFree || 0) + DAY - Date.now();
     const db = $("dailyBtn"); db.disabled = left > 0;
-    db.textContent = left > 0 ? `Free pack in ${Math.floor(left / 36e5)}h ${Math.floor(left % 36e5 / 6e4)}m` : "Claim daily free pack";
+    db.textContent = left > 0 ? `Next in ${Math.floor(left / 36e5)}h ${Math.floor(left % 36e5 / 6e4)}m` : "Claim free pack";
     const hits = (state.hits || []).slice(0, 6);
     $("hitsWrap").hidden = !hits.length;
     $("hitsRow").innerHTML = hits.map((h, i) => { const f = BY_ID[h.id], R = crOf(cardOf(h)); return `<figure class="hit${i === 0 ? " top" : ""}"><span class="rank">${i + 1}</span>${cardHTML(h)}<figcaption><b>${esc(f.name)}</b><span style="color:${R.col}">${R.sym} ${esc(R.name)}</span><span class="v">${money(itemVal(h))}</span><small>${esc(PACK_BY_ID[h.pack] ? PACK_BY_ID[h.pack].name : "")}</small></figcaption></figure>`; }).join("");
@@ -2283,7 +2505,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
       <div class="kpi"><span class="label">Money in</span><strong>${usd(s.usdSpent)}</strong><small>${s.purchases} purchase${s.purchases === 1 ? "" : "s"}</small></div>
       <div class="kpi"><span class="label">Cash-out value</span><strong>${usd(cash)}</strong><small>Coins plus vault sold back</small></div>
       <div class="kpi"><span class="label">Sold back</span><strong style="color:var(--brass-hi)">${money(s.coinsFromSales)}</strong><small>${fmt(s.packHits || 0)} of ${fmt(s.packs)} packs were hits</small></div>
-      <div class="kpi"><span class="label">Tokens earned</span><strong style="color:var(--token)">${fmt(s.tokensEarned)}</strong><small>${s.wins} W · ${s.losses} L</small></div>`;
+      <div class="kpi"><span class="label">Tokens earned</span><strong style="color:var(--token)">${fmt(s.tokensEarned)}</strong><small>${s.wins} wins, ${s.losses} losses</small></div>`;
     $("coinLedger").innerHTML = `
       <dt>Deposited (incl. bonus)</dt><dd>${money(s.coinsBought)}</dd><dt>Signup, level and daily bonuses</dt><dd>${money(s.freeCoins)}</dd>
       <dt>Spent on packs</dt><dd>−${money(s.coinsOnPacks)}</dd><dt>Sold back</dt><dd>+${money(s.coinsFromSales)}</dd>
@@ -2297,7 +2519,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
       <dt>House edge across packs</dt><dd>${Math.round(Math.min(...edges) * 100)}–${Math.round(Math.max(...edges) * 100)}%</dd>`;
     const best = s.best ? BY_ID[s.best.id] : null;
     $("recordLedger").innerHTML = `<dt>Packs opened</dt><dd>${fmt(s.packs)}</dd><dt>Hits (sold back ≥ price)</dt><dd>${fmt(s.packHits || 0)}</dd><dt>Level</dt><dd>${levelOf(s.xp || 0)}</dd><dt>Best pull</dt><dd>${best ? esc(best.name) + " · " + money(s.best.val || best.v) : "–"}</dd>
-      <dt>Fights</dt><dd>${s.wins} W · ${s.losses} L</dd><dt>Tokens on Sketch packs</dt><dd>${fmt(s.tokensOnPacks)}</dd>`;
+      <dt>Fights</dt><dd>${s.wins} wins, ${s.losses} losses</dd><dt>Tokens on Sketch packs</dt><dd>${fmt(s.tokensOnPacks)}</dd>`;
     renderChart(); renderHistory();
   }
   function renderChart() {
@@ -2512,6 +2734,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     const from = SS.total; SS.total += add;
     const el = $("stTotal"), price = SS.free ? 0 : SS.pack.price, coin = SS.pack.cur === "coin";
     const paint = v => {
+      if (!SS) return;
       const cash = Math.floor(v * BUYBACK);
       el.innerHTML = `CASH VALUE <b>${money(cash)}</b> / ${SS.free ? "FREE" : priceTxt(SS.pack)}${coin && price ? ` <span class="pct">${Math.round(cash / price * 100)}%</span>` : ""}`;
       const up = coin && cash >= price; el.classList.toggle("up", up);
@@ -2913,21 +3136,19 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     const can = (p.cur === "coin" ? state.coins : state.tokens) >= p.price;
     const paid = SS.free ? 0 : p.cur === "coin" ? p.price : 0;
     const result = p.cur === "coin" ? sell - paid : null, hit = result !== null && result >= 0;
-    let head;
-    if (result === null) head = `<div class="big num">${money(sell)}</div><span class="small-print">cash value from ${priceTxt(p)} tokens</span>`;
-    else if (hit) head = `<div class="verdict up">${SS.free ? "Free pack" : "Hit"}</div><div class="big num up">+${money(result)}</div><span class="small-print">sell-back ${money(sell)} on a ${SS.free ? "free" : money(paid)} pack · ${paid ? Math.round(sell / paid * 100) + "% return" : "all profit"}</span>`;
-    else head = `<div class="verdict">Miss</div><div class="big num down">−${money(-result)}</div><span class="small-print">sell-back ${money(sell)} on a ${money(paid)} pack · ${Math.round(sell / paid * 100)}% back</span>`;
-    const lv = SS.levelUp ? `<div class="lvup">Level ${SS.levelUp.level} reached · +${money(SS.levelUp.bonus)} bonus added</div>` : "";
+    const bestI = items.reduce((bi, it, i) => itemVal(it) > itemVal(items[bi]) ? i : bi, 0), bestIt = items[bestI], bestR = crOf(cardOf(bestIt));
+    const head = `<div class="big num">${money(total)}</div><span class="small-print">${items.length} cards worth ${money(total)} · sell back now for ${money(sell)}${paid ? ` on a ${money(paid)} pack` : ""}</span>${hit && paid ? `<span class="paid-off">Paid off · ${Math.round(sell / paid * 100)}% back</span>` : ""}`;
+    const lv = SS.levelUp ? `<div class="lvup">Level ${SS.levelUp.level} · +${money(SS.levelUp.bonus)} bonus added</div>` : "";
     $("stSummary").innerHTML = `<div class="sum-in">
-      <div class="sum-head"><span class="label">${esc(p.name)}</span>${head}</div>${lv}
-      <div class="fan">${items.map(x => cardHTML(x)).join("")}</div>
-      <div class="sum-lines"><span>Card value <b>${money(total)}</b></span><span>Instant sell-back <b>${money(sell)}</b></span><span>Pack hit rate <b>${p.cur === "coin" ? Math.round(hitRate(p) * 100) + "%" : "–"}</b></span></div>
-      <div class="sum-btns"><button class="btn" id="sumSell">Sell all · ${money(sell)}</button><button class="btn brass" id="sumKeep">Keep in vault</button>
-        ${items.some(hasCutscene) ? `<button class="btn ghost" id="sumReplay">Replay cutscene</button>` : ""}<button class="btn ghost" id="sumAgain">${can ? `Open another · ${priceTxt(p)}` : p.cur === "coin" ? "Add funds" : "Not enough tokens"}</button></div>
+      <div class="sum-head"><span class="label">${esc(p.name)} · best pull <b style="color:${bestR.col}">${esc(BY_ID[bestIt.id].name)}, ${esc(bestR.name)}</b></span>${head}</div>${lv}
+      <div class="fan">${items.map((x, i) => `<div class="fan-c${i === bestI ? " best" : ""}" style="--c:${crOf(cardOf(x)).col};--i:${i}">${cardHTML(x)}</div>`).join("")}</div>
+      <div class="sum-btns"><button class="btn" id="sumSell">Sell all <span class="pr">${money(sell)}</span></button><button class="btn brass" id="sumKeep">Keep all</button>
+        ${items.some(hasCutscene) ? `<button class="btn ghost" id="sumReplay">Replay cutscene</button>` : ""}<button class="btn ghost" id="sumAgain">${can ? `Open another <span class="pr">${priceTxt(p)}</span>` : p.cur === "coin" ? "Add funds" : "Not enough tokens"}</button></div>
     </div>`;
     if (hit) { sfx.chime("epic"); const c = { x: innerWidth / 2, y: innerHeight * .3 }; fx.confetti(c.x, c.y, 90, ["#8cbf94", "#e6d3a3", "#e9e4d8"]); }
     $("stSummary").hidden = false;
-    $("sumKeep").focus();
+    SS.sumAt = performance.now();
+    setTimeout(() => { const k = $("sumKeep"); if (k && SS && SS.phase === "summary") k.focus({ preventScroll: true }); }, 650);
     $("stHint").textContent = "";
   }
   function closeStage() { stage.hidden = true; SS = null; fx.clear(); $("stBox").innerHTML = ""; }
@@ -2953,6 +3174,13 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
     if (e.target.closest(".st-ctrl")) return;
     if (e.target.closest(".sc.top") || e.target.closest("#stCenter")) advance();
   });
+  // shelf: packs lean toward the pointer
+  document.addEventListener("pointermove", e => {
+    const box = e.target.closest && e.target.closest(".tile .stagebox"); if (!box) return;
+    const r = box.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5, pk = box.querySelector(".pk"); if (!pk) return;
+    pk.style.setProperty("--ry", (x * 16).toFixed(1) + "deg"); pk.style.setProperty("--rx", (-y * 10).toFixed(1) + "deg"); pk.style.setProperty("--sx", (50 + x * 80).toFixed(1) + "%");
+  });
+  document.addEventListener("pointerout", e => { const box = e.target.closest && e.target.closest(".tile .stagebox"); if (box && !box.contains(e.relatedTarget)) { const pk = box.querySelector(".pk"); if (pk) { pk.style.setProperty("--ry", "0deg"); pk.style.setProperty("--rx", "0deg"); } } });
   function setMuteIcon() { $("stMute").innerHTML = `<svg class="ico" style="width:16px;height:16px"><use href="#i-${state.muted ? "mute" : "sound"}"/></svg>`; $("stMute").setAttribute("aria-label", state.muted ? "Unmute" : "Mute"); }
 
   // showcase tilt on hero
@@ -3686,6 +3914,7 @@ main > section > div + div, .view > div + div { margin-top: 64px; }
   });
   document.addEventListener("click", e => {
     const t = e.target.closest("button, [data-open-store]"); if (!t) return;
+    if (/^sum/.test(t.id) && SS && SS.sumAt && performance.now() - SS.sumAt < 600) return;
     if (t.matches("[data-open-store]")) { openStore(); return; }
     if (t.dataset.buy) { buy(t.dataset.buy); return; }
     if (t.dataset.sell) { const g = sellUids([t.dataset.sell]); if (g) toast(`Sold for ${money(g)}`); return; }
