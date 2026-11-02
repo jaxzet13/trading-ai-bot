@@ -2,6 +2,7 @@
   "_note": "Strategies paper-traded on live markets. Params are frozen; do not re-tune from live results.",
   "stake": 5.0,
   "max_daily_loss": 50.0,
+  "max_trades_per_day": 150,
   "strategies": [
     {"series": "KXHYPE15M", "strategy": "fair_value", "execution": "taker", "poll": "minute",
      "params": {"start": 2, "end": 13, "edge": 0.12, "vol_mult": 1.0},
