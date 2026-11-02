@@ -427,11 +427,20 @@ class Runner:
                  f"stake ${self.L['stake_usd']}/trade, daily loss cap ${self.L['max_daily_loss_usd']}, "
                  f"log {self.log_path}")
         self.log({"event": "start", "limits": self.L, "params": self.params, "strategy": self.cfg["strategy"]})
-        if not self.dry:
-            self.refresh_balance()
-            self.reconcile()
         day = self.today()
         try:
+            if not self.dry:
+                try:
+                    self.api.balance()
+                except ApiError as e:
+                    if e.status in (401, 403):
+                        raise Stop(f"Kalshi rejected the API key ({e}). Check KALSHI_KEY_ID / KALSHI_PRIVATE_KEY_PATH "
+                                   f"and that the key belongs to the {'demo' if self.mode == 'DEMO' else 'real'} "
+                                   f"exchange.", EXIT_CONFIG) from None
+                except requests.RequestException:
+                    pass
+                self.refresh_balance()
+                self.reconcile()
             while True:
                 if self.stop_requested:
                     raise Stop("Ctrl+C")
@@ -456,7 +465,7 @@ class Runner:
         target = self.clock() + (60 - self.clock() % 60 + 0.5)
         while True:
             left = target - self.clock()
-            if left <= 0 or self.stop_requested:
+            if left <= 0 or self.stop_requested or self.stop_path.exists():
                 return
             self.sleep(min(left, 1.0))
 
