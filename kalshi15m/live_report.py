@@ -219,7 +219,8 @@ def summarise() -> dict:
             "watched": sum(x["event"] == "watched" for x in ev),
             "near": sorted(([x["ticker"], x["max_gap"]] for x in ev if x["event"] == "watched"), key=lambda t: t[0])[-12:],
         })
-    out["events"] = [x for x in events if x["event"] != "start"][-40:]
+    # the page's live log: skip bookkeeping events ("watched" is logged for every strategy x market and would crowd out bets)
+    out["events"] = [x for x in events if x["event"] not in ("start", "watched")][-80:]
     return out
 
 

@@ -95,7 +95,9 @@ GOLDEN = [
     {"id": "fv_shape:KXHYPE15M", "family": "fv_shape", "scope": "KXHYPE15M", "t": 3.86,
      "params": {"start": 2, "end": 12, "edge": 0.14, "band": "05-95", "a": 0.7, "vm": 0.8}},
 ]
-SIZED_NORMS = {"sized:ALL": None, "sized:KXDOGE15M": None, "sized:KXHYPE15M": None}
+SIZED_NORMS = {"sized:ALL": 0.26276383779910073,          # computed by compute_sized_norms(); reproduces
+               "sized:KXDOGE15M": 0.260929335166002,      # lab3's holdout of each sized rule exactly
+               "sized:KXHYPE15M": 0.22610238553831677}
 for _r in GOLDEN:
     _r["kind"] = lab3.FAMILIES[_r["family"]]["kind"]          # hold | sized | scalp
     if _r["kind"] == "sized":
@@ -245,7 +247,7 @@ class GoldenEngine:
             self._load_frame(df)
             self._T = 0
             self._feat, self._emp, self._tod = {}, {}, {}
-            self._persisted = int(df.ts.max())
+            self._persisted = int(min(df.ts.max(), _now_minute(now) - 180))
             self.ready = True
             return self
 

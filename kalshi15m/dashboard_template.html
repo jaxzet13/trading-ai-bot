@@ -282,6 +282,9 @@ td.coin { font-size: 12px; }
 .vs tr:last-child td { border-bottom: 0; }
 .vs th:first-child, .vs td:first-child { padding-left: 0; width: 52%; }
 .vs td.num { font: 500 13.5px var(--f-mono); color: var(--ink); }
+#lvBoard .vs th { padding: 0 4px 8px; border-bottom: 0; }
+#lvBoard .vs td { padding: 8px 4px; vertical-align: middle; }
+#lvBoard .vs th:first-child, #lvBoard .vs td:first-child { padding-left: 0; }
 .now-big { font-size: 15.5px; line-height: 1.55; color: var(--ink); }
 .now-big b { font-family: var(--f-mono); font-weight: 500; }
 .gauge { position: relative; height: 70px; }
@@ -1494,7 +1497,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     if (lvs.open === undefined) lvs.open = rows.length ? rows[0].id : null;
     $("lvBoardIntro").textContent = `Ranked by paper profit so far. "Holdout test" is what the same rule made on locked days of past markets it was never tuned on, at $10 a trade, as a yardstick. Tap a row for its settings, what it sees right now, and its open bets.`;
     const head = `<thead><tr><th>#</th><th>Strategy</th><th class="num">Paper profit</th><th class="num" title="Orders filled, against how many the holdout test would predict for the markets watched">Trades</th><th class="num">Win rate</th>
-      <th class="num" title="Average seconds between the end of the signal minute and the order">Decision lag (s)</th><th class="num">Holdout test</th><th class="num">Open bets</th><th><span class="sr">Details</span></th></tr></thead>`;
+      <th class="num" title="Average seconds between the end of the signal minute and the order">Decision lag (s)</th><th class="num" title="Profit, t-stat and number of trades on locked days of past markets, $10 a trade">Holdout test</th><th class="num">Open bets</th><th><span class="sr">Details</span></th></tr></thead>`;
     const body = rows.map((s, k) => {
       const g = isGold(s), b = lvRef(s), lag = s.execution === "taker" ? mean(s.lags) : null, exp = lvExp(s), open = s.id === lvs.open;
       const hold = s.holding || [], risk = hold.reduce((a, h) => a + (h.n || 0) * (h.price || 0), 0);
@@ -1506,7 +1509,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
         <td class="num" data-label="Trades">${NUM(s.fills)}<div class="sub">${exp != null ? `~${Math.round(exp)} expected` : `${NUM(s.settled)} settled`}</div></td>
         <td class="num" data-label="Win rate">${s.settled ? pct(s.wins / s.settled) : "–"}<div class="sub">${b && nz(b.win_rate) ? `test ${pct(b.win_rate)}` : "&nbsp;"}</div></td>
         <td class="num" data-label="Decision lag">${lag != null ? lag.toFixed(1) : "–"}<div class="sub">${s.execution === "taker" ? "&nbsp;" : "limit orders"}</div></td>
-        <td class="num" data-label="Holdout test">${b ? `<span class="${cls(b.pnl)}">${money(b.pnl)}</span><div class="sub">t ${tfmt(b.t_stat)} · ${NUM(b.trades)} trades</div>` : `–<div class="sub">not tested</div>`}</td>
+        <td class="num" data-label="Holdout test"${b ? ` title="${NUM(b.trades)} trades in the holdout test"` : ""}>${b ? `<span class="${cls(b.pnl)}">${money(b.pnl)}</span><div class="sub">t ${tfmt(b.t_stat)} · ${NUM(b.trades)}</div>` : `–<div class="sub">not tested</div>`}</td>
         <td class="num" data-label="Open bets">${hold.length}<div class="sub">${hold.length ? money(risk, 2) + " staked" : "none"}</div></td>
         <td class="chevc"><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>` +
         (open ? `<tr class="detail"><td colspan="9">${lvDetail(s, L)}</td></tr>` : "");
@@ -1596,8 +1599,12 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     const key = e => (e.sid || e.series) + "|" + e.ticker, exits = new Set((L.events || []).filter(e => e.event === "exit").map(key));
     // a sold position appears once, as its "exit" event (the synthesized settle repeats it)
     const ev = [...(L.events || [])].filter(e => e && e.event !== "watched" && e.event !== "start" && !(e.event === "settle" && e.result === "sold" && exits.has(key(e)))).reverse();
-    const coins = [...new Set(ev.map(e => e.series).filter(Boolean))].sort((a, b) => COIN(a).localeCompare(COIN(b)));
-    const strats = [...new Set(ev.map(sidOf).filter(Boolean))];
+    // each menu only offers what exists under the other menu's choice
+    const allCoins = [...new Set(ev.map(e => e.series).filter(Boolean))], allStrats = [...new Set(ev.map(sidOf).filter(Boolean))];
+    if (lvs.coin !== "all" && !allCoins.includes(lvs.coin)) lvs.coin = "all";
+    if (lvs.strat !== "all" && !allStrats.includes(lvs.strat)) lvs.strat = "all";
+    const coins = [...new Set(ev.filter(e => lvs.strat === "all" || sidOf(e) === lvs.strat).map(e => e.series).filter(Boolean))].sort((a, b) => COIN(a).localeCompare(COIN(b)));
+    const strats = [...new Set(ev.filter(e => lvs.coin === "all" || e.series === lvs.coin).map(sidOf).filter(Boolean))];
     if (lvs.coin !== "all" && !coins.includes(lvs.coin)) lvs.coin = "all";
     if (lvs.strat !== "all" && !strats.includes(lvs.strat)) lvs.strat = "all";
     $("lvCoin").innerHTML = `<option value="all">All coins</option>` + coins.map(k => `<option value="${esc(k)}"${k === lvs.coin ? " selected" : ""}>${esc(COIN(k))}</option>`).join("");
