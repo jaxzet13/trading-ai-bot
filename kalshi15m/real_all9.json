@@ -1,0 +1,53 @@
+{
+  "_note": "All 9 coins, fair value + fair value v2 (the two pooled strategies that passed the strict holdout bar). One runner per coin; on each 15-minute market the first rule that fires places the only bet. Limits are PER COIN (9 coins). Start on --demo. See REAL_MONEY.md.",
+  "series": [
+    "KXBTC15M",
+    "KXETH15M",
+    "KXSOL15M",
+    "KXXRP15M",
+    "KXHYPE15M",
+    "KXBNB15M",
+    "KXNEAR15M",
+    "KXDOGE15M",
+    "KXZEC15M"
+  ],
+  "execution": "taker",
+  "poll": "minute",
+  "rules": [
+    {
+      "name": "fair_value",
+      "strategy": "fair_value",
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.12,
+        "vol_mult": 0.8
+      }
+    },
+    {
+      "name": "fair_value_v2",
+      "strategy": "fair_value_v2",
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.12,
+        "vol": "60",
+        "min_price": 0.2,
+        "max_price": 0.8
+      }
+    }
+  ],
+  "log": "data/kalshi15m/real_all9_log.jsonl",
+  "limits": {
+    "stake_usd": 1.0,
+    "max_contracts_per_order": 10,
+    "max_daily_loss_usd": 2.0,
+    "max_trades_per_day": 40,
+    "max_open_positions": 1,
+    "min_balance_usd": 4.0,
+    "max_price": 0.95,
+    "min_price": 0.03,
+    "max_data_age_s": 5.0,
+    "max_decision_lag_s": 5.0
+  }
+}

@@ -236,3 +236,22 @@ stops for good if the balance drops under $4. Add `--config kalshi15m/real_10.js
 .venv/bin/python -m kalshi15m real check --live --config kalshi15m/real_10.json
 bash scripts/run_real.sh --live --config kalshi15m/real_10.json
 ```
+
+## All 9 coins: fair value + fair value v2
+
+`kalshi15m/real_all9.json` runs the two pooled strategies that passed the strict holdout bar
+(`fair_value` with vol_mult 0.8 and `fair_value_v2` with 60-min vol, prices 20-80c) on BTC, ETH, SOL, XRP,
+HYPE, BNB, NEAR, DOGE and ZEC. One runner per coin; on each 15-minute market the first rule that fires
+places the only bet (the two rules never stack or take opposite sides in one market, which Kalshi would
+net into one position). Limits are per coin: $1 a bet, $2 daily loss per coin, one open bet per coin.
+It logs to `data/kalshi15m/real_all9_log.jsonl`.
+
+Run it on the demo exchange first (fake money):
+
+```bash
+.venv/bin/python -m kalshi15m real check --demo --config kalshi15m/real_all9.json
+bash scripts/run_real.sh --demo --config kalshi15m/real_all9.json
+.venv/bin/python -m kalshi15m real-report --demo --log data/kalshi15m/real_all9_log.jsonl
+```
+
+Note: on their own, SOL, BNB and ZEC failed their backtests; the pass is for the 9 coins as a group.

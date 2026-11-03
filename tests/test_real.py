@@ -615,6 +615,23 @@ def test_signals_identical_to_paper_bot():
     assert mine == paper, f"\npaper {paper}\nreal  {mine}"
 
 
+
+def test_all9_config_loads_and_rules_are_frozen():
+    from kalshi15m import real as R
+    path = Path(__file__).resolve().parent.parent / "kalshi15m" / "real_all9.json"
+    cfg = R.load_config(path)
+    assert cfg["series"] == R.ALL9 and [r["name"] for r in cfg["rules"]] == ["fair_value", "fair_value_v2"]
+    bad = json.loads(path.read_text())
+    bad["rules"][0]["params"]["edge"] = 0.05
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(d) / "c.json"
+        p.write_text(json.dumps(bad))
+        try:
+            R.load_config(p)
+            raise AssertionError("tampered rule accepted")
+        except R.Stop:
+            pass
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):

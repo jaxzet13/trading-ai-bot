@@ -93,6 +93,14 @@ REQUIRED_LIMITS = ("stake_usd", "max_contracts_per_order", "max_daily_loss_usd",
                    "max_open_positions", "min_balance_usd", "max_price", "min_price",
                    "max_data_age_s", "max_decision_lag_s")
 
+ALL9 = ["KXBTC15M", "KXETH15M", "KXSOL15M", "KXXRP15M", "KXHYPE15M", "KXBNB15M", "KXNEAR15M", "KXDOGE15M",
+        "KXZEC15M"]
+FROZEN_RULES = {  # exactly the settings that passed the lab's holdout as "ALL" (see kalshi15m/live.json)
+    "fair_value": {"strategy": "fair_value", "params": {"start": 2, "end": 13, "edge": 0.12, "vol_mult": 0.8}},
+    "fair_value_v2": {"strategy": "fair_value_v2",
+                      "params": {"start": 2, "end": 13, "edge": 0.12, "vol": "60", "min_price": 0.2, "max_price": 0.8}},
+}
+
 # exit codes understood by scripts/run_real.sh
 EXIT_CLEAN, EXIT_CRASH, EXIT_CONFIG = 0, 1, 2
 
@@ -335,14 +343,18 @@ class Stop(Exception):
 class Runner:
     def __init__(self, cfg: dict, mode: str, api: KalshiAPI, market_api: KalshiAPI | None = None,
                  log_path: Path = LOG, stop_path: Path = STOP_FILE, clock=time.time, sleep=time.sleep,
-                 spot_fn=None, max_minutes: int | None = None, out=print):
+                 spot_fn=None, max_minutes: int | None = None, out=print, stop_event=None):
         assert mode in ("DEMO", "LIVE", "DRYRUN")
         self.cfg, self.mode, self.api = cfg, mode, api
         self.mapi = market_api or api            # where quotes come from (= the exchange we trade on)
         self.dry = mode == "DRYRUN"
         self.L = cfg["limits"]
         self.series, self.params = cfg["series"], cfg["params"]
-        self.fn = STRATEGIES[cfg["strategy"]][0]
+        # one or more rules on this coin; the first that fires takes the market (one bet per market)
+        rules = cfg.get("rules") or [{"name": cfg["strategy"], "strategy": cfg["strategy"], "params": cfg["params"]}]
+        self.rules = [(r["name"], STRATEGIES[r["strategy"]][0], r["params"]) for r in rules]
+        self.fn = self.rules[0][1]
+        self.stop_event = stop_event
         self.product = SERIES[self.series]
         self.log_path, self.stop_path = Path(log_path), Path(stop_path)
         self.clock, self.sleep, self.out = clock, sleep, out
@@ -442,7 +454,8 @@ class Runner:
         self.out(f"[{self.mode}] {self.cfg['strategy']} {self.params} on {self.series}, taker IOC, "
                  f"stake ${self.L['stake_usd']}/trade, daily loss cap ${self.L['max_daily_loss_usd']}, "
                  f"log {self.log_path}")
-        self.log({"event": "start", "limits": self.L, "params": self.params, "strategy": self.cfg["strategy"]})
+        self.log({"event": "start", "limits": self.L, "params": self.params, "strategy": self.cfg["strategy"],
+                  "rules": [r[0] for r in self.rules]})
         day = self.today()
         try:
             if not self.dry:
@@ -458,7 +471,7 @@ class Runner:
                 self.refresh_balance()
                 self.reconcile()
             while True:
-                if self.stop_requested:
+                if self.halted():
                     raise Stop("Ctrl+C")
                 if self.stop_path.exists():
                     raise Stop(f"kill switch: {self.stop_path} exists")
@@ -475,13 +488,16 @@ class Runner:
             self.print_day(self.today())
             return s.code
 
+    def halted(self):
+        return self.stop_requested or (self.stop_event is not None and self.stop_event.is_set())
+
     def wait_minute(self):
         """Wake 0.5 s after the next minute boundary (bot._wait(poll="minute")), in small steps
         so Ctrl+C and the STOP file are noticed quickly."""
         target = self.clock() + (60 - self.clock() % 60 + 0.5)
         while True:
             left = target - self.clock()
-            if left <= 0 or self.stop_requested or self.stop_path.exists():
+            if left <= 0 or self.halted() or self.stop_path.exists():
                 return
             self.sleep(min(left, 1.0))
 
@@ -523,9 +539,11 @@ class Runner:
                  f"bid/ask={obs['yes_bid']:.3f}/{obs['yes_ask']:.3f} model={mdl if mdl is None else round(mdl, 3)} "
                  f"lag={lag}s")
         if self.cur not in self.traded:
-            sig = decide(self.fn, self.P, self.params, minute)
-            if sig:
-                self.act(m, minute, sig, obs, lag, age, open_ts)
+            for name, fn, params in self.rules:
+                sig = decide(fn, self.P, params, minute)
+                if sig:
+                    self.act(m, minute, sig, {**obs, "rule": name}, lag, age, open_ts)
+                    break
         self.housekeeping()
 
     def act(self, m, minute, sig, obs, lag, age, open_ts):
@@ -764,6 +782,16 @@ def load_config(path=CONFIG) -> dict:
     bad = [k for k in REQUIRED_LIMITS if k != "min_balance_usd" and lim[k] <= 0]
     if bad or lim["min_balance_usd"] < 0 or not lim["min_price"] < lim["max_price"] < 1:
         raise Stop(f"{path}: invalid limits {bad or ['min_price/max_price']}", EXIT_CONFIG)
+    if "rules" in cfg:   # the pooled 9-coin rules (passed the strict holdout bar as a group)
+        if cfg.get("execution") != "taker" or not cfg.get("series") or not set(cfg["series"]) <= set(ALL9):
+            raise Stop(f"{path}: series must be a subset of {ALL9}, execution taker", EXIT_CONFIG)
+        for r in cfg["rules"]:
+            want = FROZEN_RULES.get(r.get("name"))
+            if not want or {k: r.get(k) for k in ("strategy", "params")} != want:
+                raise Stop(f"{path}: rule {r.get('name')} must stay one of {FROZEN_RULES}", EXIT_CONFIG)
+        cfg.setdefault("strategy", "+".join(r["name"] for r in cfg["rules"]))
+        cfg.setdefault("params", {r["name"]: r["params"] for r in cfg["rules"]})
+        return cfg
     frozen = {"series": "KXNEAR15M", "strategy": "fair_value", "execution": "taker",
               "params": {"start": 2, "end": 13, "edge": 0.12, "vol_mult": 1.0}}
     for k, v in frozen.items():
@@ -829,9 +857,16 @@ def _main(a) -> int:
         return EXIT_CONFIG
     base = PROD if a.live else DEMO
     mode = "LIVE" if a.live else "DEMO"
+    if cfg.get("log") and a.log == str(LOG):
+        a.log = str(ROOT / cfg["log"])
+    coins = cfg["series"] if isinstance(cfg["series"], list) else [cfg["series"]]
     if a.action == "check":
         try:
-            check(_api_from_env(base), cfg["series"], mode)
+            api = _api_from_env(base)
+            check(api, coins[0], mode)
+            for c in coins[1:]:
+                m = api.open_market(c)
+                print(f"{c}: {'open market ' + m['ticker'] if m else 'WARNING: no open market visible'}")
         except (ApiError, Uncertain, requests.RequestException) as e:
             print(f"check FAILED: {e}")
             return EXIT_CONFIG
@@ -847,7 +882,34 @@ def _main(a) -> int:
         runner_kw = dict(mode=mode, api=api, log_path=Path(a.log))
         if a.live:
             print("LIVE: real orders enabled. Create a file named STOP in the repo root, or press Ctrl+C, to stop.")
+    if isinstance(cfg["series"], list):
+        return supervise_many(cfg, coins, runner_kw, a.minutes)
     return supervise(cfg, runner_kw, a.minutes)
+
+
+def supervise_many(cfg, coins, runner_kw, minutes):
+    """One runner thread per coin (each: one bet per market, its own limits). Ctrl+C or STOP stops all."""
+    import threading
+    stop = threading.Event()
+    codes = {}
+
+    def one(coin):
+        codes[coin] = supervise({**cfg, "series": coin}, {**runner_kw, "stop_event": stop}, minutes)
+    threads = [threading.Thread(target=one, args=(c,), daemon=True) for c in coins]
+    for t in threads:
+        t.start()
+    try:
+        while any(t.is_alive() for t in threads):
+            for t in threads:
+                t.join(0.5)
+    except KeyboardInterrupt:
+        print("\nCtrl+C: stopping all coins after their current step")
+        stop.set()
+        for t in threads:
+            t.join(20)
+        return EXIT_CLEAN
+    bad = [c for c in codes.values() if c not in (EXIT_CLEAN, None)]
+    return max(bad) if bad else EXIT_CLEAN
 
 
 class ConfigError(Stop):
@@ -914,7 +976,10 @@ def report(args: list[str] | None = None, log_path: Path = LOG, out=print) -> in
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--demo", action="store_true", help="also fetch settlements from the demo exchange")
     g.add_argument("--live", action="store_true", help="also fetch settlements from the live exchange")
+    ap.add_argument("--log", default=None, help="log file, e.g. data/kalshi15m/real_all9_log.jsonl")
     a = ap.parse_args(args)
+    if a.log:
+        log_path = Path(a.log)
     if not Path(log_path).exists():
         out(f"no log yet: {log_path}")
         return 0
