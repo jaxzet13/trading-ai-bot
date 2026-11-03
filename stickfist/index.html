@@ -1600,6 +1600,77 @@ form.scan-opt { cursor: default; }
 .tk .up { color: var(--up); } .tk .dn { color: var(--down); } .tk .fl { color: var(--t3); }
 @keyframes tkroll { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .tk-track { animation: none; } .ticker { overflow-x: auto; } }
+/* ===================== NOIR: black, bone and blood =====================
+   Card art is the noir set (art/n): ink and bone with one accent. Rarity reads as a finish, not a colour:
+   bone paper -> steel -> blood -> silver foil -> gold foil -> chrome -> ivory -> blood foil -> dark gold. */
+.tcard .tc-holo, .tcard .tc-face::before, .tcard .tc-art::before, .tcard .tc-artwrap::after, .tcard .tc-sparkle, .tcard .tc-shine, .tcard .tc-tex { filter: grayscale(1) !important; }
+/* common: bone paper */
+.tcard.std.cr-C:not(.lim) { background: #bdb7a8; }
+.std.cr-C:not(.lim) .tc-face { background: var(--grain), #e9e4d8; }
+.std.cr-C:not(.lim) .tc-art img { filter: none; }
+/* dark stocks */
+.tcard.std:is(.cr-U, .cr-R, .cr-H, .cr-RR):not(.lim) { --sb: #0a0a0b; --sc: #1c1c1e; --sa35: rgba(255,255,255,.1); }
+.tcard.std.cr-U:not(.lim) { --sa: #8e939a; --gl: rgba(160,165,172,.28); background: linear-gradient(135deg, #3a3d42, #0c0c0d 40%, #55595f 70%, #0c0c0d); }
+.tcard.std.cr-R:not(.lim) { --sa: #c4232b; --gl: rgba(196,35,43,.5); background: linear-gradient(135deg, #4a0a0e, #0a0405 40%, #7d1218 70%, #0a0405); }
+.tcard.std.cr-H:not(.lim) { --sa: #dfe3e8; --sv: #0b0b0c; --gl: rgba(225,230,236,.55); background: linear-gradient(115deg, #4d5157, #f2f4f6 14%, #7b8088 28%, #ffffff 42%, #5f646b 56%, #dfe2e6 70%, #4d5157 84%, #f2f4f6) !important; background-size: 400% 400% !important; }
+.tcard.std.cr-RR:not(.lim) { --sa: #c9a04a; --sv: #0b0b0c; --gl: rgba(201,160,74,.55); background: linear-gradient(115deg, #4a3608, #e9cf8a 18%, #8a6a1e 36%, #f6e6b8 52%, #6e520f 70%, #d9b45e 86%, #4a3608); background-size: 240% 240%; }
+.tcard.std:is(.cr-U, .cr-R, .cr-RR):not(.lim) .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, #1e1e20, #0a0a0b 70%); color: #ece8de; }
+.tcard.std.cr-H:not(.lim) .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 15%, #27292d, #0a0a0b 70%) !important; color: #ece8de; }
+.std.cr-H:not(.lim) .tc-artwrap { background: linear-gradient(115deg, #6d727c, #fff, #8a8f99, #fff, #6d727c) !important; background-size: 300% 300%; }
+.std.cr-H:not(.lim) .tc-name { text-shadow: 0 0 1.2cqi rgba(255,255,255,.55) !important; }
+.std.cr-H:not(.lim) :is(.tc-val, .rseal) { background: linear-gradient(100deg, #9aa0a8, #ffffff 45%, #8a8f99) !important; color: #0b0b0c !important; }
+.std.cr-H:not(.lim) .mv .cost, .std.cr-H:not(.lim) .tc-sub { color: rgba(236,232,222,.6) !important; }
+.std.cr-H:not(.lim) .tc-pwr { box-shadow: inset 0 0 0 .5cqi #dfe3e8 !important; background: #0a0a0b !important; }
+.std.cr-H:not(.lim) .tc-flavor { border-left-color: #dfe3e8 !important; }
+.tcard.std.rh:not(.lim) { background: linear-gradient(115deg, #5f646e, #f4f6f9 20%, #8a8f99 40%, #ffffff 60%, #7d828d 80%, #5f646e) !important; }
+/* full art: chrome, ivory, blood foil, dark gold */
+.tcard.full.cr-IR { background: linear-gradient(115deg, #5a5446, #ece6d8 20%, #8a8270 40%, #fffaf0 55%, #6b6454 75%, #d9d1bd); background-size: 240% 240%; }
+.tcard.full.cr-IR .crest { background: linear-gradient(135deg, #8a8270, #fffaf0 45%, #5a5446); color: #141414; }
+.tcard.full.cr-SIR:not(.lim) { --gl: rgba(224,32,44,.8); background: linear-gradient(115deg, #2a0204, #e0202c 18%, #4a0508 36%, #ff6a6f 50%, #3a0306 66%, #b3121b 82%, #2a0204); background-size: 300% 300%; animation: rpulse 1.8s ease-in-out infinite, holo 7s linear infinite !important; }
+.tcard.full.cr-SIR:not(.lim) .tc-name { background-image: linear-gradient(180deg, #ffffff 8%, #ffc9cb 45%, #c4121d 95%) !important; animation: none !important; }
+.tcard.full.cr-HR { background: linear-gradient(135deg, #2e2000, #d9b45e 16%, #5c4508 34%, #f6e6b8 50%, #4a3606 68%, #c9a04a 86%, #2e2000) !important; }
+.tcard.full.cr-HR .tc-name { background-image: linear-gradient(180deg, #fbf3dc 5%, #d9b45e 50%, #7a5a12 92%) !important; }
+.cr-HR .tc-art img { filter: sepia(.55) saturate(1.15) contrast(1.12) brightness(1.02) !important; }
+.tcard.full.cr-IR:not(.lim) { --gl: rgba(236,230,216,.5); }
+.tcard.std.cr-R:not(.lim), .tcard.std.cr-U:not(.lim) { box-shadow: 0 0 2.5cqi var(--gl), 0 10px 22px rgba(0,0,0,.5); }
+/* Frostbite: cold slate and frost, no electric blue */
+.lim-FB .limtag, .lim-FB.std :is(.tc-val, .rseal) { background: #5d7f8f !important; color: #f2f6f8 !important; }
+.tcard.lim-FB.std { background: linear-gradient(135deg, #1d2a30, #07090a 40%, #34474f, #07090a); }
+.lim-FB.std .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, #141a1d, #060809 70%); }
+.lim-FB.std .tc-artwrap { background: #8fb3c4; }
+.lim-FB .tc-art::after { background: #b9d0da; }
+.lim-FB.std .mv .cost { color: #a9c6d3; } .lim-FB.std .tc-pwr { box-shadow: inset 0 0 0 .5cqi #8fb3c4; } .lim-FB.std .tc-flavor { border-left-color: #8fb3c4; }
+.tcard.full.lim-FB { background: linear-gradient(135deg, #0d1a20, #9fbccb 20%, #1d2c33 40%, #dfeaef 60%, #0d1a20 80%, #9fbccb); }
+.tcard.full.lim-FB .tc-name { background-image: linear-gradient(180deg, #f6fafc 10%, #b9d0da 55%, #4f6b78 95%); }
+.tcard.full.lim-FB .crest { background: linear-gradient(135deg, #4f6b78, #dfeaef 45%, #1d2c33); }
+.tcard.full.lim-FB:not(.cr-SIR) { --gl: rgba(185,208,218,.55); }
+.tcard.full.lim-FB.cr-SIR::before { background: conic-gradient(from 0deg, #0d1a20, #8fb3c4, #f2f6f8, #8fb3c4, #0d1a20 35%, #0d1a20 50%, #8fb3c4 70%, #ffffff 75%, #8fb3c4 80%, #0d1a20); }
+@keyframes fbpulse { 50% { box-shadow: 0 0 0 1px #000, 0 0 34px 6px rgba(185,208,218,.45), 0 18px 40px rgba(0,0,0,.6); } }
+.lim-FB .tc-ring { background: conic-gradient(from 0deg, transparent, rgba(220,232,238,.0), rgba(220,232,238,.7), #fff, rgba(220,232,238,.7), transparent 30%, transparent 55%, rgba(220,232,238,.5) 75%, transparent 90%); }
+/* Venom: toxic olive, not neon */
+.lim-VN .limtag, .lim-VN.std :is(.tc-val, .rseal) { background: #6f7d2e !important; color: #f3f5e6 !important; }
+.tcard.lim-VN.std { background: linear-gradient(135deg, #20260f, #080904 40%, #3b4419, #080904); }
+.lim-VN.std .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, #15180b, #070804 70%); }
+.lim-VN.std .tc-artwrap { background: #9db04a; }
+.lim-VN .tc-art::after { background: #c3cf8c; }
+.lim-VN.std .mv .cost { color: #b4c470; } .lim-VN.std .tc-pwr { box-shadow: inset 0 0 0 .5cqi #9db04a; } .lim-VN.std .tc-flavor { border-left-color: #9db04a; }
+.tcard.full.lim-VN { background: linear-gradient(135deg, #12160a, #a9b86a 20%, #1f2610 40%, #d3dcaa 60%, #12160a 80%, #a9b86a); }
+.tcard.full.lim-VN .tc-name { background-image: linear-gradient(180deg, #f6f8ea 10%, #c3cf8c 55%, #59642a 95%); }
+.tcard.full.lim-VN .crest { background: linear-gradient(135deg, #59642a, #d3dcaa 45%, #1f2610); }
+.tcard.full.lim-VN:not(.cr-SIR) { --gl: rgba(195,207,140,.5); }
+.tcard.full.lim-VN.cr-SIR::before { background: conic-gradient(from 0deg, #12160a, #9db04a, #eef2d8, #9db04a, #12160a 35%, #12160a 50%, #9db04a 70%, #ffffff 75%, #9db04a 80%, #12160a); }
+@keyframes vnpulse { 50% { box-shadow: 0 0 0 1px #000, 0 0 34px 6px rgba(195,207,140,.4), 0 18px 40px rgba(0,0,0,.6); } }
+.lim-VN .tc-ring { background: conic-gradient(from 0deg, transparent, rgba(220,228,180,.0), rgba(220,228,180,.7), #fff, rgba(220,228,180,.7), transparent 30%, transparent 55%, rgba(220,228,180,.5) 75%, transparent 90%); }
+.tcard.full.cr-SIR:not(.lim) .crest { background: linear-gradient(135deg, #7d0a10, #ff8a8f 45%, #3a0306) !important; color: #fff; }
+.tcard.full.cr-HR .crest { background: linear-gradient(135deg, #7a5a12, #f6e6b8 45%, #4a3606) !important; }
+.tile.lt-FB h3, .lt-FB .limbar .lb-top b { color: #b9d0da !important; } .tile.lt-VN h3, .lt-VN .limbar .lb-top b { color: #c3cf8c !important; }
+.lt-FB .limbar i b { background: #8fb3c4 !important; } .lt-VN .limbar i b { background: #9db04a !important; }
+.tile.lt-FB { --pk-glow: #8fb3c4 !important; background: linear-gradient(180deg, #0c1114, var(--ash) 55%) !important; } .tile.lt-VN { --pk-glow: #9db04a !important; background: linear-gradient(180deg, #0f1108, var(--ash) 55%) !important; }
+/* Gold Scroll: aged parchment, brass instead of yellow */
+.lim-GS .tc-art img { filter: none !important; }
+.tcard.full.lim-GS { --gl: rgba(201,160,74,.5); }
+/* noir art needs no extra tint on limited standard cards; a faint set wash is enough */
+.lim-FB.std .tc-art img, .lim-VN.std .tc-art img { filter: grayscale(1) contrast(1.25) brightness(1.05) !important; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -1860,15 +1931,15 @@ form.scan-opt { cursor: default; }
   const BUILD = { common: .9, rare: 1.3, epic: 1.8, legendary: 2.4, secret: 3.0 };
   // ---------- Card rarity, Pokemon-style: rarity belongs to the card, not the fighter ----------
   const CR = {
-    C:   { name: "Common", sym: "●", col: "#a5a5a5", tier: 0, build: 0 },
-    U:   { name: "Uncommon", sym: "◆", col: "#8cbf94", tier: 1, build: 0 },
-    R:   { name: "Rare", sym: "★", col: "#4f8fe6", tier: 2, build: .45 },
-    H:   { name: "Foil Rare", sym: "★", col: "#5fc8ff", tier: 3, build: .9 },
-    RR:  { name: "Signature", sym: "★★", col: "#9b62f0", tier: 4, build: 1.2 },
-    UR:  { name: "Chrome", sym: "★★", col: "#d4d8e0", tier: 5, build: 1.6 },
-    IR:  { name: "Full Art", sym: "★", col: "#e4ae3a", tier: 5, build: 1.5 },
-    SIR: { name: "Masterwork", sym: "★★", col: "#f04f9a", tier: 6, build: 2.4 },
-    HR:  { name: "Gilded", sym: "★★★", col: "#f5c542", tier: 7, build: 2.6 }
+    C:   { name: "Common", sym: "●", col: "#8d8a83", tier: 0, build: 0 },
+    U:   { name: "Uncommon", sym: "◆", col: "#a8acb2", tier: 1, build: 0 },
+    R:   { name: "Rare", sym: "★", col: "#c4232b", tier: 2, build: .45 },
+    H:   { name: "Foil Rare", sym: "★", col: "#dfe3e8", tier: 3, build: .9 },
+    RR:  { name: "Signature", sym: "★★", col: "#c9a04a", tier: 4, build: 1.2 },
+    UR:  { name: "Chrome", sym: "★★", col: "#eef0f2", tier: 5, build: 1.6 },
+    IR:  { name: "Full Art", sym: "★", col: "#d9cfb8", tier: 5, build: 1.5 },
+    SIR: { name: "Masterwork", sym: "★★", col: "#e0202c", tier: 6, build: 2.4 },
+    HR:  { name: "Gilded", sym: "★★★", col: "#d9b45e", tier: 7, build: 2.6 }
   };
   const CR_ORDER = ["C", "U", "R", "H", "RR", "UR", "IR", "SIR", "HR"];
   const SET_SIZE = 25, SET_NAME = "Ink & Steel", RH_MULT = 2.2;
@@ -1888,12 +1959,12 @@ form.scan-opt { cursor: default; }
   const LSETS = {
     BM: { name: "Bloodmoon", release: 60, run: 5000, window: 380, col: "#d8202c",
       r: { R: { name: "Bloodmoon", sym: "◐", col: "#e2414b" }, UR: { name: "Bloodmoon Chrome", sym: "◐◐", col: "#ff5a64" }, SIR: { name: "Crimson Eclipse", sym: "●", col: "#ff2a36" } } },
-    GS: { name: "Gold Scroll", release: 78, run: 5000, window: 380, col: "#e4ae3a",
-      r: { R: { name: "Scroll", sym: "◇", col: "#c9a04a" }, UR: { name: "Brocade", sym: "✦✦", col: "#f0c75e" }, SIR: { name: "Gold Screen", sym: "✦✦✦", col: "#ffd76a" } } },
-    FB: { name: "Frostbite", release: 86, run: 5000, window: 300, col: "#3fb6f0",
-      r: { R: { name: "Frostbite", sym: "✧", col: "#6fcaf5" }, UR: { name: "Frostbite Chrome", sym: "✧✧", col: "#8fdcff" }, SIR: { name: "Absolute Zero", sym: "✦", col: "#c8f0ff" } } },
-    VN: { name: "Venom", release: 88, run: 5000, window: 300, col: "#7ad61f",
-      r: { R: { name: "Venom", sym: "◉", col: "#8be23a" }, UR: { name: "Venom Chrome", sym: "◉◉", col: "#a6ff3b" }, SIR: { name: "Patient Zero", sym: "✹", col: "#c8ff5a" } } }
+    GS: { name: "Gold Scroll", release: 78, run: 5000, window: 380, col: "#b08d4a",
+      r: { R: { name: "Scroll", sym: "◇", col: "#a8874a" }, UR: { name: "Brocade", sym: "✦✦", col: "#c9a04a" }, SIR: { name: "Gold Screen", sym: "✦✦✦", col: "#d9b45e" } } },
+    FB: { name: "Frostbite", release: 86, run: 5000, window: 300, col: "#8fb3c4",
+      r: { R: { name: "Frostbite", sym: "✧", col: "#8fb3c4" }, UR: { name: "Frostbite Chrome", sym: "✧✧", col: "#b6cdd8" }, SIR: { name: "Absolute Zero", sym: "✦", col: "#dde9ee" } } },
+    VN: { name: "Venom", release: 88, run: 5000, window: 300, col: "#9db04a",
+      r: { R: { name: "Venom", sym: "◉", col: "#9db04a" }, UR: { name: "Venom Chrome", sym: "◉◉", col: "#b4c470" }, SIR: { name: "Patient Zero", sym: "✹", col: "#c9d48e" } } }
   };
   const LIM_ODDS = { R: 76, UR: 20, SIR: 4 };
   [["BM1", "shiv", "R", 300], ["BM2", "lash", "R", 320], ["BM3", "umbra", "R", 340], ["BM4", "kusari", "UR", 1500, "bm_kusari"], ["BM5", "chrono", "UR", 1600, "bm_chrono"], ["BM6", "phantom", "SIR", 9000, "bm_phantom"],
@@ -1969,20 +2040,20 @@ form.scan-opt { cursor: default; }
   const P = (o) => o;
   const PACKS = [
     P({ id: "scrapbin", chase: "shogun", no: "01", name: "Scrap Bin", cur: "coin", price: 179, n: 5, a: "#151515", b: "#26262a", acc: "#8d8d8d", fig: "knuckles", rh: { RH: 96, IR: 3.6, SIR: .4 }, rare: { U: 60, R: 32, H: 6.5, RR: 1.3, UR: .18, HR: .02 } }),
-    P({ id: "starter", chase: "null", no: "02", name: "First Ink", cur: "coin", price: 329, n: 5, a: "#0f1420", b: "#1d2740", acc: "#4f8fe6", fig: "shiv", rh: { RH: 93, IR: 6, SIR: 1 }, rare: { R: 70, H: 20, RR: 7.5, UR: 2, HR: .5 } }),
+    P({ id: "starter", chase: "null", no: "02", name: "First Ink", cur: "coin", price: 329, n: 5, a: "#111214", b: "#24262a", acc: "#a8acb2", fig: "shiv", rh: { RH: 93, IR: 6, SIR: 1 }, rare: { R: 70, H: 20, RR: 7.5, UR: 2, HR: .5 } }),
     P({ id: "ink", chase: "reaper", no: "03", name: "Ink Brawlers", cur: "coin", price: 449, n: 5, a: "#121214", b: "#2a2a30", acc: "#e9e4d8", fig: "ronin", rh: { RH: 90, IR: 8.5, SIR: 1.5 }, rare: { R: 50, H: 32, RR: 13, UR: 4, HR: 1 } }),
-    P({ id: "night", chase: "colossus", no: "04", name: "Night Shift", cur: "coin", price: 659, n: 5, a: "#0c0f1c", b: "#1c2240", acc: "#6f7fd8", fig: "arcanist", rh: { RH: 85, IR: 12, SIR: 3 }, rare: { R: 30, H: 40, RR: 20, UR: 8, HR: 2 } }),
-    P({ id: "glitchhunt", chase: "null", no: "05", name: "Null Hunt", cur: "coin", price: 659, n: 5, a: "#140b1a", b: "#2c1640", acc: "#c435ff", fig: "null", rh: { RH: 85, IR: 12, SIR: 3 }, rare: { R: 30, H: 40, RR: 20, UR: 8, HR: 2 }, feat: ["null", 4] }),
+    P({ id: "night", chase: "colossus", no: "04", name: "Night Shift", cur: "coin", price: 659, n: 5, a: "#0e0f12", b: "#22252b", acc: "#8e939a", fig: "arcanist", rh: { RH: 85, IR: 12, SIR: 3 }, rare: { R: 30, H: 40, RR: 20, UR: 8, HR: 2 } }),
+    P({ id: "glitchhunt", chase: "null", no: "05", name: "Null Hunt", cur: "coin", price: 659, n: 5, a: "#0b0b0c", b: "#1e1e20", acc: "#e9e4d8", fig: "null", rh: { RH: 85, IR: 12, SIR: 3 }, rare: { R: 30, H: 40, RR: 20, UR: 8, HR: 2 }, feat: ["null", 4] }),
     P({ id: "redline", chase: "reaper", no: "06", name: "Reaper Hunt", cur: "coin", price: 919, n: 5, a: "#170a0c", b: "#3a1218", acc: "#d81f3a", fig: "reaper", rh: { RH: 80, IR: 15, SIR: 5 }, rare: { H: 55, RR: 30, UR: 11, HR: 4 }, feat: ["reaper", 4] }),
     P({ id: "graphite", chase: "colossus", no: "07", name: "Iron Vault", cur: "coin", price: 1169, n: 5, a: "#131416", b: "#2e3138", acc: "#a9afba", fig: "colossus", rh: { RH: 75, IR: 18, SIR: 7 }, rare: { H: 40, RR: 38, UR: 17, HR: 5 } }),
-    P({ id: "legend", chase: "shogun", no: "08", name: "Gold Leaf", cur: "coin", price: 1779, n: 5, a: "#18130a", b: "#3a2c10", acc: "#e4ae3a", fig: "twinblade", rh: { RH: 65, IR: 25, SIR: 10 }, rare: { RR: 55, UR: 33, HR: 12 } }),
+    P({ id: "legend", chase: "shogun", no: "08", name: "Gold Leaf", cur: "coin", price: 1779, n: 5, a: "#18130a", b: "#2a2210", acc: "#c9a04a", fig: "twinblade", rh: { RH: 65, IR: 25, SIR: 10 }, rare: { RR: 55, UR: 33, HR: 12 } }),
     P({ id: "black", chase: "null", no: "09", name: "Black Label", cur: "coin", price: 2789, n: 5, a: "#050505", b: "#141414", acc: "#e9e4d8", fig: "breaker", rh: { RH: 50, IR: 30, SIR: 20 }, rare: { RR: 30, UR: 45, HR: 25 } }),
-    P({ id: "lastframe", chase: "shogun", no: "10", name: "Shogun's Seal", cur: "coin", price: 4179, n: 5, a: "#0d0b05", b: "#2b2208", acc: "#f5b400", fig: "shogun", rh: { RH: 35, IR: 35, SIR: 30 }, rare: { UR: 55, HR: 45 }, feat: ["shogun", 3] }),
+    P({ id: "lastframe", chase: "shogun", no: "10", name: "Shogun's Seal", cur: "coin", price: 4179, n: 5, a: "#0d0b05", b: "#2b2208", acc: "#d9b45e", fig: "shogun", rh: { RH: 35, IR: 35, SIR: 30 }, rare: { UR: 55, HR: 45 }, feat: ["shogun", 3] }),
     P({ id: "sketch", chase: "twinblade", no: "T1", name: "Sketchbook", cur: "token", price: 40, n: 5, ed: "sketch", a: "#1a1a1c", b: "#2a2a2e", acc: "#6fb7a8", fig: "pike", rh: { RH: 93, IR: 6, SIR: 1 }, rare: { R: 70, H: 20, RR: 7.5, UR: 2, HR: .5 } }),
     P({ id: "bloodmoon", chase: "phantom", no: "L1", name: "Bloodmoon", cur: "coin", price: 689, n: 3, lim: "BM", a: "#0d0203", b: "#4a070c", acc: "#e0202d", fig: "phantom", rh: {}, rare: {} }),
-    P({ id: "frostbite", chase: "reaper", no: "L3", name: "Frostbite", cur: "coin", price: 699, n: 3, lim: "FB", a: "#020a10", b: "#0b3a55", acc: "#3fb6f0", fig: "reaper", rh: {}, rare: {} }),
-    P({ id: "venom", chase: "umbra", no: "L4", name: "Venom", cur: "coin", price: 699, n: 3, lim: "VN", a: "#040a02", b: "#1f4a08", acc: "#7ad61f", fig: "umbra", rh: {}, rare: {} }),
-    P({ id: "goldscroll", chase: "ronin", no: "L2", name: "Gold Scroll", cur: "coin", price: 769, n: 3, lim: "GS", a: "#1d1406", b: "#4a3610", acc: "#e9b949", fig: "ronin", rh: {}, rare: {} }),
+    P({ id: "frostbite", chase: "reaper", no: "L3", name: "Frostbite", cur: "coin", price: 699, n: 3, lim: "FB", a: "#020a10", b: "#1d2a30", acc: "#8fb3c4", fig: "reaper", rh: {}, rare: {} }),
+    P({ id: "venom", chase: "umbra", no: "L4", name: "Venom", cur: "coin", price: 699, n: 3, lim: "VN", a: "#040a02", b: "#20260f", acc: "#9db04a", fig: "umbra", rh: {}, rare: {} }),
+    P({ id: "goldscroll", chase: "ronin", no: "L2", name: "Gold Scroll", cur: "coin", price: 769, n: 3, lim: "GS", a: "#1d1406", b: "#2e2410", acc: "#c9a04a", fig: "ronin", rh: {}, rare: {} }),
     P({ id: "sketch2", chase: "reaper", no: "T2", name: "Sketch Vault", cur: "token", price: 120, n: 5, ed: "sketch", a: "#141a19", b: "#22302d", acc: "#6fb7a8", fig: "reaver", rh: { RH: 90, IR: 8.5, SIR: 1.5 }, rare: { R: 50, H: 32, RR: 13, UR: 4, HR: 1 } })
   ];
   const PACK_BY_ID = Object.fromEntries(PACKS.map(p => [p.id, p]));
@@ -2277,7 +2348,7 @@ form.scan-opt { cursor: default; }
   function cardHTML(item, pending) {
     const f = BY_ID[item.id], card = cardOf(item), rar = rarOf(item), R = crOf(card) || CR.C, sk = item.ed === "sketch", T = TYPES[FTYPE[baseOf(f.id)]] || TYPES.fist;
     const num = card.set ? `${card.set}-${card.no.slice(2).padStart(2, "0")}/06` : `${card.no}/${String(SET_SIZE).padStart(3, "0")}`, full = R.tier >= 5;
-    const art = card.art ? `<img src="art/${card.art}.jpg" alt="" draggable="false">` : figImg(f), lset = card.set ? ` lim lim-${card.set}` : "", ltag = card.set ? `<span class="limtag">${esc(LSETS[card.set].name)} · Limited</span>` : "";
+    const art = card.art ? `<img src="art/n/${card.art}.jpg" alt="" draggable="false">` : figImg(f), lset = card.set ? ` lim lim-${card.set}` : "", ltag = card.set ? `<span class="limtag">${esc(LSETS[card.set].name)} · Limited</span>` : "";
     const sid = item.serial ? scanId(card, item.serial) : num;   // the copy's own scan ID; previews show the collector number
     const pwr = (f.atk + f.spd + f.def) * 10 + (card.ex ? 60 : 0);
     const name = esc(f.name) + (card.ex ? `<i class="sigst">SIG</i>` : "");
@@ -3678,7 +3749,7 @@ form.scan-opt { cursor: default; }
     }
   }
   // Card illustrations are hand-picked comic-style artworks in art/<id>.jpg
-  function portrait(f) { return `art/${baseOf(f.id)}.jpg`; }
+  function portrait(f) { return `art/n/${baseOf(f.id)}.jpg`; }
   function portraitDrawn(f) {
     if (PORTRAIT[f.id]) return PORTRAIT[f.id];
     const Wd = 600, Ht = 840, T = THEME[baseOf(f.id)] || THEME.knuckles, rnd = artRng(f.id);
