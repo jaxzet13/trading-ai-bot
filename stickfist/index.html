@@ -1792,6 +1792,18 @@ form.scan-opt { cursor: default; }
 .tcard .amb.smoke { mix-blend-mode: normal; opacity: .85; }
 .tcard .amb.smoke::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23a8a49a' stop-opacity='.75'/%3E%3Cstop offset='.55' stop-color='%23a8a49a' stop-opacity='.32'/%3E%3Cstop offset='1' stop-color='%239a968c' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cellipse cx='71.0' cy='69.4' rx='23.2' ry='8.4' fill='url%28%2523g%29'/%3E%3Cellipse cx='50.4' cy='41.5' rx='29.3' ry='9.1' fill='url%28%2523g%29'/%3E%3Cellipse cx='82.1' cy='84.7' rx='26.2' ry='14.5' fill='url%28%2523g%29'/%3E%3Cellipse cx='22.4' cy='83.7' rx='22.9' ry='15.7' fill='url%28%2523g%29'/%3E%3Cellipse cx='87.4' cy='26.6' rx='27.0' ry='15.4' fill='url%28%2523g%29'/%3E%3Cellipse cx='10.9' cy='39.6' rx='26.6' ry='9.3' fill='url%28%2523g%29'/%3E%3Cellipse cx='85.7' cy='34.2' rx='27.4' ry='9.1' fill='url%28%2523g%29'/%3E%3C/svg%3E"); background-size: 50% 50%; animation-duration: 26s; }
 .tcard .amb.smoke::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23a8a49a' stop-opacity='.75'/%3E%3Cstop offset='.55' stop-color='%23a8a49a' stop-opacity='.32'/%3E%3Cstop offset='1' stop-color='%239a968c' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cellipse cx='50.2' cy='79.4' rx='18.9' ry='10.1' fill='url%28%2523g%29'/%3E%3Cellipse cx='50.5' cy='37.3' rx='16.5' ry='9.5' fill='url%28%2523g%29'/%3E%3Cellipse cx='19.5' cy='80.5' rx='25.5' ry='15.2' fill='url%28%2523g%29'/%3E%3Cellipse cx='20.2' cy='69.9' rx='17.6' ry='12.2' fill='url%28%2523g%29'/%3E%3Cellipse cx='62.3' cy='40.2' rx='28.2' ry='12.4' fill='url%28%2523g%29'/%3E%3C/svg%3E"); background-size: 25% 100%; animation-duration: 17s; }
+/* ===== COMPLETER: set-completion secret cards ===== */
+.tcard.full.cr-CX { --gl: rgba(246,244,238,.85); background: linear-gradient(135deg, #0b0b0c, #f6f4ee 16%, #3a3a3c 33%, #ffffff 50%, #1b1b1d 67%, #d9d6cc 84%, #0b0b0c); background-size: 260% 260%; animation: rpulse 1.6s ease-in-out infinite, holo 6s linear infinite; }
+.tcard.full.cr-CX .tc-name { background-image: linear-gradient(180deg, #ffffff 10%, #d9d6cc 55%, #77736a 95%) !important; }
+.tcard.full.cr-CX .crest { background: linear-gradient(135deg, #0b0b0c, #ffffff 50%, #0b0b0c); color: #0b0b0c; }
+.setprog { border: 1px solid var(--rule); border-radius: 16px; padding: 16px 18px; display: grid; gap: 12px; margin-bottom: 18px; }
+.sp-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; align-items: baseline; } .sp-h b { font-size: 15px; font-weight: 800; }
+.sp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr)); gap: 12px; }
+.sp-row { display: grid; gap: 7px; padding: 11px 12px; border-radius: 12px; background: var(--g1, rgba(255,255,255,.03)); border: 1px solid var(--rule); }
+.sp-top { display: flex; justify-content: space-between; font-size: 13.5px; font-weight: 700; }
+.sp-bar { height: 4px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; } .sp-bar i { display: block; height: 100%; background: var(--t2); border-radius: 4px; }
+.sp-row.done .sp-bar i { background: #f6f4ee; box-shadow: 0 0 10px rgba(246,244,238,.7); } .sp-row.got { opacity: .75; }
+.sp-bot { font-size: 12.5px; color: var(--t3); min-height: 28px; display: flex; align-items: center; } .sp-row.done .sp-bot { color: var(--t1); }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -1912,6 +1924,7 @@ form.scan-opt { cursor: default; }
       <button class="btn small" id="sellDupes">Sell duplicates</button>
     </div>
     <div class="rar-key" id="rarKey"></div>
+    <div class="setprog" id="setProg"></div>
     <div id="vaultBody"></div>
   </section>
 
@@ -2066,9 +2079,10 @@ form.scan-opt { cursor: default; }
     UR:  { name: "Chrome", sym: "★★", col: "#eef0f2", tier: 5, build: 1.6 },
     IR:  { name: "Full Art", sym: "★", col: "#d9cfb8", tier: 5, build: 1.5 },
     SIR: { name: "Masterwork", sym: "★★", col: "#e0202c", tier: 6, build: 2.4 },
-    HR:  { name: "Gilded", sym: "★★★", col: "#d9b45e", tier: 7, build: 2.6 }
+    HR:  { name: "Gilded", sym: "★★★", col: "#d9b45e", tier: 7, build: 2.6 },
+    CX:  { name: "Completer", sym: "◆◆◆", col: "#f6f4ee", tier: 7, build: 3 }
   };
-  const CR_ORDER = ["C", "U", "R", "H", "RR", "UR", "IR", "SIR", "HR"];
+  const CR_ORDER = ["C", "U", "R", "H", "RR", "UR", "IR", "SIR", "HR", "CX"];
   const SET_SIZE = 25, SET_NAME = "Ink & Steel", RH_MULT = 2.2;
   const CARDS = [
     ["001", "knuckles", "C", 8], ["002", "shiv", "C", 9], ["003", "bulwark", "C", 8], ["004", "pike", "C", 10], ["005", "bo", "C", 9],
@@ -2099,6 +2113,10 @@ form.scan-opt { cursor: default; }
    ["FB1", "knuckles", "R", 310], ["FB2", "snap", "R", 320], ["FB3", "fletch", "R", 340], ["FB4", "twinblade", "UR", 1550, "fb_twinblade"], ["FB5", "arcanist", "UR", 1600, "fb_arcanist"], ["FB6", "reaper", "SIR", 9500, "fb_reaper"],
    ["VN1", "breaker", "R", 310], ["VN2", "colossus", "R", 330], ["VN3", "null", "R", 350], ["VN4", "kusari", "UR", 1550, "vn_kusari"], ["VN5", "lash", "UR", 1600, "vn_lash"], ["VN6", "umbra", "SIR", 9800, "vn_umbra"]]
     .forEach(([no, id, rar, v, art]) => CARDS.push({ no, id, rar, v, ex: false, set: no.slice(0, 2), art }));
+  // Completer cards: you can't pull these. Own every card in the set and the set's secret card unlocks.
+  const SECRET = { IS: "048", BM: "BM7", FB: "FB7", VN: "VN7", GS: "GS7" };
+  [["048", "null", 14000, "is_secret", ""], ["BM7", "reaper", 16000, "bm_secret", "BM"], ["FB7", "twinblade", 16000, "fb_secret", "FB"], ["VN7", "kusari", 16000, "vn_secret", "VN"], ["GS7", "shogun", 16000, "gs_secret", "GS"]]
+    .forEach(([no, id, v, art, set]) => CARDS.push(Object.assign({ no, id, rar: "CX", v, ex: false, art, secret: true }, set ? { set } : {})));
   const crOf = card => card && card.set ? Object.assign({}, CR[card.rar], LSETS[card.set].r[card.rar]) : CR[card ? card.rar : "C"];
   function limSold(set, d) { const L = LSETS[set], D = d == null ? mktDay() : d; if (D < L.release) return 0; const k = Math.min(1, (D - L.release) / L.window); return Math.min(L.run, Math.round(L.run * Math.pow(k, .75)) + ((typeof state !== "undefined" && state.limBought && state.limBought[set]) || 0)); }
   const limSoldOutDay = set => { const L = LSETS[set]; for (let d = L.release; d <= L.release + L.window + 1; d++) if (limSold(set, d) >= L.run) return d; return L.release + L.window; };
@@ -2145,7 +2163,7 @@ form.scan-opt { cursor: default; }
   const BY_ID = Object.fromEntries(FIGHTERS.map(f => [f.id, f]));
   // Every card is its own fighter. Cards that reuse an original fighter's look get their own name; they keep that
   // fighter's stats, moves, art pose and cutscene through .base.
-  const VARIANTS = {"FB1":["rime","Rime"],"FB2":["sleet","Sleet"],"FB3":["hailshot","Hailshot"],"FB4":["shardblade","Icepick"],"FB5":["blizzard","Blizzard"],"FB6":["whiteout","Whiteout"],"VN1":["corrode","Corrode"],"VN2":["mire","Mire"],"VN3":["hex","Hex"],"VN4":["viper","Viper"],"VN5":["acid","Acid"],"VN6":["plague","Plague"],"021":["mourne","Mourne"],"022":["monolith","Monolith"],"023":["daimyo","Daimyo"],"024":["cipher","Cipher"],"026":["kensei","Kensei"],"027":["havoc","Havoc"],"028":["glyph","Omen"],"029":["gemini","Jinx"],"030":["quiver","Deadeye"],"031":["rattle","Riot"],"032":["brickfist","Mauler"],"033":["stiletto","Stiletto"],"034":["aegis","Lockdown"],"035":["lancer","Skewer"],"036":["sensei","Hermit"],"037":["cinder","Cinder"],"038":["harvester","Harvester"],"039":["oblivion","Oblivion"],"040":["emperor","Warlord"],"041":["gyre","Shackle"],"042":["wraith","Wraith"],"043":["eclipse","Eclipse"],"044":["sunblade","Kingpin"],"045":["epoch","Zero Hour"],"046":["quake","Quake"],"047":["doppel","Mimic"],"BM1":["bloodfang","Bloodfang"],"BM2":["thorn","Thorn"],"BM3":["penumbra","Penumbra"],"BM4":["vein","Vein"],"BM5":["hourglass","Hourglass"],"BM6":["nightfall","Nightfall"],"GS1":["willow","Willow"],"GS2":["crane","Crane"],"GS3":["rampart","Rampart"],"GS4":["regent","Regent"],"GS5":["heron","Heron"],"GS6":["tsunami","Tsunami"]};
+  const VARIANTS = {"FB1":["rime","Rime"],"FB2":["sleet","Sleet"],"FB3":["hailshot","Hailshot"],"FB4":["shardblade","Icepick"],"FB5":["blizzard","Blizzard"],"FB6":["whiteout","Whiteout"],"VN1":["corrode","Corrode"],"VN2":["mire","Mire"],"VN3":["hex","Hex"],"VN4":["viper","Viper"],"VN5":["acid","Acid"],"VN6":["plague","Plague"],"021":["mourne","Mourne"],"022":["monolith","Monolith"],"023":["daimyo","Daimyo"],"024":["cipher","Cipher"],"026":["kensei","Kensei"],"027":["havoc","Havoc"],"028":["glyph","Omen"],"029":["gemini","Jinx"],"030":["quiver","Deadeye"],"031":["rattle","Riot"],"032":["brickfist","Mauler"],"033":["stiletto","Stiletto"],"034":["aegis","Lockdown"],"035":["lancer","Skewer"],"036":["sensei","Hermit"],"037":["cinder","Cinder"],"038":["harvester","Harvester"],"039":["oblivion","Oblivion"],"040":["emperor","Warlord"],"041":["gyre","Shackle"],"042":["wraith","Wraith"],"043":["eclipse","Eclipse"],"044":["sunblade","Kingpin"],"045":["epoch","Zero Hour"],"046":["quake","Quake"],"047":["doppel","Mimic"],"BM1":["bloodfang","Bloodfang"],"BM2":["thorn","Thorn"],"BM3":["penumbra","Penumbra"],"BM4":["vein","Vein"],"BM5":["hourglass","Hourglass"],"BM6":["nightfall","Nightfall"],"048":["kingmaker","Kingmaker"],"BM7":["bloodline","Bloodline"],"FB7":["permafrost","Permafrost"],"VN7":["outbreak","Outbreak"],"GS7":["goldstandard","Gold Standard"],"GS1":["willow","Willow"],"GS2":["crane","Crane"],"GS3":["rampart","Rampart"],"GS4":["regent","Regent"],"GS5":["heron","Heron"],"GS6":["tsunami","Tsunami"]};
   for (const c of CARDS) { const v = VARIANTS[c.no]; if (!v) continue; const b = BY_ID[c.id]; const f = Object.assign({}, b, { id: v[0], name: v[1], base: b.id }); FIGHTERS.push(f); BY_ID[f.id] = f; c.id = f.id; }
   const baseOf = id => (BY_ID[id] && BY_ID[id].base) || id;
   // Each card's own line. Cards not listed use their fighter's line.
@@ -2160,7 +2178,8 @@ form.scan-opt { cursor: default; }
     "BM1": "Bites first. Doesn't let go.", "BM2": "Pretty from across the room. Bleeding up close.", "BM3": "Half shadow. All problem.", "BM4": "Finds the vein on the first try.", "BM5": "Your time's up. His just started.", "BM6": "When the moon goes red, lock your goddamn door.",
     "GS1": "Bends. Never breaks. Breaks you.", "GS2": "Stands on one leg. Still kicks your ass.", "GS3": "The wall your whole crew couldn't get over.", "GS4": "Old money. Older blade.", "GS5": "Patient as hell. Then one shot.", "GS6": "Pulls back first. Then takes the whole coast.",
     "FB1": "Cold hands. Colder heart. Your nose, broken.", "FB2": "Hits like bad weather. Doesn't let up.", "FB3": "Rains on everybody's parade. On purpose.", "FB4": "Cold steel. Warm blood.", "FB5": "Can't see shit. That's the point.", "FB6": "Nobody finds the bodies till spring.",
-    "VN1": "Rots whatever he touches. Started with his own life.", "VN2": "Step in. Don't get out.", "VN3": "Cursed you on sight. Nothing personal.", "VN4": "Bites once. Once is plenty.", "VN5": "Eats through steel. You're softer.", "VN6": "Patient zero. You're patient one."
+    "VN1": "Rots whatever he touches. Started with his own life.", "VN2": "Step in. Don't get out.", "VN3": "Cursed you on sight. Nothing personal.", "VN4": "Bites once. Once is plenty.", "VN5": "Eats through steel. You're softer.", "VN6": "Patient zero. You're patient one.",
+    "048": "Owns one of everything. Including you.", "BM7": "Only shows up for people who finished the job.", "FB7": "Everyone else melted.", "VN7": "Collect them all. Catch everything.", "GS7": "What every other card gets measured against."
   };
   const lineOf = card => LINES[card.no] || (BY_ID[card.id] && BY_ID[card.id].trait) || "";
 
@@ -2255,10 +2274,10 @@ form.scan-opt { cursor: default; }
   // Deterministic from the set's launch, so every reload shows the same history. 1 market day = 15 minutes.
   // =====================================================================
   const MKT_EPOCH = Date.UTC(2026, 10, 1, 0, 0, 0), DAY_MS = 15 * 60 * 1000;
-  const MKT_GROWTH = { C: 1.35, U: 1.5, R: 1.7, H: 2, RR: 2.3, UR: 3, IR: 3.4, SIR: 5, HR: 4.2 };
-  const MKT_VOL = { C: .0035, U: .0045, R: .006, H: .008, RR: .009, UR: .011, IR: .01, SIR: .013, HR: .012 };
+  const MKT_GROWTH = { C: 1.35, U: 1.5, R: 1.7, H: 2, RR: 2.3, UR: 3, IR: 3.4, SIR: 5, HR: 4.2, CX: 4.6 };
+  const MKT_VOL = { C: .0035, U: .0045, R: .006, H: .008, RR: .009, UR: .011, IR: .01, SIR: .013, HR: .012, CX: .012 };
   const MKT_T = 900;   // days for most of the scarcity trend to play out (~2 real weeks): packs dry up, supply stops growing
-  const PER_PACK = { C: .4, U: .2, R: .05, H: .02, RR: .007, UR: .0025, IR: .003, SIR: .0006, HR: .0004 };   // copies of one card per pack opened, by rarity
+  const PER_PACK = { C: .4, U: .2, R: .05, H: .02, RR: .007, UR: .0025, IR: .003, SIR: .0006, HR: .0004, CX: .00008 };   // copies of one card per pack opened, by rarity
   const LIMITED = [["was vaulted: pulled from every pack", true], ["print run ended early", true], ["holders-only Arena event announced", false], ["a pro player is buying every copy", false], ["error print found in the first wave", false]];
   const MKT_NEWS = [["won the Ink Cup", .2], ["cutscene went viral", .28], ["opened live by a big streamer", .14], ["topped the Arena win rate", .12],
     ["reprint announced", -.16], ["counterfeits reported", -.12], ["nerfed in the Arena", -.1], ["featured in a set trailer", .16]];
@@ -2318,7 +2337,7 @@ form.scan-opt { cursor: default; }
     return { g: Math.max(1, Math.min(10, g)), black: false };
   }
   const GRADE_NAME = { 10: "GEM MINT", 9: "MINT", 8: "NM-MT", 7: "NEAR MINT", 6: "EX-MT", 5: "EXCELLENT", 4: "VG-EX", 3: "VERY GOOD", 2: "GOOD", 1: "POOR" };
-  const GEM_MULT = { C: 1.6, U: 1.9, R: 2.6, H: 3.2, RR: 3.6, UR: 4.2, IR: 4.6, SIR: 6, HR: 5.2 };
+  const GEM_MULT = { C: 1.6, U: 1.9, R: 2.6, H: 3.2, RR: 3.6, UR: 4.2, IR: 4.6, SIR: 6, HR: 5.2, CX: 6 };
   function gradeMult(rar, g, black) {
     const t = CR[rar].tier;
     if (g >= 10) return GEM_MULT[rar] * (black ? 2.2 : 1);
@@ -2378,7 +2397,8 @@ form.scan-opt { cursor: default; }
     return list.sort((a, b) => b.v - a.v)[0] || CARDS[CARDS.length - 1];
   }
   function chanceOf(p, card) {
-    if (p.lim) return card.set === p.lim ? LIM_ODDS[card.rar] / 100 / poolSet(p.lim, card.rar).length : 0;
+    if (card.secret) return 0;
+    if (p.lim) return card.set === p.lim && LIM_ODDS[card.rar] ? LIM_ODDS[card.rar] / 100 / poolSet(p.lim, card.rar).length : 0;
     let per = 0; for (const d of [p.rare, p.rh]) { const tot = Object.values(d).reduce((a, b) => a + b, 0); if (d[card.rar]) { const pool = poolR(card.rar), w = pool.reduce((a, c) => a + featW(p, c), 0); per = 1 - (1 - per) * (1 - d[card.rar] / tot * featW(p, card) / w); } }
     return per;
   }
@@ -2802,7 +2822,32 @@ form.scan-opt { cursor: default; }
   }
 
   // ---------- Vault ----------
+  const setKeyOf = c => c.set || "IS";
+  const setLabel = k => k === "IS" ? SET_NAME : LSETS[k].name;
+  const setCards = k => CARDS.filter(c => setKeyOf(c) === k && !c.secret);
+  function setProgress(k) { const own = new Set(state.vault.map(it => cardOf(it).no)), all = setCards(k), have = all.filter(c => own.has(c.no)).length; return { have, total: all.length, done: have === all.length, got: !!(state.unlocked || {})[k] }; }
+  function renderSetProg() {
+    const el = $("setProg"); if (!el) return;
+    el.innerHTML = `<div class="sp-h"><b>Complete a set, unlock its secret card</b><span class="small-print">Completer cards never come in packs.</span></div><div class="sp-grid">${Object.keys(SECRET).map(k => { const pr = setProgress(k), sc = CARD_BY_NO[SECRET[k]], nm = BY_ID[sc.id].name;
+      return `<div class="sp-row${pr.done ? " done" : ""}${pr.got ? " got" : ""}"><div class="sp-top"><span>${esc(setLabel(k))}</span><span class="num">${pr.have}/${pr.total}</span></div><div class="sp-bar"><i style="width:${(pr.have / pr.total * 100).toFixed(1)}%"></i></div><div class="sp-bot">${pr.got ? `<span>${esc(nm)} unlocked</span>` : pr.done ? `<button class="btn small brass" data-unlock="${k}">Unlock ${esc(nm)}</button>` : `<span>Secret: ${esc(nm)}</span>`}</div></div>`; }).join("")}</div>`;
+    state.notified = state.notified || {};
+    for (const k of Object.keys(SECRET)) { const pr = setProgress(k); if (pr.done && !pr.got && !state.notified[k]) { state.notified[k] = 1; save(); toast(`${setLabel(k)} complete. Your secret card is waiting in the vault`); } }
+  }
+  function claimSecret(k) {
+    const pr = setProgress(k); if (!pr.done || pr.got || (SS && SS.phase)) return;
+    const card = CARD_BY_NO[SECRET[k]], f = BY_ID[card.id]; state.serial++;
+    const item = { uid: "sx-" + k + "-" + Date.now().toString(36), id: f.id, cno: card.no, rar: card.rar, rh: false, slot: "SECRET", serial: state.serial, t: Date.now(), pack: "secret", ed: "foil", val: cardBaseValue(card, "foil", false), cond: rollCondition(), day: mktDay(), secret: true };
+    state.unlocked = Object.assign({}, state.unlocked, { [k]: Date.now() });
+    state.vault.push(item);
+    log(`Completed ${setLabel(k)} · unlocked ${f.name}`, 0, "coin");
+    snap(); save(); renderAll();
+    sfx.unlock();
+    openStage(PACK_BY_ID[{ BM: "bloodmoon", FB: "frostbite", VN: "venom", GS: "goldscroll" }[k]] || PACK_BY_ID.lastframe, [item], { free: true, unlock: k });
+    $("stHint").textContent = "Opening…";
+    setTimeout(() => { if (SS && SS.phase === "pack") autoTear(); }, 650);
+  }
   function renderVault() {
+    renderSetProg();
     const items = state.vault.slice(), sort = $("vSort").value, val = it => itemVal(it);
     if (sort === "value") items.sort((a, b) => val(b) - val(a) || b.serial - a.serial);
     else if (sort === "atk") items.sort((a, b) => BY_ID[b.id].atk - BY_ID[a.id].atk || val(b) - val(a));
@@ -3339,7 +3384,7 @@ form.scan-opt { cursor: default; }
   function center(el) { const r = el.getBoundingClientRect(), s = stage.getBoundingClientRect(); return { x: r.left + r.width / 2 - s.left, y: r.top + r.height / 2 - s.top, w: r.width, h: r.height, l: r.left - s.left, t: r.top - s.top }; }
 
   function openStage(p, items, extra) {
-    SS = { pack: p, items, free: extra && extra.free, levelUp: extra && extra.levelUp, scan: extra && extra.scan, code: extra && extra.code, crossed: false, idx: 0, phase: "pack", tear: 0, total: 0, busy: false, drag: null };
+    SS = { pack: p, items, free: extra && extra.free, levelUp: extra && extra.levelUp, scan: extra && extra.scan, unlock: extra && extra.unlock, code: extra && extra.code, crossed: false, idx: 0, phase: "pack", tear: 0, total: 0, busy: false, drag: null };
     $("stName").textContent = p.name;
     updateTotal(0);
     $("stTitle").className = "st-title"; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("rays").classList.remove("on");
@@ -3823,6 +3868,16 @@ form.scan-opt { cursor: default; }
     const paid = SS.free ? 0 : p.cur === "coin" ? p.price : 0;
     const result = p.cur === "coin" ? sell - paid : null, hit = result !== null && result >= 0;
     const bestI = items.reduce((bi, it, i) => itemVal(it) > itemVal(items[bi]) ? i : bi, 0), bestIt = items[bestI], bestR = crOf(cardOf(bestIt));
+    if (SS.unlock) {
+      const it = items[0], c = cardOf(it), R = crOf(c);
+      $("stSummary").innerHTML = `<div class="sum-in">
+        <div class="sum-head"><span class="label">${esc(setLabel(SS.unlock))} complete · secret card unlocked</span><div class="big num">${esc(BY_ID[it.id].name)}</div><span class="small-print"><b style="color:${R.col}">${R.sym} ${esc(R.name)}</b> · only players who finish ${esc(setLabel(SS.unlock))} get this card · worth ${money(itemVal(it))}</span></div>
+        <div class="fan"><div class="fan-c best" style="--c:${R.col};--i:0">${cardHTML(it)}</div></div>
+        <div class="sum-btns"><button class="btn brass" id="sumKeep">Done</button></div></div>`;
+      $("stSummary").hidden = false; SS.sumAt = performance.now(); $("stHint").textContent = "";
+      const c0 = { x: innerWidth / 2, y: innerHeight * .3 }; fx.confetti(c0.x, c0.y, 110, ["#ffffff", "#e9e4d8", "#c4232b"]); sfx.chime("secret");
+      return;
+    }
     if (SS.scan) {
       const it = items[0], c = cardOf(it), R = crOf(c);
       $("stSummary").innerHTML = `<div class="sum-in">
@@ -4616,6 +4671,7 @@ form.scan-opt { cursor: default; }
     if (t.dataset.scanopen) { openScan(PACK_BY_ID[t.dataset.scanopen] || null); return; }
     if (t.dataset.buy) { buy(t.dataset.buy); return; }
     if (t.dataset.release) { releaseCard(t.dataset.release, t); return; }
+    if (t.dataset.unlock) { claimSecret(t.dataset.unlock); return; }
     if (t.dataset.sell) { const g = sellUids([t.dataset.sell]); if (g) toast(`Sold for ${money(g)}`); return; }
     if (t.dataset.guides) { $("cmCard").classList.toggle("printguides"); return; }
     if (t.dataset.adv) { advanceMarket(+t.dataset.adv); return; }
@@ -4636,7 +4692,7 @@ form.scan-opt { cursor: default; }
       case "stSkip": if (SS && SS.phase !== "summary") { if (SS.phase === "pack") { SS.phase = "opening"; } skipAll(); } break;
       case "stMute": state.muted = !state.muted; save(); setMuteIcon(); break;
       case "sumSell": { const g = sellUids(SS.items.map(i => i.uid), `Sold back a ${SS.pack.name} pull`); closeStage(); toast(`Sold for ${money(g)}`); break; }
-      case "sumKeep": { const sc = SS && SS.scan; closeStage(); toast(sc ? "Added to your vault" : "Kept in your vault"); break; }
+      case "sumKeep": { const sc = SS && (SS.scan || SS.unlock); closeStage(); toast(sc ? "Added to your vault" : "Kept in your vault"); break; }
       case "sumScan": closeStage(); openScan(); break;
       case "sumReplay": { const it = SS.items.find(hasCutscene); if (it) playCutscene(it, null); break; }
       case "sumAgain": { const id = SS.pack.id; closeStage(); buy(id); break; }
