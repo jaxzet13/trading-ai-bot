@@ -193,146 +193,173 @@ td.coin { font-size: 12px; }
   .hb-bar { grid-column: 1 / -1; }
 }
 
-/* ---------- Live paper trading: hero, ranked board, log ---------- */
-.live-zone { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); min-width: 0; }
-.live-zone .panel { border-radius: 14px; padding: 22px 24px; box-shadow: 0 1px 2px var(--shadow); }
-.live-zone .panel-head { margin-bottom: 16px; }
-.live-zone .panel-head h2 { font-size: 20px; margin-top: 4px; }
-.live-zone .panel-head p { font-size: 13.5px; margin-top: 6px; line-height: 1.55; }
-.live-zone h3 { font: 600 16px/1.25 var(--f-display); margin: 0; }
-.live-zone .lv-hero { padding: 0; overflow: hidden; }
-.lv-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding: 13px 24px;
-  border-bottom: 1px solid var(--grid); font-size: 12.5px; color: var(--ink-2); }
-.lv-status { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.lv-status b { font: 600 11px/1 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--good); }
-.lv-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--good); flex: none; animation: lvpulse 2.4s ease-out infinite; }
+/* ---------- Live paper trading: "night desk" ----------
+   Its own calm identity: one deep, low-glare slate band in both page themes (like the hunt's vault, but cooler and softer),
+   raised surfaces instead of borders, soft sea-green / coral for wins and losses, soft gold for golden strategies.
+   The shared tokens are redefined here, so badges, sparklines and pos/neg text inside the band pick up the soft palette. */
+.live-zone {
+  --lv-bg: #151d26; --lv-card: #1a232d; --lv-raise: #212b37; --lv-hover: #1f2933; --lv-glow: rgba(159, 176, 239, .10);
+  --ink: #d9e0e7; --ink-2: #adb8c4; --muted: #8593a3; --line: #2c3743; --grid: #242e39; --chip: #27323e;
+  --surface: #1a232d; --sel: #1f2933; --accent: #9fb0ef; --accent-bg: rgba(159, 176, 239, .13);
+  --good: #5fc4bf; --good-bg: rgba(95, 196, 191, .12); --bad: #ee9585; --bad-bg: rgba(238, 149, 133, .12);
+  --warn: #e3c27f; --warn-bg: rgba(227, 194, 127, .12); --good-ring: rgba(95, 196, 191, .4);
+  --gold: #dcb76a; --gold-ink: #e6c57f; --gold-bg: rgba(220, 183, 106, .12); --gold-line: rgba(220, 183, 106, .35); --shadow: rgba(0, 0, 0, .3);
+  color-scheme: dark; color: var(--ink); background: radial-gradient(120% 80% at 0% 0%, var(--lv-glow), transparent 55%), var(--lv-bg);
+  border-radius: 24px; padding: 34px 36px 38px; display: grid; gap: 44px; grid-template-columns: minmax(0, 1fr); min-width: 0; font-size: 15px;
+}
+.live-zone h2 { font: 600 24px/1.2 var(--f-display); letter-spacing: -0.01em; margin: 6px 0 0; }
+.live-zone .eyebrow { color: var(--muted); letter-spacing: .12em; }
+.lv-hero { display: grid; gap: 30px; grid-template-columns: minmax(0, 1fr); }
+.lv-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px 20px; font-size: 13px; color: var(--ink-2); }
+.lv-status { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lv-status b { font: 600 11.5px/1 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--good); }
+.lv-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--good); flex: none; animation: lvpulse 2.6s ease-out infinite; }
 .lv-status.off b { color: var(--muted); }
 .lv-status.off .lv-dot { background: var(--muted); animation: none; }
-@keyframes lvpulse { 0% { box-shadow: 0 0 0 0 var(--good-ring); } 70% { box-shadow: 0 0 0 9px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
-.lv-running { font: 500 12px var(--f-mono); color: var(--ink-2); }
-.lv-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px 40px; padding: 26px 24px 6px; align-items: start; }
-.lv-pnl { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; }
-.lv-pnl .big { font: 600 clamp(46px, 6.2vw, 72px)/0.95 var(--f-display); letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
+@keyframes lvpulse { 0% { box-shadow: 0 0 0 0 var(--good-ring); } 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+.lv-running { font: 500 12.5px var(--f-mono); color: var(--muted); }
+.lv-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px 56px; align-items: end; }
+.lv-pnl { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px 18px; margin-top: 14px; }
+.lv-pnl .big { font: 600 clamp(52px, 6.6vw, 80px)/0.95 var(--f-display); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--ink); }
 .lv-pnl .big.neg { color: var(--bad); }
-.today { font: 500 12.5px/1 var(--f-mono); padding: 6px 10px; border-radius: 99px; background: var(--chip); color: var(--ink-2); white-space: nowrap; }
+.today { font: 500 13px/1 var(--f-mono); padding: 7px 12px; border-radius: 99px; background: var(--chip); color: var(--ink-2); white-space: nowrap; }
 .today.pos { background: var(--good-bg); color: var(--good); }
 .today.neg { background: var(--bad-bg); color: var(--bad); }
-.lv-lede { margin: 14px 0 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.6; max-width: 58ch; }
+.lv-lede { margin: 18px 0 0; color: var(--ink-2); font-size: 15px; line-height: 1.7; max-width: 54ch; }
 .lv-lede b { color: var(--ink); font-weight: 600; }
-.lv-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--grid); border: 1px solid var(--grid); border-radius: 12px; overflow: hidden; }
-.lv-stats > div { background: var(--surface); padding: 14px 16px; min-width: 0; }
-.lv-stats .v { font: 600 26px/1.15 var(--f-display); font-variant-numeric: tabular-nums; margin-top: 6px; white-space: nowrap; }
-.lv-stats .s { color: var(--muted); font-size: 12px; margin-top: 3px; line-height: 1.4; }
-.lv-chart-wrap { padding: 16px 24px 18px; }
+.lv-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px 28px; }
+.lv-stats > div { min-width: 0; }
+.lv-stats .v { font: 600 28px/1.1 var(--f-display); font-variant-numeric: tabular-nums; margin-top: 8px; white-space: nowrap; color: var(--ink); }
+.lv-stats .s { color: var(--muted); font-size: 12.5px; margin-top: 5px; line-height: 1.45; }
+.lv-chart-wrap { background: var(--lv-card); border-radius: 18px; padding: 20px 22px 16px; }
 .lv-chart-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 6px 16px; }
-.lv-chart-note { font-size: 12px; color: var(--muted); }
-.lv-chart { height: 250px; margin-top: 8px; }
+.lv-chart-note { font-size: 12.5px; color: var(--muted); }
+.lv-chart { height: 260px; margin-top: 10px; }
 
-#lvBoard { min-width: 1060px; }
-#lvBoard th { padding: 8px 10px 10px; }
-#lvBoard td { vertical-align: middle; padding: 12px 10px; }
+.lv-sec { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.lv-sec-head { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px 24px; }
+.lv-sec-head p { margin: 8px 0 0; color: var(--ink-2); font-size: 14px; line-height: 1.6; max-width: 70ch; }
+.lv-card { background: var(--lv-card); border-radius: 18px; padding: 6px 18px; min-width: 0; }
+.live-zone .filt button { background: transparent; border-color: var(--line); color: var(--ink-2); }
+.live-zone .filt button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--lv-bg); }
+
+#lvBoard { min-width: 1060px; font-size: 14px; }
+#lvBoard th { padding: 14px 10px 12px; border-bottom-color: var(--grid); color: var(--muted); }
+#lvBoard td { vertical-align: middle; padding: 15px 10px; border-bottom-color: var(--grid); }
+#lvBoard tbody tr:last-child td { border-bottom: 0; }
 #lvBoard td.rk { color: var(--muted); width: 34px; }
-#lvBoard td.strat { min-width: 300px; }
+#lvBoard td.strat { min-width: 310px; }
 #lvBoard tr.row { cursor: pointer; transition: background-color .15s; }
-#lvBoard tr.row:hover, #lvBoard tr.row.sel { background: var(--sel); }
+#lvBoard tr.row:hover, #lvBoard tr.row.sel { background: var(--lv-hover); }
 #lvBoard tr.row.sel { box-shadow: none; }
 #lvBoard tr.row.sel td { border-bottom-color: transparent; }
 #lvBoard tr.row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 #lvBoard .num { font-family: var(--f-mono); }
-.lv-name { display: flex; align-items: center; gap: 7px; }
-.lv-name .sname { font-size: 14px; }
+#lvBoard .pnl-in > span { font-size: 15px; }
+.lv-name { display: flex; align-items: center; gap: 8px; }
+.lv-name .sname { font-size: 14.5px; font-weight: 600; color: var(--ink); }
 .lv-star { width: 18px; height: 18px; flex: none; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(135deg, var(--gold-hi), var(--gold-lo)); color: var(--gold-on); }
 .lv-star svg { width: 11px; height: 11px; }
-tr.is-golden .lv-name .sname { color: var(--gold-ink); }
-.lv-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin-top: 5px; font-size: 12px; color: var(--muted); }
+#lvBoard tr.is-golden .lv-name .sname { color: var(--gold-ink); }
+.lv-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+.live-zone .coin-tag { background: var(--chip); color: var(--ink-2); font-weight: 500; }
 .paused { font: 600 10px/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--warn); background: var(--warn-bg); padding: 4px 7px; border-radius: 5px; }
+#lvBoard tr.detail > td { background: var(--lv-hover); padding: 0; border-bottom: 0; }
 
-.lvd { padding: 6px 22px 24px; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
-.lvd-why { margin: 0; color: var(--ink-2); font-size: 14px; line-height: 1.55; max-width: 92ch; }
-.lvd-set { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.lvd-set code { font-size: 12px; padding: 3px 7px; }
-.lvd-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
-.lvd-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 20px; align-items: start; }
-.lvd .rp-box { display: flex; flex-direction: column; gap: 10px; }
-.lvd .rp-chart .chart { min-height: 230px; }
-.vs { width: 100%; }
-.vs th, .vs td { padding: 7px 4px; }
+.lvd { padding: 4px 18px 26px; display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+.lvd-why { margin: 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.65; max-width: 84ch; }
+.lvd-set { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+.live-zone code { background: var(--chip); color: var(--ink-2); font-size: 12px; padding: 3px 8px; border-radius: 6px; }
+.lvd-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: stretch; }
+.lvd-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px; align-items: start; }
+.live-zone .rp-box { background: var(--lv-raise); border: 0; border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+.live-zone .rp-chart .chart { min-height: 240px; }
+.vs { width: 100%; font-size: 13.5px; }
+.vs th { border-bottom: 0; padding: 0 4px 6px; }
+.vs td { padding: 7px 4px; border-bottom: 1px solid var(--grid); color: var(--ink-2); }
+.vs tr:last-child td { border-bottom: 0; }
 .vs th:first-child, .vs td:first-child { padding-left: 0; }
-.vs td.num { font: 500 13px var(--f-mono); }
-.now-big { font-size: 15px; line-height: 1.5; }
+.vs td.num { font: 500 13.5px var(--f-mono); color: var(--ink); }
+.now-big { font-size: 15.5px; line-height: 1.55; color: var(--ink); }
 .now-big b { font-family: var(--f-mono); font-weight: 500; }
-.gauge { position: relative; height: 66px; margin: 4px 0 0; }
-.gauge-tr { position: absolute; left: 0; right: 0; top: 29px; height: 8px; border-radius: 4px; background: var(--chip); }
-.gauge-gap { position: absolute; top: 29px; height: 8px; background: var(--accent-bg); border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent); }
-.gm { position: absolute; top: 23px; width: 3px; height: 20px; margin-left: -1.5px; border-radius: 2px; }
+.gauge { position: relative; height: 70px; }
+.gauge-tr { position: absolute; left: 0; right: 0; top: 31px; height: 8px; border-radius: 4px; background: var(--chip); }
+.gauge-gap { position: absolute; top: 31px; height: 8px; border-radius: 4px; background: var(--accent-bg); box-shadow: inset 0 0 0 1px var(--accent); }
+.gm { position: absolute; top: 25px; width: 3px; height: 20px; margin-left: -1.5px; border-radius: 2px; }
 .gm.mkt { background: var(--accent); }
-.gm.mod { background: var(--ink); }
-.gm span { position: absolute; white-space: nowrap; font: 500 11.5px var(--f-mono); color: var(--ink-2); }
-.gm.mkt span { bottom: 24px; }
-.gm.mod span { top: 24px; }
-.gauge-ax { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; font: 500 10px var(--f-mono); color: var(--muted); }
-.near { position: relative; display: flex; align-items: flex-end; gap: 4px; height: 70px; margin-top: 6px; border-bottom: 1px solid var(--line); }
-.near i { flex: 1; min-height: 2px; border-radius: 3px 3px 0 0; background: var(--muted); opacity: .55; }
-.near i.hit { background: var(--accent); opacity: 1; }
-.near .thr { position: absolute; left: 0; right: 0; border-top: 1.5px dashed var(--ink-2); }
-.near .thr span { position: absolute; right: 0; top: -17px; font: 500 10.5px var(--f-mono); color: var(--ink-2); background: var(--surface); padding-left: 4px; }
-.holds { display: grid; gap: 8px; }
-.hold { font-size: 13px; line-height: 1.5; background: var(--chip); border-radius: 8px; padding: 9px 12px; }
-.hold b { font-weight: 600; }
-.box-note { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin: 0; }
+.gm.mod { background: var(--gold); }
+.gm span { position: absolute; left: 0; white-space: nowrap; font: 500 12px var(--f-mono); color: var(--ink-2); }
+.gm.mkt span { bottom: 25px; }
+.gm.mod span { top: 25px; }
+.gauge-ax { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; font: 500 10px var(--f-mono); color: var(--muted); opacity: .8; }
+.near { position: relative; display: flex; align-items: flex-end; gap: 5px; height: 76px; margin-top: 18px; }
+.near i { flex: 1; min-height: 3px; border-radius: 4px 4px 1px 1px; background: var(--chip); }
+.near i.hit { background: var(--accent); }
+.near .thr { position: absolute; left: 0; right: 0; border-top: 1.5px dashed var(--muted); }
+.near .thr span { position: absolute; right: 0; top: -18px; font: 500 11px var(--f-mono); color: var(--ink-2); }
+.holds { display: grid; gap: 10px; }
+.hold { font-size: 13.5px; line-height: 1.55; background: var(--lv-card); border-radius: 12px; padding: 11px 14px; color: var(--ink-2); }
+.hold b { font-weight: 600; color: var(--ink); }
+.box-note { font-size: 13px; color: var(--muted); line-height: 1.55; margin: 0; }
 
-.lv-filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
-.lv-filters label { display: grid; gap: 5px; font: 500 10.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.lv-filters select { font: 500 13px var(--f-body); text-transform: none; letter-spacing: 0; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
-  border-radius: 8px; padding: 7px 10px; min-width: 150px; max-width: 260px; }
+.lv-filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+.lv-filters label { display: grid; gap: 6px; font: 500 10.5px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.lv-filters select { font: 500 13.5px var(--f-body); text-transform: none; letter-spacing: 0; color: var(--ink); background: var(--lv-card); border: 1px solid var(--line);
+  border-radius: 10px; padding: 8px 10px; min-width: 160px; max-width: 280px; }
 .lv-filters select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.lv-log { display: grid; grid-template-columns: minmax(0, 1fr); max-height: 620px; overflow-y: auto; border-top: 1px solid var(--grid); }
-.lg { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 4px 14px; align-items: start; padding: 13px 4px; border-bottom: 1px solid var(--grid); }
-.lg-i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--chip); color: var(--ink-2); }
+.lv-log { display: grid; grid-template-columns: minmax(0, 1fr); max-height: 640px; overflow-y: auto; }
+.lg { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 4px 16px; align-items: start; padding: 16px 4px; border-bottom: 1px solid var(--grid); }
+.lg:last-child { border-bottom: 0; }
+.lg-i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--chip); color: var(--ink-2); }
 .lg-i svg { width: 15px; height: 15px; }
 .lg.bet .lg-i { background: var(--accent-bg); color: var(--accent); }
 .lg.win .lg-i { background: var(--good-bg); color: var(--good); }
 .lg.loss .lg-i { background: var(--bad-bg); color: var(--bad); }
 .lg.sold .lg-i { background: var(--gold-bg); color: var(--gold-ink); }
-.lg-m { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font-size: 12px; color: var(--muted); }
-.lg-m .t { font: 500 12px var(--f-mono); color: var(--ink-2); }
-.lg-d { font-size: 13.5px; line-height: 1.55; margin-top: 3px; }
+.lg-m { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; color: var(--muted); }
+.lg-m .t { font: 500 12.5px var(--f-mono); color: var(--ink-2); }
+.lg-d { font-size: 14px; line-height: 1.6; margin-top: 4px; color: var(--ink-2); max-width: 88ch; }
+.lg-d b { color: var(--ink); font-weight: 600; }
 .lg-p { text-align: right; white-space: nowrap; padding-top: 2px; }
-.lg-p b { display: block; font: 500 14px var(--f-mono); }
-.lg-p span { font: 500 10.5px var(--f-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
-.lg-empty { color: var(--muted); padding: 28px 4px; text-align: center; }
-.lv-count { font-size: 12px; color: var(--muted); margin-top: 10px; }
+.lg-p b { display: block; font: 500 15px var(--f-mono); color: var(--ink); }
+.lg-p span { font: 500 10.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.lg-empty { color: var(--muted); padding: 32px 4px; text-align: center; }
+.live-zone .pos { color: var(--good); }
+.live-zone .neg { color: var(--bad); }
 
 @media (max-width: 900px) {
   .lv-main, .lvd-grid { grid-template-columns: minmax(0, 1fr); }
+  .lv-main { align-items: start; }
 }
 @media (max-width: 720px) {
-  .live-zone .panel { padding: 18px 16px; }
-  .lv-top { padding: 12px 16px; }
-  .lv-main { padding: 20px 16px 4px; }
-  .lv-chart-wrap { padding: 14px 16px 16px; }
-  .lv-chart { height: 210px; }
-  .lv-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .lv-stats .v { font-size: 22px; }
+  .live-zone { padding: 24px 18px 28px; border-radius: 20px; gap: 36px; }
+  .lv-chart-wrap { padding: 16px 12px 12px; }
+  .lv-chart { height: 220px; }
+  .lv-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 18px; }
+  .lv-stats .v { font-size: 24px; }
+  .lv-card { padding: 4px 14px; }
   #lvBoard { min-width: 0; }
   #lvBoard thead { display: none; }
   #lvBoard, #lvBoard tbody { display: block; }
-  #lvBoard tr.row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px 10px; padding: 16px 4px; border-bottom: 1px solid var(--grid); }
+  #lvBoard tr.row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px 10px; padding: 18px 2px; border-bottom: 1px solid var(--grid); }
+  #lvBoard tbody tr.row:last-child { border-bottom: 0; }
   #lvBoard tr.row > td { display: block; padding: 0; border: 0; text-align: left; min-width: 0; grid-column: span 2; }
   #lvBoard tr.row > td.rk { display: none; }
   #lvBoard tr.row > td.strat { grid-column: 1 / -1; }
   #lvBoard tr.row > td.pnl { grid-column: 1 / -1; }
   #lvBoard tr.row > td.chevc { display: none; }
-  #lvBoard td[data-label]::before { content: attr(data-label); display: block; font: 500 9.5px/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  #lvBoard td[data-label]::before { content: attr(data-label); display: block; font: 500 9.5px/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
   #lvBoard .pnl-in { justify-content: space-between; }
-  #lvBoard .pnl-in .spark { width: 60%; height: 28px; }
+  #lvBoard .pnl-in .spark { width: 58%; height: 30px; }
   #lvBoard .sub { white-space: normal; }
   #lvBoard tr.detail, #lvBoard tr.detail > td { display: block; }
-  .lvd { padding: 4px 4px 20px; }
+  #lvBoard tr.detail > td { border-radius: 14px; }
+  .lvd { padding: 14px 10px 18px; }
+  .live-zone .rp-box { padding: 16px; }
   .lv-filters { width: 100%; }
   .lv-filters label { flex: 1 1 140px; }
   .lv-filters select { width: 100%; min-width: 0; max-width: none; }
-  .lg { grid-template-columns: 30px minmax(0, 1fr); }
+  .lg { grid-template-columns: 34px minmax(0, 1fr); }
   .lg-p { grid-column: 2; text-align: left; display: flex; gap: 8px; align-items: baseline; }
   .lg-p b { display: inline; }
 }
@@ -640,7 +667,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   </a>
 
   <section class="live-zone" id="livePanel" hidden>
-    <div class="panel lv-hero">
+    <div class="lv-hero">
       <div class="lv-top">
         <span class="lv-status" id="lvStatus"><i class="lv-dot" aria-hidden="true"></i><b id="lvStatusText">Live</b><span id="liveFresh"></span></span>
         <span class="lv-running" id="lvRunning"></span>
@@ -659,24 +686,24 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       </div>
     </div>
 
-    <section class="panel" id="lvBoardPanel">
-      <div class="panel-head">
+    <div class="lv-sec" id="lvBoardPanel">
+      <div class="lv-sec-head">
         <div><div class="eyebrow">Ranked by paper profit</div><h2>Every strategy, side by side</h2><p id="lvBoardIntro"></p></div>
         <div class="filt" role="group" aria-label="Show strategies" id="lvBoardFilt"></div>
       </div>
-      <div class="tablewrap"><table id="lvBoard"></table></div>
-    </section>
+      <div class="lv-card"><div class="tablewrap"><table id="lvBoard"></table></div></div>
+    </div>
 
-    <section class="panel" id="lvLogPanel">
-      <div class="panel-head">
+    <div class="lv-sec" id="lvLogPanel">
+      <div class="lv-sec-head">
         <div><div class="eyebrow">Live log</div><h2>What the strategies just did</h2><p id="lvLogIntro"></p></div>
         <div class="lv-filters">
           <label for="lvCoin">Coin<select id="lvCoin"></select></label>
           <label for="lvStrat">Strategy<select id="lvStrat"></select></label>
         </div>
       </div>
-      <div class="lv-log" id="liveLog"></div>
-    </section>
+      <div class="lv-card"><div class="lv-log" id="liveLog"></div></div>
+    </div>
   </section>
 
   <div class="lab-zone" id="labZone">
@@ -1342,13 +1369,18 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     const nt = document.querySelector(`#huntBoard tr[data-cand="${CSS.escape(id)}"]`);
     if (nt) { const dy = nt.getBoundingClientRect().top - top0; if (Math.abs(dy) > 1) window.scrollBy(0, dy); nt.focus({ preventScroll: true }); }
   }
+  document.addEventListener("pointermove", e => { const t = e.target.closest && e.target.closest("[data-tip]");
+    if (t) showTip(t.dataset.tip, e); else if (!(e.target.closest && e.target.closest("#hay"))) hideTip(); });
+  document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-lv]");
+    if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); lvToggle(r); } });
+  document.addEventListener("change", e => {
+    if (e.target.id === "lvCoin") { lvs.coin = e.target.value; if (LIVE_DATA) lvLog(LIVE_DATA); }
+    if (e.target.id === "lvStrat") { lvs.strat = e.target.value; if (LIVE_DATA) lvLog(LIVE_DATA); } });
   if (H3) {
     $("hay").addEventListener("pointermove", e => { const d = hayHit(e); $("hay").style.cursor = d ? "pointer" : "default";
       if (d) showTip(`${d.c.label || d.c.id}\n${(STATUS[d.c.status] || [0, d.c.status || "Unrated"])[1]} · locked-days profit ${M((d.c.holdout || {}).pnl)}`, e); else hideTip(); });
     $("hay").addEventListener("pointerleave", hideTip);
     $("hay").addEventListener("click", e => { const d = hayHit(e); if (d) openCand(d.c.id); });
-    document.addEventListener("pointermove", e => { const t = e.target.closest && e.target.closest("[data-tip]");
-      if (t) showTip(t.dataset.tip, e); else if (!(e.target.closest && e.target.closest("#hay"))) hideTip(); });
     document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-cand]");
       if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggleCand(r); } });
     if (window.ResizeObserver) { let lw = 0; new ResizeObserver(() => { const w = $("hayBox").clientWidth; if (w && w !== lw) { lw = w; drawHay(); } }).observe($("hayBox")); }
@@ -1372,55 +1404,206 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   }
   let LIVE_DATA = typeof LIVE === "undefined" ? null : LIVE, liveSource = "snapshot";
   function setLive(d, src) { if (!d || (LIVE_DATA && d.generated < LIVE_DATA.generated)) return; LIVE_DATA = d; liveSource = src; renderLive(); fresh(); }
+  // ---------- Live paper trading. renderLive() is a pure re-render from LIVE_DATA: it runs on every update. ----------
+  const lvs = { open: undefined, filt: "all", coin: "all", strat: "all" };
+  const isGold = s => !!s && (/^\s*★/.test(s.label || "") || /^G-/.test(String(s.id || "")));
+  const sLabel = s => String((s && s.label) || `${COIN(String((s && s.series) || ""))} · ${(s && (s.name || s.strategy)) || ""}`).replace(/^\s*★\s*/, "");
+  const mean = a => Array.isArray(a) && a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const coinTag = s => `<span class="coin-tag">${s === "ALL" ? "All coins" : esc(COIN(String(s || "")))}</span>`;
+  const lvRef = s => s.lab ? s.lab : s.backtest && s.backtest.oos ? s.backtest.oos : null;
+  const lvExp = s => s.lab && s.lab.per_market != null && s.watched ? s.watched * s.lab.per_market : null;
+  const signed = (v, d = 2) => (v > 0 ? "+" : "") + money(v, d);
+  // chart colours come from the live band's own tokens, not the page's
+  const CL = () => { const z = getComputedStyle($("livePanel")), g = n => z.getPropertyValue(n).trim();
+    return { ink: g("--ink"), ink2: g("--ink-2"), muted: g("--muted"), grid: g("--grid"), line: g("--line"), accent: g("--accent"), accent2: g("--accent"),
+      good: g("--good"), bad: g("--bad"), surface: g("--lv-raise"), chip: g("--chip"), gold: g("--gold") }; };
+  const killChart = id => { if (charts[id]) { charts[id].destroy(); delete charts[id]; } };
+  const dayStart = ts => { const d = new Date(ts * 1000); d.setHours(0, 0, 0, 0); return d.getTime() / 1000; };
+  const dur = sec => sec < 3600 ? `${Math.max(1, Math.round(sec / 60))} min` : sec < 172800 ? `${(sec / 3600).toFixed(sec < 36000 ? 1 : 0)} h` : `${(sec / 86400).toFixed(1)} days`;
+  const tkTime = tk => { const m = /-\d{2}[A-Z]{3}\d{2}(\d{2})(\d{2})/.exec(tk || ""); return m ? `${m[1]}:${m[2]}` : ""; };
+  function liveT(cv) {
+    if (!Array.isArray(cv) || cv.length < 3) return null;
+    const d = cv.map((p, i) => p[1] - (i ? cv[i - 1][1] : 0)), m = mean(d), sd = Math.sqrt(d.reduce((a, x) => a + (x - m) ** 2, 0) / (d.length - 1));
+    return sd > 0 ? m / sd * Math.sqrt(d.length) : null;
+  }
+  function combinedCurve(S) {
+    const pts = [];
+    S.forEach(s => (s.curve || []).forEach((p, i, a) => pts.push([p[0], p[1] - (i ? a[i - 1][1] : 0)])));
+    pts.sort((a, b) => a[0] - b[0]); let c = 0;
+    return pts.map(([t, d]) => [t, c += d]);
+  }
+  const dayLines = c => ({ id: "days", beforeDatasetsDraw(ch) {
+    const { ctx, chartArea: a, scales: { x } } = ch; ctx.save(); ctx.strokeStyle = c.line; ctx.fillStyle = c.muted; ctx.font = `500 10px ${tok("--f-mono")}`;
+    for (let d = dayStart(x.min / 1000 + 36 * 3600 - 86400); d * 1000 < x.max; d = dayStart(d + 36 * 3600)) {
+      if (d * 1000 <= x.min) continue; const px = x.getPixelForValue(d * 1000);
+      ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
+      ctx.fillText(new Date(d * 1000).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }), px + 5, a.top + 10); }
+    ctx.restore(); } });
+  function profitChart(id, pts, col, label, c) {
+    const o = base(c); o.interaction = { mode: "nearest", axis: "x", intersect: false }; o.layout = { padding: { right: 70, top: 8 } };
+    o.plugins.tooltip.callbacks = { title: i => fmtTime(i[0].parsed.x / 1000), label: i => `${label}: ${money(i.parsed.y, 2)}` };
+    o.scales = { x: axis(c, { type: "linear", grid: { display: false }, ticks: { color: c.muted, maxTicksLimit: 7, callback: v => new Date(v).toLocaleTimeString(undefined, { hour: "numeric" }) } }),
+                 y: axis(c, { ticks: { color: c.muted, maxTicksLimit: 5, callback: v => money(v) } }) };
+    mk(id, { type: "line", data: { datasets: [{ label, data: pts, borderColor: col, backgroundColor: alpha(col, 0.1), fill: "origin", borderWidth: 2, pointRadius: 0,
+      pointHoverRadius: 4, pointHoverBackgroundColor: col, pointHoverBorderColor: c.surface, pointHoverBorderWidth: 2 }] }, options: o, plugins: [zeroLine(c), dayLines(c), endLabels(c)] });
+  }
+
   function renderLive() {
-    const L = LIVE_DATA; $("livePanel").hidden = !L; if (!L) return;
-    const c = C(), ago = t => { const m = Math.round((L.generated - t) / 60); return m < 60 ? `${m} min` : `${(m / 60).toFixed(1)} h`; };
-    const since = Math.min(...L.strategies.map(s => s.since || L.generated));
-    const running = L.strategies.some(s => !s.stale);
-    $("liveBadge").className = "pill " + (running ? "cand" : "luck"); $("liveBadge").textContent = running ? (liveSource === "snapshot" ? "Running" : "Live") : "Not running";
-    const tot = L.strategies.reduce((a, s) => a + s.pnl, 0), n = L.strategies.reduce((a, s) => a + s.settled, 0);
-    $("liveIntro").innerHTML = `Paper trades on the real Kalshi markets: live prices, simulated $${L.stake} orders, real settlements. No money at risk. Running for ${ago(since)}. <span id="liveFresh"></span> So far: <b class="${cls(tot)}">${money(tot, 2)}</b> on ${n} settled trade${n === 1 ? "" : "s"}. It takes hundreds of trades before live results mean anything.`;
-    $("liveCards").className = "coins" + (L.strategies.length === 2 ? " two" : "");
-    $("liveCards").innerHTML = L.strategies.map((s, i) => { const b = s.lab ? { oos: s.lab, diag: {} } : s.backtest, st = s.status, bl = s.lab ? "Holdout test" : "Backtest";
-      const lag = s.lags && s.lags.length ? (s.lags.reduce((a, x) => a + x, 0) / s.lags.length).toFixed(1) + "s" : "–";
-      return `<div class="coin-card">
-      <div class="top"><span class="sym"><i style="background:${tok(COIN_COL[i % 5 + 1])}"></i>${s.label || COIN(s.series) + " · " + s.name}</span><span class="num ${cls(s.pnl)}" style="font:500 18px var(--f-mono)">${money(s.pnl, 2)}</span></div>
-      <div class="params">${s.execution} · ${params(s.params)}</div>
-      <div class="sdesc" style="max-width:none">${s.why}</div>
-      <div class="kv" style="grid-template-columns:auto 1fr 1fr;margin-top:4px">
-        <div class="h">&nbsp;</div><div class="h num">Live</div><div class="h num">${bl}</div>
-        <div>Markets watched</div><div class="num">${s.watched || 0}</div><div class="num">${s.lab && s.lab.per_market != null ? s.lab.per_market.toFixed(2) + " trades/market" : "–"}</div>
-        <div>Trades expected so far</div><div class="num">${s.lab && s.lab.per_market != null ? (s.watched * s.lab.per_market).toFixed(1) : "–"}</div><div class="num"></div>
-        <div>Orders placed</div><div class="num">${s.orders}</div><div class="num">${b && b.diag.orders ? b.diag.orders.toLocaleString() : "–"}</div>
-        <div>Filled</div><div class="num">${s.fills}</div><div class="num">${b && b.diag.fill_rate != null ? pct(b.diag.fill_rate) : "–"}</div>
-        <div>Settled trades</div><div class="num">${s.settled}</div><div class="num">${b ? b.oos.trades.toLocaleString() : "–"}</div>
-        <div>Win rate</div><div class="num">${s.settled ? pct(s.wins / s.settled) : "–"}</div><div class="num">${b ? pct(b.oos.win_rate) : "–"}</div>
-        <div>Profit</div><div class="num ${cls(s.pnl)}">${money(s.pnl, 2)}</div><div class="num ${b ? cls(b.oos.pnl) : ""}">${b ? money(b.oos.pnl) : "–"}</div>
-        <div>t-stat</div><div class="num">–</div><div class="num">${b ? tfmt(b.oos.t_stat) : "–"}</div>
-        ${s.execution === "taker" ? `<div>Avg seconds after the minute</div><div class="num">${lag}</div><div class="num">0</div>` : ""}
+    const L = LIVE_DATA; $("livePanel").hidden = !L; if (!L) { killChart("lvEq"); killChart("lvDet"); return; }
+    const S = (L.strategies || []).filter(Boolean), c = CL(), sum = f => S.reduce((a, s) => a + (f(s) || 0), 0);
+    const run = S.filter(s => !s.stale).length, live = run > 0;
+    $("lvStatus").classList.toggle("off", !live);
+    $("lvStatusText").textContent = live ? (liveSource === "snapshot" ? "Running" : "Live") : "Not running";
+    $("lvRunning").textContent = `${run} of ${S.length} strategies running`;
+    const tot = sum(s => s.pnl), n = sum(s => s.settled), w = sum(s => s.wins), d0 = dayStart(L.generated);
+    const sinces = S.map(s => s.since).filter(nz), since = sinces.length ? Math.min(...sinces) : null;
+    const today = sum(s => { const cv = s.curve || []; if (!cv.length) return 0; let b = 0; for (const p of cv) { if (p[0] < d0) b = p[1]; else break; } return cv[cv.length - 1][1] - b; });
+    const nOpen = sum(s => (s.holding || []).length), risk = sum(s => (s.holding || []).reduce((a, h) => a + (h.n || 0) * (h.price || 0), 0));
+    const G = S.filter(isGold), best = [...S].sort((a, b) => b.pnl - a.pnl)[0];
+    $("lvPnl").innerHTML = `<span class="big${tot < 0 ? " neg" : ""}">${signed(tot)}</span><span class="today ${cls(today)}">${signed(today)} today</span>`;
+    $("liveIntro").innerHTML = `Pretend money on real markets. <b>${S.length} strategies</b> watch Kalshi's 15-minute crypto markets, place simulated bets of about $${L.stake} at the real prices, and get paid by the real results. Nothing is at risk. Expect swings: it takes hundreds of settled trades before these numbers mean much.`;
+    $("lvStats").innerHTML = [
+      ["Settled trades", n.toLocaleString(), `${w.toLocaleString()} made money`],
+      ["Win rate", n ? pct(w / n) : "–", "share of settled trades in profit"],
+      ["Open bets", nOpen.toLocaleString(), nOpen ? `${money(risk, 2)} staked, waiting on results` : "none right now"],
+      ["Running for", since ? dur(L.generated - since) : "–", since ? `since ${fmtTime(since)}` : ""],
+      ["Leading strategy", best ? signed(best.pnl) : "–", best ? esc(sLabel(best)) : ""],
+      ["★ Golden newcomers", G.length ? signed(sum(s => isGold(s) ? s.pnl : 0)) : "–", G.length ? `${G.length} strategies from the hunt, ${G.reduce((a, s) => a + s.settled, 0)} settled so far` : "none yet"],
+    ].map(([l, v, s]) => `<div><div class="eyebrow">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+    const comb = combinedCurve(S);
+    $("lvEqNote").textContent = comb.length ? `${comb.length.toLocaleString()} settled trades from all strategies, in the order they settled` : "";
+    if (comb.length) profitChart("lvEq", [{ x: (since && since < comb[0][0] ? since : comb[0][0] - 60) * 1000, y: 0 }, ...comb.map(([t, v]) => ({ x: t * 1000, y: v }))], c.accent, "All strategies", c);
+    else { killChart("lvEq"); }
+    lvBoard(L); lvLog(L);
+  }
+
+  function lvBoard(L) {
+    const S = (L.strategies || []).filter(Boolean), nG = S.filter(isGold).length;
+    if (lvs.filt === "gold" && !nG) lvs.filt = "all";
+    $("lvBoardFilt").innerHTML = nG ? [["all", "All", S.length], ["gold", "★ Golden", nG]].map(([k, l, x]) => `<button type="button" data-lvf="${k}" aria-pressed="${lvs.filt === k}">${l}<span>${x}</span></button>`).join("") : "";
+    const rows = S.filter(s => lvs.filt === "all" || isGold(s)).sort((a, b) => (b.pnl - a.pnl) || (b.settled - a.settled));
+    if (lvs.open === undefined) lvs.open = rows.length ? rows[0].id : null;
+    $("lvBoardIntro").textContent = `Ranked by paper profit so far. "Holdout test" is what the same rule made on locked days of past markets it was never tuned on, at $10 a trade, as a yardstick. Tap a row for its settings, what it sees right now, and its open bets.`;
+    const head = `<thead><tr><th>#</th><th>Strategy</th><th class="num">Paper profit</th><th class="num" title="Orders filled, against how many the holdout test would predict for the markets watched">Trades</th><th class="num">Win rate</th>
+      <th class="num" title="Average seconds between the end of the signal minute and the order">Decision lag</th><th class="num">Holdout test</th><th class="num">Open bets</th><th><span class="sr">Details</span></th></tr></thead>`;
+    const body = rows.map((s, k) => {
+      const g = isGold(s), b = lvRef(s), lag = s.execution === "taker" ? mean(s.lags) : null, exp = lvExp(s), open = s.id === lvs.open;
+      const hold = s.holding || [], risk = hold.reduce((a, h) => a + (h.n || 0) * (h.price || 0), 0);
+      return `<tr class="row${open ? " sel" : ""}${g ? " is-golden" : ""}" tabindex="0" data-lv="${esc(s.id)}" aria-expanded="${open}">
+        <td class="rk mono">${k + 1}</td>
+        <td class="strat"><div class="lv-name">${g ? `<span class="lv-star" title="Golden: passed every test in the strategy hunt"><svg viewBox="0 0 16 16" aria-hidden="true">${ICON.star}</svg></span>` : ""}<span class="sname">${esc(sLabel(s))}</span></div>
+          <div class="lv-tags">${coinTag(s.series)}<span>${EXW[s.execution] || esc(s.execution || "")}</span>${s.stale ? '<span class="paused">Not running</span>' : ""}</div></td>
+        <td class="num pnl" data-label="Paper profit"><div class="pnl-in">${spark(s.curve, g ? "golden" : s.pnl < 0 ? "fail" : "")}<span class="${cls(s.pnl)}">${money(s.pnl, 2)}</span></div></td>
+        <td class="num" data-label="Trades">${NUM(s.fills)}<div class="sub">${exp != null ? `~${Math.round(exp)} expected` : `${NUM(s.settled)} settled`}</div></td>
+        <td class="num" data-label="Win rate">${s.settled ? pct(s.wins / s.settled) : "–"}<div class="sub">${b && nz(b.win_rate) ? `test ${pct(b.win_rate)}` : "&nbsp;"}</div></td>
+        <td class="num" data-label="Decision lag">${lag != null ? lag.toFixed(1) + " s" : "–"}<div class="sub">${s.execution === "taker" ? "after the minute" : "limit orders"}</div></td>
+        <td class="num" data-label="Holdout test">${b ? `<span class="${cls(b.pnl)}">${money(b.pnl)}</span><div class="sub">t ${tfmt(b.t_stat)} · ${NUM(b.trades)} trades</div>` : `–<div class="sub">not tested</div>`}</td>
+        <td class="num" data-label="Open bets">${hold.length}<div class="sub">${hold.length ? money(risk, 2) + " staked" : "none"}</div></td>
+        <td class="chevc"><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>` +
+        (open ? `<tr class="detail"><td colspan="9">${lvDetail(s, L)}</td></tr>` : "");
+    }).join("");
+    $("lvBoard").innerHTML = head + "<tbody>" + (body || `<tr><td colspan="9" class="empty">No strategies in this group.</td></tr>`) + "</tbody>";
+    const o = rows.find(s => s.id === lvs.open);
+    if (o) lvDetChart(o); else killChart("lvDet");
+  }
+
+  function gauge(mid, mo) {
+    if (mid == null && mo == null) return "";
+    const P = v => (Math.max(0, Math.min(1, v)) * 100).toFixed(1);
+    return `<div class="gauge" role="img" aria-label="Chance it finishes up: market ${mid != null ? pct(mid) : "unknown"}, model ${mo != null ? pct(mo) : "unknown"}">
+      <div class="gauge-ax"><span>0%</span><span>50%</span><span>100%</span></div><div class="gauge-tr"></div>
+      ${mid != null && mo != null ? `<div class="gauge-gap" style="left:${P(Math.min(mid, mo))}%;width:${(Math.abs(mid - mo) * 100).toFixed(1)}%"></div>` : ""}
+      ${mid != null ? `<div class="gm mkt" style="left:${P(mid)}%"><span style="transform:translateX(-${P(mid)}%)">Market ${pct(mid)}</span></div>` : ""}
+      ${mo != null ? `<div class="gm mod" style="left:${P(mo)}%"><span style="transform:translateX(-${P(mo)}%)">Model ${pct(mo)}</span></div>` : ""}</div>`;
+  }
+  function nearBars(near, thr) {
+    const mx = (Math.max(thr || 0, ...near.map(x => x[1] || 0)) * 1.15) || 1;
+    return `<div class="near">${near.map(([tk, g]) => `<i class="${thr && g >= thr ? "hit" : ""}" style="height:${Math.max(3, g / mx * 100).toFixed(1)}%" data-tip="${esc(`${tkTime(tk) ? tkTime(tk) + " market" : tk}\nbiggest gap ${Math.round(g * 100)}¢`)}"></i>`).join("")}${thr ? `<div class="thr" style="bottom:${(thr / mx * 100).toFixed(1)}%"><span>bets at ${Math.round(thr * 100)}¢</span></div>` : ""}</div>`;
+  }
+  function lvDetail(s, L) {
+    const b = lvRef(s), bl = s.lab ? "holdout test" : "backtest", lag = mean(s.lags), exp = lvExp(s), lt = liveT(s.curve), st = s.status, edge = s.params && s.params.edge;
+    const diag = s.lab ? {} : (s.backtest && s.backtest.diag) || {};
+    const rows = [
+      ["Markets watched", NUM(s.watched || 0), s.lab && s.lab.per_market != null ? s.lab.per_market.toFixed(2) + " trades/market" : "–"],
+      ["Trades expected so far", exp != null ? exp.toFixed(1) : "–", ""],
+      ["Orders placed", NUM(s.orders), diag.orders ? diag.orders.toLocaleString() : "–"],
+      ["Filled", NUM(s.fills), diag.fill_rate != null ? pct(diag.fill_rate) : "–"],
+      ["Settled trades", NUM(s.settled), b ? NUM(b.trades) : "–"],
+      ["Win rate", s.settled ? pct(s.wins / s.settled) : "–", b ? pct(b.win_rate) : "–"],
+      ["Profit", `<span class="${cls(s.pnl)}">${money(s.pnl, 2)}</span>`, b ? `<span class="${cls(b.pnl)}">${money(b.pnl)}</span>` : "–"],
+      ["t-stat", lt != null ? lt.toFixed(2) : "–", b ? tfmt(b.t_stat) : "–"]];
+    if (s.execution === "taker") rows.push(["Avg seconds after the minute", lag != null ? lag.toFixed(1) + "s" : "–", "0"]);
+    const exitRule = s.sold > 0 || /sell early/i.test(s.label || "");
+    if (exitRule) rows.push(["Sold before the close", NUM(s.sold || 0), "–"]);
+    let now = `<p class="box-note">Waiting for the first market.</p>`;
+    if (st) {
+      const left = st.close_ts ? Math.max(0, Math.round((st.close_ts - L.generated) / 60)) : 15 - st.minute;
+      const mid = st.yes_bid > 0 && st.yes_ask < 1 ? (st.yes_bid + st.yes_ask) / 2 : null, d = st.strike ? (st.spot / st.strike - 1) * 100 : null;
+      const gap = mid != null && st.model != null ? Math.abs(st.model - mid) : null;
+      now = `<div class="now-big"><b>${COIN(st.series || s.series)} ${usd(st.spot)}</b> vs target <b>${usd(st.strike)}</b> ${d != null ? `<span class="${d >= 0 ? "pos" : "neg"}">(${d >= 0 ? "+" : ""}${d.toFixed(3)}%)</span>` : ""}</div>
+        <div class="box-note">Market closing ${st.close_ts ? hm(st.close_ts) : ""}, ${left} min left. Chance it finishes UP:</div>${gauge(mid, st.model)}
+        ${s.execution === "taker" && edge ? `<p class="box-note">Bets when market and model differ by ${Math.round(edge * 100)}¢ or more${gap != null ? `. Right now they are ${Math.round(gap * 100)}¢ apart` : ""}.</p>` : ""}`;
+    }
+    const near = s.strategy && s.strategy.startsWith("fair_value") && Array.isArray(s.near) && s.near.length ? nearBars(s.near, s.strategy === "fair_value" && edge ? edge : null) : "";
+    const hold = (s.holding || []).map(h => `<div class="hold"><b>Bet ${dirWord(h.side)}:</b> ${betText({ ...h, series: h.series || s.series })}. ${h.n} × ${cents(h.price)}: wins ${money(h.n * (1 - h.price), 2)} if right, risks ${money(h.n * h.price, 2)}.</div>`).join("");
+    const ps = Object.entries(s.params || {});
+    return `<div class="lvd">
+      ${s.why ? `<p class="lvd-why">${esc(s.why)}</p>` : ""}
+      <div class="lvd-set"><span class="eyebrow">Settings</span>${ps.map(([k, x]) => `<code>${esc(k)}=${esc(x)}</code>`).join("")}<span class="sdesc" style="max-width:none">${EXL[s.execution] || ""}</span></div>
+      <div class="lvd-grid">
+        <div class="rp-box rp-chart"><div class="eyebrow">Live paper profit, this strategy</div><div class="chart"><canvas id="lvDet" aria-label="Live paper profit of ${esc(sLabel(s))}"></canvas></div></div>
+        <div class="rp-box"><div class="eyebrow">Live so far vs the ${bl}</div>
+          <table class="vs"><thead><tr><th></th><th class="num">Live</th><th class="num">${s.lab ? "Holdout test" : "Backtest"}</th></tr></thead><tbody>${rows.map(([k, a, z]) => `<tr><td>${k}</td><td class="num">${a}</td><td class="num">${z}</td></tr>`).join("")}</tbody></table></div>
       </div>
-      ${s.strategy.startsWith("fair_value") && s.near && s.near.length ? `<div class="live-state">Biggest model gap per recent market (trades at ${s.strategy === "fair_value" && s.params.edge ? Math.round(s.params.edge * 100) + "¢" : "its trigger"}): ${s.near.map(n => `${Math.round(n[1] * 100)}¢`).join(" · ")}</div>` : ""}
-      <div class="now">${st ? (() => { const left = st.close_ts ? Math.max(0, Math.round((st.close_ts - L.generated) / 60)) : 15 - st.minute;
-        const mid = st.yes_bid > 0 && st.yes_ask < 1 ? (st.yes_bid + st.yes_ask) / 2 : null, d = st.strike ? (st.spot / st.strike - 1) * 100 : null;
-        return `<div class="eyebrow">${s.stale ? "Last seen" : "Right now"} · market closing ${st.close_ts ? hm(st.close_ts) : ""}</div>
-          <div class="now-line"><b>${COIN(st.series || s.series)} ${usd(st.spot)}</b> vs target <b>${usd(st.strike)}</b> <span class="${d >= 0 ? "pos" : "neg"}">(${d != null ? (d >= 0 ? "+" : "") + d.toFixed(3) + "%" : ""})</span> · ${left} min left</div>
-          <div class="live-state">Chance it finishes UP: market ${mid != null ? pct(mid) : "–"}, model ${st.model != null ? pct(st.model) : "–"}. ${s.execution === "taker" && s.params && s.params.edge ? `Bets when they differ by ${Math.round(s.params.edge * 100)}¢ or more.` : ""}</div>`; })() : `<div class="live-state">Waiting for the first market</div>`}
-        ${(s.holding || []).map(h => `<div class="holding">Holding: <b>bet ${dirWord(h.side)}</b>, ${betText({ ...h, series: h.series || s.series })}. ${h.n} × ${cents(h.price)} (wins ${money(h.n * (1 - h.price), 2)}, risks ${money(h.n * h.price, 2)})</div>`).join("")}
-      </div>
-    </div>`; }).join("");
-    $("btLegend").innerHTML = L.strategies.map((s, i) => `<span><i style="background:${tok(COIN_COL[i % 5 + 1])}"></i>${s.label || COIN(s.series) + " " + s.name}</span>`).join("");
-    const o = base(c); o.interaction = { mode: "nearest", intersect: false };
-    o.plugins.tooltip.callbacks = { title: i => fmtTime(i[0].parsed.x / 1000), label: i => `${i.dataset.label}: ${money(i.parsed.y, 2)}` };
-    o.scales = { x: axis(c, { type: "linear", ticks: { color: c.muted, maxTicksLimit: 6, callback: v => fmtDate(v / 1000) } }), y: axis(c, { ticks: { color: c.muted, callback: v => money(v) } }) };
-    const btc = s => (s.lab && s.lab.curve && s.lab.curve.length ? s.lab.curve : s.backtest ? s.backtest.curve : []);
-    mk("bt", { type: "line", data: { datasets: L.strategies.map((s, i) => ({ s, i })).filter(x => btc(x.s).length).map(({ s, i }) => ({ label: s.label || COIN(s.series), data: btc(s).map(([t, v]) => ({ x: t * 1000, y: v })),
-      borderColor: tok(COIN_COL[i % 5 + 1]), borderWidth: 2, pointRadius: 0, pointHoverRadius: 4 })) }, options: o, plugins: [zeroLine(c)] });
-    const ev = [...L.events].filter(e => e.event !== "watched").reverse();
-    const LBL = Object.fromEntries(L.strategies.map(s => [s.id, s.label || COIN(s.series) + " " + s.name]));
-    $("liveLog").innerHTML = ev.length ? `<thead><tr><th>Time</th><th>Coin</th><th>Strategy</th><th>What happened</th><th class="num">P&amp;L</th></tr></thead><tbody>` +
-      ev.map(e => `<tr><td class="mono">${hm(e.ts)}</td><td class="mono">${COIN(e.series)}</td><td class="mono">${LBL[e.sid] || LBL[(e.sid || "").split("|")[0]] || LBL[e.series] || e.strategy || ""}</td><td style="min-width:260px">${describe(e)}</td>
-        <td class="num ${e.pnl != null ? cls(e.pnl) : ""}">${e.pnl != null ? money(e.pnl, 2) : ""}</td></tr>`).join("") + "</tbody>"
-      : `<tbody><tr><td class="empty">No orders yet. The strategies only trade when their conditions are met, which can take a while.</td></tr></tbody>`;
+      <div class="lvd-grid2">
+        <div class="rp-box"><div class="eyebrow">${s.stale ? "Last seen" : "Right now"}</div>${now}</div>
+        <div class="rp-box"><div class="eyebrow">Open bets · ${(s.holding || []).length}</div>${hold ? `<div class="holds">${hold}</div>` : `<p class="box-note">No open bets. It's waiting for a market where its conditions are met.</p>`}</div>
+        ${near ? `<div class="rp-box"><div class="eyebrow">How close it came to betting</div>${near}<p class="box-note">The biggest gap between model and market in each of the last ${s.near.length} markets it watched${s.strategy === "fair_value" && edge ? `. A bar past the dashed line means it placed a bet` : ""}.</p></div>` : ""}
+        ${exitRule ? `<div class="rp-box"><div class="eyebrow">Sold early</div><div class="now-big"><b>${NUM(s.sold || 0)}</b> position${s.sold === 1 ? "" : "s"} sold before the close${s.sold ? `, <b class="${cls(s.sold_pnl)}">${signed(s.sold_pnl || 0)}</b>` : ""}</div><p class="box-note">This strategy sells as soon as the price reaches the model's fair value, instead of waiting for the result. It gives up some big wins to avoid more losses.</p></div>` : ""}
+      </div></div>`;
+  }
+  function lvDetChart(s) {
+    const cv = $("lvDet"); if (!cv) return;
+    const pts = Array.isArray(s.curve) ? s.curve : [];
+    if (!pts.length) { killChart("lvDet"); cv.parentElement.innerHTML = '<p class="empty">No settled trades yet. The line starts with the first result.</p>'; return; }
+    const c = CL(), t0 = s.since && s.since < pts[0][0] ? s.since : pts[0][0] - 60;
+    profitChart("lvDet", [{ x: t0 * 1000, y: 0 }, ...pts.map(([t, v]) => ({ x: t * 1000, y: v }))], isGold(s) ? c.gold : c.accent, sLabel(s), c);
+  }
+  function lvToggle(tr) {
+    const id = tr.dataset.lv, top0 = tr.getBoundingClientRect().top;
+    lvs.open = lvs.open === id ? null : id; lvBoard(LIVE_DATA);
+    const nt = document.querySelector(`#lvBoard tr[data-lv="${CSS.escape(id)}"]`);
+    if (nt) { const dy = nt.getBoundingClientRect().top - top0; if (Math.abs(dy) > 1) window.scrollBy(0, dy); nt.focus({ preventScroll: true }); }
+  }
+
+  const LGI = {
+    up: '<path d="M8 13V3.5M4 7.2L8 3.2l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+    down: '<path d="M8 3v9.5M4 8.8l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+    sold: '<path d="M2.5 8h8M7.5 4.8L10.7 8l-3.2 3.2M13.5 3.5v9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+    clock: '<circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 5v3.2l2.2 1.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' };
+  function lvLog(L) {
+    const S = (L.strategies || []).filter(Boolean), byId = Object.fromEntries(S.map(s => [s.id, s]));
+    const sidOf = e => { const k = String(e.sid || ""), k0 = k.split("|")[0]; return byId[k] ? k : byId[k0] ? k0 : byId[e.series] ? e.series : null; };
+    const key = e => (e.sid || e.series) + "|" + e.ticker, exits = new Set((L.events || []).filter(e => e.event === "exit").map(key));
+    // a sold position appears once, as its "exit" event (the synthesized settle repeats it)
+    const ev = [...(L.events || [])].filter(e => e && e.event !== "watched" && e.event !== "start" && !(e.event === "settle" && e.result === "sold" && exits.has(key(e)))).reverse();
+    const coins = [...new Set(ev.map(e => e.series).filter(Boolean))].sort((a, b) => COIN(a).localeCompare(COIN(b)));
+    const strats = [...new Set(ev.map(sidOf).filter(Boolean))];
+    if (lvs.coin !== "all" && !coins.includes(lvs.coin)) lvs.coin = "all";
+    if (lvs.strat !== "all" && !strats.includes(lvs.strat)) lvs.strat = "all";
+    $("lvCoin").innerHTML = `<option value="all">All coins</option>` + coins.map(k => `<option value="${esc(k)}"${k === lvs.coin ? " selected" : ""}>${esc(COIN(k))}</option>`).join("");
+    $("lvStrat").innerHTML = `<option value="all">All strategies</option>` + strats.map(k => `<option value="${esc(k)}"${k === lvs.strat ? " selected" : ""}>${isGold(byId[k]) ? "★ " : ""}${esc(sLabel(byId[k]))}</option>`).join("");
+    const shown = ev.filter(e => (lvs.coin === "all" || e.series === lvs.coin) && (lvs.strat === "all" || sidOf(e) === lvs.strat));
+    const kind = e => e.event === "buy" || e.event === "fill" ? "bet" : e.event === "exit" || (e.event === "settle" && e.result === "sold") ? "sold" : e.event === "settle" ? (e.pnl > 0 ? "win" : "loss") : "other";
+    const icon = (e, k) => k === "bet" ? (e.side === "yes" ? LGI.up : LGI.down) : k === "win" ? ICON.check : k === "loss" ? ICON.cross : k === "sold" ? LGI.sold : e.event === "rest" ? LGI.clock : ICON.minus;
+    const WORD = { win: "won", loss: "lost", sold: "sold early" };
+    $("lvLogIntro").textContent = `Newest first: bets placed, results, and positions sold early. Showing ${shown.length} of the latest ${ev.length} events.`;
+    $("liveLog").innerHTML = shown.length ? shown.map(e => { const k = kind(e), s = byId[sidOf(e)];
+      const p = e.pnl != null && WORD[k] ? `<b class="${cls(e.pnl)}">${signed(e.pnl)}</b><span>${WORD[k]}</span>` : k === "bet" && nz(e.n) && nz(e.price) ? `<b>${money(e.n * e.price, 2)}</b><span>staked</span>` : "";
+      return `<div class="lg ${k}"><div class="lg-i"><svg viewBox="0 0 16 16" aria-hidden="true">${icon(e, k)}</svg></div>
+        <div><div class="lg-m"><span class="t">${nz(e.ts) ? hm(e.ts) : ""}</span>${e.series ? coinTag(e.series) : ""}<span>${s ? (isGold(s) ? "★ " : "") + esc(sLabel(s)) : esc(e.strategy || "")}</span></div><div class="lg-d">${describe(e)}</div></div>
+        <div class="lg-p">${p}</div></div>`; }).join("")
+      : `<div class="lg-empty">${ev.length ? "Nothing in the latest events matches these filters." : "No orders yet. The strategies only trade when their conditions are met, which can take a while."}</div>`;
   }
 
   function renderPortfolio() {
@@ -1555,6 +1738,8 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   }
 
   document.addEventListener("click", e => {
+    const lvf = e.target.closest("[data-lvf]"); if (lvf) { lvs.filt = lvf.dataset.lvf; if (LIVE_DATA) lvBoard(LIVE_DATA); return; }
+    const lvr = e.target.closest("tr[data-lv]"); if (lvr) { lvToggle(lvr); return; }
     const hf = e.target.closest("[data-hf]"); if (hf) { hs.filter = hf.dataset.hf; huntBoard(); return; }
     const smc = e.target.closest("[data-smc]"); if (smc) { openCand(smc.dataset.smc); return; }
     const hr = e.target.closest("tr[data-cand]"); if (hr) { toggleCand(hr); return; }
