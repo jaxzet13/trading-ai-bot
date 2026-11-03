@@ -52,6 +52,22 @@ UNDERLYING = {
     "KXBCH15M": ("coinbase", "BCH-USD", None), "KXADA15M": ("coinbase", "ADA-USD", None),
     "KXTON15M": ("coinbase", "TON-USD", None),
 }
+# Dukascopy's datafeed stopped answering from this machine (TLS reset at the proxy, Nov 3), so lab4 uses
+# Yahoo Finance 1-minute bars instead. Yahoo only serves the last ~30 days of 1-minute history, which is
+# what limits every series here to about a month. FX = spot quotes; metals/energy = front-month futures;
+# yields = Treasury futures of the matching tenor, inverted (price up <=> yield down).
+YAHOO = {
+    "KXEURUSD15M": ("EURUSD=X", False), "KXGBPUSD15M": ("GBPUSD=X", False), "KXAUDUSD15M": ("AUDUSD=X", False),
+    "KXUSDCAD15M": ("CAD=X", False), "KXUSDJPY15M": ("JPY=X", False), "KXUSDMXN15M": ("MXN=X", False),
+    "KXGOLD15M": ("GC=F", False), "KXSILVER15M": ("SI=F", False), "KXCOPPER15M": ("HG=F", False),
+    "KXPLATINUM15M": ("PL=F", False), "KXPALLADIUM15M": ("PA=F", False),
+    "KXWTI15M": ("CL=F", False), "KXBRENT15M": ("BZ=F", False), "KXNATGAS15M": ("NG=F", False),
+    "KXINX15M": ("ES=F", False), "KXNDQ15M": ("NQ=F", False), "KXDJIA15M": ("YM=F", False),
+    "KX2YRRATE15M": ("ZT=F", True), "KX5YRRATE15M": ("ZF=F", True), "KX10YRRATE15M": ("ZN=F", True),
+    "KX30YRRATE15M": ("ZB=F", True),
+}
+for _s, (_sym, _inv) in YAHOO.items():
+    UNDERLYING[_s] = ("yahoo_inv" if _inv else "yahoo", _sym, None)
 
 _k = requests.Session()          # Kalshi: default requests User-Agent (a custom one drew 429s)
 _s = requests.Session()          # Dukascopy
@@ -172,6 +188,48 @@ def fetch_candles_hist(series, markets, part: Path):
             print(f"    {series} archive candles {i + 1}/{len(todo)}", flush=True)
 
 
+# =========================================================================== Yahoo
+_y = requests.Session()
+_y.headers["User-Agent"] = "Mozilla/5.0"
+
+
+def yahoo_1m(sym, start_ts, end_ts):
+    """1-minute bars (ts = bar start) from Yahoo's chart API, 7-day requests, last ~30 days only."""
+    out, t = [], max(int(start_ts), int(time.time()) - 29 * 86400 + 600)
+    while t < end_ts:
+        t2 = min(t + 7 * 86400, int(end_ts))
+        for i in range(6):
+            try:
+                r = _y.get(f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}",
+                           params={"interval": "1m", "period1": t, "period2": t2}, timeout=30)
+            except requests.RequestException:
+                time.sleep(2 ** i)
+                continue
+            if r.status_code == 200:
+                break
+            time.sleep(min(60, 2 ** (i + 1)))
+        res = (r.json().get("chart", {}).get("result") or [None])[0] if r.status_code == 200 else None
+        if res and res.get("timestamp"):
+            q = res["indicators"]["quote"][0]
+            out.append(pd.DataFrame({"ts": res["timestamp"], "open": q["open"], "high": q["high"],
+                                     "low": q["low"], "close": q["close"], "volume": q.get("volume")}))
+        t = t2
+        time.sleep(0.6)
+    if not out:
+        return pd.DataFrame(columns=["ts", "open", "high", "low", "close", "volume"])
+    df = pd.concat(out, ignore_index=True).dropna(subset=["close"])
+    df = df[(df.ts % 60 == 0) & (df.close > 0)]
+    return df.drop_duplicates("ts").sort_values("ts").reset_index(drop=True)
+
+
+def yahoo_spot(series, start_ts, end_ts):
+    src, sym, _ = UNDERLYING[series]
+    sp = yahoo_1m(sym, start_ts, end_ts)
+    if src == "yahoo_inv" and len(sp):
+        sp = sp.assign(open=1 / sp.open, close=1 / sp.close, high=1 / sp.low, low=1 / sp.high)
+    return sp
+
+
 # =========================================================================== Dukascopy
 def duka_day(sym, day: datetime, scale):
     """1-minute BID candles for one UTC day (bar start ts). Cached as .bi5 files."""
@@ -272,7 +330,9 @@ def download(series, since_ts=None, hist_every=1, archive=False):
     lo, hi = int(mk.open_ts.min()) - 6 * 3600, int(mk.close_ts.max()) + 120
     spath = LDIR / f"{series}_spot.csv"
     if not spath.exists():
-        if src.startswith("duka"):
+        if src.startswith("yahoo"):
+            sp = yahoo_spot(series, lo, hi)
+        elif src.startswith("duka"):
             sp = duka_range(sym, scale, lo, hi)
             if src == "duka_inv":
                 sp = sp.assign(open=1 / sp.open, close=1 / sp.close, high=1 / sp.low, low=1 / sp.high)

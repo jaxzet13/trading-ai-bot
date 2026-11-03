@@ -41,7 +41,7 @@ def main():
     l3.add_argument("--out", default=None, help="output file (default data/lab/lab3_results.json)")
     l3.add_argument("--diagnose", action="store_true", help="only re-run the diagnostics on an existing results file")
     l4 = sub.add_parser("lab4", help="golden hunt on FX / yields / indices / commodities + cross-market (see lab4.py)")
-    l4.add_argument("args", nargs="*", help="survey | download [SERIES ...] | models [QUICK] | xmkt | judge")
+    l4.add_argument("args", nargs="*", help="survey | download [SERIES ...] | models [QUICK] | xmkt | range | judge")
     sub.add_parser("live-report", help="refresh the dashboard with the live paper-trading log")
     rl = sub.add_parser("real", help="REAL-MONEY runner for KXNEAR15M fair_value (see REAL_MONEY.md); --demo by default",
                         add_help=False)

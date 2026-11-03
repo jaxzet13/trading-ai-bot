@@ -4,6 +4,7 @@
     nice -n 19 python -m kalshi15m lab4 download    # Kalshi candles + underlying 1-min prices
     nice -n 19 python -m kalshi15m lab4 models      # lab3 families on every testable 15-min series
     nice -n 19 python -m kalshi15m lab4 xmkt        # structural / cross-market families (crypto data)
+    nice -n 19 python -m kalshi15m lab4 range       # range sums on the 15-minute coin race (KXCRYPTOLEAD15M)
     nice -n 19 python -m kalshi15m lab4 judge       # one strict bar over everything -> lab4_results.json
 
 Protocol = lab3's, applied to new markets (fixed in code before any holdout number is computed):
@@ -19,10 +20,10 @@ Protocol = lab3's, applied to new markets (fixed in code before any holdout numb
  6. There is no live strategy on these markets, so the comparison is the CONTROL: lab3's fv_ref family
     (the live bell-curve fair-value model) re-tuned on the same search window, run on the same holdout.
 
-Underlying prices are NOT the settlement source (Pyth): Dukascopy 1-minute BID candles (see data_fx).
-For Dukascopy series the model's "strike" is the feed's own price at the market open (Pyth's opening
-print is the real strike; the two venues' levels differ, returns agree), so x = log(price now / price
-at open). Treasury yields use the inverted US T-bond CFD price as a proxy (yield up <=> bond down).
+Underlying prices are NOT the settlement source (Pyth): Yahoo 1-minute bars (see data_fx; Dukascopy was
+unreachable), which only go back ~30 days. The model's "strike" is the feed's own price at the market open
+(Pyth's opening print is the real strike; the venues' levels differ, returns agree), so x = log(price now /
+price at open). Treasury yields use inverted Treasury futures of the same tenor (yield up <=> price down).
 """
 from __future__ import annotations
 
@@ -47,14 +48,14 @@ PART_MODELS = LAB / "lab4_part_models.json"
 PART_XMKT = LAB / "lab4_part_xmkt.json"
 SURVEY = LAB / "lab4_survey15.json"
 HOLDOUT_FRAC, N_FOLDS = 0.25, L3.N_FOLDS
-MIN_DAYS = 20                   # a series needs this many days of data to be tested
+MIN_DAYS = 14                   # a series needs this many days of Kalshi markets to be tested (yields: 15)
 MIN_MED_VOLUME = 100            # median contracts traded per market
 MIN_PER_TRADE, MIN_PER_DAY = 0.10, 2.0   # "economically meaningful" at $10 a trade
 
 FX = ["KXEURUSD15M", "KXUSDJPY15M", "KXGBPUSD15M", "KXAUDUSD15M", "KXUSDCAD15M", "KXUSDMXN15M"]
 RATES = ["KX2YRRATE15M", "KX5YRRATE15M", "KX10YRRATE15M", "KX30YRRATE15M"]
 INDEX = ["KXINX15M", "KXNDQ15M", "KXDJIA15M"]
-METALS = ["KXGOLD15M", "KXSILVER15M", "KXCOPPER15M"]
+METALS = ["KXGOLD15M", "KXSILVER15M", "KXCOPPER15M", "KXPLATINUM15M", "KXPALLADIUM15M"]
 ENERGY = ["KXWTI15M", "KXBRENT15M", "KXNATGAS15M"]
 XCRYPTO = ["KXBCH15M", "KXADA15M", "KXTON15M"]
 GROUPS_ALL = {"FX": FX, "RATES": RATES, "INDEX": INDEX, "METALS": METALS, "ENERGY": ENERGY, "XCRYPTO": XCRYPTO}
@@ -63,7 +64,7 @@ GROUP_NAMES = {"FX": "All FX pooled", "RATES": "All yields pooled", "INDEX": "Al
 NAMES = {"KXEURUSD15M": "EUR/USD", "KXUSDJPY15M": "USD/JPY", "KXGBPUSD15M": "GBP/USD", "KXAUDUSD15M": "AUD/USD",
          "KXUSDCAD15M": "USD/CAD", "KXUSDMXN15M": "USD/MXN", "KX2YRRATE15M": "2Y yield", "KX5YRRATE15M": "5Y yield",
          "KX10YRRATE15M": "10Y yield", "KX30YRRATE15M": "30Y yield", "KXINX15M": "S&P 500", "KXNDQ15M": "Nasdaq-100",
-         "KXDJIA15M": "Dow", "KXGOLD15M": "Gold", "KXSILVER15M": "Silver", "KXCOPPER15M": "Copper", "KXWTI15M": "WTI",
+         "KXDJIA15M": "Dow", "KXGOLD15M": "Gold", "KXPLATINUM15M": "Platinum", "KXPALLADIUM15M": "Palladium", "KXSILVER15M": "Silver", "KXCOPPER15M": "Copper", "KXWTI15M": "WTI",
          "KXBRENT15M": "Brent", "KXNATGAS15M": "Nat gas", "KXBCH15M": "BCH", "KXADA15M": "ADA", "KXTON15M": "TON"}
 RATE_PROXY = ("duka", "USTBONDTRUSD", 1e-3)      # inverted T-bond CFD as the yield proxy
 SKIP_FAMILIES = {f for f, v in L3.FAMILIES.items() if v["needs_ref"]}   # need BTC/ETH reference prices
@@ -93,7 +94,7 @@ def underlying(series):
 
 
 def anchor_own(series):
-    return underlying(series)[0].startswith("duka")
+    return underlying(series)[0].startswith(("duka", "yahoo"))
 
 
 def spot_path(series):
@@ -706,6 +707,153 @@ def xmkt(quick=0):
     return part
 
 
+# =========================================================================== part 3: range sums (coin race)
+# None of the non-crypto 15-minute series has more than one market per 15-minute window (one 'at or above the
+# open' contract each), so there are no strike ladders or range buckets to check against each other. The only
+# 15-minute series with mutually exclusive outcomes is KXCRYPTOLEAD15M ("which of BTC/ETH/SOL/XRP/HYPE rises
+# most in the next 15 minutes"): exactly one outcome pays, so
+#   all YES: buy YES on every outcome; pays $1 per set whatever happens, worth it when the asks sum below $1;
+#   all NO : buy NO on every outcome; pays $(n-1) per set, worth it when the NO asks sum below n-1.
+# Fills only at the quoted asks of the same minute, 10 contracts per leg, taker fee on every leg.
+RANGE_SERIES = "KXCRYPTOLEAD15M"
+RFAMS = {
+    "range_sum": {"name": "Coin-race outcomes summing to $1 (arbitrage)",
+                  "idea": "In Kalshi's 15-minute 'which coin rises most' race exactly one of the five outcomes pays. "
+                          "If the five YES asks add up to less than $1 (or the five NO asks to less than $4), buying the "
+                          "whole set locks in the difference; trade when that margin after fees is at least g.",
+                  "grid": {"g": [-0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.05], "start": [1, 5, 10], "end": [10, 14],
+                           "side": ["yes", "no", "both"]}},
+}
+PART_RANGE = LAB / "lab4_part_range.json"
+
+
+def _rload():
+    mk = pd.read_csv(F.LDIR / f"{RANGE_SERIES}_markets.csv")
+    cd = pd.read_csv(F.LDIR / f"{RANGE_SERIES}_candles.part.csv", usecols=["ticker", "ts", "yes_bid", "yes_ask"])
+    cd = cd[cd.ts > 0].drop_duplicates(["ticker", "ts"]).set_index(["ticker", "ts"])
+    mk = mk[(mk.close_ts - mk.open_ts) == 900]
+    ev = [(e, g) for e, g in mk.groupby("event") if len(g) == 5]
+    E = len(ev)
+    YB, YA = np.full((E, 5, 14), np.nan), np.full((E, 5, 14), np.nan)
+    R, ots = np.zeros((E, 5)), np.zeros(E, np.int64)
+    for i, (e, g) in enumerate(ev):
+        ots[i] = int(g.open_ts.iloc[0])
+        tsv = ots[i] + 60 * MIN
+        for k, r in enumerate(g.itertuples()):
+            R[i, k] = r.result
+            kk = pd.MultiIndex.from_arrays([[r.ticker] * 14, tsv])
+            YB[i, k] = cd.yes_bid.reindex(kk).to_numpy()
+            YA[i, k] = cd.yes_ask.reindex(kk).to_numpy()
+    o = np.argsort(ots)
+    return {"open_ts": ots[o], "YB": YB[o], "YA": YA[o], "R": R[o], "event": np.array([e for e, _ in ev])[o]}
+
+
+def _r_trades(X, c, delay=0):
+    YB, YA, R = X["YB"], X["YA"], X["R"]
+    n = 5
+    ya = np.where((YA > 0) & (YA < 1), YA, np.nan)              # YES ask must be a real quote
+    na = np.where(YB > 0, 1 - YB, 1.0)                           # no bid -> NO costs $1 (equivalent to skipping it)
+    na = np.where(np.isnan(YB), np.nan, na)
+    feeY = np.ceil(B.TAKER_RATE * PAIR_N * ya * (1 - ya) * 100 - 1e-9) / 100
+    feeN = np.ceil(B.TAKER_RATE * PAIR_N * na * (1 - na) * 100 - 1e-9) / 100
+    costY = PAIR_N * ya.sum(1) + feeY.sum(1)                     # (E,14); NaN if any leg missing
+    costN = PAIR_N * na.sum(1) + feeN.sum(1)
+    mY = (PAIR_N * 1 - costY) / PAIR_N                           # guaranteed margin per set, after fees
+    mN = (PAIR_N * (n - 1) - costN) / PAIR_N
+    win = ((MIN >= c["start"]) & (MIN <= c["end"]))[None, :]
+    sY = (np.nan_to_num(mY, nan=-9) >= c["g"] - 1e-9) & win & (c["side"] in ("yes", "both"))
+    sN = (np.nan_to_num(mN, nan=-9) >= c["g"] - 1e-9) & win & (c["side"] in ("no", "both"))
+    out = []
+    for e in np.nonzero((sY | sN).any(1))[0]:
+        j = int(np.argmax(sY[e] | sN[e]))
+        yes = bool(sY[e, j])
+        fj = j + delay
+        if fj > 13:
+            continue
+        cost = costY[e, fj] if yes else costN[e, fj]
+        if not np.isfinite(cost):
+            continue
+        pay = PAIR_N * (R[e].sum() if yes else (n - R[e].sum()))
+        pnl = pay - cost
+        out.append((int(X["open_ts"][e] + 60 * (fj + 1)), pnl, cost, pnl > 0, j + 1, X["event"][e], "yes" if yes else "no"))
+    df = pd.DataFrame(out, columns=["ts", "pnl", "cost", "win", "minute", "ticker", "set"])
+    df["series"] = RANGE_SERIES
+    return df
+
+
+def range_arb():
+    """Part 3: range sums on the coin race. Own calendar cut: most recent 25% of days = holdout."""
+    import itertools
+    t0 = time.time()
+    try:
+        os.nice(19)
+    except OSError:
+        pass
+    X = _rload()
+    start, end = int(X["open_ts"][0]), int(X["open_ts"][-1])
+    hdays = int(round(HOLDOUT_FRAC * (end - start) / 86400))
+    cut = end - hdays * 86400
+    cut -= cut % 900
+    print(f"range: {len(X['open_ts'])} events, search {pd.to_datetime(start, unit='s')} .. {pd.to_datetime(cut, unit='s')}, "
+          f"holdout {hdays} days", flush=True)
+    cands, fam_rows = [], []
+    for fam, spec in RFAMS.items():
+        keys = list(spec["grid"])
+        cfgs = [dict(zip(keys, v)) for v in itertools.product(*(spec["grid"][k] for k in keys))]
+        agg = np.zeros((len(cfgs), N_FOLDS, 3))
+        for i, cfg in enumerate(cfgs):
+            df = _r_trades(X, cfg)
+            df = df[(df.ts >= start) & (df.ts < cut)] if len(df) else df
+            if not len(df):
+                continue
+            f = np.clip(((df.ts.to_numpy() - start) * N_FOLDS) // (cut - start), 0, N_FOLDS - 1).astype(int)
+            pn = df.pnl.to_numpy()
+            agg[i, :, 0] = np.bincount(f, minlength=N_FOLDS)
+            agg[i, :, 1] = np.bincount(f, weights=pn, minlength=N_FOLDS)
+            agg[i, :, 2] = np.bincount(f, weights=pn ** 2, minlength=N_FOLDS)
+        w = L3.walk(agg)
+        # raw opportunities on the search window: any set whose asks leave a margin >= 0 before fees
+        YA, YB = X["YA"], X["YB"]
+        sm = X["open_ts"] < cut
+        sy = np.where((YA > 0) & (YA < 1), YA, np.nan).sum(1)
+        sn = np.where(np.isnan(YB), np.nan, np.where(YB > 0, 1 - YB, 1.0)).sum(1)
+        opp = {"events_in_search": int(sm.sum()),
+               "events_with_yes_set_under_1_before_fees": int((np.nan_to_num(sy[sm], nan=9) <= 1).any(1).sum()),
+               "events_with_no_set_under_4_before_fees": int((np.nan_to_num(sn[sm], nan=9) <= 4).any(1).sum()),
+               "median_min_yes_set_cost": round(float(np.nanmedian(np.nanmin(np.where(np.isfinite(sy[sm]), sy[sm], np.nan), 1))), 3),
+               "median_min_no_set_cost": round(float(np.nanmedian(np.nanmin(np.where(np.isfinite(sn[sm]), sn[sm], np.nan), 1))), 3)}
+        short = L3.shortlisted(w)
+        if short:
+            cands.append({"id": f"{fam}:{RANGE_SERIES}", "family": fam, "scope": RANGE_SERIES, "execution": "taker",
+                          "rule": {"family": fam, "params": cfgs[w["final"]]},
+                          "search": {**w["oos"], "insample": w["final_search"]}})
+        fam_rows.append({"id": fam, "name": spec["name"], "idea": spec["idea"], "configs": len(cfgs), "scopes_tested": 1,
+                         "shortlisted": int(short), "best_search_t": w["oos"]["t"],
+                         "walk_forward": {"Coin race": w["oos"]}, "search_opportunities": opp,
+                         "final_search": w["final_search"],
+                         "final_params": None if w["final"] is None else cfgs[w["final"]]})
+        print(f"  {fam}: {len(cfgs)} configs WF {w['oos']} shortlisted={short} opp={opp} ({time.time() - t0:.0f}s)", flush=True)
+    for c in cands:                                       # final exam, once
+        h = _r_trades(X, c["rule"]["params"])
+        d1 = _r_trades(X, c["rule"]["params"], delay=1)
+        h, d1 = h[h.ts >= cut], d1[d1.ts >= cut]
+        c["holdout"] = _xsumm(h)
+        c["curve"] = L3.curve(h) if len(h) else []
+        c["delay1"] = {k: v for k, v in _xsumm(d1).items() if k in ("pnl", "t", "trades")}
+        c["archive"] = None
+        c["label"] = f"Coin race · {RFAMS[c['family']]['name']} ({c['rule']['params']})"
+    part = {"generated": int(time.time()), "runtime_s": int(time.time() - t0), "start": start, "cut": cut,
+            "holdout_days": hdays, "families": fam_rows, "candidates": cands,
+            "data": f"KXCRYPTOLEAD15M (5 outcomes per 15-minute race), {pd.to_datetime(start, unit='s'):%Y-%m-%d} to "
+                    f"{pd.to_datetime(end, unit='s'):%Y-%m-%d}"}
+    PART_RANGE.write_text(json.dumps(part, default=L3._jd))
+    print(f"range done in {time.time() - t0:.0f}s: {len(cands)} candidates", flush=True)
+    for c in cands:
+        h = c["holdout"]
+        print(f"  {c['id']:24s} ${h['pnl']:>8} n={h['trades']:>5} t={h['t']:>5} d1 t={c['delay1']['t']}", flush=True)
+    return part
+
+
 # =========================================================================== judge (one strict bar for both parts)
 def RULES(t_bar):
     return [
@@ -730,20 +878,44 @@ def RULES(t_bar):
 
 
 CAVEATS = [
-    "Short histories: FX majors have 41 days of Kalshi data, AUD/USD and USD/CAD 27; the holdout is ~10 days. A t-stat "
-    "on 10 days is fragile even when it clears the bar; treat any golden result as 'worth paper trading', not proven.",
-    "The underlying prices are NOT the settlement feed. Kalshi settles FX/metals/energy/yields on Pyth, whose history "
-    "API now needs a key; Yahoo refused requests (HTTP 429). Dukascopy 1-minute BID candles are used instead "
-    "(feed_sign_agreement_search shows how often the feed's 15-minute move has the same sign as Kalshi's result). A live "
-    "bot would need a feed at least as close to Pyth.",
-    "Treasury-yield series use the inverted US T-bond CFD as a proxy for every tenor (30Y-like duration), which is a "
-    "poor stand-in for 2Y/5Y yields.",
-    "Backtest fills assume the quoted ask had enough size for a $10 order (10 contracts a leg); two-leg trades assume "
-    "both legs fill at the quotes of the same minute (1-minute candle closes are not guaranteed to be simultaneous). "
-    "The one-minute-late column shows how much survives if the second look is a minute later.",
-    "Family 3 (range buckets summing to $1) was not tested: it needs every bucket's quotes, which were not downloaded "
-    "in this budget; only the 4 strikes nearest spot of each hourly ladder are available (ladder_arb).",
+    "Short histories. Free 1-minute prices (Yahoo) only go back about 30 days, so every series is tested on roughly "
+    "Oct 6 - Nov 3 2026 (about 20 trading days) even where Kalshi has older markets: search ~3 weeks, holdout the last 7 "
+    "days. Treasury yields have only 15 days of Kalshi markets at all (search ~1 week). A t-stat on 7 days is fragile even "
+    "when it clears the bar; treat anything that passes as 'worth paper trading', never as proven.",
+    "The underlying prices are NOT the settlement feed. Kalshi settles these markets on Pyth, whose history API needs a "
+    "key; Dukascopy's free feed was unreachable from this machine. Yahoo 1-minute bars are used instead: spot quotes for "
+    "FX, front-month futures for metals/energy, Treasury futures of the matching tenor (inverted) for yields. The model's "
+    "strike is the feed's own price at the market open. coins[*].feed_sign_agreement_search shows how often the feed's "
+    "15-minute move has the same sign as Kalshi's result (e.g. ~96% for EUR/USD): every disagreement is a likely loss for "
+    "a fair-value rule, so these backtests understate what a bot with a Pyth feed could do, and a failure here does not "
+    "prove there is no edge with the right feed.",
+    "Yahoo's AUD/USD and some futures (palladium, platinum) skip minutes; gaps are forward-filled, so the 'price now' "
+    "can be up to a minute or two stale on those series.",
+    "Backtest fills assume the quoted ask had enough size for a $10 order (10 contracts a leg for set trades). The "
+    "yields are thin (median ~200 contracts per market, 11-15% of markets never trade), so real fills would be worse. "
+    "The one-minute-late column shows how much survives if the bot acts a minute later.",
+    "Structural arbitrage: every non-crypto 15-minute series has exactly one market per 15-minute window (one 'at or "
+    "above the open' contract), so there is no ladder or range to arbitrage. The range-sum test was run on the only "
+    "15-minute series with mutually exclusive outcomes, Kalshi's crypto 'coin race' (KXCRYPTOLEAD15M). The 15-min vs "
+    "hourly pair and hourly-ladder tests (xmkt_arb, xmkt_fv, ladder_arb) were run earlier on crypto data and are kept "
+    "for completeness.",
+    "Stock-index 15-minute series (S&P 500, Nasdaq-100, Dow) and USD/MXN are listed by Kalshi but had no settled "
+    "markets, so they could not be tested. Brent has only 13 days of markets (< 14) and was not tested.",
+    "To fit the time budget the lab3 parameter grids were thinned to every 3rd configuration (method.grid_thinning); "
+    "neighbouring configurations in those grids are near-duplicates.",
 ]
+
+PLAIN = {"KXEURUSD15M": "Euro vs US dollar", "KXUSDJPY15M": "US dollar vs Japanese yen",
+         "KXGBPUSD15M": "British pound vs US dollar", "KXAUDUSD15M": "Australian dollar vs US dollar",
+         "KXUSDCAD15M": "US dollar vs Canadian dollar", "KXUSDMXN15M": "US dollar vs Mexican peso",
+         "KX2YRRATE15M": "2-year Treasury yield", "KX5YRRATE15M": "5-year Treasury yield",
+         "KX10YRRATE15M": "10-year Treasury yield", "KX30YRRATE15M": "30-year Treasury yield",
+         "KXINX15M": "S&P 500", "KXNDQ15M": "Nasdaq-100", "KXDJIA15M": "Dow Jones Industrial Average",
+         "KXGOLD15M": "Gold", "KXSILVER15M": "Silver", "KXCOPPER15M": "Copper", "KXPLATINUM15M": "Platinum",
+         "KXPALLADIUM15M": "Palladium", "KXWTI15M": "WTI crude oil", "KXBRENT15M": "Brent crude oil",
+         "KXNATGAS15M": "Natural gas", "KXBCH15M": "Bitcoin Cash", "KXADA15M": "Cardano", "KXTON15M": "Toncoin",
+         "KXCOFFEE15M": "Coffee", "KXCRYPTOCOMP15M": "Crypto comparison", "KXCRYPTOLEAD15M": "Crypto coin race (which coin rises most)",
+         "KXKPOWMID15M": "KPOW midterms", "KXGBPUSD15MTEST": "GBP/USD test series"}
 
 
 def _paired(a, b):
@@ -784,13 +956,18 @@ def _why4(c, ch, t_bar, ctl):
 def judge(out_path=None):
     pm = json.loads(PART_MODELS.read_text()) if PART_MODELS.exists() else None
     px = json.loads(PART_XMKT.read_text()) if PART_XMKT.exists() else None
-    cands = (pm["candidates"] if pm else []) + (px["candidates"] if px else [])
+    pr = json.loads(PART_RANGE.read_text()) if PART_RANGE.exists() else None
+    if px:                                            # crypto data: say so in every name
+        for fr in px["families"]:
+            if not fr["name"].startswith("Crypto"):
+                fr["name"] = "Crypto: " + fr["name"]
+    cands = (pm["candidates"] if pm else []) + (px["candidates"] if px else []) + (pr["candidates"] if pr else [])
     k = max(1, len(cands))
     t_bar = round(NormalDist().inv_cdf(1 - 0.05 / k), 2)
     base = {b["scope"]: b for b in (pm["baselines"] if pm else [])}
     for c in cands:
-        is_x = c["family"] in XFAMS
-        part = px if is_x else pm
+        is_x = c["family"] in XFAMS or c["family"] in RFAMS
+        part = (px if c["family"] in XFAMS else pr) if is_x else pm
         h = c["holdout"]
         c["per_day"] = round(h["pnl"] / max(1, part["holdout_days"]), 2)
         ctl = None if is_x else base.get(c["scope"])
@@ -835,7 +1012,7 @@ def judge(out_path=None):
                     "checks": c["checks"], "curve": c["curve"]})
     pub.sort(key=lambda c: ({"golden": 0, "pass": 1, "fail": 2}[c["status"]], -c["holdout"]["t"]))
     fams = []
-    for part in (pm, px):
+    for part in (pm, px, pr):
         if not part:
             continue
         for fr in part["families"]:
@@ -848,16 +1025,41 @@ def judge(out_path=None):
                                      if not best else f"Best: {best['label']}: ${best['holdout']['pnl']:,.0f} at "
                                      f"t = {best['holdout']['t']} on the holdout ({best['status']}).")})
     sv = json.loads(SURVEY.read_text()) if SURVEY.exists() else {}
-    svh = json.loads((LAB / "lab4_survey_hourly.json").read_text()) if (LAB / "lab4_survey_hourly.json").exists() else {}
     why = (pm or {}).get("why", {})
+    coins = (pm or {}).get("coins", {})
     surveyed = []
-    for s, r in sv.items():
-        surveyed.append({"series": s, "name": cname(s), "frequency": "15min", **r,
-                         "testable": why.get(s) == "testable",
-                         "note": why.get(s, "not one of the families' target markets (no free 1-minute underlying)")})
-    for s, r in svh.items():
-        surveyed.append({"series": s, "frequency": "hourly", **r, "testable": False,
-                         "note": r.get("note", "surveyed only; not tested in this budget")})
+    for sname, r in sv.items():
+        if sname in L3.COINS or sname in ("KXBTC15M", "KXETH15M", "KXSOL15M", "KXXRP15M", "KXHYPE15M", "KXBNB15M",
+                                          "KXNEAR15M", "KXDOGE15M", "KXZEC15M"):
+            continue
+        w = why.get(sname)
+        n_mk = int(r.get("markets") or 0)
+        if sname == RANGE_SERIES:
+            testable = bool(pr)
+            note = ("Not an up/down market: a 5-way race (which of BTC/ETH/SOL/XRP/HYPE rises most). Used only for the "
+                    "range-sum arbitrage test" + (f" ({pr['data']})." if pr else ".") +
+                    f" Thin: median {r.get('median_volume', 0):,.0f} contracts per outcome.")
+        elif w == "testable":
+            testable = True
+            cinfo = coins.get(sname, {})
+            note = (f"Tested on {cinfo.get('markets', '?')} markets from Oct 6 (free 1-minute prices only go back ~30 days)"
+                    f"; Yahoo {F.UNDERLYING[sname][1]} as the price feed"
+                    + (f", same up/down sign as Kalshi's result {cinfo['feed_sign_agreement_search'] * 100:.1f}% of the time"
+                       if cinfo.get("feed_sign_agreement_search") else "") + ".")
+        elif n_mk == 0:
+            testable = False
+            note = "Kalshi lists this series but has not opened a single market in it (checked Nov 3 2026), so there is nothing to test."
+        else:
+            testable = False
+            note = (w or "not one of the hunt's target markets") + "."
+            note = note[0].upper() + note[1:]
+        surveyed.append({"series": sname, "name": PLAIN.get(sname, cname(sname)), "markets": n_mk,
+                         "history_days": r.get("span_days", 0), "median_volume": r.get("median_volume"),
+                         "testable": testable, "note": note, "first": r.get("first"), "last": r.get("last"),
+                         "markets_per_day": r.get("markets_per_day_recent"), "yes_rate": r.get("yes_rate"),
+                         "tested_markets": coins.get(sname, {}).get("markets") if testable else None})
+    order = FX + RATES + INDEX + METALS + ENERGY
+    surveyed.sort(key=lambda x: (order.index(x["series"]) if x["series"] in order else 99, x["series"]))
     gold = [c for c in pub if c["status"] == "golden"]
     summary = [f"{len(gold)} of {len(pub)} candidates that reached the holdout are golden, "
                f"{sum(c['status'] == 'pass' for c in pub)} pass, {sum(c['status'] == 'fail' for c in pub)} fail "
@@ -867,7 +1069,7 @@ def judge(out_path=None):
                        f"{b['holdout']['trades']} trades) on the holdout.")
     res = {
         "generated": int(time.time()),
-        "runtime_s": int((pm or {}).get("runtime_s", 0) + (px or {}).get("runtime_s", 0)),
+        "runtime_s": int((pm or {}).get("runtime_s", 0) + (px or {}).get("runtime_s", 0) + (pr or {}).get("runtime_s", 0)),
         "method": {
             "search_window": (f"{pd.to_datetime(pm['start'], unit='s'):%Y-%m-%d %H:%M} to "
                               f"{pd.to_datetime(pm['cut'], unit='s'):%Y-%m-%d %H:%M} UTC") if pm else None,
@@ -875,9 +1077,11 @@ def judge(out_path=None):
             "holdout_days": pm["holdout_days"] if pm else None, "n_folds": N_FOLDS,
             "n_families": len(fams), "n_grid_configs": (pm or {}).get("n_grid"),
             "n_configs_tested": ((pm or {}).get("n_grid", 0) * (pm or {}).get("n_scopes", 0)
-                                 + sum(f["configs"] * f["scopes_tested"] for f in (px or {}).get("families", []))),
+                                 + sum(f["configs"] * f["scopes_tested"] for f in (px or {}).get("families", []))
+                                 + sum(f["configs"] * f["scopes_tested"] for f in (pr or {}).get("families", []))),
             "n_walk_forwards": (pm or {}).get("n_walk_forwards", 0) + sum(f["scopes_tested"] for f in (px or {}).get("families", [])),
             "n_holdout_tests": k, "t_bar_strict": t_bar, "stake": L3.STAKE,
+            "grid_thinning": (pm or {}).get("quick") or 1,
             "shortlist": f"walk-forward P&L > 0, t >= {L3.T_SHORT}, >= {L3.SHORT_TRADES} trades, >= half of test folds profitable",
             "rules": RULES(t_bar), "caveats": CAVEATS, "summary": summary,
             "parts": {
@@ -887,15 +1091,20 @@ def judge(out_path=None):
                                                "quick": pm.get("quick")},
                 "xmkt": None if not px else {"what": "structural / cross-market families on crypto 15-min + hourly data",
                                              "start": px["start"], "cut": px["cut"], "holdout_days": px["holdout_days"],
-                                             "data": px["data"]}},
+                                             "data": px["data"]},
+                "range": None if not pr else {"what": "range sums on the 15-minute coin race", "start": pr["start"],
+                                              "cut": pr["cut"], "holdout_days": pr["holdout_days"], "data": pr["data"]}},
             "data_sources": {"kalshi": "public trade API (markets, 1-minute candlesticks)",
-                             "fx_metals_energy_index": "Dukascopy 1-minute BID candles (not Pyth; see caveats)",
-                             "yields": "Dukascopy USTBOND.TR/USD CFD, inverted, as a proxy",
+                             "fx_metals_energy_index": "Yahoo Finance 1-minute bars: FX spot (EURUSD=X ...), front-month "
+                                                       "futures for metals/energy (GC=F, SI=F, HG=F, PL=F, PA=F, CL=F, NG=F); "
+                                                       "not Pyth, see caveats",
+                             "yields": "Yahoo 1-minute Treasury futures, inverted, as the yield proxy: ZT=F (2Y), ZF=F (5Y), "
+                                       "ZN=F (10Y), ZB=F (30Y)",
                              "crypto": "Coinbase 1-minute candles (existing lab data)",
                              "tried_and_failed": ["Pyth Benchmarks TradingView shim (404, sunset Aug 2026)",
                                                   "Pyth Pro history API (401, needs an API key)",
                                                   "Hermes historical price updates (401)",
-                                                  "Yahoo chart API (HTTP 429 from this IP)"]},
+                                                  "Dukascopy datafeed (TLS connection reset from this machine)"]},
         },
         "coins": (pm or {}).get("coins", {}),
         "markets_surveyed": surveyed,
@@ -968,6 +1177,8 @@ def main(args):
         models(quick=quick)
     elif cmd == "xmkt":
         xmkt()
+    elif cmd == "range":
+        range_arb()
     elif cmd == "archive":
         archive_step()
     elif cmd == "judge":
