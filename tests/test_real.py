@@ -632,6 +632,285 @@ def test_all9_config_loads_and_rules_are_frozen():
         except R.Stop:
             pass
 
+# ----------------------------------------------------------------------------- golden rules (lab3) mode
+GOLDEN_CFG_PATH = Path(__file__).resolve().parent.parent / "kalshi15m" / "real_golden_demo.json"
+
+
+def golden_cfg(rule_ids=None, **limits):
+    cfg = real.load_config(GOLDEN_CFG_PATH)
+    cfg = json.loads(json.dumps(cfg))
+    cfg["series"] = "KXNEAR15M"                   # what supervise_many hands each coin's runner
+    if rule_ids is not None:
+        cfg["golden_rules"] = [r for r in cfg["golden_rules"] if r["id"] in rule_ids]
+    cfg["limits"].update(min_balance_usd=10.0, **limits)
+    return cfg
+
+
+def golden_engine(clock, flat_from=None, level=4.0, lag_bars=1):
+    """A real GoldenEngine on synthetic NEAR spot bars (23 days, iid 1-minute noise around `level`, exactly
+    `level` from `flat_from` on so the model says 50%). Coinbase is faked: candles published `lag_bars`
+    minutes late, the ticker = the close of the bar that just ended."""
+    import pandas as pd
+    from kalshi15m import golden_live as GL
+    rng = random.Random(3)
+    flat_from = T0 - 600 if flat_from is None else flat_from
+    ts = list(range(T0 - 23 * 86400, T0 + 4 * 900, 60))
+    px = [level if t >= flat_from else level * math.exp(0.001 * rng.gauss(0, 1)) for t in ts]
+    df = pd.DataFrame({"ts": ts, "low": px, "high": px, "open": px, "close": px, "volume": 1.0})
+    cols = ["ts", "low", "high", "open", "close", "volume"]
+
+    def fetch_candles(**kw):
+        T = int(clock() // 60 * 60)
+        rows = df[(df.ts <= T - 60 * (1 + lag_bars)) & (df.ts > T - 60 * 15)]
+        return rows[cols].values.tolist()[::-1]
+
+    def fetch_ticker():
+        T = int(clock() // 60 * 60)
+        return float(df.close[df.ts == T - 60].iloc[0])
+    return GL.GoldenEngine("KXNEAR15M", history=df[df.ts <= T0 - 180], fetch_candles=fetch_candles,
+                           fetch_ticker=fetch_ticker, clock=clock, data_dir=None)
+
+
+def golden_runner(d, clock, fake, kp, mode="LIVE", rule_ids=None, eng=None, **limits):
+    api = real.KalshiAPI("https://fake", "test-key-id", str(kp), session=fake, clock=clock, sleep=clock.sleep)
+    return real.Runner(golden_cfg(rule_ids, **limits), mode, api, log_path=d / "real_log.jsonl",
+                       stop_path=d / "STOP", clock=clock, sleep=clock.sleep, out=lambda *a: None,
+                       engine=eng or golden_engine(clock))
+
+
+def scalp_quotes(tk, minute):                        # cheap YES at entry, bid above fair value (0.5) after
+    return (0.28, 0.30) if minute <= 2 else (0.52, 0.54)
+
+
+def test_exit_order_body():
+    b = real.exit_order_body("KXNEAR15M-X", "yes", 0.52, 13, "cid")      # sell YES at the yes bid
+    assert b == {"ticker": "KXNEAR15M-X", "client_order_id": "cid", "side": "ask", "count": "13", "price": "0.5200",
+                 "time_in_force": "immediate_or_cancel", "self_trade_prevention_type": "taker_at_cross",
+                 "post_only": False, "reduce_only": True}
+    b = real.exit_order_body("KXNEAR15M-X", "no", 0.46, 7, "cid")        # sell NO at no bid 0.46 = buy YES @ 0.54
+    assert b["side"] == "bid" and b["price"] == "0.5400" and b["count"] == "7" and b["reduce_only"] is True
+    fl = [{"order_id": "o", "count_fp": "4.00", "outcome_side": "no", "yes_price_dollars": "0.5200",
+           "no_price_dollars": "0.4800", "fee_cost": "0.0700"},
+          {"order_id": "o", "count_fp": "1.00", "outcome_side": "yes", "yes_price_dollars": "0.5300",
+           "no_price_dollars": "0.4700", "fee_cost": "0.0200"}]
+    assert real.exit_fill_summary(fl, "yes") == (5.0, round(4 * 0.52 + 0.53, 6), 0.09)
+    assert real.exit_fill_summary(fl, "no") == (5.0, round(4 * 0.48 + 0.47, 6), 0.09)
+
+
+def test_golden_config_frozen():
+    cfg = real.load_config(GOLDEN_CFG_PATH)
+    assert [r["id"] for r in cfg["golden_rules"]] == [r["id"] for r in __import__("kalshi15m.golden_live").golden_live.GOLDEN]
+    assert cfg["limits"] == json.loads((GOLDEN_CFG_PATH.parent / "real_all9_demo.json").read_text())["limits"]
+    assert cfg["log"] == "data/kalshi15m/real_all9_log.jsonl" and cfg["series"] == real.ALL9
+    raw = json.loads(GOLDEN_CFG_PATH.read_text())
+
+    def refused(mut):
+        c = json.loads(json.dumps(raw))
+        mut(c)
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "c.json"
+            p.write_text(json.dumps(c))
+            try:
+                real.load_config(p)
+                return False
+            except real.Stop as s:
+                return s.code == real.EXIT_CONFIG
+    assert refused(lambda c: c["golden_rules"][2]["params"].update(edge=0.10))       # tampered param
+    assert refused(lambda c: c["golden_rules"][1].update(norm=0.1))                  # tampered sized norm
+    assert refused(lambda c: c["golden_rules"][0].update(t=9.9))                     # tampered priority
+    assert refused(lambda c: c["golden_rules"][0].update(id="scalp:KXBTC15M"))       # unknown rule
+    assert refused(lambda c: c["golden_rules"].append(c["golden_rules"][0]))         # duplicate
+    assert refused(lambda c: c.update(rules=json.loads((GOLDEN_CFG_PATH.parent / "real_all9.json").read_text())["rules"]))
+    assert refused(lambda c: c.update(series=["KXBTC15M", "KXFOO15M"]))
+    assert not refused(lambda c: c.update(golden_rules=c["golden_rules"][:3]))       # a subset is fine
+    for name in ("real.json", "real_10.json", "real_all9.json", "real_all9_demo.json"):   # old configs unchanged
+        p = GOLDEN_CFG_PATH.parent / name
+        if p.exists():
+            assert "golden_rules" not in real.load_config(p)
+
+
+def test_golden_best_rule_wins_and_others_logged():
+    d, clock, fake, kp = setup(quotes=scalp_quotes)
+    r = golden_runner(d, clock, fake, kp)
+    at_minute(clock, T0, 1); r.step()
+    assert not fake.posts                                         # every rule starts at minute >= 2
+    at_minute(clock, T0, 2); r.step()
+    assert len(fake.posts) == 1
+    b = fake.posts[0]
+    assert b["side"] == "bid" and b["price"] == "0.3000" and b["count"] == str(int(4.0 / 0.30)) and not b["reduce_only"]
+    it = events(r, "order_intent")[-1]
+    from kalshi15m import golden_live as GL
+    assert it["rule"] == "scalp:ALL" and abs(it["q"] - 0.5) < 1e-12
+    also = it["also_signalled"]
+    assert {"sized:ALL", "fv_shape:ALL", "fv_ref:ALL"} <= set(also) and "scalp:ALL" not in also
+    assert also == sorted(also, key=GL.PRIORITY.get)              # best first
+    assert all(GL.PRIORITY[x] > 0 for x in also)
+    assert r.pos[f"KXNEAR15M-T{T0}"]["rule"] == "scalp:ALL"
+
+
+def test_golden_sized_stake():
+    from kalshi15m import golden_live as GL
+    d, clock, fake, kp = setup(quotes=scalp_quotes)
+    r = golden_runner(d, clock, fake, kp, rule_ids={"sized:ALL"})
+    at_minute(clock, T0, 2); r.step()
+    it = events(r, "order_intent")[-1]
+    kel = (0.5 - 0.30) / (1 - 0.30)
+    stake = 4.0 * min(kel / GL.RULES["sized:ALL"]["norm"], 5)
+    assert it["rule"] == "sized:ALL" and abs(it["kelly"] - kel) < 1e-6 and abs(it["stake"] - stake) < 1e-4
+    assert fake.posts[0]["count"] == str(real.contracts_for(stake, 0.30, 40)) == "14"
+    assert abs(it["max_cost"] - (14 * 0.30 + kalshi_fee(0.30, 14))) < 1e-9
+    # the per-order contract cap still applies to sized stakes
+    d, clock, fake, kp = setup(quotes=scalp_quotes)
+    r = golden_runner(d, clock, fake, kp, rule_ids={"sized:ALL"}, max_contracts_per_order=10)
+    at_minute(clock, T0, 2); r.step()
+    assert fake.posts[0]["count"] == "10"
+
+
+def test_golden_scalp_full_exit_no_double_count():
+    d, clock, fake, kp = setup(quotes=scalp_quotes)
+    r = golden_runner(d, clock, fake, kp, rule_ids={"scalp:ALL"})
+    tk = f"KXNEAR15M-T{T0}"
+    at_minute(clock, T0, 2); r.step()
+    at_minute(clock, T0, 3); r.step()
+    assert len(fake.posts) == 2
+    x = fake.posts[1]
+    assert x["side"] == "ask" and x["price"] == "0.5200" and x["count"] == "13" and x["reduce_only"] is True
+    assert x["time_in_force"] == "immediate_or_cancel"
+    e = events(r, "exit")[-1]
+    exp = 13 * (0.52 - 0.30) - kalshi_fee(0.30, 13) - kalshi_fee(0.52, 13)
+    assert e["n"] == 13 and e["remaining"] == 0 and abs(e["pnl"] - exp) < 1e-6 and e["source"] == "fills"
+    assert tk not in r.pos and tk in r.settled and abs(r.day_pnl() - exp) < 1e-6
+    at_minute(clock, T0, 4); r.step()
+    assert len(fake.posts) == 2                                   # nothing left to sell, no re-entry
+    fake.results[tk] = "no"
+    at_minute(clock, T0 + 900, 1); r.step()
+    assert not events(r, "settle") and abs(r.day_pnl() - exp) < 1e-6     # never settled again
+    r2 = golden_runner(d, clock, fake, kp, rule_ids={"scalp:ALL"})        # restart: same state from the log
+    assert tk in r2.traded and tk not in r2.pos and abs(r2.day_pnl() - exp) < 1e-6
+    lines = []
+    real.report([], log_path=d / "real_log.jsonl", out=lines.append)
+    txt = "\n".join(lines)
+    assert "exits" in txt and f"{exp:+.2f}" in txt and "early exits: 1 (1 sold everything" in txt
+
+
+def test_golden_scalp_partial_then_settle():
+    d, clock, fake, kp = setup(quotes=scalp_quotes)
+    fake.fill_qty = lambda body: 5 if body["reduce_only"] else int(body["count"])
+    r = golden_runner(d, clock, fake, kp, rule_ids={"scalp:ALL"})
+    tk = f"KXNEAR15M-T{T0}"
+    at_minute(clock, T0, 2); r.step()
+    at_minute(clock, T0, 3); r.step()
+    at_minute(clock, T0, 4); r.step()                             # sells 5 more of the remaining 8
+    ex = events(r, "exit")
+    assert [e["n"] for e in ex] == [5, 5] and ex[-1]["remaining"] == 3
+    assert [p["count"] for p in fake.posts] == ["13", "8", "3"][:len(fake.posts)] and len(fake.posts) == 3
+    p = r.pos[tk]
+    assert p["n"] == 3 and abs(p["cost"] - 3 * 0.30) < 1e-6
+    assert abs(r.open_risk() - (3 * 0.30 + kalshi_fee(0.30, 13) * 3 / 13)) < 1e-6
+    fake.results[tk] = "yes"
+    at_minute(clock, T0 + 900, 1); r.step()
+    s = events(r, "settle")[-1]
+    fee_e = kalshi_fee(0.30, 13)
+    sold = 2 * (5 * 0.52 - kalshi_fee(0.52, 5))
+    exp_total = sold + 3 * 1.0 - 13 * 0.30 - fee_e
+    assert s["after_exit"] and s["n"] == 3 and abs(s["pnl"] - (3 - 0.9 - fee_e * 3 / 13)) < 1e-4
+    assert abs(sum(e["pnl"] for e in ex) + s["pnl"] - exp_total) < 1e-4
+    assert abs(r.day_pnl() - exp_total) < 1e-4 and tk not in r.pos
+    r2 = golden_runner(d, clock, fake, kp, rule_ids={"scalp:ALL"})
+    assert tk not in r2.pos and abs(r2.day_pnl() - exp_total) < 1e-4
+    lines = []
+    real.report([], log_path=d / "real_log.jsonl", out=lines.append)
+    assert "early exits: 2 (0 sold everything, 2 partial)" in "\n".join(lines)
+
+
+def test_golden_exit_zero_fill_retries_and_ignores_entry_limits():
+    d, clock, fake, kp = setup(quotes=scalp_quotes)
+    r = golden_runner(d, clock, fake, kp, rule_ids={"scalp:ALL"})
+    tk = f"KXNEAR15M-T{T0}"
+    at_minute(clock, T0, 2); r.step()
+    fake.fill_qty = lambda body: 0 if body["reduce_only"] else int(body["count"])
+    r.pnl_by_day[r.today()] = -1000.0                             # daily loss cap hit: no NEW orders ...
+    assert "daily loss cap" in r.blocked()
+    at_minute(clock, T0, 3); r.step()
+    assert events(r, "exit_unfilled") and r.pos[tk]["n"] == 13 and not events(r, "exit")
+    fake.fill_qty = lambda body: int(body["count"])
+    at_minute(clock, T0, 4); r.step()                             # ... but exits still go out
+    assert events(r, "exit")[-1]["n"] == 13 and tk not in r.pos
+    assert [p["reduce_only"] for p in fake.posts] == [False, True, True]
+
+
+def test_golden_exit_rejected_holds_to_settlement():
+    d, clock, fake, kp = setup(quotes=scalp_quotes)
+    r = golden_runner(d, clock, fake, kp, rule_ids={"scalp:ALL"})
+    tk = f"KXNEAR15M-T{T0}"
+    at_minute(clock, T0, 2); r.step()
+    fake.post_fail = ["400"]
+    at_minute(clock, T0, 3); r.step()
+    at_minute(clock, T0, 4); r.step()
+    assert events(r, "exit_rejected") and sum(1 for c in fake.calls if c[0] == "POST") == 2   # no retry
+    fake.results[tk] = "yes"
+    at_minute(clock, T0 + 900, 1); r.step()
+    s = events(r, "settle")[-1]
+    assert abs(s["pnl"] - (13 - 13 * 0.30 - kalshi_fee(0.30, 13))) < 1e-6 and not s.get("after_exit")
+
+
+def test_golden_exit_unknown_reconciled_at_settlement():
+    d, clock, fake, kp = setup(quotes=scalp_quotes)
+    r = golden_runner(d, clock, fake, kp, rule_ids={"scalp:ALL"})
+    tk = f"KXNEAR15M-T{T0}"
+    at_minute(clock, T0, 2); r.step()
+    fake.post_fail = ["timeout_before"]                          # exit never reached Kalshi (we can't know)
+    at_minute(clock, T0, 3); r.step()
+    assert events(r, "exit_unknown") and r.pos[tk]["exit_unknown"]
+    at_minute(clock, T0, 4); r.step()
+    assert sum(1 for c in fake.calls if c[0] == "POST") == 2     # never resent
+    fake.results[tk] = "no"
+    at_minute(clock, T0 + 900, 1); r.step()
+    s = events(r, "settle")[-1]
+    assert s["after_exit"] and s["n"] == 13 and abs(s["pnl"] - (-13 * 0.30 - kalshi_fee(0.30, 13))) < 1e-6
+    assert not events(r, "exit") and tk not in r.pos
+
+
+def test_golden_dry_run_exit():
+    d, clock, fake, kp = setup(quotes=scalp_quotes)
+    r = golden_runner(d, clock, fake, kp, mode="DRYRUN", rule_ids={"scalp:ALL", "sized:ALL"})
+    tk = f"KXNEAR15M-T{T0}"
+    at_minute(clock, T0, 2); r.step()
+    at_minute(clock, T0, 3); r.step()
+    assert not fake.posts and events(r, "would_order")[-1]["rule"] == "scalp:ALL"
+    e = events(r, "exit")[-1]
+    assert e["source"] == "dry" and abs(e["pnl"] - (13 * 0.22 - kalshi_fee(0.30, 13) - kalshi_fee(0.52, 13))) < 1e-6
+    fake.results[tk] = "yes"
+    at_minute(clock, T0 + 900, 1); r.step()
+    assert not events(r, "dry_settle")
+
+
+def test_golden_stale_spot_feed_skips():
+    from kalshi15m import golden_live as GL
+    d, clock, fake, kp = setup(quotes=scalp_quotes)
+    eng = golden_engine(clock, lag_bars=7)                        # newest Coinbase candle 8 minutes old
+    eng.max_candle_lag_s = 300
+    r = golden_runner(d, clock, fake, kp, eng=eng)
+    at_minute(clock, T0, 2); r.step()
+    assert not fake.posts and events(r, "skip")[-1]["reason"] == "network_spot"
+    assert issubclass(GL.StaleData, requests.RequestException)
+
+
+def test_golden_engine_synthetic_bar_then_official():
+    clock = Clock(T0 + 60.5)
+    eng = golden_engine(clock, flat_from=T0 + 10 ** 6)
+    P = real.new_panel()
+    real.observe(P, {"open_time": iso(T0), "floor_strike": 4.0, "yes_bid_dollars": "0.4", "yes_ask_dollars": "0.42"},
+                 1, float("nan"), float("nan"), float("nan"), {})
+    info = eng.update(P, T0, 1)
+    assert info["synthetic"] and info["bar_ts"] == T0 and abs(P["spot"][0, 0] - eng.fetch_ticker()) < 1e-12
+    for k in ("vol_ewma30", "r1", "emp21_1.0", "tod_ratio", "vol240"):
+        assert math.isfinite(P[k][0, 0]), k
+    clock.t += 60
+    eng.update(P, T0, 2)
+    assert eng.official[(T0 - eng.t0) // 60]                      # bar T0 is now the published candle
+
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):
