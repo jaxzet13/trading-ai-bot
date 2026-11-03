@@ -205,6 +205,9 @@ def summarise() -> dict:
             "orders": sum(x["event"] == "rest" for x in ev) + sum(x["event"] == "buy" for x in ev),
             "fills": len(fills), "expired": sum(x["event"] == "expired" for x in ev),
             "settled": len(settles), "wins": sum(x["pnl"] > 0 for x in settles),
+            # display only: how many positions were sold before the close, and what they made
+            "sold": sum(x.get("result") == "sold" for x in settles),
+            "sold_pnl": round(sum(x["pnl"] for x in settles if x.get("result") == "sold"), 2),
             "pnl": round(sum(x["pnl"] for x in settles), 2), "curve": pnl_curve,
             "open": [x["ticker"] for x in fills if x["ts"] not in settled_fills],
             "holding": [{k: x.get(k) for k in ("ticker", "series", "side", "n", "price", "strike", "close_ts", "model", "spot")}
@@ -240,10 +243,18 @@ def _lab3():
         return None
     if not isinstance(r, dict):
         return None
-    cands = [c for c in (r.get("candidates") or []) if isinstance(c, dict)][:60]
-    for x in cands + [b for b in (r.get("baselines") or []) if isinstance(b, dict)]:
+    allc = [c for c in (r.get("candidates") or []) if isinstance(c, dict)]
+    # true totals from the full file; the page may only get the best MAX_CANDS rows
+    r["counts"] = {"reached": len(allc), **{k: sum(c.get("status") == k for c in allc) for k in ("golden", "pass", "fail")}}
+    cands = allc[:150]
+    r["counts"]["shown"] = len(cands)
+    for x in cands:
         if "curve" in x:
-            x["curve"] = _thin(x["curve"])
+            x["curve"] = _thin(x["curve"], 150)
+        x.pop("holdout_by_coin", None)  # not shown; keeps the page small
+    for b in (r.get("baselines") or []):
+        if isinstance(b, dict) and "curve" in b:
+            b["curve"] = _thin(b["curve"])
     r["candidates"] = cands
     r["heatmaps"] = (r.get("heatmaps") or [])[:12]
     return r
