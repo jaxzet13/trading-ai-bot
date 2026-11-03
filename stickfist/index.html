@@ -1739,6 +1739,25 @@ form.scan-opt { cursor: default; }
 .tcard.fx-blood .fxtag { background: linear-gradient(100deg, #7d0a10, #ff8a8f 45%, #8c0a12); color: #fff; box-shadow: 0 0 0 .35cqi #0b0b0c, 0 0 2.6cqi rgba(224,32,44,.7); }
 .lab-o { display: block; font-size: 12.5px; font-weight: 700; color: var(--t1); margin-top: 2px; }
 .fxhit { margin-top: 8px; font-size: 14px; color: var(--t2); } .fxhit b { color: var(--t1); }
+/* ===== KNIFE CUT ===== */
+.stage.cutting { touch-action: none; }
+.slash-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; overflow: visible; }
+.slash-svg line { stroke: #fff; stroke-linecap: round; filter: drop-shadow(0 0 3px rgba(255,255,255,.95)) drop-shadow(0 0 9px rgba(255,255,255,.5)); }
+.st-pack .pk.cutp { position: absolute !important; margin: 0 !important; visibility: visible !important; }
+.st-pack .pk.cut-top { z-index: 4; animation: cutTop .9s cubic-bezier(.18,.7,.3,1) forwards !important; }
+@keyframes cutTop { 0% { transform: none; } 14% { transform: translate(calc(var(--dx) * 7px), -7px) rotate(calc(var(--dx) * 1.2deg)); } 100% { transform: translate(calc(var(--dx) * 280px), -340px) rotate(calc(var(--dx) * 38deg)); opacity: 0; } }
+.st-pack .pk.cut-bot { z-index: 3; animation: cutBot .5s cubic-bezier(.2,1.5,.4,1) forwards !important; }
+@keyframes cutBot { 0% { transform: none; } 30% { transform: translateY(6px) scale(1.012); } 100% { transform: translateY(2px); } }
+.cut-seam { position: absolute; z-index: 8; pointer-events: none; }
+.cut-seam svg { width: 100%; height: 100%; overflow: visible; display: block; }
+.cut-seam line { stroke: #fff; stroke-width: 3; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 14px var(--pa, #fff)); animation: seamDraw .1s linear forwards, seamFade .75s .12s ease-out forwards; }
+@keyframes seamDraw { to { stroke-dashoffset: 0; } }
+@keyframes seamFade { to { opacity: 0; stroke-width: 12; } }
+.cut-flash { position: absolute; inset: 0; z-index: 58; pointer-events: none; background: radial-gradient(ellipse at 50% 42%, rgba(255,255,255,.32), transparent 62%); animation: cutFlash .5s ease-out forwards; }
+@keyframes cutFlash { to { opacity: 0; } }
+.st-pack .pk.nick { animation: nick .28s ease-out; }
+@keyframes nick { 30% { transform: translateX(-5px) rotate(-1.2deg); } 65% { transform: translateX(4px) rotate(.6deg); } }
+@media (prefers-reduced-motion: reduce) { .st-pack .pk.cut-top, .st-pack .pk.cut-bot { animation-duration: .01s !important; } }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -2648,6 +2667,8 @@ form.scan-opt { cursor: default; }
       pop() { tone(520, .09, "triangle", .12, 0, 880); nz(.06, "highpass", 3000, 6000, .1); },
       rip() { nz(.42, "bandpass", 900, 5200, .55, .9); nz(.25, "highpass", 3000, 7000, .2); nz(.7, "lowpass", 2400, 200, .35, .8); tone(140, .35, "sine", .35, 0, 50); tone(1200, .5, "sine", .06, .08, 2400); },
       whoosh() { nz(.45, "lowpass", 300, 2400, .28, .7); },
+      scrape(v) { v = Math.max(.25, Math.min(1, v || .5)); nz(.07, "bandpass", 3600 + rand() * 2200, 6400, .09 * v, 7); },
+      slash() { nz(.16, "highpass", 3000, 9500, .34, .7); nz(.26, "bandpass", 5600, 2000, .24, 5); nz(.5, "lowpass", 1800, 160, .22, .8); tone(2350, 1.1, "sine", .055, .015, 2290); tone(3140, .8, "sine", .04, .02, 3080); tone(4710, .45, "sine", .022, .02); tone(120, .3, "sine", .28, 0, 55); },
       snap() { nz(.05, "highpass", 2500, 5000, .3); tone(1800, .04, "square", .03); },
       deal() { nz(.08, "bandpass", 1500, 900, .18, 1.5); },
       boom(v) { tone(110, .9, "sine", .8 * (v || 1), 0, 32); nz(.6, "lowpass", 400, 60, .5 * (v || 1)); },
@@ -3284,8 +3305,9 @@ form.scan-opt { cursor: default; }
     $("stName").textContent = p.name;
     updateTotal(0);
     $("stTitle").className = "st-title"; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("rays").classList.remove("on");
-    $("stBox").innerHTML = `<div class="st-pack" id="stPack">${packHTML(p).replace('<div class="sheen"></div>', '<div class="sheen"></div><div class="tearline"></div><div class="tearfill"></div><div class="tearglow"></div><div class="beam"></div>')}<div class="grabhint" id="grabHint">DRAG →</div></div><div class="st-stack" id="stStack"></div>`;
-    $("stHint").textContent = "Drag across the top edge to tear it open · or press Space";
+    $("stBox").innerHTML = `<div class="st-pack" id="stPack">${packHTML(p).replace('<div class="sheen"></div>', '<div class="sheen"></div><div class="tearline"></div><div class="tearfill"></div><div class="tearglow"></div><div class="beam"></div>')}<div class="grabhint" id="grabHint">SWIPE TO CUT →</div></div><div class="st-stack" id="stStack"></div>`;
+    $("stHint").textContent = "Swipe across the pack to cut it open · or press Space";
+    stage.classList.add("cutting");
     stage.classList.remove("dim");
     stage.hidden = false;
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -3296,7 +3318,6 @@ form.scan-opt { cursor: default; }
     stage.style.setProperty("--pa", p.acc);
     sp.classList.add("enter"); setTimeout(() => sp.classList.remove("enter"), 1100);
     sfx.whoosh();
-    sp.addEventListener("pointerdown", onPackDown);
   }
   function updateTotal(add) {
     if (!SS) return;
@@ -3314,49 +3335,106 @@ form.scan-opt { cursor: default; }
     (function tickUp(now) { const k = Math.min(1, (now - t0) / dur), v = from + add * (1 - Math.pow(1 - k, 3)); paint(v); if (k < 1) { sfx.coin(); requestAnimationFrame(tickUp); } })(t0);
   }
 
-  // --- tear ---
-  function setTear(t) {
-    if (!SS || SS.phase !== "pack") return;
-    t = Math.max(SS.tear, Math.min(1, t));
-    if (Math.floor(t * 40) > Math.floor(SS.tear * 40)) {
-      sfx.tear(t);
-      if (navigator.vibrate) try { navigator.vibrate(6 + Math.round(t * 10)); } catch (_) {}
-      const pk = $("stPack").querySelector(".pk"), c = center(pk);
-      fx.burst(c.l + c.w * t, c.t + c.h * .13, 2 + Math.round(t * 4), ["#fff", SS.pack.acc, SS.pack.acc], 180 + t * 160);
-    }
-    SS.tear = t;
-    $("stPack").querySelector(".pk").style.setProperty("--t", t.toFixed(3));
-    const gh = $("grabHint"); if (gh && t > .05) gh.remove();
-    if (t >= 1) completeTear();
+  // --- knife cut: swipe across the pack and it splits along your line ---
+  let TRAIL = [], trailOn = false;
+  function slashLayer() {
+    let el = $("slashSvg");
+    if (!el) { el = document.createElementNS("http://www.w3.org/2000/svg", "svg"); el.id = "slashSvg"; el.setAttribute("class", "slash-svg"); el.setAttribute("aria-hidden", "true"); stage.appendChild(el); }
+    const b = stage.getBoundingClientRect(); el.setAttribute("viewBox", `0 0 ${Math.round(b.width)} ${Math.round(b.height)}`);
+    return el;
+  }
+  function trailLoop() {
+    if (trailOn) return; trailOn = true;
+    (function frame() {
+      const now = performance.now(), b = stage.getBoundingClientRect();
+      TRAIL = TRAIL.filter(q => now - q.t < 170);
+      let h = "";
+      for (let i = 1; i < TRAIL.length; i++) { const a = TRAIL[i - 1], c = TRAIL[i], k = 1 - (now - c.t) / 170; h += `<line x1="${(a.x - b.left).toFixed(1)}" y1="${(a.y - b.top).toFixed(1)}" x2="${(c.x - b.left).toFixed(1)}" y2="${(c.y - b.top).toFixed(1)}" stroke-width="${(1 + k * 5.5).toFixed(1)}" stroke-opacity="${Math.max(0, k).toFixed(2)}"/>`; }
+      slashLayer().innerHTML = h;
+      if (TRAIL.length || (SS && SS.drag)) requestAnimationFrame(frame); else trailOn = false;
+    })();
   }
   function onPackDown(e) {
-    if (!SS || SS.phase !== "pack") return;
+    if (!SS || SS.phase !== "pack" || SS.auto) return;
+    if (e.button > 0 || (e.target.closest && e.target.closest("button, a, input"))) return;
     sfx.unlock();
-    const pk = $("stPack").querySelector(".pk");
-    SS.drag = { x0: e.clientX, t0: SS.tear, moved: false, w: pk.getBoundingClientRect().width };
-    pk.classList.add("shudder");
-    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
-    e.currentTarget.addEventListener("pointermove", onPackMove);
-    e.currentTarget.addEventListener("pointerup", onPackUp, { once: true });
-    e.currentTarget.addEventListener("pointercancel", onPackUp, { once: true });
+    const pk = $("stPack").querySelector(".pk"), now = performance.now();
+    SS.drag = { pts: [{ x: e.clientX, y: e.clientY, t: now }], r: pk.getBoundingClientRect(), moved: false, sc: 0 };
+    TRAIL = [{ x: e.clientX, y: e.clientY, t: now }];
+    try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+    stage.addEventListener("pointermove", onPackMove);
+    stage.addEventListener("pointerup", onPackUp, { once: true });
+    stage.addEventListener("pointercancel", onPackUp, { once: true });
+    trailLoop();
   }
   function onPackMove(e) {
-    if (!SS || !SS.drag) return;
-    const dx = e.clientX - SS.drag.x0;
-    if (Math.abs(dx) > 6) SS.drag.moved = true;
-    setTear(SS.drag.t0 + dx / (SS.drag.w * .85));
+    const D = SS && SS.drag; if (!D || SS.phase !== "pack") return;
+    const now = performance.now(), last = D.pts[D.pts.length - 1], sp = Math.hypot(e.clientX - last.x, e.clientY - last.y);
+    D.pts.push({ x: e.clientX, y: e.clientY, t: now }); TRAIL.push({ x: e.clientX, y: e.clientY, t: now });
+    if (D.pts.length > 80) D.pts.splice(0, D.pts.length - 80);
+    if (Math.hypot(e.clientX - D.pts[0].x, e.clientY - D.pts[0].y) > 8) D.moved = true;
+    const r = D.r, inPack = e.clientX > r.left && e.clientX < r.right && e.clientY > r.top && e.clientY < r.bottom;
+    if (inPack && now - D.sc > 40) { D.sc = now; sfx.scrape(sp / 24); }
+    // it cuts the moment one stroke has crossed most of the pack
+    const inside = D.pts.filter(q => q.y > r.top - 12 && q.y < r.bottom + 12);
+    if (inside.length < 2) return;
+    let lo = Infinity, hi = -Infinity; for (const q of inside) { lo = Math.min(lo, q.x); hi = Math.max(hi, q.x); }
+    if (Math.min(r.right, hi) - Math.max(r.left, lo) < r.width * .62) return;
+    const a = inside[0], b = inside[inside.length - 1], m = (b.y - a.y) / ((b.x - a.x) || 1);
+    slashOpen((a.y + m * (r.left - a.x) - r.top) / r.height, (a.y + m * (r.right - a.x) - r.top) / r.height, b.x >= a.x ? 1 : -1);
   }
-  function onPackUp(e) {
-    const sp = $("stPack"); if (sp) { sp.removeEventListener("pointermove", onPackMove); const pk = sp.querySelector(".pk"); if (pk) pk.classList.remove("shudder"); }
+  function onPackUp() {
+    stage.removeEventListener("pointermove", onPackMove);
     if (!SS || !SS.drag) return;
     const moved = SS.drag.moved; SS.drag = null;
-    if (!moved && SS.phase === "pack") autoTear();
+    if (SS.phase !== "pack") return;
+    if (!moved) { autoTear(); return; }
+    const pk = $("stPack").querySelector(".pk"); pk.classList.remove("nick"); void pk.offsetWidth; pk.classList.add("nick");
+    $("stHint").textContent = "Swipe all the way across to cut it open";
   }
+  stage.addEventListener("pointerdown", onPackDown);
+  // a tap or Space: the blade does it for you
   function autoTear() {
     if (!SS || SS.phase !== "pack" || SS.auto) return;
-    SS.auto = true; const start = SS.tear, t0 = performance.now(), dur = 650 * (1 - start) + 120;
-    const pk = $("stPack").querySelector(".pk"); pk.classList.add("shudder");
-    (function run(now) { if (!SS || SS.phase !== "pack") return; const k = Math.min(1, (now - t0) / dur); setTear(start + (1 - start) * (k * k * (3 - 2 * k))); if (k < 1) requestAnimationFrame(run); })(t0);
+    SS.auto = true;
+    const pk = $("stPack").querySelector(".pk"), r = pk.getBoundingClientRect(), dir = rand() < .5 ? 1 : -1;
+    const ya = r.top + r.height * (.1 + rand() * .07), yb = r.top + r.height * (.11 + rand() * .09), xa = dir > 0 ? r.left - r.width * .3 : r.right + r.width * .3, xb = dir > 0 ? r.right + r.width * .3 : r.left - r.width * .3, t0 = performance.now(), dur = 210;
+    sfx.unlock(); sfx.scrape(1); trailLoop();
+    (function run(now) {
+      if (!SS || SS.phase !== "pack") return;
+      const k = Math.min(1, (now - t0) / dur), e = k * k * (3 - 2 * k);
+      TRAIL.push({ x: xa + (xb - xa) * e, y: ya + (yb - ya) * e, t: now }); trailLoop();
+      if (k < 1) { requestAnimationFrame(run); return; }
+      const fl = (dir > 0 ? ya : yb) - r.top, fr = (dir > 0 ? yb : ya) - r.top;
+      slashOpen(fl / r.height, fr / r.height, dir);
+    })(t0);
+  }
+  function slashOpen(fa, fb, dir) {
+    if (!SS || SS.phase !== "pack") return;
+    const cl = v => Math.max(.07, Math.min(.6, v)); fa = cl(fa); fb = cl(fb);
+    if (Math.abs(fa - fb) > .3) { const mid = (fa + fb) / 2, s1 = fa > fb ? 1 : -1; fa = mid + s1 * .15; fb = mid - s1 * .15; }
+    SS.phase = "opening"; SS.drag = null;
+    stage.classList.remove("cutting");
+    const sp = $("stPack"), pk = sp.querySelector(".pk"), c = center(pk), gh = $("grabHint"); if (gh) gh.remove();
+    pk.classList.remove("shudder", "nick");
+    const box = `left:${pk.offsetLeft}px;top:${pk.offsetTop}px;width:${pk.offsetWidth}px;height:${pk.offsetHeight}px`;
+    const ea = fa - (fb - fa) * .1, eb = fb + (fb - fa) * .1, A = (ea * 100).toFixed(2), B = (eb * 100).toFixed(2);
+    const top = pk.cloneNode(true), bot = pk.cloneNode(true);
+    top.classList.add("cutp", "cut-top"); bot.classList.add("cutp", "cut-bot");
+    top.style.cssText += `;${box};--dx:${dir};clip-path:polygon(-10% -20%, 110% -20%, 110% ${B}%, -10% ${A}%);-webkit-clip-path:polygon(-10% -20%, 110% -20%, 110% ${B}%, -10% ${A}%)`;
+    bot.style.cssText += `;${box};clip-path:polygon(-10% ${A}%, 110% ${B}%, 110% 120%, -10% 120%);-webkit-clip-path:polygon(-10% ${A}%, 110% ${B}%, 110% 120%, -10% 120%)`;
+    pk.style.visibility = "hidden";
+    const seam = document.createElement("div"); seam.className = "cut-seam"; seam.style.cssText = box;
+    const L = (fa * 100).toFixed(2), R = (fb * 100).toFixed(2);
+    seam.innerHTML = `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="${dir > 0 ? -4 : 104}" y1="${dir > 0 ? L : R}" x2="${dir > 0 ? 104 : -4}" y2="${dir > 0 ? R : L}" pathLength="1"/></svg>`;
+    sp.append(bot, top, seam);
+    const flash = document.createElement("div"); flash.className = "cut-flash"; stage.appendChild(flash); setTimeout(() => flash.remove(), 600);
+    sfx.slash();
+    if (navigator.vibrate) try { navigator.vibrate([16, 24, 60]); } catch (_) {}
+    for (let i = 0; i <= 12; i++) { const k = i / 12; fx.burst(c.l + c.w * k, c.t + c.h * (fa + (fb - fa) * k), 3, ["#ffffff", "#fff4d0", SS.pack.acc], 240 + rand() * 300); }
+    shake(7, 220);
+    setTimeout(() => { if (!SS || SS.phase !== "opening") return; buildStack(); sp.classList.add("drop"); sfx.whoosh(); }, 300);
+    setTimeout(() => { if (!SS || SS.phase !== "opening") return; SS.phase = "stack"; $("stHint").textContent = "Click the card to reveal · Space"; if (SS.queued) { SS.queued = false; advance(); } }, 680);
   }
   function completeTear() {
     if (!SS || SS.phase !== "pack") return;
