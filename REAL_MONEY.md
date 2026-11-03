@@ -267,3 +267,30 @@ orders are rejected with `insufficient_shard_balance` until you move money once:
 ```
 
 `real check` shows the balance on each shard and warns if shard 2 is empty.
+
+## Golden rules (lab3 hunt), demo only
+
+`kalshi15m/real_golden_demo.json` trades the 16 "golden" rules of the lab3 strategy hunt on all 9 coins, on
+the **demo** exchange. On each coin, every minute, the coin's rules are checked best first (highest holdout
+t-stat); the first one that fires places the market's only bet, and the lower-ranked rules that fired in the
+same minute are logged as `also_signalled`. A lower-ranked rule that fires at an *earlier* minute still takes
+the market (the bot cannot know a better rule would fire later).
+
+* Features are computed live exactly as the lab3 backtest computes them (`kalshi15m/golden_live.py`; proof:
+  `nice -n 19 python3 tests/test_golden_live.py`, which replays holdout markets minute by minute). The spot
+  history comes from `data/kalshi15m/<coin>_spot.csv` plus a cached Coinbase catch-up
+  (`<coin>_spot_live.csv`, gitignored, refreshed while running).
+* "sized" rules bet `base stake x min(Kelly / norm, 5)`; "scalp" rules sell back at the bid (IOC,
+  reduce-only) once it reaches the model's fair value; the sold part is booked as an `exit` and never settled
+  again. Exits are allowed when the daily limits block new bets (not when the STOP file exists).
+* Compounding stakes: `stake_pct_of_balance` (0.10) of the crypto (shard 2) balance per bet, at least
+  `stake_usd_min` ($1); `stake_usd` ($10) while the balance is unknown. Orders the balance can't cover are
+  skipped and logged. Limits are per coin. The rule settings are frozen: the runner refuses an edited rule.
+* It logs to `data/kalshi15m/real_all9_log.jsonl`, continuing the all-9 demo (open positions, one bet per
+  market and the daily loss cap carry over). Stop the all-9 demo runner before starting this one.
+
+```bash
+python3 -m kalshi15m real --dry-run --minutes 2 --config kalshi15m/real_golden_demo.json --log /tmp/golden_dry.jsonl
+python3 -u -m kalshi15m real --demo --config kalshi15m/real_golden_demo.json
+python3 -m kalshi15m real-report --demo --log data/kalshi15m/real_all9_log.jsonl     # per-rule table + exits
+```
