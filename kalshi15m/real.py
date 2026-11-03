@@ -407,16 +407,30 @@ class Runner:
                 self.trades_by_day[d] = self.trades_by_day.get(d, 0) + 1
                 self.pos[tk] = {"side": e["side"], "n": 0.0, "cost": 0.0, "fees": 0.0, "close_ts": e["close_ts"],
                                 "status": "pending", "limit": e["price"],
-                                "max_cost": e.get("max_cost", 0.0)}
+                                "max_cost": e.get("max_cost", 0.0), "rule": e.get("rule"), "minute": e.get("minute")}
                 if ev == "would_order":   # dry run: pretend the order filled as the paper bot does
                     self.pos[tk].update(n=e["n"], cost=e["n"] * e["price"], fees=kalshi_fee(e["price"], e["n"]),
                                         status="filled")
             elif ev == "fill" and tk in self.pos:
-                self.pos[tk].update(n=e["n"], cost=e["cost"], fees=e["fees"], status="filled" if e["n"] > 0 else "none")
+                self.pos[tk].update(n=e["n"], cost=e["cost"], fees=e["fees"], status="filled" if e["n"] > 0 else "none",
+                                    order_id=e.get("order_id"))
             elif ev == "order_unknown" and tk in self.pos:
                 self.pos[tk]["status"] = "unknown"
             elif ev in ("order_rejected",) and tk in self.pos:
                 self.pos[tk]["status"] = "none"
+            elif ev == "exit" and tk in self.pos:            # early exit (scalp rules): part or all sold
+                p = self.pos[tk]
+                p.update(n=e["remaining"], cost=e["remaining_cost"], fees=e["remaining_fees"],
+                         exited=p.get("exited", 0.0) + e["n"], exit_pnl=p.get("exit_pnl", 0.0) + e["pnl"])
+                p.setdefault("exit_orders", []).append(e.get("order_id"))
+                d = e.get("day") or _day(e["ts"])
+                self.pnl_by_day[d] = self.pnl_by_day.get(d, 0.0) + e["pnl"]
+                if e["remaining"] <= 1e-9:
+                    self.settled.add(tk)
+            elif ev == "exit_unknown" and tk in self.pos:
+                self.pos[tk]["exit_unknown"] = e.get("client_order_id") or True
+            elif ev == "exit_rejected" and tk in self.pos:
+                self.pos[tk]["exit_blocked"] = True
             elif ev in ("settle", "dry_settle"):
                 self.settled.add(tk)
                 d = e.get("day") or _day(e["ts"])
@@ -462,12 +476,16 @@ class Runner:
 
     # --- main loop
     def run(self):
-        self.out(f"[{self.mode}] {self.cfg['strategy']} {self.params} on {self.series}, taker IOC, "
+        what = (f"golden rules (best first) {[r[0] for r in self.rules]}" if self.golden
+                else f"{self.cfg['strategy']} {self.params}")
+        self.out(f"[{self.mode}] {what} on {self.series}, taker IOC, "
                  f"stake ${self.L['stake_usd']}/trade, daily loss cap ${self.L['max_daily_loss_usd']}, "
                  f"log {self.log_path}")
         self.log({"event": "start", "limits": self.L, "params": self.params, "strategy": self.cfg["strategy"],
                   "rules": [r[0] for r in self.rules]})
         day = self.today()
+        if self.golden:
+            self.prepare_engine()
         try:
             if not self.dry:
                 try:
@@ -501,6 +519,17 @@ class Runner:
 
     def halted(self):
         return self.stop_requested or (self.stop_event is not None and self.stop_event.is_set())
+
+    def prepare_engine(self):
+        """Golden mode: load + catch up the spot history before the first decision (update() retries
+        later if this fails, e.g. Coinbase unreachable)."""
+        t0 = time.time()
+        try:
+            self.engine.prepare()
+            self.out(f"  {self.series}: spot history ready ({time.time() - t0:.1f}s)")
+        except (requests.RequestException, OSError, ValueError) as e:
+            self.out(f"  {self.series}: spot history not ready ({e}); will retry each minute")
+            self.log({"event": "skip", "reason": "engine_prepare", "error": str(e)[:200]})
 
     def wait_minute(self):
         """Wake 0.5 s after the next minute boundary (bot._wait(poll="minute")), in small steps
