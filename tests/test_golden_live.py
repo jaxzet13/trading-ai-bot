@@ -62,8 +62,8 @@ def test_sized_stake_formula():
     n = GL.RULES["sized:ALL"]["norm"]
     st, k = GL.sized_stake("sized:ALL", 0.70, 0.40, 4.0)
     assert abs(k - 0.5) < 1e-12 and abs(st - 4.0 * min(0.5 / n, 5)) < 1e-12
-    st, k = GL.sized_stake("sized:ALL", 0.99, 0.05, 4.0)          # capped at 5x
-    assert abs(st - 20.0) < 1e-12
+    st, k = GL.sized_stake("sized:ALL", 0.99, 0.05, 4.0)          # kelly <= 1, so the 5x cap never binds
+    assert abs(k - 0.94 / 0.95) < 1e-12 and abs(st - 4.0 * k / n) < 1e-12 and st < 4.0 * 5
     st, k = GL.sized_stake("sized:KXHYPE15M", 0.10, 0.40, 4.0)     # negative edge -> floor 1e-4
     assert k == 1e-4
 
@@ -236,7 +236,7 @@ def _same(a, b):
     return True
 
 
-REPLAY = {}
+REPLAY, DEDUP = {}, {}
 
 
 def replay_all():
@@ -333,8 +333,8 @@ def test_replay_priority_dedup():
             by_rule[taken[2]] = by_rule.get(taken[2], 0) + 1
             if taken[2] != best[2]:
                 taken_not_best += 1
-    REPLAY["_dedup"] = {"markets_with_bet": tot, "several_rules": multi, "taken_not_best": taken_not_best,
-                        "taken_by_rule": by_rule}
+    DEDUP.update({"markets_with_bet": tot, "several_rules": multi, "taken_not_best": taken_not_best,
+                        "taken_by_rule": by_rule})
     print(f"  markets with a bet: {tot}; several rules fired in {multi}; the rule that took the market was not "
           f"the best rule that fired in it (a lower-ranked rule fired at an earlier minute) in {taken_not_best} "
           f"({100 * taken_not_best / max(tot, 1):.1f}%)")

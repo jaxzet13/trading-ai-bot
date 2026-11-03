@@ -245,7 +245,7 @@ def _lab3():
     if not isinstance(r, dict):
         return None
     allc = [c for c in (r.get("candidates") or []) if isinstance(c, dict)]
-    # true totals from the full file; the page may only get the best MAX_CANDS rows
+    # true totals from the full file; the page gets at most the best 150 rows
     r["counts"] = {"reached": len(allc), **{k: sum(c.get("status") == k for c in allc) for k in ("golden", "pass", "fail")}}
     cands = allc[:150]
     r["counts"]["shown"] = len(cands)
