@@ -34,6 +34,11 @@ def main():
     lb.add_argument("--workers", type=int, default=4)
     l2 = sub.add_parser("lab2", help="blind archive / fresh tests of the frozen fair_value rule + variants")
     l2.add_argument("args", nargs="*", help="download-archive [SERIES:EVERY ...] | download-fresh [SERIES ...] | probe | run")
+    l3 = sub.add_parser("lab3", help="new strategy families vs the live ones on the locked holdout (+ archive)")
+    l3.add_argument("--workers", type=int, default=2, help="worker processes (capped at 2: the bots share the machine)")
+    l3.add_argument("--families", nargs="+", default=None, help="only these family ids (default: all)")
+    l3.add_argument("--quick", type=int, default=0, help="pipeline test: only every Nth config of each grid")
+    l3.add_argument("--out", default=None, help="output file (default data/lab/lab3_results.json)")
     sub.add_parser("live-report", help="refresh the dashboard with the live paper-trading log")
     rl = sub.add_parser("real", help="REAL-MONEY runner for KXNEAR15M fair_value (see REAL_MONEY.md); --demo by default",
                         add_help=False)
@@ -75,6 +80,9 @@ def main():
     elif a.cmd == "lab2":
         from . import lab2
         lab2.main(a.args)
+    elif a.cmd == "lab3":
+        from . import lab3
+        lab3.main(a.workers, a.families, a.quick, a.out)
     elif a.cmd == "hourly":
         from . import hourly
         hourly.main(a.series, a.workers, a.days, a.skip_download)
