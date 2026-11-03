@@ -389,6 +389,9 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .sm-grid > .sm:last-child:nth-child(odd) { grid-column: 1 / -1; }
 
+/* canvases must never widen an auto grid column */
+.lab-zone, .hunt-inner, .vault-body, .sm, .heat, .report, .rp-head { grid-template-columns: minmax(0, 1fr); }
+
 @media (max-width: 900px) {
   .rp-grid, .method-grid { grid-template-columns: 1fr; }
   .hero-stats { grid-template-columns: 1fr 1fr; }
@@ -802,6 +805,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   const PC = v => nz(v) ? pct(v) : DASH;
   const NUM = v => nz(v) ? Math.round(v).toLocaleString() : DASH;
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+  const pl = (n, one, many) => `${NUM(n)} ${n === 1 ? one : many}`;
   const SCOPE = s => !s ? DASH : s === "ALL" ? "All coins" : COIN(String(s));
   const dayFmt = ts => new Date(ts * 1000).toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
   const alpha = (hex, a) => { const m = /^#?([0-9a-f]{6})$/i.exec(String(hex).trim()); if (!m) return hex; const n = parseInt(m[1], 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
@@ -873,9 +877,9 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     $("huntHead").innerHTML = nGold ? `<span class="gold-num">${nGold}</span> golden ${nGold === 1 ? "strategy" : "strategies"}${n ? ` out of ${NUM(n)} settings tried` : ""}`
       : `No golden strategy yet${n ? `, after ${NUM(n)} settings tried` : ""}`;
     const w = windowText(m.search_window);
-    $("huntLede").innerHTML = `We wrote <b>${nf ? NUM(nf) : "several"} families</b> of trading ideas and tried <b>${n ? NUM(n) : "many"} settings</b> of them on past markets${w.text ? ` from ${esc(w.text)}` : ""}. The best <b>${C3.length}</b> then sat a final exam on ${hd ? `<b>${hd} locked days</b>` : "locked days"} of markets they had never seen. Golden means a strategy passed every test listed under <a href="#hunt-method">How we test</a>.`;
+    $("huntLede").innerHTML = `We wrote <b>${nf ? pl(nf, "family", "families") : "several families"}</b> of trading ideas and tried <b>${n ? NUM(n) : "many"} settings</b> of them on past markets${w.text ? ` from ${esc(w.text)}` : ""}. The best <b>${C3.length}</b> then sat a final exam on ${hd ? `<b>${hd} locked days</b>` : "locked days"} of markets they had never seen. Golden means a strategy passed every test listed under <a href="#hunt-method">How we test</a>.`;
     $("huntStats").innerHTML = [
-      ["Settings tested", NUM(n), nf ? `across ${NUM(nf)} idea families` : "every combination of rules and dials"],
+      ["Settings tested", NUM(n), nf ? `across ${pl(nf, "idea family", "idea families")}` : "every combination of rules and dials"],
       ["Idea families", nf ? NUM(nf) : DASH, fams.length ? `${prom} showed promise, ${fams.length - prom} didn't` : ""],
       ["Golden", nGold ? `<span class="gold-num">${nGold}</span>` : "0", `of ${C3.length} that reached the final exam`],
       ["Strict bar", bar ? `t ≥ ${bar}` : DASH, bar ? `luck alone scores this high about once in ${oneIn(bar)} tries` : ""],
@@ -906,7 +910,8 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       return { c, x: (i % cols) * pitch + s / 2, y: Math.floor(i / cols) * pitch + s / 2 }; });
     const vault = tok("--vault"), gold = tok("--vault-gold"), good = tok("--vault-good"), ink2 = tok("--vault-ink-2");
     for (const d of hayDots) {
-      const g = d.c.status === "golden", z = g ? Math.max(8, s * 2.6) : Math.max(4, s * 1.6);
+      const g = d.c.status === "golden", z = g ? Math.max(8, s * 2.6) : Math.max(4, s * 1.6), mg = z / 2 + (g ? 6 : 2);
+      d.x = Math.min(Math.max(d.x, mg), W - mg); d.y = Math.min(Math.max(d.y, mg), Math.max(mg, Hh - mg));
       ctx.fillStyle = vault; ctx.fillRect(d.x - z / 2 - 2, d.y - z / 2 - 2, z + 4, z + 4);
       ctx.save();
       if (g) { ctx.shadowColor = gold; ctx.shadowBlur = 16; }
@@ -938,7 +943,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       const h = c.holdout || {}, a = c.archive && typeof c.archive === "object" ? c.archive : null, d = c.delay1 || {}, v = c.vs_baseline, sel = c.id === hs.sel, b = v && B3[v.baseline_id], fam = FAM[c.family];
       return `<tr class="row${sel ? " sel" : ""}${c.status === "golden" ? " is-golden" : ""}" tabindex="0" data-cand="${esc(c.id)}" aria-expanded="${sel}">
         <td class="rk mono">${i + 1}</td><td class="st">${sbadge(c.status)}</td>
-        <td class="strat"><div class="sname">${esc(c.label || c.id)}</div><div class="sdesc">${esc([fam ? fam.name : c.family, SCOPE(c.scope), EXW[c.execution] || c.execution].filter(Boolean).join(" · "))}</div></td>
+        <td class="strat"><div class="sname">${esc(c.label || c.id)}</div><div class="sdesc">${esc([fam ? fam.name : c.family, c.scope ? SCOPE(c.scope) : null, EXW[c.execution] || c.execution].filter(Boolean).join(" · "))}</div></td>
         <td class="num pnl" data-label="Profit, locked days"><div class="pnl-in">${spark(c.curve, c.status)}<span class="${cls(h.pnl)}">${M(h.pnl)}</span></div></td>
         <td class="num tcol" data-label="t-score">${tMeter(h.t, bar, tmax)}</td>
         <td class="num" data-label="Trades">${NUM(h.trades)}</td><td class="num" data-label="Win rate">${PC(h.win_rate)}</td>
