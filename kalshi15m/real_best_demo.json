@@ -1,0 +1,51 @@
+{
+  "_note": "DEMO (fake money): the single best tested rule for profit per day: #2's entries and edge-scaled (Kelly) stakes with #1's early exit at fair value (holdout $8,034 / t 6.95 at a $10 base; archive t 5.81; search t 11.3). 10% of the crypto balance per bet (compounding); IOC orders may reach up to 5c deeper into thin books while keeping at least 6c of model edge.",
+  "series": [
+    "KXBTC15M",
+    "KXETH15M",
+    "KXSOL15M",
+    "KXXRP15M",
+    "KXHYPE15M",
+    "KXBNB15M",
+    "KXNEAR15M",
+    "KXDOGE15M",
+    "KXZEC15M"
+  ],
+  "execution": "taker",
+  "poll": "minute",
+  "golden_rules": [
+    {
+      "id": "sized_exit:ALL",
+      "family": "sized",
+      "scope": "ALL",
+      "t": 6.95,
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.13,
+        "band": "05-95",
+        "vm": 1.0,
+        "cap": 5,
+        "exit": "conv0"
+      },
+      "norm": 0.26276383779910073
+    }
+  ],
+  "log": "data/kalshi15m/real_all9_log.jsonl",
+  "limits": {
+    "stake_usd": 10.0,
+    "stake_pct_of_balance": 0.1,
+    "stake_usd_min": 1.0,
+    "max_contracts_per_order": 100,
+    "max_daily_loss_usd": 20.0,
+    "max_trades_per_day": 40,
+    "max_open_positions": 1,
+    "min_balance_usd": 2.0,
+    "max_price": 0.95,
+    "min_price": 0.03,
+    "max_data_age_s": 5.0,
+    "max_decision_lag_s": 5.0,
+    "walk_cents": 5,
+    "walk_keep_edge": 0.06
+  }
+}

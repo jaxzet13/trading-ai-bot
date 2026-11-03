@@ -103,13 +103,22 @@ for _r in GOLDEN:
     _r["kind"] = lab3.FAMILIES[_r["family"]]["kind"]          # hold | sized | scalp
     if _r["kind"] == "sized":
         _r["norm"] = SIZED_NORMS[_r["id"]]
-RULES = {r["id"]: r for r in GOLDEN}
-PRIORITY = {r["id"]: i for i, r in enumerate(GOLDEN)}
+# Combinations of golden pieces, each tested as ONE fixed rule (no tuning) on the search window, the
+# locked holdout and the older archive (scratchpad combo.py, Nov 3): #2's entries and Kelly stakes
+# (sized:ALL) with #1's early exit (conv0). Holdout $8,034 / t 6.95; archive $6,607 / t 5.81; search t 11.3.
+EXTRA = [
+    {"id": "sized_exit:ALL", "family": "sized", "scope": "ALL", "t": 6.95, "kind": "sized_exit",
+     "params": {"start": 2, "end": 13, "edge": 0.13, "band": "05-95", "vm": 1.0, "cap": 5, "exit": "conv0"},
+     "norm": SIZED_NORMS["sized:ALL"]},
+]
+ORDER = EXTRA + GOLDEN                                        # best first
+RULES = {r["id"]: r for r in ORDER}
+PRIORITY = {r["id"]: i for i, r in enumerate(ORDER)}
 
 
 def rules_for(series: str) -> list[str]:
     """Golden rule ids that apply to this coin, best first."""
-    return [r["id"] for r in GOLDEN if r["scope"] in ("ALL", series)]
+    return [r["id"] for r in ORDER if r["scope"] in ("ALL", series)]
 
 
 def sized_stake(rule_id: str, q: float, price: float, stake: float):
@@ -620,7 +629,7 @@ def exit_check(rule_id: str, P: dict, minute: int, held_side: str, entry_minute:
     -> (sell price, model value) or None."""
     r = RULES[rule_id]
     ex = r["params"].get("exit", "")
-    if r["kind"] != "scalp" or not ex.startswith("conv") or minute <= entry_minute:
+    if r["kind"] not in ("scalp", "sized_exit") or not ex.startswith("conv") or minute <= entry_minute:
         return None
     j = minute - 1
     _, _, p = lab3.FAMILIES[r["family"]]["fn"](_ctx(P), r["params"])

@@ -107,9 +107,9 @@ def golden_frozen() -> dict:
     as lab3 froze them (+ the sized stake normaliser). Order of evaluation = golden_live.GOLDEN (best first)."""
     from . import golden_live as GL
     out = {}
-    for r in GL.GOLDEN:
+    for r in GL.ORDER:
         out[r["id"]] = {k: r[k] for k in ("id", "family", "scope", "t", "params")}
-        if r["kind"] == "sized":
+        if r["kind"] in ("sized", "sized_exit"):
             out[r["id"]]["norm"] = r["norm"]
     return out
 
@@ -671,7 +671,7 @@ class Runner:
             base.update(base_stake=round(stake, 4), balance_crypto=self.crypto_balance)
         if signal is not None:                      # golden rule: its model value, and Kelly stake if "sized"
             base["q"] = round(signal.q, 6)
-            if signal.kind == "sized":
+            if signal.kind in ("sized", "sized_exit"):
                 from . import golden_live as GL
                 stake, kel = GL.sized_stake(signal.rule, signal.q, price, stake)
                 base.update(kelly=round(kel, 6), stake=round(stake, 4), norm=GL.RULES[signal.rule]["norm"])
@@ -682,10 +682,19 @@ class Runner:
             why = f"data {age}s old > {self.L['max_data_age_s']}s"
         if why is None and not (self.L["min_price"] <= price <= self.L["max_price"]):
             why = f"price {price} outside [{self.L['min_price']}, {self.L['max_price']}]"
-        n = contracts_for(stake, price, self.L["max_contracts_per_order"])
+        # walk_cents (default off): thin books often show only a few contracts at the best price. Let the IOC
+        # order reach up to walk_cents deeper, but never closer than walk_keep_edge to the rule's model value.
+        limit = price
+        if signal is not None and self.L.get("walk_cents"):
+            lim2 = min(price + self.L["walk_cents"] / 100, signal.q - self.L.get("walk_keep_edge", 0.06))
+            lim2 = math.floor(lim2 * 100 + 1e-9) / 100
+            if price < lim2 <= self.L["max_price"]:
+                limit = lim2
+                base["limit"] = limit
+        n = contracts_for(stake, limit, self.L["max_contracts_per_order"])
         if why is None and n < 1:
             why = "stake too small for one contract"
-        max_cost = round(n * price + kalshi_fee(price, n), 4)
+        max_cost = round(n * limit + kalshi_fee(limit, n), 4)
         if why is None and not self.dry and self.balance is not None and self.balance < max_cost:
             why = f"balance ${self.balance:.2f} < order cost ${max_cost:.2f}"
         if why is None and not self.dry and self.L.get("stake_pct_of_balance") and self.crypto_balance is not None \
@@ -696,7 +705,7 @@ class Runner:
             self.log({"event": "signal_skipped", "reason": why, **base})
             return
         coid = str(uuid.uuid4())
-        body = order_body(tk, side, price, n, coid)
+        body = order_body(tk, side, limit, n, coid)
         # mark the market as traded BEFORE sending, so a crash can never lead to a second order
         self.traded.add(tk)
         d = self.today()
@@ -824,7 +833,7 @@ class Runner:
         p = self.pos.get(tk)
         if not p or p.get("status") != "filled" or p["n"] <= 0 or p.get("rule") not in GL.RULES:
             return
-        if GL.RULES[p["rule"]]["kind"] != "scalp" or p.get("exit_blocked") or p.get("exit_unknown"):
+        if GL.RULES[p["rule"]]["kind"] not in ("scalp", "sized_exit") or p.get("exit_blocked") or p.get("exit_unknown"):
             return
         hit = GL.exit_check(p["rule"], self.P, minute, p["side"], p.get("minute") or 99)
         if not hit:
@@ -1115,6 +1124,8 @@ def load_config(path=CONFIG) -> dict:
                 or not 0 < pct <= 0.25 or mn <= 0:
             raise Stop(f"{path}: stake_pct_of_balance must be in (0, 0.25] and stake_usd_min > 0 (both set)",
                        EXIT_CONFIG)
+    if not 0 <= lim.get("walk_cents", 0) <= 10 or not 0 <= lim.get("walk_keep_edge", 0.06) <= 0.5:
+        raise Stop(f"{path}: walk_cents must be 0-10 and walk_keep_edge 0-0.5", EXIT_CONFIG)
     if "golden_rules" in cfg:   # lab3's golden rules, frozen to the exact lab3 params (see golden_live.GOLDEN)
         frozen = golden_frozen()
         if cfg.get("execution") != "taker" or not cfg.get("series") or not isinstance(cfg["series"], list) \

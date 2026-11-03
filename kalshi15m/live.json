@@ -5,6 +5,40 @@
  "max_trades_per_day": 150,
  "strategies": [
   {
+   "id": "G-best",
+   "label": "#0 \u2605 All 9 coins \u00b7 Edge-sized bets + sell early (best combo)",
+   "series": [
+    "KXBTC15M",
+    "KXETH15M",
+    "KXSOL15M",
+    "KXXRP15M",
+    "KXHYPE15M",
+    "KXBNB15M",
+    "KXNEAR15M",
+    "KXDOGE15M",
+    "KXZEC15M"
+   ],
+   "strategy": "fair_value",
+   "execution": "taker",
+   "poll": "minute",
+   "params": {
+    "start": 2,
+    "end": 13,
+    "edge": 0.13,
+    "vol_mult": 1.0
+   },
+   "sizing": {
+    "vm": 1.0,
+    "norm": 0.26276383779910073,
+    "cap": 5
+   },
+   "exit": {
+    "vm": 1.0,
+    "conv": 0
+   },
+   "why": "Best tested combination: #2's entries and edge-scaled bets with #1's early exit at fair value. One fixed rule, no tuning: search window +$21,896 (t 11.3), final exam +$8,034 on 5,537 trades (t 6.95), older archive +$6,607 (t 5.81), at a $10 base bet."
+  },
+  {
    "id": "G-exit",
    "label": "#1 \u2605 All 9 coins \u00b7 Fair value, sell early",
    "series": [

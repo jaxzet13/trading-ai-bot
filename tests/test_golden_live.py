@@ -53,8 +53,9 @@ def test_rule_table_matches_lab3_results():
         assert r["t"] == c["holdout"]["t"] and r["kind"] == lab3.FAMILIES[r["family"]]["kind"]
         assert not lab3.FAMILIES[r["family"]]["needs_ref"]
     assert [r["t"] for r in GL.GOLDEN] == sorted([r["t"] for r in GL.GOLDEN], reverse=True)
-    assert GL.rules_for("KXBTC15M") == [r["id"] for r in GL.GOLDEN if r["scope"] == "ALL"]
-    assert len(GL.rules_for("KXDOGE15M")) == 13 and len(GL.rules_for("KXHYPE15M")) == 13
+    extra = [r["id"] for r in GL.EXTRA if r["scope"] == "ALL"]       # tested combinations, ranked first
+    assert GL.rules_for("KXBTC15M") == extra + [r["id"] for r in GL.GOLDEN if r["scope"] == "ALL"]
+    assert len(GL.rules_for("KXDOGE15M")) == 13 + len(extra) and len(GL.rules_for("KXHYPE15M")) == 13 + len(extra)
     assert abs(GL.RULES["sized:ALL"]["norm"] - 0.26276) < 1e-5 and abs(GL.RULES["sized:KXHYPE15M"]["norm"] - 0.22610) < 1e-5
 
 

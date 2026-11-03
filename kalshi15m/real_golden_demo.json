@@ -1,5 +1,5 @@
 {
-  "_note": "DEMO settings (fake money): the 16 golden rules of the lab3 hunt on all 9 coins. One runner per coin; every minute the coin's rules are checked best first (highest holdout t-stat) and the first that fires places the market's only bet (lower-ranked rules that fired at the same minute are logged as also_signalled). Rule settings are frozen to lab3's (the runner refuses edits). Compounding stakes: each bet's base stake = max(stake_usd_min, stake_pct_of_balance x the crypto (shard 2) balance), stake_usd while the balance is unknown; 'sized' rules multiply the base by min(Kelly / norm, 5); 'scalp' rules sell back at the bid once it reaches the model's fair value. Orders the balance cannot cover are skipped and logged. Limits are per coin. Logs to real_all9_log.jsonl so open positions, one-bet-per-market and today's loss cap carry over from the all-9 demo. See kalshi15m/golden_live.py and REAL_MONEY.md.",
+  "_note": "DEMO (fake money): all 16 golden rules, best first; 10% of the crypto balance per bet. See REAL_MONEY.md.",
   "series": [
     "KXBTC15M",
     "KXETH15M",
