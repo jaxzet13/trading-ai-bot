@@ -1871,6 +1871,38 @@ form.scan-opt { cursor: default; }
 .pk.pk5 .tearline, .pk.pk5 .tearfill, .pk.pk5 .tearglow { display: none !important; }
 .tile:hover .pk.pk5 .pk5-glint, .showcase:hover .pk.pk5 .pk5-glint { animation-duration: 2.2s; }
 @media (prefers-reduced-motion: reduce) { .pk.pk5 .pk5-glint { animation: none; } }
+/* ===== DECK FLOW: face-up commons you flick through, face-down big pulls that glow their rarity ===== */
+.sc.pre .tilt { animation: none; }
+.sc.top.tell:not(.flipped) .cback { box-shadow: 0 0 0 1px var(--c), 0 0 18px 2px var(--c), 0 0 46px 8px var(--c); animation: telltale 1.6s ease-in-out infinite; }
+@keyframes telltale { 50% { box-shadow: 0 0 0 1px var(--c), 0 0 26px 5px var(--c), 0 0 70px 14px var(--c); } }
+.sc.top.flipped { cursor: grab; touch-action: none; } .sc.top.flipped:active { cursor: grabbing; }
+.stage .st-hint { transition: opacity .2s; }
+@media (prefers-reduced-motion: reduce) { .sc.top.tell:not(.flipped) .cback { animation: none; } }
+/* ===================== HOUSE STYLE: the cut =====================
+   STIXX's signature is the slash: section titles open with a blood-red cut, primary controls have their
+   corners sliced off, blood red is the only accent, and a fine film grain sits over everything. */
+:root { --blood: #c4232b; --blood-hi: #e0303a; --cut: 10px; }
+body::after { content: ""; position: fixed; inset: -50%; z-index: 2147483000; pointer-events: none; opacity: .07; mix-blend-mode: overlay; background: var(--grain); animation: hsgrain 1.2s steps(6) infinite; }
+@keyframes hsgrain { 0% { transform: translate(0, 0); } 20% { transform: translate(-3%, 2%); } 40% { transform: translate(2%, -3%); } 60% { transform: translate(-2%, -1%); } 80% { transform: translate(3%, 3%); } 100% { transform: translate(0, 0); } }
+@media (prefers-reduced-motion: reduce) { body::after { animation: none; } }
+.hs-red { color: var(--blood); }
+.section-head h2::before, #all-packs h2::before { content: "/"; color: var(--blood); display: inline-block; margin-right: .08em; transform: skewX(-8deg); }
+.btn.brass, .scan-btn, nav.tabs a[aria-current="page"] { clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut))); border-radius: 3px !important; }
+nav.tabs a[aria-current="page"] { --cut: 7px; }
+.scan-btn { --cut: 8px; }
+.btn.brass { transition: background .18s, color .18s, transform .12s; }
+.btn.brass:hover { background: var(--blood) !important; border-color: var(--blood) !important; color: #fff !important; }
+.btn.brass:active { transform: translateY(1px) scale(.99); }
+.tile .btn.brass:hover { background: var(--blood) !important; }
+.btn:not(.brass):hover { border-color: rgba(233,228,216,.45); }
+.btn:focus-visible, nav.tabs a:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px; }
+.tile { transition: transform .25s cubic-bezier(.2,.8,.2,1), border-color .25s; }
+.tile:hover { transform: translateY(-3px); border-color: rgba(233,228,216,.22); }
+.tile:hover .stagebox::after { opacity: 1; }
+.stagebox::after { content: ""; position: absolute; left: 14%; right: 14%; bottom: 10%; height: 2px; background: linear-gradient(90deg, transparent, var(--blood), transparent); transform: skewX(-30deg); opacity: 0; transition: opacity .25s; pointer-events: none; }
+.label { letter-spacing: .1em; }
+::selection { background: var(--blood); color: #fff; }
+.num, .price, .bal { font-variant-numeric: tabular-nums; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -1924,7 +1956,7 @@ form.scan-opt { cursor: default; }
     <div class="hero">
       <div>
         <div class="label">STIXX · Series II · 18+</div>
-        <h1>Pull.<br>Grade.<br>Flip.</h1>
+        <h1>Pull.<br>Grade.<br><span class="hs-red">Flip.</span></h1>
         <p class="lede">Explicit, numbered fight cards in short print runs. Scan yours to prove it's real, track what it's worth, and sell it with its history attached. <span id="heroCount">0</span> fighters, <span id="heroPacks">0</span> packs, and store-only drops that never get reprinted.</p>
         <div class="ctas"><button class="btn brass big" data-scanopen="1"><svg class="ico"><use href="#i-qr"/></svg>Scan a card</button><a class="btn big" href="#all-packs">Browse packs</a><button class="btn ghost big" data-buy="lastframe" id="heroOpen">Open the featured pack</button></div>
         <div class="facts">
@@ -3857,20 +3889,40 @@ form.scan-opt { cursor: default; }
   }
 
   // --- stack ---
+  // Big pulls (Rare and up, reverse foils, variants, graded and cutscene cards) stay face-down for the build-up;
+  // everything else comes out of the pack face-up and you flick through it.
+  const isBigPull = it => (CR[rarOf(it)] || CR.C).tier >= 2 || !!it.rh || !!it.fx || !!it.g || hasCutscene(it);
   function buildStack() {
     const st = $("stStack");
     st.innerHTML = SS.items.map((it, i) => {
       const rot = i === 0 ? 0 : (rand() - .5) * 6, ox = i * 3, oy = i * 4;
-      return `<div class="sc rise" data-i="${i}" style="z-index:${50 - i};--rot:${rot.toFixed(1)}deg;--ox:${ox}px;--oy:${oy}px;--c:${(CR[rarOf(it)] || CR.C).col}">
+      return `<div class="sc rise${isBigPull(it) ? " big" : " flipped settled pre"}" data-i="${i}" style="z-index:${50 - i};--rot:${rot.toFixed(1)}deg;--ox:${ox}px;--oy:${oy}px;--c:${(CR[rarOf(it)] || CR.C).col}">
         <div class="tilt"><div class="flip-inner"><div class="face back"><div class="cback"><div class="in"><svg class="xmark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="9.5" r="1.6" fill="currentColor"/><path d="M11 15 L29 33 M29 15 L11 33" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg><span class="t">STIXX</span></div><span class="leak"></span><span class="crk"></span></div></div><div class="face front">${cardHTML(it, !!it.g)}</div></div></div></div>`;
     }).join("");
     requestAnimationFrame(() => requestAnimationFrame(() => {
       st.querySelectorAll(".sc").forEach((el, i) => setTimeout(() => { el.classList.remove("rise"); sfx.deal(); }, 60 + i * 70));
+      el0Ready = performance.now() + 60 + SS.items.length * 70 + 260;
       markTop();
     }));
   }
   const scEl = i => $("stStack") && $("stStack").querySelector(`.sc[data-i="${i}"]`);
-  function markTop() { const el = scEl(SS.idx); if (el) el.classList.add("top"); }
+  let el0Ready = 0;
+  function markTop() {
+    const el = scEl(SS.idx); if (!el) return; el.classList.add("top");
+    const it = SS.items[SS.idx];
+    if (el.classList.contains("pre")) { const wait = Math.max(0, el0Ready - performance.now()); setTimeout(() => { if (SS && scEl(SS.idx) === el) landFace(el, it); }, wait); }
+    else { el.classList.add("tell"); $("stHint").textContent = "Tap to reveal · Space"; }
+  }
+  // a face-up card arrives on top: it counts the moment you see it
+  function landFace(el, it) {
+    if (el.dataset.landed) return; el.dataset.landed = "1";
+    const f = BY_ID[it.id], val = itemVal(it), tc = el.querySelector(".tcard");
+    el.classList.add("glowing"); el.style.setProperty("--gr", ".3"); if (tc) tc.style.setProperty("--go", "1");
+    sfx.pop(); const c = center(el); fx.dust(c.x, c.y, 10);
+    showTitle(f, it, val, false); updateTotal(val);
+    if (navigator.vibrate) try { navigator.vibrate(6); } catch (_) {}
+    $("stHint").textContent = SS.idx < SS.items.length - 1 ? "Swipe it away · or press Space" : "Swipe to see your pull · or press Space";
+  }
 
   function advance() {
     if (!SS) return;
@@ -4052,7 +4104,7 @@ form.scan-opt { cursor: default; }
     setTimeout(() => {
       if (!SS || SS.phase !== "stack") return;
       el.classList.remove("flipB");
-      const done = () => { if (!SS || SS.phase !== "stack") return; SS.busy = false; if (SS.queued) { SS.queued = false; setTimeout(advance, 40); return; } $("stHint").textContent = SS.idx < SS.items.length - 1 ? "Click again for the next card · Space" : "Click to see your result · Space"; };
+      const done = () => { if (!SS || SS.phase !== "stack") return; SS.busy = false; if (SS.queued) { SS.queued = false; setTimeout(advance, 40); return; } $("stHint").textContent = SS.idx < SS.items.length - 1 ? "Swipe it away · or press Space" : "Swipe to see your pull · or press Space"; };
       const after = () => hasCutscene(it) && !(SS.cutDone && SS.cutDone[it.uid]) ? setTimeout(() => playCutscene(it, done), 650) : done();
       if (it.g) { $("stHint").textContent = "Grading…"; gradeRoll(el, it, after); } else after();
     }, 470);
@@ -4141,19 +4193,21 @@ form.scan-opt { cursor: default; }
     void t.offsetWidth; t.classList.add("slam");
   }
 
-  function dismiss(el) {
+  function dismiss(el, dir, vy) {
     const it = SS.items[SS.idx];
     SS.busy = true;
-    el.classList.remove("top"); el.classList.add("gone");
-    sfx.whoosh();
+    el.classList.remove("top", "tell");
+    if (dir) { el.style.transition = "transform .42s cubic-bezier(.2,.65,.35,1), opacity .38s ease-in"; el.style.transform = `translate(${dir * 120}vw, ${Math.round((vy || 0) * 260 - 60)}px) rotate(${dir * 34}deg) scale(1.02)`; el.style.opacity = "0"; el.style.pointerEvents = "none"; }
+    else el.classList.add("gone");
+    sfx.whoosh(); if (navigator.vibrate) try { navigator.vibrate(8); } catch (_) {}
     { const t = $("stTitle"); t.classList.remove("slam"); t.classList.add("fade"); } $("rays").classList.remove("on");
     const mini = document.createElement("div"); mini.className = "mini"; mini.style.setProperty("--c", (CR[rarOf(it)] || CR.C).col); mini.innerHTML = cardHTML(it); $("stTray").appendChild(mini);
     SS.idx++;
     setTimeout(() => {
       if (!SS || SS.phase !== "stack") return; SS.busy = false;
       if (SS.idx >= SS.items.length) showSummary();
-      else { markTop(); $("stHint").textContent = "Click the card to reveal · Space"; if (SS.queued) { SS.queued = false; setTimeout(advance, 30); } }
-    }, 200);
+      else { markTop(); if (SS.queued) { SS.queued = false; setTimeout(advance, 30); } }
+    }, dir ? 120 : 200);
   }
 
   function shake(px, ms) {
@@ -4234,8 +4288,35 @@ form.scan-opt { cursor: default; }
       const tc = el.querySelector(".front .tcard"); if (tc) { tc.style.setProperty("--mx", (100 - (x + .5) * 100).toFixed(1) + "%"); tc.style.setProperty("--my", ((y + .5) * 100).toFixed(1) + "%"); }
     }
   });
+  // flick: drag the face-up top card and throw it off the table
+  let FL = null;
+  stage.addEventListener("pointerdown", e => {
+    if (!SS || SS.phase !== "stack" || SS.busy) return;
+    const el = e.target.closest && e.target.closest(".sc.top.flipped"); if (!el) return;
+    FL = { el, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, t: performance.now(), vx: 0, vy: 0, moved: false, id: e.pointerId };
+    try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+    el.style.transition = "none";
+  });
+  stage.addEventListener("pointermove", e => {
+    if (!FL || e.pointerId !== FL.id) return;
+    const now = performance.now(), dt = Math.max(1, now - FL.t);
+    FL.vx = FL.vx * .6 + (e.clientX - FL.x) / dt * .4; FL.vy = FL.vy * .6 + (e.clientY - FL.y) / dt * .4; FL.x = e.clientX; FL.y = e.clientY; FL.t = now;
+    const dx = e.clientX - FL.x0, dy = e.clientY - FL.y0; if (Math.hypot(dx, dy) > 6) FL.moved = true;
+    FL.el.style.transform = `translate(${dx}px, ${dy * .45}px) rotate(${dx * .06}deg) scale(1.05)`;
+  });
+  const flEnd = e => {
+    if (!FL || (e && e.pointerId !== FL.id)) return;
+    const f = FL; FL = null; const dx = f.x - f.x0;
+    if (!f.moved) { f.el.style.transition = ""; f.el.style.transform = ""; return; }
+    SS && (SS.noClick = performance.now());
+    if (SS && SS.phase === "stack" && !SS.busy && (Math.abs(dx) > 90 || (Math.abs(f.vx) > .55 && Math.abs(dx) > 24))) { dismiss(f.el, dx > 0 ? 1 : -1, f.vy); return; }
+    f.el.style.transition = "transform .5s cubic-bezier(.2,1.45,.4,1)"; f.el.style.transform = "";
+    setTimeout(() => { if (f.el.isConnected && !FL) f.el.style.transition = ""; }, 520);
+  };
+  stage.addEventListener("pointerup", flEnd); stage.addEventListener("pointercancel", flEnd);
   stage.addEventListener("click", e => {
     if (!SS || (SS.phase !== "stack" && SS.phase !== "opening")) return;
+    if (SS.noClick && performance.now() - SS.noClick < 350) return;
     if (e.target.closest(".st-ctrl")) return;
     if (e.target.closest(".sc.top") || e.target.closest("#stCenter")) advance();
   });
@@ -4971,6 +5052,7 @@ form.scan-opt { cursor: default; }
     }
     if (!stage.hidden && SS) {
       if ((k === " " || k === "enter") && SS.phase !== "summary") { e.preventDefault(); if (!e.repeat) advance(); }
+      if ((k === "arrowleft" || k === "arrowright") && SS.phase === "stack" && !SS.busy && !e.repeat) { const el = scEl(SS.idx); if (el && el.classList.contains("flipped")) { e.preventDefault(); dismiss(el, k === "arrowright" ? 1 : -1, 0); } else if (el) { e.preventDefault(); advance(); } }
       if (k === "escape") { if (SS.phase === "summary") closeStage(); else skipAll(); }
       return;
     }
