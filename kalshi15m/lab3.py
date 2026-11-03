@@ -651,7 +651,7 @@ def f_ens(ctx, c):
         {"vm": [0.8, 1.0, 1.25], "edge": [0.06, 0.08, 0.10, 0.12, 0.14, 0.16, 0.20], "start": [2, 3, 5],
          "end": [11, 13], "band": BANDS5,
          "exit": ["conv0", "conv2", "conv4", "conv6", "tp5", "tp10", "tp15", "tp20", "t8", "t10", "t12", "t14"]},
-        kind="scalp", heat=None)
+        kind="scalp", heat=("edge", "vm"))
 def f_scalp(ctx, c):
     p, pk = _std(ctx, c, vm=c["vm"])
     return (*fv_masks(ctx, p, pk, c["start"], c["end"], c["edge"], c["band"]), p)
@@ -680,7 +680,7 @@ def f_maker(ctx, c):
 @family("sized", "Edge-scaled stakes",
         "Live model, but bet more when the model's edge is bigger (fractional Kelly), capped at 2-5x "
         "the average stake. Stakes are scaled so the average is about $10, to stay comparable.",
-        {**BASE, "vm": [0.8, 1.0, 1.25], "cap": [2, 3, 5]}, kind="sized")
+        {**BASE, "vm": [0.8, 1.0, 1.25], "cap": [2, 3, 5]}, kind="sized", heat=("edge", "cap"))
 def f_sized(ctx, c):
     p, pk = _std(ctx, c, vm=c["vm"])
     return (*fv_masks(ctx, p, pk, c["start"], c["end"], c["edge"], c["band"]), p)
@@ -1175,6 +1175,19 @@ def load(verbose=True):
     return full
 
 
+def diagnose_file(path=None):
+    """Re-run only the diagnostics on an existing results file (no search, holdout rules re-run as frozen)."""
+    path = Path(path) if path else OUT
+    res = json.loads(path.read_text())
+    G["quick"] = 0
+    load(verbose=False)
+    diagnose(res)
+    path.write_text(json.dumps(res, default=_jd))
+    for line in res["method"]["summary"]:
+        print(" -", line)
+    return res
+
+
 def main(workers=2, families=None, quick=0, out_path=None):
     """quick = N: only every Nth config of each grid (pipeline test). out_path: write elsewhere."""
     t0 = time.time()
@@ -1306,6 +1319,7 @@ def main(workers=2, families=None, quick=0, out_path=None):
         "candidates": [_public(c) for c in cands],
         "heatmaps": heats,
     }
+    diagnose(out)
     dest = Path(out_path) if out_path else OUT
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps(out, default=_jd))
@@ -1315,6 +1329,111 @@ def main(workers=2, families=None, quick=0, out_path=None):
         print(f"  {c['status']:6s} {c['id']:28s} ${h['pnl']:>8} n={h['trades']:>5} t={h['t']:>5} | "
               f"arch {(c['archive'] or {}).get('t')} | d1 t={c['delay1']['t']} | {c['why']}")
     print(f"done in {time.time() - t0:.0f}s -> {dest}")
+    return out
+
+
+# =========================================================================== diagnostics (do not change status)
+def _tser(x):
+    x = np.asarray(x, float)
+    if len(x) < 3 or x.std(ddof=1) == 0:
+        return 0.0
+    return round(float(x.mean() / (x.std(ddof=1) / math.sqrt(len(x)))), 2)
+
+
+def _rule_from_public(c):
+    fam, params = c["family"], c["params"]
+    if fam == "ens_best":
+        return {"members": params["members"]}
+    if fam == "pertune":
+        back = {cname(s): s for s in COINS}
+        return {"family": "fv_ref", "per_coin": True, "params": {back[k]: v for k, v in params.items()}}
+    return {"family": fam, "params": params}
+
+
+def _base_df(b):
+    coins = [b["id"].split("|")[1]] if "|" in b["id"] else _coins_of(b["scope"])
+    return _bt("hold", coins, b["strategy"], b["params"])
+
+
+def diagnose(res):
+    """Extra skeptic's checks on the holdout, added to each candidate / baseline:
+    t_by_window  t-stat of P&L summed per 15-minute window (pooled scopes trade several correlated coins in the
+                 same window, which the per-trade t ignores); t_by_day  t-stat of daily P&L;
+    paired_vs_live / paired_vs_control  extra P&L over the most profitable live rule (or the re-tuned live model,
+                 family fv_ref) on the same markets, with the t-stat of the per-window difference."""
+    o2w, wins = {}, {}
+    for s, ctx in G["hold"].items():
+        o2w.update(zip(ctx.panel.ticker, ctx.open_ts))
+        wins[s] = np.unique(ctx.open_ts)
+    scope_w = {sc: np.unique(np.concatenate([wins[c] for c in _coins_of(sc)])) for sc in COINS + ["ALL"]}
+
+    def wsum(df):
+        if df is None or len(df) == 0:
+            return pd.Series(dtype=float)
+        return df.groupby(df.ticker.map(o2w)).pnl.sum()
+
+    def stats(item, df):
+        ws = wsum(df)
+        item["holdout"]["t_by_window"] = _tser(ws.values)
+        item["holdout"]["t_by_day"] = _tser(df.groupby(df.ts // 86400).pnl.sum().values) if len(df) else 0.0
+        return ws
+
+    WS = {}
+    for b in res["baselines"]:
+        WS[b["id"]] = stats(b, _base_df(b))
+    for c in res["candidates"]:
+        WS[c["id"]] = stats(c, run_rule("hold", c["scope"], _rule_from_public(c),
+                                        norms=_sized_norms(_rule_from_public(c), c["scope"])
+                                        if c["family"] == "sized" else None))
+
+    def paired(a, b, sc):
+        W = scope_w[sc]
+        d = WS[a].reindex(W, fill_value=0.0).to_numpy() - WS[b].reindex(W, fill_value=0.0).to_numpy()
+        return {"extra_pnl": round(float(d.sum()), 2), "t": _tser(d)}
+    for c in res["candidates"]:
+        bl = [b for b in res["baselines"] if b["scope"] == c["scope"]]
+        if bl:
+            bp = max(bl, key=lambda b: b["holdout"]["pnl"])
+            c["paired_vs_live"] = {"baseline_id": bp["id"], **paired(c["id"], bp["id"], c["scope"])}
+        ctl = [x for x in res["candidates"] if x["family"] == "fv_ref" and x["scope"] == c["scope"] and x is not c]
+        c["paired_vs_control"] = {"control_id": ctl[0]["id"], **paired(c["id"], ctl[0]["id"], c["scope"])} if ctl else None
+    res["method"]["diagnostics"] = (
+        "Added after the run as extra skeptic's checks; they do not change any status. 't by window' groups trades "
+        "in the same 15-minute window (pooled scopes bet on several coins that move together, so the per-trade t "
+        "overstates certainty); 't by day' uses daily totals. 'Paired vs live' is the extra holdout profit over the "
+        "most profitable live rule on the same coin(s), with the t-stat of that difference per 15-minute window; "
+        "'paired vs control' does the same against the live model simply re-tuned on the search window (fv_ref).")
+    res["method"]["summary"] = headline(res)
+    return res
+
+
+def headline(res):
+    cs = res["candidates"]
+    gold = [c for c in cs if c["status"] == "golden"]
+    out = [f"{len(gold)} of {len(cs)} candidates that reached the holdout are golden, "
+           f"{sum(c['status'] == 'pass' for c in cs)} pass, {sum(c['status'] == 'fail' for c in cs)} fail "
+           f"(strict bar t >= {res['method']['t_bar_strict']})."]
+    ctl = next((c for c in cs if c["family"] == "fv_ref" and c["scope"] == "ALL"), None)
+    live = next((b for b in res["baselines"] if b["id"] == "live:ALL:fair_value"), None)
+    if ctl and live:
+        out.append(f"Control: simply re-tuning the live model on the search window, all 9 coins, made "
+                   f"${ctl['holdout']['pnl']:,.0f} (t {ctl['holdout']['t']}) vs ${live['holdout']['pnl']:,.0f} "
+                   f"(t {live['holdout']['t']}) for the live all-coin rule. Part of every all-coin gain is just this re-tuning.")
+    clear = [c for c in gold if (c.get("paired_vs_live") or {}).get("t", 0) >= 2]
+    if gold:
+        out.append("Golden rules whose extra profit over the live rule is itself statistically clear (paired t >= 2): "
+                   + (", ".join(f"{c['label']} (+${c['paired_vs_live']['extra_pnl']:,.0f}, t {c['paired_vs_live']['t']})"
+                                for c in clear) or "none") + ".")
+        beat_ctl = [c for c in gold if (c.get("paired_vs_control") or {}).get("t", 0) >= 2]
+        out.append("Golden rules that also clearly beat the re-tuned control (paired t >= 2): "
+                   + (", ".join(c["label"] for c in beat_ctl) or "none") + ".")
+        under = [c for c in gold if c["holdout"].get("t_by_window", 99) < res["method"]["t_bar_strict"]]
+        if under:
+            out.append("Golden rules whose t-stat falls below the strict bar once trades in the same 15-minute window "
+                       "are grouped: " + ", ".join(c["label"] for c in under) + ".")
+        d1 = sorted(c["delay1"]["t"] for c in gold)
+        out.append(f"Latency: acting one minute late, the golden rules' holdout t-stats have a median of "
+                   f"{d1[len(d1) // 2]} (range {d1[0]} to {d1[-1]}); the edge depends on reacting within the minute.")
     return out
 
 

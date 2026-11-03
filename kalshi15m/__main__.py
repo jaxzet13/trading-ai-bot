@@ -39,6 +39,7 @@ def main():
     l3.add_argument("--families", nargs="+", default=None, help="only these family ids (default: all)")
     l3.add_argument("--quick", type=int, default=0, help="pipeline test: only every Nth config of each grid")
     l3.add_argument("--out", default=None, help="output file (default data/lab/lab3_results.json)")
+    l3.add_argument("--diagnose", action="store_true", help="only re-run the diagnostics on an existing results file")
     sub.add_parser("live-report", help="refresh the dashboard with the live paper-trading log")
     rl = sub.add_parser("real", help="REAL-MONEY runner for KXNEAR15M fair_value (see REAL_MONEY.md); --demo by default",
                         add_help=False)
@@ -82,7 +83,7 @@ def main():
         lab2.main(a.args)
     elif a.cmd == "lab3":
         from . import lab3
-        lab3.main(a.workers, a.families, a.quick, a.out)
+        lab3.diagnose_file(a.out) if a.diagnose else lab3.main(a.workers, a.families, a.quick, a.out)
     elif a.cmd == "hourly":
         from . import hourly
         hourly.main(a.series, a.workers, a.days, a.skip_download)
