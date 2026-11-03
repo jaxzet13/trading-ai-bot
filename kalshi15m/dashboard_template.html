@@ -243,12 +243,13 @@ td.coin { font-size: 12px; }
 .live-zone .filt button { background: transparent; border-color: var(--line); color: var(--ink-2); }
 .live-zone .filt button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--lv-bg); }
 
-#lvBoard { min-width: 1060px; font-size: 14px; }
+#lvBoard { min-width: 980px; font-size: 14px; }
+#lvBoard > tbody > tr.row .sub { white-space: normal; max-width: 15ch; margin-left: auto; }
 #lvBoard th { padding: 14px 10px 12px; border-bottom-color: var(--grid); color: var(--muted); }
 #lvBoard td { vertical-align: middle; padding: 15px 10px; border-bottom-color: var(--grid); }
 #lvBoard tbody tr:last-child td { border-bottom: 0; }
 #lvBoard td.rk { color: var(--muted); width: 34px; }
-#lvBoard td.strat { min-width: 310px; }
+#lvBoard td.strat { min-width: 260px; }
 #lvBoard tr.row { cursor: pointer; transition: background-color .15s; }
 #lvBoard tr.row:hover, #lvBoard tr.row.sel { background: var(--lv-hover); }
 #lvBoard tr.row.sel { box-shadow: none; }
