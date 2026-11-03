@@ -93,6 +93,7 @@ class FakeKalshi:
         self.post_fail = []          # queue of failure modes for the next POSTs
         self.results = {}            # ticker -> "yes"/"no"
         self.balance_cents = 100_00
+        self.shard2 = None           # dollars on the crypto shard (adds balance_breakdown when set)
 
     # market helpers
     def market_at(self, t):
@@ -125,7 +126,11 @@ class FakeKalshi:
             o = int(tk.split("-T")[1])
             return Resp(200, {"market": self.market_dict(o)})
         if p == "/portfolio/balance":
-            return Resp(200, {"balance": self.balance_cents, "balance_dollars": f"{self.balance_cents / 100:.4f}"})
+            d = {"balance": self.balance_cents, "balance_dollars": f"{self.balance_cents / 100:.4f}"}
+            if self.shard2 is not None:
+                d["balance_breakdown"] = [{"exchange_index": 0, "balance": f"{self.balance_cents / 100 - self.shard2:.4f}"},
+                                          {"exchange_index": 2, "balance": f"{self.shard2:.4f}"}]
+            return Resp(200, d)
         if p == "/portfolio/positions":
             return Resp(200, {"market_positions": [], "cursor": ""})
         if method == "POST" and p == "/portfolio/events/orders":
@@ -636,13 +641,19 @@ def test_all9_config_loads_and_rules_are_frozen():
 GOLDEN_CFG_PATH = Path(__file__).resolve().parent.parent / "kalshi15m" / "real_golden_demo.json"
 
 
-def golden_cfg(rule_ids=None, **limits):
+def golden_cfg(rule_ids=None, compounding=False, **limits):
+    """The golden demo config for one coin. Unless compounding=True, a fixed $4 stake / 40 contracts so the
+    expected order sizes below are easy to read."""
     cfg = real.load_config(GOLDEN_CFG_PATH)
     cfg = json.loads(json.dumps(cfg))
     cfg["series"] = "KXNEAR15M"                   # what supervise_many hands each coin's runner
     if rule_ids is not None:
         cfg["golden_rules"] = [r for r in cfg["golden_rules"] if r["id"] in rule_ids]
-    cfg["limits"].update(min_balance_usd=10.0, **limits)
+    if not compounding:
+        for k in ("stake_pct_of_balance", "stake_usd_min"):
+            cfg["limits"].pop(k)
+        cfg["limits"].update(stake_usd=4.0, max_contracts_per_order=40)
+    cfg["limits"].update(**limits)
     return cfg
 
 
@@ -671,9 +682,9 @@ def golden_engine(clock, flat_from=None, level=4.0, lag_bars=1):
                            fetch_ticker=fetch_ticker, clock=clock, data_dir=None)
 
 
-def golden_runner(d, clock, fake, kp, mode="LIVE", rule_ids=None, eng=None, **limits):
+def golden_runner(d, clock, fake, kp, mode="LIVE", rule_ids=None, eng=None, compounding=False, **limits):
     api = real.KalshiAPI("https://fake", "test-key-id", str(kp), session=fake, clock=clock, sleep=clock.sleep)
-    return real.Runner(golden_cfg(rule_ids, **limits), mode, api, log_path=d / "real_log.jsonl",
+    return real.Runner(golden_cfg(rule_ids, compounding, **limits), mode, api, log_path=d / "real_log.jsonl",
                        stop_path=d / "STOP", clock=clock, sleep=clock.sleep, out=lambda *a: None,
                        engine=eng or golden_engine(clock))
 
@@ -700,7 +711,10 @@ def test_exit_order_body():
 def test_golden_config_frozen():
     cfg = real.load_config(GOLDEN_CFG_PATH)
     assert [r["id"] for r in cfg["golden_rules"]] == [r["id"] for r in __import__("kalshi15m.golden_live").golden_live.GOLDEN]
-    assert cfg["limits"] == json.loads((GOLDEN_CFG_PATH.parent / "real_all9_demo.json").read_text())["limits"]
+    assert cfg["limits"] == {"stake_usd": 10.0, "stake_pct_of_balance": 0.10, "stake_usd_min": 1.0,
+                             "max_contracts_per_order": 100, "max_daily_loss_usd": 20.0, "max_trades_per_day": 40,
+                             "max_open_positions": 1, "min_balance_usd": 2.0, "max_price": 0.95, "min_price": 0.03,
+                             "max_data_age_s": 5.0, "max_decision_lag_s": 5.0}
     assert cfg["log"] == "data/kalshi15m/real_all9_log.jsonl" and cfg["series"] == real.ALL9
     raw = json.loads(GOLDEN_CFG_PATH.read_text())
 
@@ -723,6 +737,10 @@ def test_golden_config_frozen():
     assert refused(lambda c: c.update(rules=json.loads((GOLDEN_CFG_PATH.parent / "real_all9.json").read_text())["rules"]))
     assert refused(lambda c: c.update(series=["KXBTC15M", "KXFOO15M"]))
     assert not refused(lambda c: c.update(golden_rules=c["golden_rules"][:3]))       # a subset is fine
+    assert refused(lambda c: c["limits"].update(stake_pct_of_balance=0.30))          # compounding: (0, 0.25]
+    assert refused(lambda c: c["limits"].update(stake_pct_of_balance=0))
+    assert refused(lambda c: c["limits"].pop("stake_usd_min"))
+    assert refused(lambda c: c["limits"].update(stake_usd_min=-1))
     for name in ("real.json", "real_10.json", "real_all9.json", "real_all9_demo.json"):   # old configs unchanged
         p = GOLDEN_CFG_PATH.parent / name
         if p.exists():
@@ -803,7 +821,7 @@ def test_golden_scalp_partial_then_settle():
     at_minute(clock, T0, 4); r.step()                             # sells 5 more of the remaining 8
     ex = events(r, "exit")
     assert [e["n"] for e in ex] == [5, 5] and ex[-1]["remaining"] == 3
-    assert [p["count"] for p in fake.posts] == ["13", "8", "3"][:len(fake.posts)] and len(fake.posts) == 3
+    assert [p["count"] for p in fake.posts] == ["13", "13", "8"]       # entry, sell all 13 (5 fill), sell the 8 left
     p = r.pos[tk]
     assert p["n"] == 3 and abs(p["cost"] - 3 * 0.30) < 1e-6
     assert abs(r.open_risk() - (3 * 0.30 + kalshi_fee(0.30, 13) * 3 / 13)) < 1e-6
@@ -887,13 +905,60 @@ def test_golden_dry_run_exit():
 
 def test_golden_stale_spot_feed_skips():
     from kalshi15m import golden_live as GL
-    d, clock, fake, kp = setup(quotes=scalp_quotes)
-    eng = golden_engine(clock, lag_bars=7)                        # newest Coinbase candle 8 minutes old
+    d, clock, fake, kp = setup(quotes=lambda tk, m: (0.28, 0.30))
+    eng = golden_engine(clock, lag_bars=30)                       # Coinbase stopped publishing candles
     eng.max_candle_lag_s = 300
     r = golden_runner(d, clock, fake, kp, eng=eng)
     at_minute(clock, T0, 2); r.step()
-    assert not fake.posts and events(r, "skip")[-1]["reason"] == "network_spot"
+    assert len(fake.posts) == 1                                   # newest candle 4 min old: still fine
+    at_minute(clock, T0 + 900, 3); r.step()                       # next market: newest candle 18 min old
+    assert len(fake.posts) == 1 and events(r, "skip")[-1]["reason"] == "network_spot"
+    assert "Coinbase candle" in events(r, "skip")[-1]["error"]
     assert issubclass(GL.StaleData, requests.RequestException)
+
+
+def test_stake_grows_with_balance():
+    """limits.stake_pct_of_balance: base stake = max(stake_usd_min, pct x crypto-shard balance), refreshed per
+    market and after fills; sized rules scale that base; unaffordable orders are skipped and logged."""
+    from kalshi15m import golden_live as GL
+    sizes = {}
+    for shard2 in (5.0, 50.0, 200.0):
+        d, clock, fake, kp = setup(quotes=scalp_quotes)
+        fake.balance_cents = int((shard2 + 30) * 100)                       # some money left on shard 0 too
+        fake.shard2 = shard2
+        r = golden_runner(d, clock, fake, kp, rule_ids={"scalp:ALL"}, compounding=True)
+        at_minute(clock, T0, 2); r.step()
+        it = events(r, "order_intent")[-1]
+        base = max(1.0, 0.10 * shard2)
+        assert abs(it["base_stake"] - base) < 1e-9 and it["balance_crypto"] == shard2
+        sizes[shard2] = int(fake.posts[0]["count"])
+        assert sizes[shard2] == min(int(base / 0.30 + 1e-9), 100)
+    assert sizes == {5.0: 3, 50.0: 16, 200.0: 66}                            # bets grow with the account
+    # sized rule: Kelly multiplies the compounding base
+    d, clock, fake, kp = setup(quotes=scalp_quotes)
+    fake.shard2 = 50.0
+    r = golden_runner(d, clock, fake, kp, rule_ids={"sized:ALL"}, compounding=True)
+    at_minute(clock, T0, 2); r.step()
+    it = events(r, "order_intent")[-1]
+    stake = 5.0 * (0.2 / 0.7) / GL.RULES["sized:ALL"]["norm"]
+    assert abs(it["stake"] - stake) < 1e-4 and fake.posts[0]["count"] == str(int(stake / 0.30))
+    # balance unknown (e.g. dry run) -> stake_usd
+    d, clock, fake, kp = setup(quotes=scalp_quotes)
+    r = golden_runner(d, clock, fake, kp, mode="DRYRUN", rule_ids={"scalp:ALL"}, compounding=True)
+    at_minute(clock, T0, 2); r.step()
+    assert events(r, "would_order")[-1]["n"] == int(10.0 / 0.30)
+    # the crypto shard cannot pay for the order -> skipped with the reason, no crash, nothing sent
+    d, clock, fake, kp = setup(quotes=scalp_quotes)
+    fake.shard2 = 0.50
+    r = golden_runner(d, clock, fake, kp, rule_ids={"scalp:ALL"}, compounding=True)
+    at_minute(clock, T0, 2); r.step()
+    assert not fake.posts and "crypto (shard 2) balance $0.50 < order cost" in events(r, "signal_skipped")[-1]["reason"]
+    # the old configs never look at the breakdown and keep their fixed stake
+    d, clock, fake, kp = setup()
+    fake.shard2 = 500.0
+    r = make_runner(d, clock, fake, kp)
+    at_minute(clock, T0, 2); r.step()
+    assert r.crypto_balance is None and fake.posts[0]["count"] == "5" and "base_stake" not in events(r, "order_intent")[-1]
 
 
 def test_golden_engine_synthetic_bar_then_official():
