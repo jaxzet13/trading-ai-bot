@@ -210,9 +210,41 @@ def summarise() -> dict:
     return out
 
 
+def _thin(curve, n=300):
+    """Keep at most n points of a [[ts, value], ...] curve, always including the last one."""
+    if not isinstance(curve, list) or len(curve) <= n:
+        return curve
+    k = -(-len(curve) // (n - 1))
+    return curve[::k] + [curve[-1]]
+
+
+def _lab3():
+    """The golden-strategy hunt (lab3.py output), or None if it hasn't been run.
+    LAB3_PATH overrides the location, e.g. to render the dashboard from a test fixture."""
+    import os
+    p = os.environ.get("LAB3_PATH")
+    f = Path(p) if p else OUT.parent / "data" / "lab" / "lab3_results.json"
+    try:
+        r = json.loads(f.read_text())
+    except (OSError, ValueError):
+        return None
+    if not isinstance(r, dict):
+        return None
+    cands = [c for c in (r.get("candidates") or []) if isinstance(c, dict)][:60]
+    for x in cands + [b for b in (r.get("baselines") or []) if isinstance(b, dict)]:
+        if "curve" in x:
+            x["curve"] = _thin(x["curve"])
+    r["candidates"] = cands
+    r["heatmaps"] = (r.get("heatmaps") or [])[:12]
+    return r
+
+
 def lab_summary():
     """Compact view of data/lab/*.json for the dashboard (drops the full search list)."""
     out = {}
+    lab3 = _lab3()
+    if lab3:
+        out["lab3"] = lab3
     for key, fname in (("m15", "results.json"), ("hourly", "hourly_results.json")):
         f = OUT.parent / "data" / "lab" / fname
         if not f.exists():
