@@ -1943,6 +1943,18 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
 .cl-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 6px; }
 @media (max-width: 640px) { .cl-card { width: 38vw; } .cl-arena { gap: 4px; } }
 @media (prefers-reduced-motion: reduce) { .clash .cl-side, .clash .cl-vs { transition: none; } .clash.charge .cl-side .cl-card, .clash.slam .cl-side, .cl-big { animation: none !important; } }
+/* ===== EVO badge ===== */
+.tcard .evo { position: absolute; z-index: 8; left: 6%; top: 16.5%; display: inline-flex; align-items: baseline; gap: 1.2cqi; padding: 1cqi 2.4cqi; border-radius: 99px; background: rgba(8,8,9,.84); border: .35cqi solid rgba(233,228,216,.35); color: #f4f2ec; font-family: var(--f-mono); font-size: max(7px, 3.8cqi); line-height: 1; box-shadow: 0 .6cqi 2cqi rgba(0,0,0,.55); pointer-events: none; }
+.tcard .evo b { font-size: .78em; letter-spacing: .2em; opacity: .7; font-weight: 600; }
+.tcard .evo .ev { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.tcard .evo-steel { border-color: #a8acb2; } .tcard .evo-red { border-color: #c4232b; box-shadow: 0 0 2.4cqi rgba(196,35,43,.55); } .tcard .evo-gold { border-color: #d9b45e; color: #fbf3dc; box-shadow: 0 0 2.8cqi rgba(217,180,94,.65); }
+.tcard .evo.up { animation: evoup 1s ease-out; } .tcard .evo.down { animation: evodown 1s ease-out; }
+@keyframes evoup { 15% { transform: scale(1.45); background: #1d6b35; border-color: #5fe08a; } 100% { transform: none; } }
+@keyframes evodown { 15% { transform: scale(1.3); background: #6a080d; border-color: #ff6a6f; } 100% { transform: none; } }
+.evo-float { position: absolute; z-index: 9; left: 8%; top: 9%; font-family: var(--f-mono); font-weight: 800; font-size: max(9px, 5cqi); pointer-events: none; animation: evofloat 1.4s ease-out forwards; text-shadow: 0 1px 6px rgba(0,0,0,.8); }
+.evo-float.up { color: #7dffa6; } .evo-float.down { color: #ff7a7f; }
+@keyframes evofloat { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-120%); opacity: 0; } }
+.ppill.evo-pill { background: #f4f2ec; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -2407,7 +2419,15 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   const GRADE_MEAN = GRADES.reduce((s, x) => s + x.p * x.m, 0);
   const gradeOf = g => GRADES.find(x => x.g === g) || GRADES[2];
   function rollGrade() { let x = rand(); for (const g of GRADES) { x -= g.p; if (x < 0) return g.g; } return 8; }
-  const itemVal = it => { const c = cardOf(it); let v = cardBaseValue(c, it.ed, it.rh) * fxMult(it); if (it.slab) v = v * gradeMult(c.rar, it.slab.g, it.slab.black); return Math.max(1, Math.round(v)); };
+  // EVO: a copy's fight rating. Beating harder opponents raises it more, losses lower it, and every point
+  // adds 0.1% to that copy's value (EVO 250 = +25%). Only staked clashes move it; it caps at 999.
+  const EVO_CAP = 999;
+  const evoGain = (p, evo) => Math.max(1, Math.round((10 + 55 * (1 - p)) * (1 - (evo || 0) / (EVO_CAP + 250))));
+  const evoLoss = p => Math.round(5 + 16 * p);
+  const evoMult = it => 1 + Math.min(EVO_CAP, (it && it.evo) || 0) / 1000;
+  const evoTier = e => e >= 600 ? "gold" : e >= 300 ? "red" : e >= 100 ? "steel" : "base";
+  const evoHTML = it => it && it.evo != null ? `<span class="evo evo-${evoTier(it.evo)}"><b>EVO</b><span class="ev">${it.evo}</span></span>` : "";
+  const itemVal = it => { const c = cardOf(it); let v = cardBaseValue(c, it.ed, it.rh) * fxMult(it) * evoMult(it); if (it.slab) v = v * gradeMult(c.rar, it.slab.g, it.slab.black); return Math.max(1, Math.round(v)); };
   const costOf = it => it.val != null ? it.val : itemVal(it);
   const itemSell = it => it.phys ? 0 : Math.max(1, Math.floor(itemVal(it) * BUYBACK));
   const money = c => "$" + (c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -2810,7 +2830,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
         <div class="tc-moves">${tech}</div>
         <div class="tc-flavor">${esc(lineOf(card))}</div>
         <div class="tc-foot"><span class="tc-no">${sid}</span><span class="rseal" title="${R.name}">${R.sym}</span>${item.rh ? `<span class="rhb">REVERSE FOIL</span>` : ""}<span class="tc-val rv">${esc(R.name)}</span></div>
-        ${stamp}${fxHTML(fx, item, card)}</div><div class="glare"></div>${fxTagHTML(fx)}</div>`;
+        ${stamp}${fxHTML(fx, item, card)}${evoHTML(item)}</div><div class="glare"></div>${fxTagHTML(fx)}</div>`;
     return `<div class="${cls}" style="--tc:${T.col};--rc:${R.col}"><div class="tc-face">
       <div class="tc-art">${art}${amb}<div class="tc-holo"></div><div class="tc-tex"></div>${fxa}</div><div class="tc-sparkle"></div><div class="tc-shine"></div>${card.set && rar === "SIR" ? `<div class="tc-ring"></div>` : ""}${ltag}
       <div class="tc-top"><span class="tc-name">${name}</span><span class="tc-hp"><small>PWR</small>${pwr}</span></div>
@@ -2818,7 +2838,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
       <div class="tc-info">
         <div class="tc-moves">${tech}</div>
         <div class="tc-bottom"><span class="tag" title="${R.name}"><span class="crest">${R.sym}</span>${sid}</span><span class="tc-val rv">${esc(R.name)}</span></div>
-      </div>${fxHTML(fx, item, card)}
+      </div>${fxHTML(fx, item, card)}${evoHTML(item)}
     </div><div class="glare"></div>${fxTagHTML(fx)}</div>`;
   }
 
@@ -3141,7 +3161,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     const copyRow = it => {
       const tag = it.slab ? `<span class="gpill${it.slab.black ? " bl" : ""}">IGC ${it.slab.g}</span>` : it.grading ? `<span class="gpill wait">At IGC · day ${it.grading.due}</span>` : `<span class="small-print">${condLine(it)}</span>`;
       const gain = itemVal(it) - costOf(it);
-      return `<div class="copy${it.phys ? " phys" : ""}"><div class="cp-l"><span>${it.phys ? `<b class="ppill">Physical</b> #${String(it.serial).padStart(6, "0")}` : `No. ${String(it.serial).padStart(4, "0")}`}${it.rh ? " · Reverse Foil" : ""}${it.ed === "sketch" ? " · Sketch" : ""}</span>${it.phys ? `<span class="small-print">Scanned ${new Date(it.t).toLocaleDateString()} · ${ordinal(it.owners || 1)} owner · code ${esc(it.code)}</span>` : tag}</div>
+      return `<div class="copy${it.phys ? " phys" : ""}"><div class="cp-l"><span>${it.evo != null ? `<b class="ppill evo-pill">EVO ${it.evo}</b>` : ""}${it.phys ? `<b class="ppill">Physical</b> #${String(it.serial).padStart(6, "0")}` : `No. ${String(it.serial).padStart(4, "0")}`}${it.rh ? " · Reverse Foil" : ""}${it.ed === "sketch" ? " · Sketch" : ""}</span>${it.phys ? `<span class="small-print">Scanned ${new Date(it.t).toLocaleDateString()} · ${ordinal(it.owners || 1)} owner · code ${esc(it.code)}</span>` : tag}</div>
         <div class="cp-v"><span class="num">${money(itemVal(it))}</span><small class="${gain >= 0 ? "up" : "dn"}">${gain >= 0 ? "+" : "−"}${money(Math.abs(gain))} since pulled</small></div>
         <div class="cp-a">${it.transit ? `<span class="small-print">In the mail · scan it when it arrives</span>` : `${it.phys ? `<button class="btn small ghost" data-release="${it.uid}">Transfer</button>` : ""}${!it.phys && !it.slab && !it.grading && it.ed !== "sketch" ? `<button class="btn small" data-gradeopen="${it.uid}">Grade</button>` : ""}${it.grading ? "" : `<button class="btn small" data-listopen="${it.uid}">List</button><button class="btn small" data-tradeopen="${it.uid}">Trade</button>`}${it.grading || it.phys ? "" : `<button class="btn small" data-sell="${it.uid}">Sell back ${money(itemSell(it))}</button>`}`}</div></div>
         <div class="gradeform" id="gf-${it.uid}" hidden>${IGC_TIERS.map(T => `<button class="btn small" data-grade="${it.uid}" data-tier="${T.id}">${T.name} · ${money(T.fee)} · ${T.days}d</button>`).join("")}<span class="small-print">Raw ${money(itemVal(it))} → IGC 10 would be ${money(itemVal(it) * gradeMult(card.rar, 10))}, IGC 8 ${money(itemVal(it) * gradeMult(card.rar, 8))}.</span></div>`;
@@ -3262,7 +3282,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     const roster = arenaRoster();
     if (pickFighter !== "loaner" && !roster.some(it => it.id === pickFighter)) pickFighter = "loaner";
     const myId = pickFighter === "loaner" ? "knuckles" : pickFighter, me = BY_ID[myId];
-    const tile = (key, f, tag, col, it) => `<button class="fp" data-pick="${key}" aria-pressed="${pickFighter === key}">${figImg(f)}<span class="n">${esc(f.name)}</span><span class="st">${esc(f.title)} · ${key === "loaner" ? "loaner" : "record " + recTxt(it)}</span><span class="tag" style="color:${col}">${tag}</span></button>`;
+    const tile = (key, f, tag, col, it) => `<button class="fp" data-pick="${key}" aria-pressed="${pickFighter === key}">${figImg(f)}<span class="n">${esc(f.name)}</span><span class="st">${esc(f.title)} · ${key === "loaner" ? "loaner" : "EVO " + ((it && it.evo) || 0) + " · " + recTxt(it)}</span><span class="tag" style="color:${col}">${tag}</span></button>`;
     $("fighterPick").innerHTML = tile("loaner", BY_ID.knuckles, "Loaner", "#8d897f") + roster.map(it => { const f = BY_ID[it.id], c = cardOf(it), R = crOf(c); return tile(it.id, f, esc(R.name), R.col, it); }).join("");
     const opps = FIGHTERS.filter(f => !f.base && f.id !== myId).map(f => ({ f, p: clashChance(me, f), ce: counterEdge(me, f) })).sort((x, y) => y.p - x.p);
     if (!pickOpp || !opps.some(o => o.f.id === pickOpp)) pickOpp = (opps[Math.floor(opps.length / 2)] || opps[0]).f.id;
@@ -3300,7 +3320,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     const target = won ? Math.max(.015, p - rand() * rand() * p) : Math.min(.985, p + rand() * rand() * (1 - p));
     CL = { me, opp, p, won, stake, pay, myItem, target };
     const box = $("clash");
-    $("clMe").innerHTML = `<div class="cl-card">${cardHTML(myItem)}</div><div class="cl-tag"><b>${esc(me.name)}</b><span>${Math.round(p * 100)}%</span></div>`;
+    $("clMe").innerHTML = `<div class="cl-card">${cardHTML(myItem && myItem.uid ? Object.assign({}, myItem, { evo: myItem.evo || 0 }) : myItem)}</div><div class="cl-tag"><b>${esc(me.name)}</b><span>${Math.round(p * 100)}%</span></div>`;
     $("clOpp").innerHTML = `<div class="cl-card">${cardHTML(oppItem)}</div><div class="cl-tag"><b>${esc(opp.name)}</b><span>${Math.round((1 - p) * 100)}%</span></div>`;
     $("clSegMe").style.width = (p * 100).toFixed(1) + "%"; $("clMark").style.left = "0%"; $("clResult").innerHTML = ""; $("clLabel").textContent = stake ? `Stake ${stake} · win pays ${pay}` : "Free clash · win pays 5";
     box.className = "clash"; box.hidden = false; clFx.bind($("clFx")); void box.offsetWidth;
@@ -3334,7 +3354,9 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     const { me, opp, won, stake, pay, myItem } = CL, box = $("clash");
     const gain = won ? pay : 0;
     state.tokens += gain; state.s.tokensEarned += Math.max(0, gain - stake); if (won) { state.s.wins++; state.s.streak = (state.s.streak || 0) + 1; } else { state.s.losses++; state.s.streak = 0; }
-    if (myItem && myItem.uid) { const it = state.vault.find(x => x.uid === myItem.uid); if (it) { it.rec = it.rec || { w: 0, l: 0 }; if (won) it.rec.w++; else it.rec.l++; } }
+    let evo0 = null, evo1 = null;
+    if (myItem && myItem.uid) { const it = state.vault.find(x => x.uid === myItem.uid); if (it) { it.rec = it.rec || { w: 0, l: 0 }; if (won) it.rec.w++; else it.rec.l++;
+      if (stake) { evo0 = it.evo || 0; evo1 = Math.max(0, Math.min(EVO_CAP, evo0 + (won ? evoGain(CL.p, evo0) : -evoLoss(CL.p)))); it.evo = evo1; CL.myItem = it; } } }
     const rp = rankedResult(won, me, opp, CL.p);
     log(`${won ? "Won" : "Lost"} a clash vs ${opp.name}${stake ? ` (stake ${stake})` : ""}`, gain - stake, "token"); save();
     box.classList.add(won ? "won" : "lost");
@@ -3343,11 +3365,21 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     sfx.boom(won ? 1.3 : .8); clShake(won ? 14 : 8, 360);
     if (won) { sfx.chime(stake >= 50 || CL.p < .35 ? "legendary" : "rare"); setTimeout(() => clFx.rain(wr.left + wr.width / 2, wr.width * 1.6, Math.min(160, 30 + gain * 2), ["#e9e4d8", "#c9a04a", "#ffffff"]), 220); }
     const rec = myItem && myItem.uid ? (state.vault.find(x => x.uid === myItem.uid) || {}).rec : null;
+    const evoLine = evo0 == null ? (myItem && myItem.uid && !stake ? " · free clashes don't change EVO" : "") : ` · EVO ${evo0} → ${evo1} (${evo1 >= evo0 ? "+" : ""}${evo1 - evo0}) · value +${(evo1 / 10).toFixed(1)}%`;
+    if (evo0 != null) setTimeout(() => evoLive($("clMe"), evo0, evo1), 260);
     $("clResult").innerHTML = `<div class="cl-big">${won ? "WIN" : "LOSS"}</div>
-      <div class="cl-sub">${won ? `+<span id="clCount">0</span> tokens` : stake ? `−${stake} tokens` : "No tokens lost"} · ${rp >= 0 ? "+" + rp : rp} ranked${state.s.streak > 1 ? ` · ${state.s.streak} win streak` : ""}${rec ? ` · ${esc(me.name)} ${rec.w}–${rec.l}` : ""}</div>
+      <div class="cl-sub">${won ? `+<span id="clCount">0</span> tokens` : stake ? `−${stake} tokens` : "No tokens lost"} · ${rp >= 0 ? "+" + rp : rp} ranked${state.s.streak > 1 ? ` · ${state.s.streak} win streak` : ""}${rec ? ` · ${esc(me.name)} ${rec.w}–${rec.l}` : ""}${evoLine}</div>
       <div class="cl-btns"><button class="btn brass" data-clagain="1">Again · Space</button><button class="btn" data-clnew="1">New opponent</button><button class="btn ghost" data-clclose="1">Leave</button></div>`;
     if (won) { const el = $("clCount"), t0 = performance.now(); (function up(now) { const k = Math.min(1, (now - t0) / 700); if (el) el.textContent = Math.round(gain * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(up); else sfx.coin(); })(t0); }
     CL.done = true; renderAll();
+  }
+  // the EVO badge on the card counts to its new value, flashes, and a +/- floats off it
+  function evoLive(host, from, to) {
+    const b = host && host.querySelector(".evo"), v = b && b.querySelector(".ev"); if (!b || !v) return;
+    const up = to >= from; b.classList.remove("up", "down"); void b.offsetWidth; b.classList.add(up ? "up" : "down"); b.className = b.className.replace(/evo-(base|steel|red|gold)/, "evo-" + evoTier(to));
+    const fl = document.createElement("span"); fl.className = "evo-float " + (up ? "up" : "down"); fl.textContent = `${up ? "+" : "−"}${Math.abs(to - from)} EVO`; b.parentNode.appendChild(fl); setTimeout(() => fl.remove(), 1500);
+    const t0 = performance.now(), D = 900; (function step(now) { const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3); v.textContent = Math.round(from + (to - from) * e); if (k < 1) requestAnimationFrame(step); })(t0);
+    if (up) sfx.coin(); else sfx.snap();
   }
   function clClose() { CL = null; const box = $("clash"); box.hidden = true; box.className = "clash"; renderArena(); }
   function clAgain() { if (!CL || !CL.done) return; CL = null; $("clash").className = "clash"; setTimeout(clashStart, 60); }
