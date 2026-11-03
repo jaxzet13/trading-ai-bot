@@ -15,7 +15,7 @@
   --gold-hi: #ffe49c; --gold-lo: #d49a22; --accent-bg: #e6effb; --sel: #f3f6fa; --shadow: rgba(17, 22, 28, .06);
   --vault: #0d1625; --vault-2: #1a2b45; --vault-ink: #f1f4f9; --vault-ink-2: #a3b1c5; --vault-line: #243450;
   --vault-dot: #2a3a55; --vault-good: #4fc98a; --vault-gold: #f2c14e;
-  --hm-pos: #2a78d6; --hm-neg: #d4632c; --hm-mid: #eef2f6; --hm-strong-ink: #ffffff; --base-line: #5a6573;
+  --hm-pos: #2a78d6; --hm-neg: #d4632c; --hm-mid: #eef2f6; --hm-strong-ink: #11161c; --base-line: #5a6573;
   --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
   --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -29,7 +29,7 @@
   --gold-hi: #ffe49c; --gold-lo: #d49a22; --accent-bg: #16263b; --sel: #1d242c; --shadow: rgba(0, 0, 0, .25);
   --vault: #0a111d; --vault-2: #172840; --vault-ink: #eef1f6; --vault-ink-2: #98a7bb; --vault-line: #22324b;
   --vault-dot: #24334b; --vault-good: #4fc98a; --vault-gold: #f2c14e;
-  --hm-pos: #4a94ec; --hm-neg: #e0703a; --hm-mid: #222a33; --hm-strong-ink: #ffffff; --base-line: #aab4c0; color-scheme: dark; } }
+  --hm-pos: #4a94ec; --hm-neg: #e0703a; --hm-mid: #222a33; --hm-strong-ink: #0b1220; --base-line: #aab4c0; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #0f1317; --surface: #171c22; --ink: #eef1f4; --ink-2: #b4bdc7; --muted: #7f8a96;
   --line: #29313a; --grid: #222930; --accent: #3987e5; --accent-2: #d95926; --s3: #199e70; --s4: #eda100; --s5: #e87ba4;
@@ -39,7 +39,7 @@
   --gold-hi: #ffe49c; --gold-lo: #d49a22; --accent-bg: #16263b; --sel: #1d242c; --shadow: rgba(0, 0, 0, .25);
   --vault: #0a111d; --vault-2: #172840; --vault-ink: #eef1f6; --vault-ink-2: #98a7bb; --vault-line: #22324b;
   --vault-dot: #24334b; --vault-good: #4fc98a; --vault-gold: #f2c14e;
-  --hm-pos: #4a94ec; --hm-neg: #e0703a; --hm-mid: #222a33; --hm-strong-ink: #ffffff; --base-line: #aab4c0; color-scheme: dark; }
+  --hm-pos: #4a94ec; --hm-neg: #e0703a; --hm-mid: #222a33; --hm-strong-ink: #0b1220; --base-line: #aab4c0; color-scheme: dark; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -209,7 +209,7 @@ table { font: 13px/1.45 var(--f-body); color: var(--ink); }
 .tm-tr b { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--ink-2); }
 .tm.neg .tm-v { color: var(--bad); }
 
-.spark { width: 84px; height: 24px; display: block; overflow: visible; }
+.spark { width: 76px; height: 24px; display: block; overflow: visible; }
 .spark polyline { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .spark.golden polyline { stroke: var(--gold); stroke-width: 2; }
 .spark.fail polyline { stroke: var(--muted); }
@@ -233,7 +233,7 @@ table { font: 13px/1.45 var(--f-body); color: var(--ink); }
 .hunt-inner { display: grid; gap: 20px; min-width: 0; }
 .vault-body { color: var(--vault-ink); border: 1px solid var(--vault-line); border-top: 0; border-radius: 0 0 18px 18px; padding: 6px 28px 26px;
   background: radial-gradient(110% 130% at 100% 100%, var(--vault-2), transparent 62%), var(--vault); display: grid; gap: 20px; min-width: 0; }
-.hunt-head { font: 600 clamp(30px, 4.4vw, 50px)/1.04 var(--f-display); letter-spacing: -0.02em; margin: 0; max-width: 20ch; text-wrap: balance; }
+.lab-zone .hunt-head { font: 600 clamp(30px, 4.4vw, 50px)/1.04 var(--f-display); letter-spacing: -0.02em; margin: 0; max-width: 20ch; text-wrap: balance; }
 .gold-num { background: linear-gradient(180deg, var(--gold-hi) 15%, var(--gold-lo) 92%); -webkit-background-clip: text; background-clip: text; color: transparent; padding-right: .04em; }
 .hunt-lede { margin: 0; color: var(--vault-ink-2); font-size: 15px; line-height: 1.6; max-width: 72ch; }
 .hunt-lede b { color: var(--vault-ink); font-weight: 600; }
@@ -270,31 +270,34 @@ table { font: 13px/1.45 var(--f-body); color: var(--ink); }
 #huntBoard th { padding: 8px 10px 10px; }
 #huntBoard td { vertical-align: middle; padding: 12px 10px; }
 #huntBoard td.rk { color: var(--muted); width: 34px; }
-#huntBoard td.strat { min-width: 250px; }
+#huntBoard td.strat { min-width: 280px; }
 #huntBoard tr.row { cursor: pointer; transition: background-color .15s; }
 #huntBoard tr.row:hover { background: var(--sel); }
-#huntBoard tr.row.sel { background: var(--sel); }
+#huntBoard tr.row.sel { background: var(--sel); box-shadow: none; }
 #huntBoard tr.row.sel td { border-bottom-color: transparent; }
 #huntBoard tr.row.is-golden .sname { color: var(--gold-ink); }
 .pnl-in { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
-.pnl-in > span { font: 500 14px var(--f-mono); }
+.pnl-in > span { font: 500 14px var(--f-mono); min-width: 6.2ch; text-align: right; }
 .chev { width: 16px; height: 16px; color: var(--muted); transition: transform .2s; display: block; }
 tr.sel .chev { transform: rotate(180deg); color: var(--ink); }
 tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid var(--line); }
-.report { padding: 6px 22px 24px; display: grid; gap: 18px; }
+.report { padding: 8px 22px 24px; display: grid; gap: 16px; }
 .rp-head { display: grid; gap: 8px; max-width: 80ch; }
 .rp-head h3 { font-size: 22px; }
 .rp-why { margin: 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.55; }
-.rp-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.rp-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; align-items: stretch; }
+.rp-chart { display: flex; flex-direction: column; }
+.rp-chart .chart { flex: 1 1 auto; min-height: 250px; height: auto; margin-top: 8px; }
+.rp-chart .chart canvas { position: absolute; inset: 0; }
 .rp-box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; min-width: 0; }
 .exam { width: 100%; }
 .exam td { padding: 9px 6px; vertical-align: top; }
 .exam td:first-child { padding-left: 0; white-space: normal; }
 .exam td.num { font: 500 13px var(--f-mono); }
-.exam .sub { white-space: normal; }
+.exam .sub { white-space: normal; font: 12px/1.4 var(--f-body); margin-top: 3px; }
 .mk { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; background: var(--muted); vertical-align: 1px; }
 .mk.good { background: var(--good); } .mk.bad { background: var(--bad); } .mk.gold { background: var(--gold); box-shadow: 0 0 0 3px var(--gold-bg); }
-.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--grid); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 12px; margin-top: 10px; }
 .facts div { display: grid; gap: 2px; }
 .facts b { font: 500 15px var(--f-mono); font-variant-numeric: tabular-nums; }
 .facts span { font-size: 11.5px; color: var(--muted); }
@@ -307,8 +310,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
 .sm { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 10px; display: grid; gap: 4px; min-width: 0; background: var(--surface); }
 .sm.golden { border-color: var(--gold-line); }
 .sm-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.sm-h > div { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.sm-h b { font: 600 15px/1.25 var(--f-display); }
+.sm-t { font: 600 16px/1.25 var(--f-display); margin-top: 6px; }
 .sm-s { color: var(--muted); font-size: 12px; }
 .sm-open { font: 500 12px var(--f-mono); color: var(--accent); background: none; border: 0; padding: 4px 0; cursor: pointer; white-space: nowrap; }
 .sm .chart { height: 190px; margin-top: 6px; }
@@ -316,7 +318,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
 /* idea board */
 .ideas-sum { display: flex; flex-wrap: wrap; gap: 8px; }
 .ideas { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
-.idea { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; background: var(--surface); min-width: 0; }
+.idea { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; background: var(--surface); min-width: 0; }
 .idea.golden { border-color: var(--gold-line); background: linear-gradient(180deg, var(--gold-bg), var(--surface) 70%); }
 .idea.fail h3 { color: var(--ink-2); }
 .idea-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -338,7 +340,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
 .heat-s { color: var(--muted); font-size: 12px; }
 .heat-scroll { overflow-x: auto; }
 .heat-grid { display: grid; gap: 2px; min-width: max-content; }
-.heat-grid > div { font: 500 11px/1 var(--f-mono); font-variant-numeric: tabular-nums; display: flex; align-items: center; justify-content: center; min-height: 32px; min-width: 38px; }
+.heat-grid > div { font: 500 11px/1 var(--f-mono); font-variant-numeric: tabular-nums; display: flex; align-items: center; justify-content: center; min-height: 32px; min-width: 36px; }
 .heat-grid .hx, .heat-grid .hy, .heat-grid .hc0 { color: var(--muted); min-height: 22px; }
 .heat-grid .hy { justify-content: flex-end; padding-right: 8px; min-width: 0; }
 .heat-grid .hc0 { justify-content: flex-start; font-size: 10px; }
@@ -375,6 +377,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
 .tablewrap.tall { max-height: 640px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; }
 .tablewrap.tall thead th { position: sticky; top: 0; background: var(--surface); z-index: 1; padding-top: 12px; }
 #labFinals td { vertical-align: middle; }
+#labFinals td:nth-child(2) { min-width: 170px; }
 #labFinals tbody tr:hover { background: var(--sel); }
 #labFinals tr.bench td { background: var(--accent-bg); }
 .coin-tag { font: 600 11px var(--f-mono); letter-spacing: .03em; padding: 3px 7px; border-radius: 5px; background: var(--chip); color: var(--ink); white-space: nowrap; }
@@ -391,24 +394,32 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   .hero-stats { grid-template-columns: 1fr 1fr; }
   .hero-stats > div:nth-child(3) { padding-left: 0; border-left: 0; }
   .hero-stats > div:nth-child(n+3) { border-top: 1px solid var(--vault-line); margin-top: 14px; }
-  .stat-row { grid-template-columns: 1fr 1fr; }
+  .stat-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .stat-row > div:first-child { grid-column: 1 / -1; }
-  .stat-row > div:nth-child(2) { padding-left: 0; border-left: 0; border-top: 1px solid var(--grid); }
-  .stat-row > div:nth-child(n+3) { border-top: 1px solid var(--grid); }
+  .stat-row > div:nth-child(n+2) { border-top: 1px solid var(--grid); padding-right: 10px; }
+  .stat-row > div:nth-child(2) { padding-left: 0; border-left: 0; }
+  .stat-row > div + div { padding-left: 12px; }
 }
 @media (max-width: 720px) {
   .sm-grid { grid-template-columns: 1fr; }
   #huntBoard { min-width: 0; }
   #huntBoard thead { display: none; }
   #huntBoard, #huntBoard tbody { display: block; }
-  #huntBoard tr.row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 10px; padding: 16px 4px; border-bottom: 1px solid var(--grid); }
+  #huntBoard tr.row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px 10px; padding: 16px 4px; border-bottom: 1px solid var(--grid); }
   #huntBoard tr.row > td { display: block; padding: 0; border: 0; text-align: left; min-width: 0; }
-  #huntBoard td.rk { grid-column: 1 / 2; align-self: center; width: auto; }
-  #huntBoard td.st { grid-column: 2 / -1; justify-self: end; }
-  #huntBoard td.strat { grid-column: 1 / -1; min-width: 0; }
-  #huntBoard td.pnl { grid-column: span 2; }
-  #huntBoard td.tcol { grid-column: span 2; }
-  #huntBoard td.chevc { display: none; }
+  #huntBoard tr.row > td { grid-column: span 2; }
+  #huntBoard tr.row > td.rk { grid-column: 1 / 3; align-self: center; width: auto; }
+  #huntBoard tr.row > td.st { grid-column: 3 / -1; justify-self: end; }
+  #huntBoard tr.row > td.strat { grid-column: 1 / -1; min-width: 0; }
+  #huntBoard tr.row > td.pnl, #huntBoard tr.row > td.tcol, #huntBoard tr.row > td.arch, #huntBoard tr.row > td.late { grid-column: span 3; }
+  #huntBoard tr.row > td.chevc { display: none; }
+  .exam thead { display: none; }
+  .exam, .exam tbody { display: block; }
+  .exam tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 8px; padding: 10px 0; border-bottom: 1px solid var(--grid); }
+  .exam tr > td { padding: 0; border: 0; }
+  .exam tr > td:first-child { grid-column: 1 / -1; }
+  .exam tr > td.num { text-align: left; }
+  .exam td.num::before { content: attr(data-label) " "; color: var(--muted); font-size: 11px; }
   #huntBoard td[data-label]::before { content: attr(data-label); display: block; font: 500 9.5px/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
   #huntBoard .pnl-in { justify-content: flex-start; }
   #huntBoard .tm { justify-content: start; }
@@ -430,6 +441,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   .hero-stats > div + div { padding-left: 14px; }
   .hero-stats > div:nth-child(3) { padding-left: 0; }
   .stat-row .big { font-size: 22px; }
+  .stat-row .v { font-size: 21px; }
 }
 @media (prefers-reduced-motion: reduce) { .chev, #huntBoard tr.row { transition: none; } }
 </style>
@@ -931,8 +943,8 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
         <td class="num tcol" data-label="t-score">${tMeter(h.t, bar, tmax)}</td>
         <td class="num" data-label="Trades">${NUM(h.trades)}</td><td class="num" data-label="Win rate">${PC(h.win_rate)}</td>
         <td class="num" data-label="vs live"${b ? ` title="vs ${esc(b.label)}"` : ""}>${v && nz(v.pnl_diff) ? two(`<span class="${cls(v.pnl_diff)}">${SM(v.pnl_diff)}</span>`, `t ${ST(v.t_diff)}`) : two(DASH, "no live match")}</td>
-        <td class="num" data-label="Older data">${a ? two(`<span class="${cls(a.pnl)}">${M(a.pnl)}</span>`, `t ${T(a.t)}`) : two(DASH, "no data")}</td>
-        <td class="num" data-label="1 min late">${nz(d.pnl) ? two(`<span class="${cls(d.pnl)}">${M(d.pnl)}</span>`, `t ${T(d.t)}`) : DASH}</td>
+        <td class="num arch" data-label="Older data">${a ? two(`<span class="${cls(a.pnl)}">${M(a.pnl)}</span>`, `t ${T(a.t)}`) : two(DASH, "no data")}</td>
+        <td class="num late" data-label="1 min late">${nz(d.pnl) ? two(`<span class="${cls(d.pnl)}">${M(d.pnl)}</span>`, `t ${T(d.t)}`) : DASH}</td>
         <td class="chevc"><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>` +
         (sel ? `<tr class="detail"><td colspan="11">${report(c)}</td></tr>` : "");
     }).join("");
@@ -956,15 +968,15 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       ["Worst dip", M(h.max_dd)], ["Winning days", PC(h.days_positive)], ["Daily Sharpe", nz(h.sharpe_daily) ? h.sharpe_daily.toFixed(2) : DASH]];
     const ps = Object.entries(c.params || {});
     return `<div class="report">
-      <div class="rp-head"><div>${sbadge(c.status)}</div><h3>${esc(c.label || c.id)}</h3>${c.why ? `<p class="rp-why">${esc(c.why)}</p>` : ""}</div>
+      <div class="rp-head"><h3>${esc(c.label || c.id)}</h3>${c.why ? `<p class="rp-why">${esc(c.why)}</p>` : ""}</div>
       <div class="rp-grid">
-        <div class="rp-box"><div class="eyebrow">Running profit over ${hd ? `the ${hd} locked days` : "the locked days"} · $10 a trade</div>
+        <div class="rp-box rp-chart"><div class="eyebrow">Running profit over ${hd ? `the ${hd} locked days` : "the locked days"} · $10 a trade</div>
           <div class="legend" style="margin-top:10px"><span><i style="background:var(${c.status === "golden" ? "--gold" : "--accent"})"></i>This strategy</span>${b ? `<span><i class="dash"></i>${esc(b.label)}</span>` : ""}</div>
           <div class="chart short"><canvas id="huntEq" aria-label="Running profit of ${esc(c.label || c.id)} on the locked days${b ? ", against " + esc(b.label) : ""}"></canvas></div></div>
         <div class="rp-box"><div class="eyebrow">Report card</div>
           <table class="exam"><thead><tr><th>Test</th><th class="num">Profit</th><th class="num">Trades</th><th class="num">t</th></tr></thead><tbody>${tests.map(([k, name, notes, p, n, t]) =>
-            `<tr><td><span class="mk ${k}"></span><b>${esc(name)}</b><div class="sub">${notes.filter(Boolean).map(esc).join(" · ")}</div></td><td class="num ${nz(p) ? cls(p) : ""}">${M(p)}</td><td class="num">${NUM(n)}</td><td class="num">${T(t)}</td></tr>`).join("")}</tbody></table>
-          <div class="facts">${facts.map(([k, x]) => `<div><b>${x}</b><span>${k}, final exam</span></div>`).join("")}</div>
+            `<tr><td><span class="mk ${k}"></span><b>${esc(name)}</b><div class="sub">${notes.filter(Boolean).map(esc).join(" · ")}</div></td><td class="num ${nz(p) ? cls(p) : ""}" data-label="Profit">${M(p)}</td><td class="num" data-label="Trades">${NUM(n)}</td><td class="num" data-label="t">${T(t)}</td></tr>`).join("")}</tbody></table>
+          <div class="eyebrow" style="margin-top:16px">More from the final exam</div><div class="facts">${facts.map(([k, x]) => `<div><b>${x}</b><span>${k}</span></div>`).join("")}</div>
           <div class="setting"><span class="eyebrow">Settings</span>${ps.length ? ps.map(([k, x]) => `<code title="${esc(pword(k))}">${esc(k)}=${esc(x)}</code>`).join("") : '<span class="muted">none</span>'}</div>
           ${EXL[c.execution] ? `<div class="sdesc" style="max-width:none;margin-top:8px">${EXL[c.execution]}</div>` : ""}
         </div>
@@ -1008,7 +1020,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     const g = top.some(c => c.status === "golden"), o = top.some(c => c.status !== "golden");
     $("smLegend").innerHTML = (g ? `<span><i style="background:var(--gold)"></i>Golden candidate</span>` : "") + (o ? `<span><i style="background:var(--accent)"></i>Other candidate</span>` : "") + `<span><i class="dash"></i>Live strategy, same days</span>`;
     $("smGrid").innerHTML = top.map((c, j) => { const v = c.vs_baseline, b = v && HX.B3[v.baseline_id];
-      return `<article class="sm${c.status === "golden" ? " golden" : ""}"><div class="sm-h"><div>${sbadge(c.status)}<b>${esc(c.label || c.id)}</b></div><button type="button" class="sm-open" data-smc="${esc(c.id)}">Report card</button></div>
+      return `<article class="sm${c.status === "golden" ? " golden" : ""}"><div class="sm-h">${sbadge(c.status)}<button type="button" class="sm-open" data-smc="${esc(c.id)}">Open report card</button></div><b class="sm-t">${esc(c.label || c.id)}</b>
         <div class="sm-s">${b ? `vs ${esc(b.label)}` : "No live strategy on these markets to compare with"}${v && nz(v.pnl_diff) ? ` · ${SM(v.pnl_diff)} ${v.pnl_diff >= 0 ? "ahead" : "behind"}` : ""}</div>
         <div class="chart"><canvas id="huntSm${j}" aria-label="Running profit of ${esc(c.label || c.id)}${b ? " against " + esc(b.label) : ""}"></canvas></div></article>`; }).join("");
     top.forEach((c, j) => { const v = c.vs_baseline; eqChart("huntSm" + j, c, v && HX.B3[v.baseline_id], 4); });
@@ -1027,7 +1039,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       const reach = r ? `${r} setting${r > 1 ? "s" : ""} reached the final exam.` : nz(f.best_holdout_t) ? "" : "No setting reached the final exam.";
       return `<article class="idea ${STATUS[f.status] ? f.status : ""}"><div class="idea-top">${sbadge(f.status)}<span class="idea-n">${nz(f.configs) ? NUM(f.configs) + " settings tried" : ""}</span></div>
         <h3>${esc(f.name || f.id)}</h3>${f.idea ? `<p>${esc(f.idea)}</p>` : ""}
-        <div class="idea-foot"><div class="idea-meter"><span class="eyebrow">Best final-exam score</span>${tMeter(f.best_holdout_t, bar, tmax)}</div>
+        <div class="idea-foot"><div class="idea-meter"><span class="eyebrow">Best exam score</span>${tMeter(f.best_holdout_t, bar, tmax)}</div>
           <div class="idea-v">${VERD[f.status] || ""} ${reach}</div></div></article>`; }).join("");
   }
 
@@ -1035,21 +1047,21 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     const HM = (Array.isArray(H3.heatmaps) ? H3.heatmaps : []).filter(h => h && Array.isArray(h.z) && Array.isArray(h.x) && Array.isArray(h.y) && h.z.length && h.x.length && h.y.length);
     $("huntHeatPanel").hidden = !HM.length; if (!HM.length) return;
     const vals = HM.flatMap(h => h.z.flat()).filter(nz), lim = Math.max(1, ...vals.map(Math.abs));
-    const fv = v => nz(v) ? String(+v.toFixed(4)) : String(v), same = (p, q) => nz(p) && nz(q) ? Math.abs(p - q) < 1e-9 : String(p) === String(q);
+    const hv = v => Math.abs(v) < 0.05 ? "0.0" : (v < 0 ? "−" : "") + Math.abs(v).toFixed(1), fv = v => nz(v) ? String(+v.toFixed(4)) : String(v), same = (p, q) => nz(p) && nz(q) ? Math.abs(p - q) < 1e-9 : String(p) === String(q);
     const metric0 = HM[0].metric || "score";
     $("hmKey").innerHTML = `<span class="hm-ramp">−${lim.toFixed(1)}<i></i>+${lim.toFixed(1)}</span><span>${esc(metric0)}: orange lost money in the search, grey broke even, blue made money</span>` +
       `<span style="display:inline-flex;align-items:center;gap:8px"><i class="hm-pick-key"></i>the setting sent to the final exam</span>`;
     $("heats").innerHTML = HM.map(h => {
       const fam = HX.FAM[h.family], metric = h.metric || "score";
       const pick = HX.C3.find(c => c.family === h.family && c.scope === h.scope && c.params && h.x_name in c.params && h.y_name in c.params);
-      let g = `<div class="hc0">${esc(pword(h.y_name))} ↓</div>` + h.x.map(x => `<div class="hx">${esc(fv(x))}</div>`).join("");
+      let g = `<div class="hc0"></div>` + h.x.map(x => `<div class="hx">${esc(fv(x))}</div>`).join("");
       h.y.forEach((y, yi) => { g += `<div class="hy">${esc(fv(y))}</div>`; h.x.forEach((x, xi) => { const v = (h.z[yi] || [])[xi], where = `${pword(h.x_name)} ${fv(x)}, ${pword(h.y_name)} ${fv(y)}`;
         if (!nz(v)) { g += `<div class="hc" style="background:var(--chip)" data-tip="${esc(where + "\nno result")}">·</div>`; return; }
         const k = Math.round(Math.min(1, Math.abs(v) / lim) * 88), isPick = pick && same(pick.params[h.x_name], x) && same(pick.params[h.y_name], y);
-        g += `<div class="hc${isPick ? " pick" : ""}" style="background:color-mix(in oklab, var(${v >= 0 ? "--hm-pos" : "--hm-neg"}) ${k}%, var(--hm-mid));color:var(${k > 52 ? "--hm-strong-ink" : "--ink"})" data-tip="${esc(`${where}\n${metric} ${v.toFixed(2)}${isPick ? "\nthe setting sent to the final exam" : ""}`)}">${v.toFixed(1)}</div>`; }); });
+        g += `<div class="hc${isPick ? " pick" : ""}" style="background:color-mix(in oklab, var(${v >= 0 ? "--hm-pos" : "--hm-neg"}) ${k}%, var(--hm-mid));color:var(${k > 60 ? "--hm-strong-ink" : "--ink"})" data-tip="${esc(`${where}\n${metric} ${v.toFixed(2)}${isPick ? "\nthe setting sent to the final exam" : ""}`)}">${hv(v)}</div>`; }); });
       return `<div class="heat"><h3>${esc(fam ? fam.name : h.family)} <span class="muted" style="font-weight:500">· ${esc(SCOPE(h.scope))}</span></h3>
-        <div class="heat-s">${esc(metric)} for each pair of settings</div>
-        <div class="heat-scroll"><div class="heat-grid" style="grid-template-columns:auto repeat(${h.x.length}, minmax(38px, 1fr))">${g}</div></div>
+        <div class="heat-s">${esc(metric)} for each pair of settings</div><div class="heat-ax">↓ ${esc(pword(h.y_name))}</div>
+        <div class="heat-scroll"><div class="heat-grid" style="grid-template-columns:auto repeat(${h.x.length}, minmax(36px, 1fr))">${g}</div></div>
         <div class="heat-ax" style="text-align:center">${esc(pword(h.x_name))} →</div></div>`; }).join("");
   }
 
