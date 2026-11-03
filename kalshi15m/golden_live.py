@@ -451,6 +451,8 @@ class GoldenEngine:
         res = self._emp_day(day)
         # cache only once every bar the samples use (up to the day start - 120 s) is an official candle
         if self.t0 + 60 * self.last_off >= day * 86400 - 120:
+            for d in [d for d in self._emp if d < day - 1]:      # bounded memory: today and yesterday only
+                del self._emp[d]
             self._emp[day] = res
         return res
 
@@ -459,6 +461,8 @@ class GoldenEngine:
         if hit is None:
             ots = day * 86400 + 900 * np.arange(96, dtype=np.int64)
             hit = lab3._tod_ratio(self.sp, ots)
+            for d in [d for d in self._tod if d < day - 1]:
+                del self._tod[d]
             self._tod[day] = hit
         return hit
 
