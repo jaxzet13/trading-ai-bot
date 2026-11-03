@@ -1614,11 +1614,12 @@ form.scan-opt { cursor: default; }
 .tcard.std.cr-R:not(.lim) { --sa: #c4232b; --gl: rgba(196,35,43,.5); background: linear-gradient(135deg, #4a0a0e, #0a0405 40%, #7d1218 70%, #0a0405); }
 .tcard.std.cr-H:not(.lim) { --sa: #dfe3e8; --sv: #0b0b0c; --gl: rgba(225,230,236,.55); background: linear-gradient(115deg, #4d5157, #f2f4f6 14%, #7b8088 28%, #ffffff 42%, #5f646b 56%, #dfe2e6 70%, #4d5157 84%, #f2f4f6) !important; background-size: 400% 400% !important; }
 .tcard.std.cr-RR:not(.lim) { --sa: #c9a04a; --sv: #0b0b0c; --gl: rgba(201,160,74,.55); background: linear-gradient(115deg, #4a3608, #e9cf8a 18%, #8a6a1e 36%, #f6e6b8 52%, #6e520f 70%, #d9b45e 86%, #4a3608); background-size: 240% 240%; }
-.tcard.std:is(.cr-U, .cr-R, .cr-RR):not(.lim) .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, #1e1e20, #0a0a0b 70%); color: #ece8de; }
-.tcard.std.cr-H:not(.lim) .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 15%, #27292d, #0a0a0b 70%) !important; color: #ece8de; }
+.tcard.std.cr-U:not(.lim) .tc-face, .tcard.std.cr-R:not(.lim) .tc-face, .tcard.std.cr-RR:not(.lim) .tc-face { background: #0a0a0b; background-image: var(--grain), radial-gradient(ellipse at 30% 20%, #1e1e20, #0a0a0b 70%); color: #ece8de; }
+.tcard.std.cr-H:not(.lim) .tc-face { background: #0a0a0b !important; background-image: radial-gradient(ellipse at 30% 15%, #27292d, #0a0a0b 70%) !important; color: #ece8de !important; }
+.tcard.std.cr-H:not(.lim) .tc-name { color: #f4f2ec !important; }
 .std.cr-H:not(.lim) .tc-artwrap { background: linear-gradient(115deg, #6d727c, #fff, #8a8f99, #fff, #6d727c) !important; background-size: 300% 300%; }
 .std.cr-H:not(.lim) .tc-name { text-shadow: 0 0 1.2cqi rgba(255,255,255,.55) !important; }
-.std.cr-H:not(.lim) :is(.tc-val, .rseal) { background: linear-gradient(100deg, #9aa0a8, #ffffff 45%, #8a8f99) !important; color: #0b0b0c !important; }
+.std.cr-H:not(.lim) .tc-val, .std.cr-H:not(.lim) .rseal { background: linear-gradient(100deg, #9aa0a8, #ffffff 45%, #8a8f99) !important; color: #0b0b0c !important; }
 .std.cr-H:not(.lim) .mv .cost, .std.cr-H:not(.lim) .tc-sub { color: rgba(236,232,222,.6) !important; }
 .std.cr-H:not(.lim) .tc-pwr { box-shadow: inset 0 0 0 .5cqi #dfe3e8 !important; background: #0a0a0b !important; }
 .std.cr-H:not(.lim) .tc-flavor { border-left-color: #dfe3e8 !important; }
@@ -1634,9 +1635,9 @@ form.scan-opt { cursor: default; }
 .tcard.full.cr-IR:not(.lim) { --gl: rgba(236,230,216,.5); }
 .tcard.std.cr-R:not(.lim), .tcard.std.cr-U:not(.lim) { box-shadow: 0 0 2.5cqi var(--gl), 0 10px 22px rgba(0,0,0,.5); }
 /* Frostbite: cold slate and frost, no electric blue */
-.lim-FB .limtag, .lim-FB.std :is(.tc-val, .rseal) { background: #5d7f8f !important; color: #f2f6f8 !important; }
+.lim-FB .limtag, .lim-FB.std .tc-val, .lim-FB.std .rseal { background: #5d7f8f !important; color: #f2f6f8 !important; }
 .tcard.lim-FB.std { background: linear-gradient(135deg, #1d2a30, #07090a 40%, #34474f, #07090a); }
-.lim-FB.std .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, #141a1d, #060809 70%); }
+.lim-FB.std .tc-face { background: #060809; background-image: var(--grain), radial-gradient(ellipse at 30% 20%, #141a1d, #060809 70%); }
 .lim-FB.std .tc-artwrap { background: #8fb3c4; }
 .lim-FB .tc-art::after { background: #b9d0da; }
 .lim-FB.std .mv .cost { color: #a9c6d3; } .lim-FB.std .tc-pwr { box-shadow: inset 0 0 0 .5cqi #8fb3c4; } .lim-FB.std .tc-flavor { border-left-color: #8fb3c4; }
@@ -1648,9 +1649,9 @@ form.scan-opt { cursor: default; }
 @keyframes fbpulse { 50% { box-shadow: 0 0 0 1px #000, 0 0 34px 6px rgba(185,208,218,.45), 0 18px 40px rgba(0,0,0,.6); } }
 .lim-FB .tc-ring { background: conic-gradient(from 0deg, transparent, rgba(220,232,238,.0), rgba(220,232,238,.7), #fff, rgba(220,232,238,.7), transparent 30%, transparent 55%, rgba(220,232,238,.5) 75%, transparent 90%); }
 /* Venom: toxic olive, not neon */
-.lim-VN .limtag, .lim-VN.std :is(.tc-val, .rseal) { background: #6f7d2e !important; color: #f3f5e6 !important; }
+.lim-VN .limtag, .lim-VN.std .tc-val, .lim-VN.std .rseal { background: #6f7d2e !important; color: #f3f5e6 !important; }
 .tcard.lim-VN.std { background: linear-gradient(135deg, #20260f, #080904 40%, #3b4419, #080904); }
-.lim-VN.std .tc-face { background: var(--grain), radial-gradient(ellipse at 30% 20%, #15180b, #070804 70%); }
+.lim-VN.std .tc-face { background: #070804; background-image: var(--grain), radial-gradient(ellipse at 30% 20%, #15180b, #070804 70%); }
 .lim-VN.std .tc-artwrap { background: #9db04a; }
 .lim-VN .tc-art::after { background: #c3cf8c; }
 .lim-VN.std .mv .cost { color: #b4c470; } .lim-VN.std .tc-pwr { box-shadow: inset 0 0 0 .5cqi #9db04a; } .lim-VN.std .tc-flavor { border-left-color: #9db04a; }
@@ -1671,6 +1672,73 @@ form.scan-opt { cursor: default; }
 .tcard.full.lim-GS { --gl: rgba(201,160,74,.5); }
 /* noir art needs no extra tint on limited standard cards; a faint set wash is enough */
 .lim-FB.std .tc-art img, .lim-VN.std .tc-art img { filter: grayscale(1) contrast(1.25) brightness(1.05) !important; }
+/* ===================== FX: foil and overlay styles (picked in #lab) ===================== */
+.tcard { --px: 50%; --py: 30%; }
+.tcard .fx { position: absolute; inset: 0; z-index: 7; pointer-events: none; border-radius: inherit; overflow: hidden; }
+.tcard .fx > i, .tcard .fx > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.tcard .fxa { position: absolute; inset: 0; z-index: 2; pointer-events: none; display: block; }
+.tcard .fxl { background: radial-gradient(circle at var(--px) var(--py), rgba(255,255,255,.28), transparent 45%); mix-blend-mode: overlay; opacity: 0; transition: opacity .3s; }
+.tcard.lit .fxl { opacity: 1; }
+.fx-glint { animation: fxglint 3.4s linear infinite; }
+@keyframes fxglint { from { stroke-dashoffset: 200; } to { stroke-dashoffset: 0; } }
+@keyframes fxsweep { 0% { background-position: 135% 0; } 60%, 100% { background-position: -35% 0; } }
+/* A cracked ice */
+.fx-ice .fxs { mix-blend-mode: screen; }
+.fx-ice .fx-dim { opacity: .26; } .fx-ice .fx-lit { opacity: 1; }
+/* B brushed steel */
+.fx-steel .fxs { mix-blend-mode: overlay; opacity: .55; }
+.fx-steel .fxg { background: linear-gradient(100deg, transparent 40%, rgba(255,255,255,.45) 48.5%, rgba(255,255,255,.9) 50%, rgba(255,255,255,.45) 51.5%, transparent 60%); background-size: 260% 100%; mix-blend-mode: overlay; animation: fxsweep 3.6s ease-in-out infinite; }
+/* C scratched chrome */
+.fx-scratch .fxs { mix-blend-mode: screen; }
+/* D kintsugi */
+.fx-kin .fxs { filter: drop-shadow(0 0 1.3px rgba(246,230,184,.8)); }
+/* E bullet glass */
+.fx-glass .fxs { filter: drop-shadow(0 0 .6px rgba(255,255,255,.45)); }
+/* F blood foil */
+.fx-blood .fxs { opacity: .94; filter: drop-shadow(0 .5px .7px rgba(0,0,0,.7)); }
+/* G fingerprint */
+.fx-print .fxs { mix-blend-mode: screen; }
+/* H halftone chrome */
+.fx-dots .fxf { background: radial-gradient(circle, rgba(255,255,255,.95) 0 33%, transparent 37%) 0 0 / 3.6% 2.571%; -webkit-mask-image: linear-gradient(135deg, #000, transparent 40%, transparent 60%, #000); mask-image: linear-gradient(135deg, #000, transparent 40%, transparent 60%, #000); mix-blend-mode: screen; opacity: .5; }
+.fx-dots .fxg { background: linear-gradient(110deg, transparent 36%, #fff 50%, transparent 64%); background-size: 280% 100%; animation: fxsweep 3.2s ease-in-out infinite;
+  -webkit-mask-image: radial-gradient(circle, #000 0 30%, transparent 34%); -webkit-mask-size: 3.6% 2.571%; mask-image: radial-gradient(circle, #000 0 30%, transparent 34%); mask-size: 3.6% 2.571%; mix-blend-mode: screen; opacity: .9; }
+/* I barbed wire */
+.fx-wire .fxs { filter: drop-shadow(0 0 .8px rgba(255,255,255,.35)); }
+/* J VHS glitch */
+.fx-vhs .fxa { background: repeating-linear-gradient(0deg, rgba(0,0,0,.34) 0 1px, transparent 1px 3px); }
+.fx-vhs .fxf { background: linear-gradient(180deg, transparent 0, rgba(255,255,255,.06) 40%, rgba(255,255,255,.16) 50%, rgba(255,255,255,.06) 60%, transparent 100%) 0 0 / 100% 26% no-repeat; animation: fxroll 5s linear infinite; mix-blend-mode: screen; }
+@keyframes fxroll { from { background-position: 0 -30%; } to { background-position: 0 130%; } }
+.fx-vhs .tc-art img { animation: fxglitch 4.5s steps(1) infinite; }
+@keyframes fxglitch { 0%, 87%, 100% { transform: none; filter: none; } 88% { transform: translateX(-2.5%) skewX(-3deg); filter: drop-shadow(2px 0 0 rgba(255,40,60,.75)) drop-shadow(-2px 0 0 rgba(40,220,255,.6)); } 90% { transform: translateX(2%); filter: drop-shadow(-3px 0 0 rgba(255,40,60,.75)) drop-shadow(3px 0 0 rgba(40,220,255,.6)); } 92% { transform: translateX(-1%) scaleY(1.02); filter: none; } }
+.fx-vhs .fxg { background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(255,255,255,.22) 2px 3px); opacity: 0; mix-blend-mode: screen; animation: fxtear 4.5s steps(1) infinite; }
+@keyframes fxtear { 0%, 87%, 93%, 100% { opacity: 0; clip-path: inset(0 0 100% 0); } 88% { opacity: 1; clip-path: inset(38% 0 54% 0); } 90% { opacity: 1; clip-path: inset(64% 0 27% 0); } }
+/* K chain-link */
+.fx-chain .fxa { background:
+  repeating-linear-gradient(55deg, transparent 0 6.75%, rgba(232,235,240,.85) 6.75% 7.18%, transparent 7.18% 7.5%),
+  repeating-linear-gradient(-55deg, transparent 0 6.75%, rgba(232,235,240,.85) 6.75% 7.18%, transparent 7.18% 7.5%),
+  repeating-linear-gradient(55deg, transparent 0 6.6%, rgba(0,0,0,.75) 6.6% 7.35%, transparent 7.35% 7.5%),
+  repeating-linear-gradient(-55deg, transparent 0 6.6%, rgba(0,0,0,.75) 6.6% 7.35%, transparent 7.35% 7.5%);
+  background-position: 0 0, 0 0, 1.5px 2px, 1.5px 2px; }
+.fx-chain .fxa::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 38%, #fff 50%, transparent 62%); background-size: 280% 100%; animation: fxsweep 3.4s ease-in-out infinite;
+  -webkit-mask-image: repeating-linear-gradient(55deg, transparent 0 6.6%, #000 6.6% 7.15%, transparent 7.15% 7.5%), repeating-linear-gradient(-55deg, transparent 0 6.6%, #000 6.6% 7.15%, transparent 7.15% 7.5%);
+  mask-image: repeating-linear-gradient(55deg, transparent 0 6.6%, #000 6.6% 7.15%, transparent 7.15% 7.5%), repeating-linear-gradient(-55deg, transparent 0 6.6%, #000 6.6% 7.15%, transparent 7.15% 7.5%); }
+/* L gold leaf */
+.fx-leaf .fxs { filter: drop-shadow(0 .5px .6px rgba(0,0,0,.6)); }
+@media (prefers-reduced-motion: reduce) { .tcard .fx *, .fx-vhs .tc-art img, .fx-chain .fxa::after { animation: none !important; } }
+/* the lab */
+.lab { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 430px), 1fr)); gap: 22px; }
+.lab-row { border: 1px solid var(--rule); border-radius: 18px; padding: 18px; display: grid; gap: 16px; align-content: start; }
+.lab-h { display: flex; gap: 14px; align-items: flex-start; }
+.lab-k { flex: none; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--t1); color: #0c0d10; font-weight: 900; font-size: 20px; font-stretch: 75%; }
+.lab-h b { font-size: 17px; font-weight: 800; } .lab-h p { margin: 2px 0 0; color: var(--t2); font-size: 14px; line-height: 1.45; }
+.lab-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.lab-c { container-type: inline-size; touch-action: pan-y; }
+.lab-c .tcard { transition: transform .25s ease-out; will-change: transform; }
+.tcard .fxtag { position: absolute; left: 50%; bottom: 0; transform: translate(-50%, 45%); z-index: 9; white-space: nowrap; pointer-events: none; font-family: var(--f-mono); font-weight: 600; font-size: max(7px, 3.3cqi); letter-spacing: .16em; text-transform: uppercase; line-height: 1.3; color: #0b0b0c; background: linear-gradient(100deg, #9aa0a8, #ffffff 45%, #8a8f99); padding: .7cqi 2.6cqi; border-radius: 99px; box-shadow: 0 0 0 .35cqi #0b0b0c, 0 0 2.6cqi rgba(255,255,255,.6); }
+.tcard.fx-kin .fxtag, .tcard.fx-leaf .fxtag { background: linear-gradient(100deg, #8a6a1e, #fff4d0 45%, #a8822e); box-shadow: 0 0 0 .35cqi #0b0b0c, 0 0 2.6cqi rgba(246,230,184,.7); }
+.tcard.fx-blood .fxtag { background: linear-gradient(100deg, #7d0a10, #ff8a8f 45%, #8c0a12); color: #fff; box-shadow: 0 0 0 .35cqi #0b0b0c, 0 0 2.6cqi rgba(224,32,44,.7); }
+.lab-o { display: block; font-size: 12.5px; font-weight: 700; color: var(--t1); margin-top: 2px; }
+.fxhit { margin-top: 8px; font-size: 14px; color: var(--t2); } .fxhit b { color: var(--t1); }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -1827,6 +1895,7 @@ form.scan-opt { cursor: default; }
     <div class="section-head"><div><h2>Odds &amp; terms</h2><p class="lede">Exact pull rates for every pack, how prices move, and how grading works.</p></div></div>
     <div class="rules">
       <div class="panel"><h3>Rarity</h3><div class="table-wrap"><table class="odds" id="valueTable"></table></div></div>
+      <div class="panel"><h3>Variants</h3><p class="small-print">Any card can roll a variant when it's pulled. Physical cards get theirs from the code on the back, so the printed card and its twin always match.</p><div class="table-wrap"><table class="odds" id="fxTable"></table></div></div>
       <div class="panel"><h3>Pulls</h3><ul>
         <li>Every booster holds 5 cards: 2 commons, 1 uncommon, a reverse-foil slot (which can instead hold a Full Art or a Masterwork), and the rare slot. Each slot rolls with the odds printed on the pack.</li>
         <li>Inside a rarity, every fighter is equally likely, except a pack's featured fighter, whose boost is printed on the pack.</li>
@@ -1849,6 +1918,11 @@ form.scan-opt { cursor: default; }
         <li>Deposit limits and self-exclusion</li></ul></div>
       <div class="panel"><h3>Demo</h3><p>Your coins, tokens and vault are stored in this browser only.</p><div><button class="btn small" id="resetBtn">Reset demo</button></div></div>
     </div>
+  </section>
+
+  <section class="view" id="view-lab" hidden>
+    <div class="section-head"><div><h2>Foil lab</h2><p class="lede">Every card you pull can roll one of these variants. Rarer variants multiply the card's value more. Shown on a Foil Rare and a full-art card; hover or drag across a card to move the light.</p></div></div>
+    <div class="lab" id="labGrid"></div>
   </section>
 </main>
 
@@ -2108,7 +2182,7 @@ form.scan-opt { cursor: default; }
   const GRADE_MEAN = GRADES.reduce((s, x) => s + x.p * x.m, 0);
   const gradeOf = g => GRADES.find(x => x.g === g) || GRADES[2];
   function rollGrade() { let x = rand(); for (const g of GRADES) { x -= g.p; if (x < 0) return g.g; } return 8; }
-  const itemVal = it => { const c = cardOf(it); let v = cardBaseValue(c, it.ed, it.rh); if (it.slab) v = v * gradeMult(c.rar, it.slab.g, it.slab.black); return Math.max(1, Math.round(v)); };
+  const itemVal = it => { const c = cardOf(it); let v = cardBaseValue(c, it.ed, it.rh) * fxMult(it); if (it.slab) v = v * gradeMult(c.rar, it.slab.g, it.slab.black); return Math.max(1, Math.round(v)); };
   const costOf = it => it.val != null ? it.val : itemVal(it);
   const itemSell = it => it.phys ? 0 : Math.max(1, Math.floor(itemVal(it) * BUYBACK));
   const money = c => "$" + (c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -2229,8 +2303,8 @@ form.scan-opt { cursor: default; }
   function packEVAt(p, d) {
     const mr = rar => { const pool = poolR(rar); let w = 0, v = 0; for (const c of pool) { const x = featW(p, c); w += x; v += x * rawPrice(c.no, d) * (p.ed === "sketch" ? SKETCH_MULT : 1); } return v / w; };
     const dm = dd => { let tot = 0, v = 0; for (const [k, pr] of Object.entries(dd)) { tot += pr; v += pr * (k === "RH" ? (.5 * mr("C") + .35 * mr("U") + .15 * mr("R")) * RH_MULT : mr(k)); } return v / tot; };
-    if (p.lim) { let lv = 0; for (const [k, pr] of Object.entries(LIM_ODDS)) { const pool = poolSet(p.lim, k); lv += pr / 100 * pool.reduce((a, c) => a + rawPrice(c.no, Math.max(d, LSETS[p.lim].release)), 0) / pool.length; } return mr("C") + mr("U") + lv; }
-    return 2 * mr("C") + mr("U") + dm(p.rh) + dm(p.rare);
+    if (p.lim) { let lv = 0; for (const [k, pr] of Object.entries(LIM_ODDS)) { const pool = poolSet(p.lim, k); lv += pr / 100 * pool.reduce((a, c) => a + rawPrice(c.no, Math.max(d, LSETS[p.lim].release)), 0) / pool.length; } return (mr("C") + mr("U") + lv) * FX_EV; }
+    return (2 * mr("C") + mr("U") + dm(p.rh) + dm(p.rare)) * (p.ed === "sketch" ? 1 : FX_EV);
   }
   let PRICE_DAY = -1;
   // Friendlier odds: high rarities come up 1.5-3x more often than launch. Prices are then set from the new
@@ -2241,7 +2315,7 @@ form.scan-opt { cursor: default; }
     const d = mktDay(); if (d === PRICE_DAY) return; PRICE_DAY = d;
     for (const p of PACKS) { if (p.base == null) { if (p.cur === "coin") p.price = Math.max(99, Math.round(packEVAt(p, p.lim ? LSETS[p.lim].release : 0) * BUYBACK / HOUSE_RTP / 10) * 10 - 1); p.base = p.price; p.ev0 = packEVAt(p, p.lim ? LSETS[p.lim].release : 0); } if (p.cur !== "coin") continue; const r = packEVAt(p, d) / p.ev0; p.price = r > 1 ? Math.round(p.base * r / 10) * 10 - 1 : p.base; }
   }
-  function packEV(p) { if (p.lim) { let lv = 0; for (const [k, pr] of Object.entries(LIM_ODDS)) { const pool = poolSet(p.lim, k); lv += pr / 100 * pool.reduce((a, c) => a + cardBaseValue(c), 0) / pool.length; } return meanR(p, "C") + meanR(p, "U") + lv; } return 2 * meanR(p, "C") + meanR(p, "U") + distMean(p, p.rh) + distMean(p, p.rare); }
+  function packEV(p) { if (p.lim) { let lv = 0; for (const [k, pr] of Object.entries(LIM_ODDS)) { const pool = poolSet(p.lim, k); lv += pr / 100 * pool.reduce((a, c) => a + cardBaseValue(c), 0) / pool.length; } return (meanR(p, "C") + meanR(p, "U") + lv) * FX_EV; } return (2 * meanR(p, "C") + meanR(p, "U") + distMean(p, p.rh) + distMean(p, p.rare)) * (p.ed === "sketch" ? 1 : FX_EV); }
   let HIT = {}, HIT_DAY = -1;
   function hitRate(p) { if (HIT_DAY !== mktDay()) { HIT = {}; HIT_DAY = mktDay(); } if (HIT[p.id] != null) return HIT[p.id]; const N = 2500; let h = 0; for (let i = 0; i < N; i++) { const t = pullPack(p).reduce((a, x) => a + Math.floor(cardBaseValue(x.card, p.ed, x.rh) * BUYBACK), 0); if (t >= p.price) h++; } return (HIT[p.id] = h / N); }
   function chaseOf(p) {
@@ -2345,6 +2419,146 @@ form.scan-opt { cursor: default; }
     document.documentElement.style.setProperty("--strike", `url("data:image/svg+xml;utf8,${svg.replace(/#/g, "%23")}")`);
   })();
   const SET_CODE = "IS";
+  // ---------- FX: foil and overlay styles. #lab shows every style; FX_BY_RAR assigns the chosen ones to rarities. ----------
+  const FX_BY_RAR = {};
+  const FX_STYLES = [
+    ["ice", "Cracked Ice", "Shattered refractor shards that flash as the light crosses them."],
+    ["steel", "Brushed Steel", "Knife-blade metal grain with a glint that runs across."],
+    ["scratch", "Scratched Chrome", "Hundreds of fine scratches that catch the light. No two copies are scratched the same."],
+    ["kin", "Kintsugi", "Gold-filled cracks with light running through them. Every copy breaks differently."],
+    ["glass", "Bullet Glass", "A bullet hole and spiderweb cracks. The hole lands somewhere new on every copy."],
+    ["blood", "Blood Foil", "Metallic blood spatter with a moving sheen. Unique splatter per copy."],
+    ["print", "Fingerprint", "An etched fingerprint that only shows where the light hits."],
+    ["dots", "Halftone Chrome", "Comic-noir chrome dots that flash as the light passes."],
+    ["wire", "Barbed Wire", "Steel barbed wire wrapped around the frame."],
+    ["vhs", "VHS Glitch", "Scanlines, a rolling tracking bar and an RGB tear every few seconds."],
+    ["chain", "Chain-Link", "The fighter is behind a cage fence that glints."],
+    ["leaf", "Gold Leaf", "Hand-laid gold flakes with a slow sheen. Placement differs per copy."]
+  ];
+  // Variants: every card rolls once when it's pulled (a physical card rolls from its code, so print and twin match).
+  // [chance per card, value multiplier]. About 1 card in 30 is a variant; pack prices include the extra value.
+  const FX_VAR = { steel: [.006, 3], dots: [.005, 3], vhs: [.004, 3.5], scratch: [.004, 3.5], ice: [.0025, 5], chain: [.0025, 5], wire: [.002, 6], print: [.002, 6], glass: [.001, 10], blood: [.001, 10], leaf: [.0006, 15], kin: [.0003, 25] };
+  const FX_EV = 1 + Object.values(FX_VAR).reduce((a, v) => a + v[0] * (v[1] - 1), 0);
+  const fxMult = it => (it && it.fx && FX_VAR[it.fx] ? FX_VAR[it.fx][1] : 1);
+  const fxName = fx => { const x = FX_STYLES.find(y => y[0] === fx); return x ? x[1] : ""; };
+  const fxOdds = fx => "1 in " + Math.round(1 / FX_VAR[fx][0]).toLocaleString("en-US");
+  function rollFx(u) { let acc = 0; for (const k in FX_VAR) { acc += FX_VAR[k][0]; if (u < acc) return k; } return ""; }
+  const fxForCode = code => rollFx(fnv("fx:" + code) / 4294967296);
+  const fxTagHTML = fx => fx ? `<span class="fxtag">${esc(fxName(fx))}</span>` : "";
+  let fxN = 0;
+  const fxRng = seed => () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
+  const f1 = n => Math.round(n * 10) / 10;
+  const FX_SVG = `<svg class="fxs" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">`;
+  const fxSweep = (id, stops, dur) => `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="140">${stops}<animateTransform attributeName="gradientTransform" type="translate" values="-170 -60;170 60" dur="${dur}s" repeatCount="indefinite"/></linearGradient>`;
+  function fxWalk(r, x, y, ang, len, step, wig) {
+    const pts = [[x, y]]; let L = 0;
+    while (L < len) { ang += (r() - .5) * wig; const s = step * (.6 + r() * .8); x += Math.cos(ang) * s; y += Math.sin(ang) * s; L += s; pts.push([x, y]); if (x < -6 || x > 106 || y < -6 || y > 146) break; }
+    return pts;
+  }
+  const fxPath = pts => "M" + pts.map(p => f1(p[0]) + " " + f1(p[1])).join(" L");
+  function fxIce(r, id) {
+    const cols = 6, rows = 9, P = [];
+    for (let j = 0; j <= rows; j++) for (let i = 0; i <= cols; i++) { const e = i === 0 || j === 0 || i === cols || j === rows; P.push([i / cols * 100 + (e ? 0 : (r() - .5) * 13), j / rows * 140 + (e ? 0 : (r() - .5) * 13)]); }
+    const at = (i, j) => P[j * (cols + 1) + i]; let t = "";
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      const a = at(i, j), b = at(i + 1, j), c = at(i + 1, j + 1), d = at(i, j + 1);
+      for (const tri of (r() < .5 ? [[a, b, c], [a, c, d]] : [[a, b, d], [b, c, d]])) { const o = r(); t += `<polygon points="${tri.map(p => f1(p[0]) + "," + f1(p[1])).join(" ")}" fill-opacity="${(o * o * .6).toFixed(2)}"/>`; }
+    }
+    return `${FX_SVG}<defs>${fxSweep(id + "s", '<stop offset=".32" stop-color="#000"/><stop offset=".5" stop-color="#fff"/><stop offset=".68" stop-color="#000"/>', 3.4)}<mask id="${id}m" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="140"><rect width="100" height="140" fill="url(#${id}s)"/></mask></defs><g fill="#fff" stroke="#fff" stroke-opacity=".55" stroke-width=".2" class="fx-dim">${t}</g><g fill="#fff" stroke="#fff" stroke-width=".3" mask="url(#${id}m)" class="fx-lit">${t}</g></svg>`;
+  }
+  function fxKin(r, id) {
+    const paths = [], n = 4 + Math.floor(r() * 3);
+    for (let k = 0; k < n; k++) {
+      const side = Math.floor(r() * 4); let x, y, a;
+      if (side === 0) { x = 8 + r() * 84; y = -3; a = Math.PI / 2; } else if (side === 1) { x = 103; y = 8 + r() * 124; a = Math.PI; } else if (side === 2) { x = 8 + r() * 84; y = 143; a = -Math.PI / 2; } else { x = -3; y = 8 + r() * 124; a = 0; }
+      const main = fxWalk(r, x, y, a + (r() - .5) * 1.1, 45 + r() * 70, 5, 1.1); paths.push(fxPath(main));
+      const nb = r() < .8 ? 1 + Math.floor(r() * 2) : 0;
+      for (let b = 0; b < nb; b++) { const p = main[1 + Math.floor(r() * Math.max(1, main.length - 2))]; paths.push(fxPath(fxWalk(r, p[0], p[1], a + (r() < .5 ? 1 : -1) * (.7 + r() * .6), 10 + r() * 22, 3.5, 1))); }
+    }
+    const g = `<linearGradient id="${id}g" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="140"><stop offset="0" stop-color="#8a6a1e"/><stop offset=".3" stop-color="#f6e6b8"/><stop offset=".5" stop-color="#b8914a"/><stop offset=".72" stop-color="#fff4d0"/><stop offset="1" stop-color="#7a5a12"/></linearGradient>`;
+    return `${FX_SVG}<defs>${g}</defs><g fill="none" stroke-linecap="round" stroke-linejoin="round">${paths.map(d => `<path d="${d}" stroke="#000" stroke-opacity=".7" stroke-width="1.7"/>`).join("")}${paths.map(d => `<path d="${d}" stroke="url(#${id}g)" stroke-width=".85"/>`).join("")}${paths.map((d, i) => `<path class="fx-glint" d="${d}" stroke="#fffbe8" stroke-width="1" pathLength="100" stroke-dasharray="7 193" style="animation-delay:-${(i * 1.1 + r() * 2).toFixed(2)}s"/>`).join("")}</g></svg>`;
+  }
+  function fxGlass(r, id) {
+    const cx = 30 + r() * 40, cy = 32 + r() * 34, rays = 11 + Math.floor(r() * 5), A = [], lines = [];
+    for (let k = 0; k < rays; k++) { const pts = fxWalk(r, cx, cy, k / rays * Math.PI * 2 + (r() - .5) * .45, 34 + r() * 70, 4.5, .35); A.push(pts); lines.push(fxPath(pts)); }
+    const dist = p => Math.hypot(p[0] - cx, p[1] - cy), rings = [];
+    for (const R0 of [4.5, 9.5, 17, 28]) {
+      let d = "";
+      for (let k = 0; k < rays; k++) {
+        if (r() < .22) continue;
+        const near = arr => arr.slice(1).reduce((b, p) => Math.abs(dist(p) - R0) < Math.abs(dist(b) - R0) ? p : b, arr[1]);
+        const a1 = near(A[k]), b1 = near(A[(k + 1) % rays]), mx = (a1[0] + b1[0]) / 2, my = (a1[1] + b1[1]) / 2, s = .1 + r() * .14;
+        d += `M${f1(a1[0])} ${f1(a1[1])} Q${f1(mx + (cx - mx) * s)} ${f1(my + (cy - my) * s)} ${f1(b1[0])} ${f1(b1[1])} `;
+      }
+      rings.push(d);
+    }
+    let chips = "";
+    for (let k = 0; k < 8; k++) { const a = r() * Math.PI * 2, d1 = 1.8 + r() * 1.2, d2 = d1 + 1.6 + r() * 2.6; chips += `<polygon points="${f1(cx + Math.cos(a) * d1)},${f1(cy + Math.sin(a) * d1)} ${f1(cx + Math.cos(a + .32) * d2)},${f1(cy + Math.sin(a + .32) * d2)} ${f1(cx + Math.cos(a - .22) * d2)},${f1(cy + Math.sin(a - .22) * d2)}" fill="#fff" fill-opacity="${(.18 + r() * .35).toFixed(2)}"/>`; }
+    const all = lines.join(" ") + " " + rings.join(" ");
+    return `${FX_SVG}<defs>${fxSweep(id + "s", '<stop offset=".36" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".2"/><stop offset=".64" stop-color="#fff" stop-opacity="0"/>', 4.6)}</defs><rect width="100" height="140" fill="url(#${id}s)"/><path d="${all}" fill="none" stroke="#000" stroke-opacity=".75" stroke-width=".65" transform="translate(.35 .4)"/><path d="${all}" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width=".32"/>${chips}<circle cx="${f1(cx)}" cy="${f1(cy)}" r="3.6" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width=".35"/><circle cx="${f1(cx)}" cy="${f1(cy)}" r="2.2" fill="#040404" stroke="#fff" stroke-opacity=".9" stroke-width=".45"/></svg>`;
+  }
+  function fxBlood(r, id) {
+    const cx = 22 + r() * 56, cy = 34 + r() * 66, base = r() * Math.PI * 2; let s = "";
+    for (let k = 0; k < 7; k++) s += `<circle cx="${f1(cx + (r() - .5) * 7)}" cy="${f1(cy + (r() - .5) * 7)}" r="${f1(1.6 + r() * 2.6)}"/>`;
+    const spines = 13 + Math.floor(r() * 6);
+    for (let k = 0; k < spines; k++) {
+      const a = base + k / spines * Math.PI * 2 + (r() - .5) * .4, len = 8 + Math.pow(r(), 1.3) * 34; let rad = 1.5 + r() * 1.3;
+      for (let d = 2.5; d < len; d += rad * 1.15) { s += `<circle cx="${f1(cx + Math.cos(a) * d)}" cy="${f1(cy + Math.sin(a) * d)}" r="${f1(rad)}"/>`; rad *= .86; if (rad < .3) break; }
+      const d2 = len + 2 + r() * 8; s += `<ellipse cx="${f1(cx + Math.cos(a) * d2)}" cy="${f1(cy + Math.sin(a) * d2)}" rx="${f1(1.2 + r() * 1.4)}" ry="${f1(.45 + r() * .4)}" transform="rotate(${Math.round(a * 57.3)} ${f1(cx + Math.cos(a) * d2)} ${f1(cy + Math.sin(a) * d2)})"/>`;
+    }
+    for (let k = 0; k < 90; k++) { const a = r() * Math.PI * 2, d = 6 + Math.pow(r(), .6) * 55; s += `<circle cx="${f1(cx + Math.cos(a) * d)}" cy="${f1(cy + Math.sin(a) * d)}" r="${f1(Math.max(.22, .9 - d / 70 + r() * .5))}"/>`; }
+    for (let k = 0; k < 2; k++) { const x = cx + (r() - .5) * 6, y = cy + 2, l = 14 + r() * 32; s += `<path d="M${f1(x - .8)} ${f1(y)} L${f1(x - .55)} ${f1(y + l)} Q${f1(x)} ${f1(y + l + 2.4)} ${f1(x + .55)} ${f1(y + l)} L${f1(x + .8)} ${f1(y)} Z"/>`; }
+    return `${FX_SVG}<defs><filter id="${id}f" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation=".55"/><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -10"/></filter>${fxSweep(id + "s", '<stop offset="0" stop-color="#5e070c"/><stop offset=".42" stop-color="#7d0a10"/><stop offset=".5" stop-color="#ff7a80"/><stop offset=".58" stop-color="#99101a"/><stop offset="1" stop-color="#52060a"/>', 3.8)}</defs><g fill="url(#${id}s)" filter="url(#${id}f)">${s}</g></svg>`;
+  }
+  function fxPrint(r, id) {
+    const cx = 52 + r() * 26, cy = 72 + r() * 36, rot = (r() * 70 - 35).toFixed(1); let d = "";
+    for (let k = 1; k < 27; k++) {
+      const R = k * 1.65, n = 72, g0 = r(), gap = k > 3 && r() < .65; let pen = false;
+      for (let i = 0; i <= n; i++) {
+        const u = i / n, t = u * Math.PI * 2, wob = Math.sin(t * 3 + k * .7) * .5 + Math.sin(t * 5 + k) * .25;
+        if (gap && u > g0 && u < g0 + .05) { pen = false; continue; }
+        if (k > 15 && u > .18 && u < .32) { pen = false; continue; }
+        d += (pen ? " L" : " M") + f1(cx + Math.cos(t) * (R + wob) * .8) + " " + f1(cy + Math.sin(t) * (R + wob) * 1.08); pen = true;
+      }
+    }
+    return `${FX_SVG}<defs><radialGradient id="${id}r" gradientUnits="userSpaceOnUse" cx="30" cy="40" r="42"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/><animate attributeName="cx" values="18;82;55;18" dur="7s" repeatCount="indefinite"/><animate attributeName="cy" values="30;70;120;30" dur="7s" repeatCount="indefinite"/></radialGradient><mask id="${id}m" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="140"><rect width="100" height="140" fill="url(#${id}r)"/></mask></defs><g transform="rotate(${rot} ${f1(cx)} ${f1(cy)})"><path d="${d}" fill="none" stroke="#fff" stroke-width=".42" stroke-opacity=".14"/></g><g mask="url(#${id}m)"><g transform="rotate(${rot} ${f1(cx)} ${f1(cy)})"><path d="${d}" fill="none" stroke="#fff" stroke-width=".5" stroke-opacity=".95"/></g></g></svg>`;
+  }
+  function fxWire(r, id) {
+    const ins = 4.4, W = 100 - ins * 2, H = 140 - ins * 2, per = 2 * (W + H);
+    const at = s => { s = ((s % per) + per) % per; if (s < W) return [ins + s, ins, 0, 1]; s -= W; if (s < H) return [100 - ins, ins + s, -1, 0]; s -= H; if (s < W) return [100 - ins - s, 140 - ins, 0, -1]; s -= W; return [ins, 140 - ins - s, 1, 0]; };
+    let w1 = "", w2 = "", barbs = "";
+    for (let s = 0; s <= per + .1; s += .7) { const [x, y, nx, ny] = at(s), o = Math.sin(s * 1.05) * .6; w1 += (s ? " L" : "M") + f1(x + nx * o) + " " + f1(y + ny * o); w2 += (s ? " L" : "M") + f1(x - nx * o) + " " + f1(y - ny * o); }
+    for (let s = 5 + r() * 4; s < per - 3; s += 10 + r() * 4) { const [x, y] = at(s), q = 1.9; barbs += `M${f1(x - q)} ${f1(y - q)} L${f1(x + q)} ${f1(y + q)} M${f1(x + q)} ${f1(y - q)} L${f1(x - q)} ${f1(y + q)} `; }
+    const g = `<linearGradient id="${id}g" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="140"><stop offset="0" stop-color="#6d727c"/><stop offset=".25" stop-color="#f4f6f9"/><stop offset=".5" stop-color="#7b8088"/><stop offset=".75" stop-color="#ffffff"/><stop offset="1" stop-color="#5f646e"/></linearGradient>`;
+    return `${FX_SVG}<defs>${g}</defs><g fill="none" stroke-linecap="round"><path d="${w1} ${w2} ${barbs}" stroke="#000" stroke-opacity=".8" stroke-width="1.2" transform="translate(.3 .45)"/><path d="${w1}" stroke="url(#${id}g)" stroke-width=".6"/><path d="${w2}" stroke="url(#${id}g)" stroke-width=".6"/><path d="${barbs}" stroke="url(#${id}g)" stroke-width=".55"/><path class="fx-glint" d="${w1}" stroke="#fff" stroke-width=".8" pathLength="100" stroke-dasharray="5 195"/></g></svg>`;
+  }
+  function fxLeaf(r, id) {
+    const corners = [[0, 0], [100, 0], [0, 140], [100, 140]], pick = Math.floor(r() * 4), anchors = [corners[pick], corners[3 - pick]]; let s = "";
+    for (let k = 0; k < 46; k++) {
+      const A = anchors[k % 2], d = Math.pow(r(), 1.25) * 40, a = Math.atan2(70 - A[1], 50 - A[0]) + (r() - .5) * 1.7, x = A[0] + Math.cos(a) * d, y = A[1] + Math.sin(a) * d, sz = Math.max(.8, 9 - d / 4.5) * (.55 + r() * .7);
+      const n = 9 + Math.floor(r() * 5), rot = r() * 6.28, pts = [];
+      for (let i = 0; i < n; i++) { const t = rot + i / n * 6.28, rr = sz * (.55 + r() * .5) * (i % 2 ? .82 : 1); pts.push(f1(x + Math.cos(t) * rr * 1.25) + "," + f1(y + Math.sin(t) * rr * .8)); }
+      s += `<polygon points="${pts.join(" ")}" fill-opacity="${(.78 + r() * .22).toFixed(2)}"/>`;
+    }
+    for (let k = 0; k < 40; k++) { const A = anchors[k % 2], d = 10 + r() * 55, a = Math.atan2(70 - A[1], 50 - A[0]) + (r() - .5) * 2; s += `<circle cx="${f1(A[0] + Math.cos(a) * d)}" cy="${f1(A[1] + Math.sin(a) * d)}" r="${f1(.2 + r() * .45)}"/>`; }
+    return `${FX_SVG}<defs>${fxSweep(id + "s", '<stop offset="0" stop-color="#8a6a1e"/><stop offset=".4" stop-color="#a8822e"/><stop offset=".5" stop-color="#fff6dc"/><stop offset=".6" stop-color="#c9a04a"/><stop offset="1" stop-color="#6e520f"/>', 4.6)}</defs><g fill="url(#${id}s)" stroke="#3a2a06" stroke-opacity=".55" stroke-width=".18">${s}</g></svg>`;
+  }
+  function fxScratch(r, id) {
+    let d = ""; const dir = r() * Math.PI;
+    for (let k = 0; k < 170; k++) { const x = r() * 100, y = r() * 140, a = (r() < .75 ? dir + (r() - .5) * .5 : r() * Math.PI), l = 1.5 + Math.pow(r(), 2) * 16, bend = (r() - .5) * 1.4;
+      const x2 = x + Math.cos(a) * l, y2 = y + Math.sin(a) * l; d += `M${f1(x)} ${f1(y)} Q${f1((x + x2) / 2 + Math.sin(a) * bend)} ${f1((y + y2) / 2 - Math.cos(a) * bend)} ${f1(x2)} ${f1(y2)} `; }
+    return `${FX_SVG}<defs>${fxSweep(id + "s", '<stop offset=".33" stop-color="#000"/><stop offset=".5" stop-color="#fff"/><stop offset=".67" stop-color="#000"/>', 3.6)}<mask id="${id}m" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="140"><rect width="100" height="140" fill="url(#${id}s)"/></mask></defs><path d="${d}" fill="none" stroke="#fff" stroke-width=".2" stroke-opacity=".34"/><path d="${d}" fill="none" stroke="#fff" stroke-width=".3" mask="url(#${id}m)"/></svg>`;
+  }
+  function fxSteel(r, id) {
+    return `${FX_SVG}<defs><filter id="${id}t" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".006 3.2" numOctaves="3" seed="${Math.floor(r() * 99)}"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.1 -.42"/></filter></defs><rect width="100" height="140" filter="url(#${id}t)"/></svg>`;
+  }
+  const FX_DRAW = { ice: fxIce, kin: fxKin, glass: fxGlass, blood: fxBlood, print: fxPrint, wire: fxWire, leaf: fxLeaf, scratch: fxScratch, steel: fxSteel };
+  function fxHTML(fx, item, card) {
+    if (!fx) return "";
+    const id = "fx" + (++fxN), draw = FX_DRAW[fx];
+    return `<div class="fx">${draw ? draw(fxRng(fnv(card.no + ":" + (item.serial || 0) + ":" + fx)), id) : ""}<i class="fxf"></i><i class="fxg"></i><i class="fxl"></i></div>`;
+  }
+
   function cardHTML(item, pending) {
     const f = BY_ID[item.id], card = cardOf(item), rar = rarOf(item), R = crOf(card) || CR.C, sk = item.ed === "sketch", T = TYPES[FTYPE[baseOf(f.id)]] || TYPES.fist;
     const num = card.set ? `${card.set}-${card.no.slice(2).padStart(2, "0")}/06` : `${card.no}/${String(SET_SIZE).padStart(3, "0")}`, full = R.tier >= 5;
@@ -2353,7 +2567,8 @@ form.scan-opt { cursor: default; }
     const pwr = (f.atk + f.spd + f.def) * 10 + (card.ex ? 60 : 0);
     const name = esc(f.name) + (card.ex ? `<i class="sigst">SIG</i>` : "");
     const moves = (MOVES[baseOf(f.id)] || []).map(([n, d, txt]) => `<div class="mv"><span class="mc"><i></i><i></i></span><b>${esc(n)}</b><em>${d || ""}</em>${txt ? `<small>${esc(txt)}</small>` : ""}</div>`).join("");
-    const cls = `tcard cr-${rar}${item.rh ? " rh" : ""}${full ? " full" : " std"}${sk ? " sketch" : ""}${lset}`;
+    const fx = item.fx || FX_BY_RAR[rar] || "", fxa = fx ? `<i class="fxa"></i>` : "";
+    const cls = `tcard cr-${rar}${item.rh ? " rh" : ""}${full ? " full" : " std"}${sk ? " sketch" : ""}${lset}${fx ? " fx-" + fx : ""}`;
     const stamp = sk ? `<span class="stamp">SKETCH</span>` : "";
     const sig = card.ex ? `<i class="sigst">SIG</i>` : "";
     const tech = (MOVES[baseOf(f.id)] || []).map(([n, d, txt], k) => `<div class="mv"><span class="cost">${"/".repeat(k + 1 + (d >= 100 ? 1 : 0))}</span><b>${esc(n)}</b><em>${d || "–"}</em>${txt ? `<small>${esc(txt)}</small>` : ""}</div>`).join("");
@@ -2361,20 +2576,20 @@ form.scan-opt { cursor: default; }
         <div class="tc-wash"></div>
         <div class="tc-head"><span class="tc-name">${esc(f.name)}${sig}</span><span class="tc-pwr"><small>PWR</small>${pwr}</span></div>
         <div class="tc-sub">${esc(f.title)} · ${T.name} · ${card.set ? esc(LSETS[card.set].name) : SET_NAME}</div>
-        <div class="tc-artwrap"><div class="tc-art">${art}<div class="tc-holo"></div></div></div>${ltag}
+        <div class="tc-artwrap"><div class="tc-art">${art}<div class="tc-holo"></div>${fxa}</div></div>${ltag}
         <div class="tc-moves">${tech}</div>
         <div class="tc-flavor">${esc(lineOf(card))}</div>
         <div class="tc-foot"><span class="tc-no">${sid}</span><span class="rseal" title="${R.name}">${R.sym}</span>${item.rh ? `<span class="rhb">REVERSE FOIL</span>` : ""}<span class="tc-val rv">${esc(R.name)}</span></div>
-        ${stamp}</div><div class="glare"></div></div>`;
+        ${stamp}${fxHTML(fx, item, card)}</div><div class="glare"></div>${fxTagHTML(fx)}</div>`;
     return `<div class="${cls}" style="--tc:${T.col};--rc:${R.col}"><div class="tc-face">
-      <div class="tc-art">${art}<div class="tc-holo"></div><div class="tc-tex"></div></div><div class="tc-sparkle"></div><div class="tc-shine"></div>${card.set && rar === "SIR" ? `<div class="tc-ring"></div>` : ""}${ltag}
+      <div class="tc-art">${art}<div class="tc-holo"></div><div class="tc-tex"></div>${fxa}</div><div class="tc-sparkle"></div><div class="tc-shine"></div>${card.set && rar === "SIR" ? `<div class="tc-ring"></div>` : ""}${ltag}
       <div class="tc-top"><span class="tc-name">${name}</span><span class="tc-hp"><small>PWR</small>${pwr}</span></div>
       ${stamp}
       <div class="tc-info">
         <div class="tc-moves">${tech}</div>
         <div class="tc-bottom"><span class="tag" title="${R.name}"><span class="crest">${R.sym}</span>${sid}</span><span class="tc-val rv">${esc(R.name)}</span></div>
-      </div>
-    </div><div class="glare"></div></div>`;
+      </div>${fxHTML(fx, item, card)}
+    </div><div class="glare"></div>${fxTagHTML(fx)}</div>`;
   }
 
   // Scan ID printed on every physical card: set, collector number, and the copy's own serial.
@@ -2766,6 +2981,7 @@ form.scan-opt { cursor: default; }
       const vs = CARDS.filter(c => c.rar === r).map(c => c.v);
       return `<tr><td><b style="color:${CR[r].col}">${CR[r].sym}</b> ${CR[r].name}</td><td>${vs.length}</td><td>${money(Math.min(...vs))}–${money(Math.max(...vs))}</td></tr>`;
     }).join("") + `<tr><td>Reverse Foil (any ●◆★)</td><td>–</td><td>${RH_MULT}× the card</td></tr></tbody>`;
+    $("fxTable").innerHTML = `<thead><tr><th>Variant</th><th>Odds per card</th><th>Value</th></tr></thead><tbody>` + Object.keys(FX_VAR).map(k => `<tr><td><a href="#lab">${esc(fxName(k))}</a></td><td>${fxOdds(k)}</td><td>${FX_VAR[k][1]}× the card</td></tr>`).join("") + `</tbody>`;
   }
 
   // ---------- Arena (fight films) ----------
@@ -2808,8 +3024,17 @@ form.scan-opt { cursor: default; }
   // =====================================================================
   // TABS
   // =====================================================================
-  const TABS = ["packs", "arena", "vault", "market", "ledger", "terms"];
+  const TABS = ["packs", "arena", "vault", "market", "ledger", "terms", "lab"];
   let currentTab = "packs";
+  function renderLab() {
+    const el = $("labGrid"); if (!el || el.dataset.done) return; el.dataset.done = "1";
+    el.innerHTML = FX_STYLES.map(([fx, name, note], i) => `<div class="lab-row"><div class="lab-h"><span class="lab-k">${String.fromCharCode(65 + i)}</span><div><b>${esc(name)}</b><span class="lab-o">${fxOdds(fx)} cards · ${FX_VAR[fx][1]}× value</span><p>${esc(note)}</p></div></div><div class="lab-cards">${["015", "026"].map((no, k) => { const c = CARD_BY_NO[no]; return `<div class="lab-c">${cardHTML({ id: c.id, cno: c.no, rar: c.rar, serial: 11 + i * 7 + k, fx })}</div>`; }).join("")}</div></div>`).join("");
+    let raf = 0;
+    const move = e => { const tc = e.target.closest && e.target.closest(".lab-c .tcard"); if (!tc) return; const b = tc.getBoundingClientRect(), x = (e.clientX - b.left) / b.width, y = (e.clientY - b.top) / b.height;
+      cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { tc.style.setProperty("--px", (x * 100).toFixed(1) + "%"); tc.style.setProperty("--py", (y * 100).toFixed(1) + "%"); tc.style.setProperty("--mx", (x * 100).toFixed(1) + "%"); tc.style.setProperty("--my", (y * 100).toFixed(1) + "%"); tc.classList.add("lit"); tc.style.transform = `perspective(800px) rotateY(${((x - .5) * 16).toFixed(1)}deg) rotateX(${((.5 - y) * 16).toFixed(1)}deg)`; }); };
+    const leave = e => { const tc = e.target.closest && e.target.closest(".lab-c .tcard"); if (!tc) return; tc.classList.remove("lit"); tc.style.transform = ""; };
+    el.addEventListener("pointermove", move); el.addEventListener("pointerout", leave); el.addEventListener("pointercancel", leave);
+  }
   function showTab() {
     let h = location.hash.slice(1);
     if (/^[cp]-/i.test(h)) {
@@ -2821,6 +3046,7 @@ form.scan-opt { cursor: default; }
     if (anchor) h = "packs";
     currentTab = TABS.includes(h) ? h : "packs";
     TABS.forEach(t => { $("view-" + t).hidden = t !== currentTab; });
+    if (currentTab === "lab") renderLab();
     document.querySelectorAll("nav.tabs a").forEach(a => { if (a.dataset.tab === currentTab) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
     if (anchor) $("all-packs").scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" }); else window.scrollTo(0, 0);
   }
@@ -2864,7 +3090,8 @@ form.scan-opt { cursor: default; }
     const items = [];
     for (const pull of pullPack(p, ownedSet())) {
       const f = BY_ID[pull.card.id]; state.serial++;
-      const item = { uid: Date.now().toString(36) + "-" + state.serial, id: f.id, cno: pull.card.no, rar: pull.card.rar, rh: pull.rh, slot: pull.slot, serial: state.serial, t: Date.now(), pack: p.id, ed: p.ed || "foil", val: cardBaseValue(pull.card, p.ed, pull.rh), cond: rollCondition(), day: mktDay() };
+      const fx = p.ed === "sketch" ? "" : rollFx(rand());
+      const item = { uid: Date.now().toString(36) + "-" + state.serial, id: f.id, cno: pull.card.no, rar: pull.card.rar, rh: pull.rh, slot: pull.slot, serial: state.serial, t: Date.now(), pack: p.id, ed: p.ed || "foil", ...(fx ? { fx } : {}), val: Math.round(cardBaseValue(pull.card, p.ed, pull.rh) * fxMult({ fx })), cond: rollCondition(), day: mktDay() };
       items.push(item); state.vault.push(item);
       if (p.cur === "coin" && !free) state.s.coinValuePulled += item.val;
       if (p.ed !== "sketch" && (!state.s.best || item.val > (state.s.best.val || 0))) state.s.best = { id: f.id, serial: item.serial, val: item.val };
@@ -2956,7 +3183,8 @@ form.scan-opt { cursor: default; }
     sfx.unlock();
     if (r.kind === "pack") { save(); buy(r.pack.id, true, r.code); return true; }
     const card = r.card, f = BY_ID[card.id];
-    const item = { uid: "phys-" + r.code, id: f.id, cno: card.no, rar: card.rar, rh: false, slot: "SCAN", serial: r.serial, t: Date.now(), pack: RETAIL_KEY[card.set] || "scan", ed: "foil", val: cardBaseValue(card, "foil", false), day: mktDay(), phys: true, code: r.code, owners: reg.owners || 1 };
+    const pfx = fxForCode(r.code);
+    const item = { uid: "phys-" + r.code, id: f.id, cno: card.no, rar: card.rar, rh: false, slot: "SCAN", serial: r.serial, t: Date.now(), pack: RETAIL_KEY[card.set] || "scan", ed: "foil", ...(pfx ? { fx: pfx } : {}), val: Math.round(cardBaseValue(card, "foil", false) * fxMult({ fx: pfx })), day: mktDay(), phys: true, code: r.code, owners: reg.owners || 1 };
     state.vault.push(item);
     if (!state.s.best || item.val > (state.s.best.val || 0)) state.s.best = { id: f.id, cno: card.no, serial: item.serial, val: item.val };
     state.hits = (state.hits || []).concat([Object.assign({}, item)]).sort((a, b) => b.val - a.val).slice(0, 12);
@@ -3180,7 +3408,8 @@ form.scan-opt { cursor: default; }
   }
 
   function reveal(el) {
-    const it = SS.items[SS.idx], f = BY_ID[it.id], r = rarOf(it), RC = CR[r] || CR.C, cut = hasCutscene(it);
+    const it = SS.items[SS.idx], f = BY_ID[it.id], r = rarOf(it), RC0 = CR[r] || CR.C, cut = hasCutscene(it);
+    const RC = it.fx ? Object.assign({}, RC0, { build: Math.max(RC0.build, 1.7), tier: Math.max(RC0.tier, 5), col: "#f6f4ee" }) : RC0;
     // rare cards get a long, staged build-up; cutscene cards the longest
     const base = (RC.build + (it.rh ? .35 : 0)) * (it.ed === "sketch" ? .5 : 1), dur = reduceMotion() ? 0 : cut ? Math.max(6.8, base + 4) : RC.tier >= 4 ? base + 1.4 : RC.tier >= 2 ? base + .5 : base;
     SS.busy = true;
@@ -3481,7 +3710,7 @@ form.scan-opt { cursor: default; }
     if (SS.scan) {
       const it = items[0], c = cardOf(it), R = crOf(c);
       $("stSummary").innerHTML = `<div class="sum-in">
-        <div class="sum-head"><span class="label">Physical card verified</span><div class="big num">${esc(BY_ID[it.id].name)}</div><span class="small-print"><b style="color:${R.col}">${R.sym} ${esc(R.name)}</b> · copy #${String(it.serial).padStart(6, "0")} · worth ${money(itemVal(it))}</span></div>
+        <div class="sum-head"><span class="label">Physical card verified</span><div class="big num">${esc(BY_ID[it.id].name)}</div><span class="small-print"><b style="color:${R.col}">${R.sym} ${esc(R.name)}</b> · copy #${String(it.serial).padStart(6, "0")} · worth ${money(itemVal(it))}${it.fx ? ` · <b>${esc(fxName(it.fx))} variant, ${fxMult(it)}× value</b>` : ""}</span></div>
         <div class="fan"><div class="fan-c best phys-c" style="--c:${R.col};--i:0">${cardHTML(it)}</div></div>
         <div class="sum-btns"><button class="btn brass" id="sumKeep">Done</button><button class="btn" id="sumScan"><svg class="ico"><use href="#i-qr"/></svg>Scan another</button></div></div>`;
       $("stSummary").hidden = false; SS.sumAt = performance.now(); $("stHint").textContent = "";
@@ -3491,7 +3720,7 @@ form.scan-opt { cursor: default; }
     const head = `<div class="big num">${money(total)}</div><span class="small-print">${items.length} cards worth ${money(total)} · sell back now for ${money(sell)}${paid ? ` on a ${money(paid)} pack` : ""}</span>${hit && paid ? `<span class="paid-off">Paid off · ${Math.round(sell / paid * 100)}% back</span>` : ""}`;
     const lv = SS.levelUp ? `<div class="lvup">Volume tier ${SS.levelUp.level} · +${money(SS.levelUp.bonus)} bonus added</div>` : "";
     $("stSummary").innerHTML = `<div class="sum-in">
-      <div class="sum-head"><span class="label">${esc(p.name)} · best pull <b style="color:${bestR.col}">${esc(BY_ID[bestIt.id].name)}, ${esc(bestR.name)}</b></span>${head}</div>${lv}
+      <div class="sum-head"><span class="label">${esc(p.name)} · best pull <b style="color:${bestR.col}">${esc(BY_ID[bestIt.id].name)}, ${esc(bestR.name)}</b></span>${head}${items.some(x => x.fx) ? `<div class="fxhit">Variant pulled: ${items.filter(x => x.fx).map(x => `<b>${esc(fxName(x.fx))}</b> ${esc(BY_ID[x.id].name)} · ${fxMult(x)}× value`).join(" &nbsp; ")}</div>` : ""}</div>${lv}
       <div class="fan">${items.map((x, i) => `<div class="fan-c${i === bestI ? " best" : ""}" style="--c:${crOf(cardOf(x)).col};--i:${i}">${cardHTML(x)}</div>`).join("")}</div>
       <div class="sum-btns"><button class="btn" id="sumSell">Sell all <span class="pr">${money(sell)}</span></button><button class="btn brass" id="sumKeep">Keep all</button>
         ${items.some(hasCutscene) ? `<button class="btn ghost" id="sumReplay">Replay cutscene</button>` : ""}${SS.code ? `<button class="btn ghost" id="sumScan"><svg class="ico"><use href="#i-qr"/></svg>Scan another code</button>` : ""}<button class="btn ghost" id="sumAgain"${SS.code ? " hidden" : ""}>${can ? `Open another <span class="pr">${priceTxt(p)}</span>` : p.cur === "coin" ? "Add funds" : "Not enough tokens"}</button></div>
@@ -4323,7 +4552,7 @@ form.scan-opt { cursor: default; }
   $("ageCheck").addEventListener("change", e => { $("gateEnter").disabled = !e.target.checked; });
   $("gateEnter").addEventListener("click", () => { state.ageOK = true; if (state.pendingCode) { const pc = state.pendingCode; delete state.pendingCode; setTimeout(() => redeem(pc), 400); } if (!state.history.length) grantSignup(); save(); renderAll(); $("gate").hidden = true; toast(`${money(SIGNUP_BONUS)} signup bonus added`); });
 
-  window.STIXX_PRINT = { cardHTML, cardCode, packCode, parseCode, CARD_BY_NO, PACK_BY_ID, CARDS, APP_URL, RETAIL_KEY };
+  window.STIXX_PRINT = { fxForCode, fxName, cardHTML, cardCode, packCode, parseCode, CARD_BY_NO, PACK_BY_ID, CARDS, APP_URL, RETAIL_KEY };
   renderAll(); showTab();
   let lastDay = mktDay();
   setInterval(() => { renderTick(); const d = mktDay(); if (d !== lastDay && stage.hidden && $("cut").hidden) { lastDay = d; renderAll(); if (cmNo && $("cardModal").hidden === false) openCardModal(cmNo); } if (currentTab === "packs" && stage.hidden && Date.now() % 60000 < 1000) renderHero(); }, 1000);

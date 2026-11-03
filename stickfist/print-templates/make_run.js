@@ -50,18 +50,18 @@ const CSS = `html,body{margin:0;background:#000}
   const qr = (text) => app.evaluate(t => { const q = qrcode(0, "M"); q.addData(t); q.make(); return q.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); }, text);
   const sheet = await b.newPage({ viewport: { width: 1650, height: 2250 } });
   const renderSheet = async (html, file) => { await sheet.setContent(`<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet"><style>${CSS}</style></head><body>${html}</body></html>`); await sheet.waitForTimeout(700); await sheet.screenshot({ path: file }); };
-  const rows = [["type", "set", "card", "name", "rarity", "serial", "code", "url", "front", "back"]];
+  const rows = [["type", "set", "card", "name", "rarity", "serial", "code", "url", "front", "back", "variant"]];
   for (const set of SETS) {
     const cards = await app.evaluate(s => window.STIXX_PRINT.CARDS.filter(c => c.set === s).map(c => c.no), set);
     for (const no of cards) for (let k = 0; k < COPIES; k++) {
       const serial = START + k;
-      const info = await app.evaluate(({ no, serial }) => { const P = window.STIXX_PRINT, c = P.CARD_BY_NO[no]; document.getElementById("probe").innerHTML = P.cardHTML({ uid: "print", id: c.id, cno: no, rar: c.rar, serial, ed: "foil" }); return { code: P.cardCode(c, serial), id: c.id, rar: c.rar }; }, { no, serial });
+      const info = await app.evaluate(({ no, serial }) => { const P = window.STIXX_PRINT, c = P.CARD_BY_NO[no]; const code = P.cardCode(c, serial), fx = P.fxForCode(code); document.getElementById("probe").innerHTML = "<style>#probe .fxtag{display:none}</style>" + P.cardHTML({ uid: "print", id: c.id, cno: no, rar: c.rar, serial, ed: "foil", fx }); return { code, id: c.id, rar: c.rar, fx: fx ? P.fxName(fx) : "" }; }, { no, serial });
       await app.waitForTimeout(500);
       const tag = `${no}_${String(serial).padStart(6, "0")}`, raw = path.join(OUT, "_raw", tag + ".png");
       await (await app.$("#probe .tcard")).screenshot({ path: raw });
       const url = `${BASE}#c-${info.code}`;
       await renderSheet(BACK(await qr(url), info.code), path.join(OUT, "backs", `${tag}_back.png`));
-      rows.push(["card", set, no, info.id, info.rar, serial, info.code, url, `fronts/${tag}_front.png`, `backs/${tag}_back.png`]);
+      rows.push(["card", set, no, info.id, info.rar, serial, info.code, url, `fronts/${tag}_front.png`, `backs/${tag}_back.png`, info.fx]);
       console.log("card", tag, info.code);
     }
     for (let k = 0; k < PACKS; k++) {
@@ -70,7 +70,7 @@ const CSS = `html,body{margin:0;background:#000}
       if (!pk) continue;
       const url = `${BASE}#p-${pk.code}`, tag = `PK-${key}_${String(serial).padStart(6, "0")}`;
       await renderSheet(CODECARD(await qr(url), pk.code, pk), path.join(OUT, "packcodes", `${tag}_front.png`));
-      rows.push(["pack", set, "", pk.name, "", serial, pk.code, url, `packcodes/${tag}_front.png`, "plain STIXX back"]);
+      rows.push(["pack", set, "", pk.name, "", serial, pk.code, url, `packcodes/${tag}_front.png`, "plain STIXX back", ""]);
       console.log("pack", tag, pk.code);
     }
   }
