@@ -101,6 +101,20 @@ FROZEN_RULES = {  # exactly the settings that passed the lab's holdout as "ALL" 
                       "params": {"start": 2, "end": 13, "edge": 0.12, "vol": "60", "min_price": 0.2, "max_price": 0.8}},
 }
 
+
+
+def golden_frozen() -> dict:
+    """The only accepted form of each golden rule in a config: id, family, scope, holdout t, params exactly
+    as lab3 froze them (+ the sized stake normaliser). Order of evaluation = golden_live.GOLDEN (best first)."""
+    from . import golden_live as GL
+    out = {}
+    for r in GL.GOLDEN:
+        out[r["id"]] = {k: r[k] for k in ("id", "family", "scope", "t", "params")}
+        if r["kind"] == "sized":
+            out[r["id"]]["norm"] = r["norm"]
+    return out
+
+
 # exit codes understood by scripts/run_real.sh
 EXIT_CLEAN, EXIT_CRASH, EXIT_CONFIG = 0, 1, 2
 
@@ -939,6 +953,9 @@ class Runner:
         for tk, p in list(self.pos.items()):
             if p["close_ts"] > now:
                 continue
+            if p.get("exited") or p.get("exit_unknown"):
+                self._settle_after_exit(tk, p)
+                continue
             if self.dry:
                 res = self.mapi.market(tk).get("result")
                 if res not in ("yes", "no"):
@@ -972,6 +989,43 @@ class Runner:
                                 "revenue": revenue, "kalshi_cost": cost_k, "kalshi_fee": fee_k,
                                 "pnl_kalshi": round(pnl_k, 4), "pnl_fills": None if pnl_f is None else round(pnl_f, 4),
                                 "pnl": round(pnl, 4), "settled_time": s.get("settled_time")})
+            self.refresh_balance()
+
+    def _settle_after_exit(self, tk, p):
+        """Settle what is left of a position that was partly sold early (or whose exit order is unconfirmed).
+        The sold part was booked by its "exit" event; only the remaining contracts are settled here, at their
+        share of the entry cost, so nothing is counted twice. Kalshi's settlement record (netted position)
+        is logged for reference only."""
+        st = [] if self.dry else [s for s in self.api.settlements(ticker=tk) if s.get("ticker") == tk]
+        res = st[0].get("market_result") if st else None
+        if res not in ("yes", "no"):
+            res = self.mapi.market(tk).get("result")
+        if res not in ("yes", "no"):
+            return
+        if p.get("exit_unknown") and not self.dry:
+            known = set(p.get("exit_orders") or []) | {p.get("order_id")}
+            fx = [f for f in self.api.fills(ticker=tk) if f.get("order_id") not in known]
+            k, proceeds, fees2 = exit_fill_summary(fx, p["side"])
+            k = min(k, p["n"])
+            p.pop("exit_unknown", None)
+            if k > 0:
+                self._book_exit(tk, p, k, proceeds, fees2, fx[0].get("order_id"), "fills_at_settlement",
+                                round(proceeds / k, 4), None)
+            if tk not in self.pos:
+                return
+        n = p["n"]
+        pnl = n * (res == p["side"]) - p["cost"] - p["fees"]
+        rec = {"event": "dry_settle" if self.dry else "settle", "ticker": tk, "result": res, "side": p["side"],
+               "n": n, "cost": round(p["cost"], 6), "fees": round(p["fees"], 6), "pnl": round(pnl, 4),
+               "after_exit": True, "exited": p.get("exited", 0.0), "exit_pnl": round(p.get("exit_pnl", 0.0), 4)}
+        if st:
+            s = st[0]
+            revenue = _f(s.get("revenue")) / 100
+            cost_k = _f(s.get("yes_total_cost_dollars")) + _f(s.get("no_total_cost_dollars"))
+            rec.update(revenue=revenue, kalshi_cost=cost_k, kalshi_fee=_f(s.get("fee_cost")),
+                       pnl_kalshi=round(revenue - cost_k - _f(s.get("fee_cost")), 4), settled_time=s.get("settled_time"))
+        self.finish(tk, p, rec)
+        if not self.dry:
             self.refresh_balance()
 
     def finish(self, tk, p, rec):
@@ -1023,6 +1077,21 @@ def load_config(path=CONFIG) -> dict:
     bad = [k for k in REQUIRED_LIMITS if k != "min_balance_usd" and lim[k] <= 0]
     if bad or lim["min_balance_usd"] < 0 or not lim["min_price"] < lim["max_price"] < 1:
         raise Stop(f"{path}: invalid limits {bad or ['min_price/max_price']}", EXIT_CONFIG)
+    if "golden_rules" in cfg:   # lab3's golden rules, frozen to the exact lab3 params (see golden_live.GOLDEN)
+        frozen = golden_frozen()
+        if cfg.get("execution") != "taker" or not cfg.get("series") or not isinstance(cfg["series"], list) \
+                or not set(cfg["series"]) <= set(ALL9) or "rules" in cfg or not cfg["golden_rules"]:
+            raise Stop(f"{path}: golden config needs series = a list within {ALL9}, execution taker, "
+                       f"no 'rules'", EXIT_CONFIG)
+        ids = [r.get("id") if isinstance(r, dict) else None for r in cfg["golden_rules"]]
+        for r, rid in zip(cfg["golden_rules"], ids):
+            if rid not in frozen or r != frozen[rid]:
+                raise Stop(f"{path}: golden rule {rid} must stay exactly {frozen.get(rid, list(frozen))}", EXIT_CONFIG)
+        if len(set(ids)) != len(ids):
+            raise Stop(f"{path}: duplicate golden rule", EXIT_CONFIG)
+        cfg.setdefault("strategy", "golden")
+        cfg.setdefault("params", {r["id"]: r["params"] for r in cfg["golden_rules"]})
+        return cfg
     if "rules" in cfg:   # the pooled 9-coin rules (passed the strict holdout bar as a group)
         if cfg.get("execution") != "taker" or not cfg.get("series") or not set(cfg["series"]) <= set(ALL9):
             raise Stop(f"{path}: series must be a subset of {ALL9}, execution taker", EXIT_CONFIG)
