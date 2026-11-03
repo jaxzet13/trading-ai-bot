@@ -102,7 +102,6 @@ FROZEN_RULES = {  # exactly the settings that passed the lab's holdout as "ALL" 
 }
 
 
-
 def golden_frozen() -> dict:
     """The only accepted form of each golden rule in a config: id, family, scope, holdout t, params exactly
     as lab3 froze them (+ the sized stake normaliser). Order of evaluation = golden_live.GOLDEN (best first)."""
@@ -1330,40 +1329,82 @@ def report(args: list[str] | None = None, log_path: Path = LOG, out=print) -> in
         orders = [e for e in es if e.get("event") in ("order_intent", "would_order")]
         fills = {e["ticker"]: e for e in es if e.get("event") == "fill"}
         sets = [e for e in es if e.get("event") in ("settle", "dry_settle")]
+        exits = [e for e in es if e.get("event") == "exit" and e.get("n")]     # golden scalp: sold early
+        hx = bool(exits)
         skipped = [e for e in es if e.get("event") == "signal_skipped"]
         out(f"\n===== {mode} =====")
-        out(f"{'day (UTC)':<12}{'orders':>7}{'filled':>7}{'settled':>8}{'wins':>6}{'cost':>9}{'fees':>8}{'P&L':>9}")
-        days = sorted({e.get("day") or _day(e["ts"]) for e in sets} | {_day(e["ts"]) for e in orders})
-        tot = {"o": 0, "f": 0, "s": 0, "w": 0, "c": 0.0, "fe": 0.0, "p": 0.0}
+        out(f"{'day (UTC)':<12}{'orders':>7}{'filled':>7}{'settled':>8}" + (f"{'exits':>6}" if hx else "")
+            + f"{'wins':>6}{'cost':>9}{'fees':>8}{'P&L':>9}")
+        days = sorted({e.get("day") or _day(e["ts"]) for e in sets + exits} | {_day(e["ts"]) for e in orders})
+        tot = {"o": 0, "f": 0, "s": 0, "x": 0, "w": 0, "c": 0.0, "fe": 0.0, "p": 0.0}
         for d in days:
             o = [e for e in orders if _day(e["ts"]) == d]
             f = [fills[e["ticker"]] for e in o if e["ticker"] in fills and fills[e["ticker"]]["n"] > 0] \
                 if mode != "DRYRUN" else o
             s = [e for e in sets if (e.get("day") or _day(e["ts"])) == d and e.get("n")]
-            w = sum(1 for e in s if e.get("result") == e.get("side"))
-            c, fe, p = sum(e["cost"] for e in s), sum(e["fees"] for e in s), sum(e["pnl"] for e in s)
-            out(f"{d:<12}{len(o):>7}{len(f):>7}{len(s):>8}{w:>6}{c:>9.2f}{fe:>8.2f}{p:>+9.2f}")
-            for k, v in zip("o f s w c fe p".split(), (len(o), len(f), len(s), w, c, fe, p)):
+            x = [e for e in exits if (e.get("day") or _day(e["ts"])) == d]
+            w = sum(1 for e in s if e.get("result") == e.get("side")) + sum(1 for e in x if e["pnl"] > 0)
+            c = sum(e["cost"] for e in s) + sum(e["entry_cost"] for e in x)
+            fe = sum(e["fees"] for e in s) + sum(e["entry_fees"] + e["exit_fees"] for e in x)
+            p = sum(e["pnl"] for e in s) + sum(e["pnl"] for e in x)
+            out(f"{d:<12}{len(o):>7}{len(f):>7}{len(s):>8}" + (f"{len(x):>6}" if hx else "")
+                + f"{w:>6}{c:>9.2f}{fe:>8.2f}{p:>+9.2f}")
+            for k, v in zip("o f s x w c fe p".split(), (len(o), len(f), len(s), len(x), w, c, fe, p)):
                 tot[k] += v
-        out(f"{'TOTAL':<12}{tot['o']:>7}{tot['f']:>7}{tot['s']:>8}{tot['w']:>6}{tot['c']:>9.2f}{tot['fe']:>8.2f}{tot['p']:>+9.2f}")
-        if tot["s"]:
-            pnls = [e["pnl"] for e in sets if e.get("n")]
+        out(f"{'TOTAL':<12}{tot['o']:>7}{tot['f']:>7}{tot['s']:>8}" + (f"{tot['x']:>6}" if hx else "")
+            + f"{tot['w']:>6}{tot['c']:>9.2f}{tot['fe']:>8.2f}{tot['p']:>+9.2f}")
+        by_tk = {}                  # one number per market: exits + settlement of what was left
+        for e in [e for e in sets if e.get("n")] + exits:
+            by_tk[e["ticker"]] = by_tk.get(e["ticker"], 0.0) + e["pnl"]
+        if tot["s"] or tot["x"]:
+            pnls = list(by_tk.values()) if hx else [e["pnl"] for e in sets if e.get("n")]
             avg = sum(pnls) / len(pnls)
             sd = float(np.std(pnls, ddof=1)) if len(pnls) > 1 else float("nan")
             t = avg / (sd / math.sqrt(len(pnls))) if len(pnls) > 1 and sd > 0 else float("nan")
-            out(f"average P&L per settled trade ${avg:+.3f} over {len(pnls)} trades (t = {t:.2f}); "
-                f"win rate {tot['w'] / tot['s']:.0%}")
+            what = "closed trade (exits + settlements, per market)" if hx else "settled trade"
+            out(f"average P&L per {what} ${avg:+.3f} over {len(pnls)} trades (t = {t:.2f}); "
+                f"win rate {tot['w'] / (tot['s'] + tot['x']):.0%}")
+        if hx or any(e.get("event") in ("exit_unfilled", "exit_rejected", "exit_unknown", "exit_skipped") for e in es):
+            full = sum(1 for e in exits if e.get("remaining", 0) <= 1e-9)
+            un = sum(1 for e in es if e.get("event") == "exit_unfilled")
+            out(f"early exits: {len(exits)} ({full} sold everything, {len(exits) - full} partial), exit P&L "
+                f"${sum(e['pnl'] for e in exits):+.2f}; exit orders not filled: {un}, rejected: "
+                f"{sum(1 for e in es if e.get('event') == 'exit_rejected')}, unconfirmed: "
+                f"{sum(1 for e in es if e.get('event') == 'exit_unknown')}")
         if mode != "DRYRUN" and orders:
             out(f"fill rate {tot['f'] / tot['o']:.0%}; signals skipped by limits/staleness: {len(skipped)}")
             unknown = [e["ticker"] for e in es if e.get("event") == "order_unknown"]
             if unknown:
                 out(f"orders with unconfirmed status (reconciled at settlement): {unknown}")
+        _report_rules(orders, fills, by_tk, mode, out)
         if (a.live and mode == "LIVE") or (a.demo and mode == "DEMO"):
-            _report_kalshi(PROD if mode == "LIVE" else DEMO, {e["ticker"] for e in orders}, sets, out)
+            _report_kalshi(PROD if mode == "LIVE" else DEMO, {e["ticker"] for e in orders}, sets, out,
+                           exited={e["ticker"] for e in exits})
     return 0
 
 
-def _report_kalshi(base, tickers, sets, out):
+def _report_rules(orders, fills, by_tk, mode, out):
+    """Per-rule breakdown when several rules share the log (golden: best first, with how often lower-ranked
+    rules signalled the same market at the same minute and were de-duplicated)."""
+    rules = sorted({e.get("rule") for e in orders if e.get("rule")})
+    if len(rules) < 2:
+        return
+    try:
+        from . import golden_live as GL
+        rules.sort(key=lambda r: GL.PRIORITY.get(r, 99))
+    except ImportError:
+        pass
+    out(f"{'by rule':<22}{'orders':>7}{'filled':>7}{'closed':>7}{'P&L':>9}{'others also fired':>19}")
+    for r in rules:
+        o = [e for e in orders if e.get("rule") == r]
+        f = o if mode == "DRYRUN" else [e for e in o if e["ticker"] in fills and fills[e["ticker"]]["n"] > 0]
+        closed = [e["ticker"] for e in o if e["ticker"] in by_tk]
+        pnl = sum(by_tk[t] for t in closed)
+        dup = sum(1 for e in o if e.get("also_signalled"))
+        out(f"{r:<22}{len(o):>7}{len(f):>7}{len(closed):>7}{pnl:>+9.2f}{dup:>19}")
+
+
+def _report_kalshi(base, tickers, sets, out, exited=()):
     try:
         api = KalshiAPI.from_env(base)
     except SystemExit as e:
@@ -1380,12 +1421,15 @@ def _report_kalshi(base, tickers, sets, out):
                     - _f(s.get("no_total_cost_dollars")) - _f(s.get("fee_cost"))
                 tot += pnl
                 n += 1
+                if tk in exited:            # sold early: Kalshi's record covers only what was left
+                    continue
                 if tk not in logged or abs(logged[tk]["pnl"] - pnl) > 0.02:
                     diff.append((tk, round(pnl, 2), logged.get(tk, {}).get("pnl")))
     except requests.RequestException as e:
         out(f"Kalshi fetch failed: {e}")
         return
-    out(f"Kalshi settlements for our tickers: {n} markets, P&L ${tot:+.2f} (revenue - cost - fees)")
+    out(f"Kalshi settlements for our tickers: {n} markets, P&L ${tot:+.2f} (revenue - cost - fees)"
+        + (f"; {len(exited)} markets sold early are not compared" if exited else ""))
     for tk, k, lg in diff:
         out(f"  differs from log: {tk} kalshi ${k:+.2f} vs log {lg}")
 
