@@ -45,6 +45,7 @@ ARCH_DIR = D.DATA_DIR / "archive"
 COINS = list(D.SERIES)
 HOLDOUT_DAYS, N_FOLDS, MIN_TRADES = 15, 5, 30
 T_SHORT, SHORT_TRADES, STAKE = 1.5, 50, 10.0
+MIN_ARCH_TRADES = 50
 ARCH_COINS = ("KXNEAR15M", "KXDOGE15M", "KXBNB15M", "KXSOL15M")
 BANDS = {"05-95": (0.05, 0.95), "10-90": (0.10, 0.90), "15-85": (0.15, 0.85), "20-80": (0.20, 0.80),
          "25-75": (0.25, 0.75)}
@@ -359,13 +360,13 @@ VM6 = [0.7, 0.8, 0.9, 1.0, 1.1, 1.25]
 BANDS5 = ["05-95", "10-90", "15-85", "20-80", "25-75"]
 
 
-def family(fid, name, idea, grid, kind="hold", heat=None, single=True):
+def family(fid, name, idea, grid, kind="hold", heat=None, single=True, needs_ref=False):
     """Register a family. kind: hold (taker, hold to settlement) | maker | makerfv | scalp | sized.
     heat: (x, y) parameter names for the sensitivity heatmap. single: a single-model signal that
     may join an ensemble of survivors."""
     def deco(fn):
         FAMILIES[fid] = {"id": fid, "name": name, "idea": idea, "grid": grid, "kind": kind, "fn": fn,
-                         "heat": heat, "single": single and kind == "hold"}
+                         "heat": heat, "single": single and kind == "hold", "needs_ref": needs_ref}
         return fn
     return deco
 
@@ -453,7 +454,8 @@ def f_drift(ctx, c):
 @family("fv_btcdrift", "BTC catch-up fair value",
         "If BTC (ETH for BTC itself) has just moved more than this coin, assume the coin partly catches "
         "up and build that into the fair value.",
-        {**BASE, "L": [1, 2, 3, 5, "open"], "a": [-0.5, 0.25, 0.5, 1.0], "vm": [0.8, 1.0]}, heat=("edge", "a"))
+        {**BASE, "L": [1, 2, 3, 5, "open"], "a": [-0.5, 0.25, 0.5, 1.0], "vm": [0.8, 1.0]}, heat=("edge", "a"),
+        needs_ref=True)
 def f_btcdrift(ctx, c):
     p, pk = _std(ctx, c, vm=c["vm"], drift=("res", c["L"], c["a"]))
     return (*fv_masks(ctx, p, pk, c["start"], c["end"], c["edge"], c["band"]), p)
@@ -536,7 +538,8 @@ def f_lag(ctx, c):
 @family("fv_cross", "BTC confirmation",
         "Only take the trade when BTC (ETH for BTC) has moved the same way since the open, or only "
         "when it has moved the other way (contrarian).",
-        {**BASE, "mode": ["agree", "disagree"], "thr": [0.0, 0.5, 1.0, 1.5], "vm": [0.8, 1.0]}, heat=("edge", "thr"))
+        {**BASE, "mode": ["agree", "disagree"], "thr": [0.0, 0.5, 1.0, 1.5], "vm": [0.8, 1.0]}, heat=("edge", "thr"),
+        needs_ref=True)
 def f_cross(ctx, c):
     P = ctx.P
     p, pk = _std(ctx, c, vm=c["vm"])
@@ -972,10 +975,15 @@ def _final_task(cand):
     hold = run_rule("hold", scope, rule, norms=norms)
     d1 = run_rule("hold", scope, rule, delay=1, norms=norms)
     arch_coins = [c for c in _coins_of(scope) if c in G["arch"]]
-    arch = run_rule("arch", scope, rule, norms=norms) if arch_coins else None
+    fams = [m["family"] for m in rule["members"]] if "members" in rule else [rule["family"]]
+    no_ref = any(FAMILIES[f]["needs_ref"] for f in fams)
+    arch = run_rule("arch", scope, rule, norms=norms) if arch_coins and not no_ref else None
     out = {"holdout": summ(hold), "curve": curve(hold), "delay1": {k: v for k, v in summ(d1).items()
                                                                      if k in ("pnl", "t", "trades")},
            "archive": None if arch is None else {**summ(arch), "coins": [cname(c) for c in arch_coins]}}
+    if arch_coins and no_ref:
+        out["archive"] = {**summ(None), "coins": [cname(c) for c in arch_coins],
+                          "note": "needs BTC/ETH prices, which the archive period lacks"}
     if arch is not None and len(arch):
         mo = pd.to_datetime(arch.ts, unit="s").dt.strftime("%Y-%m")
         out["archive"]["monthly_pnl"] = {k: round(float(v), 2) for k, v in arch.groupby(mo).pnl.sum().items()}
@@ -1411,8 +1419,8 @@ def RULES(t_bar):
         "most profitable live strategy trading that coin (including that coin's share of the all-coin strategies) "
         "and a higher t-stat than the live strategy with the best t-stat.",
         "(3) Where older archive data exists for the coin (NEAR, DOGE, BNB, SOL from April-August; pooled for the "
-        "all-coin scope), it also made money there with t >= 2, with no re-tuning. If the rule cannot be run on the "
-        "archive (e.g. it needs BTC prices the archive lacks), it cannot be golden.",
+        "all-coin scope), it also made money there with t >= 2 on at least 50 trades, with no re-tuning. If the rule "
+        "cannot be run on the archive (e.g. it needs BTC prices the archive lacks), it cannot be golden.",
         "(4) No more than 40% of its holdout profit came from a single day.",
         "Pass = made money on the holdout with t >= 2 but missed at least one golden test. Fail = anything else.",
         "Every result assumes $10 per trade, Kalshi taker fees (maker fee 1.75% for maker rules), fills at the quoted "
@@ -1448,7 +1456,7 @@ def judge(cands, base, t_bar):
             "t_diff": round(h["t"] - best_t["holdout"]["t"], 2),
             "best_pnl_baseline_id": best_p["id"], "best_pnl_diff": round(h["pnl"] - best_p["holdout"]["pnl"], 2)}
         arch = c.get("archive")
-        arch_ok = None if arch is None else bool(arch["trades"] > 0 and arch["pnl"] > 0 and arch["t"] >= 2)
+        arch_ok = None if arch is None else bool(arch["trades"] >= MIN_ARCH_TRADES and arch["pnl"] > 0 and arch["t"] >= 2)
         top = h.get("top_day_share")
         checks = {
             "holdout_profit": h["pnl"] > 0,
@@ -1481,8 +1489,12 @@ def _why(c, ch, t_bar, best_t, best_p):
         miss.append(f"t-stat below the live {best_t['label'].replace(' (live)', '')} ({h['t']} vs {best_t['holdout']['t']})")
     if ch["archive"] is False:
         a = c["archive"]
-        miss.append("could not be checked on the older archive data" if a["trades"] == 0 else
-                    f"did not hold up on the older archive data (${a['pnl']:,.0f}, t = {a['t']})")
+        if a.get("note"):
+            miss.append("could not be checked on the older archive data (" + a["note"] + ")")
+        elif a["trades"] < MIN_ARCH_TRADES:
+            miss.append(f"too few trades on the older archive data to check it ({a['trades']})")
+        else:
+            miss.append(f"did not hold up on the older archive data (${a['pnl']:,.0f}, t = {a['t']})")
     if not ch["not_one_day"]:
         miss.append(f"{(h.get('top_day_share') or 0) * 100:.0f}% of the profit came from one day")
     if not miss:
