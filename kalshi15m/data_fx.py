@@ -50,8 +50,9 @@ UNDERLYING = {
     "KXTON15M": ("coinbase", "TON-USD", None),
 }
 
-_s = requests.Session()
-_s.headers["User-Agent"] = "Mozilla/5.0 (research script)"
+_k = requests.Session()          # Kalshi: default requests User-Agent (a custom one drew 429s)
+_s = requests.Session()          # Dukascopy
+_s.headers["User-Agent"] = "Mozilla/5.0"
 
 
 class _Lim:
@@ -74,7 +75,7 @@ def kget(path, params=None, tries=10):
     for i in range(tries):
         _KLIM.wait()
         try:
-            r = _s.get(f"{KALSHI}{path}", params=params, timeout=30)
+            r = _k.get(f"{KALSHI}{path}", params=params, timeout=30)
         except requests.RequestException:
             time.sleep(min(60, 2 ** i))
             continue
@@ -241,7 +242,7 @@ def survey(series_list, out=SURVEY_OUT):
 
 
 # =========================================================================== download for lab4
-def download(series, since_ts=None, hist_every=1):
+def download(series, since_ts=None, hist_every=1, archive=False):
     """Markets (cached by survey), 1-minute candles, underlying spot -> data/kalshi15m/lab4/."""
     LDIR.mkdir(parents=True, exist_ok=True)
     mpath = LDIR / f"{series}_markets_all.csv"
@@ -251,6 +252,8 @@ def download(series, since_ts=None, hist_every=1):
     mk = mk[np.isfinite(mk.strike)]
     cutoff = _ts(kget("/historical/cutoff")["market_settled_ts"])
     live, old = mk[mk.close_ts >= cutoff], mk[mk.close_ts < cutoff].iloc[::hist_every]
+    if not archive:                       # archive = one request per market: too slow for this budget
+        mk, old = live, old.iloc[:0]
     part = LDIR / f"{series}_candles.part.csv"
     print(f"  {series}: {len(live)} live + {len(old)} archive markets", flush=True)
     fetch_candles(series, live, part)

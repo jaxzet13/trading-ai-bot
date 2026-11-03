@@ -718,7 +718,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     <p>Everything from here down is a backtest: the computer replays past markets to see what a strategy would have done. A good result earns a strategy a place in paper trading above. It is not a promise of real profit.</p>
   </div>
 
-  <details class="hunt" id="hunt" open hidden>
+  <details class="hunt" id="hunt" data-hunt="hunt" open hidden>
     <summary>
       <span class="vt-l">
         <svg class="hallmark" viewBox="0 0 34 34" aria-hidden="true"><rect x="1.5" y="1.5" width="31" height="31" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="5" width="24" height="24" rx="5" fill="none" stroke="currentColor" stroke-opacity=".45"/><path d="M17 9.2l2.3 4.9 5.3.6-3.9 3.6 1.1 5.3L17 21l-4.8 2.6 1.1-5.3-3.9-3.6 5.3-.6z" fill="currentColor"/></svg>
@@ -730,7 +730,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       <div class="vault-body">
         <h3 class="hunt-head" id="huntHead"></h3>
         <p class="hunt-lede" id="huntLede"></p>
-        <div class="hay" id="hayBox"><canvas id="hay" role="img"></canvas><div class="hay-legend" id="hayLegend"></div></div>
+        <div class="hay" id="hayBox"><canvas id="hay" role="img" data-hay></canvas><div class="hay-legend" id="hayLegend"></div></div>
         <div class="hero-stats" id="huntStats"></div>
         <p class="caveat"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="4.8" r="1" fill="currentColor"/></svg>
           <span><b>Paper results, not real money.</b> These numbers come from replaying past markets at $10 a trade. Real trading has delays, bigger orders move prices, and markets change, so a strategy that looked golden can still lose. Nothing here is guaranteed.</span></p>
@@ -1109,147 +1109,6 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     const lo = Math.min(0, ...ys), hi = Math.max(0, ...ys), X = x => (x - x0) / (x1 - x0 || 1) * 100, Y = y => 22 - (y - lo) / (hi - lo || 1) * 20;
     return `<svg class="spark ${esc(k)}" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="100" y1="${Y(0).toFixed(1)}" y2="${Y(0).toFixed(1)}"/><polyline points="${curve.map(p => X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join(" ")}"/></svg>`;
   }
-  const HX = H3 ? (() => {
-    const m = H3.method && typeof H3.method === "object" ? H3.method : {};
-    const C3 = (Array.isArray(H3.candidates) ? H3.candidates : []).filter(c => c && typeof c === "object" && c.id != null).map(c => ({ ...c, id: String(c.id) }));
-    const B3 = {}, FAM = {};
-    (Array.isArray(H3.baselines) ? H3.baselines : []).forEach(b => { if (b && b.id != null) B3[b.id] = b; });
-    (Array.isArray(H3.families) ? H3.families : []).forEach(f => { if (f && f.id != null) FAM[f.id] = f; });
-    const k0 = H3.counts && typeof H3.counts === "object" ? H3.counts : {}, own = k => C3.filter(c => c.status === k).length;
-    const N = { reached: nz(k0.reached) ? k0.reached : C3.length, golden: nz(k0.golden) ? k0.golden : own("golden"), pass: nz(k0.pass) ? k0.pass : own("pass"), fail: nz(k0.fail) ? k0.fail : own("fail") };
-    return { m, C3, B3, FAM, N, bar: nz(m.t_bar_strict) ? m.t_bar_strict : null, hd: nz(m.holdout_days) ? m.holdout_days : null };
-  })() : null;
-  const hs = { sel: undefined, filter: "all" };
-  let hayDots = [];
-
-  function renderHunt() {
-    $("hunt").hidden = !H3;
-    if (!H3) return;
-    huntHero(); huntBoard(); huntCurves(); huntIdeas(); huntHeat(); huntMethod(); drawHay();
-  }
-
-  function huntHero() {
-    const { m, C3, hd, bar } = HX, fams = Object.values(HX.FAM);
-    const n = nz(m.n_configs_tested) ? m.n_configs_tested : null, nf = nz(m.n_families) ? m.n_families : fams.length || null;
-    const nGold = HX.N.golden, nReach = HX.N.reached, prom = fams.filter(f => f.status === "golden" || f.status === "pass").length;
-    $("huntSample").hidden = !H3.sample;
-    const rt = nz(H3.runtime_s) ? (H3.runtime_s >= 3600 ? (H3.runtime_s / 3600).toFixed(1).replace(".0", "") + " h" : Math.max(1, Math.round(H3.runtime_s / 60)) + " min") : null;
-    $("huntMeta").textContent = [nGold ? `${nGold} golden` : "none golden yet", `${NUM(nReach)} reached the final exam`,
-      nz(H3.generated) ? `run finished ${fmtDate(H3.generated)}` : null, rt ? `${rt} of computing` : null].filter(Boolean).join(" · ");
-    $("huntHead").innerHTML = nGold ? `<span class="gold-num">${nGold}</span> golden ${nGold === 1 ? "strategy" : "strategies"}${n ? ` out of ${NUM(n)} settings tried` : ""}`
-      : `No golden strategy yet${n ? `, after ${NUM(n)} settings tried` : ""}`;
-    const w = windowText(m.search_window);
-    $("huntLede").innerHTML = `We wrote <b>${nf ? pl(nf, "family", "families") : "several families"}</b> of trading ideas and tried <b>${n ? NUM(n) : "many"} settings</b> of them on past markets${w.text ? ` from ${esc(w.text)}` : ""}. The best <b>${NUM(nReach)}</b> then sat a final exam on ${hd ? `<b>${hd} locked days</b>` : "locked days"} of markets they had never seen. Golden means a strategy passed every test listed under <a href="#hunt-method">How we test</a>.`;
-    $("huntStats").innerHTML = [
-      ["Settings tested", NUM(n), nf ? `across ${pl(nf, "idea family", "idea families")}` : "every combination of rules and dials"],
-      ["Idea families", nf ? NUM(nf) : DASH, fams.length ? `${prom} showed promise, ${fams.length - prom} didn't` : ""],
-      ["Golden", nGold ? `<span class="gold-num">${nGold}</span>` : "0", `of ${NUM(nReach)} that reached the final exam`],
-      ["Strict bar", bar ? `t ≥ ${bar}` : DASH, bar ? `luck alone scores this high about once in ${oneIn(bar)} tries` : ""],
-    ].map(([l, v, s]) => `<div><div class="hs-l">${l}</div><div class="hs-v">${v}</div><div class="hs-s">${s}</div></div>`).join("");
-  }
-
-  function drawHay() {
-    const cv = $("hay"), box = $("hayBox"); if (!HX || !cv) return;
-    const N = nz(HX.m.n_configs_tested) ? Math.round(HX.m.n_configs_tested) : 0, C3 = HX.C3;
-    box.hidden = !N; if (!N) return;
-    const W = box.clientWidth; if (!W) return;
-    const target = Math.max(110, Math.min(190, W * 0.15));
-    let p = Math.sqrt(W * target / N), per = 1;
-    const PMIN = 3.4;
-    if (p < PMIN) { p = PMIN; per = Math.ceil(N / (Math.floor(W / p) * Math.floor(target / p))); }
-    const dots = Math.ceil(N / per), cols = Math.max(1, Math.floor(W / p)), pitch = W / cols, rows = Math.ceil(dots / cols), Hh = Math.ceil(rows * pitch);
-    const dpr = window.devicePixelRatio || 1;
-    cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr); cv.style.height = Hh + "px";
-    const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, Hh);
-    const s = Math.max(1.4, pitch * 0.62);
-    ctx.fillStyle = tok("--vault-dot");
-    for (let i = 0; i < dots; i++) ctx.fillRect((i % cols) * pitch, Math.floor(i / cols) * pitch, s, s);
-    // finalists sit on fixed pseudo-random squares; golden ones are drawn last, on top
-    let seed = (N % 2147483646) + 1; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
-    const used = new Set(), rank = c => c.status === "golden" ? 2 : c.status === "pass" ? 1 : 0;
-    hayDots = [...C3].sort((a, b) => rank(a) - rank(b)).map(c => { let i = 0, g = 0;
-      do { i = Math.floor(rnd() * dots); } while (used.has(i) && ++g < 50); used.add(i);
-      return { c, x: (i % cols) * pitch + s / 2, y: Math.floor(i / cols) * pitch + s / 2 }; });
-    const vault = tok("--vault"), gold = tok("--vault-gold"), good = tok("--vault-good"), ink2 = tok("--vault-ink-2");
-    for (const d of hayDots) {
-      const g = d.c.status === "golden", z = g ? Math.max(8, s * 2.6) : Math.max(4, s * 1.6), mg = z / 2 + (g ? 6 : 2);
-      d.x = Math.min(Math.max(d.x, mg), W - mg); d.y = Math.min(Math.max(d.y, mg), Math.max(mg, Hh - mg));
-      ctx.fillStyle = vault; ctx.fillRect(d.x - z / 2 - 2, d.y - z / 2 - 2, z + 4, z + 4);
-      ctx.save();
-      if (g) { ctx.shadowColor = gold; ctx.shadowBlur = 16; }
-      ctx.fillStyle = g ? gold : d.c.status === "pass" ? good : ink2; ctx.fillRect(d.x - z / 2, d.y - z / 2, z, z);
-      ctx.restore();
-    }
-    const cnt = k => NUM(HX.N[k]);
-    $("hayLegend").innerHTML = `<span><i style="background:var(--vault-dot)"></i>${per > 1 ? `Each square is ${per} settings tried` : "Each square is one setting tried"}</span>` +
-      `<span><i style="background:var(--vault-ink-2)"></i>Reached the final exam, then failed <b>${cnt("fail")}</b></span>` +
-      `<span><i style="background:var(--vault-good)"></i>Passed, but not every test <b>${cnt("pass")}</b></span>` +
-      `<span><i style="background:var(--vault-gold)"></i>Golden <b>${cnt("golden")}</b></span>`;
-    cv.setAttribute("aria-label", `${NUM(N)} settings tried, ${NUM(HX.N.reached)} reached the final exam, ${cnt("golden")} golden`);
-  }
-
-  function huntBoard() {
-    const { C3, bar, B3, FAM, hd } = HX;
-    const cnt = k => C3.filter(c => c.status === k).length;
-    if (hs.sel === undefined) hs.sel = C3.length ? C3[0].id : null;
-    $("huntBoardIntro").textContent = `Everything that made it to the final exam, best first. Each strategy was frozen, then run once on ${hd ? `the ${hd} locked days` : "the locked days"}. ${C3.length < HX.N.reached ? `Showing the top ${NUM(C3.length)} of ${NUM(HX.N.reached)}. ` : ""}Tap a row for its full report card.`;
-    $("huntFilter").innerHTML = [["all", "All"], ["golden", "Golden"], ["pass", "Pass"], ["fail", "Fail"]].filter(([k]) => k === "all" || cnt(k))
-      .map(([k, l]) => `<button type="button" data-hf="${k}" aria-pressed="${hs.filter === k}">${l}<span>${k === "all" ? C3.length : cnt(k)}</span></button>`).join("");
-    $("huntKey").innerHTML = `<span>${sbadge("golden")} passed every test</span><span>${sbadge("pass")} good, but missed at least one test</span><span>${sbadge("fail")} didn't hold up on new data</span>`;
-    const rows = C3.map((c, i) => ({ c, i })).filter(({ c }) => hs.filter === "all" || c.status === hs.filter);
-    const tmax = Math.max(bar ? bar * 1.45 : 5, ...rows.map(({ c }) => nz((c.holdout || {}).t) ? Math.min(c.holdout.t, (bar || 3) * 2) : 0));
-    const two = (main, sub) => `${main}<div class="sub">${sub}</div>`;
-    const head = `<thead><tr><th>#</th><th>Verdict</th><th>Strategy</th><th class="num">Profit, locked days</th><th class="num" title="How sure we can be it isn't luck. The tick marks the strict bar.">t-score</th><th class="num">Trades</th><th class="num">Win rate</th>
-      <th class="num" title="Profit difference against the live strategy on the same coins and days">vs live</th><th class="num" title="Older archive data the strategy was never tuned on">Older data</th><th class="num" title="Same strategy with every order placed one minute late">1 min late</th><th><span class="sr">Details</span></th></tr></thead>`;
-    const body = rows.map(({ c, i }) => {
-      const h = c.holdout || {}, a = c.archive && typeof c.archive === "object" ? c.archive : null, d = c.delay1 || {}, v = c.vs_baseline, sel = c.id === hs.sel, b = v && B3[v.baseline_id], fam = FAM[c.family];
-      return `<tr class="row${sel ? " sel" : ""}${c.status === "golden" ? " is-golden" : ""}" tabindex="0" data-cand="${esc(c.id)}" aria-expanded="${sel}">
-        <td class="rk mono">${i + 1}</td><td class="st">${sbadge(c.status)}</td>
-        <td class="strat"><div class="sname">${esc(c.label || c.id)}</div><div class="sdesc">${esc([fam ? fam.name : c.family, c.scope ? SCOPE(c.scope) : null, EXW[c.execution] || c.execution].filter(Boolean).join(" · "))}</div></td>
-        <td class="num pnl" data-label="Profit, locked days"><div class="pnl-in">${spark(c.curve, c.status)}<span class="${cls(h.pnl)}">${M(h.pnl)}</span></div></td>
-        <td class="num tcol" data-label="t-score">${tMeter(h.t, bar, tmax)}</td>
-        <td class="num" data-label="Trades">${NUM(h.trades)}</td><td class="num" data-label="Win rate">${PC(h.win_rate)}</td>
-        <td class="num" data-label="vs live"${b ? ` title="vs ${esc(b.label)}"` : ""}>${v && nz(v.pnl_diff) ? two(`<span class="${cls(v.pnl_diff)}">${SM(v.pnl_diff)}</span>`, `t ${ST(v.t_diff)}`) : two(DASH, "no live match")}</td>
-        <td class="num arch" data-label="Older data">${a ? two(`<span class="${cls(a.pnl)}">${M(a.pnl)}</span>`, `t ${T(a.t)}`) : two(DASH, "no data")}</td>
-        <td class="num late" data-label="1 min late">${nz(d.pnl) ? two(`<span class="${cls(d.pnl)}">${M(d.pnl)}</span>`, `t ${T(d.t)}`) : DASH}</td>
-        <td class="chevc"><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>` +
-        (sel ? `<tr class="detail"><td colspan="11">${report(c)}</td></tr>` : "");
-    }).join("");
-    $("huntBoard").innerHTML = head + "<tbody>" + (body || `<tr><td colspan="11" class="empty">${C3.length ? "No candidates in this group." : "No strategy reached the final exam in this run."}</td></tr>`) + "</tbody>";
-    const s = rows.find(r => r.c.id === hs.sel); if (s) { const v = s.c.vs_baseline; eqChart("huntEq", s.c, v && B3[v.baseline_id], 6); }
-  }
-
-  function report(c) {
-    const { bar, B3, hd } = HX, m = HX.m, h = c.holdout || {}, s = c.search || {}, a = c.archive && typeof c.archive === "object" ? c.archive : null, d = c.delay1 || {};
-    const v = c.vs_baseline, b = v && B3[v.baseline_id], bh = (b && b.holdout) || {};
-    const nf = nz(m.n_folds) ? m.n_folds : null, w = windowText(m.search_window);
-    const keep = nz(d.pnl) && nz(h.pnl) && h.pnl > 0 ? d.pnl / h.pnl : null, sg = x => !nz(x) ? "" : x > 0 ? "good" : "bad";
-    const tests = [
-      [sg(s.pnl), "Search period", [w.text, nz(s.fold_win) ? (nf ? `profitable in ${Math.round(s.fold_win * nf)} of ${nf} slices` : `${pct(s.fold_win)} of slices profitable`) : ""], s.pnl, s.trades, s.t],
-      [nz(h.t) && bar && h.t >= bar && h.pnl > 0 ? "gold" : sg(h.pnl), "Final exam", [hd ? `${hd} locked days` : "locked days", nz(h.t) && bar ? (h.t >= bar ? `clears the ${bar} bar` : `below the ${bar} bar`) : ""], h.pnl, h.trades, h.t],
-      [a ? sg(a.pnl) : "", "Older archive data", [a ? "never used for tuning" : "no archive data for these markets"], a && a.pnl, a && a.trades, a && a.t],
-      [sg(d.pnl), "Orders 1 minute late", [keep == null ? (nz(d.pnl) ? (d.pnl > 0 ? "still profitable" : "loses money") : "not tested") : keep > 0 ? `keeps ${Math.round(keep * 100)}% of the profit` : "turns into a loss"], d.pnl, null, d.t],
-      [v && nz(v.pnl_diff) ? sg(v.pnl_diff) : "", b ? `Live: ${b.label}` : "Live strategy", [v && nz(v.pnl_diff) ? (v.pnl_diff >= 0 ? `this one makes ${M(v.pnl_diff)} more` : `this one makes ${M(-v.pnl_diff)} less`) : "no live strategy on the same markets"], bh.pnl, bh.trades, bh.t],
-    ];
-    const facts = [["Win rate", PC(h.win_rate)], ["Profit per trade", M(h.per_trade, 2)], ["Return per $1", nz(h.roi) ? spct(h.roi) : DASH],
-      ["Worst dip", M(h.max_dd)], ["Winning days", PC(h.days_positive)], ["Daily Sharpe", nz(h.sharpe_daily) ? h.sharpe_daily.toFixed(2) : DASH]];
-    const ps = Object.entries(c.params || {});
-    return `<div class="report">
-      <div class="rp-head"><h3>${esc(c.label || c.id)}</h3>${c.why ? `<p class="rp-why">${esc(c.why)}</p>` : ""}</div>
-      <div class="rp-grid">
-        <div class="rp-box rp-chart"><div class="eyebrow">Running profit over ${hd ? `the ${hd} locked days` : "the locked days"} · $10 a trade</div>
-          <div class="legend" style="margin-top:10px"><span><i style="background:var(${c.status === "golden" ? "--gold" : "--accent"})"></i>This strategy</span>${b ? `<span><i class="dash"></i>${esc(b.label)}</span>` : ""}</div>
-          <div class="chart short"><canvas id="huntEq" aria-label="Running profit of ${esc(c.label || c.id)} on the locked days${b ? ", against " + esc(b.label) : ""}"></canvas></div></div>
-        <div class="rp-box"><div class="eyebrow">Report card</div>
-          <table class="exam"><thead><tr><th>Test</th><th class="num">Profit</th><th class="num">Trades</th><th class="num">t</th></tr></thead><tbody>${tests.map(([k, name, notes, p, n, t]) =>
-            `<tr><td><span class="mk ${k}"></span><b>${esc(name)}</b><div class="sub">${notes.filter(Boolean).map(esc).join(" · ")}</div></td><td class="num ${nz(p) ? cls(p) : ""}" data-label="Profit">${M(p)}</td><td class="num" data-label="Trades">${NUM(n)}</td><td class="num" data-label="t">${T(t)}</td></tr>`).join("")}</tbody></table>
-          <div class="eyebrow" style="margin-top:16px">More from the final exam</div><div class="facts">${facts.map(([k, x]) => `<div><b>${x}</b><span>${k}</span></div>`).join("")}</div>
-          <div class="setting"><span class="eyebrow">Settings</span>${ps.length ? ps.map(([k, x]) => `<code title="${esc(pword(k))}">${esc(k)}=${esc(x)}</code>`).join("") : '<span class="muted">none</span>'}</div>
-          ${EXL[c.execution] ? `<div class="sdesc" style="max-width:none;margin-top:8px">${EXL[c.execution]}</div>` : ""}
-        </div>
-      </div></div>`;
-  }
-
   // running profit: candidate (solid, area wash) vs its live baseline (dashed), both stepped onto one time grid
   const endLabels = c => ({ id: "ends", afterDatasetsDraw(ch) {
     const { ctx, chartArea: a } = ch, items = [];
@@ -1260,98 +1119,6 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       if (it.main) { ctx.beginPath(); ctx.arc(it.x, it.oy, 4, 0, Math.PI * 2); ctx.fillStyle = it.col; ctx.strokeStyle = c.surface; ctx.lineWidth = 2; ctx.fill(); ctx.stroke(); }
       ctx.fillStyle = it.main ? c.ink : c.muted; ctx.fillText(money(it.v), it.x + 9, Math.min(a.bottom - 4, Math.max(a.top + 4, it.y))); });
     ctx.restore(); } });
-  function eqChart(id, c, b, ticks) {
-    const cv = $(id); if (!cv) return;
-    const cc = C(), col = c.status === "golden" ? tok("--gold") : cc.accent, bc = tok("--base-line");
-    const ok = x => Array.isArray(x) && x.length && Array.isArray(x[0]);
-    const cur = ok(c.curve) ? c.curve : null, bl = b && ok(b.curve) ? b.curve : null;
-    if (!cur && !bl) { cv.parentElement.innerHTML = '<p class="empty">No profit curve in the results file.</p>'; return; }
-    const all = [cur, bl].filter(Boolean), first = Math.min(...all.map(x => x[0][0]));
-    const t0 = nz(HX.m.holdout_start) ? Math.min(HX.m.holdout_start, first) : first, t1 = Math.max(...all.map(x => x[x.length - 1][0]));
-    const n = 160, xs = Array.from({ length: n }, (_, i) => t0 + (t1 - t0) * i / (n - 1));
-    const step = cv => { let j = 0, val = 0; return xs.map(x => { while (j < cv.length && cv[j][0] <= x) { val = cv[j][1]; j++; } return { x: x * 1000, y: val }; }); };
-    const ds = [];
-    if (bl) ds.push({ label: b.label || "Live strategy", data: step(bl), borderColor: bc, borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0, pointHoverRadius: 3, pointHoverBackgroundColor: bc });
-    if (cur) ds.push({ label: c.label || "This strategy", data: step(cur), borderColor: col, backgroundColor: alpha(col, 0.1), fill: "origin", borderWidth: 2, pointRadius: 0,
-      pointHoverRadius: 4, pointHoverBackgroundColor: col, pointHoverBorderColor: cc.surface, pointHoverBorderWidth: 2 });
-    const o = base(cc); o.interaction = { mode: "index", intersect: false }; o.layout = { padding: { right: 62, top: 8 } };
-    o.plugins.tooltip.callbacks = { title: i => fmtTime(i[0].parsed.x / 1000), label: i => `${i.dataset.label}: ${money(i.parsed.y)}` };
-    o.scales = { x: axis(cc, { type: "linear", min: t0 * 1000, max: t1 * 1000, grid: { display: false }, ticks: { color: cc.muted, maxTicksLimit: ticks || 5, callback: v => dayFmt(v / 1000) } }),
-                 y: axis(cc, { ticks: { color: cc.muted, maxTicksLimit: 5, callback: v => money(v) } }) };
-    mk(id, { type: "line", data: { datasets: ds }, options: o, plugins: [zeroLine(cc), endLabels(cc)] });
-  }
-
-  function huntCurves() {
-    const top = HX.C3.filter(c => c.status !== "fail" && Array.isArray(c.curve) && c.curve.length > 1).slice(0, 4);
-    $("huntCurvesPanel").hidden = !top.length; if (!top.length) return;
-    const g = top.some(c => c.status === "golden"), o = top.some(c => c.status !== "golden");
-    $("smLegend").innerHTML = (g ? `<span><i style="background:var(--gold)"></i>Golden candidate</span>` : "") + (o ? `<span><i style="background:var(--accent)"></i>Other candidate</span>` : "") + `<span><i class="dash"></i>Live strategy, same days</span>`;
-    $("smGrid").innerHTML = top.map((c, j) => { const v = c.vs_baseline, b = v && HX.B3[v.baseline_id];
-      return `<article class="sm${c.status === "golden" ? " golden" : ""}"><div class="sm-h">${sbadge(c.status)}<button type="button" class="sm-open" data-smc="${esc(c.id)}">Open report card</button></div><b class="sm-t">${esc(c.label || c.id)}</b>
-        <div class="sm-s">${b ? `vs ${esc(b.label)}` : "No live strategy on these markets to compare with"}${v && nz(v.pnl_diff) ? ` · ${SM(v.pnl_diff)} ${v.pnl_diff >= 0 ? "ahead" : "behind"}` : ""}</div>
-        <div class="chart"><canvas id="huntSm${j}" aria-label="Running profit of ${esc(c.label || c.id)}${b ? " against " + esc(b.label) : ""}"></canvas></div></article>`; }).join("");
-    top.forEach((c, j) => { const v = c.vs_baseline; eqChart("huntSm" + j, c, v && HX.B3[v.baseline_id], 4); });
-  }
-
-  function huntIdeas() {
-    const F = Object.values(HX.FAM), bar = HX.bar;
-    $("huntIdeasPanel").hidden = !F.length; if (!F.length) return;
-    const ord = { golden: 0, pass: 1, fail: 2 }, tv = f => nz(f.best_holdout_t) ? f.best_holdout_t : -99;
-    const fs = [...F].sort((a, b) => ((ord[a.status] ?? 3) - (ord[b.status] ?? 3)) || (tv(b) - tv(a)));
-    const tmax = Math.max(bar ? bar * 1.45 : 5, ...F.map(f => nz(f.best_holdout_t) ? Math.min(f.best_holdout_t, (bar || 3) * 2) : 0));
-    const cnt = k => F.filter(f => f.status === k).length;
-    $("ideasSum").innerHTML = [["golden", "struck gold"], ["pass", "promising"], ["fail", "didn't hold up"]].filter(([k]) => cnt(k)).map(([k, l]) => badge(STATUS[k][0], `${cnt(k)} ${l}`, STATUS[k][2])).join("");
-    const VERD = { golden: "Struck gold: at least one setting passed every test.", pass: "Promising, but no setting passed every test.", fail: "Didn't hold up on data it hadn't seen." };
-    $("ideas").innerHTML = fs.map(f => { const r = HX.C3.filter(c => c.family === f.id).length;
-      const reach = r ? `${r} setting${r > 1 ? "s" : ""} reached the final exam.` : nz(f.best_holdout_t) ? "" : "No setting reached the final exam.";
-      return `<article class="idea ${STATUS[f.status] ? f.status : ""}"><div class="idea-top">${sbadge(f.status)}<span class="idea-n">${nz(f.configs) ? NUM(f.configs) + " settings tried" : ""}</span></div>
-        <h3>${esc(f.name || f.id)}</h3>${f.idea ? `<p>${esc(f.idea)}</p>` : ""}
-        <div class="idea-foot"><div class="idea-meter"><span class="eyebrow">Best exam score</span>${tMeter(f.best_holdout_t, bar, tmax)}</div>
-          <div class="idea-v">${VERD[f.status] || ""} ${reach}</div></div></article>`; }).join("");
-  }
-
-  function huntHeat() {
-    const HM = (Array.isArray(H3.heatmaps) ? H3.heatmaps : []).filter(h => h && Array.isArray(h.z) && Array.isArray(h.x) && Array.isArray(h.y) && h.z.length && h.x.length && h.y.length);
-    $("huntHeatPanel").hidden = !HM.length; if (!HM.length) return;
-    const vals = HM.flatMap(h => h.z.flat()).filter(nz), lim = Math.max(1, ...vals.map(Math.abs));
-    const hv = v => Math.abs(v) < 0.05 ? "0.0" : (v < 0 ? "−" : "") + Math.abs(v).toFixed(1), fv = v => nz(v) ? String(+v.toFixed(4)) : String(v), same = (p, q) => nz(p) && nz(q) ? Math.abs(p - q) < 1e-9 : String(p) === String(q);
-    const metric0 = HM[0].metric || "score";
-    $("hmKey").innerHTML = `<span class="hm-ramp">−${lim.toFixed(1)}<i></i>+${lim.toFixed(1)}</span><span>${esc(metric0)}: orange lost money in the search, grey broke even, blue made money</span>` +
-      `<span style="display:inline-flex;align-items:center;gap:8px"><i class="hm-pick-key"></i>the setting sent to the final exam</span>`;
-    $("heats").innerHTML = HM.map(h => {
-      const fam = HX.FAM[h.family], metric = h.metric || "score";
-      const pick = HX.C3.find(c => c.family === h.family && c.scope === h.scope && c.params && h.x_name in c.params && h.y_name in c.params);
-      let g = `<div class="hc0"></div>` + h.x.map(x => `<div class="hx">${esc(fv(x))}</div>`).join("");
-      h.y.forEach((y, yi) => { g += `<div class="hy">${esc(fv(y))}</div>`; h.x.forEach((x, xi) => { const v = (h.z[yi] || [])[xi], where = `${pword(h.x_name)} ${fv(x)}, ${pword(h.y_name)} ${fv(y)}`;
-        if (!nz(v)) { g += `<div class="hc" style="background:var(--chip)" data-tip="${esc(where + "\nno result")}">·</div>`; return; }
-        const k = Math.round(Math.min(1, Math.abs(v) / lim) * 88), isPick = pick && same(pick.params[h.x_name], x) && same(pick.params[h.y_name], y);
-        g += `<div class="hc${isPick ? " pick" : ""}" style="background:color-mix(in oklab, var(${v >= 0 ? "--hm-pos" : "--hm-neg"}) ${k}%, var(--hm-mid));color:var(${k > 60 ? "--hm-strong-ink" : "--ink"})" data-tip="${esc(`${where}\n${metric} ${v.toFixed(2)}${isPick ? "\nthe setting sent to the final exam" : ""}`)}">${hv(v)}</div>`; }); });
-      return `<div class="heat"><h3>${esc(fam ? fam.name : h.family)} <span class="muted" style="font-weight:500">· ${esc(SCOPE(h.scope))}</span></h3>
-        <div class="heat-s">${esc(metric)} for each pair of settings</div><div class="heat-ax">↓ ${esc(pword(h.y_name))}</div>
-        <div class="heat-scroll"><div class="heat-grid" style="grid-template-columns:auto repeat(${h.x.length}, minmax(36px, 1fr))">${g}</div></div>
-        <div class="heat-ax" style="text-align:center">${esc(pword(h.x_name))} →</div></div>`; }).join("");
-  }
-
-  function huntMethod() {
-    const m = HX.m, w = windowText(m.search_window), hd = HX.hd, h0 = nz(m.holdout_start) ? m.holdout_start : null;
-    const coins = Object.values(H3.coins && typeof H3.coins === "object" ? H3.coins : {}), arch = coins.map(c => c && c.archive_markets).filter(v => nz(v) && v > 0);
-    $("methodIntro").textContent = `Trying ${nz(m.n_configs_tested) ? NUM(m.n_configs_tested) : "thousands of"} settings guarantees that a few look brilliant by pure chance, the same way a few people in a big crowd will flip ten heads in a row. So the search is only the first step. The real test is data the strategy has never seen, judged against a bar that rises with the number of things tried.`;
-    const segs = [];
-    if (arch.length) segs.push(`<div class="t-arch" style="flex:1.1 1 0"><b>Older archive</b><span>Up to ${NUM(Math.max(...arch))} earlier markets per coin${arch.length < coins.length ? ` (${arch.length} of ${coins.length} coins)` : ""}. A second blind check, never used for tuning.</span></div>`);
-    segs.push(`<div class="t-search" style="flex:${w.days && hd ? (w.days / hd).toFixed(2) : 3} 1 0"><b>Search period</b><span>${w.text ? esc(w.text) + ". " : ""}Every setting is tried here${nz(m.n_folds) ? `, and results are checked in ${m.n_folds} separate time slices` : ""}.</span>${nz(m.n_folds) ? `<div class="folds" aria-hidden="true">${"<i></i>".repeat(Math.min(m.n_folds, 24))}</div>` : ""}</div>`);
-    segs.push(`<div class="t-hold" style="flex:1 1 0"><b>Locked final exam</b><span>${h0 && hd ? `${dayFmt(h0)} – ${dayFmt(h0 + hd * 86400 - 1)}. ` : ""}Hidden during the search and opened once, for the finalists only.</span></div>`);
-    $("timeline").innerHTML = segs.join("");
-    const rules = (Array.isArray(m.rules) ? m.rules : []).filter(Boolean);
-    $("rules").innerHTML = rules.length ? rules.map(r => `<li><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="var(--gold-bg)"/><path d="M6.5 11.3l3 3 6-6.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>${esc(r)}</span></li>`).join("")
-      : `<li class="muted">This results file doesn't list its rules.</li>`;
-    $("gloss").innerHTML = [
-      ["t-score", `How sure we can be that a profit isn't luck. It compares the average profit per trade with how much results bounce around. Around 2 is suggestive.${HX.bar ? ` We ask for ${HX.bar} because so many settings were tried: luck alone gets there about once in ${oneIn(HX.bar)} tries.` : ""}`],
-      ["Locked days", `${hd ? `The last ${hd} days` : "The most recent days"} of data, set aside before the search began. A strategy can't have been tuned to days it never saw.`],
-      ["Older data", "Kalshi's records from earlier months. Making money there too suggests the edge isn't just a recent fluke."],
-      ["1 min late", "The same strategy with every order placed a minute after it should have been. If the profit disappears, the edge is too fragile for a real bot."],
-      ["vs live", "The strategy already running in paper trading on the same coins, replayed over the same locked days. A newcomer has to beat it to be worth switching."],
-    ].map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join("");
-  }
 
   const tipEl = $("tip");
   function showTip(text, e) {
@@ -1361,38 +1128,295 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     tipEl.style.left = Math.max(8, x) + "px"; tipEl.style.top = Math.max(8, y) + "px";
   }
   const hideTip = () => { tipEl.hidden = true; };
-  function hayHit(e) {
-    const r = $("hay").getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; let best = null, bd = 12;
-    for (const d of hayDots) { const dd = Math.hypot(d.x - x, d.y - y); if (dd < bd) { bd = dd; best = d; } } return best;
+
+  // ---------- Golden-hunt view. One instance per results file: crypto (LAB.lab3, original element ids) and
+  // currencies & more (LAB.lab4, "l4…" ids). All element lookups go through I, so both share every component. ----------
+  const HUNT_KEYS = { root: "hunt", meta: "huntMeta", sample: "huntSample", head: "huntHead", lede: "huntLede", hayBox: "hayBox", hay: "hay", hayLegend: "hayLegend",
+    stats: "huntStats", boardIntro: "huntBoardIntro", filter: "huntFilter", key: "huntKey", board: "huntBoard", curvesPanel: "huntCurvesPanel", smLegend: "smLegend", smGrid: "smGrid",
+    ideasPanel: "huntIdeasPanel", ideasSum: "ideasSum", ideas: "ideas", heatPanel: "huntHeatPanel", hmKey: "hmKey", heats: "heats", method: "hunt-method", methodIntro: "methodIntro",
+    timeline: "timeline", rules: "rules", gloss: "gloss", eq: "huntEq", sm: "huntSm" };
+  const huntIds = p => p === "hunt" ? HUNT_KEYS : Object.fromEntries(Object.keys(HUNT_KEYS).map(k => [k, p + k[0].toUpperCase() + k.slice(1)]));
+  const HUNTS = {};
+  function makeHunt(D, I, opt) {
+    const u = opt.unit, us = opt.unit + "s";
+    const SCOPE = s => !s ? DASH : s === "ALL" ? opt.all : (opt.name && opt.name(s)) || COIN(String(s));
+    const HX = D ? (() => {
+      const m = D.method && typeof D.method === "object" ? D.method : {};
+      const C3 = (Array.isArray(D.candidates) ? D.candidates : []).filter(c => c && typeof c === "object" && c.id != null).map(c => ({ ...c, id: String(c.id) }));
+      const B3 = {}, FAM = {};
+      (Array.isArray(D.baselines) ? D.baselines : []).forEach(b => { if (b && b.id != null) B3[b.id] = b; });
+      (Array.isArray(D.families) ? D.families : []).forEach(f => { if (f && f.id != null) FAM[f.id] = f; });
+      const k0 = D.counts && typeof D.counts === "object" ? D.counts : {}, own = k => C3.filter(c => c.status === k).length;
+      const N = { reached: nz(k0.reached) ? k0.reached : C3.length, golden: nz(k0.golden) ? k0.golden : own("golden"), pass: nz(k0.pass) ? k0.pass : own("pass"), fail: nz(k0.fail) ? k0.fail : own("fail") };
+      return { m, C3, B3, FAM, N, bar: nz(m.t_bar_strict) ? m.t_bar_strict : null, hd: nz(m.holdout_days) ? m.holdout_days : null };
+    })() : null;
+    const hs = { sel: undefined, filter: "all" };
+    let hayDots = [];
+    const rowSel = id => document.querySelector(`#${I.board} tr[data-cand="${CSS.escape(id)}"]`);
+
+    function renderHunt() {
+      $(I.root).hidden = !D;
+      if (!D) return;
+      huntHero(); huntBoard(); huntCurves(); huntIdeas(); huntHeat(); huntMethod(); drawHay();
+    }
+
+    function huntHero() {
+      const { m, hd, bar } = HX, fams = Object.values(HX.FAM);
+      const n = nz(m.n_configs_tested) ? m.n_configs_tested : null, nf = nz(m.n_families) ? m.n_families : fams.length || null;
+      const nGold = HX.N.golden, nReach = HX.N.reached, prom = fams.filter(f => f.status === "golden" || f.status === "pass").length;
+      $(I.sample).hidden = !D.sample;
+      const rt = nz(D.runtime_s) ? (D.runtime_s >= 3600 ? (D.runtime_s / 3600).toFixed(1).replace(".0", "") + " h" : Math.max(1, Math.round(D.runtime_s / 60)) + " min") : null;
+      $(I.meta).textContent = [nGold ? `${nGold} golden` : "none golden yet", `${NUM(nReach)} reached the final exam`,
+        nz(D.generated) ? `run finished ${fmtDate(D.generated)}` : null, rt ? `${rt} of computing` : null].filter(Boolean).join(" · ");
+      $(I.head).innerHTML = nGold ? `<span class="gold-num">${nGold}</span> golden ${nGold === 1 ? "strategy" : "strategies"}${n ? ` out of ${NUM(n)} settings tried` : ""}`
+        : `No golden strategy yet${n ? `, after ${NUM(n)} settings tried` : ""}`;
+      const w = windowText(m.search_window);
+      $(I.lede).innerHTML = `We wrote <b>${nf ? pl(nf, "family", "families") : "several families"}</b> of trading ideas and tried <b>${n ? NUM(n) : "many"} settings</b> of them on past markets${w.text ? ` from ${esc(w.text)}` : ""}. The best <b>${NUM(nReach)}</b> then sat a final exam on ${hd ? `<b>${hd} locked days</b>` : "locked days"} of markets they had never seen. Golden means a strategy passed every test listed under <a href="#${I.method}">How we test</a>.`;
+      $(I.stats).innerHTML = [
+        ["Settings tested", NUM(n), nf ? `across ${pl(nf, "idea family", "idea families")}` : "every combination of rules and dials"],
+        ["Idea families", nf ? NUM(nf) : DASH, fams.length ? `${prom} showed promise, ${fams.length - prom} didn't` : ""],
+        ["Golden", nGold ? `<span class="gold-num">${nGold}</span>` : "0", `of ${NUM(nReach)} that reached the final exam`],
+        ["Strict bar", bar ? `t ≥ ${bar}` : DASH, bar ? `luck alone scores this high about once in ${oneIn(bar)} tries` : ""],
+      ].map(([l, v, s]) => `<div><div class="hs-l">${l}</div><div class="hs-v">${v}</div><div class="hs-s">${s}</div></div>`).join("");
+    }
+
+    function drawHay() {
+      const cv = $(I.hay), box = $(I.hayBox); if (!HX || !cv) return;
+      const N = nz(HX.m.n_configs_tested) ? Math.round(HX.m.n_configs_tested) : 0, C3 = HX.C3;
+      box.hidden = !N; if (!N) return;
+      const W = box.clientWidth; if (!W) return;
+      const target = Math.max(110, Math.min(190, W * 0.15));
+      let p = Math.sqrt(W * target / N), per = 1;
+      const PMIN = 3.4;
+      if (p < PMIN) { p = PMIN; per = Math.ceil(N / (Math.floor(W / p) * Math.floor(target / p))); }
+      const dots = Math.ceil(N / per), cols = Math.max(1, Math.floor(W / p)), pitch = W / cols, rows = Math.ceil(dots / cols), Hh = Math.ceil(rows * pitch);
+      const dpr = window.devicePixelRatio || 1;
+      cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr); cv.style.height = Hh + "px";
+      const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, Hh);
+      const s = Math.max(1.4, pitch * 0.62);
+      ctx.fillStyle = tok("--vault-dot");
+      for (let i = 0; i < dots; i++) ctx.fillRect((i % cols) * pitch, Math.floor(i / cols) * pitch, s, s);
+      // finalists sit on fixed pseudo-random squares; golden ones are drawn last, on top
+      let seed = (N % 2147483646) + 1; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+      const used = new Set(), rank = c => c.status === "golden" ? 2 : c.status === "pass" ? 1 : 0;
+      hayDots = [...C3].sort((a, b) => rank(a) - rank(b)).map(c => { let i = 0, g = 0;
+        do { i = Math.floor(rnd() * dots); } while (used.has(i) && ++g < 50); used.add(i);
+        return { c, x: (i % cols) * pitch + s / 2, y: Math.floor(i / cols) * pitch + s / 2 }; });
+      const vault = tok("--vault"), gold = tok("--vault-gold"), good = tok("--vault-good"), ink2 = tok("--vault-ink-2");
+      for (const d of hayDots) {
+        const g = d.c.status === "golden", z = g ? Math.max(8, s * 2.6) : Math.max(4, s * 1.6), mg = z / 2 + (g ? 6 : 2);
+        d.x = Math.min(Math.max(d.x, mg), W - mg); d.y = Math.min(Math.max(d.y, mg), Math.max(mg, Hh - mg));
+        ctx.fillStyle = vault; ctx.fillRect(d.x - z / 2 - 2, d.y - z / 2 - 2, z + 4, z + 4);
+        ctx.save();
+        if (g) { ctx.shadowColor = gold; ctx.shadowBlur = 16; }
+        ctx.fillStyle = g ? gold : d.c.status === "pass" ? good : ink2; ctx.fillRect(d.x - z / 2, d.y - z / 2, z, z);
+        ctx.restore();
+      }
+      const cnt = k => NUM(HX.N[k]);
+      $(I.hayLegend).innerHTML = `<span><i style="background:var(--vault-dot)"></i>${per > 1 ? `Each square is ${per} settings tried` : "Each square is one setting tried"}</span>` +
+        `<span><i style="background:var(--vault-ink-2)"></i>Reached the final exam, then failed <b>${cnt("fail")}</b></span>` +
+        `<span><i style="background:var(--vault-good)"></i>Passed, but not every test <b>${cnt("pass")}</b></span>` +
+        `<span><i style="background:var(--vault-gold)"></i>Golden <b>${cnt("golden")}</b></span>`;
+      cv.setAttribute("aria-label", `${NUM(N)} settings tried, ${NUM(HX.N.reached)} reached the final exam, ${cnt("golden")} golden`);
+    }
+
+    function huntBoard() {
+      if (!HX) return;
+      const { C3, bar, B3, FAM, hd } = HX;
+      const cnt = k => C3.filter(c => c.status === k).length;
+      if (hs.sel === undefined) hs.sel = C3.length ? C3[0].id : null;
+      $(I.boardIntro).textContent = `Everything that made it to the final exam, best first. Each strategy was frozen, then run once on ${hd ? `the ${hd} locked days` : "the locked days"}. ${C3.length < HX.N.reached ? `Showing the top ${NUM(C3.length)} of ${NUM(HX.N.reached)}. ` : ""}Tap a row for its full report card.`;
+      $(I.filter).innerHTML = [["all", "All"], ["golden", "Golden"], ["pass", "Pass"], ["fail", "Fail"]].filter(([k]) => k === "all" || cnt(k))
+        .map(([k, l]) => `<button type="button" data-hf="${k}" aria-pressed="${hs.filter === k}">${l}<span>${k === "all" ? C3.length : cnt(k)}</span></button>`).join("");
+      $(I.key).innerHTML = `<span>${sbadge("golden")} passed every test</span><span>${sbadge("pass")} good, but missed at least one test</span><span>${sbadge("fail")} didn't hold up on new data</span>`;
+      const rows = C3.map((c, i) => ({ c, i })).filter(({ c }) => hs.filter === "all" || c.status === hs.filter);
+      const tmax = Math.max(bar ? bar * 1.45 : 5, ...rows.map(({ c }) => nz((c.holdout || {}).t) ? Math.min(c.holdout.t, (bar || 3) * 2) : 0));
+      const two = (main, sub) => `${main}<div class="sub">${sub}</div>`;
+      const head = `<thead><tr><th>#</th><th>Verdict</th><th>Strategy</th><th class="num">Profit, locked days</th><th class="num" title="How sure we can be it isn't luck. The tick marks the strict bar.">t-score</th><th class="num">Trades</th><th class="num">Win rate</th>
+        <th class="num" title="Profit difference against the live strategy on the same ${us} and days">vs live</th><th class="num" title="Older archive data the strategy was never tuned on">Older data</th><th class="num" title="Same strategy with every order placed one minute late">1 min late</th><th><span class="sr">Details</span></th></tr></thead>`;
+      const body = rows.map(({ c, i }) => {
+        const h = c.holdout || {}, a = c.archive && typeof c.archive === "object" ? c.archive : null, d = c.delay1 || {}, v = c.vs_baseline, sel = c.id === hs.sel, b = v && B3[v.baseline_id], fam = FAM[c.family];
+        return `<tr class="row${sel ? " sel" : ""}${c.status === "golden" ? " is-golden" : ""}" tabindex="0" data-cand="${esc(c.id)}" aria-expanded="${sel}">
+          <td class="rk mono">${i + 1}</td><td class="st">${sbadge(c.status)}</td>
+          <td class="strat"><div class="sname">${esc(c.label || c.id)}</div><div class="sdesc">${esc([fam ? fam.name : c.family, c.scope ? SCOPE(c.scope) : null, EXW[c.execution] || c.execution].filter(Boolean).join(" · "))}</div></td>
+          <td class="num pnl" data-label="Profit, locked days"><div class="pnl-in">${spark(c.curve, c.status)}<span class="${cls(h.pnl)}">${M(h.pnl)}</span></div></td>
+          <td class="num tcol" data-label="t-score">${tMeter(h.t, bar, tmax)}</td>
+          <td class="num" data-label="Trades">${NUM(h.trades)}</td><td class="num" data-label="Win rate">${PC(h.win_rate)}</td>
+          <td class="num" data-label="vs live"${b ? ` title="vs ${esc(b.label)}"` : ""}>${v && nz(v.pnl_diff) ? two(`<span class="${cls(v.pnl_diff)}">${SM(v.pnl_diff)}</span>`, `t ${ST(v.t_diff)}`) : two(DASH, "no live match")}</td>
+          <td class="num arch" data-label="Older data">${a ? two(`<span class="${cls(a.pnl)}">${M(a.pnl)}</span>`, `t ${T(a.t)}`) : two(DASH, "no data")}</td>
+          <td class="num late" data-label="1 min late">${nz(d.pnl) ? two(`<span class="${cls(d.pnl)}">${M(d.pnl)}</span>`, `t ${T(d.t)}`) : DASH}</td>
+          <td class="chevc"><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>` +
+          (sel ? `<tr class="detail"><td colspan="11">${report(c)}</td></tr>` : "");
+      }).join("");
+      $(I.board).innerHTML = head + "<tbody>" + (body || `<tr><td colspan="11" class="empty">${C3.length ? "No candidates in this group." : "No strategy reached the final exam in this run."}</td></tr>`) + "</tbody>";
+      const s = rows.find(r => r.c.id === hs.sel); if (s) { const v = s.c.vs_baseline; eqChart(I.eq, s.c, v && B3[v.baseline_id], 6); }
+    }
+
+    function report(c) {
+      const { bar, B3, hd } = HX, m = HX.m, h = c.holdout || {}, s = c.search || {}, a = c.archive && typeof c.archive === "object" ? c.archive : null, d = c.delay1 || {};
+      const v = c.vs_baseline, b = v && B3[v.baseline_id], bh = (b && b.holdout) || {};
+      const nf = nz(m.n_folds) ? m.n_folds : null, w = windowText(m.search_window);
+      const keep = nz(d.pnl) && nz(h.pnl) && h.pnl > 0 ? d.pnl / h.pnl : null, sg = x => !nz(x) ? "" : x > 0 ? "good" : "bad";
+      const tests = [
+        [sg(s.pnl), "Search period", [w.text, nz(s.fold_win) ? (nf ? `profitable in ${Math.round(s.fold_win * nf)} of ${nf} slices` : `${pct(s.fold_win)} of slices profitable`) : ""], s.pnl, s.trades, s.t],
+        [nz(h.t) && bar && h.t >= bar && h.pnl > 0 ? "gold" : sg(h.pnl), "Final exam", [hd ? `${hd} locked days` : "locked days", nz(h.t) && bar ? (h.t >= bar ? `clears the ${bar} bar` : `below the ${bar} bar`) : ""], h.pnl, h.trades, h.t],
+        [a ? sg(a.pnl) : "", "Older archive data", [a ? "never used for tuning" : "no archive data for these markets"], a && a.pnl, a && a.trades, a && a.t],
+        [sg(d.pnl), "Orders 1 minute late", [keep == null ? (nz(d.pnl) ? (d.pnl > 0 ? "still profitable" : "loses money") : "not tested") : keep > 0 ? `keeps ${Math.round(keep * 100)}% of the profit` : "turns into a loss"], d.pnl, null, d.t],
+        [v && nz(v.pnl_diff) ? sg(v.pnl_diff) : "", b ? `Live: ${b.label}` : "Live strategy", [v && nz(v.pnl_diff) ? (v.pnl_diff >= 0 ? `this one makes ${M(v.pnl_diff)} more` : `this one makes ${M(-v.pnl_diff)} less`) : "no live strategy on the same markets"], bh.pnl, bh.trades, bh.t],
+      ];
+      const facts = [["Win rate", PC(h.win_rate)], ["Profit per trade", M(h.per_trade, 2)], ["Return per $1", nz(h.roi) ? spct(h.roi) : DASH],
+        ["Worst dip", M(h.max_dd)], ["Winning days", PC(h.days_positive)], ["Daily Sharpe", nz(h.sharpe_daily) ? h.sharpe_daily.toFixed(2) : DASH]];
+      const ps = Object.entries(c.params || {});
+      return `<div class="report">
+        <div class="rp-head"><h3>${esc(c.label || c.id)}</h3>${c.why ? `<p class="rp-why">${esc(c.why)}</p>` : ""}</div>
+        <div class="rp-grid">
+          <div class="rp-box rp-chart"><div class="eyebrow">Running profit over ${hd ? `the ${hd} locked days` : "the locked days"} · $10 a trade</div>
+            <div class="legend" style="margin-top:10px"><span><i style="background:var(${c.status === "golden" ? "--gold" : "--accent"})"></i>This strategy</span>${b ? `<span><i class="dash"></i>${esc(b.label)}</span>` : ""}</div>
+            <div class="chart short"><canvas id="${I.eq}" aria-label="Running profit of ${esc(c.label || c.id)} on the locked days${b ? ", against " + esc(b.label) : ""}"></canvas></div></div>
+          <div class="rp-box"><div class="eyebrow">Report card</div>
+            <table class="exam"><thead><tr><th>Test</th><th class="num">Profit</th><th class="num">Trades</th><th class="num">t</th></tr></thead><tbody>${tests.map(([k, name, notes, p, n, t]) =>
+              `<tr><td><span class="mk ${k}"></span><b>${esc(name)}</b><div class="sub">${notes.filter(Boolean).map(esc).join(" · ")}</div></td><td class="num ${nz(p) ? cls(p) : ""}" data-label="Profit">${M(p)}</td><td class="num" data-label="Trades">${NUM(n)}</td><td class="num" data-label="t">${T(t)}</td></tr>`).join("")}</tbody></table>
+            <div class="eyebrow" style="margin-top:16px">More from the final exam</div><div class="facts">${facts.map(([k, x]) => `<div><b>${x}</b><span>${k}</span></div>`).join("")}</div>
+            <div class="setting"><span class="eyebrow">Settings</span>${ps.length ? ps.map(([k, x]) => `<code title="${esc(pword(k))}">${esc(k)}=${esc(x)}</code>`).join("") : '<span class="muted">none</span>'}</div>
+            ${EXL[c.execution] ? `<div class="sdesc" style="max-width:none;margin-top:8px">${EXL[c.execution]}</div>` : ""}
+          </div>
+        </div></div>`;
+    }
+
+    function eqChart(id, c, b, ticks) {
+      const cv = $(id); if (!cv) return;
+      const cc = C(), col = c.status === "golden" ? tok("--gold") : cc.accent, bc = tok("--base-line");
+      const ok = x => Array.isArray(x) && x.length && Array.isArray(x[0]);
+      const cur = ok(c.curve) ? c.curve : null, bl = b && ok(b.curve) ? b.curve : null;
+      if (!cur && !bl) { cv.parentElement.innerHTML = '<p class="empty">No profit curve in the results file.</p>'; return; }
+      const all = [cur, bl].filter(Boolean), first = Math.min(...all.map(x => x[0][0]));
+      const t0 = nz(HX.m.holdout_start) ? Math.min(HX.m.holdout_start, first) : first, t1 = Math.max(...all.map(x => x[x.length - 1][0]));
+      const n = 160, xs = Array.from({ length: n }, (_, i) => t0 + (t1 - t0) * i / (n - 1));
+      const step = cv => { let j = 0, val = 0; return xs.map(x => { while (j < cv.length && cv[j][0] <= x) { val = cv[j][1]; j++; } return { x: x * 1000, y: val }; }); };
+      const ds = [];
+      if (bl) ds.push({ label: b.label || "Live strategy", data: step(bl), borderColor: bc, borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0, pointHoverRadius: 3, pointHoverBackgroundColor: bc });
+      if (cur) ds.push({ label: c.label || "This strategy", data: step(cur), borderColor: col, backgroundColor: alpha(col, 0.1), fill: "origin", borderWidth: 2, pointRadius: 0,
+        pointHoverRadius: 4, pointHoverBackgroundColor: col, pointHoverBorderColor: cc.surface, pointHoverBorderWidth: 2 });
+      const o = base(cc); o.interaction = { mode: "index", intersect: false }; o.layout = { padding: { right: 62, top: 8 } };
+      o.plugins.tooltip.callbacks = { title: i => fmtTime(i[0].parsed.x / 1000), label: i => `${i.dataset.label}: ${money(i.parsed.y)}` };
+      o.scales = { x: axis(cc, { type: "linear", min: t0 * 1000, max: t1 * 1000, grid: { display: false }, ticks: { color: cc.muted, maxTicksLimit: ticks || 5, callback: v => dayFmt(v / 1000) } }),
+                   y: axis(cc, { ticks: { color: cc.muted, maxTicksLimit: 5, callback: v => money(v) } }) };
+      mk(id, { type: "line", data: { datasets: ds }, options: o, plugins: [zeroLine(cc), endLabels(cc)] });
+    }
+
+    function huntCurves() {
+      if (!HX) return;
+      const top = HX.C3.filter(c => c.status !== "fail" && Array.isArray(c.curve) && c.curve.length > 1).slice(0, 4);
+      $(I.curvesPanel).hidden = !top.length; if (!top.length) return;
+      const g = top.some(c => c.status === "golden"), o = top.some(c => c.status !== "golden");
+      $(I.smLegend).innerHTML = (g ? `<span><i style="background:var(--gold)"></i>Golden candidate</span>` : "") + (o ? `<span><i style="background:var(--accent)"></i>Other candidate</span>` : "") + `<span><i class="dash"></i>Live strategy, same days</span>`;
+      $(I.smGrid).innerHTML = top.map((c, j) => { const v = c.vs_baseline, b = v && HX.B3[v.baseline_id];
+        return `<article class="sm${c.status === "golden" ? " golden" : ""}"><div class="sm-h">${sbadge(c.status)}<button type="button" class="sm-open" data-smc="${esc(c.id)}">Open report card</button></div><b class="sm-t">${esc(c.label || c.id)}</b>
+          <div class="sm-s">${b ? `vs ${esc(b.label)}` : "No live strategy on these markets to compare with"}${v && nz(v.pnl_diff) ? ` · ${SM(v.pnl_diff)} ${v.pnl_diff >= 0 ? "ahead" : "behind"}` : ""}</div>
+          <div class="chart"><canvas id="${I.sm}${j}" aria-label="Running profit of ${esc(c.label || c.id)}${b ? " against " + esc(b.label) : ""}"></canvas></div></article>`; }).join("");
+      top.forEach((c, j) => { const v = c.vs_baseline; eqChart(I.sm + j, c, v && HX.B3[v.baseline_id], 4); });
+    }
+
+    function huntIdeas() {
+      const F = Object.values(HX.FAM), bar = HX.bar;
+      $(I.ideasPanel).hidden = !F.length; if (!F.length) return;
+      const ord = { golden: 0, pass: 1, fail: 2 }, tv = f => nz(f.best_holdout_t) ? f.best_holdout_t : -99;
+      const fs = [...F].sort((a, b) => ((ord[a.status] ?? 3) - (ord[b.status] ?? 3)) || (tv(b) - tv(a)));
+      const tmax = Math.max(bar ? bar * 1.45 : 5, ...F.map(f => nz(f.best_holdout_t) ? Math.min(f.best_holdout_t, (bar || 3) * 2) : 0));
+      const cnt = k => F.filter(f => f.status === k).length;
+      $(I.ideasSum).innerHTML = [["golden", "struck gold"], ["pass", "promising"], ["fail", "didn't hold up"]].filter(([k]) => cnt(k)).map(([k, l]) => badge(STATUS[k][0], `${cnt(k)} ${l}`, STATUS[k][2])).join("");
+      const VERD = { golden: "Struck gold: at least one setting passed every test.", pass: "Promising, but no setting passed every test.", fail: "Didn't hold up on data it hadn't seen." };
+      $(I.ideas).innerHTML = fs.map(f => { const r = HX.C3.filter(c => c.family === f.id).length;
+        const reach = r ? `${r} setting${r > 1 ? "s" : ""} reached the final exam.` : nz(f.best_holdout_t) ? "" : "No setting reached the final exam.";
+        return `<article class="idea ${STATUS[f.status] ? f.status : ""}"><div class="idea-top">${sbadge(f.status)}<span class="idea-n">${nz(f.configs) ? NUM(f.configs) + " settings tried" : ""}</span></div>
+          <h3>${esc(f.name || f.id)}</h3>${f.idea ? `<p>${esc(f.idea)}</p>` : ""}
+          <div class="idea-foot"><div class="idea-meter"><span class="eyebrow">Best exam score</span>${tMeter(f.best_holdout_t, bar, tmax)}</div>
+            <div class="idea-v">${VERD[f.status] || ""} ${reach}</div></div></article>`; }).join("");
+    }
+
+    function huntHeat() {
+      const HM = (Array.isArray(D.heatmaps) ? D.heatmaps : []).filter(h => h && Array.isArray(h.z) && Array.isArray(h.x) && Array.isArray(h.y) && h.z.length && h.x.length && h.y.length);
+      $(I.heatPanel).hidden = !HM.length; if (!HM.length) return;
+      const vals = HM.flatMap(h => h.z.flat()).filter(nz), lim = Math.max(1, ...vals.map(Math.abs));
+      const hv = v => Math.abs(v) < 0.05 ? "0.0" : (v < 0 ? "−" : "") + Math.abs(v).toFixed(1), fv = v => nz(v) ? String(+v.toFixed(4)) : String(v), same = (p, q) => nz(p) && nz(q) ? Math.abs(p - q) < 1e-9 : String(p) === String(q);
+      const metric0 = HM[0].metric || "score";
+      $(I.hmKey).innerHTML = `<span class="hm-ramp">−${lim.toFixed(1)}<i></i>+${lim.toFixed(1)}</span><span>${esc(metric0)}: orange lost money in the search, grey broke even, blue made money</span>` +
+        `<span style="display:inline-flex;align-items:center;gap:8px"><i class="hm-pick-key"></i>the setting sent to the final exam</span>`;
+      $(I.heats).innerHTML = HM.map(h => {
+        const fam = HX.FAM[h.family], metric = h.metric || "score";
+        const pick = HX.C3.find(c => c.family === h.family && c.scope === h.scope && c.params && h.x_name in c.params && h.y_name in c.params);
+        let g = `<div class="hc0"></div>` + h.x.map(x => `<div class="hx">${esc(fv(x))}</div>`).join("");
+        h.y.forEach((y, yi) => { g += `<div class="hy">${esc(fv(y))}</div>`; h.x.forEach((x, xi) => { const v = (h.z[yi] || [])[xi], where = `${pword(h.x_name)} ${fv(x)}, ${pword(h.y_name)} ${fv(y)}`;
+          if (!nz(v)) { g += `<div class="hc" style="background:var(--chip)" data-tip="${esc(where + "\nno result")}">·</div>`; return; }
+          const k = Math.round(Math.min(1, Math.abs(v) / lim) * 88), isPick = pick && same(pick.params[h.x_name], x) && same(pick.params[h.y_name], y);
+          g += `<div class="hc${isPick ? " pick" : ""}" style="background:color-mix(in oklab, var(${v >= 0 ? "--hm-pos" : "--hm-neg"}) ${k}%, var(--hm-mid));color:var(${k > 60 ? "--hm-strong-ink" : "--ink"})" data-tip="${esc(`${where}\n${metric} ${v.toFixed(2)}${isPick ? "\nthe setting sent to the final exam" : ""}`)}">${hv(v)}</div>`; }); });
+        return `<div class="heat"><h3>${esc(fam ? fam.name : h.family)} <span class="muted" style="font-weight:500">· ${esc(SCOPE(h.scope))}</span></h3>
+          <div class="heat-s">${esc(metric)} for each pair of settings</div><div class="heat-ax">↓ ${esc(pword(h.y_name))}</div>
+          <div class="heat-scroll"><div class="heat-grid" style="grid-template-columns:auto repeat(${h.x.length}, minmax(36px, 1fr))">${g}</div></div>
+          <div class="heat-ax" style="text-align:center">${esc(pword(h.x_name))} →</div></div>`; }).join("");
+    }
+
+    function huntMethod() {
+      const m = HX.m, w = windowText(m.search_window), hd = HX.hd, h0 = nz(m.holdout_start) ? m.holdout_start : null;
+      const coins = Object.values(D.coins && typeof D.coins === "object" ? D.coins : {}), arch = coins.map(c => c && c.archive_markets).filter(v => nz(v) && v > 0);
+      $(I.methodIntro).textContent = `Trying ${nz(m.n_configs_tested) ? NUM(m.n_configs_tested) : "thousands of"} settings guarantees that a few look brilliant by pure chance, the same way a few people in a big crowd will flip ten heads in a row. So the search is only the first step. The real test is data the strategy has never seen, judged against a bar that rises with the number of things tried.`;
+      const segs = [];
+      if (arch.length) segs.push(`<div class="t-arch" style="flex:1.1 1 0"><b>Older archive</b><span>Up to ${NUM(Math.max(...arch))} earlier markets per ${u}${arch.length < coins.length ? ` (${arch.length} of ${coins.length} ${us})` : ""}. A second blind check, never used for tuning.</span></div>`);
+      segs.push(`<div class="t-search" style="flex:${w.days && hd ? (w.days / hd).toFixed(2) : 3} 1 0"><b>Search period</b><span>${w.text ? esc(w.text) + ". " : ""}Every setting is tried here${nz(m.n_folds) ? `, and results are checked in ${m.n_folds} separate time slices` : ""}.</span>${nz(m.n_folds) ? `<div class="folds" aria-hidden="true">${"<i></i>".repeat(Math.min(m.n_folds, 24))}</div>` : ""}</div>`);
+      segs.push(`<div class="t-hold" style="flex:1 1 0"><b>Locked final exam</b><span>${h0 && hd ? `${dayFmt(h0)} – ${dayFmt(h0 + hd * 86400 - 1)}. ` : ""}Hidden during the search and opened once, for the finalists only.</span></div>`);
+      $(I.timeline).innerHTML = segs.join("");
+      const rules = (Array.isArray(m.rules) ? m.rules : []).filter(Boolean);
+      $(I.rules).innerHTML = rules.length ? rules.map(r => `<li><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="var(--gold-bg)"/><path d="M6.5 11.3l3 3 6-6.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>${esc(r)}</span></li>`).join("")
+        : `<li class="muted">This results file doesn't list its rules.</li>`;
+      $(I.gloss).innerHTML = [
+        ["t-score", `How sure we can be that a profit isn't luck. It compares the average profit per trade with how much results bounce around. Around 2 is suggestive.${HX.bar ? ` We ask for ${HX.bar} because so many settings were tried: luck alone gets there about once in ${oneIn(HX.bar)} tries.` : ""}`],
+        ["Locked days", `${hd ? `The last ${hd} days` : "The most recent days"} of data, set aside before the search began. A strategy can't have been tuned to days it never saw.`],
+        ["Older data", "Kalshi's records from earlier months. Making money there too suggests the edge isn't just a recent fluke."],
+        ["1 min late", "The same strategy with every order placed a minute after it should have been. If the profit disappears, the edge is too fragile for a real bot."],
+        ["vs live", opt.liveGloss],
+      ].map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join("");
+    }
+
+    function hayHit(e) {
+      const r = $(I.hay).getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; let best = null, bd = 12;
+      for (const d of hayDots) { const dd = Math.hypot(d.x - x, d.y - y); if (dd < bd) { bd = dd; best = d; } } return best;
+    }
+    function openCand(id) {
+      const c = HX && HX.C3.find(x => x.id === id); if (!c) return;
+      if ($(I.root).tagName === "DETAILS") $(I.root).open = true;
+      hs.sel = id; if (hs.filter !== "all" && c.status !== hs.filter) hs.filter = "all"; huntBoard();
+      const tr = rowSel(id);
+      if (tr) { tr.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); tr.focus({ preventScroll: true }); }
+    }
+    function toggleCand(tr) {
+      const id = tr.dataset.cand, top0 = tr.getBoundingClientRect().top;
+      hs.sel = hs.sel === id ? null : id; huntBoard();
+      const nt = rowSel(id);
+      if (nt) { const dy = nt.getBoundingClientRect().top - top0; if (Math.abs(dy) > 1) window.scrollBy(0, dy); nt.focus({ preventScroll: true }); }
+    }
+    if (D) {
+      const hay = $(I.hay);
+      hay.addEventListener("pointermove", e => { const d = hayHit(e); hay.style.cursor = d ? "pointer" : "default";
+        if (d) showTip(`${d.c.label || d.c.id}\n${(STATUS[d.c.status] || [0, d.c.status || "Unrated"])[1]} · locked-days profit ${M((d.c.holdout || {}).pnl)}`, e); else hideTip(); });
+      hay.addEventListener("pointerleave", hideTip);
+      hay.addEventListener("click", e => { const d = hayHit(e); if (d) openCand(d.c.id); });
+      if (window.ResizeObserver) { let lw = 0; new ResizeObserver(() => { const w = $(I.hayBox).clientWidth; if (w && w !== lw) { lw = w; drawHay(); } }).observe($(I.hayBox)); }
+    }
+    return { data: D, render: renderHunt, rerender: () => { if (D) { huntBoard(); huntCurves(); drawHay(); } },
+      setFilter: f => { hs.filter = f; huntBoard(); }, open: openCand, toggle: toggleCand };
   }
-  function openCand(id) {
-    const c = HX.C3.find(x => x.id === id); if (!c) return;
-    $("hunt").open = true; hs.sel = id; if (hs.filter !== "all" && c.status !== hs.filter) hs.filter = "all"; huntBoard();
-    const tr = document.querySelector(`#huntBoard tr[data-cand="${CSS.escape(id)}"]`);
-    if (tr) { tr.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); tr.focus({ preventScroll: true }); }
-  }
-  function toggleCand(tr) {
-    const id = tr.dataset.cand, top0 = tr.getBoundingClientRect().top;
-    hs.sel = hs.sel === id ? null : id; huntBoard();
-    const nt = document.querySelector(`#huntBoard tr[data-cand="${CSS.escape(id)}"]`);
-    if (nt) { const dy = nt.getBoundingClientRect().top - top0; if (Math.abs(dy) > 1) window.scrollBy(0, dy); nt.focus({ preventScroll: true }); }
-  }
+  HUNTS.hunt = makeHunt(H3, huntIds("hunt"), { all: "All coins", unit: "coin",
+    liveGloss: "The strategy already running in paper trading on the same coins, replayed over the same locked days. A newcomer has to beat it to be worth switching." });
+
   document.addEventListener("pointermove", e => { const t = e.target.closest && e.target.closest("[data-tip]");
-    if (t) showTip(t.dataset.tip, e); else if (!(e.target.closest && e.target.closest("#hay"))) hideTip(); });
+    if (t) showTip(t.dataset.tip, e); else if (!(e.target.closest && e.target.closest("[data-hay]"))) hideTip(); });
   document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-lv]");
     if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); lvToggle(r); } });
+  document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-cand]"), H = r && HUNTS[(r.closest("[data-hunt]") || {}).dataset?.hunt];
+    if (H && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); H.toggle(r); } });
   document.addEventListener("change", e => {
     if (e.target.id === "lvCoin") { lvs.coin = e.target.value; if (LIVE_DATA) lvLog(LIVE_DATA); }
     if (e.target.id === "lvStrat") { lvs.strat = e.target.value; if (LIVE_DATA) lvLog(LIVE_DATA); } });
-  if (H3) {
-    $("hay").addEventListener("pointermove", e => { const d = hayHit(e); $("hay").style.cursor = d ? "pointer" : "default";
-      if (d) showTip(`${d.c.label || d.c.id}\n${(STATUS[d.c.status] || [0, d.c.status || "Unrated"])[1]} · locked-days profit ${M((d.c.holdout || {}).pnl)}`, e); else hideTip(); });
-    $("hay").addEventListener("pointerleave", hideTip);
-    $("hay").addEventListener("click", e => { const d = hayHit(e); if (d) openCand(d.c.id); });
-    document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-cand]");
-      if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggleCand(r); } });
-    if (window.ResizeObserver) { let lw = 0; new ResizeObserver(() => { const w = $("hayBox").clientWidth; if (w && w !== lw) { lw = w; drawHay(); } }).observe($("hayBox")); }
-  }
 
   const usd = v => v == null ? "?" : "$" + (Math.abs(v) >= 100 ? v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : Math.abs(v) >= 1 ? v.toFixed(4) : v.toFixed(5));
   const cents = p => (p * 100).toFixed(p < 0.1 ? 1 : 0) + "¢";
@@ -1756,9 +1780,10 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   document.addEventListener("click", e => {
     const lvf = e.target.closest("[data-lvf]"); if (lvf) { lvs.filt = lvf.dataset.lvf; if (LIVE_DATA) lvBoard(LIVE_DATA); return; }
     const lvr = e.target.closest("tr[data-lv]"); if (lvr) { lvToggle(lvr); return; }
-    const hf = e.target.closest("[data-hf]"); if (hf) { hs.filter = hf.dataset.hf; huntBoard(); return; }
-    const smc = e.target.closest("[data-smc]"); if (smc) { openCand(smc.dataset.smc); return; }
-    const hr = e.target.closest("tr[data-cand]"); if (hr) { toggleCand(hr); return; }
+    const hroot = e.target.closest("[data-hunt]"), H = hroot && HUNTS[hroot.dataset.hunt];
+    if (H) { const hf = e.target.closest("[data-hf]"); if (hf) { H.setFilter(hf.dataset.hf); return; }
+      const smc = e.target.closest("[data-smc]"); if (smc) { H.open(smc.dataset.smc); return; }
+      const hr = e.target.closest("tr[data-cand]"); if (hr) { H.toggle(hr); return; } }
     const jl = e.target.closest("a[data-jump]"); if (jl) { const t = $(jl.dataset.jump); if (t && t.tagName === "DETAILS") t.open = true; }
     const lb = e.target.closest("[data-lab]"); if (lb) { labKey = lb.dataset.lab; renderLab(); return; }
     const sc = e.target.closest("[data-scope]"); if (sc) { setScope(sc.dataset.scope); renderAll(); return; }
@@ -1769,11 +1794,11 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   });
   document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-n]");
     if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); const n = r.dataset.n; r.click(); setTimeout(() => document.querySelector(`tr[data-n="${n}"]`)?.focus(), 0); } });
-  const rerender = () => { renderLive(); renderPortfolio(); renderCmp(); renderDetail(); renderCal(); if (H3) { huntBoard(); huntCurves(); drawHay(); } };
+  const rerender = () => { renderLive(); renderPortfolio(); renderCmp(); renderDetail(); renderCal(); Object.values(HUNTS).forEach(h => h.rerender()); };
   try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rerender); } catch (e) {}
   new MutationObserver(rerender).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   renderAll();
-  renderHunt();
+  Object.values(HUNTS).forEach(h => h.render());
   document.querySelectorAll("a[data-jump]").forEach(a => { const t = $(a.dataset.jump); if (t && t.hidden && a.dataset.jump !== "livePanel") a.hidden = true; });
 
   // ---- live updates: local server polls live.json; the published page listens to its database

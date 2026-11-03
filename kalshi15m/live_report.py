@@ -256,9 +256,19 @@ def _thin(curve, n=300):
 def _lab3():
     """The golden-strategy hunt (lab3.py output), or None if it hasn't been run.
     LAB3_PATH overrides the location, e.g. to render the dashboard from a test fixture."""
+    return _hunt_results("LAB3_PATH", "lab3_results.json")
+
+
+def _lab4():
+    """The same hunt run on Kalshi's other 15-minute markets (currencies, Treasury yields, stock indices;
+    lab4 output, with an extra "markets_surveyed" list), or None. LAB4_PATH overrides the location."""
+    return _hunt_results("LAB4_PATH", "lab4_results.json")
+
+
+def _hunt_results(env, fname):
     import os
-    p = os.environ.get("LAB3_PATH")
-    f = Path(p) if p else OUT.parent / "data" / "lab" / "lab3_results.json"
+    p = os.environ.get(env)
+    f = Path(p) if p else OUT.parent / "data" / "lab" / fname
     try:
         r = json.loads(f.read_text())
     except (OSError, ValueError):
@@ -288,6 +298,9 @@ def lab_summary():
     lab3 = _lab3()
     if lab3:
         out["lab3"] = lab3
+    lab4 = _lab4()
+    if lab4:
+        out["lab4"] = lab4
     try:   # progress of a running hunt (written by scripts/lab3_progress.py), shown as a banner
         out["lab3_progress"] = json.loads((OUT.parent / "data" / "lab" / "lab3_progress.json").read_text())
     except (OSError, ValueError):
@@ -328,8 +341,97 @@ def lab_summary():
     return out or None
 
 
+# Kalshi's other 15-minute up/down markets, shown on the dashboard's "Currencies & more" tab.
+# Research only: nothing trades on them. (series, plain-English name, short name, group)
+OTHER_SERIES = [
+    ("KXEURUSD15M", "Euro vs US dollar", "EUR/USD", "fx"), ("KXUSDJPY15M", "US dollar vs Japanese yen", "USD/JPY", "fx"),
+    ("KXGBPUSD15M", "British pound vs US dollar", "GBP/USD", "fx"), ("KXAUDUSD15M", "Australian dollar vs US dollar", "AUD/USD", "fx"),
+    ("KXUSDCAD15M", "US dollar vs Canadian dollar", "USD/CAD", "fx"), ("KXUSDMXN15M", "US dollar vs Mexican peso", "USD/MXN", "fx"),
+    ("KX2YRRATE15M", "2-year Treasury yield", "2Y yield", "rates"), ("KX5YRRATE15M", "5-year Treasury yield", "5Y yield", "rates"),
+    ("KX10YRRATE15M", "10-year Treasury yield", "10Y yield", "rates"), ("KX30YRRATE15M", "30-year Treasury yield", "30Y yield", "rates"),
+    ("KXINX15M", "S&P 500", "S&P 500", "index"), ("KXNDQ15M", "Nasdaq-100", "Nasdaq-100", "index"),
+    ("KXDJIA15M", "Dow Jones Industrial Average", "Dow", "index"),
+]
+_OCACHE = OUT.parent / "data" / "kalshi15m" / "other_markets_cache.json"
+
+
+def other_markets(budget_s: float = 6.0) -> dict:
+    """The open market for each OTHER_SERIES from Kalshi's public API, plus how much a typical market trades
+    (median volume of the last ~50 settled ones, cached and refreshed at most hourly). Best effort and bounded:
+    sequential requests, short timeouts, a hard time budget; anything that fails shows as missing on the page."""
+    import requests
+    from datetime import datetime
+    api = "https://api.elections.kalshi.com/trade-api/v2/markets"
+    stop, now = time.monotonic() + budget_s, time.time()
+    try:
+        cache = json.loads(_OCACHE.read_text())
+    except (OSError, ValueError):
+        cache = {}
+    sess = requests.Session()
+
+    def get(params):
+        left = stop - time.monotonic()
+        if left < 0.4:
+            return None
+        try:
+            r = sess.get(api, params=params, timeout=min(2.5, left))
+            return r.json().get("markets") if r.ok else None
+        except Exception:
+            return None
+
+    def ts(v):
+        try:
+            return datetime.fromisoformat(str(v).replace("Z", "+00:00")).timestamp()
+        except ValueError:
+            return None
+
+    def num(v):
+        try:
+            return float(v) if v not in (None, "") else None
+        except (TypeError, ValueError):
+            return None
+
+    rows = []
+    for series, name, short, group in OTHER_SERIES:
+        row = {"series": series, "name": name, "short": short, "group": group, "market": None}
+        ms = get({"series_ticker": series, "status": "open", "limit": 20})
+        if ms is None:
+            row["error"] = True
+        else:
+            live = [m for m in ms if (ts(m.get("close_time")) or 0) > now]
+            if live:
+                m = min(live, key=lambda m: ts(m.get("close_time")))
+                row["market"] = {"ticker": m.get("ticker"), "title": m.get("title"), "strike": num(m.get("floor_strike")),
+                                 "open_ts": ts(m.get("open_time")), "close_ts": ts(m.get("close_time")),
+                                 "yes_bid": num(m.get("yes_bid_dollars")), "yes_ask": num(m.get("yes_ask_dollars")),
+                                 "last": num(m.get("last_price_dollars")), "volume": num(m.get("volume_fp")),
+                                 "open_interest": num(m.get("open_interest_fp"))}
+        rows.append(row)
+    # typical volume, refreshed with whatever time is left (oldest first), at most hourly per series
+    for series, *_ in sorted(OTHER_SERIES, key=lambda x: (cache.get(x[0]) or {}).get("ts", 0)):
+        if now - (cache.get(series) or {}).get("ts", 0) < 3600:
+            continue
+        ms = get({"series_ticker": series, "status": "settled", "limit": 50})
+        if ms is None:
+            break
+        vols = sorted(v for v in (num(m.get("volume_fp")) for m in ms) if v is not None)
+        cache[series] = {"ts": now, "median_volume": vols[len(vols) // 2] if vols else None, "n": len(vols)}
+    try:
+        _OCACHE.write_text(json.dumps(cache))
+    except OSError:
+        pass
+    for row in rows:
+        c = cache.get(row["series"]) or {}
+        row["typical_volume"], row["typical_n"] = c.get("median_volume"), c.get("n")
+    return {"generated": int(now), "series": rows}
+
+
 def build():
     live = summarise()
+    try:  # research-only markets for the "Currencies & more" tab; never allowed to break the report
+        live["other_markets"] = other_markets()
+    except Exception as e:
+        print(f"other markets: skipped ({e})")
     html = (ROOT / "dashboard_template.html").read_text()
     results = (OUT / "results.json").read_text()
     html = html.replace("/*__RESULTS__*/null", results).replace("/*__LIVE__*/null", json.dumps(live))
