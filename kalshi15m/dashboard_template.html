@@ -267,6 +267,7 @@ td.coin { font-size: 12px; }
 #lvBoard tr.detail > td { background: var(--lv-hover); padding: 0; border-bottom: 0; }
 
 .lvd { padding: 4px 18px 26px; display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+#lvBoard tr.detail .lvd { width: 0; min-width: 100%; } /* the detail takes the row's width instead of widening the table */
 .lvd-why { margin: 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.65; max-width: 84ch; }
 .lvd-set { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
 .live-zone code { background: var(--chip); color: var(--ink-2); font-size: 12px; padding: 3px 8px; border-radius: 6px; }
