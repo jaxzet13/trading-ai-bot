@@ -1833,6 +1833,33 @@ form.scan-opt { cursor: default; }
 .ld-list li.me { background: rgba(255,255,255,.06); } .ld-list .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .ld-list .rec { color: var(--t3); font-size: 12.5px; } .ld-list b { text-align: right; }
 .rk-pts { margin: 6px 0 0; font-weight: 700; }
 .cp-a { flex-wrap: wrap; }
+/* ===================== PACK v4: crinkled foil over full-bleed key art ===================== */
+.pk.pk4 { container-type: inline-size; filter: drop-shadow(0 26px 30px rgba(0,0,0,.65)); }
+.pk.pk4 .pk-body { background: linear-gradient(160deg, var(--pk-b), var(--pk-a) 60%); }
+.pk.pk4 .pk-top { background: linear-gradient(160deg, var(--pk-b), var(--pk-a) 70%); }
+.pk.pk4 .pk-top::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.06), transparent 60%, rgba(0,0,0,.35)); }
+.pk.pk4 .pk-top .band { display: none; }
+.st-pack .grabhint { top: auto !important; bottom: -38px; left: 0 !important; right: 0; justify-content: center; }
+.pk.pk4 .pk4-no { text-shadow: 0 0 2cqi rgba(0,0,0,.9); filter: brightness(1.25); }
+.pk.pk4 .pk-body::before, .pk.pk4 .pk-top::before, .pk.pk4 .pk-body::after { display: none !important; }
+.pk.pk4 .pk4-art { position: absolute; inset: 0; overflow: hidden; }
+.pk.pk4 .pk4-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 28%; transform: scale(1.05); }
+.pk.pk4 .pk4-tint { position: absolute; inset: 0; background: var(--pk-acc); mix-blend-mode: color; opacity: .2; }
+.pk.pk4 .pk4-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7,7,8,.94) 0%, rgba(7,7,8,.6) 14%, rgba(7,7,8,0) 33%, rgba(7,7,8,0) 48%, rgba(7,7,8,.72) 70%, rgba(7,7,8,.97) 89%), radial-gradient(130% 85% at 50% 45%, transparent 56%, rgba(0,0,0,.62) 100%), linear-gradient(90deg, rgba(0,0,0,.55), transparent 9%, transparent 91%, rgba(0,0,0,.55)); }
+.pk.pk4 .pk4-crinkle { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: .55; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='430' viewBox='0 0 300 430' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.006 .028' numOctaves='4' seed='11'/%3E%3CfeDiffuseLighting lighting-color='%23ffffff' surfaceScale='4.5'%3E%3CfeDistantLight azimuth='235' elevation='38'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='300' height='430' filter='url%28%23f%29'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+.pk.pk4 .band { left: 6%; width: 1.6%; opacity: .95; z-index: 1; }
+.pk.pk4 .crimp { height: 6.5%; z-index: 1; background: repeating-linear-gradient(90deg, rgba(255,255,255,.16) 0 1px, rgba(0,0,0,.28) 1px 2px, transparent 2px 4px), linear-gradient(180deg, rgba(255,255,255,.1), rgba(0,0,0,.25)); }
+.pk.pk4 .pk4-head { position: absolute; top: 7.6%; left: 11%; right: 7%; z-index: 3; display: flex; align-items: center; gap: 2cqi; color: #f4f2ec; font-family: "Archivo", "Helvetica Neue", Arial, sans-serif; font-weight: 800; font-size: 4.2cqi; letter-spacing: .42em; line-height: 1; }
+.pk.pk4 .pk4-head svg { width: 5.6cqi; height: 5.6cqi; color: var(--pk-acc); flex: none; }
+.pk.pk4 .pk4-head em { margin-left: auto; font-style: normal; letter-spacing: .04em; font-size: 3.3cqi; border: .35cqi solid rgba(244,242,236,.7); border-radius: 1cqi; padding: .5cqi 1.2cqi; }
+.pk.pk4 .pk4-lim { position: absolute; left: 0; right: 0; top: 15.5%; z-index: 3; text-align: center; background: var(--pk-acc); color: #0b0b0c; font-family: "Archivo", "Helvetica Neue", Arial, sans-serif; font-weight: 800; text-transform: uppercase; font-size: 3.2cqi; letter-spacing: .14em; padding: 1.4cqi 0; box-shadow: 0 .6cqi 2.4cqi rgba(0,0,0,.55); }
+.pk.pk4.pk-BM .pk4-lim { color: #fff; }
+.pk.pk4 .pk4-title { position: absolute; left: 11%; right: 7%; bottom: 10.5%; z-index: 3; display: grid; gap: 1.6cqi; }
+.pk.pk4 .pk4-no { font-family: "Archivo", "Helvetica Neue", Arial, sans-serif; font-weight: 800; font-size: 3.6cqi; letter-spacing: .28em; text-transform: uppercase; color: var(--pk-acc); }
+.pk.pk4 .pk4-name { font-family: "Archivo", "Helvetica Neue", Arial, sans-serif; font-stretch: 66%; font-weight: 900; text-transform: uppercase; font-size: 15.5cqi; line-height: .84; letter-spacing: -.005em; color: #f6f4ee; text-shadow: 0 1cqi 3cqi rgba(0,0,0,.75); overflow-wrap: anywhere; }
+.pk.pk4 .pk4-sub { font-family: "Archivo", "Helvetica Neue", Arial, sans-serif; font-weight: 700; font-size: 3.1cqi; letter-spacing: .22em; text-transform: uppercase; color: rgba(244,242,236,.62); }
+.pk.pk4.sketch .pk4-art img { filter: grayscale(1) contrast(1.35) brightness(1.08); } .pk.pk4.sketch .pk4-tint { opacity: .12; }
+.pk.pk4 .pk-fig, .pk.pk4 .pk-name, .pk.pk4 .pk-no, .pk.pk4 .pk-sub, .pk.pk4 .pk-sigil, .pk.pk4 .pk-lim { display: none; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -2707,15 +2734,16 @@ form.scan-opt { cursor: default; }
   // Scan ID printed on every physical card: set, collector number, and the copy's own serial.
   const scanId = (card, serial) => `${card.set || "IS"}-${card.set ? card.no.slice(2).padStart(3, "0") : card.no}-${String(serial).padStart(6, "0")}`;
 
+  // Packs: crinkled foil wrapper over full-bleed key art (the pack's signature fighter; limited packs use their chase card)
   function packHTML(p) {
-    const fig = BY_ID[p.fig];
+    const lim = p.lim, key = lim ? poolSet(lim, "SIR")[0] : null, src = key && key.art ? `art/n/${key.art}.jpg` : portrait(BY_ID[p.fig]);
     const inner = `<div class="band"></div><div class="crimp t"></div><div class="crimp b"></div>`;
-    return `<div class="pk${p.ed === "sketch" ? " sketch" : ""}${p.lim ? " pklim pk-" + p.lim : ""}" style="--pk-a:${p.a};--pk-b:${p.b};--pk-acc:${p.acc}">
-      <div class="pk-body">${inner}<img class="pk-fig" src="${cutout(fig)}" alt="" draggable="false">
-        <div class="pk-no">No. ${p.no}</div><div class="pk-name">${esc(p.name)}</div>
-        <svg class="pk-sigil" viewBox="0 0 40 40"><use href="#i-sigil"/></svg>
-        <div class="pk-sub">${p.lim ? "3 cards · Limited edition" : "5 cards · Ink &amp; Steel"}</div>${p.lim ? `<div class="pk-lim">LIMITED · ${fmt(LSETS[p.lim].run)} PACKS</div>` : ""}</div>
-      <div class="pk-top">${inner}</div>
+    return `<div class="pk pk4${p.ed === "sketch" ? " sketch" : ""}${lim ? " pklim pk-" + lim : ""}" style="--pk-a:${p.a};--pk-b:${p.b};--pk-acc:${p.acc}">
+      <div class="pk-body"><div class="pk4-art"><img src="${src}" alt="" draggable="false"></div><i class="pk4-tint"></i><i class="pk4-shade"></i><i class="pk4-crinkle"></i>${inner}
+        ${lim ? `<div class="pk4-lim">Limited · ${fmt(LSETS[lim].run)} packs · never reprinted</div>` : ""}
+        <div class="pk4-title"><div class="pk4-no">No. ${p.no}</div><div class="pk4-name">${esc(p.name)}</div><div class="pk4-sub">${lim ? "3 cards · Limited edition" : p.ed === "sketch" ? "5 cards · Sketch edition" : "5 cards · Ink &amp; Steel"}</div></div>
+      </div>
+      <div class="pk-top">${inner}<div class="pk4-head"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#i-sigil"/></svg><span>STIXX</span><em>18+</em></div></div>
       <div class="sheen"></div>
     </div>`;
   }
