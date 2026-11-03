@@ -55,7 +55,7 @@ const CSS = `html,body{margin:0;background:#000}
     const cards = await app.evaluate(s => window.STIXX_PRINT.CARDS.filter(c => c.set === s).map(c => c.no), set);
     for (const no of cards) for (let k = 0; k < COPIES; k++) {
       const serial = START + k;
-      const info = await app.evaluate(({ no, serial }) => { const P = window.STIXX_PRINT, c = P.CARD_BY_NO[no]; const code = P.cardCode(c, serial), fx = P.fxForCode(code); document.getElementById("probe").innerHTML = "<style>#probe .fxtag{display:none}</style>" + P.cardHTML({ uid: "print", id: c.id, cno: no, rar: c.rar, serial, ed: "foil", fx }); return { code, id: c.id, rar: c.rar, fx: fx ? P.fxName(fx) : "" }; }, { no, serial });
+      const info = await app.evaluate(({ no, serial }) => { const P = window.STIXX_PRINT, c = P.CARD_BY_NO[no]; const code = P.cardCode(c, serial), fx = P.fxForCode(code); document.getElementById("probe").innerHTML = "<style>#probe .fxtag,#probe .amb{display:none}</style>" + P.cardHTML({ uid: "print", id: c.id, cno: no, rar: c.rar, serial, ed: "foil", fx }); return { code, id: c.id, rar: c.rar, fx: fx ? P.fxName(fx) : "" }; }, { no, serial });
       await app.waitForTimeout(500);
       const tag = `${no}_${String(serial).padStart(6, "0")}`, raw = path.join(OUT, "_raw", tag + ".png");
       await (await app.$("#probe .tcard")).screenshot({ path: raw });
