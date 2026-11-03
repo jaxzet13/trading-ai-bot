@@ -1903,6 +1903,46 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
 .label { letter-spacing: .1em; }
 ::selection { background: var(--blood); color: #fff; }
 .num, .price, .bal { font-variant-numeric: tabular-nums; }
+/* ===== ARENA: Clash ===== */
+.stakes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 14px 0 10px; }
+.stakes .label { margin-right: 6px; }
+.stakes .chip { font: inherit; font-weight: 800; font-size: 13px; color: var(--t1); background: transparent; border: 1px solid var(--rule); border-radius: 999px; padding: 6px 12px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.stakes .chip.on { background: var(--blood); border-color: var(--blood); color: #fff; }
+.stakes .chip:disabled { opacity: .35; cursor: not-allowed; }
+.clash { position: fixed; inset: 0; z-index: 950; display: grid; grid-template-rows: auto 1fr auto auto; justify-items: center; gap: 18px; padding: 18px 16px 28px; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 42%, #1c1c1f, #060607 70%); }
+.clash[hidden] { display: none; }
+#clFx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+.cl-top { width: min(900px, 100%); display: flex; justify-content: space-between; align-items: center; }
+.cl-arena { width: min(900px, 100%); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; align-self: center; }
+.cl-side { display: grid; justify-items: center; gap: 10px; transition: transform .5s cubic-bezier(.2,1.25,.3,1), opacity .4s, filter .4s; }
+.cl-side.me { transform: translateX(-70vw) rotate(-8deg); } .cl-side.opp { transform: translateX(70vw) rotate(8deg); }
+.clash.in .cl-side { transform: none; }
+.cl-card { width: min(250px, 36vw); container-type: inline-size; }
+.cl-tag { display: flex; gap: 10px; align-items: baseline; font-size: 15px; } .cl-tag b { font-weight: 800; } .cl-tag span { color: var(--t2); font-variant-numeric: tabular-nums; }
+.cl-vs { font-family: "Archivo", sans-serif; font-stretch: 66%; font-weight: 900; font-size: clamp(34px, 7vw, 64px); color: var(--blood); opacity: 0; transform: scale(2.4); transition: opacity .25s, transform .35s cubic-bezier(.2,1.4,.4,1); }
+.clash.in .cl-vs { opacity: 1; transform: none; transition-delay: .3s; }
+.clash.charge .cl-side .cl-card { animation: clshake .09s linear infinite; }
+@keyframes clshake { 0% { transform: translate(1px, -1px); } 50% { transform: translate(-2px, 1px); } 100% { transform: translate(1px, 1px); } }
+.clash.slam .cl-side.me { animation: slamL .5s cubic-bezier(.2,.9,.3,1); } .clash.slam .cl-side.opp { animation: slamR .5s cubic-bezier(.2,.9,.3,1); }
+@keyframes slamL { 35% { transform: translateX(18%) scale(1.04); } 100% { transform: none; } } @keyframes slamR { 35% { transform: translateX(-18%) scale(1.04); } 100% { transform: none; } }
+.clash.slam .cl-vs { animation: vspop .5s cubic-bezier(.2,1.4,.4,1); } @keyframes vspop { 35% { transform: scale(1.6); color: #fff; } }
+.cl-bar { --heat: 0; position: relative; width: min(620px, 92%); height: 18px; border-radius: 999px; display: flex; overflow: visible; opacity: 0; transform: translateY(12px); transition: opacity .3s, transform .3s; box-shadow: 0 0 0 1px rgba(255,255,255,.12); }
+.clash.bar .cl-bar { opacity: 1; transform: none; }
+.cl-seg { height: 100%; } .cl-seg.me { background: linear-gradient(90deg, #7d0a10, var(--blood)); border-radius: 999px 0 0 999px; } .cl-seg.opp { flex: 1; background: linear-gradient(90deg, #3a3a3d, #1e1e20); border-radius: 0 999px 999px 0; }
+.cl-mark { position: absolute; top: -9px; bottom: -9px; width: 4px; margin-left: -2px; border-radius: 3px; background: #fff; box-shadow: 0 0 calc(8px + var(--heat) * 16px) calc(2px + var(--heat) * 4px) rgba(255,255,255,.85); }
+.cl-bar.cross { animation: clcross .18s ease-out; } @keyframes clcross { 0% { box-shadow: 0 0 0 1px rgba(255,255,255,.12), 0 0 22px 4px rgba(255,255,255,.45); } }
+.clash.won .cl-side.me, .clash.lost .cl-side.opp { transform: translateY(-10px) scale(1.06); filter: drop-shadow(0 0 26px rgba(255,255,255,.35)); }
+.clash.won .cl-side.opp, .clash.lost .cl-side.me { transform: translateY(24px) scale(.88) rotate(-4deg); opacity: .18; filter: grayscale(1) blur(1px); }
+.clash.won .cl-side.me .cl-card { animation: winpulse 1.2s ease-in-out infinite; } @keyframes winpulse { 50% { filter: drop-shadow(0 0 22px var(--blood)); } }
+.cl-result { min-height: 140px; display: grid; justify-items: center; gap: 8px; text-align: center; }
+.cl-big { font-family: "Archivo", sans-serif; font-stretch: 66%; font-weight: 900; font-size: clamp(56px, 12vw, 120px); line-height: .85; letter-spacing: -.01em; animation: bigin .45s cubic-bezier(.2,1.5,.4,1); }
+.clash.won .cl-big { color: #fff; text-shadow: 0 0 30px var(--blood); } .clash.lost .cl-big { color: #5a5a5e; }
+@keyframes bigin { from { transform: scale(2.2); opacity: 0; } }
+.cl-sub { color: var(--t2); font-size: 15px; font-variant-numeric: tabular-nums; } .cl-sub span { color: #fff; font-weight: 800; }
+.cl-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 6px; }
+@media (max-width: 640px) { .cl-card { width: 38vw; } .cl-arena { gap: 4px; } }
+@media (prefers-reduced-motion: reduce) { .clash .cl-side, .clash .cl-vs { transition: none; } .clash.charge .cl-side .cl-card, .clash.slam .cl-side, .cl-big { animation: none !important; } }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -1996,12 +2036,12 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
 
   <section class="view" id="view-arena" hidden>
     <div class="section-head">
-      <div><div class="label">Free to play</div><h2>Arena</h2><p class="lede">Pick your fighter and an opponent and watch the fight. Every fight is choreographed fresh, and the winner is rolled from the two fighters' stats (win chance shown on each opponent). A win pays tokens by opponent rarity.</p></div>
+      <div><div class="label">Tokens only · free to play</div><h2>Arena</h2><p class="lede">Pick a card, pick an opponent, stake your tokens. The cards clash and the odds bar decides: your card's stats and type counters set your chance, and long shots pay big. Under ten seconds a fight.</p></div>
       <div class="record" id="arenaRecord"></div>
     </div>
     <div class="arena-setup">
       <div class="panel"><div class="label">Your fighter</div><div class="fighter-pick" id="fighterPick"></div></div>
-      <div class="panel"><div class="label">Opponent</div><div class="films" id="filmPick"></div><button class="btn brass big" id="startFight">Watch</button></div>
+      <div class="panel"><div class="label">Opponent</div><div class="films" id="filmPick"></div><div class="stakes" id="stakes"></div><button class="btn brass big" id="startFight">Clash</button></div>
     </div>
     <div class="panel ladder" id="ladder"></div>
   </section>
@@ -2161,6 +2201,14 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
 
 <div class="modal" id="pm" hidden>
   <div class="modal-box pm-box" role="dialog" aria-modal="true"><div id="pmBody"></div></div>
+</div>
+
+<div class="clash" id="clash" hidden>
+  <canvas id="clFx"></canvas>
+  <div class="cl-top"><span class="label" id="clLabel"></span><button class="btn small ghost" data-clclose="1">Leave</button></div>
+  <div class="cl-arena" id="clArena"><div class="cl-side me" id="clMe"></div><div class="cl-vs">VS</div><div class="cl-side opp" id="clOpp"></div></div>
+  <div class="cl-bar" id="clBar"><div class="cl-seg me" id="clSegMe"></div><div class="cl-seg opp"></div><i class="cl-mark" id="clMark"></i></div>
+  <div class="cl-result" id="clResult"></div>
 </div>
 
 <script>
@@ -3200,21 +3248,109 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     for (const it of state.vault) { const c = best.get(it.id); if (!c || (c.ed === "sketch" && it.ed !== "sketch")) best.set(it.id, it); }
     return [...best.values()].sort((a, b) => BY_ID[b.id].v - BY_ID[a.id].v);
   }
+  // ---------- ARENA: Clash. Pick a card, stake tokens, the cards collide and the odds bar decides. ----------
+  // Win chance = stats (rarer fighters hit harder) + a type counter edge. Payout = stake x 0.95 / chance,
+  // so long shots pay big. Tokens are play money: they can't be bought or cashed out.
+  const TYPE_CYCLE = ["fist", "blade", "chain", "reach", "guard", "blunt", "arcane", "shadow", "time", "royal", "void"];
+  function counterEdge(m, o) { const a = TYPE_CYCLE.indexOf(FTYPE[baseOf(m.id)]), b = TYPE_CYCLE.indexOf(FTYPE[baseOf(o.id)]); if (a < 0 || b < 0) return 0; if ((a + 1) % TYPE_CYCLE.length === b) return .06; if ((b + 1) % TYPE_CYCLE.length === a) return -.06; return 0; }
+  const clashChance = (m, o) => Math.max(.12, Math.min(.88, winChance(m, o) + counterEdge(m, o)));
+  const clashPay = (p, stake) => stake ? Math.max(stake + 1, Math.round(stake * .95 / p)) : 5;
+  const STAKES = [0, 5, 10, 25, 50, 100];
+  let clStake = 10, CL = null;
+  const recTxt = it => it && it.rec ? `${it.rec.w}–${it.rec.l}` : "0–0";
   function renderArena() {
     const roster = arenaRoster();
     if (pickFighter !== "loaner" && !roster.some(it => it.id === pickFighter)) pickFighter = "loaner";
     const myId = pickFighter === "loaner" ? "knuckles" : pickFighter, me = BY_ID[myId];
-    const tile = (key, f, tag, col) => `<button class="fp" data-pick="${key}" aria-pressed="${pickFighter === key}">${figImg(f)}<span class="n">${esc(f.name)}</span><span class="st">${esc(f.title)} · A${f.atk} S${f.spd} D${f.def}</span><span class="tag" style="color:${col}">${tag}</span></button>`;
-    $("fighterPick").innerHTML = tile("loaner", BY_ID.knuckles, "Loaner", "#8d897f") + roster.filter(it => it.id !== "knuckles" || true).map(it => { const f = BY_ID[it.id]; return tile(it.id, f, (it.ed === "sketch" ? "Sketch " : "") + RLABEL[f.r], RCOLOR[f.r]); }).join("");
-    const opps = FIGHTERS.filter(f => f.id !== myId).map(f => ({ f, film: filmFor(myId, f.id) })).sort((x, y) => (x.film ? 0 : 1) - (y.film ? 0 : 1) || RARITIES.indexOf(x.f.r) - RARITIES.indexOf(y.f.r));
-    if (!pickOpp || !filmFor(myId, pickOpp)) { const first = opps.find(o => o.film); pickOpp = first ? first.f.id : null; }
-    $("filmPick").innerHTML = opps.map(({ f, film }) => film
-      ? `<button class="film" data-opp="${f.id}" aria-pressed="${pickOpp === f.id}">${figImg(f)}<span class="fno">${esc(f.title || "")}</span><b>${esc(f.name)}</b><span class="ft">“${esc(film.title)}”</span><span class="fw">Win ${Math.round(winChance(me, f) * 100)}% · +${REWARD[f.r]} tokens</span></button>`
-      : `<div class="film locked" title="No fight film exists for this matchup yet">${figImg(f)}<span class="fno">NO FILM YET</span><b>${esc(f.name)}</b><span class="ft">Locked</span></div>`).join("");
-    const fm = pickOpp && filmFor(myId, pickOpp);
-    $("startFight").disabled = !fm; $("startFight").textContent = fm ? `Fight · ${me.name} vs ${BY_ID[pickOpp].name}` : "Pick an opponent";
-    $("arenaRecord").innerHTML = `<div><span class="label">Wins</span><strong>${state.s.wins}</strong></div><div><span class="label">Losses</span><strong>${state.s.losses}</strong></div><div><span class="label">Tokens</span><strong style="color:var(--token)">${fmt(state.tokens)}</strong></div>`;
+    const tile = (key, f, tag, col, it) => `<button class="fp" data-pick="${key}" aria-pressed="${pickFighter === key}">${figImg(f)}<span class="n">${esc(f.name)}</span><span class="st">${esc(f.title)} · ${key === "loaner" ? "loaner" : "record " + recTxt(it)}</span><span class="tag" style="color:${col}">${tag}</span></button>`;
+    $("fighterPick").innerHTML = tile("loaner", BY_ID.knuckles, "Loaner", "#8d897f") + roster.map(it => { const f = BY_ID[it.id], c = cardOf(it), R = crOf(c); return tile(it.id, f, esc(R.name), R.col, it); }).join("");
+    const opps = FIGHTERS.filter(f => !f.base && f.id !== myId).map(f => ({ f, p: clashChance(me, f), ce: counterEdge(me, f) })).sort((x, y) => y.p - x.p);
+    if (!pickOpp || !opps.some(o => o.f.id === pickOpp)) pickOpp = (opps[Math.floor(opps.length / 2)] || opps[0]).f.id;
+    const stake = clStake;
+    $("filmPick").innerHTML = opps.map(({ f, p, ce }) => `<button class="film" data-opp="${f.id}" aria-pressed="${pickOpp === f.id}">${figImg(f)}<span class="fno">${esc(f.title || "")}</span><b>${esc(f.name)}</b><span class="ft">${Math.round(p * 100)}% to win${ce > 0 ? " · counter +6%" : ce < 0 ? " · countered" : ""}</span><span class="fw">${stake ? `${stake} pays ${clashPay(p, stake)}` : "Free · win pays 5"}</span></button>`).join("");
+    const o = BY_ID[pickOpp], p = clashChance(me, o);
+    $("stakes").innerHTML = `<span class="label">Stake</span>${STAKES.map(s => `<button class="chip${clStake === s ? " on" : ""}" data-stake="${s}" ${s > state.tokens ? "disabled" : ""}>${s ? s : "Free"}</button>`).join("")}`;
+    $("startFight").disabled = !o || (clStake > state.tokens); $("startFight").innerHTML = o ? `Clash · ${Math.round(p * 100)}% · ${clStake ? `win ${clashPay(p, clStake)}` : "free"}` : "Pick an opponent";
+    $("arenaRecord").innerHTML = `<div><span class="label">Wins</span><strong>${state.s.wins}</strong></div><div><span class="label">Losses</span><strong>${state.s.losses}</strong></div><div><span class="label">Streak</span><strong>${state.s.streak || 0}</strong></div><div><span class="label">Tokens</span><strong style="color:var(--token)">${fmt(state.tokens)}</strong></div>`;
   }
+  // tiny particle layer for the clash screen
+  const clFx = (function () {
+    let cv, c, parts = [], raf = 0, last = 0;
+    function loop(now) { const dt = Math.min(.05, (now - last) / 1000); last = now; const d = Math.min(devicePixelRatio || 1, 2), W = cv.clientWidth, H = cv.clientHeight;
+      if (cv.width !== Math.round(W * d)) { cv.width = Math.round(W * d); cv.height = Math.round(H * d); } c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, W, H); c.globalCompositeOperation = "lighter";
+      for (const p of parts) { p.vx *= p.dr; p.vy = p.vy * p.dr + p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.l -= dt; p.r += p.vr * dt; const a = Math.max(0, Math.min(1, p.l / p.m * 1.5)); c.globalAlpha = a; c.fillStyle = p.col;
+        if (p.k === "chip") { c.save(); c.translate(p.x, p.y); c.rotate(p.r); c.fillRect(-p.s, -p.s * .45, p.s * 2, p.s * .9); c.restore(); } else { c.beginPath(); c.arc(p.x, p.y, p.s, 0, 7); c.fill(); } }
+      parts = parts.filter(p => p.l > 0); c.globalAlpha = 1; if (parts.length) raf = requestAnimationFrame(loop); else { c.clearRect(0, 0, W, H); raf = 0; } }
+    const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(loop); } };
+    return {
+      bind(el) { cv = el; c = el.getContext("2d"); },
+      burst(x, y, n, cols, sp, kind) { for (let i = 0; i < n; i++) { const a = rand() * Math.PI * 2, v = sp * (.2 + rand() * .9), l = .5 + rand() * .9; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 420, dr: .985, l, m: l, s: kind === "chip" ? 2 + rand() * 5 : 1 + rand() * 2.4, col: cols[i % cols.length], k: kind || "spark", r: rand() * 6, vr: (rand() - .5) * 14 }); } kick(); },
+      rain(x, w, n, cols) { for (let i = 0; i < n; i++) { const l = 1.2 + rand(); parts.push({ x: x + (rand() - .5) * w, y: -20 - rand() * 200, vx: (rand() - .5) * 60, vy: 120 + rand() * 260, g: 420, dr: .995, l, m: l, s: 3 + rand() * 4, col: cols[i % cols.length], k: "chip", r: rand() * 6, vr: (rand() - .5) * 10 }); } kick(); }
+    };
+  })();
+  function clashStart() {
+    if (CL) return;
+    const myId = pickFighter === "loaner" ? "knuckles" : pickFighter, me = BY_ID[myId], opp = BY_ID[pickOpp]; if (!opp) return;
+    if (clStake > state.tokens) { toast(`You need ${clStake} tokens for that stake`); return; }
+    const p = clashChance(me, opp), won = rand() < p, stake = clStake, pay = clashPay(p, stake);
+    const myItem = pickFighter === "loaner" ? { id: "knuckles", cno: "001", rar: "C", serial: 0, ed: "foil" } : arenaRoster().find(it => it.id === myId);
+    const oc = CARDS.find(c => c.id === opp.id) || CARDS[0], oppItem = { id: oc.id, cno: oc.no, rar: oc.rar, serial: 0, ed: "foil" };
+    state.tokens -= stake; save(); renderWallet();
+    // the marker lands inside the winner's share of the bar, usually close to the line
+    const target = won ? Math.max(.015, p - rand() * rand() * p) : Math.min(.985, p + rand() * rand() * (1 - p));
+    CL = { me, opp, p, won, stake, pay, myItem, target };
+    const box = $("clash");
+    $("clMe").innerHTML = `<div class="cl-card">${cardHTML(myItem)}</div><div class="cl-tag"><b>${esc(me.name)}</b><span>${Math.round(p * 100)}%</span></div>`;
+    $("clOpp").innerHTML = `<div class="cl-card">${cardHTML(oppItem)}</div><div class="cl-tag"><b>${esc(opp.name)}</b><span>${Math.round((1 - p) * 100)}%</span></div>`;
+    $("clSegMe").style.width = (p * 100).toFixed(1) + "%"; $("clMark").style.left = "0%"; $("clResult").innerHTML = ""; $("clLabel").textContent = stake ? `Stake ${stake} · win pays ${pay}` : "Free clash · win pays 5";
+    box.className = "clash"; box.hidden = false; clFx.bind($("clFx")); void box.offsetWidth;
+    sfx.unlock(); sfx.whoosh();
+    const at = (ms, f) => setTimeout(() => { if (CL) f(); }, ms);
+    box.classList.add("in");
+    at(480, () => { box.classList.add("charge"); sfx.charge(.7, "epic"); });
+    at(1180, () => {
+      box.classList.remove("charge"); box.classList.add("slam"); sfx.boom(1); clShake(10, 280);
+      const r = $("clArena").getBoundingClientRect(); clFx.burst(r.left + r.width / 2, r.top + r.height / 2, 90, ["#ffffff", "#e9e4d8", "#c4232b"], 900);
+      if (navigator.vibrate) try { navigator.vibrate([20, 30, 40]); } catch (_) {}
+    });
+    at(1500, () => { box.classList.add("bar"); clRoll(); });
+  }
+  function clShake(px, ms) { const a = $("clArena"), t0 = performance.now(); (function run(now) { const k = (now - t0) / ms; if (k >= 1 || !CL) { a.style.transform = ""; return; } const m = px * (1 - k); a.style.transform = `translate(${((rand() - .5) * 2 * m).toFixed(1)}px,${((rand() - .5) * 2 * m).toFixed(1)}px)`; requestAnimationFrame(run); })(t0); }
+  function clRoll() {
+    const T = 2700, L = 6 + CL.target, mark = $("clMark"), bar = $("clBar"), t0 = performance.now(), p = CL.p;
+    const tri = s => { const m = s % 2; return m < 1 ? m : 2 - m; };
+    let side = 0;
+    (function step(now) {
+      if (!CL) return;
+      const k = Math.min(1, (now - t0) / T), s = L * (1 - Math.pow(1 - k, 3.2)), x = tri(s);
+      mark.style.left = (x * 100).toFixed(2) + "%";
+      const sd = x < p ? 1 : -1; if (sd !== side) { if (side) { sfx.tick(); bar.classList.remove("cross"); void bar.offsetWidth; bar.classList.add("cross"); } side = sd; }
+      bar.style.setProperty("--heat", k.toFixed(3));
+      if (k < 1) requestAnimationFrame(step); else setTimeout(clResolve, 320);
+    })(t0);
+  }
+  function clResolve() {
+    if (!CL) return;
+    const { me, opp, won, stake, pay, myItem } = CL, box = $("clash");
+    const gain = won ? pay : 0;
+    state.tokens += gain; state.s.tokensEarned += Math.max(0, gain - stake); if (won) { state.s.wins++; state.s.streak = (state.s.streak || 0) + 1; } else { state.s.losses++; state.s.streak = 0; }
+    if (myItem && myItem.uid) { const it = state.vault.find(x => x.uid === myItem.uid); if (it) { it.rec = it.rec || { w: 0, l: 0 }; if (won) it.rec.w++; else it.rec.l++; } }
+    const rp = rankedResult(won, me, opp, CL.p);
+    log(`${won ? "Won" : "Lost"} a clash vs ${opp.name}${stake ? ` (stake ${stake})` : ""}`, gain - stake, "token"); save();
+    box.classList.add(won ? "won" : "lost");
+    const loser = won ? $("clOpp") : $("clMe"), lr = loser.getBoundingClientRect(), wr = (won ? $("clMe") : $("clOpp")).getBoundingClientRect();
+    clFx.burst(lr.left + lr.width / 2, lr.top + lr.height * .4, 120, ["#0b0b0c", "#2a2a2c", "#e9e4d8", "#c4232b"], 700, "chip");
+    sfx.boom(won ? 1.3 : .8); clShake(won ? 14 : 8, 360);
+    if (won) { sfx.chime(stake >= 50 || CL.p < .35 ? "legendary" : "rare"); setTimeout(() => clFx.rain(wr.left + wr.width / 2, wr.width * 1.6, Math.min(160, 30 + gain * 2), ["#e9e4d8", "#c9a04a", "#ffffff"]), 220); }
+    const rec = myItem && myItem.uid ? (state.vault.find(x => x.uid === myItem.uid) || {}).rec : null;
+    $("clResult").innerHTML = `<div class="cl-big">${won ? "WIN" : "LOSS"}</div>
+      <div class="cl-sub">${won ? `+<span id="clCount">0</span> tokens` : stake ? `−${stake} tokens` : "No tokens lost"} · ${rp >= 0 ? "+" + rp : rp} ranked${state.s.streak > 1 ? ` · ${state.s.streak} win streak` : ""}${rec ? ` · ${esc(me.name)} ${rec.w}–${rec.l}` : ""}</div>
+      <div class="cl-btns"><button class="btn brass" data-clagain="1">Again · Space</button><button class="btn" data-clnew="1">New opponent</button><button class="btn ghost" data-clclose="1">Leave</button></div>`;
+    if (won) { const el = $("clCount"), t0 = performance.now(); (function up(now) { const k = Math.min(1, (now - t0) / 700); if (el) el.textContent = Math.round(gain * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(up); else sfx.coin(); })(t0); }
+    CL.done = true; renderAll();
+  }
+  function clClose() { CL = null; const box = $("clash"); box.hidden = true; box.className = "clash"; renderArena(); }
+  function clAgain() { if (!CL || !CL.done) return; CL = null; $("clash").className = "clash"; setTimeout(clashStart, 60); }
 
   // price tape across the top: the day's biggest movers
   let tkDay = -1;
@@ -3626,8 +3762,8 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
         ${trades.map(t => `<div class="pl-row"><span>Your trade: ${esc(t.give.map(g => BY_ID[g.id] ? BY_ID[g.id].name : "card").join(", "))}${t.wantNo ? " for " + esc(BY_ID[CARD_BY_NO[t.wantNo].id].name) : ""}${t.wantCoins ? " + " + money(t.wantCoins) : ""}</span><span><button class="btn small" data-tradelink="${t.id}">Link</button> <button class="btn small ghost" data-tradecancel="${t.id}">Cancel</button></span></div>`).join("")}</div>` : ""}`;
   }
   // --- ranked seasons ---
-  function rankedResult(won, me, opp) {
-    const sid = seasonId(), p = winChance(me, opp), pts = won ? Math.round(5 + 40 * (1 - p)) : -Math.round(3 + 12 * p);
+  function rankedResult(won, me, opp, p0) {
+    const sid = seasonId(), p = p0 || winChance(me, opp), pts = won ? Math.round(5 + 40 * (1 - p)) : -Math.round(3 + 12 * p);
     if (!state.rank || state.rank.season !== sid) state.rank = { season: sid, pts: 0, w: 0, l: 0 };
     state.rank.pts = Math.max(0, state.rank.pts + pts); if (won) state.rank.w++; else state.rank.l++; save();
     if (NET.ready) NET.db.doc("ladder/" + NET.uid).set({ season: sid, pts: state.rank.pts, w: state.rank.w, l: state.rank.l, at: Date.now() }).catch(() => {});
@@ -5044,6 +5180,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   $("cut").addEventListener("click", e => { e.stopPropagation(); if (e.target.id === "cutSkip") { endCutscene(); return; } closeCutscene(); });
   document.addEventListener("keydown", e => {
     const k = e.key.toLowerCase();
+    if (!$("clash").hidden) { if ((k === " " || k === "enter") && !e.repeat) { e.preventDefault(); clAgain(); } if (k === "escape") clClose(); return; }
     if (CUT) { if (k === " " || k === "enter" || k === "escape") { e.preventDefault(); if (!e.repeat) closeCutscene(); } return; }
     if (!$("fight").hidden && fight) {
       if (k === " " && !fight.done) { e.preventDefault(); fight.skip(); }
@@ -5069,6 +5206,10 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     if (t.dataset.scanopen) { openScan(PACK_BY_ID[t.dataset.scanopen] || null); return; }
     if (t.dataset.buy) { buy(t.dataset.buy); return; }
     if (t.dataset.release) { releaseCard(t.dataset.release, t); return; }
+    if (t.dataset.stake != null) { clStake = +t.dataset.stake; renderArena(); return; }
+    if (t.dataset.clagain) { clAgain(); return; }
+    if (t.dataset.clnew) { clClose(); document.getElementById("filmPick").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+    if (t.dataset.clclose) { clClose(); return; }
     if (t.dataset.listopen) { listOpen(t.dataset.listopen); return; }
     if (t.dataset.listconfirm) { listConfirm(t.dataset.listconfirm); return; }
     if (t.dataset.tradeopen) { tradeOpen(t.dataset.tradeopen); return; }
@@ -5106,7 +5247,8 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
       case "sumScan": closeStage(); openScan(); break;
       case "sumReplay": { const it = SS.items.find(hasCutscene); if (it) playCutscene(it, null); break; }
       case "sumAgain": { const id = SS.pack.id; closeStage(); buy(id); break; }
-      case "startFight": case "rematch": startFight(); break;
+      case "startFight": clashStart(); break;
+      case "rematch": startFight(); break;
       case "leaveFight": case "quitFight": closeFight(); break;
       case "fightSkip": if (fight && !fight.done) fight.skip(); break;
       case "toSketch": closeFight(); location.hash = "#packs"; buy("sketch"); break;
