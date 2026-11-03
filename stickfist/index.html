@@ -1860,6 +1860,17 @@ form.scan-opt { cursor: default; }
 .pk.pk4 .pk4-sub { font-family: "Archivo", "Helvetica Neue", Arial, sans-serif; font-weight: 700; font-size: 3.1cqi; letter-spacing: .22em; text-transform: uppercase; color: rgba(244,242,236,.62); }
 .pk.pk4.sketch .pk4-art img { filter: grayscale(1) contrast(1.35) brightness(1.08); } .pk.pk4.sketch .pk4-tint { opacity: .12; }
 .pk.pk4 .pk-fig, .pk.pk4 .pk-name, .pk.pk4 .pk-no, .pk.pk4 .pk-sub, .pk.pk4 .pk-sigil, .pk.pk4 .pk-lim { display: none; }
+/* ===================== PACK v5: product renders of the foil wrappers ===================== */
+.pk.pk5 { filter: drop-shadow(0 28px 26px rgba(0,0,0,.7)) drop-shadow(0 6px 8px rgba(0,0,0,.5)); }
+.pk.pk5 .pk-body { clip-path: none !important; -webkit-clip-path: none !important; background: none !important; overflow: visible; }
+.pk.pk5 .pk-body::before, .pk.pk5 .pk-body::after, .pk.pk5 .pk-top { display: none !important; }
+.pk.pk5 .pk5-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; user-select: none; -webkit-user-drag: none; }
+.pk.pk5 .pk5-glint, .pk.pk5 .sheen { -webkit-mask: var(--pkimg) center / 100% 100% no-repeat; mask: var(--pkimg) center / 100% 100% no-repeat; clip-path: none !important; -webkit-clip-path: none !important; }
+.pk.pk5 .pk5-glint { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; background: linear-gradient(105deg, transparent 36%, rgba(255,255,255,.0) 41%, rgba(255,255,255,.38) 48%, rgba(255,255,255,.08) 53%, transparent 60%); background-size: 320% 100%; animation: pk5glint 5.5s ease-in-out infinite; }
+@keyframes pk5glint { 0%, 55% { background-position: 120% 0; } 100% { background-position: -30% 0; } }
+.pk.pk5 .tearline, .pk.pk5 .tearfill, .pk.pk5 .tearglow { display: none !important; }
+.tile:hover .pk.pk5 .pk5-glint, .showcase:hover .pk.pk5 .pk5-glint { animation-duration: 2.2s; }
+@media (prefers-reduced-motion: reduce) { .pk.pk5 .pk5-glint { animation: none; } }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -2734,16 +2745,12 @@ form.scan-opt { cursor: default; }
   // Scan ID printed on every physical card: set, collector number, and the copy's own serial.
   const scanId = (card, serial) => `${card.set || "IS"}-${card.set ? card.no.slice(2).padStart(3, "0") : card.no}-${String(serial).padStart(6, "0")}`;
 
-  // Packs: crinkled foil wrapper over full-bleed key art (the pack's signature fighter; limited packs use their chase card)
+  // Packs: product renders of the real foil wrappers (art/packs), with a moving highlight masked to the pack's shape
   function packHTML(p) {
-    const lim = p.lim, key = lim ? poolSet(lim, "SIR")[0] : null, src = key && key.art ? `art/n/${key.art}.jpg` : portrait(BY_ID[p.fig]);
-    const inner = `<div class="band"></div><div class="crimp t"></div><div class="crimp b"></div>`;
-    return `<div class="pk pk4${p.ed === "sketch" ? " sketch" : ""}${lim ? " pklim pk-" + lim : ""}" style="--pk-a:${p.a};--pk-b:${p.b};--pk-acc:${p.acc}">
-      <div class="pk-body"><div class="pk4-art"><img src="${src}" alt="" draggable="false"></div><i class="pk4-tint"></i><i class="pk4-shade"></i><i class="pk4-crinkle"></i>${inner}
-        ${lim ? `<div class="pk4-lim">Limited · ${fmt(LSETS[lim].run)} packs · never reprinted</div>` : ""}
-        <div class="pk4-title"><div class="pk4-no">No. ${p.no}</div><div class="pk4-name">${esc(p.name)}</div><div class="pk4-sub">${lim ? "3 cards · Limited edition" : p.ed === "sketch" ? "5 cards · Sketch edition" : "5 cards · Ink &amp; Steel"}</div></div>
-      </div>
-      <div class="pk-top">${inner}<div class="pk4-head"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#i-sigil"/></svg><span>STIXX</span><em>18+</em></div></div>
+    const src = `art/packs/${p.id}.webp`;
+    return `<div class="pk pk5${p.ed === "sketch" ? " sketch" : ""}${p.lim ? " pklim pk-" + p.lim : ""}" style="--pk-a:${p.a};--pk-b:${p.b};--pk-acc:${p.acc};--pkimg:url(${src})">
+      <div class="pk-body"><img class="pk5-img" src="${src}" alt="${esc(p.name)} pack" draggable="false"><i class="pk5-glint"></i></div>
+      <div class="pk-top"></div>
       <div class="sheen"></div>
     </div>`;
   }
@@ -3815,8 +3822,8 @@ form.scan-opt { cursor: default; }
     bot.style.cssText += `;${box};clip-path:polygon(-10% ${A}%, 110% ${B}%, 110% 120%, -10% 120%);-webkit-clip-path:polygon(-10% ${A}%, 110% ${B}%, 110% 120%, -10% 120%)`;
     pk.style.visibility = "hidden";
     const seam = document.createElement("div"); seam.className = "cut-seam"; seam.style.cssText = box;
-    const L = (fa * 100).toFixed(2), R = (fb * 100).toFixed(2);
-    seam.innerHTML = `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="${dir > 0 ? -4 : 104}" y1="${dir > 0 ? L : R}" x2="${dir > 0 ? 104 : -4}" y2="${dir > 0 ? R : L}" pathLength="1"/></svg>`;
+    const L = (fa * 100).toFixed(2), R = (fb * 100).toFixed(2), sx0 = pk.classList.contains("pk5") ? 9 : -4, sx1 = 100 - sx0;
+    seam.innerHTML = `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="${dir > 0 ? sx0 : sx1}" y1="${dir > 0 ? L : R}" x2="${dir > 0 ? sx1 : sx0}" y2="${dir > 0 ? R : L}" pathLength="1"/></svg>`;
     sp.append(bot, top, seam);
     const flash = document.createElement("div"); flash.className = "cut-flash"; stage.appendChild(flash); setTimeout(() => flash.remove(), 600);
     sfx.slash();
