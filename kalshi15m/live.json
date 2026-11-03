@@ -149,6 +149,34 @@
    "why": "#5 of the 16 golden strategies. Assumes a quarter of the last 1-minute move carries on. Final exam (15 locked days, $10 a bet): +$7,476 on 3,844 trades, t=5.33; older archive t=4.32."
   },
   {
+   "id": "G-emp",
+   "label": "#6 \u2605 All 9 coins \u00b7 Bootstrap fair value",
+   "series": [
+    "KXBTC15M",
+    "KXETH15M",
+    "KXSOL15M",
+    "KXXRP15M",
+    "KXHYPE15M",
+    "KXBNB15M",
+    "KXNEAR15M",
+    "KXDOGE15M",
+    "KXZEC15M"
+   ],
+   "strategy": "golden:fv_emp",
+   "execution": "taker",
+   "poll": "minute",
+   "params": {
+    "start": 2,
+    "end": 13,
+    "edge": 0.14,
+    "lb": 21,
+    "vm": 1.0
+   },
+   "golden_rule": "fv_emp:ALL",
+   "lab3_id": "fv_emp:ALL:taker",
+   "why": "#6 of the 16 golden strategies. Reads the chance of finishing above the target off this coin's own last 21 days of similar moves. Final exam (15 locked days, $10 a bet): +$7,036 on 4,687 trades, t=5.30; older archive t=4.24."
+  },
+  {
    "id": "G-DOGE-drift",
    "label": "#7 \u2605 DOGE \u00b7 Momentum-aware fair value",
    "series": "KXDOGE15M",

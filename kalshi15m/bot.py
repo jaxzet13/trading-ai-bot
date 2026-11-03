@@ -119,14 +119,21 @@ def _ts(s): return int(datetime.fromisoformat(s.replace("Z", "+00:00")).timestam
 
 def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=False, demo=False,
         max_daily_loss=50.0, max_trades_per_day=40, poll=5, execution="taker", wait=2, improve=0.01, sid=None,
-        sizing=None, exit_rule=None):
+        sizing=None, exit_rule=None, golden_rule=None):
     """sizing: {"vm", "norm", "cap"} = stake * min(kelly / norm, cap) (lab3 "sized");
     exit_rule: {"vm", "conv": k} = sell at the bid once it reaches model value - k cents (lab3 "scalp").
     Both default off, so existing strategies behave exactly as before."""
     if strategy not in STRATEGIES and "@" in strategy:
         from .lab import _register_sessions
         _register_sessions()
-    fn = STRATEGIES[strategy][0]
+    # golden_rule: a lab3 rule id (e.g. "fv_emp:ALL") evaluated by golden_live's engine, which adds the
+    # lab3 features (21-day bootstrap etc.) to P; replay-tested equal to lab3.signal.
+    eng = None
+    if golden_rule:
+        from . import golden_live as GL
+        eng = GL.engine(series)
+        eng.prepare()
+    fn = None if golden_rule else STRATEGIES[strategy][0]
     sid = sid or series  # one id per config entry, so several strategies can share a coin
     tag = {"series": series, "sid": sid, "strategy": strategy, "execution": execution, "params": params}
     log = lambda d: _log({**d, **tag})
@@ -259,7 +266,13 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                          "minute": minute, "close_ts": open_ts + 900})
             if cur in traded or day_pnl <= -max_daily_loss or day_trades >= max_trades_per_day:
                 continue
-            sides, mins = fn(P, **params)
+            gsig = None
+            if eng is not None:
+                eng.update(P, open_ts, minute, spot_now=spot)
+                gsig = eng.decide(golden_rule, P, minute)
+                sides, mins = (np.array([1 if gsig.side == "yes" else -1]), np.array([minute])) if gsig else (np.array([0]), np.array([0]))
+            else:
+                sides, mins = fn(P, **params)
             if sides[0] != 0 and mins[0] == minute:
                 side = "yes" if sides[0] == 1 else "no"
                 traded.add(cur); day_trades += 1
@@ -278,7 +291,7 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                     log({"event": "rest", "mode": mode, "ticker": cur, "side": side, "n": n, "price": price,
                          "model": float(P["p_model"][0, j]), "spot": spot, "strike": strike, "close_ts": open_ts + 900})
                     continue
-                price = P["yes_ask"][0, j] if side == "yes" else P["no_ask"][0, j]
+                price = gsig.price if gsig else (P["yes_ask"][0, j] if side == "yes" else P["no_ask"][0, j])
                 stake_i = stake
                 if sizing:
                     q = model_prob(P, sizing.get("vm", 1.0))[0, j]
