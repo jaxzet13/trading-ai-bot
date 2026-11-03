@@ -255,3 +255,15 @@ bash scripts/run_real.sh --demo --config kalshi15m/real_all9.json
 ```
 
 Note: on their own, SOL, BNB and ZEC failed their backtests; the pass is for the 9 coins as a group.
+
+### Kalshi exchange shards (important)
+
+Kalshi splits its exchange into shards, and crypto markets trade from **shard 2**. Money you deposit lands on
+shard 0. The Kalshi website moves money between shards for you, but API orders do not, so the bot's crypto
+orders are rejected with `insufficient_shard_balance` until you move money once:
+
+```bash
+.venv/bin/python -m kalshi15m real move-to-crypto --demo --usd 10     # or --live
+```
+
+`real check` shows the balance on each shard and warns if shard 2 is empty.

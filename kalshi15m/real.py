@@ -815,6 +815,15 @@ def check(api: KalshiAPI, series: str, mode: str):
     """Authenticated read-only checks. Places NO orders."""
     print(f"[{mode}] {api.base}  key id {api.key_id[:4]}...{api.key_id[-4:]}")
     print(f"balance: ${api.balance():.2f}")
+    try:
+        bd = {int(x["exchange_index"]): float(x["balance"]) for x in api.get("/portfolio/balance").get("balance_breakdown", [])}
+        if bd:
+            print(f"  by exchange shard: {bd}  (crypto markets trade from shard 2)")
+            if bd.get(2, 0.0) <= 0:
+                print("  WARNING: no money on shard 2, so crypto orders will be rejected (insufficient_shard_balance).")
+                print("  Move funds with:  python -m kalshi15m real move-to-crypto --demo|--live --usd AMOUNT")
+    except (requests.RequestException, KeyError, ValueError, TypeError):
+        pass
     pos = [p for p in api.positions() if _f(p.get("position_fp")) != 0]
     print(f"open positions: {len(pos)}")
     for p in pos:
@@ -832,7 +841,8 @@ def check(api: KalshiAPI, series: str, mode: str):
 
 def main(args: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="kalshi15m real")
-    ap.add_argument("action", nargs="?", choices=["run", "check"], default="run")
+    ap.add_argument("action", nargs="?", choices=["run", "check", "move-to-crypto"], default="run")
+    ap.add_argument("--usd", type=float, default=None, help="move-to-crypto: dollars to move from shard 0 to shard 2")
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--demo", action="store_true", help="Kalshi demo exchange, fake money (default)")
     g.add_argument("--live", action="store_true", help="REAL MONEY")
@@ -862,6 +872,20 @@ def _main(a) -> int:
     if cfg.get("log") and a.log == str(LOG):
         a.log = str(ROOT / cfg["log"])
     coins = cfg["series"] if isinstance(cfg["series"], list) else [cfg["series"]]
+    if a.action == "move-to-crypto":
+        if not a.usd or a.usd <= 0:
+            print("give --usd AMOUNT")
+            return EXIT_CONFIG
+        api = _api_from_env(base)
+        body = {"client_transfer_id": str(uuid.uuid4()), "source": "event_contract", "destination": "event_contract",
+                "amount": int(round(a.usd * 10000)), "source_exchange_shard": 0, "destination_exchange_shard": 2}
+        try:
+            print(api._send("POST", "/portfolio/intra_exchange_instance_transfer", body=body))
+        except requests.RequestException as e:
+            print(f"transfer FAILED: {e}")
+            return EXIT_CONFIG
+        print(f"moved ${a.usd:.2f} to the crypto shard (2); no orders placed")
+        return EXIT_CLEAN
     if a.action == "check":
         try:
             api = _api_from_env(base)
