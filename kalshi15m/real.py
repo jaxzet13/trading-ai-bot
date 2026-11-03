@@ -211,6 +211,8 @@ class KalshiAPI:
     # --- market data (public)
     def open_market(self, series: str, deadline=None):
         ms = self.get("/markets", {"series_ticker": series, "status": "open"}, deadline=deadline).get("markets", [])
+        # the demo exchange keeps some long-closed markets listed as "open": only consider ones still running
+        ms = [m for m in ms if bot._ts(m["close_time"]) > self.clock()] if ms else ms
         return min(ms, key=lambda m: m["close_time"]) if ms else None
 
     def market(self, ticker: str):
