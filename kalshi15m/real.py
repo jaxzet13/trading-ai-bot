@@ -236,6 +236,14 @@ class KalshiAPI:
         d = self.get("/portfolio/balance")
         return float(d["balance_dollars"]) if d.get("balance_dollars") is not None else d["balance"] / 100
 
+    def balances(self) -> tuple[float, float]:
+        """(total, crypto) in dollars. crypto = exchange shard 2 (balance_breakdown, a dollar string), where
+        crypto markets trade from; the total when the breakdown is absent (subaccount-restricted keys)."""
+        d = self.get("/portfolio/balance")
+        total = float(d["balance_dollars"]) if d.get("balance_dollars") is not None else d["balance"] / 100
+        bd = {int(x["exchange_index"]): float(x["balance"]) for x in d.get("balance_breakdown") or []}
+        return total, bd.get(2, total if not bd else 0.0)
+
     def positions(self, **params):
         return self.get("/portfolio/positions", params).get("market_positions", [])
 
@@ -410,6 +418,7 @@ class Runner:
         self.stop_requested = False
         self.cur, self.P, self.seen, self.minutes_run = None, None, set(), 0
         self.balance = None
+        self.crypto_balance = None               # shard 2, only tracked with limits.stake_pct_of_balance
         self.rebuild()
 
     # --- persistence
@@ -514,8 +523,11 @@ class Runner:
     def run(self):
         what = (f"golden rules (best first) {[r[0] for r in self.rules]}" if self.golden
                 else f"{self.cfg['strategy']} {self.params}")
+        pct = self.L.get("stake_pct_of_balance")
+        stake = (f"stake max(${self.L['stake_usd_min']}, {pct:.0%} of the crypto balance) (${self.L['stake_usd']} "
+                 f"while unknown)" if pct else f"stake ${self.L['stake_usd']}/trade")
         self.out(f"[{self.mode}] {what} on {self.series}, taker IOC, "
-                 f"stake ${self.L['stake_usd']}/trade, daily loss cap ${self.L['max_daily_loss_usd']}, "
+                 f"{stake}, daily loss cap ${self.L['max_daily_loss_usd']}, "
                  f"log {self.log_path}")
         self.log({"event": "start", "limits": self.L, "params": self.params, "strategy": self.cfg["strategy"],
                   "rules": [r[0] for r in self.rules]})
@@ -653,12 +665,14 @@ class Runner:
         tk = self.cur
         base = {"ticker": tk, "minute": minute, "side": side, "price": price, "lag_s": lag, "data_age_s": age,
                 **obs, "yes_ask_size": m.get("yes_ask_size_fp"), "yes_bid_size": m.get("yes_bid_size_fp")}
-        stake = self.L["stake_usd"]
+        stake = self.base_stake()
+        if self.L.get("stake_pct_of_balance") or signal is not None:
+            base.update(base_stake=round(stake, 4), balance_crypto=self.crypto_balance)
         if signal is not None:                      # golden rule: its model value, and Kelly stake if "sized"
             base["q"] = round(signal.q, 6)
             if signal.kind == "sized":
                 from . import golden_live as GL
-                stake, kel = GL.sized_stake(signal.rule, signal.q, price, self.L["stake_usd"])
+                stake, kel = GL.sized_stake(signal.rule, signal.q, price, stake)
                 base.update(kelly=round(kel, 6), stake=round(stake, 4), norm=GL.RULES[signal.rule]["norm"])
         why = self.blocked()
         if why is None and lag > self.L["max_decision_lag_s"]:
@@ -673,6 +687,9 @@ class Runner:
         max_cost = round(n * price + kalshi_fee(price, n), 4)
         if why is None and not self.dry and self.balance is not None and self.balance < max_cost:
             why = f"balance ${self.balance:.2f} < order cost ${max_cost:.2f}"
+        if why is None and not self.dry and self.L.get("stake_pct_of_balance") and self.crypto_balance is not None \
+                and self.crypto_balance < max_cost:
+            why = f"crypto (shard 2) balance ${self.crypto_balance:.2f} < order cost ${max_cost:.2f}"
         if why:
             self.out(f"  signal {side.upper()} @ {price:.3f} skipped: {why}")
             self.log({"event": "signal_skipped", "reason": why, **base})
@@ -1036,9 +1053,24 @@ class Runner:
         self.pnl_by_day[d] = self.pnl_by_day.get(d, 0.0) + rec["pnl"]
         self.out(f"  settled {tk}: {rec['result']} -> P&L ${rec['pnl']:+.2f} (today ${self.pnl_by_day[d]:+.2f})")
 
+    def base_stake(self):
+        """Dollars per bet before any Kelly scaling. With limits.stake_pct_of_balance (compounding):
+        max(stake_usd_min, pct x crypto balance), stake_usd while the balance is unknown (e.g. dry run)."""
+        pct = self.L.get("stake_pct_of_balance")
+        if not pct or self.crypto_balance is None:
+            return self.L["stake_usd"]
+        return max(self.L["stake_usd_min"], pct * self.crypto_balance)
+
     def refresh_balance(self):
         try:
-            self.balance = self.api.balance()
+            if self.L.get("stake_pct_of_balance"):
+                try:
+                    self.balance, self.crypto_balance = self.api.balances()
+                except (KeyError, ValueError, TypeError) as e:
+                    self.out(f"  balance check failed: unexpected answer ({e})")
+                    return
+            else:
+                self.balance = self.api.balance()
         except requests.RequestException as e:
             self.out(f"  balance check failed: {e}")
             return
@@ -1076,6 +1108,12 @@ def load_config(path=CONFIG) -> dict:
     bad = [k for k in REQUIRED_LIMITS if k != "min_balance_usd" and lim[k] <= 0]
     if bad or lim["min_balance_usd"] < 0 or not lim["min_price"] < lim["max_price"] < 1:
         raise Stop(f"{path}: invalid limits {bad or ['min_price/max_price']}", EXIT_CONFIG)
+    if "stake_pct_of_balance" in lim or "stake_usd_min" in lim:   # optional compounding stake (default off)
+        pct, mn = lim.get("stake_pct_of_balance"), lim.get("stake_usd_min")
+        if not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in (pct, mn)) \
+                or not 0 < pct <= 0.25 or mn <= 0:
+            raise Stop(f"{path}: stake_pct_of_balance must be in (0, 0.25] and stake_usd_min > 0 (both set)",
+                       EXIT_CONFIG)
     if "golden_rules" in cfg:   # lab3's golden rules, frozen to the exact lab3 params (see golden_live.GOLDEN)
         frozen = golden_frozen()
         if cfg.get("execution") != "taker" or not cfg.get("series") or not isinstance(cfg["series"], list) \

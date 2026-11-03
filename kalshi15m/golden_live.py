@@ -133,6 +133,9 @@ class Signal:
     def kind(self):
         return RULES[self.rule]["kind"]
 
+    def __iter__(self):                  # side, price, p = engine.decide(...)
+        return iter((self.side, self.price, self.p))
+
 
 class StaleData(requests.RequestException):
     """The spot feed is too old to trade on (treated like a network error by the runners)."""
@@ -163,6 +166,7 @@ def _iso(ts):
 
 
 _FETCH_LOCK = threading.Lock()        # catch-up downloads: one coin at a time
+_POOL = __import__("concurrent.futures").futures.ThreadPoolExecutor(max_workers=4, thread_name_prefix="golden-tick")
 
 
 def coinbase_candles(product: str, start: int | None = None, end: int | None = None, timeout: float = 4.0,
@@ -229,7 +233,10 @@ class GoldenEngine:
                 df = self._history
                 main_last = int(df.ts.max()) if len(df) else 0
             else:
-                main = pd.read_csv(self.data_dir / f"{self.series}_spot.csv")
+                try:
+                    main = pd.read_csv(self.data_dir / f"{self.series}_spot.csv")
+                except (OSError, ValueError) as e:
+                    raise StaleData(f"{self.series}: cannot read the spot history ({e})") from None
                 main_last = int(main.ts.max())
                 parts = [main[main.ts >= ws]]
                 if self.cache_path.exists():
@@ -382,12 +389,24 @@ class GoldenEngine:
         if self._T >= T:
             return self._last_info
         t0 = time.perf_counter()
-        candles = self.fetch_candles()
+        # Coinbase publishes the bar that just closed a few seconds late, so the live price is almost always
+        # needed: ask for it at the same time as the candles (same two requests as bot._spot_and_vol).
+        tick = _POOL.submit(self.fetch_ticker) if spot_now is None else None
+        try:
+            candles = self.fetch_candles()
+        finally:
+            if tick is not None:
+                try:
+                    tick_px, tick_err = tick.result(), None
+                except requests.RequestException as e:
+                    tick_px, tick_err = None, e
         bar = T - 60
         have = any(int(r[0]) == bar for r in candles) or (
             0 <= (bar - self.t0) // 60 < len(self.official) and self.official[(bar - self.t0) // 60])
-        if not have and spot_now is None:
-            spot_now = self.fetch_ticker()
+        if tick is not None:
+            if tick_err is not None and not have:
+                raise tick_err
+            spot_now = tick_px
         fetch_s = time.perf_counter() - t0
         self._trim(T)
         synthetic, last_ts, _ = self._merge(candles, T, spot_now)

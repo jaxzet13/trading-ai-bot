@@ -1,5 +1,5 @@
 {
-  "_note": "DEMO settings (fake money): the 16 golden rules of the lab3 hunt on all 9 coins. One runner per coin; every minute the coin's rules are checked best first (highest holdout t-stat) and the first that fires places the market's only bet (lower-ranked rules that fired too are logged as also_signalled). Rule settings are frozen to lab3's (the runner refuses edits). 'sized' rules stake stake_usd x min(Kelly / norm, 5); 'scalp' rules sell back at the bid once it reaches the model's fair value. Same limits as real_all9_demo.json ($4 per bet). Logs to real_all9_log.jsonl so open positions, one-bet-per-market and today's loss cap carry over from the all-9 demo. See kalshi15m/golden_live.py and REAL_MONEY.md.",
+  "_note": "DEMO settings (fake money): the 16 golden rules of the lab3 hunt on all 9 coins. One runner per coin; every minute the coin's rules are checked best first (highest holdout t-stat) and the first that fires places the market's only bet (lower-ranked rules that fired at the same minute are logged as also_signalled). Rule settings are frozen to lab3's (the runner refuses edits). Compounding stakes: each bet's base stake = max(stake_usd_min, stake_pct_of_balance x the crypto (shard 2) balance), stake_usd while the balance is unknown; 'sized' rules multiply the base by min(Kelly / norm, 5); 'scalp' rules sell back at the bid once it reaches the model's fair value. Orders the balance cannot cover are skipped and logged. Limits are per coin. Logs to real_all9_log.jsonl so open positions, one-bet-per-market and today's loss cap carry over from the all-9 demo. See kalshi15m/golden_live.py and REAL_MONEY.md.",
   "series": [
     "KXBTC15M",
     "KXETH15M",
@@ -252,9 +252,11 @@
   ],
   "log": "data/kalshi15m/real_all9_log.jsonl",
   "limits": {
-    "stake_usd": 4.0,
-    "max_contracts_per_order": 40,
-    "max_daily_loss_usd": 8.0,
+    "stake_usd": 10.0,
+    "stake_pct_of_balance": 0.1,
+    "stake_usd_min": 1.0,
+    "max_contracts_per_order": 100,
+    "max_daily_loss_usd": 20.0,
     "max_trades_per_day": 40,
     "max_open_positions": 1,
     "min_balance_usd": 2.0,

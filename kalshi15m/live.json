@@ -1,185 +1,12 @@
 {
- "_note": "Strategies paper-traded on live markets. Params are frozen; do not re-tune from live results.",
+ "_note": "Top-10 golden strategies from the lab3 hunt (#6, bootstrap fair value, is added once its 21-day live data feed is ready). The original strategies are archived in live_original.json.",
  "stake": 5.0,
  "max_daily_loss": 50.0,
  "max_trades_per_day": 150,
  "strategies": [
   {
-   "series": "KXNEAR15M",
-   "strategy": "fair_value",
-   "execution": "taker",
-   "poll": "minute",
-   "params": {
-    "start": 2,
-    "end": 13,
-    "edge": 0.12,
-    "vol_mult": 1.0
-   },
-   "why": "Passed two blind tests: Oct 17-Nov 1 holdout +$1,307/811 trades (t=2.53) and Jul-Aug archive +$3,099/1,782 trades (t=3.83). Latency-sensitive.",
-   "label": "NEAR \u00b7 Fair value"
-  },
-  {
-   "series": "KXHYPE15M",
-   "strategy": "fair_value",
-   "execution": "taker",
-   "poll": "minute",
-   "params": {
-    "start": 2,
-    "end": 13,
-    "edge": 0.12,
-    "vol_mult": 1.0
-   },
-   "why": "Passed the full backtest's strict bar: +$2,193 on 770 holdout trades, t=3.43.",
-   "label": "HYPE \u00b7 Fair value"
-  },
-  {
-   "series": "KXDOGE15M",
-   "strategy": "fair_value",
-   "execution": "taker",
-   "poll": "minute",
-   "params": {
-    "start": 2,
-    "end": 13,
-    "edge": 0.12,
-    "vol_mult": 1.0
-   },
-   "why": "Passed the full backtest (Oct 18-Nov 2 final exam +$2,260 on 968 trades, t=3.67, strict bar 3.21) and the Apr-Aug archive blind test (t=3.16). Same rule as NEAR.",
-   "label": "DOGE \u00b7 Fair value"
-  },
-  {
-   "id": "DOGE-v2",
-   "label": "DOGE \u00b7 Fair value v2",
-   "series": "KXDOGE15M",
-   "strategy": "fair_value_v2",
-   "execution": "taker",
-   "poll": "minute",
-   "params": {
-    "start": 2,
-    "end": 13,
-    "edge": 0.12,
-    "vol": "blend",
-    "min_price": 0.2,
-    "max_price": 0.8
-   },
-   "why": "Passed the full backtest's strict bar: +$1,752 on 745 holdout trades, t=4.23. Blends 1-hour and 4-hour volatility, skips prices under 20\u00a2 or over 80\u00a2."
-  },
-  {
-   "id": "DOGE-bid",
-   "label": "DOGE \u00b7 Fair value (bid)",
-   "series": "KXDOGE15M",
-   "strategy": "fair_value_bid",
-   "execution": "taker",
-   "poll": "minute",
-   "params": {
-    "start": 5,
-    "end": 13,
-    "edge": 0.1,
-    "vol_mult": 0.8,
-    "min_price": 0.1,
-    "max_price": 0.75
-   },
-   "why": "Passed the full backtest's strict bar: +$1,824 on 970 holdout trades, t=3.87."
-  },
-  {
-   "id": "DOGE-bid-asia",
-   "label": "DOGE \u00b7 Fair value (bid), Asia hours",
-   "series": "KXDOGE15M",
-   "strategy": "fair_value_bid@asia",
-   "execution": "taker",
-   "poll": "minute",
-   "params": {
-    "start": 5,
-    "end": 10,
-    "edge": 0.1,
-    "vol_mult": 0.8,
-    "min_price": 0.1,
-    "max_price": 0.9
-   },
-   "why": "Passed the full backtest's strict bar: +$912 on 318 holdout trades, t=3.58. Only trades 7 PM\u20133 AM ET (00\u201308 UTC)."
-  },
-  {
-   "id": "HYPE-asia",
-   "label": "HYPE \u00b7 Fair value, Asia hours",
-   "series": "KXHYPE15M",
-   "strategy": "fair_value@asia",
-   "execution": "taker",
-   "poll": "minute",
-   "params": {
-    "start": 2,
-    "end": 13,
-    "edge": 0.16,
-    "vol_mult": 1.0
-   },
-   "why": "Passed the full backtest's strict bar: +$1,038 on 176 holdout trades, t=3.36. Only trades 7 PM\u20133 AM ET, needs a 16\u00a2 gap."
-  },
-  {
-   "id": "ALL-fv",
-   "label": "All 9 coins \u00b7 Fair value",
-   "series": [
-    "KXBTC15M",
-    "KXETH15M",
-    "KXSOL15M",
-    "KXXRP15M",
-    "KXHYPE15M",
-    "KXBNB15M",
-    "KXNEAR15M",
-    "KXDOGE15M",
-    "KXZEC15M"
-   ],
-   "lab_scope": "ALL",
-   "strategy": "fair_value",
-   "execution": "taker",
-   "poll": "minute",
-   "params": {
-    "start": 2,
-    "end": 13,
-    "edge": 0.12,
-    "vol_mult": 0.8
-   },
-   "why": "Passed the full backtest's strict bar pooled over all 9 coins: +$5,940 on 5,814 holdout trades, t=4.68. Most of that came from DOGE, HYPE and NEAR."
-  },
-  {
-   "id": "ALL-v2",
-   "label": "All 9 coins \u00b7 Fair value v2",
-   "series": [
-    "KXBTC15M",
-    "KXETH15M",
-    "KXSOL15M",
-    "KXXRP15M",
-    "KXHYPE15M",
-    "KXBNB15M",
-    "KXNEAR15M",
-    "KXDOGE15M",
-    "KXZEC15M"
-   ],
-   "lab_scope": "ALL",
-   "strategy": "fair_value_v2",
-   "execution": "taker",
-   "poll": "minute",
-   "params": {
-    "start": 2,
-    "end": 13,
-    "edge": 0.12,
-    "vol": "60",
-    "min_price": 0.2,
-    "max_price": 0.8
-   },
-   "why": "Passed the full backtest's strict bar pooled over all 9 coins: +$4,285 on 4,572 holdout trades, t=4.42."
-  },
-  {
-   "series": "KXETH15M",
-   "strategy": "reversal_z",
-   "execution": "maker",
-   "params": {
-    "minute": 2,
-    "min_z": 1.5,
-    "max_price": 0.55
-   },
-   "why": "Earlier pick: +$74 on 74 holdout trades (t=0.62). Kept for comparison."
-  },
-  {
    "id": "G-exit",
-   "label": "\u2605 All 9 coins \u00b7 Fair value, sell early",
+   "label": "#1 \u2605 All 9 coins \u00b7 Fair value, sell early",
    "series": [
     "KXBTC15M",
     "KXETH15M",
@@ -200,16 +27,16 @@
     "edge": 0.12,
     "vol_mult": 0.8
    },
+   "lab3_id": "scalp:ALL:taker+exit",
+   "why": "#1 of the 16 golden strategies. Same entries as the old all-coin fair value; sells at the bid once it reaches fair value. Final exam (15 locked days, $10 a bet): +$7,369 on 5,814 trades, t=6.71; older archive t=5.30.",
    "exit": {
     "vm": 0.8,
     "conv": 0
-   },
-   "why": "Golden (strategy hunt): same entries as the live all-coin fair value, but sells at the bid as soon as it reaches the model's fair value. Final exam +$7,369 on 5,814 trades, t=6.71 (live rule: +$5,940, t=4.68); older archive t=5.3.",
-   "lab3_id": "scalp:ALL:taker+exit"
+   }
   },
   {
    "id": "G-sized",
-   "label": "\u2605 All 9 coins \u00b7 Fair value, edge-sized bets",
+   "label": "#2 \u2605 All 9 coins \u00b7 Edge-sized bets",
    "series": [
     "KXBTC15M",
     "KXETH15M",
@@ -230,17 +57,46 @@
     "edge": 0.13,
     "vol_mult": 1.0
    },
+   "lab3_id": "sized:ALL:taker",
+   "why": "#2 of the 16 golden strategies. Bets more when the model's edge is bigger (up to 5x). Final exam (15 locked days, $10 a bet): +$8,474 on 5,537 trades, t=6.14; older archive t=4.21.",
    "sizing": {
     "vm": 1.0,
     "norm": 0.2628,
     "cap": 5
+   }
+  },
+  {
+   "id": "G-lag",
+   "label": "#3 \u2605 All 9 coins \u00b7 Fresh move, lagging quote",
+   "series": [
+    "KXBTC15M",
+    "KXETH15M",
+    "KXSOL15M",
+    "KXXRP15M",
+    "KXHYPE15M",
+    "KXBNB15M",
+    "KXNEAR15M",
+    "KXDOGE15M",
+    "KXZEC15M"
+   ],
+   "strategy": "fair_value_lag",
+   "execution": "taker",
+   "poll": "minute",
+   "params": {
+    "start": 2,
+    "end": 13,
+    "edge": 0.12,
+    "vol_mult": 0.8,
+    "r": 1,
+    "k": 0.25,
+    "qlag": "lag"
    },
-   "why": "Golden (strategy hunt): bets more when the model's edge is bigger (average stake about $5, at most 5x). Final exam +$8,474 on 5,537 trades, t=6.14; older archive t=4.21.",
-   "lab3_id": "sized:ALL:taker"
+   "lab3_id": "fv_lag:ALL:taker",
+   "why": "#3 of the 16 golden strategies. Only right after a fresh spot move that Kalshi's quote hasn't followed yet. Final exam (15 locked days, $10 a bet): +$6,219 on 3,422 trades, t=5.74; older archive t=6.43."
   },
   {
    "id": "G-shape",
-   "label": "\u2605 All 9 coins \u00b7 Recalibrated fair value",
+   "label": "#4 \u2605 All 9 coins \u00b7 Recalibrated fair value",
    "series": [
     "KXBTC15M",
     "KXETH15M",
@@ -262,29 +118,126 @@
     "vol_mult": 1.0,
     "shape": 1.1
    },
-   "why": "Golden (strategy hunt): the model's probabilities made slightly more confident (slope 1.1), needs a 14c gap. Final exam +$7,930 on 4,618 trades, t=5.67; older archive t=4.07.",
-   "lab3_id": "fv_shape:ALL:taker"
+   "lab3_id": "fv_shape:ALL:taker",
+   "why": "#4 of the 16 golden strategies. Model probabilities made slightly more confident (slope 1.1). Final exam (15 locked days, $10 a bet): +$7,930 on 4,618 trades, t=5.67; older archive t=4.07."
   },
   {
-   "id": "G-HYPE-sized",
-   "label": "\u2605 HYPE \u00b7 Fair value, edge-sized bets",
-   "series": "KXHYPE15M",
-   "strategy": "fair_value",
+   "id": "G-drift",
+   "label": "#5 \u2605 All 9 coins \u00b7 Momentum-aware fair value",
+   "series": [
+    "KXBTC15M",
+    "KXETH15M",
+    "KXSOL15M",
+    "KXXRP15M",
+    "KXHYPE15M",
+    "KXBNB15M",
+    "KXNEAR15M",
+    "KXDOGE15M",
+    "KXZEC15M"
+   ],
+   "strategy": "fair_value_drift",
    "execution": "taker",
    "poll": "minute",
    "params": {
     "start": 2,
-    "end": 12,
+    "end": 13,
+    "edge": 0.18,
+    "vol_mult": 1.0,
+    "a": 0.25
+   },
+   "lab3_id": "fv_drift:ALL:taker",
+   "why": "#5 of the 16 golden strategies. Assumes a quarter of the last 1-minute move carries on. Final exam (15 locked days, $10 a bet): +$7,476 on 3,844 trades, t=5.33; older archive t=4.32."
+  },
+  {
+   "id": "G-DOGE-drift",
+   "label": "#7 \u2605 DOGE \u00b7 Momentum-aware fair value",
+   "series": "KXDOGE15M",
+   "strategy": "fair_value_drift",
+   "execution": "taker",
+   "poll": "minute",
+   "params": {
+    "start": 2,
+    "end": 13,
+    "edge": 0.2,
+    "vol_mult": 0.8,
+    "a": 0.25
+   },
+   "lab3_id": "fv_drift:KXDOGE15M:taker",
+   "why": "#7 of the 16 golden strategies. DOGE only. Final exam (15 locked days, $10 a bet): +$2,416 on 540 trades, t=5.27; older archive t=3.79."
+  },
+  {
+   "id": "G-vol",
+   "label": "#8 \u2605 All 9 coins \u00b7 Better volatility",
+   "series": [
+    "KXBTC15M",
+    "KXETH15M",
+    "KXSOL15M",
+    "KXXRP15M",
+    "KXHYPE15M",
+    "KXBNB15M",
+    "KXNEAR15M",
+    "KXDOGE15M",
+    "KXZEC15M"
+   ],
+   "strategy": "fair_value_vol",
+   "execution": "taker",
+   "poll": "minute",
+   "params": {
+    "start": 2,
+    "end": 13,
+    "edge": 0.13,
+    "vol": "ewma30",
+    "vol_mult": 0.9
+   },
+   "lab3_id": "fv_vol:ALL:taker",
+   "why": "#8 of the 16 golden strategies. Uses a fast-reacting weighted volatility. Final exam (15 locked days, $10 a bet): +$7,400 on 5,009 trades, t=5.22; older archive t=3.64."
+  },
+  {
+   "id": "G-DOGE-exit",
+   "label": "#9 \u2605 DOGE \u00b7 Fair value, sell early",
+   "series": "KXDOGE15M",
+   "strategy": "fair_value",
+   "execution": "taker",
+   "poll": "minute",
+   "params": {
+    "start": 3,
+    "end": 13,
     "edge": 0.14,
-    "vol_mult": 1.25
+    "vol_mult": 0.8
    },
-   "sizing": {
-    "vm": 1.25,
-    "norm": 0.2261,
-    "cap": 5
+   "lab3_id": "scalp:KXDOGE15M:taker+exit",
+   "why": "#9 of the 16 golden strategies. DOGE only; sells early once the bid reaches fair value. Final exam (15 locked days, $10 a bet): +$2,294 on 781 trades, t=5.16; older archive t=4.38.",
+   "exit": {
+    "vm": 0.8,
+    "conv": 0
+   }
+  },
+  {
+   "id": "G-ref",
+   "label": "#10 \u2605 All 9 coins \u00b7 Re-tuned fair value",
+   "series": [
+    "KXBTC15M",
+    "KXETH15M",
+    "KXSOL15M",
+    "KXXRP15M",
+    "KXHYPE15M",
+    "KXBNB15M",
+    "KXNEAR15M",
+    "KXDOGE15M",
+    "KXZEC15M"
+   ],
+   "strategy": "fair_value_vol",
+   "execution": "taker",
+   "poll": "minute",
+   "params": {
+    "start": 2,
+    "end": 13,
+    "edge": 0.14,
+    "vol": "max",
+    "vol_mult": 0.8
    },
-   "why": "Golden (strategy hunt): HYPE only, bigger bets when the edge is bigger. Final exam +$3,310 on 732 trades, t=4.22 (live HYPE: +$2,193, t=3.43). No archive data exists for HYPE.",
-   "lab3_id": "sized:KXHYPE15M:taker"
+   "lab3_id": "fv_ref:ALL:taker",
+   "why": "#10 of the 16 golden strategies. The original model with updated settings (larger of 1h/4h volatility). Final exam (15 locked days, $10 a bet): +$7,274 on 4,707 trades, t=5.13; older archive t=4.04."
   }
  ]
 }

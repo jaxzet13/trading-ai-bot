@@ -208,6 +208,7 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                 cur, seen, max_gap = m["ticker"], set(), -1.0
                 P = {f: np.full((1, 14), np.nan) for f in FIELDS}
                 P["hour"] = np.full((1, 14), float((_ts(m["open_time"]) % 86400) // 3600))
+                P["vol_ewma30"] = np.full((1, 14), np.nan)
             open_ts = _ts(m["open_time"])
             minute = int((time.time() - open_ts) // 60)
             if minute < 1 or minute > 14 or minute in seen:
@@ -224,6 +225,12 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                     "ret_from_open": (spot / p1 - 1) if p1 else np.nan}
             for f in FIELDS:
                 P[f][0, j] = vals.get(f, np.nan)
+            if "vol_ewma30" in P:   # lab3 "ewma30" vol: EWMA(halflife 30) of 1-min log returns up to this minute's bar
+                ks = sorted(t for t in bars if t <= open_ts + 60 * j)
+                if len(ks) > 31:
+                    lr = np.diff(np.log([bars[t] for t in ks]))
+                    w = 0.5 ** (np.arange(len(lr))[::-1] / 30.0)
+                    P["vol_ewma30"][0, j] = float(np.sqrt(np.sum(w * lr ** 2) / np.sum(w)))
             P["p_model"] = model_prob(P)
             pm = P["p_model"][0, j]
             if np.isfinite(pm) and np.isfinite(P["yes_ask"][0, j]) and np.isfinite(P["no_ask"][0, j]):

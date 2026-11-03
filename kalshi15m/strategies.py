@@ -313,3 +313,70 @@ def fair_value_shape(P, start=2, end=13, edge=0.14, vol_mult=1.0, shape=1.1, min
 
 STRATEGIES["fair_value_shape"] = (fair_value_shape, "Fair value with recalibrated (sharper) probabilities.",
                                   {"edge": [0.12, 0.14], "shape": [1.1, 1.25]})
+
+
+def _fv_pick(P, p, start, end, edge, min_price=0.05, max_price=0.95, extra_y=None, extra_n=None):
+    ya, na = P["yes_ask"], P["no_ask"]
+    win = (MIN >= start) & (MIN <= end)
+    ok = np.isfinite(p) & win[None, :]
+    with np.errstate(invalid="ignore"):
+        y = ok & _valid(ya) & (ya >= min_price) & (ya <= max_price) & (p - ya >= edge)
+        n = ok & _valid(na) & (na >= min_price) & (na <= max_price) & ((1 - p) - na >= edge)
+    if extra_y is not None:
+        y &= extra_y
+        n &= extra_n
+    both = y & n                      # lab3 drops cells where both sides qualify
+    return _first(y & ~both, n & ~both)
+
+
+def _vol(P, vol):
+    if vol == "max":
+        return np.fmax(P["vol1m"], P["vol240"])
+    if vol == "blend":
+        return np.sqrt((P["vol1m"] ** 2 + P["vol240"] ** 2) / 2)
+    if vol == "ewma30":
+        return P["vol_ewma30"]
+    return P["vol1m"]
+
+
+def _prob(P, vol="60", vol_mult=1.0, drift=0.0):
+    tau = 15 - MIN[None, :]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        z = (np.log(P["spot"] / P["strike"]) + drift) / (_vol(P, vol) * vol_mult * np.sqrt(tau))
+    return ndtr(z)
+
+
+def fair_value_vol(P, start=2, end=13, edge=0.13, vol="max", vol_mult=0.8, min_price=0.05, max_price=0.95):
+    """lab3 fv_ref / fv_vol: fair value with a different volatility measure ("max" of 1h/4h, "ewma30")."""
+    return _fv_pick(P, _prob(P, vol, vol_mult), start, end, edge, min_price, max_price)
+
+
+def fair_value_drift(P, start=2, end=13, edge=0.18, vol_mult=1.0, a=0.25, min_price=0.05, max_price=0.95):
+    """lab3 fv_drift (L=1): assume a share `a` of the last 1-minute spot move carries on."""
+    with np.errstate(invalid="ignore", divide="ignore"):
+        lc = np.log(P["spot"])
+    r1 = np.full_like(lc, np.nan)
+    r1[:, 1:] = lc[:, 1:] - lc[:, :-1]
+    return _fv_pick(P, _prob(P, "60", vol_mult, a * r1), start, end, edge, min_price, max_price)
+
+
+def fair_value_lag(P, start=2, end=13, edge=0.12, vol_mult=0.8, r=1, k=0.25, qlag="lag", min_price=0.05, max_price=0.95):
+    """lab3 fv_lag: only when the model just jumped (spot moved in the last r minutes) and,
+    with qlag="lag", the Kalshi quote has not followed."""
+    p = _prob(P, "60", vol_mult)
+    dp = np.full_like(p, np.nan)
+    dp[:, r:] = p[:, r:] - p[:, :-r]
+    with np.errstate(invalid="ignore"):
+        ey, en = dp >= k * edge, -dp >= k * edge
+        if qlag == "lag":
+            mid = (P["yes_ask"] + P["yes_bid"]) / 2
+            dm = np.full_like(mid, np.nan)
+            dm[:, r:] = mid[:, r:] - mid[:, :-r]
+            ey &= dm < 0.5 * dp
+            en &= dm > 0.5 * dp
+    return _fv_pick(P, p, start, end, edge, min_price, max_price, ey, en)
+
+
+STRATEGIES["fair_value_vol"] = (fair_value_vol, "Fair value with another volatility measure.", {"vol": ["max", "ewma30"]})
+STRATEGIES["fair_value_drift"] = (fair_value_drift, "Fair value that assumes part of the last 1-min move carries on.", {"a": [0.25]})
+STRATEGIES["fair_value_lag"] = (fair_value_lag, "Fair value only right after a fresh spot move the quote hasn't followed.", {"k": [0.25]})
