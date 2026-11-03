@@ -245,6 +245,10 @@ def lab_summary():
     lab3 = _lab3()
     if lab3:
         out["lab3"] = lab3
+    try:   # progress of a running hunt (written by scripts/lab3_progress.py), shown as a banner
+        out["lab3_progress"] = json.loads((OUT.parent / "data" / "lab" / "lab3_progress.json").read_text())
+    except (OSError, ValueError):
+        pass
     for key, fname in (("m15", "results.json"), ("hourly", "hourly_results.json")):
         f = OUT.parent / "data" / "lab" / fname
         if not f.exists():

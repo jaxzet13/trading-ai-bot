@@ -170,6 +170,29 @@ td.coin { font-size: 12px; }
 .coins { grid-template-columns: 1fr; } }
 .fold-note { color: var(--muted); font-size: 12px; margin-top: 8px; }
 
+/* ---------- Hunt banner at the top of the page ---------- */
+.hunt-banner { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px 18px; margin: 0 0 20px;
+  padding: 18px 22px; border-radius: 16px; text-decoration: none; color: var(--vault-ink);
+  background: radial-gradient(120% 160% at 0% 0%, var(--vault-2) 0%, var(--vault) 60%); border: 1px solid var(--vault-line);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--vault-gold) 18%, transparent) inset; }
+.hunt-banner[hidden] { display: none; }
+.hunt-banner:hover { border-color: color-mix(in srgb, var(--vault-gold) 55%, var(--vault-line)); }
+.hunt-banner:focus-visible { outline: 2px solid var(--vault-gold); outline-offset: 3px; }
+.hb-mark { width: 38px; height: 38px; color: var(--vault-gold); }
+.hb-text { display: grid; gap: 3px; min-width: 0; }
+.hb-eyebrow { font: 500 10.5px/1.2 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--vault-gold); }
+.hb-title { font: 600 clamp(17px, 2.2vw, 22px)/1.2 var(--f-display); letter-spacing: -0.01em; }
+.hb-sub { color: var(--vault-ink-2); font-size: 13.5px; line-height: 1.45; }
+.hb-bar { grid-column: 2 / 3; height: 6px; border-radius: 99px; background: var(--vault-dot); overflow: hidden; }
+.hb-fill { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--vault-good), var(--vault-gold)); transition: width .6s; }
+.hb-cta { grid-row: 1 / span 2; grid-column: 3; font: 500 12px/1 var(--f-mono); color: var(--vault); background: var(--vault-gold);
+  padding: 10px 14px; border-radius: 99px; white-space: nowrap; }
+@media (max-width: 640px) {
+  .hunt-banner { grid-template-columns: auto minmax(0, 1fr); padding: 16px; }
+  .hb-cta { grid-row: auto; grid-column: 1 / -1; justify-self: start; }
+  .hb-bar { grid-column: 1 / -1; }
+}
+
 /* ---------- Research lab: zone header, golden hunt, strategy search ---------- */
 table { font: 13px/1.45 var(--f-body); color: var(--ink); }
 .jump { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
@@ -463,6 +486,13 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       </nav>
     </div>
   </header>
+
+  <a class="hunt-banner" id="huntBanner" href="#hunt" hidden>
+    <svg class="hb-mark" viewBox="0 0 34 34" aria-hidden="true"><rect x="1.5" y="1.5" width="31" height="31" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M17 9.2l2.3 4.9 5.3.6-3.9 3.6 1.1 5.3L17 21l-4.8 2.6 1.1-5.3-3.9-3.6 5.3-.6z" fill="currentColor"/></svg>
+    <span class="hb-text"><span class="hb-eyebrow" id="hbEyebrow">Golden strategy hunt</span><span class="hb-title" id="hbTitle"></span><span class="hb-sub" id="hbSub"></span></span>
+    <span class="hb-bar" id="hbBarWrap" hidden><span class="hb-fill" id="hbFill"></span></span>
+    <span class="hb-cta" id="hbCta"></span>
+  </a>
 
   <section class="panel live" id="livePanel" hidden>
     <div class="panel-head">
@@ -767,9 +797,9 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   let labKey = null;
   function renderLab() {
     const L = typeof LAB === "undefined" || !LAB ? null : LAB;
-    const keys = L ? Object.keys(L).filter(k => k !== "lab3" && L[k]) : [];
+    const keys = L ? Object.keys(L).filter(k => !k.startsWith("lab3") && L[k]) : [];
     $("labPanel").hidden = !keys.length; if (!keys.length) return;
-    if (!labKey || !L[labKey] || labKey === "lab3") labKey = keys[0];
+    if (!labKey || !L[labKey] || labKey.startsWith("lab3")) labKey = keys[0];
     const lbl = { m15: "15-minute", hourly: "Hourly", blind: "Blind tests" };
     $("labSeg").innerHTML = keys.length > 1 ? keys.map(k => `<button type="button" aria-pressed="${k === labKey}" data-lab="${k}">${lbl[k] || k}</button>`).join("") : "";
     const R = L[labKey], F = R.finals || [], B = R.benchmarks || [];
@@ -817,6 +847,32 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     dot: '<circle cx="8" cy="8" r="3.6" fill="currentColor"/>',
     minus: '<path d="M4 8h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' };
   const badge = (k, text, icon) => `<span class="badge ${k}"><svg viewBox="0 0 16 16" aria-hidden="true">${ICON[icon]}</svg>${esc(text)}</span>`;
+
+  // Top-of-page banner: hunt results if they exist, otherwise live progress of the running hunt.
+  (() => {
+    const el = document.getElementById("huntBanner");
+    if (!el) return;
+    const set = (id, txt) => { const n = document.getElementById(id); if (n) n.textContent = txt; };
+    const PR = typeof LAB !== "undefined" && LAB && LAB.lab3_progress && typeof LAB.lab3_progress === "object" ? LAB.lab3_progress : null;
+    if (H3) {
+      const cs = Array.isArray(H3.candidates) ? H3.candidates : [];
+      const g = cs.filter(c => c && c.status === "golden").length, p = cs.filter(c => c && c.status === "pass").length;
+      const n = (H3.method || {}).n_configs_tested;
+      set("hbTitle", g ? `${g} golden ${g === 1 ? "strategy" : "strategies"} found` : "Hunt finished: no strategy beat what's running now");
+      set("hbSub", `${nz(n) ? NUM(n) + " settings tested" : "Every setting tested"} · ${cs.length} reached the final exam · ${p} passed but missed a test`);
+      set("hbCta", "See the results ↓");
+    } else if (PR && nz(PR.pct)) {
+      const done = Math.max(0, Math.min(100, PR.pct));
+      set("hbTitle", PR.done ? "Hunt finished: building the results" : `Hunt running: ${Math.round(done)}% through the search`);
+      set("hbSub", [PR.families ? `${NUM(PR.families)} idea families` : "", nz(PR.configs_per_coin) ? `${NUM(PR.configs_per_coin)} settings per coin` : "",
+        PR.updated ? `updated ${new Date(PR.updated * 1000).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}` : ""].filter(Boolean).join(" · ") + ". Nothing live changes until a strategy passes every test.");
+      document.getElementById("hbBarWrap").hidden = false;
+      document.getElementById("hbFill").style.width = done + "%";
+      set("hbCta", "How we test ↓");
+      el.href = "#labZone";
+    } else return;
+    el.hidden = false;
+  })();
   const STATUS = { golden: ["golden", "Golden", "star"], pass: ["pass", "Pass", "check"], fail: ["fail", "Fail", "cross"] };
   const sbadge = s => { const x = STATUS[s] || ["neutral", s || "Unrated", "minus"]; return badge(x[0], x[1], x[2]); };
   const EXW = { taker: "buys instantly", maker: "waits with limit orders" };
