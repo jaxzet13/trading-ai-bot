@@ -34,6 +34,26 @@ def _lab_holdout(series, strategy, execution):
     return None
 
 
+def _lab3_holdout(cid):
+    """Holdout result of a golden-hunt candidate (data/lab/lab3_results.json), in the same shape as
+    _lab_holdout, for paper strategies that came from the hunt (live.json "lab3_id")."""
+    try:
+        r = json.loads((OUT.parent / "data" / "lab" / "lab3_results.json").read_text())
+    except (OSError, ValueError):
+        return None
+    for x in r.get("candidates") or []:
+        if x.get("id") == cid:
+            h = x.get("holdout") or {}
+            out = {"pnl": h.get("pnl"), "trades": h.get("trades"), "t_stat": h.get("t"), "win_rate": h.get("win_rate"),
+                   "curve": x.get("curve") or []}
+            n = sum((v.get("holdout_markets") or 0) for k, v in (r.get("coins") or {}).items()
+                    if x.get("scope") in ("ALL", k))
+            if n and h.get("trades"):
+                out["per_market"] = round(h["trades"] / n, 3)
+            return out
+    return None
+
+
 def _backtest(results: dict, series: str, strategy: str, execution: str):
     scope = (results.get("scopes") or {}).get(series.replace("KX", "").replace("15M", "") + " only")
     if not scope:
@@ -214,7 +234,8 @@ def summarise() -> dict:
                         for x in fills if x["ts"] not in settled_fills],
             "status": st, "stale": (not st) or now - st.get("ts", 0) > 180,
             "backtest": _backtest(results, s, e["strategy"], e["execution"]),
-            "lab": _lab_holdout(e.get("lab_scope", s), e["strategy"], e["execution"]),
+            "lab": (_lab3_holdout(e["lab3_id"]) if e.get("lab3_id") else None)
+                   or _lab_holdout(e.get("lab_scope", s), e["strategy"], e["execution"]),
             "lags": [x.get("lag_s") for x in ev if x["event"] == "buy" and x.get("lag_s") is not None],
             "watched": sum(x["event"] == "watched" for x in ev),
             "near": sorted(([x["ticker"], x["max_gap"]] for x in ev if x["event"] == "watched"), key=lambda t: t[0])[-12:],

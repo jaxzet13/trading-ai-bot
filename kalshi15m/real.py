@@ -309,6 +309,29 @@ def order_body(ticker: str, side: str, price: float, n: int, client_order_id: st
             "post_only": False, "reduce_only": False}
 
 
+def exit_order_body(ticker: str, held: str, sell_price: float, n: int, client_order_id: str) -> dict:
+    """Sell a held position (golden scalp exit), IOC + reduce-only, quoted on the YES book like order_body:
+    sell YES at the yes bid = "ask" @ bid; sell NO at the no bid = buy YES ("bid") @ 1 - no bid (= yes ask)."""
+    yes_px = sell_price if held == "yes" else 1 - sell_price
+    return {"ticker": ticker, "client_order_id": client_order_id,
+            "side": "ask" if held == "yes" else "bid",
+            "count": str(int(n)), "price": f"{round(yes_px, 4):.4f}",
+            "time_in_force": "immediate_or_cancel", "self_trade_prevention_type": "taker_at_cross",
+            "post_only": False, "reduce_only": True}
+
+
+def exit_fill_summary(fills: list, held: str):
+    """Contracts sold, proceeds and fees of the fills of an exit order. A fill's yes/no prices are the
+    traded YES price and 1 minus it, so the held side's price is the sale price whatever outcome_side says."""
+    k = proceeds = fees = 0.0
+    for f in fills:
+        c = _f(f.get("count_fp", f.get("count")))
+        k += c
+        proceeds += c * _f(f.get("yes_price_dollars" if held == "yes" else "no_price_dollars"))
+        fees += _f(f.get("fee_cost"))
+    return round(k, 2), round(proceeds, 6), round(fees, 6)
+
+
 def _f(x, default=0.0) -> float:
     try:
         return float(x)
@@ -562,13 +585,18 @@ class Runner:
             return self.housekeeping()
         t_spot = self.clock()
         try:
-            spot, vol, vol240, bars = self.spot_fn(self.product)
+            if self.golden:
+                obs = self.observe_golden(m, minute, open_ts)
+            else:
+                spot, vol, vol240, bars = self.spot_fn(self.product)
         except (requests.RequestException, ValueError, KeyError, IndexError, TypeError) as e:
             self.out(f"  spot data error: {e}; skipping this minute")
             self.log({"event": "skip", "reason": "network_spot", "ticker": self.cur, "minute": minute,
                       "error": str(e)[:200]})
             return self.housekeeping()
-        obs = observe(self.P, m, minute, spot, vol, vol240, bars)
+        if not self.golden:
+            obs = observe(self.P, m, minute, spot, vol, vol240, bars)
+        spot = obs["spot"]
         self.seen.add(minute)
         self.minutes_run += 1
         t_dec = self.clock()
@@ -577,8 +605,17 @@ class Runner:
         mdl = obs["model"]
         self.out(f"{datetime.now():%H:%M:%S} {self.cur} m{minute:02d} spot={spot:.4f} K={obs['strike']:.4f} "
                  f"bid/ask={obs['yes_bid']:.3f}/{obs['yes_ask']:.3f} model={mdl if mdl is None else round(mdl, 3)} "
-                 f"lag={lag}s")
-        if self.cur not in self.traded:
+                 f"lag={lag}s" + (f" ({'synthetic' if obs.get('synthetic') else 'candle'} bar)" if self.golden else ""))
+        if self.golden:
+            self.manage_exit(minute, obs, lag, age)
+            if self.cur not in self.traded:
+                sigs = self.engine.signals(self.P, minute, self.golden_ids)
+                if sigs:
+                    best = sigs[0]
+                    self.act(m, minute, (best.side, best.price),
+                             {**obs, "rule": best.rule, "also_signalled": [s.rule for s in sigs[1:]]},
+                             lag, age, open_ts, signal=best)
+        elif self.cur not in self.traded:
             for name, fn, params in self.rules:
                 sig = decide(fn, self.P, params, minute)
                 if sig:
@@ -586,11 +623,30 @@ class Runner:
                     break
         self.housekeeping()
 
-    def act(self, m, minute, sig, obs, lag, age, open_ts):
+    def observe_golden(self, m, minute, open_ts):
+        """Quotes + strike exactly like observe(); spot fields and every lab3 feature from the golden engine
+        (Coinbase candles; the bar that just closed from the live ticker until Coinbase publishes it)."""
+        obs = observe(self.P, m, minute, np.nan, np.nan, np.nan, {})
+        info = self.engine.update(self.P, open_ts, minute)
+        j = minute - 1
+        pm = self.P["p_model"][0, j]
+        obs.update(spot=info["spot"], vol1m=info["vol1m"], vol240=info["vol240"],
+                   model=float(pm) if np.isfinite(pm) else None, synthetic=info["synthetic"],
+                   engine_s=info["update_s"])
+        return obs
+
+    def act(self, m, minute, sig, obs, lag, age, open_ts, signal=None):
         side, price = sig
         tk = self.cur
         base = {"ticker": tk, "minute": minute, "side": side, "price": price, "lag_s": lag, "data_age_s": age,
                 **obs, "yes_ask_size": m.get("yes_ask_size_fp"), "yes_bid_size": m.get("yes_bid_size_fp")}
+        stake = self.L["stake_usd"]
+        if signal is not None:                      # golden rule: its model value, and Kelly stake if "sized"
+            base["q"] = round(signal.q, 6)
+            if signal.kind == "sized":
+                from . import golden_live as GL
+                stake, kel = GL.sized_stake(signal.rule, signal.q, price, self.L["stake_usd"])
+                base.update(kelly=round(kel, 6), stake=round(stake, 4), norm=GL.RULES[signal.rule]["norm"])
         why = self.blocked()
         if why is None and lag > self.L["max_decision_lag_s"]:
             why = f"decision lag {lag}s > {self.L['max_decision_lag_s']}s"
@@ -598,7 +654,7 @@ class Runner:
             why = f"data {age}s old > {self.L['max_data_age_s']}s"
         if why is None and not (self.L["min_price"] <= price <= self.L["max_price"]):
             why = f"price {price} outside [{self.L['min_price']}, {self.L['max_price']}]"
-        n = contracts_for(self.L["stake_usd"], price, self.L["max_contracts_per_order"])
+        n = contracts_for(stake, price, self.L["max_contracts_per_order"])
         if why is None and n < 1:
             why = "stake too small for one contract"
         max_cost = round(n * price + kalshi_fee(price, n), 4)
@@ -615,7 +671,8 @@ class Runner:
         d = self.today()
         self.trades_by_day[d] = self.trades_by_day.get(d, 0) + 1
         self.pos[tk] = {"side": side, "n": 0.0, "cost": 0.0, "fees": 0.0, "close_ts": open_ts + 900,
-                        "status": "pending", "limit": price, "max_cost": max_cost}
+                        "status": "pending", "limit": price, "max_cost": max_cost, "rule": obs.get("rule"),
+                        "minute": minute}
         if self.dry:
             self.pos[tk].update(n=n, cost=n * price, fees=kalshi_fee(price, n), status="filled")
             self.out(f"  >>> WOULD BUY {n} {side.upper()} @ {price:.3f} (max ${max_cost:.2f}), {lag}s after the minute")
@@ -717,7 +774,7 @@ class Runner:
                "limit": price, "source": src, "order_status": order.get("status")}
         self.log(rec)
         if filled > 0:
-            self.pos[tk].update(n=filled, cost=cost, fees=fees, status="filled")
+            self.pos[tk].update(n=filled, cost=cost, fees=fees, status="filled", order_id=order_id)
             part = " (PARTIAL)" if filled < n else ""
             self.out(f"  filled {filled:g}/{n} {side.upper()}{part}, cost ${cost:.2f} + fees ${fees:.2f}")
             if not self.dry:
@@ -725,6 +782,150 @@ class Runner:
         else:
             self.pos.pop(tk, None)
             self.out("  not filled (0 contracts): no position")
+
+    # --- early exit (golden "scalp" rules: sell back at the bid once it reaches the model's fair value)
+    def manage_exit(self, minute, obs, lag, age):
+        """Each minute after the entry: if the held side's bid >= the entering rule's model value, sell the
+        whole filled position (IOC, reduce-only). Not blocked by the entry limits (daily loss, open positions,
+        trade count, balance); the STOP file, and stale data / decision lag, do apply."""
+        from . import golden_live as GL
+        tk = self.cur
+        p = self.pos.get(tk)
+        if not p or p.get("status") != "filled" or p["n"] <= 0 or p.get("rule") not in GL.RULES:
+            return
+        if GL.RULES[p["rule"]]["kind"] != "scalp" or p.get("exit_blocked") or p.get("exit_unknown"):
+            return
+        hit = GL.exit_check(p["rule"], self.P, minute, p["side"], p.get("minute") or 99)
+        if not hit:
+            return
+        sell, q = hit
+        n = int(math.floor(p["n"] + 1e-9))
+        base = {"ticker": tk, "minute": minute, "side": p["side"], "rule": p["rule"], "sell_price": sell,
+                "model_value": round(q, 6), "held": p["n"], "lag_s": lag, "data_age_s": age,
+                "yes_bid": obs.get("yes_bid"), "yes_ask": obs.get("yes_ask")}
+        why = None
+        if lag > self.L["max_decision_lag_s"]:
+            why = f"decision lag {lag}s > {self.L['max_decision_lag_s']}s"
+        elif age > self.L["max_data_age_s"]:
+            why = f"data {age}s old > {self.L['max_data_age_s']}s"
+        elif n < 1:
+            why = "less than one whole contract held"
+        if why:
+            self.out(f"  exit signal {p['side'].upper()} @ {sell:.3f} skipped: {why}")
+            self.log({"event": "exit_skipped", "reason": why, **base})
+            return
+        if self.dry:
+            self.out(f"  <<< WOULD SELL {n} {p['side'].upper()} @ {sell:.3f} (model {q:.3f})")
+            self._book_exit(tk, p, n, n * sell, kalshi_fee(sell, n), None, "dry", sell, minute)
+            return
+        coid = str(uuid.uuid4())
+        body = exit_order_body(tk, p["side"], sell, n, coid)
+        self.log({"event": "exit_intent", "n": n, "client_order_id": coid, "order": body, **base})
+        self.out(f"  <<< SELL {n} {p['side'].upper()} @ {sell:.3f} IOC reduce-only (model {q:.3f})")
+        self._place_exit(tk, p, body, n, sell, minute)
+
+    def _place_exit(self, tk, p, body, n, sell, minute):
+        coid, sent_at = body["client_order_id"], int(self.clock())
+        resp, err = None, None
+        for attempt in range(2):
+            try:
+                resp = self.api.create_order(body)
+                break
+            except ApiError as e:
+                if e.status == 429 and attempt == 0:
+                    self.sleep(0.3)
+                    continue
+                if e.status == 409:
+                    err = "duplicate"
+                    break
+                # rejected = not executed: keep the position, hold it to settlement
+                self.out(f"  exit order REJECTED: {e}; holding to settlement")
+                self.log({"event": "exit_rejected", "ticker": tk, "client_order_id": coid, "status": e.status,
+                          "error": e.body[:500]})
+                p["exit_blocked"] = True
+                return
+            except Uncertain as e:
+                err = str(e)
+                break
+        if resp is None:
+            o = None
+            for _ in range(3):
+                try:
+                    o = self.api.find_order(tk, coid, sent_at - 120)
+                    if o:
+                        break
+                except requests.RequestException:
+                    pass
+                self.sleep(1.0)
+            if not o:
+                # never resend: no more exits on this market; settlement reconciles it from the fills
+                p["exit_unknown"] = coid
+                self.out("  could not confirm the exit order; holding the rest, reconciled at settlement")
+                self.log({"event": "exit_unknown", "ticker": tk, "client_order_id": coid, "error": err})
+                return
+            resp = {"order_id": o.get("order_id"), "fill_count": o.get("fill_count_fp"), "from_lookup": True}
+        self.log({"event": "exit_response", "ticker": tk, "client_order_id": coid, "response": resp})
+        order_id = resp.get("order_id")
+        filled = _f(resp.get("fill_count"))
+        try:
+            order = self.api.get_order(order_id) if order_id else {}
+            filled = _f(order.get("fill_count_fp"), filled) if order else filled
+            if order and order.get("status") == "resting":
+                try:
+                    self.api.cancel_order(order_id)
+                except (ApiError, Uncertain) as e:
+                    self.log({"event": "cancel_failed", "ticker": tk, "order_id": order_id, "error": str(e)})
+                order = self.api.get_order(order_id) or order
+                filled = _f(order.get("fill_count_fp"), filled)
+        except requests.RequestException as e:
+            self.log({"event": "get_order_failed", "ticker": tk, "order_id": order_id, "error": str(e)[:200]})
+        filled = min(filled, p["n"])
+        if filled <= 0:
+            self.out("  exit not filled (0 contracts): still holding")
+            self.log({"event": "exit_unfilled", "ticker": tk, "order_id": order_id, "limit": sell})
+            return
+        proceeds = fees = None
+        src = None
+        for _ in range(3):
+            try:
+                fl = self.api.fills(order_id=order_id)
+            except requests.RequestException:
+                fl = []
+            k, pr, fe = exit_fill_summary(fl, p["side"])
+            if k >= filled - 1e-9:
+                proceeds, fees, src = pr, fe, "fills"
+                break
+            self.sleep(0.5)
+        if proceeds is None:            # fills not visible yet: our limit price (IOC never sells below it)
+            proceeds, fees, src = filled * sell, kalshi_fee(sell, int(math.ceil(filled))), "estimate"
+        self._book_exit(tk, p, filled, proceeds, fees, order_id, src, sell, minute)
+        self.refresh_balance()
+
+    def _book_exit(self, tk, p, k, proceeds, fees2, order_id, src, sell, minute):
+        """Realised P&L of the contracts sold: proceeds - their share of the entry cost and fee - exit fee
+        (all sold: n * (sell - buy) - both fees). The rest of the position stays and settles normally."""
+        frac = k / p["n"]
+        cost_k, fee_k = p["cost"] * frac, p["fees"] * frac
+        pnl = proceeds - cost_k - fee_k - fees2
+        rem = p["n"] - k
+        rec = {"event": "exit", "ticker": tk, "order_id": order_id, "side": p["side"], "rule": p.get("rule"),
+               "minute": minute, "n": k, "limit": sell, "sell_avg": round(proceeds / k, 6), "proceeds": round(proceeds, 6),
+               "exit_fees": round(fees2, 6), "entry_cost": round(cost_k, 6), "entry_fees": round(fee_k, 6),
+               "pnl": round(pnl, 6), "remaining": round(rem, 6), "remaining_cost": round(p["cost"] - cost_k, 6),
+               "remaining_fees": round(p["fees"] - fee_k, 6), "day": _day(p["close_ts"] - 1), "source": src,
+               "close_ts": p["close_ts"]}
+        self.log(rec)
+        p.update(n=rec["remaining"], cost=rec["remaining_cost"], fees=rec["remaining_fees"],
+                 exited=p.get("exited", 0.0) + k, exit_pnl=p.get("exit_pnl", 0.0) + rec["pnl"])
+        p.setdefault("exit_orders", []).append(order_id)
+        d = rec["day"]
+        self.pnl_by_day[d] = self.pnl_by_day.get(d, 0.0) + rec["pnl"]
+        part = "" if rem <= 1e-9 else f" (PARTIAL, {rem:g} still held)"
+        self.out(f"  sold {k:g} {p['side'].upper()} @ {proceeds / k:.3f}{part}: P&L ${pnl:+.2f} "
+                 f"(today ${self.pnl_by_day[d]:+.2f})")
+        if rem <= 1e-9:
+            self.settled.add(tk)          # closed: never settled again
+            self.pos.pop(tk, None)
 
     # --- settlement, balance, reconciliation
     def housekeeping(self):
