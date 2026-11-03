@@ -345,17 +345,26 @@ class Stop(Exception):
 class Runner:
     def __init__(self, cfg: dict, mode: str, api: KalshiAPI, market_api: KalshiAPI | None = None,
                  log_path: Path = LOG, stop_path: Path = STOP_FILE, clock=time.time, sleep=time.sleep,
-                 spot_fn=None, max_minutes: int | None = None, out=print, stop_event=None):
+                 spot_fn=None, max_minutes: int | None = None, out=print, stop_event=None, engine=None):
         assert mode in ("DEMO", "LIVE", "DRYRUN")
         self.cfg, self.mode, self.api = cfg, mode, api
         self.mapi = market_api or api            # where quotes come from (= the exchange we trade on)
         self.dry = mode == "DRYRUN"
         self.L = cfg["limits"]
         self.series, self.params = cfg["series"], cfg["params"]
-        # one or more rules on this coin; the first that fires takes the market (one bet per market)
-        rules = cfg.get("rules") or [{"name": cfg["strategy"], "strategy": cfg["strategy"], "params": cfg["params"]}]
-        self.rules = [(r["name"], STRATEGIES[r["strategy"]][0], r["params"]) for r in rules]
-        self.fn = self.rules[0][1]
+        # golden mode (config key "golden_rules"): lab3's 16 golden rules via golden_live, best first
+        self.golden = "golden_rules" in cfg
+        if self.golden:
+            from . import golden_live as GL
+            ids = {r["id"] for r in cfg["golden_rules"]}
+            self.golden_ids = [rid for rid in GL.rules_for(self.series) if rid in ids]   # best first
+            self.rules = [(rid, None, GL.RULES[rid]["params"]) for rid in self.golden_ids]
+            self.engine = engine or GL.engine(self.series)
+        else:
+            # one or more rules on this coin; the first that fires takes the market (one bet per market)
+            rules = cfg.get("rules") or [{"name": cfg["strategy"], "strategy": cfg["strategy"], "params": cfg["params"]}]
+            self.rules = [(r["name"], STRATEGIES[r["strategy"]][0], r["params"]) for r in rules]
+        self.fn = self.rules[0][1] if self.rules else None
         self.stop_event = stop_event
         self.product = SERIES[self.series]
         self.log_path, self.stop_path = Path(log_path), Path(stop_path)
