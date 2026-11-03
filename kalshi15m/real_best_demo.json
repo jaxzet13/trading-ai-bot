@@ -1,5 +1,5 @@
 {
-  "_note": "DEMO (fake money): the single best tested rule for profit per day: #2's entries and edge-scaled (Kelly) stakes with #1's early exit at fair value (holdout $8,034 / t 6.95 at a $10 base; archive t 5.81; search t 11.3). 10% of the crypto balance per bet (compounding); IOC orders may reach up to 5c deeper into thin books while keeping at least 6c of model edge.",
+  "_note": "DEMO (fake money), tuned for growth on thin demo books: the best combo (Kelly-sized entries + early exit) gets first pick of every market; the 16 golden rules, best first, take markets the combo doesn't signal on. 10% of the crypto balance per bet (compounding); IOC orders may reach up to 10c deeper while keeping >= 6c edge.",
   "series": [
     "KXBTC15M",
     "KXETH15M",
@@ -29,6 +29,241 @@
         "exit": "conv0"
       },
       "norm": 0.26276383779910073
+    },
+    {
+      "id": "scalp:ALL",
+      "family": "scalp",
+      "scope": "ALL",
+      "t": 6.71,
+      "params": {
+        "vm": 0.8,
+        "edge": 0.12,
+        "start": 2,
+        "end": 13,
+        "band": "05-95",
+        "exit": "conv0"
+      }
+    },
+    {
+      "id": "sized:ALL",
+      "family": "sized",
+      "scope": "ALL",
+      "t": 6.14,
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.13,
+        "band": "05-95",
+        "vm": 1.0,
+        "cap": 5
+      },
+      "norm": 0.26276383779910073
+    },
+    {
+      "id": "fv_lag:ALL",
+      "family": "fv_lag",
+      "scope": "ALL",
+      "t": 5.74,
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.12,
+        "band": "05-95",
+        "r": 1,
+        "k": 0.25,
+        "qlag": "lag",
+        "vm": 0.8
+      }
+    },
+    {
+      "id": "fv_shape:ALL",
+      "family": "fv_shape",
+      "scope": "ALL",
+      "t": 5.67,
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.14,
+        "band": "05-95",
+        "a": 1.1,
+        "vm": 1.0
+      }
+    },
+    {
+      "id": "fv_drift:ALL",
+      "family": "fv_drift",
+      "scope": "ALL",
+      "t": 5.33,
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.18,
+        "band": "05-95",
+        "L": 1,
+        "a": 0.25,
+        "vm": 1.0
+      }
+    },
+    {
+      "id": "fv_emp:ALL",
+      "family": "fv_emp",
+      "scope": "ALL",
+      "t": 5.3,
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.14,
+        "band": "05-95",
+        "lb": 21,
+        "vm": 1.0
+      }
+    },
+    {
+      "id": "fv_drift:KXDOGE15M",
+      "family": "fv_drift",
+      "scope": "KXDOGE15M",
+      "t": 5.27,
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.2,
+        "band": "05-95",
+        "L": 1,
+        "a": 0.25,
+        "vm": 0.8
+      }
+    },
+    {
+      "id": "fv_vol:ALL",
+      "family": "fv_vol",
+      "scope": "ALL",
+      "t": 5.22,
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.13,
+        "band": "05-95",
+        "vol": "ewma30",
+        "vm": 0.9
+      }
+    },
+    {
+      "id": "scalp:KXDOGE15M",
+      "family": "scalp",
+      "scope": "KXDOGE15M",
+      "t": 5.16,
+      "params": {
+        "vm": 0.8,
+        "edge": 0.14,
+        "start": 3,
+        "end": 13,
+        "band": "05-95",
+        "exit": "conv0"
+      }
+    },
+    {
+      "id": "fv_ref:ALL",
+      "family": "fv_ref",
+      "scope": "ALL",
+      "t": 5.13,
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.14,
+        "band": "05-95",
+        "vol": "max",
+        "vm": 0.8
+      }
+    },
+    {
+      "id": "ens_fixed:ALL",
+      "family": "ens_fixed",
+      "scope": "ALL",
+      "t": 5.0,
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.14,
+        "band": "05-95",
+        "members": "fv+v2",
+        "mode": "first",
+        "vm": 0.8
+      }
+    },
+    {
+      "id": "fv_t:ALL",
+      "family": "fv_t",
+      "scope": "ALL",
+      "t": 4.72,
+      "params": {
+        "start": 2,
+        "end": 13,
+        "edge": 0.13,
+        "band": "05-95",
+        "nu": 4,
+        "vol": "60",
+        "vm": 1.25
+      }
+    },
+    {
+      "id": "sized:KXDOGE15M",
+      "family": "sized",
+      "scope": "KXDOGE15M",
+      "t": 4.38,
+      "params": {
+        "start": 4,
+        "end": 13,
+        "edge": 0.13,
+        "band": "05-95",
+        "vm": 1.0,
+        "cap": 5
+      },
+      "norm": 0.260929335166002
+    },
+    {
+      "id": "sized:KXHYPE15M",
+      "family": "sized",
+      "scope": "KXHYPE15M",
+      "t": 4.22,
+      "params": {
+        "start": 2,
+        "end": 12,
+        "edge": 0.14,
+        "band": "05-95",
+        "vm": 1.25,
+        "cap": 5
+      },
+      "norm": 0.22610238553831677
+    },
+    {
+      "id": "fv_liq:KXHYPE15M",
+      "family": "fv_liq",
+      "scope": "KXHYPE15M",
+      "t": 3.89,
+      "params": {
+        "start": 2,
+        "end": 12,
+        "edge": 0.13,
+        "band": "05-95",
+        "max_spr": 0.1,
+        "quote": "any",
+        "min_vol": 0,
+        "vm": 1.0
+      }
+    },
+    {
+      "id": "fv_shape:KXHYPE15M",
+      "family": "fv_shape",
+      "scope": "KXHYPE15M",
+      "t": 3.86,
+      "params": {
+        "start": 2,
+        "end": 12,
+        "edge": 0.14,
+        "band": "05-95",
+        "a": 0.7,
+        "vm": 0.8
+      }
     }
   ],
   "log": "data/kalshi15m/real_all9_log.jsonl",
@@ -45,7 +280,7 @@
     "min_price": 0.03,
     "max_data_age_s": 5.0,
     "max_decision_lag_s": 5.0,
-    "walk_cents": 5,
+    "walk_cents": 10,
     "walk_keep_edge": 0.06
   }
 }
