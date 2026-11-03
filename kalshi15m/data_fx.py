@@ -89,16 +89,22 @@ def kget(path, params=None, tries=10):
     raise RuntimeError(f"Kalshi {path} failed after {tries} tries")
 
 
+def _f(x):
+    try:
+        return float(str(x).replace(",", ""))
+    except (TypeError, ValueError):
+        return np.nan
+
+
 def _mrow(m):
     if m.get("result") not in ("yes", "no"):
         return None
     fs = m.get("floor_strike")
     return {"ticker": m["ticker"], "event": m.get("event_ticker"), "open_ts": _ts(m["open_time"]),
             "close_ts": _ts(m["close_time"]),
-            "strike": float(str(fs).replace(",", "")) if fs is not None else np.nan,
-            "cap_strike": float(str(m["cap_strike"]).replace(",", "")) if m.get("cap_strike") is not None else np.nan,
+            "strike": _f(fs), "cap_strike": _f(m.get("cap_strike")),
             "strike_type": m.get("strike_type"),
-            "settle_value": float(str(m["expiration_value"]).replace(",", "")) if m.get("expiration_value") else np.nan,
+            "settle_value": _f(m.get("expiration_value")),
             "result": 1 if m["result"] == "yes" else 0,
             "volume": float(m.get("volume_fp") or m.get("volume") or 0)}
 

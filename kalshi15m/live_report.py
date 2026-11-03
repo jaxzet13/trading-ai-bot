@@ -355,7 +355,7 @@ OTHER_SERIES = [
 _OCACHE = OUT.parent / "data" / "kalshi15m" / "other_markets_cache.json"
 
 
-def other_markets(budget_s: float = 6.0) -> dict:
+def other_markets(budget_s: float = 7.0) -> dict:
     """The open market for each OTHER_SERIES from Kalshi's public API, plus how much a typical market trades
     (median volume of the last ~50 settled ones, cached and refreshed at most hourly). Best effort and bounded:
     sequential requests, short timeouts, a hard time budget; anything that fails shows as missing on the page."""
@@ -367,14 +367,21 @@ def other_markets(budget_s: float = 6.0) -> dict:
         cache = json.loads(_OCACHE.read_text())
     except (OSError, ValueError):
         cache = {}
-    sess = requests.Session()
+    sess, last = requests.Session(), [0.0]
 
-    def get(params):
+    def get(params, retry=True):
+        wait = last[0] + 0.35 - time.monotonic()  # Kalshi rate-limits bursts (shared with the bots): space requests out
+        if wait > 0:
+            time.sleep(wait)
         left = stop - time.monotonic()
         if left < 0.4:
             return None
         try:
+            last[0] = time.monotonic()
             r = sess.get(api, params=params, timeout=min(2.5, left))
+            if r.status_code == 429 and retry and stop - time.monotonic() > 2.0:
+                time.sleep(1.0)
+                return get(params, retry=False)
             return r.json().get("markets") if r.ok else None
         except Exception:
             return None
@@ -391,37 +398,45 @@ def other_markets(budget_s: float = 6.0) -> dict:
         except (TypeError, ValueError):
             return None
 
-    rows = []
+    rows, seen = [], cache.setdefault("open", {})
     for series, name, short, group in OTHER_SERIES:
         row = {"series": series, "name": name, "short": short, "group": group, "market": None}
         ms = get({"series_ticker": series, "status": "open", "limit": 20})
-        if ms is None:
-            row["error"] = True
+        if ms is None:  # no answer: keep showing the last market we saw while it is still open
+            old = seen.get(series)
+            if old and (old.get("close_ts") or 0) > now:
+                row["market"], row["stale_since"] = old, old.get("fetched")
+            else:
+                row["error"] = True
         else:
             live = [m for m in ms if (ts(m.get("close_time")) or 0) > now]
             if live:
                 m = min(live, key=lambda m: ts(m.get("close_time")))
-                row["market"] = {"ticker": m.get("ticker"), "title": m.get("title"), "strike": num(m.get("floor_strike")),
-                                 "open_ts": ts(m.get("open_time")), "close_ts": ts(m.get("close_time")),
-                                 "yes_bid": num(m.get("yes_bid_dollars")), "yes_ask": num(m.get("yes_ask_dollars")),
-                                 "last": num(m.get("last_price_dollars")), "volume": num(m.get("volume_fp")),
-                                 "open_interest": num(m.get("open_interest_fp"))}
+                row["market"] = seen[series] = {
+                    "ticker": m.get("ticker"), "title": m.get("title"), "strike": num(m.get("floor_strike")),
+                    "open_ts": ts(m.get("open_time")), "close_ts": ts(m.get("close_time")),
+                    "yes_bid": num(m.get("yes_bid_dollars")), "yes_ask": num(m.get("yes_ask_dollars")),
+                    "last": num(m.get("last_price_dollars")), "volume": num(m.get("volume_fp")),
+                    "open_interest": num(m.get("open_interest_fp")), "fetched": int(now)}
+            else:
+                seen.pop(series, None)
         rows.append(row)
-    # typical volume, refreshed with whatever time is left (oldest first), at most hourly per series
-    for series, *_ in sorted(OTHER_SERIES, key=lambda x: (cache.get(x[0]) or {}).get("ts", 0)):
-        if now - (cache.get(series) or {}).get("ts", 0) < 3600:
+    # typical volume: refresh the 3 stalest figures per run (each at most hourly), with whatever time is left
+    vol = cache.setdefault("volume", {})
+    for series, *_ in sorted(OTHER_SERIES, key=lambda x: (vol.get(x[0]) or {}).get("ts", 0))[:3]:
+        if now - (vol.get(series) or {}).get("ts", 0) < 3600:
             continue
         ms = get({"series_ticker": series, "status": "settled", "limit": 50})
         if ms is None:
             break
         vols = sorted(v for v in (num(m.get("volume_fp")) for m in ms) if v is not None)
-        cache[series] = {"ts": now, "median_volume": vols[len(vols) // 2] if vols else None, "n": len(vols)}
+        vol[series] = {"ts": now, "median_volume": vols[len(vols) // 2] if vols else None, "n": len(vols)}
     try:
         _OCACHE.write_text(json.dumps(cache))
     except OSError:
         pass
     for row in rows:
-        c = cache.get(row["series"]) or {}
+        c = vol.get(row["series"]) or {}
         row["typical_volume"], row["typical_n"] = c.get("median_volume"), c.get("n")
     return {"generated": int(now), "series": rows}
 
