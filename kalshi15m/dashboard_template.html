@@ -1054,10 +1054,11 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     const PR = typeof LAB !== "undefined" && LAB && LAB.lab3_progress && typeof LAB.lab3_progress === "object" ? LAB.lab3_progress : null;
     if (H3) {
       const cs = Array.isArray(H3.candidates) ? H3.candidates : [];
-      const g = cs.filter(c => c && c.status === "golden").length, p = cs.filter(c => c && c.status === "pass").length;
+      const k0 = H3.counts && typeof H3.counts === "object" ? H3.counts : {}, own = k => cs.filter(c => c && c.status === k).length;
+      const g = nz(k0.golden) ? k0.golden : own("golden"), p = nz(k0.pass) ? k0.pass : own("pass"), reached = nz(k0.reached) ? k0.reached : cs.length;
       const n = (H3.method || {}).n_configs_tested;
       set("hbTitle", g ? `${g} golden ${g === 1 ? "strategy" : "strategies"} found` : "Hunt finished: no strategy beat what's running now");
-      set("hbSub", `${nz(n) ? NUM(n) + " settings tested" : "Every setting tested"} · ${cs.length} reached the final exam · ${p} passed but missed a test`);
+      set("hbSub", `${nz(n) ? NUM(n) + " settings tested" : "Every setting tested"} · ${NUM(reached)} reached the final exam · ${p} passed but missed a test`);
       set("hbCta", "See the results ↓");
     } else if (PR && nz(PR.pct)) {
       const done = Math.max(0, Math.min(100, PR.pct));
@@ -1109,7 +1110,9 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     const B3 = {}, FAM = {};
     (Array.isArray(H3.baselines) ? H3.baselines : []).forEach(b => { if (b && b.id != null) B3[b.id] = b; });
     (Array.isArray(H3.families) ? H3.families : []).forEach(f => { if (f && f.id != null) FAM[f.id] = f; });
-    return { m, C3, B3, FAM, bar: nz(m.t_bar_strict) ? m.t_bar_strict : null, hd: nz(m.holdout_days) ? m.holdout_days : null };
+    const k0 = H3.counts && typeof H3.counts === "object" ? H3.counts : {}, own = k => C3.filter(c => c.status === k).length;
+    const N = { reached: nz(k0.reached) ? k0.reached : C3.length, golden: nz(k0.golden) ? k0.golden : own("golden"), pass: nz(k0.pass) ? k0.pass : own("pass"), fail: nz(k0.fail) ? k0.fail : own("fail") };
+    return { m, C3, B3, FAM, N, bar: nz(m.t_bar_strict) ? m.t_bar_strict : null, hd: nz(m.holdout_days) ? m.holdout_days : null };
   })() : null;
   const hs = { sel: undefined, filter: "all" };
   let hayDots = [];
@@ -1123,19 +1126,19 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   function huntHero() {
     const { m, C3, hd, bar } = HX, fams = Object.values(HX.FAM);
     const n = nz(m.n_configs_tested) ? m.n_configs_tested : null, nf = nz(m.n_families) ? m.n_families : fams.length || null;
-    const nGold = C3.filter(c => c.status === "golden").length, prom = fams.filter(f => f.status === "golden" || f.status === "pass").length;
+    const nGold = HX.N.golden, nReach = HX.N.reached, prom = fams.filter(f => f.status === "golden" || f.status === "pass").length;
     $("huntSample").hidden = !H3.sample;
     const rt = nz(H3.runtime_s) ? (H3.runtime_s >= 3600 ? (H3.runtime_s / 3600).toFixed(1).replace(".0", "") + " h" : Math.max(1, Math.round(H3.runtime_s / 60)) + " min") : null;
-    $("huntMeta").textContent = [nGold ? `${nGold} golden` : "none golden yet", `${C3.length} reached the final exam`,
+    $("huntMeta").textContent = [nGold ? `${nGold} golden` : "none golden yet", `${NUM(nReach)} reached the final exam`,
       nz(H3.generated) ? `run finished ${fmtDate(H3.generated)}` : null, rt ? `${rt} of computing` : null].filter(Boolean).join(" · ");
     $("huntHead").innerHTML = nGold ? `<span class="gold-num">${nGold}</span> golden ${nGold === 1 ? "strategy" : "strategies"}${n ? ` out of ${NUM(n)} settings tried` : ""}`
       : `No golden strategy yet${n ? `, after ${NUM(n)} settings tried` : ""}`;
     const w = windowText(m.search_window);
-    $("huntLede").innerHTML = `We wrote <b>${nf ? pl(nf, "family", "families") : "several families"}</b> of trading ideas and tried <b>${n ? NUM(n) : "many"} settings</b> of them on past markets${w.text ? ` from ${esc(w.text)}` : ""}. The best <b>${C3.length}</b> then sat a final exam on ${hd ? `<b>${hd} locked days</b>` : "locked days"} of markets they had never seen. Golden means a strategy passed every test listed under <a href="#hunt-method">How we test</a>.`;
+    $("huntLede").innerHTML = `We wrote <b>${nf ? pl(nf, "family", "families") : "several families"}</b> of trading ideas and tried <b>${n ? NUM(n) : "many"} settings</b> of them on past markets${w.text ? ` from ${esc(w.text)}` : ""}. The best <b>${NUM(nReach)}</b> then sat a final exam on ${hd ? `<b>${hd} locked days</b>` : "locked days"} of markets they had never seen. Golden means a strategy passed every test listed under <a href="#hunt-method">How we test</a>.`;
     $("huntStats").innerHTML = [
       ["Settings tested", NUM(n), nf ? `across ${pl(nf, "idea family", "idea families")}` : "every combination of rules and dials"],
       ["Idea families", nf ? NUM(nf) : DASH, fams.length ? `${prom} showed promise, ${fams.length - prom} didn't` : ""],
-      ["Golden", nGold ? `<span class="gold-num">${nGold}</span>` : "0", `of ${C3.length} that reached the final exam`],
+      ["Golden", nGold ? `<span class="gold-num">${nGold}</span>` : "0", `of ${NUM(nReach)} that reached the final exam`],
       ["Strict bar", bar ? `t ≥ ${bar}` : DASH, bar ? `luck alone scores this high about once in ${oneIn(bar)} tries` : ""],
     ].map(([l, v, s]) => `<div><div class="hs-l">${l}</div><div class="hs-v">${v}</div><div class="hs-s">${s}</div></div>`).join("");
   }
@@ -1172,19 +1175,19 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       ctx.fillStyle = g ? gold : d.c.status === "pass" ? good : ink2; ctx.fillRect(d.x - z / 2, d.y - z / 2, z, z);
       ctx.restore();
     }
-    const cnt = k => C3.filter(c => c.status === k).length;
+    const cnt = k => NUM(HX.N[k]);
     $("hayLegend").innerHTML = `<span><i style="background:var(--vault-dot)"></i>${per > 1 ? `Each square is ${per} settings tried` : "Each square is one setting tried"}</span>` +
       `<span><i style="background:var(--vault-ink-2)"></i>Reached the final exam, then failed <b>${cnt("fail")}</b></span>` +
       `<span><i style="background:var(--vault-good)"></i>Passed, but not every test <b>${cnt("pass")}</b></span>` +
       `<span><i style="background:var(--vault-gold)"></i>Golden <b>${cnt("golden")}</b></span>`;
-    cv.setAttribute("aria-label", `${NUM(N)} settings tried, ${C3.length} reached the final exam, ${cnt("golden")} golden`);
+    cv.setAttribute("aria-label", `${NUM(N)} settings tried, ${NUM(HX.N.reached)} reached the final exam, ${cnt("golden")} golden`);
   }
 
   function huntBoard() {
     const { C3, bar, B3, FAM, hd } = HX;
     const cnt = k => C3.filter(c => c.status === k).length;
     if (hs.sel === undefined) hs.sel = C3.length ? C3[0].id : null;
-    $("huntBoardIntro").textContent = `Everything that made it to the final exam, best first. Each strategy was frozen, then run once on ${hd ? `the ${hd} locked days` : "the locked days"}. Tap a row for its full report card.`;
+    $("huntBoardIntro").textContent = `Everything that made it to the final exam, best first. Each strategy was frozen, then run once on ${hd ? `the ${hd} locked days` : "the locked days"}. ${C3.length < HX.N.reached ? `Showing the top ${NUM(C3.length)} of ${NUM(HX.N.reached)}. ` : ""}Tap a row for its full report card.`;
     $("huntFilter").innerHTML = [["all", "All"], ["golden", "Golden"], ["pass", "Pass"], ["fail", "Fail"]].filter(([k]) => k === "all" || cnt(k))
       .map(([k, l]) => `<button type="button" data-hf="${k}" aria-pressed="${hs.filter === k}">${l}<span>${k === "all" ? C3.length : cnt(k)}</span></button>`).join("");
     $("huntKey").innerHTML = `<span>${sbadge("golden")} passed every test</span><span>${sbadge("pass")} good, but missed at least one test</span><span>${sbadge("fail")} didn't hold up on new data</span>`;
