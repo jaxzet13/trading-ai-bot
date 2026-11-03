@@ -89,23 +89,21 @@ L3.cname = cname
 
 # =========================================================================== panel
 def underlying(series):
-    if series in RATES:
-        return RATE_PROXY
     return F.UNDERLYING.get(series)
 
 
 def anchor_own(series):
-    return underlying(series)[0] == "duka"
+    return underlying(series)[0].startswith("duka")
 
 
 def spot_path(series):
     return F.LDIR / f"{series}_spot.csv"
 
 
-def build_panel4(series):
+def build_panel4(series, where="main"):
     """Same as backtest.build_panel, but from data_fx files; strike = feed price at the open for
     Dukascopy-priced series (see module doc)."""
-    mk, cd, sp = F.load(series)
+    mk, cd, sp = F.load(series) if where == "main" else F.load_archive(series)
     mk = mk[(mk.close_ts - mk.open_ts) == 900].copy()
     spot = sp.drop_duplicates("ts").set_index("ts")["close"].sort_index()
     spot = spot.reindex(np.arange(spot.index.min(), spot.index.max() + 60, 60)).ffill()
@@ -196,22 +194,30 @@ def load4(series_list, verbose=True):
     return full, info
 
 
+ARCH_BEFORE = 1788480000          # 2026-09-04 00:00 UTC, Kalshi's historical cutoff: older markets = blind archive
+
+
 def split(full):
-    start = int(max(p.open_ts.min() for p in full.values()))
+    """One common holdout cut for every series. Each series' search window runs from its own first market
+    (after the archive boundary) to the cut; folds are calendar slices of [earliest start, cut) so pooled
+    scopes stay aligned. Holdout length = HOLDOUT_FRAC of (end - median series start), whole days."""
+    starts = {s: int(np.min(np.asarray(p.open_ts)[np.asarray(p.open_ts) >= ARCH_BEFORE])) for s, p in full.items()}
+    start = int(min(starts.values()))
     end = int(min(p.open_ts.max() for p in full.values()))
-    hdays = max(5, int(round(HOLDOUT_FRAC * (end - start) / 86400)))
+    ref = float(np.median(list(starts.values())))
+    hdays = max(5, int(round(HOLDOUT_FRAC * (end - ref) / 86400)))
     cut = end - hdays * 86400
     cut = cut - cut % 900
     L3.G.update({"search": {}, "hold": {}, "arch": {}, "start": start, "cut": cut, "quick": L3.G.get("quick", 0)})
     for s, p in full.items():
         ots = np.asarray(p.open_ts, np.int64)
-        sm = (ots >= start) & (ots < cut)
+        sm = (ots >= ARCH_BEFORE) & (ots < cut)
         sp_ = p.subset(sm)
         fold = np.clip(((np.asarray(sp_.open_ts, np.int64) - start) * N_FOLDS) // (cut - start), 0, N_FOLDS - 1)
         L3.G["search"][s] = L3.Ctx(s, sp_, fold.astype(int))
         L3.G["hold"][s] = L3.Ctx(s, p.subset(ots >= cut))
-        older = ots < start - 900
-        if older.sum() >= 7 * 50:                    # a week+ of older data -> blind archive test
+        older = ots < ARCH_BEFORE - 900
+        if older.sum() >= 350:                       # Kalshi archive data downloaded -> blind archive test
             L3.G["arch"][s] = L3.Ctx(s, p.subset(older))
     return start, cut, hdays
 
@@ -243,7 +249,7 @@ def _final4(cand):
            "archive": None if arch is None else {**L3.summ(arch), "coins": [cname(c) for c in arch_coins]},
            "holdout_by_coin": ({cname(c): round(float(g.pnl.sum()), 2) for c, g in hold.groupby("series")}
                                if scope in GROUPS and len(hold) else None),
-           "_wsum": _wsum(hold)}
+           "_wsum": _wsum(hold), "_norms": norms}
     return cand["id"], out
 
 
@@ -255,7 +261,7 @@ def control_rule(WF, scope):
 
 
 # =========================================================================== part 1: lab3 families
-def models(workers=2, quick=0, families=None):
+def models(workers=2, quick=0, families=None, series_only=None, out=None):
     t0 = time.time()
     L3.G["quick"] = quick or 0
     L3._GRID_CACHE.clear()
@@ -264,6 +270,8 @@ def models(workers=2, quick=0, families=None):
     except OSError:
         pass
     ser, why = testable_list()
+    if series_only:
+        ser = [s for s in ser if s in series_only]
     print(f"lab4 models: testable {ser}", flush=True)
     full, info = load4(ser)
     for g, mem in GROUPS_ALL.items():
@@ -376,8 +384,9 @@ def models(workers=2, quick=0, families=None):
             "heatmaps": heats, "coins": coins, "groups": GROUPS, "why": why,
             "n_grid": sum(len(L3.grid_list(L3.FAMILIES[f]["grid"])) for f in fams), "n_scopes": len(scopes),
             "n_walk_forwards": len(WF), "quick": quick}
-    PART_MODELS.write_text(json.dumps(part, default=L3._jd))
-    print(f"models part done in {time.time() - t0:.0f}s -> {PART_MODELS}", flush=True)
+    dest = Path(out) if out else PART_MODELS
+    dest.write_text(json.dumps(part, default=L3._jd))
+    print(f"models part done in {time.time() - t0:.0f}s -> {dest}", flush=True)
     for c in sorted(cands, key=lambda c: -c["holdout"]["t"])[:30]:
         h = c["holdout"]
         print(f"  {c['id']:32s} ${h['pnl']:>8} n={h['trades']:>5} t={h['t']:>5} d1 t={c['delay1']['t']}", flush=True)
@@ -695,3 +704,279 @@ def xmkt(quick=0):
         h = c["holdout"]
         print(f"  {c['id']:24s} ${h['pnl']:>8} n={h['trades']:>5} t={h['t']:>5} d1 t={c['delay1']['t']}", flush=True)
     return part
+
+
+# =========================================================================== judge (one strict bar for both parts)
+def RULES(t_bar):
+    return [
+        "Only data from before the holdout was used to pick any setting; the holdout (the most recent ~25% of days, one "
+        "calendar cut for every series in a part) was run once per candidate with frozen settings.",
+        f"Golden needs ALL of the following. (1) Made money on the holdout with a t-stat of at least {t_bar}, the strict "
+        "bar that corrects for every candidate taken to the holdout in lab4 (one-sided Bonferroni, 5%).",
+        "(2) There is no live strategy on these markets, so the comparison is the CONTROL: the live bell-curve fair-value "
+        "model re-tuned on the same search window (lab3 family fv_ref) and run on the same holdout. A new family must beat "
+        "the control on the same scope on BOTH holdout profit and t-stat. The control itself is judged on the other tests.",
+        "(3) Where older Kalshi archive data was downloaded for the series (before Sep 4), it also made money there with "
+        "t >= 2 on at least 50 trades, with no re-tuning.",
+        "(4) No more than 40% of its holdout profit came from a single day.",
+        f"(5) Economically meaningful after fees: at least ${MIN_PER_TRADE:.2f} per $10 trade and at least "
+        f"${MIN_PER_DAY:.0f} a day on the holdout.",
+        "Pass = made money on the holdout with t >= 2 but missed at least one golden test. Fail = anything else.",
+        "Every result assumes $10 per trade (10 contracts per leg for the two-leg pair trades), Kalshi taker fees "
+        "ceil(0.07*C*P*(1-P)) on every leg (maker 0.0175 for maker rules), fills only at the quoted ask/bid at the end of "
+        "the decision minute, one bet per market. 'One minute late' re-runs the frozen rule with a 1-minute delay; "
+        "reported, not graded.",
+    ]
+
+
+CAVEATS = [
+    "Short histories: FX majors have 41 days of Kalshi data, AUD/USD and USD/CAD 27; the holdout is ~10 days. A t-stat "
+    "on 10 days is fragile even when it clears the bar; treat any golden result as 'worth paper trading', not proven.",
+    "The underlying prices are NOT the settlement feed. Kalshi settles FX/metals/energy/yields on Pyth, whose history "
+    "API now needs a key; Yahoo refused requests (HTTP 429). Dukascopy 1-minute BID candles are used instead "
+    "(feed_sign_agreement_search shows how often the feed's 15-minute move has the same sign as Kalshi's result). A live "
+    "bot would need a feed at least as close to Pyth.",
+    "Treasury-yield series use the inverted US T-bond CFD as a proxy for every tenor (30Y-like duration), which is a "
+    "poor stand-in for 2Y/5Y yields.",
+    "Backtest fills assume the quoted ask had enough size for a $10 order (10 contracts a leg); two-leg trades assume "
+    "both legs fill at the quotes of the same minute (1-minute candle closes are not guaranteed to be simultaneous). "
+    "The one-minute-late column shows how much survives if the second look is a minute later.",
+    "Family 3 (range buckets summing to $1) was not tested: it needs every bucket's quotes, which were not downloaded "
+    "in this budget; only the 4 strikes nearest spot of each hourly ladder are available (ladder_arb).",
+]
+
+
+def _paired(a, b):
+    ks = set(a) | set(b)
+    if not ks:
+        return {"extra_pnl": 0.0, "t": 0.0}
+    d = np.array([a.get(k, 0.0) - b.get(k, 0.0) for k in sorted(ks)])
+    return {"extra_pnl": round(float(d.sum()), 2), "t": L3._tser(d)}
+
+
+def _why4(c, ch, t_bar, ctl):
+    h = c["holdout"]
+    if h["pnl"] <= 0:
+        return f"Lost ${-h['pnl']:,.0f} on the holdout ({h['trades']} trades)."
+    if h["t"] < 2:
+        return f"Made ${h['pnl']:,.0f} on the holdout but t = {h['t']} is too weak to rule out luck (needs 2)."
+    miss = []
+    if not ch["strict_t"]:
+        miss.append(f"t = {h['t']} is below the strict bar of {t_bar}")
+    if ch.get("beats_control_pnl") is False:
+        miss.append(f"made less than the re-tuned control (${h['pnl']:,.0f} vs ${ctl['holdout']['pnl']:,.0f})")
+    if ch.get("beats_control_t") is False:
+        miss.append(f"t-stat below the re-tuned control ({h['t']} vs {ctl['holdout']['t']})")
+    if ch.get("archive") is False:
+        a = c["archive"]
+        miss.append(f"did not hold up on the older archive data (${a['pnl']:,.0f}, t = {a['t']}, {a['trades']} trades)")
+    if not ch["not_one_day"]:
+        miss.append(f"{(h.get('top_day_share') or 0) * 100:.0f}% of the profit came from one day")
+    if not ch["economic"]:
+        miss.append(f"too small to matter (${h['per_trade']:.2f} a trade, ${c['per_day']:.2f} a day)")
+    if not miss:
+        a = c.get("archive")
+        return (f"Cleared every test: ${h['pnl']:,.0f} at t = {h['t']} on the holdout (strict bar {t_bar}"
+                + (f", archive t = {a['t']}" if a else "") + f"), ${c['per_day']:.2f} a day at $10 a trade.")
+    return f"Made ${h['pnl']:,.0f} (t = {h['t']}) but " + "; ".join(miss) + "."
+
+
+def judge(out_path=None):
+    pm = json.loads(PART_MODELS.read_text()) if PART_MODELS.exists() else None
+    px = json.loads(PART_XMKT.read_text()) if PART_XMKT.exists() else None
+    cands = (pm["candidates"] if pm else []) + (px["candidates"] if px else [])
+    k = max(1, len(cands))
+    t_bar = round(NormalDist().inv_cdf(1 - 0.05 / k), 2)
+    base = {b["scope"]: b for b in (pm["baselines"] if pm else [])}
+    for c in cands:
+        is_x = c["family"] in XFAMS
+        part = px if is_x else pm
+        h = c["holdout"]
+        c["per_day"] = round(h["pnl"] / max(1, part["holdout_days"]), 2)
+        ctl = None if is_x else base.get(c["scope"])
+        own_ctl = (not is_x) and c["family"] == "fv_ref"
+        arch = c.get("archive")
+        arch_ok = None if not arch else bool(arch["trades"] >= L3.MIN_ARCH_TRADES and arch["pnl"] > 0 and arch["t"] >= 2)
+        top = h.get("top_day_share")
+        ch = {"holdout_profit": h["pnl"] > 0, "strict_t": h["t"] >= t_bar,
+              "beats_control_pnl": None if (ctl is None or own_ctl) else h["pnl"] > ctl["holdout"]["pnl"],
+              "beats_control_t": None if (ctl is None or own_ctl) else h["t"] > ctl["holdout"]["t"],
+              "archive": arch_ok, "not_one_day": top is not None and top <= 0.40,
+              "economic": h.get("per_trade", 0) >= MIN_PER_TRADE and c["per_day"] >= MIN_PER_DAY}
+        c["checks"] = ch
+        golden = all(v for v in ch.values() if v is not None)
+        c["status"] = "golden" if golden else ("pass" if h["pnl"] > 0 and h["t"] >= 2 else "fail")
+        c["why"] = _why4(c, ch, t_bar, ctl)
+        if not is_x:
+            c["label"] = L3.label(c["family"], c["scope"], c["rule"].get("params") if "params" in c["rule"] else None)
+            if ctl and not own_ctl:
+                c["paired_vs_control"] = {"control_id": ctl["id"], **_paired(c.get("_wsum") or {}, ctl.get("_wsum") or {})}
+            c["vs_baseline"] = None if not ctl else {"baseline_id": ctl["id"], "pnl_diff": round(h["pnl"] - ctl["holdout"]["pnl"], 2),
+                                                     "t_diff": round(h["t"] - ctl["holdout"]["t"], 2)}
+            if c["status"] == "golden" and (c.get("paired_vs_control") or {}).get("t", 99) < 2:
+                c["why"] += (f" Caution: the extra ${c['paired_vs_control']['extra_pnl']:,.0f} over the control on the same "
+                             f"markets is not statistically clear (paired t = {c['paired_vs_control']['t']}).")
+        else:
+            c["vs_baseline"] = None
+    pub = []
+    for c in cands:
+        rule = c["rule"]
+        if "members" in rule:
+            params, strategy = {"members": [{"family": m["family"], "params": m["params"]} for m in rule["members"]]}, "ens_best"
+        elif rule.get("per_coin"):
+            params, strategy = {cname(kk): v for kk, v in rule["params"].items()}, "fv_ref (per series)"
+        else:
+            params, strategy = rule["params"], rule["family"]
+        pub.append({"id": f"{c['id']}:{c['execution']}", "label": c["label"], "family": c["family"], "scope": c["scope"],
+                    "strategy": strategy, "execution": c["execution"], "params": params, "search": c["search"],
+                    "holdout": c["holdout"], "per_day": c["per_day"], "archive": c.get("archive"), "delay1": c["delay1"],
+                    "vs_baseline": c.get("vs_baseline"), "paired_vs_control": c.get("paired_vs_control"),
+                    "holdout_by_coin": c.get("holdout_by_coin"), "status": c["status"], "why": c["why"],
+                    "checks": c["checks"], "curve": c["curve"]})
+    pub.sort(key=lambda c: ({"golden": 0, "pass": 1, "fail": 2}[c["status"]], -c["holdout"]["t"]))
+    fams = []
+    for part in (pm, px):
+        if not part:
+            continue
+        for fr in part["families"]:
+            mine = [c for c in pub if c["family"] == fr["id"]]
+            st = "golden" if any(c["status"] == "golden" for c in mine) else (
+                "pass" if any(c["status"] == "pass" for c in mine) else "fail")
+            best = max(mine, key=lambda c: c["holdout"]["t"], default=None)
+            fams.append({**fr, "best_holdout_t": best["holdout"]["t"] if best else None, "status": st,
+                         "finding": ("Nothing reached the holdout: no scope had a good enough walk-forward record."
+                                     if not best else f"Best: {best['label']}: ${best['holdout']['pnl']:,.0f} at "
+                                     f"t = {best['holdout']['t']} on the holdout ({best['status']}).")})
+    sv = json.loads(SURVEY.read_text()) if SURVEY.exists() else {}
+    svh = json.loads((LAB / "lab4_survey_hourly.json").read_text()) if (LAB / "lab4_survey_hourly.json").exists() else {}
+    why = (pm or {}).get("why", {})
+    surveyed = []
+    for s, r in sv.items():
+        surveyed.append({"series": s, "name": cname(s), "frequency": "15min", **r,
+                         "testable": why.get(s) == "testable",
+                         "note": why.get(s, "not one of the families' target markets (no free 1-minute underlying)")})
+    for s, r in svh.items():
+        surveyed.append({"series": s, "frequency": "hourly", **r, "testable": False,
+                         "note": r.get("note", "surveyed only; not tested in this budget")})
+    gold = [c for c in pub if c["status"] == "golden"]
+    summary = [f"{len(gold)} of {len(pub)} candidates that reached the holdout are golden, "
+               f"{sum(c['status'] == 'pass' for c in pub)} pass, {sum(c['status'] == 'fail' for c in pub)} fail "
+               f"(strict bar t >= {t_bar} over {k} holdout tests)."]
+    for b in (pm["baselines"] if pm else []):
+        summary.append(f"Control {cname(b['scope'])}: ${b['holdout']['pnl']:,.0f} (t {b['holdout']['t']}, "
+                       f"{b['holdout']['trades']} trades) on the holdout.")
+    res = {
+        "generated": int(time.time()),
+        "runtime_s": int((pm or {}).get("runtime_s", 0) + (px or {}).get("runtime_s", 0)),
+        "method": {
+            "search_window": (f"{pd.to_datetime(pm['start'], unit='s'):%Y-%m-%d %H:%M} to "
+                              f"{pd.to_datetime(pm['cut'], unit='s'):%Y-%m-%d %H:%M} UTC") if pm else None,
+            "search_start": pm["start"] if pm else None, "holdout_start": pm["cut"] if pm else None,
+            "holdout_days": pm["holdout_days"] if pm else None, "n_folds": N_FOLDS,
+            "n_families": len(fams), "n_grid_configs": (pm or {}).get("n_grid"),
+            "n_configs_tested": ((pm or {}).get("n_grid", 0) * (pm or {}).get("n_scopes", 0)
+                                 + sum(f["configs"] * f["scopes_tested"] for f in (px or {}).get("families", []))),
+            "n_walk_forwards": (pm or {}).get("n_walk_forwards", 0) + sum(f["scopes_tested"] for f in (px or {}).get("families", [])),
+            "n_holdout_tests": k, "t_bar_strict": t_bar, "stake": L3.STAKE,
+            "shortlist": f"walk-forward P&L > 0, t >= {L3.T_SHORT}, >= {L3.SHORT_TRADES} trades, >= half of test folds profitable",
+            "rules": RULES(t_bar), "caveats": CAVEATS, "summary": summary,
+            "parts": {
+                "models": None if not pm else {"what": "lab3 families on new 15-minute series", "start": pm["start"],
+                                               "cut": pm["cut"], "holdout_days": pm["holdout_days"],
+                                               "groups": {g: [cname(x) for x in v] for g, v in pm["groups"].items()},
+                                               "quick": pm.get("quick")},
+                "xmkt": None if not px else {"what": "structural / cross-market families on crypto 15-min + hourly data",
+                                             "start": px["start"], "cut": px["cut"], "holdout_days": px["holdout_days"],
+                                             "data": px["data"]}},
+            "data_sources": {"kalshi": "public trade API (markets, 1-minute candlesticks)",
+                             "fx_metals_energy_index": "Dukascopy 1-minute BID candles (not Pyth; see caveats)",
+                             "yields": "Dukascopy USTBOND.TR/USD CFD, inverted, as a proxy",
+                             "crypto": "Coinbase 1-minute candles (existing lab data)",
+                             "tried_and_failed": ["Pyth Benchmarks TradingView shim (404, sunset Aug 2026)",
+                                                  "Pyth Pro history API (401, needs an API key)",
+                                                  "Hermes historical price updates (401)",
+                                                  "Yahoo chart API (HTTP 429 from this IP)"]},
+        },
+        "coins": (pm or {}).get("coins", {}),
+        "markets_surveyed": surveyed,
+        "families": fams,
+        "baselines": [{kk: v for kk, v in b.items() if kk != "_wsum"} for b in (pm["baselines"] if pm else [])],
+        "candidates": pub,
+        "heatmaps": (pm or {}).get("heatmaps", []),
+    }
+    dest = Path(out_path) if out_path else OUT
+    dest.write_text(json.dumps(res, default=L3._jd))
+    print(f"strict bar t >= {t_bar} over {k} holdout tests")
+    for c in pub[:60]:
+        h = c["holdout"]
+        print(f"  {c['status']:6s} {c['id']:36s} ${h['pnl']:>8} n={h['trades']:>5} t={h['t']:>5} ${c['per_day']:>7}/day "
+              f"d1 t={c['delay1']['t']} | {c['why'][:110]}")
+    print(f"-> {dest}")
+    return res
+
+
+def archive_step():
+    """Blind archive test of every frozen model candidate whose scope contains a series with downloaded
+    Kalshi archive data (markets before Sep 4). Writes into the models part file; no settings change."""
+    pm = json.loads(PART_MODELS.read_text())
+    GROUPS.clear()
+    GROUPS.update(pm["groups"])
+    have = [s for s in pm["coins"] if (F.LDIR / f"{s}_markets_arch.csv").exists()
+            and (F.LDIR / f"{s}_candles_hist.part.csv").exists() and (F.LDIR / f"{s}_spot_arch.csv").exists()]
+    L3.G.update({"arch": {}, "quick": pm.get("quick", 0)})
+    for s in have:
+        L3._SPOT[(s, "archive")] = L3.Spot(F.LDIR / f"{s}_spot_arch.csv")
+        df, _ = build_panel4(s, "archive")
+        p = B.Panel(df)
+        L3.add_features(p, s, "archive")
+        L3.G["arch"][s] = L3.Ctx(s, p)
+        print(f"  archive {s}: {len(p)} markets {pd.to_datetime(p.open_ts.min(), unit='s'):%m-%d}.."
+              f"{pd.to_datetime(p.open_ts.max(), unit='s'):%m-%d}", flush=True)
+    for c in pm["candidates"]:
+        ac = [x for x in _coins_of(c["scope"]) if x in L3.G["arch"]]
+        if not ac:
+            continue
+        rule = c["rule"]
+        if rule.get("per_coin"):
+            rule = {**rule, "params": {k: v for k, v in rule["params"].items()}}
+        norms = c.get("_norms")
+        a = L3.run_rule("arch", c["scope"], rule, norms=norms)
+        c["archive"] = {**L3.summ(a), "coins": [cname(x) for x in ac]}
+        if len(a):
+            mo = pd.to_datetime(a.ts, unit="s").dt.strftime("%Y-%m")
+            c["archive"]["monthly_pnl"] = {k: round(float(v), 2) for k, v in a.groupby(mo).pnl.sum().items()}
+        print(f"  {c['id']:32s} archive ${c['archive']['pnl']:>8} n={c['archive']['trades']:>5} t={c['archive']['t']}", flush=True)
+    for s in have:
+        pm["coins"][s]["archive_markets"] = len(L3.G["arch"][s])
+        pm["coins"][s]["archive_span"] = (f"{pd.to_datetime(L3.G['arch'][s].open_ts.min(), unit='s'):%Y-%m-%d} to "
+                                          f"{pd.to_datetime(L3.G['arch'][s].open_ts.max(), unit='s'):%Y-%m-%d}")
+    pm["archive_series"] = have
+    PART_MODELS.write_text(json.dumps(pm, default=L3._jd))
+
+
+def main(args):
+    cmd = args[0] if args else "help"
+    if cmd == "survey":
+        ser = [s for s in sum(GROUPS_ALL.values(), [])]
+        F.survey(ser, out=SURVEY)
+    elif cmd == "download":
+        ser = args[1:] or testable_candidates()
+        for s in ser:
+            F.download(s)
+    elif cmd == "models":
+        quick = int(args[1]) if len(args) > 1 else 0
+        models(quick=quick)
+    elif cmd == "xmkt":
+        xmkt()
+    elif cmd == "archive":
+        archive_step()
+    elif cmd == "judge":
+        judge()
+    else:
+        print(__doc__)
+
+
+def testable_candidates():
+    sv = json.loads(SURVEY.read_text()) if SURVEY.exists() else {}
+    return [s for s, r in sv.items() if r.get("markets") and r.get("span_days", 0) >= MIN_DAYS
+            and r.get("median_volume", 0) >= MIN_MED_VOLUME and underlying(s) is not None]

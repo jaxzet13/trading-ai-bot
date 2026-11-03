@@ -355,7 +355,7 @@ OTHER_SERIES = [
 _OCACHE = OUT.parent / "data" / "kalshi15m" / "other_markets_cache.json"
 
 
-def other_markets(budget_s: float = 7.0) -> dict:
+def other_markets(budget_s: float = 6.0) -> dict:
     """The open market for each OTHER_SERIES from Kalshi's public API, plus how much a typical market trades
     (median volume of the last ~50 settled ones, cached and refreshed at most hourly). Best effort and bounded:
     sequential requests, short timeouts, a hard time budget; anything that fails shows as missing on the page."""

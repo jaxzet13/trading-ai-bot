@@ -46,6 +46,9 @@ UNDERLYING = {
     "KXCOPPER15M": ("duka", "COPPERCMDUSD", 1e-5), "KXNATGAS15M": ("duka", "GASCMDUSD", 1e-5),
     "KXINX15M": ("duka", "USA500IDXUSD", 1e-3), "KXNDQ15M": ("duka", "USATECHIDXUSD", 1e-3),
     "KXDJIA15M": ("duka", "USA30IDXUSD", 1e-3),
+    # Treasury yields: no free 1-minute yield history; inverted US T-bond CFD as a proxy (yield up <=> bond down)
+    "KX2YRRATE15M": ("duka_inv", "USTBONDTRUSD", 1e-3), "KX5YRRATE15M": ("duka_inv", "USTBONDTRUSD", 1e-3),
+    "KX10YRRATE15M": ("duka_inv", "USTBONDTRUSD", 1e-3), "KX30YRRATE15M": ("duka_inv", "USTBONDTRUSD", 1e-3),
     "KXBCH15M": ("coinbase", "BCH-USD", None), "KXADA15M": ("coinbase", "ADA-USD", None),
     "KXTON15M": ("coinbase", "TON-USD", None),
 }
@@ -269,7 +272,12 @@ def download(series, since_ts=None, hist_every=1, archive=False):
     lo, hi = int(mk.open_ts.min()) - 6 * 3600, int(mk.close_ts.max()) + 120
     spath = LDIR / f"{series}_spot.csv"
     if not spath.exists():
-        sp = duka_range(sym, scale, lo, hi) if src == "duka" else fetch_spot(sym, lo, hi)
+        if src.startswith("duka"):
+            sp = duka_range(sym, scale, lo, hi)
+            if src == "duka_inv":
+                sp = sp.assign(open=1 / sp.open, close=1 / sp.close, high=1 / sp.low, low=1 / sp.high)
+        else:
+            sp = fetch_spot(sym, lo, hi)
         sp.to_csv(spath, index=False)
     mk.to_csv(LDIR / f"{series}_markets.csv", index=False)
 
@@ -280,4 +288,52 @@ def load(series):
     cd = pd.concat([pd.read_csv(p) for p in parts], ignore_index=True)
     cd = cd[cd.ts > 0].drop_duplicates(["ticker", "ts"])
     sp = pd.read_csv(LDIR / f"{series}_spot.csv")
+    return mk, cd, sp
+
+
+def survey_hourly(series_list, out):
+    """Light survey of hourly series: the latest 200 settled events + the most recent event's markets."""
+    rows = json.loads(out.read_text()) if out.exists() else {}
+    for s in series_list:
+        if s in rows:
+            continue
+        d = kget("/events", {"series_ticker": s, "status": "settled", "limit": 200})
+        ev = d.get("events", [])
+        if not ev:
+            rows[s] = {"events_recent": 0, "note": "no settled events"}
+        else:
+            last = ev[0]["event_ticker"]
+            m = kget("/markets", {"event_ticker": last, "limit": 1000}).get("markets", [])
+            vols = [float(x.get("volume_fp") or x.get("volume") or 0) for x in m]
+            closes = [_ts(x["close_time"]) for x in m if x.get("close_time")]
+            rows[s] = {"events_recent": len(ev), "more_events": bool(d.get("cursor")), "latest_event": last,
+                       "markets_in_latest_event": len(m), "latest_event_volume": round(sum(vols), 1),
+                       "latest_close": f"{pd.to_datetime(max(closes), unit='s'):%Y-%m-%d %H:%M}" if closes else None,
+                       "strike_types": sorted({str(x.get('strike_type')) for x in m})[:3]}
+        print(f"  {s}: {rows[s]}", flush=True)
+        out.write_text(json.dumps(rows, indent=1))
+    return rows
+
+
+def download_archive(series, every=2):
+    """Markets that settled before Kalshi's historical cutoff (one candle request per market, every Nth
+    market) + the underlying for that period -> {series}_markets_arch.csv, _candles_hist.part.csv, _spot_arch.csv."""
+    mk = pd.read_csv(LDIR / f"{series}_markets_all.csv")
+    cutoff = _ts(kget("/historical/cutoff")["market_settled_ts"])
+    old = mk[(mk.close_ts < cutoff) & np.isfinite(mk.strike)].iloc[::every].reset_index(drop=True)
+    old.to_csv(LDIR / f"{series}_markets_arch.csv", index=False)
+    print(f"  {series}: {len(old)} archive markets", flush=True)
+    fetch_candles_hist(series, old, LDIR / f"{series}_candles_hist.part.csv")
+    src, sym, scale = UNDERLYING[series]
+    sp = duka_range(sym, scale, int(old.open_ts.min()) - 6 * 3600, int(old.close_ts.max()) + 120)
+    if src == "duka_inv":
+        sp = sp.assign(open=1 / sp.open, close=1 / sp.close, high=1 / sp.low, low=1 / sp.high)
+    sp.to_csv(LDIR / f"{series}_spot_arch.csv", index=False)
+
+
+def load_archive(series):
+    mk = pd.read_csv(LDIR / f"{series}_markets_arch.csv")
+    cd = pd.read_csv(LDIR / f"{series}_candles_hist.part.csv")
+    cd = cd[cd.ts > 0].drop_duplicates(["ticker", "ts"])
+    sp = pd.read_csv(LDIR / f"{series}_spot_arch.csv")
     return mk, cd, sp
