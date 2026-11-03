@@ -1955,6 +1955,9 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
 .evo-float.up { color: #7dffa6; } .evo-float.down { color: #ff7a7f; }
 @keyframes evofloat { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-120%); opacity: 0; } }
 .ppill.evo-pill { background: #f4f2ec; }
+.tokshop { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.tokshop .label { margin-right: 6px; color: var(--token); }
+.tcard .evo-neg { border-color: #6a080d; color: #ff9a9e; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -2048,7 +2051,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
 
   <section class="view" id="view-arena" hidden>
     <div class="section-head">
-      <div><div class="label">Tokens only · free to play</div><h2>Arena</h2><p class="lede">Pick a card, pick an opponent, stake your tokens. The cards clash and the odds bar decides: your card's stats and type counters set your chance, and long shots pay big. Under ten seconds a fight.</p></div>
+      <div><div class="label">Tokens · bought with dollars</div><h2>Arena</h2><p class="lede">Pick a card, pick an opponent, stake your tokens. The cards clash and the odds bar decides: your card's stats and type counters set your chance, and long shots pay big. Every clash moves your card's EVO: beat the odds and it climbs, get upset and it drops.</p></div>
       <div class="record" id="arenaRecord"></div>
     </div>
     <div class="arena-setup">
@@ -2421,11 +2424,13 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   function rollGrade() { let x = rand(); for (const g of GRADES) { x -= g.p; if (x < 0) return g.g; } return 8; }
   // EVO: a copy's fight rating. Beating harder opponents raises it more, losses lower it, and every point
   // adds 0.1% to that copy's value (EVO 250 = +25%). Only staked clashes move it; it caps at 999.
-  const EVO_CAP = 999;
-  const evoGain = (p, evo) => Math.max(1, Math.round((10 + 55 * (1 - p)) * (1 - (evo || 0) / (EVO_CAP + 250))));
-  const evoLoss = p => Math.round(5 + 16 * p);
-  const evoMult = it => 1 + Math.min(EVO_CAP, (it && it.evo) || 0) / 1000;
-  const evoTier = e => e >= 600 ? "gold" : e >= 300 ? "red" : e >= 100 ? "steel" : "base";
+  // Zero-sum like a chess rating: win at chance p and gain 60 x (1 - p), lose and drop 60 x p. On average
+  // it never moves, so spamming fights can't farm it; only beating the odds raises it. Negative EVO lowers value.
+  const EVO_CAP = 999, EVO_MIN = -300;
+  const evoGain = p => Math.max(1, Math.round(60 * (1 - p)));
+  const evoLoss = p => Math.max(1, Math.round(60 * p));
+  const evoMult = it => 1 + Math.max(EVO_MIN, Math.min(EVO_CAP, (it && it.evo) || 0)) / 1000;
+  const evoTier = e => e < 0 ? "neg" : e >= 600 ? "gold" : e >= 300 ? "red" : e >= 100 ? "steel" : "base";
   const evoHTML = it => it && it.evo != null ? `<span class="evo evo-${evoTier(it.evo)}"><b>EVO</b><span class="ev">${it.evo}</span></span>` : "";
   const itemVal = it => { const c = cardOf(it); let v = cardBaseValue(c, it.ed, it.rh) * fxMult(it) * evoMult(it); if (it.slab) v = v * gradeMult(c.rar, it.slab.g, it.slab.black); return Math.max(1, Math.round(v)); };
   const costOf = it => it.val != null ? it.val : itemVal(it);
@@ -2558,7 +2563,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   for (const p of PACKS) for (const d of [p.rare, p.rh]) for (const k in d) if (BOOST[k]) d[k] = +(d[k] * BOOST[k]).toFixed(3);
   function refreshPackPrices() {   // sealed product reprices when the cards inside appreciate (never below its launch price)
     const d = mktDay(); if (d === PRICE_DAY) return; PRICE_DAY = d;
-    for (const p of PACKS) { if (p.base == null) { if (p.cur === "coin") p.price = Math.max(99, Math.round(packEVAt(p, p.lim ? LSETS[p.lim].release : 0) * BUYBACK / HOUSE_RTP / 10) * 10 - 1); p.base = p.price; p.ev0 = packEVAt(p, p.lim ? LSETS[p.lim].release : 0); } if (p.cur !== "coin") continue; const r = packEVAt(p, d) / p.ev0; p.price = r > 1 ? Math.round(p.base * r / 10) * 10 - 1 : p.base; }
+    for (const p of PACKS) { if (p.base == null) { if (p.cur === "coin") p.price = Math.max(99, Math.round(packEVAt(p, p.lim ? LSETS[p.lim].release : 0) * BUYBACK / HOUSE_RTP / 10) * 10 - 1); p.base = p.price; p.ev0 = packEVAt(p, p.lim ? LSETS[p.lim].release : 0); } if (p.cur !== "coin") { p.price = Math.max(p.base, Math.ceil(packEVAt(p, d) * BUYBACK / TOKEN_CENTS * 1.15)); continue; } const r = packEVAt(p, d) / p.ev0; p.price = r > 1 ? Math.round(p.base * r / 10) * 10 - 1 : p.base; }
   }
   function packEV(p) { if (p.lim) { let lv = 0; for (const [k, pr] of Object.entries(LIM_ODDS)) { const pool = poolSet(p.lim, k); lv += pr / 100 * pool.reduce((a, c) => a + cardBaseValue(c), 0) / pool.length; } return (meanR(p, "C") + meanR(p, "U") + lv) * FX_EV; } return (2 * meanR(p, "C") + meanR(p, "U") + distMean(p, p.rh) + distMean(p, p.rare)) * (p.ed === "sketch" ? 1 : FX_EV); }
   let HIT = {}, HIT_DAY = -1;
@@ -3274,8 +3279,10 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   const TYPE_CYCLE = ["fist", "blade", "chain", "reach", "guard", "blunt", "arcane", "shadow", "time", "royal", "void"];
   function counterEdge(m, o) { const a = TYPE_CYCLE.indexOf(FTYPE[baseOf(m.id)]), b = TYPE_CYCLE.indexOf(FTYPE[baseOf(o.id)]); if (a < 0 || b < 0) return 0; if ((a + 1) % TYPE_CYCLE.length === b) return .06; if ((b + 1) % TYPE_CYCLE.length === a) return -.06; return 0; }
   const clashChance = (m, o) => Math.max(.12, Math.min(.88, winChance(m, o) + counterEdge(m, o)));
-  const clashPay = (p, stake) => stake ? Math.max(stake + 1, Math.round(stake * .95 / p)) : 5;
-  const STAKES = [0, 5, 10, 25, 50, 100];
+  const clashPay = (p, stake) => Math.max(stake + 1, Math.round(stake * .95 / p));
+  const STAKES = [10, 25, 50, 100, 250];
+  // tokens cost demo dollars; priced so buying tokens for Sketch packs never turns a profit
+  const TOKEN_CENTS = 2.5, TOKEN_PACKS = [[100, 250], [500, 1150], [1500, 3200]];
   let clStake = 10, CL = null;
   const recTxt = it => it && it.rec ? `${it.rec.w}–${it.rec.l}` : "0–0";
   function renderArena() {
@@ -3287,10 +3294,12 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     const opps = FIGHTERS.filter(f => !f.base && f.id !== myId).map(f => ({ f, p: clashChance(me, f), ce: counterEdge(me, f) })).sort((x, y) => y.p - x.p);
     if (!pickOpp || !opps.some(o => o.f.id === pickOpp)) pickOpp = (opps[Math.floor(opps.length / 2)] || opps[0]).f.id;
     const stake = clStake;
-    $("filmPick").innerHTML = opps.map(({ f, p, ce }) => `<button class="film" data-opp="${f.id}" aria-pressed="${pickOpp === f.id}">${figImg(f)}<span class="fno">${esc(f.title || "")}</span><b>${esc(f.name)}</b><span class="ft">${Math.round(p * 100)}% to win${ce > 0 ? " · counter +6%" : ce < 0 ? " · countered" : ""}</span><span class="fw">${stake ? `${stake} pays ${clashPay(p, stake)}` : "Free · win pays 5"}</span></button>`).join("");
+    $("filmPick").innerHTML = opps.map(({ f, p, ce }) => `<button class="film" data-opp="${f.id}" aria-pressed="${pickOpp === f.id}">${figImg(f)}<span class="fno">${esc(f.title || "")}</span><b>${esc(f.name)}</b><span class="ft">${Math.round(p * 100)}% to win${ce > 0 ? " · counter +6%" : ce < 0 ? " · countered" : ""}</span><span class="fw">${stake} pays ${clashPay(p, stake)}</span></button>`).join("");
     const o = BY_ID[pickOpp], p = clashChance(me, o);
-    $("stakes").innerHTML = `<span class="label">Stake</span>${STAKES.map(s => `<button class="chip${clStake === s ? " on" : ""}" data-stake="${s}" ${s > state.tokens ? "disabled" : ""}>${s ? s : "Free"}</button>`).join("")}`;
-    $("startFight").disabled = !o || (clStake > state.tokens); $("startFight").innerHTML = o ? `Clash · ${Math.round(p * 100)}% · ${clStake ? `win ${clashPay(p, clStake)}` : "free"}` : "Pick an opponent";
+    $("stakes").innerHTML = `<span class="label">Stake</span>${STAKES.map(s => `<button class="chip${clStake === s ? " on" : ""}" data-stake="${s}" ${s > state.tokens ? "disabled" : ""}>${s}</button>`).join("")}
+      <div class="tokshop"><span class="label">Tokens ${fmt(state.tokens)}</span>${TOKEN_PACKS.map(([n, c]) => `<button class="chip" data-buytok="${n}" ${state.coins < c ? "disabled" : ""}>+${fmt(n)} · ${money(c)}</button>`).join("")}</div>`;
+    const short = clStake > state.tokens;
+    $("startFight").disabled = !o || short; $("startFight").innerHTML = !o ? "Pick an opponent" : short ? `You need ${clStake} tokens · buy some below` : `Clash · ${Math.round(p * 100)}% · stake ${clStake} · win ${clashPay(p, clStake)}`;
     $("arenaRecord").innerHTML = `<div><span class="label">Wins</span><strong>${state.s.wins}</strong></div><div><span class="label">Losses</span><strong>${state.s.losses}</strong></div><div><span class="label">Streak</span><strong>${state.s.streak || 0}</strong></div><div><span class="label">Tokens</span><strong style="color:var(--token)">${fmt(state.tokens)}</strong></div>`;
   }
   // tiny particle layer for the clash screen
@@ -3311,7 +3320,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   function clashStart() {
     if (CL) return;
     const myId = pickFighter === "loaner" ? "knuckles" : pickFighter, me = BY_ID[myId], opp = BY_ID[pickOpp]; if (!opp) return;
-    if (clStake > state.tokens) { toast(`You need ${clStake} tokens for that stake`); return; }
+    if (clStake > state.tokens) { toast(`You need ${clStake} tokens for that stake. Buy tokens under the stake buttons`); return; }
     const p = clashChance(me, opp), won = rand() < p, stake = clStake, pay = clashPay(p, stake);
     const myItem = pickFighter === "loaner" ? { id: "knuckles", cno: "001", rar: "C", serial: 0, ed: "foil" } : arenaRoster().find(it => it.id === myId);
     const oc = CARDS.find(c => c.id === opp.id) || CARDS[0], oppItem = { id: oc.id, cno: oc.no, rar: oc.rar, serial: 0, ed: "foil" };
@@ -3322,7 +3331,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     const box = $("clash");
     $("clMe").innerHTML = `<div class="cl-card">${cardHTML(myItem && myItem.uid ? Object.assign({}, myItem, { evo: myItem.evo || 0 }) : myItem)}</div><div class="cl-tag"><b>${esc(me.name)}</b><span>${Math.round(p * 100)}%</span></div>`;
     $("clOpp").innerHTML = `<div class="cl-card">${cardHTML(oppItem)}</div><div class="cl-tag"><b>${esc(opp.name)}</b><span>${Math.round((1 - p) * 100)}%</span></div>`;
-    $("clSegMe").style.width = (p * 100).toFixed(1) + "%"; $("clMark").style.left = "0%"; $("clResult").innerHTML = ""; $("clLabel").textContent = stake ? `Stake ${stake} · win pays ${pay}` : "Free clash · win pays 5";
+    $("clSegMe").style.width = (p * 100).toFixed(1) + "%"; $("clMark").style.left = "0%"; $("clResult").innerHTML = ""; $("clLabel").textContent = `Stake ${stake} · win pays ${pay}`;
     box.className = "clash"; box.hidden = false; clFx.bind($("clFx")); void box.offsetWidth;
     sfx.unlock(); sfx.whoosh();
     const at = (ms, f) => setTimeout(() => { if (CL) f(); }, ms);
@@ -3356,7 +3365,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     state.tokens += gain; state.s.tokensEarned += Math.max(0, gain - stake); if (won) { state.s.wins++; state.s.streak = (state.s.streak || 0) + 1; } else { state.s.losses++; state.s.streak = 0; }
     let evo0 = null, evo1 = null;
     if (myItem && myItem.uid) { const it = state.vault.find(x => x.uid === myItem.uid); if (it) { it.rec = it.rec || { w: 0, l: 0 }; if (won) it.rec.w++; else it.rec.l++;
-      if (stake) { evo0 = it.evo || 0; evo1 = Math.max(0, Math.min(EVO_CAP, evo0 + (won ? evoGain(CL.p, evo0) : -evoLoss(CL.p)))); it.evo = evo1; CL.myItem = it; } } }
+      evo0 = it.evo || 0; evo1 = Math.max(EVO_MIN, Math.min(EVO_CAP, evo0 + (won ? evoGain(CL.p) : -evoLoss(CL.p)))); it.evo = evo1; CL.myItem = it; } }
     const rp = rankedResult(won, me, opp, CL.p);
     log(`${won ? "Won" : "Lost"} a clash vs ${opp.name}${stake ? ` (stake ${stake})` : ""}`, gain - stake, "token"); save();
     box.classList.add(won ? "won" : "lost");
@@ -3365,10 +3374,10 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     sfx.boom(won ? 1.3 : .8); clShake(won ? 14 : 8, 360);
     if (won) { sfx.chime(stake >= 50 || CL.p < .35 ? "legendary" : "rare"); setTimeout(() => clFx.rain(wr.left + wr.width / 2, wr.width * 1.6, Math.min(160, 30 + gain * 2), ["#e9e4d8", "#c9a04a", "#ffffff"]), 220); }
     const rec = myItem && myItem.uid ? (state.vault.find(x => x.uid === myItem.uid) || {}).rec : null;
-    const evoLine = evo0 == null ? (myItem && myItem.uid && !stake ? " · free clashes don't change EVO" : "") : ` · EVO ${evo0} → ${evo1} (${evo1 >= evo0 ? "+" : ""}${evo1 - evo0}) · value +${(evo1 / 10).toFixed(1)}%`;
+    const evoLine = evo0 == null ? "" : ` · EVO ${evo0} → ${evo1} (${evo1 >= evo0 ? "+" : ""}${evo1 - evo0}) · value ${evo1 >= 0 ? "+" : "−"}${Math.abs(evo1 / 10).toFixed(1)}%`;
     if (evo0 != null) setTimeout(() => evoLive($("clMe"), evo0, evo1), 260);
     $("clResult").innerHTML = `<div class="cl-big">${won ? "WIN" : "LOSS"}</div>
-      <div class="cl-sub">${won ? `+<span id="clCount">0</span> tokens` : stake ? `−${stake} tokens` : "No tokens lost"} · ${rp >= 0 ? "+" + rp : rp} ranked${state.s.streak > 1 ? ` · ${state.s.streak} win streak` : ""}${rec ? ` · ${esc(me.name)} ${rec.w}–${rec.l}` : ""}${evoLine}</div>
+      <div class="cl-sub">${won ? `+<span id="clCount">0</span> tokens` : `−${stake} tokens`} · ${rp >= 0 ? "+" + rp : rp} ranked${state.s.streak > 1 ? ` · ${state.s.streak} win streak` : ""}${rec ? ` · ${esc(me.name)} ${rec.w}–${rec.l}` : ""}${evoLine}</div>
       <div class="cl-btns"><button class="btn brass" data-clagain="1">Again · Space</button><button class="btn" data-clnew="1">New opponent</button><button class="btn ghost" data-clclose="1">Leave</button></div>`;
     if (won) { const el = $("clCount"), t0 = performance.now(); (function up(now) { const k = Math.min(1, (now - t0) / 700); if (el) el.textContent = Math.round(gain * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(up); else sfx.coin(); })(t0); }
     CL.done = true; renderAll();
@@ -3382,7 +3391,12 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     if (up) sfx.coin(); else sfx.snap();
   }
   function clClose() { CL = null; const box = $("clash"); box.hidden = true; box.className = "clash"; renderArena(); }
-  function clAgain() { if (!CL || !CL.done) return; CL = null; $("clash").className = "clash"; setTimeout(clashStart, 60); }
+  function buyTokens(n) {
+    const pk = TOKEN_PACKS.find(x => x[0] === n); if (!pk) return;
+    if (state.coins < pk[1]) { toast(`You need ${money(pk[1] - state.coins)} more`); return; }
+    state.coins -= pk[1]; state.tokens += n; log(`Bought ${fmt(n)} tokens`, -pk[1], "coin"); snap(); save(); renderAll(); sfx.coin(); toast(`+${fmt(n)} tokens`);
+  }
+  function clAgain() { if (!CL || !CL.done) return; if (clStake > state.tokens) { toast(`You need ${clStake} tokens to go again`); return; } CL = null; $("clash").className = "clash"; setTimeout(clashStart, 60); }
 
   // price tape across the top: the day's biggest movers
   let tkDay = -1;
@@ -3795,7 +3809,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   }
   // --- ranked seasons ---
   function rankedResult(won, me, opp, p0) {
-    const sid = seasonId(), p = p0 || winChance(me, opp), pts = won ? Math.round(5 + 40 * (1 - p)) : -Math.round(3 + 12 * p);
+    const sid = seasonId(), p = p0 || winChance(me, opp), pts = won ? Math.max(1, Math.round(40 * (1 - p))) : -Math.max(1, Math.round(40 * p));
     if (!state.rank || state.rank.season !== sid) state.rank = { season: sid, pts: 0, w: 0, l: 0 };
     state.rank.pts = Math.max(0, state.rank.pts + pts); if (won) state.rank.w++; else state.rank.l++; save();
     if (NET.ready) NET.db.doc("ladder/" + NET.uid).set({ season: sid, pts: state.rank.pts, w: state.rank.w, l: state.rank.l, at: Date.now() }).catch(() => {});
@@ -5239,6 +5253,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     if (t.dataset.buy) { buy(t.dataset.buy); return; }
     if (t.dataset.release) { releaseCard(t.dataset.release, t); return; }
     if (t.dataset.stake != null) { clStake = +t.dataset.stake; renderArena(); return; }
+    if (t.dataset.buytok) { buyTokens(+t.dataset.buytok); return; }
     if (t.dataset.clagain) { clAgain(); return; }
     if (t.dataset.clnew) { clClose(); document.getElementById("filmPick").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     if (t.dataset.clclose) { clClose(); return; }
@@ -5308,7 +5323,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   $("ageCheck").addEventListener("change", e => { $("gateEnter").disabled = !e.target.checked; });
   $("gateEnter").addEventListener("click", () => { state.ageOK = true; if (state.pendingCode) { const pc = state.pendingCode; delete state.pendingCode; setTimeout(() => redeem(pc), 400); } if (!state.history.length) grantSignup(); save(); renderAll(); $("gate").hidden = true; toast(`${money(SIGNUP_BONUS)} signup bonus added`); });
 
-  window.STIXX_PRINT = { fxForCode, fxName, cardHTML, cardCode, packCode, parseCode, CARD_BY_NO, PACK_BY_ID, CARDS, APP_URL, RETAIL_KEY };
+  window.STIXX_PRINT = { packEV, BUYBACK, fxForCode, fxName, cardHTML, cardCode, packCode, parseCode, CARD_BY_NO, PACK_BY_ID, CARDS, APP_URL, RETAIL_KEY };
   renderAll(); showTab();
   netInit();
   let lastDay = mktDay();
