@@ -382,3 +382,316 @@ def models(workers=2, quick=0, families=None):
         h = c["holdout"]
         print(f"  {c['id']:32s} ${h['pnl']:>8} n={h['trades']:>5} t={h['t']:>5} d1 t={c['delay1']['t']}", flush=True)
     return part
+
+
+# =========================================================================== part 2: structural / cross-market
+# Data: the crypto 15-minute files (data/kalshi15m) and the hourly "above K" ladders (data/kalshi15m/hourly,
+# 1-minute candles for the 4 strikes nearest spot at the start of each hour). The 15-minute market that
+# closes on the hour and the hourly ladder settle on the SAME CF Benchmarks value (checked: 100% consistent).
+#   xmkt_arb   15-min YES + hourly NO at a strike K >= the 15-min strike (or 15-min NO + hourly YES at K below
+#              it) pays >= $1 in every outcome, $2 when the price ends between the two strikes. Trade the pair
+#              when the guaranteed margin (before fees) is >= g; 10 contracts per leg, taker fee on both legs.
+#   xmkt_fv    price the 15-min contract off the hourly ladder (interpolated mid at the 15-min strike) and buy
+#              the 15-min side that is cheaper than that by `edge`. One bet per 15-min market.
+#   ladder_arb within one hourly ladder: a higher strike's YES bid above a lower strike's YES ask -> buy YES
+#              low + NO high (pays >= $1 always). 10 contracts per leg.
+XCOINS = ["BTC", "ETH", "SOL", "XRP"]
+XGROUP = "XALL"
+PAIR_N = 10
+
+
+def _fee(p, n):
+    return np.ceil(B.TAKER_RATE * n * p * (1 - p) * 100 - 1e-9) / 100
+
+
+def _xload(coin):
+    """-> per 15-min market (closing on the hour): arrays (markets x 14) of its quotes and, for up to 4 hourly
+    strikes, their quotes at the same minute; plus results."""
+    from . import data as D
+    mk, cd, _ = D.load(f"KX{coin}15M")
+    mk = mk[mk.close_ts % 3600 == 0].reset_index(drop=True)
+    hd = F.DATA_DIR / "hourly"
+    hm = pd.read_csv(hd / f"KX{coin}D_markets.csv", usecols=["ticker", "close_ts", "strike", "result"])
+    hc = pd.read_csv(hd / f"KX{coin}D_candles.part.csv", usecols=["ticker", "ts", "yes_bid", "yes_ask"])
+    hc = hc[hc.ticker.isin(set(pd.read_csv(hd / f"KX{coin}D_selected.csv").ticker))]
+    hm = hm[hm.ticker.isin(set(hc.ticker))]
+    n = len(mk)
+    ts = mk.open_ts.to_numpy()[:, None] + 60 * MIN[None, :]
+    q15 = cd.drop_duplicates(["ticker", "ts"]).set_index(["ticker", "ts"])
+    key = pd.MultiIndex.from_arrays([np.repeat(mk.ticker.to_numpy(), 14), ts.reshape(-1)])
+    yb = np.array(q15.yes_bid.reindex(key).to_numpy(), float).reshape(n, 14)
+    ya = np.array(q15.yes_ask.reindex(key).to_numpy(), float).reshape(n, 14)
+    bad = ~((yb > 0) & (ya < 1))
+    yb[bad], ya[bad] = np.nan, np.nan
+    K = np.full((n, 4), np.nan)
+    RK = np.full((n, 4), np.nan)
+    HB = np.full((n, 4, 14), np.nan)
+    HA = np.full((n, 4, 14), np.nan)
+    hq = hc.drop_duplicates(["ticker", "ts"]).set_index(["ticker", "ts"])
+    pos = {t: i for i, t in enumerate(mk.close_ts)}
+    for T, g in hm.groupby("close_ts"):
+        i = pos.get(T)
+        if i is None:
+            continue
+        g = g.sort_values("strike").head(4)
+        for k, r in enumerate(g.itertuples()):
+            K[i, k], RK[i, k] = r.strike, r.result
+            kk = pd.MultiIndex.from_arrays([[r.ticker] * 14, ts[i]])
+            b, a = hq.yes_bid.reindex(kk).to_numpy(), hq.yes_ask.reindex(kk).to_numpy()
+            ok = (b > 0) & (a < 1)
+            HB[i, k] = np.where(ok, b, np.nan)
+            HA[i, k] = np.where(ok, a, np.nan)
+    return {"coin": coin, "ticker": mk.ticker.to_numpy(), "open_ts": mk.open_ts.to_numpy(), "s15": mk.strike.to_numpy(),
+            "r15": mk.result.to_numpy(), "yb": yb, "ya": ya, "K": K, "RK": RK, "HB": HB, "HA": HA}
+
+
+def _hload(coin):
+    """Hourly ladders on their own: (events x 59 minutes x 4 strikes) quotes + results."""
+    hd = F.DATA_DIR / "hourly"
+    sel = pd.read_csv(hd / f"KX{coin}D_selected.csv")
+    hc = pd.read_csv(hd / f"KX{coin}D_candles.part.csv", usecols=["ticker", "ts", "yes_bid", "yes_ask"])
+    hc = hc[hc.ticker.isin(set(sel.ticker))].drop_duplicates(["ticker", "ts"]).set_index(["ticker", "ts"])
+    ev = sel.groupby("event")
+    E = len(ev)
+    K, R = np.full((E, 4), np.nan), np.full((E, 4), np.nan)
+    HB, HA = np.full((E, 4, 59), np.nan), np.full((E, 4, 59), np.nan)
+    ots = np.zeros(E, np.int64)
+    for e, (name, g) in enumerate(ev):
+        g = g.sort_values("strike").head(4)
+        ots[e] = int(g.open_ts.iloc[0])
+        tsv = ots[e] + 60 * np.arange(1, 60)
+        for k, r in enumerate(g.itertuples()):
+            K[e, k], R[e, k] = r.strike, r.result
+            kk = pd.MultiIndex.from_arrays([[r.ticker] * 59, tsv])
+            b, a = hc.yes_bid.reindex(kk).to_numpy(), hc.yes_ask.reindex(kk).to_numpy()
+            ok = (b > 0) & (a < 1)
+            HB[e, k], HA[e, k] = np.where(ok, b, np.nan), np.where(ok, a, np.nan)
+    order = np.argsort(ots)
+    return {"coin": coin, "open_ts": ots[order], "K": K[order], "R": R[order], "HB": HB[order], "HA": HA[order],
+            "event": np.array(list(ev.groups))[order]}
+
+
+XFAMS = {
+    "xmkt_arb": {"name": "15-min vs hourly pair (arbitrage)",
+                 "idea": "The 15-minute market that closes on the hour and the hourly 'above K' ladder settle on the same "
+                         "price. Buying 15-min YES plus hourly NO at a strike at or above the 15-min strike (or the mirror "
+                         "pair) pays at least $1 whatever happens; trade it when the two quotes leave a margin.",
+                 "grid": {"g": [-0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03], "start": [1, 4, 8], "end": [10, 14]}},
+    "xmkt_fv": {"name": "15-min priced off the hourly ladder",
+                "idea": "Read the market's own probability for the 15-minute strike off the hourly ladder (interpolating "
+                        "between the nearest hourly strikes) and buy the 15-minute side that is cheaper than that.",
+                "grid": {"edge": [0.03, 0.05, 0.07, 0.10, 0.12, 0.15, 0.20], "start": [1, 3, 5, 8], "end": [10, 12, 14],
+                         "band": L3.BANDS5}},
+    "ladder_arb": {"name": "Hourly ladder monotonicity",
+                   "idea": "Inside one hourly ladder a higher strike can never be more likely than a lower one. When a "
+                           "higher strike's YES bid sits above a lower strike's YES ask, buy YES low + NO high (pays at least $1).",
+                   "grid": {"g": [-0.03, -0.02, -0.01, 0.0, 0.01, 0.02], "start": [1, 15, 30, 45], "end": [50, 59]}},
+}
+
+
+def _x_trades(X, fam, c, delay=0):
+    """-> DataFrame of trades (ts, pnl, cost, win, minute, ticker, series) for one coin's data X."""
+    n = len(X["open_ts"])
+    if fam == "ladder_arb":
+        HB, HA, R = X["HB"], X["HA"], X["R"]
+        M = HB.shape[2]
+        best = np.full((n, M), -np.inf)
+        bi = np.zeros((n, M, 2), int)
+        for i in range(4):
+            for j in range(i + 1, 4):
+                g = HB[:, j] - HA[:, i]                       # (n, M): bid of higher strike - ask of lower strike
+                better = np.nan_to_num(g, nan=-np.inf) > best
+                best = np.where(better, np.nan_to_num(g, nan=-np.inf), best)
+                bi[better] = (i, j)
+        mins = np.arange(1, M + 1)
+        win = (mins >= c["start"]) & (mins <= c["end"])
+        sig = (best >= c["g"] - 1e-9) & win[None, :]
+        has = sig.any(1)
+        jj = np.argmax(sig, 1)
+        rows = np.nonzero(has)[0]
+        out = []
+        for e in rows:
+            j = jj[e]
+            i_lo, i_hi = bi[e, j]
+            fj = j + delay
+            if fj >= M:
+                continue
+            pa, pb = HA[e, i_lo, fj], 1 - HB[e, i_hi, fj]
+            if not (np.isfinite(pa) and np.isfinite(pb)):
+                continue
+            pay = R[e, i_lo] + (1 - R[e, i_hi])
+            cost = PAIR_N * (pa + pb) + _fee(pa, PAIR_N) + _fee(pb, PAIR_N)
+            pnl = PAIR_N * pay - cost
+            out.append((int(X["open_ts"][e] + 60 * (fj + 1)), pnl, cost, pnl > 0, j + 1, X["event"][e]))
+        df = pd.DataFrame(out, columns=["ts", "pnl", "cost", "win", "minute", "ticker"])
+        df["series"] = f"KX{X['coin']}D"
+        return df
+    yb, ya, K, RK, HB, HA = X["yb"], X["ya"], X["K"], X["RK"], X["HB"], X["HA"]
+    s15, r15 = X["s15"], X["r15"]
+    win = ((MIN >= c["start"]) & (MIN <= c["end"]))[None, :]
+    if fam == "xmkt_arb":
+        above = K >= s15[:, None]                                    # (n,4)
+        gA = HB - ya[:, None, :]                                      # YES15 + NO_K (K above)
+        gB = yb[:, None, :] - HA                                      # NO15 + YES_K (K below)
+        g = np.where(above[:, :, None], gA, gB)
+        g = np.where(np.isfinite(g), g, -np.inf)
+        k = np.argmax(g, 1)                                           # best strike per minute (n,14)
+        gm = np.take_along_axis(g, k[:, None, :], 1)[:, 0, :]
+        sig = (gm >= c["g"] - 1e-9) & win
+        has = sig.any(1)
+        j = np.argmax(sig, 1)
+        out = []
+        for m in np.nonzero(has)[0]:
+            jj, kk = j[m], k[m, j[m]]
+            fj = jj + delay
+            if fj > 13:
+                continue
+            if above[m, kk]:
+                p1, p2 = ya[m, fj], 1 - HB[m, kk, fj]
+                pay = r15[m] + (1 - RK[m, kk])
+            else:
+                p1, p2 = 1 - yb[m, fj], HA[m, kk, fj]
+                pay = (1 - r15[m]) + RK[m, kk]
+            if not (np.isfinite(p1) and np.isfinite(p2)):
+                continue
+            cost = PAIR_N * (p1 + p2) + _fee(p1, PAIR_N) + _fee(p2, PAIR_N)
+            pnl = PAIR_N * pay - cost
+            out.append((int(X["open_ts"][m] + 60 * (fj + 1)), pnl, cost, pnl > 0, jj + 1, X["ticker"][m]))
+        df = pd.DataFrame(out, columns=["ts", "pnl", "cost", "win", "minute", "ticker"])
+        df["series"] = f"KX{X['coin']}15M"
+        return df
+    # xmkt_fv: implied probability of finishing >= s15 from the hourly mids (monotone ladders only)
+    mid = (HB + HA) / 2                                               # (n,4,14) P(S > K)
+    p = np.full((len(s15), 14), np.nan)
+    for a in range(3):
+        k0, k1 = K[:, a], K[:, a + 1]
+        inside = (s15 >= k0) & (s15 <= k1) & (k1 > k0)
+        w = np.where(inside, (s15 - k0) / np.where(k1 > k0, k1 - k0, 1), np.nan)
+        pi = mid[:, a, :] + w[:, None] * (mid[:, a + 1, :] - mid[:, a, :])
+        mono = mid[:, a, :] >= mid[:, a + 1, :]
+        p = np.where(inside[:, None] & mono & np.isfinite(pi) & ~np.isfinite(p), pi, p)
+    lo, hi = L3.BANDS[c["band"]]
+    na = 1 - yb
+    y = win & np.isfinite(p) & np.isfinite(ya) & (ya >= lo) & (ya <= hi) & (p - ya >= c["edge"])
+    nn = win & np.isfinite(p) & np.isfinite(na) & (na >= lo) & (na <= hi) & ((1 - p) - na >= c["edge"])
+    side, minute = L3.first(y, nn)
+    idx = np.nonzero(side)[0]
+    fj = minute[idx] - 1 + delay
+    keep = fj <= 13
+    idx, fj = idx[keep], fj[keep]
+    yes = side[idx] == 1
+    price = np.where(yes, ya[idx, fj], na[idx, fj])
+    ok = np.isfinite(price) & (price > 0) & (price < 1)
+    idx, fj, yes, price = idx[ok], fj[ok], yes[ok], price[ok]
+    nct = np.maximum(1, np.floor(L3.STAKE / price + 1e-9))
+    fee = _fee(price, nct)
+    w_ = (r15[idx] == 1) == yes
+    pnl = nct * (w_.astype(float) - price) - fee
+    df = pd.DataFrame({"ts": X["open_ts"][idx] + 60 * (fj + 1), "pnl": pnl, "cost": nct * price + fee, "win": w_,
+                       "minute": minute[idx], "ticker": X["ticker"][idx], "price": price})
+    df["series"] = f"KX{X['coin']}15M"
+    return df
+
+
+def _xsumm(df):
+    if df is None or len(df) == 0:
+        return L3.summ(None)
+    df = df.copy()
+    for col, v in (("fee", 0.0), ("price", 0.5), ("stake", L3.STAKE)):
+        if col not in df:
+            df[col] = v
+    s = L3.summ(df)
+    daily = df.groupby(df.ts // 86400).pnl.sum()
+    s["t_by_day"] = L3._tser(daily.values)
+    s["days"] = int(len(daily))
+    return s
+
+
+def xmkt(quick=0):
+    """Part 2. Common calendar cut over the crypto data used here; 25% most recent days = holdout."""
+    t0 = time.time()
+    try:
+        os.nice(19)
+    except OSError:
+        pass
+    XD = {c: _xload(c) for c in XCOINS}
+    HD = {c: _hload(c) for c in XCOINS}
+    print(f"xmkt: loaded ({time.time() - t0:.0f}s)", flush=True)
+    start = int(max(max(X["open_ts"][0] for X in XD.values()), max(H["open_ts"][0] for H in HD.values())))
+    end = int(min(min(X["open_ts"][-1] for X in XD.values()), min(H["open_ts"][-1] for H in HD.values())))
+    hdays = int(round(HOLDOUT_FRAC * (end - start) / 86400))
+    cut = end - hdays * 86400
+    cut -= cut % 3600
+    print(f"xmkt: search {pd.to_datetime(start, unit='s')} .. {pd.to_datetime(cut, unit='s')}, holdout {hdays} days", flush=True)
+    import itertools
+    cands, fam_rows, WFX = [], [], {}
+    for fam, spec in XFAMS.items():
+        keys = list(spec["grid"])
+        cfgs = [dict(zip(keys, v)) for v in itertools.product(*(spec["grid"][k] for k in keys))]
+        data = HD if fam == "ladder_arb" else XD
+        agg = {c: np.zeros((len(cfgs), N_FOLDS, 3)) for c in XCOINS}
+        for i, cfg in enumerate(cfgs):
+            for c in XCOINS:
+                df = _x_trades(data[c], fam, cfg)
+                if not len(df):
+                    continue
+                df = df[(df.ts >= start) & (df.ts < cut)]
+                f = np.clip(((df.ts.to_numpy() - start) * N_FOLDS) // (cut - start), 0, N_FOLDS - 1).astype(int)
+                pn = df.pnl.to_numpy()
+                agg[c][i, :, 0] = np.bincount(f, minlength=N_FOLDS)
+                agg[c][i, :, 1] = np.bincount(f, weights=pn, minlength=N_FOLDS)
+                agg[c][i, :, 2] = np.bincount(f, weights=pn ** 2, minlength=N_FOLDS)
+        agg[XGROUP] = sum(agg[c] for c in XCOINS)
+        wf = {}
+        nshort = 0
+        for sc in XCOINS + [XGROUP]:
+            w = L3.walk(agg[sc])
+            wf[sc] = w["oos"]
+            WFX[(fam, sc)] = w
+            if L3.shortlisted(w):
+                nshort += 1
+                cands.append({"id": f"{fam}:{sc}", "family": fam, "scope": sc if sc == XGROUP else f"KX{sc}",
+                              "_coins": XCOINS if sc == XGROUP else [sc], "execution": "taker",
+                              "rule": {"family": fam, "params": cfgs[w["final"]]},
+                              "search": {**w["oos"], "insample": w["final_search"]}})
+        # raw opportunity count on the search window (any margin >= 0), for the report
+        n_arb = None
+        if fam != "xmkt_fv":
+            c0 = dict(cfgs[0], g=0.0, start=1, end=59 if fam == "ladder_arb" else 14)
+            d = pd.concat([_x_trades(data[c], fam, c0) for c in XCOINS], ignore_index=True)
+            d = d[(d.ts >= start) & (d.ts < cut)] if len(d) else d
+            n_arb = {"pairs_with_margin_ge_0_before_fees": int(len(d)),
+                     "pnl_if_all_traded": round(float(d.pnl.sum()), 2) if len(d) else 0.0}
+        fam_rows.append({"id": fam, "name": spec["name"], "idea": spec["idea"], "configs": len(cfgs),
+                         "scopes_tested": len(wf), "shortlisted": nshort,
+                         "best_search_t": max(v["t"] for v in wf.values()),
+                         "walk_forward": {("Crypto pooled (BTC/ETH/SOL/XRP)" if s == XGROUP else s): v for s, v in wf.items()},
+                         "search_opportunities": n_arb})
+        print(f"  {fam}: {len(cfgs)} configs, shortlisted {nshort} ({time.time() - t0:.0f}s)", flush=True)
+    for c in cands:                                     # final exam, once
+        fam, cfg = c["family"], c["rule"]["params"]
+        data = HD if fam == "ladder_arb" else XD
+        h = [_x_trades(data[k], fam, cfg) for k in c["_coins"]]
+        d1 = [_x_trades(data[k], fam, cfg, delay=1) for k in c["_coins"]]
+        h = pd.concat([x for x in h if len(x)], ignore_index=True) if any(len(x) for x in h) else None
+        d1 = pd.concat([x for x in d1 if len(x)], ignore_index=True) if any(len(x) for x in d1) else None
+        h = h[h.ts >= cut] if h is not None else None
+        d1 = d1[d1.ts >= cut] if d1 is not None else None
+        c["holdout"] = _xsumm(h)
+        c["curve"] = L3.curve(h)
+        c["delay1"] = {k: v for k, v in _xsumm(d1).items() if k in ("pnl", "t", "trades")}
+        c["archive"] = None
+        c["holdout_by_coin"] = ({k: round(float(g.pnl.sum()), 2) for k, g in h.groupby("series")}
+                                if h is not None and len(h) and c["scope"] == XGROUP else None)
+        c["label"] = f"{'Crypto pooled' if c['scope'] == XGROUP else c['scope'][2:]} · {XFAMS[fam]['name']} ({cfg})"
+        del c["_coins"]
+    part = {"generated": int(time.time()), "runtime_s": int(time.time() - t0), "start": start, "cut": cut,
+            "holdout_days": hdays, "families": fam_rows, "candidates": cands,
+            "data": "crypto 15-min markets closing on the hour + hourly ladders (4 strikes nearest spot), "
+                    f"{pd.to_datetime(start, unit='s'):%Y-%m-%d} to {pd.to_datetime(end, unit='s'):%Y-%m-%d}"}
+    PART_XMKT.write_text(json.dumps(part, default=L3._jd))
+    print(f"xmkt done in {time.time() - t0:.0f}s: {len(cands)} candidates", flush=True)
+    for c in cands:
+        h = c["holdout"]
+        print(f"  {c['id']:24s} ${h['pnl']:>8} n={h['trades']:>5} t={h['t']:>5} d1 t={c['delay1']['t']}", flush=True)
+    return part
