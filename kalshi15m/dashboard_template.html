@@ -273,14 +273,14 @@ td.coin { font-size: 12px; }
 .lvd-set { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
 .live-zone code { background: var(--chip); color: var(--ink-2); font-size: 12px; padding: 3px 8px; border-radius: 6px; }
 .lvd-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: stretch; }
-.lvd-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px; align-items: start; }
+.lvd-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); gap: 18px; align-items: start; }
 .live-zone .rp-box { background: var(--lv-raise); border: 0; border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
 .live-zone .rp-chart .chart { min-height: 240px; }
 .vs { width: 100%; font-size: 13.5px; }
 .vs th { border-bottom: 0; padding: 0 4px 6px; }
 .vs td { padding: 7px 4px; border-bottom: 1px solid var(--grid); color: var(--ink-2); }
 .vs tr:last-child td { border-bottom: 0; }
-.vs th:first-child, .vs td:first-child { padding-left: 0; }
+.vs th:first-child, .vs td:first-child { padding-left: 0; width: 52%; }
 .vs td.num { font: 500 13.5px var(--f-mono); color: var(--ink); }
 .now-big { font-size: 15.5px; line-height: 1.55; color: var(--ink); }
 .now-big b { font-family: var(--f-mono); font-weight: 500; }
@@ -293,7 +293,7 @@ td.coin { font-size: 12px; }
 .gm span { position: absolute; left: 0; white-space: nowrap; font: 500 12px var(--f-mono); color: var(--ink-2); }
 .gm.mkt span { bottom: 25px; }
 .gm.mod span { top: 25px; }
-.gauge-ax { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; font: 500 10px var(--f-mono); color: var(--muted); opacity: .8; }
+.gauge-tick { position: absolute; top: 41px; width: 1px; height: 6px; margin-left: -.5px; background: var(--muted); opacity: .6; }
 .near { position: relative; display: flex; align-items: flex-end; gap: 5px; height: 76px; margin-top: 18px; }
 .near i { flex: 1; min-height: 3px; border-radius: 4px 4px 1px 1px; background: var(--chip); }
 .near i.hit { background: var(--accent); }
@@ -1439,15 +1439,19 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   }
   const dayLines = c => ({ id: "days", beforeDatasetsDraw(ch) {
     const { ctx, chartArea: a, scales: { x } } = ch; ctx.save(); ctx.strokeStyle = c.line; ctx.fillStyle = c.muted; ctx.font = `500 10px ${tok("--f-mono")}`;
+    let lastEnd = -1e9;
     for (let d = dayStart(x.min / 1000 + 36 * 3600 - 86400); d * 1000 < x.max; d = dayStart(d + 36 * 3600)) {
       if (d * 1000 <= x.min) continue; const px = x.getPixelForValue(d * 1000);
       ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
-      ctx.fillText(new Date(d * 1000).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }), px + 5, a.top + 10); }
+      const t = new Date(d * 1000).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }), tw = ctx.measureText(t).width;
+      const lx = px + 5 + tw < a.right ? px + 5 : px - 5 - tw;
+      if (lx > lastEnd + 8 && lx > a.left) { ctx.fillText(t, lx, a.top + 10); lastEnd = lx + tw; } }
     ctx.restore(); } });
   function profitChart(id, pts, col, label, c) {
     const o = base(c); o.interaction = { mode: "nearest", axis: "x", intersect: false }; o.layout = { padding: { right: 70, top: 8 } };
     o.plugins.tooltip.callbacks = { title: i => fmtTime(i[0].parsed.x / 1000), label: i => `${label}: ${money(i.parsed.y, 2)}` };
-    o.scales = { x: axis(c, { type: "linear", grid: { display: false }, ticks: { color: c.muted, maxTicksLimit: 7, callback: v => new Date(v).toLocaleTimeString(undefined, { hour: "numeric" }) } }),
+    const x0 = pts.length ? pts[0].x : undefined, x1 = pts.length ? pts[pts.length - 1].x : undefined;
+    o.scales = { x: axis(c, { type: "linear", min: x0, max: x1, grid: { display: false }, ticks: { color: c.muted, maxTicksLimit: 6, callback: v => new Date(v).toLocaleTimeString(undefined, { hour: "numeric" }) } }),
                  y: axis(c, { ticks: { color: c.muted, maxTicksLimit: 5, callback: v => money(v) } }) };
     mk(id, { type: "line", data: { datasets: [{ label, data: pts, borderColor: col, backgroundColor: alpha(col, 0.1), fill: "origin", borderWidth: 2, pointRadius: 0,
       pointHoverRadius: 4, pointHoverBackgroundColor: col, pointHoverBorderColor: c.surface, pointHoverBorderWidth: 2 }] }, options: o, plugins: [zeroLine(c), dayLines(c), endLabels(c)] });
@@ -1490,7 +1494,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     if (lvs.open === undefined) lvs.open = rows.length ? rows[0].id : null;
     $("lvBoardIntro").textContent = `Ranked by paper profit so far. "Holdout test" is what the same rule made on locked days of past markets it was never tuned on, at $10 a trade, as a yardstick. Tap a row for its settings, what it sees right now, and its open bets.`;
     const head = `<thead><tr><th>#</th><th>Strategy</th><th class="num">Paper profit</th><th class="num" title="Orders filled, against how many the holdout test would predict for the markets watched">Trades</th><th class="num">Win rate</th>
-      <th class="num" title="Average seconds between the end of the signal minute and the order">Decision lag</th><th class="num">Holdout test</th><th class="num">Open bets</th><th><span class="sr">Details</span></th></tr></thead>`;
+      <th class="num" title="Average seconds between the end of the signal minute and the order">Decision lag (s)</th><th class="num">Holdout test</th><th class="num">Open bets</th><th><span class="sr">Details</span></th></tr></thead>`;
     const body = rows.map((s, k) => {
       const g = isGold(s), b = lvRef(s), lag = s.execution === "taker" ? mean(s.lags) : null, exp = lvExp(s), open = s.id === lvs.open;
       const hold = s.holding || [], risk = hold.reduce((a, h) => a + (h.n || 0) * (h.price || 0), 0);
@@ -1501,7 +1505,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
         <td class="num pnl" data-label="Paper profit"><div class="pnl-in">${spark(s.curve, g ? "golden" : s.pnl < 0 ? "fail" : "")}<span class="${cls(s.pnl)}">${money(s.pnl, 2)}</span></div></td>
         <td class="num" data-label="Trades">${NUM(s.fills)}<div class="sub">${exp != null ? `~${Math.round(exp)} expected` : `${NUM(s.settled)} settled`}</div></td>
         <td class="num" data-label="Win rate">${s.settled ? pct(s.wins / s.settled) : "–"}<div class="sub">${b && nz(b.win_rate) ? `test ${pct(b.win_rate)}` : "&nbsp;"}</div></td>
-        <td class="num" data-label="Decision lag">${lag != null ? lag.toFixed(1) + " s" : "–"}<div class="sub">${s.execution === "taker" ? "after the minute" : "limit orders"}</div></td>
+        <td class="num" data-label="Decision lag">${lag != null ? lag.toFixed(1) : "–"}<div class="sub">${s.execution === "taker" ? "&nbsp;" : "limit orders"}</div></td>
         <td class="num" data-label="Holdout test">${b ? `<span class="${cls(b.pnl)}">${money(b.pnl)}</span><div class="sub">t ${tfmt(b.t_stat)} · ${NUM(b.trades)} trades</div>` : `–<div class="sub">not tested</div>`}</td>
         <td class="num" data-label="Open bets">${hold.length}<div class="sub">${hold.length ? money(risk, 2) + " staked" : "none"}</div></td>
         <td class="chevc"><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>` +
@@ -1516,14 +1520,14 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     if (mid == null && mo == null) return "";
     const P = v => (Math.max(0, Math.min(1, v)) * 100).toFixed(1);
     return `<div class="gauge" role="img" aria-label="Chance it finishes up: market ${mid != null ? pct(mid) : "unknown"}, model ${mo != null ? pct(mo) : "unknown"}">
-      <div class="gauge-ax"><span>0%</span><span>50%</span><span>100%</span></div><div class="gauge-tr"></div>
+      <div class="gauge-tr"></div><i class="gauge-tick" style="left:0"></i><i class="gauge-tick" style="left:50%"></i><i class="gauge-tick" style="left:100%"></i>
       ${mid != null && mo != null ? `<div class="gauge-gap" style="left:${P(Math.min(mid, mo))}%;width:${(Math.abs(mid - mo) * 100).toFixed(1)}%"></div>` : ""}
       ${mid != null ? `<div class="gm mkt" style="left:${P(mid)}%"><span style="transform:translateX(-${P(mid)}%)">Market ${pct(mid)}</span></div>` : ""}
       ${mo != null ? `<div class="gm mod" style="left:${P(mo)}%"><span style="transform:translateX(-${P(mo)}%)">Model ${pct(mo)}</span></div>` : ""}</div>`;
   }
   function nearBars(near, thr) {
     const mx = (Math.max(thr || 0, ...near.map(x => x[1] || 0)) * 1.15) || 1;
-    return `<div class="near">${near.map(([tk, g]) => `<i class="${thr && g >= thr ? "hit" : ""}" style="height:${Math.max(3, g / mx * 100).toFixed(1)}%" data-tip="${esc(`${tkTime(tk) ? tkTime(tk) + " market" : tk}\nbiggest gap ${Math.round(g * 100)}¢`)}"></i>`).join("")}${thr ? `<div class="thr" style="bottom:${(thr / mx * 100).toFixed(1)}%"><span>bets at ${Math.round(thr * 100)}¢</span></div>` : ""}</div>`;
+    return `<div class="near">${near.map(([tk, g]) => `<i class="${thr && g >= thr ? "hit" : ""}" style="height:${Math.max(3, g / mx * 100).toFixed(1)}%" data-tip="${esc(`${tkTime(tk) ? tkTime(tk) + " market" : tk}\nbiggest gap ${Math.round(g * 100)}¢`)}"></i>`).join("")}${thr ? `<div class="thr" style="bottom:${(thr / mx * 100).toFixed(1)}%"></div>` : ""}</div>`;
   }
   function lvDetail(s, L) {
     const b = lvRef(s), bl = s.lab ? "holdout test" : "backtest", lag = mean(s.lags), exp = lvExp(s), lt = liveT(s.curve), st = s.status, edge = s.params && s.params.edge;
@@ -1563,7 +1567,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       <div class="lvd-grid2">
         <div class="rp-box"><div class="eyebrow">${s.stale ? "Last seen" : "Right now"}</div>${now}</div>
         <div class="rp-box"><div class="eyebrow">Open bets · ${(s.holding || []).length}</div>${hold ? `<div class="holds">${hold}</div>` : `<p class="box-note">No open bets. It's waiting for a market where its conditions are met.</p>`}</div>
-        ${near ? `<div class="rp-box"><div class="eyebrow">How close it came to betting</div>${near}<p class="box-note">The biggest gap between model and market in each of the last ${s.near.length} markets it watched${s.strategy === "fair_value" && edge ? `. A bar past the dashed line means it placed a bet` : ""}.</p></div>` : ""}
+        ${near ? `<div class="rp-box"><div class="eyebrow">How close it came to betting</div>${near}<p class="box-note">The biggest gap between model and market in each of the last ${s.near.length} markets it watched${s.strategy === "fair_value" && edge ? `. The dashed line is its ${Math.round(edge * 100)}¢ trigger: a bar past it means it placed a bet` : ""}.</p></div>` : ""}
         ${exitRule ? `<div class="rp-box"><div class="eyebrow">Sold early</div><div class="now-big"><b>${NUM(s.sold || 0)}</b> position${s.sold === 1 ? "" : "s"} sold before the close${s.sold ? `, <b class="${cls(s.sold_pnl)}">${signed(s.sold_pnl || 0)}</b>` : ""}</div><p class="box-note">This strategy sells as soon as the price reaches the model's fair value, instead of waiting for the result. It gives up some big wins to avoid more losses.</p></div>` : ""}
       </div></div>`;
   }
