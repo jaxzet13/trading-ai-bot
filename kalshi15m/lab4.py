@@ -1042,10 +1042,17 @@ def judge(out_path=None):
         elif w == "testable":
             testable = True
             cinfo = coins.get(sname, {})
-            note = (f"Tested on {cinfo.get('markets', '?')} markets from Oct 6 (free 1-minute prices only go back ~30 days)"
-                    f"; Yahoo {F.UNDERLYING[sname][1]} as the price feed"
+            t_from = max(str(r.get("first") or ""), f"{pd.to_datetime(pm['start'], unit='s'):%Y-%m-%d}")
+            note = (f"Tested on {cinfo.get('markets', '?')} markets from {t_from}"
+                    + (" (all of its history)" if str(r.get("first") or "") >= t_from else
+                       " (free 1-minute prices only go back ~30 days, so older markets could not be used)")
+                    + f"; Yahoo {F.UNDERLYING[sname][1]} as the price feed"
                     + (f", same up/down sign as Kalshi's result {cinfo['feed_sign_agreement_search'] * 100:.1f}% of the time"
                        if cinfo.get("feed_sign_agreement_search") else "") + ".")
+        elif sname == "KXKPOWMID15M":
+            testable = False
+            note = (f"Not a price up/down market (a political-event series); only {r.get('span_days')} days of markets and "
+                    f"{(r.get('zero_volume_frac') or 0) * 100:.0f}% of them never traded.")
         elif n_mk == 0:
             testable = False
             note = "Kalshi lists this series but has not opened a single market in it (checked Nov 3 2026), so there is nothing to test."
