@@ -1076,23 +1076,79 @@ def heatmap(fam, scope, final_idx, agg):
 
 
 # =========================================================================== labels
-_PNAMES = {"vm": "vol x", "edge": "edge", "start": "from min", "end": "to min", "band": "price band", "nu": "tail df",
-           "vol": "vol", "lb": "lookback days", "a": "strength", "tau_adj": "time-left shift", "L": "window",
-           "e0": "base edge", "e_tau": "early-edge add", "k_spr": "spread mult", "rel": "min edge/price",
-           "reg": "vol ratio", "max_spr": "max spread", "quote": "quote", "min_vol": "min volume", "r": "minutes",
-           "k": "move share", "qlag": "quote lag", "mode": "mode", "thr": "BTC z", "jmode": "jump", "sess": "session",
-           "members": "members", "exit": "exit", "wait": "wait", "cap": "stake cap"}
+_EXIT = {"conv0": "sell once the bid reaches fair value", "conv2": "sell within 2c of fair value",
+         "conv4": "sell within 4c of fair value", "conv6": "sell within 6c of fair value",
+         "tp5": "sell at a 5c gain", "tp10": "sell at a 10c gain", "tp15": "sell at a 15c gain",
+         "tp20": "sell at a 20c gain", "t8": "sell at minute 8", "t10": "sell at minute 10",
+         "t12": "sell at minute 12", "t14": "sell at minute 14"}
+_VOL = {"60": "1-hour vol", "blend": "1h+4h vol blend", "240": "4-hour vol", "max": "larger of 1h/4h vol",
+        "v15": "15-min vol", "v30": "30-min vol", "ewma30": "fast weighted vol", "ewma60": "weighted vol",
+        "ewma120": "slow weighted vol", "park": "high/low range vol", "bpv": "jump-robust vol",
+        "inmkt90": "vol updated each minute", "blend_ewma": "weighted+4h vol blend", "tod": "time-of-day vol",
+        "tod_ewma60": "time-of-day weighted vol"}
+_SESSN = {"asia": "Asia hours", "europe": "Europe hours", "us": "US hours", "late": "late US hours",
+          "weekday": "weekdays", "weekend": "weekends", "not_us": "outside US hours", "asia_late": "evening+Asia"}
+
+
+def describe(fam, p):
+    """Plain-English summary of a config, for labels."""
+    e = p.get("edge", p.get("e0"))
+    parts = [f"{e * 100:.0f}c edge"] if e is not None else []
+    if fam == "fv_t":
+        parts.append(f"tail thickness {p['nu']}")
+    elif fam == "fv_emp":
+        parts.append(f"last {p['lb']} days of moves")
+    elif fam == "fv_shape":
+        parts.append(f"calibration slope {p['a']}")
+    elif fam == "fv_tau":
+        parts.append(f"time left {-p['tau_adj']:+g} min")
+    elif fam == "fv_drift":
+        parts.append(f"{abs(p['a']) * 100:.0f}% of last {p['L']}-min move {'carries on' if p['a'] > 0 else 'reverses'}")
+    elif fam == "fv_btcdrift":
+        w = "since the open" if p["L"] == "open" else f"over {p['L']} min"
+        parts.append(f"BTC catch-up x{p['a']} {w}")
+    elif fam == "fv_dyn":
+        parts.append(f"{p['e_tau'] * 100:+.0f}c early, +{p['k_spr']}x spread" + (f", gap >= {p['rel']:.0%} of price" if p["rel"] else ""))
+    elif fam == "fv_vreg":
+        parts.append(f"1h/4h vol ratio {p['reg']}")
+    elif fam == "fv_liq":
+        q = {"any": "", "stale": ", quote unchanged", "moved": ", quote just moved"}[p["quote"]]
+        parts.append(f"spread <= {p['max_spr'] * 100:.0f}c{q}" + (", traded that minute" if p["min_vol"] else ""))
+    elif fam == "fv_lag":
+        parts.append(f"spot moved in last {p['r']} min" + (", quote lagging" if p["qlag"] == "lag" else ""))
+    elif fam == "fv_cross":
+        parts.append(("BTC moved the same way" if p["mode"] == "agree" else "BTC moved the other way")
+                     + (f" by {p['thr']} sd+" if p["thr"] else ""))
+    elif fam == "fv_jump":
+        parts.append(f"1-min move {p['jmode'][0]} {p['jmode'][1:]} sd")
+    elif fam == "fv_session":
+        parts.append(_SESSN[p["sess"]])
+    elif fam == "fv_prev":
+        parts.append(f"previous 15 min moved {'the same' if p['pmode'] == 'with' else 'the opposite'} way"
+                     + (f" by {p['pz']} sd+" if p["pz"] else ""))
+    elif fam == "ens_fixed":
+        parts.append(p["members"].replace("all4", "4 models") + (", first signal" if p["mode"] == "first" else ", two must agree"))
+    elif fam == "scalp":
+        parts.append(_EXIT[p["exit"]])
+    elif fam in ("maker_fv", "fv_maker"):
+        parts.append(f"bid rests {p['wait']} min")
+    elif fam == "sized":
+        parts.append(f"stakes up to {p['cap']}x average")
+    if p.get("vol") not in (None, "60"):
+        parts.append(_VOL[p["vol"]])
+    if p.get("vm", 1.0) != 1.0:
+        parts.append(f"vol x{p['vm']}")
+    if p.get("band") not in (None, "05-95"):
+        lo, hi = BANDS[p["band"]]
+        parts.append(f"{lo * 100:.0f}-{hi * 100:.0f}c only")
+    return ", ".join(parts)
 
 
 def label(fam, scope, params):
     name = FAMILIES[fam]["name"] if fam in FAMILIES else EXTRA_FAMILIES[fam][0]
     lab = f"{cname(scope)} · {name}"
     if isinstance(params, dict) and fam in FAMILIES:
-        keys = [k for k in ("nu", "vol", "lb", "a", "L", "tau_adj", "reg", "max_spr", "quote", "mode", "thr", "jmode",
-                            "sess", "members", "exit", "wait", "cap") if k in params]
-        extra = ", ".join(f"{_PNAMES[k]} {params[k]}" for k in keys[:3])
-        e = params.get("edge", params.get("e0"))
-        lab += f" (edge {e:.2f}" + (f", {extra})" if extra else ")")
+        lab += f" ({describe(fam, params)})"
     return lab
 
 
@@ -1403,6 +1459,25 @@ def diagnose(res):
         "overstates certainty); 't by day' uses daily totals. 'Paired vs live' is the extra holdout profit over the "
         "most profitable live rule on the same coin(s), with the t-stat of that difference per 15-minute window; "
         "'paired vs control' does the same against the live model simply re-tuned on the search window (fv_ref).")
+    for c in res["candidates"]:
+        if c["family"] in FAMILIES:
+            c["label"] = label(c["family"], c["scope"], c["params"])
+        c["why"] = c["why"].split(" Caution:")[0]
+        pl = c.get("paired_vs_live")
+        if c["status"] == "golden" and pl and pl["t"] < 2:
+            c["why"] += (f" Caution: the extra ${pl['extra_pnl']:,.0f} over the live rule on the same markets is not "
+                         f"statistically clear (paired t = {pl['t']}).")
+    for fr in res["families"]:
+        mine = [c for c in res["candidates"] if c["family"] == fr["id"]]
+        if not mine:
+            fr["finding"] = "Nothing reached the holdout: no scope had a good enough walk-forward record."
+            continue
+        b = max(mine, key=lambda c: c["holdout"]["t"])
+        pc = b.get("paired_vs_control")
+        fr["finding"] = (f"Best: {b['label']}: ${b['holdout']['pnl']:,.0f} at t = {b['holdout']['t']} on the holdout "
+                         f"({b['status']})." + (f" Versus the re-tuned live model on the same markets: "
+                                                f"{'+' if pc['extra_pnl'] >= 0 else '-'}${abs(pc['extra_pnl']):,.0f} "
+                                                f"(paired t = {pc['t']})." if pc and fr["id"] != "fv_ref" else ""))
     res["method"]["summary"] = headline(res)
     return res
 
