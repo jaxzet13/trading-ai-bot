@@ -54,7 +54,8 @@ from .strategies import model_prob
 ALL9 = list(SERIES)
 KEEP_DAYS = 22                    # spot history kept in memory (bootstrap lookback is 21 days)
 VOL_TAIL = 7200                   # bars used for the rolling/EWMA vols (EWMA half-life 120: 0.5**60 ~ 1e-18)
-MAX_CANDLE_LAG_S = 300            # newest official Coinbase bar older than this -> refuse (stale data)
+MAX_CANDLE_LAG_S = 1800           # newest Coinbase bar older than this -> refuse (dead feed). Thin coins
+                                  # legitimately go up to 13 min without a trade (HYPE, last 30 days)
 FETCH_GAP_S = 0.35                # pause between catch-up requests (the bots share one IP)
 
 # The 16 golden rules of data/lab/lab3_results.json, best first (priority = holdout t-stat). Params are
@@ -166,7 +167,7 @@ def _iso(ts):
 
 
 _FETCH_LOCK = threading.Lock()        # catch-up downloads: one coin at a time
-_POOL = __import__("concurrent.futures").futures.ThreadPoolExecutor(max_workers=4, thread_name_prefix="golden-tick")
+_POOL = __import__("concurrent.futures").futures.ThreadPoolExecutor(max_workers=12, thread_name_prefix="golden-tick")
 
 
 def coinbase_candles(product: str, start: int | None = None, end: int | None = None, timeout: float = 4.0,

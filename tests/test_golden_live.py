@@ -309,7 +309,7 @@ def test_replay_rules_match_lab3_signal():
         rows.append((rid, n, trades_b, trades_l, match))
     print(f"  {'rule':<22}{'markets':>8}{'lab3 bets':>10}{'live bets':>10}{'match':>9}")
     for rid, n, tb, tl, m in rows:
-        print(f"  {rid:<22}{n:>8}{tb:>10}{tl:>10}{100 * m / n:>8.2f}%")
+        print(f"  {rid:<22}{n:>8}{tb:>10}{tl:>10}{100 * m / max(n, 1):>8.2f}%")
     for x in bad[:20]:
         print("  MISMATCH", x)
     assert not bad, f"{len(bad)} mismatches"

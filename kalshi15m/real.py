@@ -630,7 +630,8 @@ class Runner:
         mdl = obs["model"]
         self.out(f"{datetime.now():%H:%M:%S} {self.cur} m{minute:02d} spot={spot:.4f} K={obs['strike']:.4f} "
                  f"bid/ask={obs['yes_bid']:.3f}/{obs['yes_ask']:.3f} model={mdl if mdl is None else round(mdl, 3)} "
-                 f"lag={lag}s" + (f" ({'synthetic' if obs.get('synthetic') else 'candle'} bar)" if self.golden else ""))
+                 f"lag={lag}s" + (f" ({'synthetic' if obs.get('synthetic') else 'candle'} bar, quote {t_spot - t_quote:.2f}s"
+                                  f" + spot {obs.get('engine_s', 0):.2f}s)" if self.golden else ""))
         if self.golden:
             self.manage_exit(minute, obs, lag, age)
             if self.cur not in self.traded:
