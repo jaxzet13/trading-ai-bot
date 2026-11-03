@@ -51,9 +51,10 @@ def settle_open(events: list) -> list:
     import requests
     sid = lambda e: e.get("sid", e.get("series"))
     settled = {(sid(e), e["ticker"]) for e in events if e["event"] == "settle"}
+    exited = {(sid(e), e["ticker"]) for e in events if e["event"] == "exit"}
     new = []
     for e in events:
-        if e["event"] not in ("fill", "buy") or (sid(e), e["ticker"]) in settled:
+        if e["event"] not in ("fill", "buy") or (sid(e), e["ticker"]) in settled or (sid(e), e["ticker"]) in exited:
             continue
         try:
             m = requests.get(f"https://api.elections.kalshi.com/trade-api/v2/markets/{e['ticker']}",
@@ -144,8 +145,17 @@ def summarise() -> dict:
         cache = {}
     real = [x for x in events if x.get("event") != "settle"]
     synth = []
+    # positions sold before the close (lab3 exit rule) settle at the exit, not at Kalshi's result
+    exits = {(x.get("sid", x.get("series")), x["ticker"]): x for x in real if x.get("event") == "exit"}
     for x in real:
         if x.get("event") not in ("buy", "fill"):
+            continue
+        ex = exits.get((x.get("sid", x.get("series")), x["ticker"]))
+        if ex:
+            synth.append({"event": "settle", "ticker": x["ticker"], "series": x["series"],
+                          "sid": x.get("sid", x["series"]), "side": x["side"], "price": x["price"], "n": x["n"],
+                          "result": "sold", "exit_price": ex["exit_price"], "pnl": round(ex["pnl"], 4),
+                          "ts": ex["ts"], "fill_ts": x["ts"]})
             continue
         c = cache.get(x["ticker"]) or {}
         res = c.get("result")

@@ -1193,6 +1193,8 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     if (e.event === "buy" || e.event === "fill") return `<b>Bet ${dirWord(e.side)}:</b> ${betText(e)}. ${e.event === "fill" ? "Limit order filled," : "Bought"} ${e.n} × ${cents(e.price)}, pays $1 each if right${chance != null ? ` (model: ${pct(chance)} chance, market: ${pct(e.price)})` : ""}.${e.spot ? ` ${c} was ${usd(e.spot)}${e.lag_s != null ? `, ${e.lag_s}s into the minute` : ""}.` : ""}`;
     if (e.event === "rest") return `Placed a limit order to bet <b>${dirWord(e.side)}</b>: ${betText(e)}, ${e.n} × ${cents(e.price)}.`;
     if (e.event === "expired") return `Limit order to bet ${dirWord(e.side)} at ${cents(e.price)} wasn't filled, cancelled.`;
+    if (e.event === "exit") return `<b>Sold early:</b> the bet ${dirWord(e.side)} bought at ${cents(e.price)} was sold at ${cents(e.exit_price)} once the price caught up with the model. <b class="${e.pnl >= 0 ? "pos" : "neg"}">${e.pnl >= 0 ? "Locked in" : "Cut"} ${money(Math.abs(e.pnl), 2)}.</b>`;
+    if (e.event === "settle" && e.result === "sold") return `Position closed early at ${cents(e.exit_price)}.`;
     if (e.event === "settle") { const won = e.result === e.side;
       return `${c} finished at <b>${usd(e.final)}</b>${e.final != null && e.strike != null ? `, ${e.final >= e.strike ? "above" : "below"} the ${usd(e.strike)} target` : ""}. <b class="${won ? "pos" : "neg"}">Bet ${dirWord(e.side)} ${won ? "won" : "lost"}.</b>`; }
     return e.event;

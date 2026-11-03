@@ -118,7 +118,11 @@ def _ts(s): return int(datetime.fromisoformat(s.replace("Z", "+00:00")).timestam
 
 
 def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=False, demo=False,
-        max_daily_loss=50.0, max_trades_per_day=40, poll=5, execution="taker", wait=2, improve=0.01, sid=None):
+        max_daily_loss=50.0, max_trades_per_day=40, poll=5, execution="taker", wait=2, improve=0.01, sid=None,
+        sizing=None, exit_rule=None):
+    """sizing: {"vm", "norm", "cap"} = stake * min(kelly / norm, cap) (lab3 "sized");
+    exit_rule: {"vm", "conv": k} = sell at the bid once it reaches model value - k cents (lab3 "scalp").
+    Both default off, so existing strategies behave exactly as before."""
     if strategy not in STRATEGIES and "@" in strategy:
         from .lab import _register_sessions
         _register_sessions()
@@ -160,7 +164,8 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
             # settle paper positions from previous markets
             for tk in list(open_pos):
                 if tk != m["ticker"]:
-                    res = api.req("GET", f"/markets/{tk}")["market"].get("result")
+                    res = (_cached(("res", tk), lambda: api.req("GET", f"/markets/{tk}"), ttl=20) if not live
+                           else api.req("GET", f"/markets/{tk}"))["market"].get("result")
                     if res in ("yes", "no"):
                         p = open_pos.pop(tk)
                         pnl = p["n"] * ((res == p["side"]) - p["price"]) - p["fee"]
@@ -231,6 +236,20 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                              "close_ts": open_ts + 900, "seconds_left": int(open_ts + 900 - time.time())})
             print(f"{datetime.now():%H:%M:%S} {cur} m{minute:02d} spot={spot:.2f} K={strike:.2f} "
                   f"bid/ask={yb:.3f}/{ya:.3f} model={P['p_model'][0, j]:.3f}")
+            if exit_rule and cur in open_pos and minute > open_pos[cur].get("minute", 99):
+                o = open_pos[cur]
+                q = model_prob(P, exit_rule.get("vm", 1.0))[0, j]
+                q = q if o["side"] == "yes" else 1 - q
+                sb = yb if o["side"] == "yes" else 1 - ya
+                if np.isfinite(q) and 0 < sb < 1 and sb >= q - exit_rule.get("conv", 0) / 100:
+                    f2 = kalshi_fee(sb, o["n"])
+                    pnl = o["n"] * (sb - o["price"]) - o["fee"] - f2
+                    day_pnl += pnl
+                    open_pos.pop(cur)
+                    print(f"  <<< SELL {o['n']} {o['side'].upper()} @ {sb:.3f} (bought {o['price']:.3f}) pnl ${pnl:+.2f}")
+                    log({"event": "exit", "mode": mode, "ticker": cur, "side": o["side"], "n": o["n"],
+                         "price": o["price"], "exit_price": sb, "pnl": round(pnl, 4), "model": float(q),
+                         "minute": minute, "close_ts": open_ts + 900})
             if cur in traded or day_pnl <= -max_daily_loss or day_trades >= max_trades_per_day:
                 continue
             sides, mins = fn(P, **params)
@@ -253,13 +272,19 @@ def run(series="KXBTC15M", strategy="fair_value", params=None, stake=5.0, live=F
                          "model": float(P["p_model"][0, j]), "spot": spot, "strike": strike, "close_ts": open_ts + 900})
                     continue
                 price = P["yes_ask"][0, j] if side == "yes" else P["no_ask"][0, j]
-                n = max(1, int(stake // price))
+                stake_i = stake
+                if sizing:
+                    q = model_prob(P, sizing.get("vm", 1.0))[0, j]
+                    q = q if side == "yes" else 1 - q
+                    kel = max((q - price) / (1 - price), 1e-4) if np.isfinite(q) else sizing["norm"]
+                    stake_i = stake * min(kel / sizing["norm"], sizing.get("cap", 5))
+                n = max(1, int(stake_i // price))
                 fee = kalshi_fee(price, n)
                 lag = round(time.time() - (open_ts + 60 * minute), 1)
                 print(f"  >>> BUY {n} {side.upper()} @ {price:.3f} (fee ${fee:.2f}), {lag}s after the minute")
                 if live:
                     print("  order:", api.buy(cur, side, n, price))
-                open_pos[cur] = {"side": side, "n": n, "price": price, "fee": fee}
+                open_pos[cur] = {"side": side, "n": n, "price": price, "fee": fee, "minute": minute}
                 log({"event": "buy", "mode": mode, "ticker": cur, "side": side, "n": n, "price": price,
                      "lag_s": lag, "model": float(P["p_model"][0, j]), "spot": spot, "strike": strike,
                      "close_ts": open_ts + 900})

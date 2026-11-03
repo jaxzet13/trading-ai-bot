@@ -294,3 +294,22 @@ STRATEGIES = {
                    {"start": [2, 5, 8], "end": [10, 13], "edge": [0.04, 0.08, 0.12, 0.16],
                     "vol_mult": [0.8, 1.0, 1.25]}),
 }
+
+
+# ---- golden-hunt additions (lab3). Appended only; nothing above changed. ----
+def fair_value_shape(P, start=2, end=13, edge=0.14, vol_mult=1.0, shape=1.1, min_price=0.05, max_price=0.95):
+    """fair_value with the model's probabilities recalibrated by a logistic slope `shape`
+    (>1 = more confident). lab3 family fv_shape."""
+    q = np.clip(model_prob(P, vol_mult), 1e-9, 1 - 1e-9)
+    p = 1 / (1 + np.exp(-shape * np.log(q / (1 - q))))
+    ya, na = P["yes_ask"], P["no_ask"]
+    win = (MIN >= start) & (MIN <= end)
+    ok = np.isfinite(p) & win[None, :]
+    with np.errstate(invalid="ignore"):
+        y = ok & _valid(ya) & (ya >= min_price) & (ya <= max_price) & (p - ya >= edge)
+        n = ok & _valid(na) & (na >= min_price) & (na <= max_price) & ((1 - p) - na >= edge)
+    return _first(y, n)
+
+
+STRATEGIES["fair_value_shape"] = (fair_value_shape, "Fair value with recalibrated (sharper) probabilities.",
+                                  {"edge": [0.12, 0.14], "shape": [1.1, 1.25]})

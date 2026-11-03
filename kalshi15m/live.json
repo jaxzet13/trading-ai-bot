@@ -176,6 +176,111 @@
     "max_price": 0.55
    },
    "why": "Earlier pick: +$74 on 74 holdout trades (t=0.62). Kept for comparison."
+  },
+  {
+   "id": "G-exit",
+   "label": "\u2605 All 9 coins \u00b7 Fair value, sell early",
+   "series": [
+    "KXBTC15M",
+    "KXETH15M",
+    "KXSOL15M",
+    "KXXRP15M",
+    "KXHYPE15M",
+    "KXBNB15M",
+    "KXNEAR15M",
+    "KXDOGE15M",
+    "KXZEC15M"
+   ],
+   "strategy": "fair_value",
+   "execution": "taker",
+   "poll": "minute",
+   "params": {
+    "start": 2,
+    "end": 13,
+    "edge": 0.12,
+    "vol_mult": 0.8
+   },
+   "exit": {
+    "vm": 0.8,
+    "conv": 0
+   },
+   "why": "Golden (strategy hunt): same entries as the live all-coin fair value, but sells at the bid as soon as it reaches the model's fair value. Final exam +$7,369 on 5,814 trades, t=6.71 (live rule: +$5,940, t=4.68); older archive t=5.3."
+  },
+  {
+   "id": "G-sized",
+   "label": "\u2605 All 9 coins \u00b7 Fair value, edge-sized bets",
+   "series": [
+    "KXBTC15M",
+    "KXETH15M",
+    "KXSOL15M",
+    "KXXRP15M",
+    "KXHYPE15M",
+    "KXBNB15M",
+    "KXNEAR15M",
+    "KXDOGE15M",
+    "KXZEC15M"
+   ],
+   "strategy": "fair_value",
+   "execution": "taker",
+   "poll": "minute",
+   "params": {
+    "start": 2,
+    "end": 13,
+    "edge": 0.13,
+    "vol_mult": 1.0
+   },
+   "sizing": {
+    "vm": 1.0,
+    "norm": 0.2628,
+    "cap": 5
+   },
+   "why": "Golden (strategy hunt): bets more when the model's edge is bigger (average stake about $5, at most 5x). Final exam +$8,474 on 5,537 trades, t=6.14; older archive t=4.21."
+  },
+  {
+   "id": "G-shape",
+   "label": "\u2605 All 9 coins \u00b7 Recalibrated fair value",
+   "series": [
+    "KXBTC15M",
+    "KXETH15M",
+    "KXSOL15M",
+    "KXXRP15M",
+    "KXHYPE15M",
+    "KXBNB15M",
+    "KXNEAR15M",
+    "KXDOGE15M",
+    "KXZEC15M"
+   ],
+   "strategy": "fair_value_shape",
+   "execution": "taker",
+   "poll": "minute",
+   "params": {
+    "start": 2,
+    "end": 13,
+    "edge": 0.14,
+    "vol_mult": 1.0,
+    "shape": 1.1
+   },
+   "why": "Golden (strategy hunt): the model's probabilities made slightly more confident (slope 1.1), needs a 14c gap. Final exam +$7,930 on 4,618 trades, t=5.67; older archive t=4.07."
+  },
+  {
+   "id": "G-HYPE-sized",
+   "label": "\u2605 HYPE \u00b7 Fair value, edge-sized bets",
+   "series": "KXHYPE15M",
+   "strategy": "fair_value",
+   "execution": "taker",
+   "poll": "minute",
+   "params": {
+    "start": 2,
+    "end": 12,
+    "edge": 0.14,
+    "vol_mult": 1.25
+   },
+   "sizing": {
+    "vm": 1.25,
+    "norm": 0.2261,
+    "cap": 5
+   },
+   "why": "Golden (strategy hunt): HYPE only, bigger bets when the edge is bigger. Final exam +$3,310 on 732 trades, t=4.22 (live HYPE: +$2,193, t=3.43). No archive data exists for HYPE."
   }
  ]
 }
