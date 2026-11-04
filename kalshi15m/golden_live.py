@@ -224,8 +224,14 @@ class GoldenEngine:
 
     def __init__(self, series: str, history: pd.DataFrame | None = None, fetch_candles=None, fetch_ticker=None,
                  clock=time.time, sleep=time.sleep, data_dir: Path | None = DATA_DIR, persist: bool = True,
-                 max_candle_lag_s: float = MAX_CANDLE_LAG_S):
+                 max_candle_lag_s: float = MAX_CANDLE_LAG_S, stream="auto"):
         self.series, self.product = series, SERIES[series]
+        # Coinbase trade stream (kalshi15m.streams): exact 1-minute bars at decision time. Only with the real
+        # network feeds (tests pass fakes) and unless KALSHI15M_NO_STREAMS is set.
+        if stream == "auto":
+            from . import streams as _streams
+            stream = _streams.coinbase() if fetch_candles is None and fetch_ticker is None else None
+        self.stream = stream
         self.rule_ids = rules_for(series)
         self._history = history
         self.fetch_candles = fetch_candles or (lambda **kw: coinbase_candles(self.product, **kw))
@@ -343,6 +349,7 @@ class GoldenEngine:
         self.last_off = int(idx[-1])
         self.synth = {}
         self.prov = {}
+        self.exact = {}
         self._rebuild()
 
     def _grow(self, n):
@@ -365,6 +372,10 @@ class GoldenEngine:
             i = (ts - self.t0) // 60
             if self.last_off < i < len(c):
                 c[i] = px
+        for ts, (pc, ph, pl) in getattr(self, "exact", {}).items():    # bars built from every trade: exact
+            i = (ts - self.t0) // 60
+            if self.last_off < i < len(c):
+                c[i], h[i], l[i] = pc, ph, pl
         ff = lambda a: pd.Series(a).ffill().to_numpy()
         self.sp = LiveSpot(self.t0, ff(c), ff(h), ff(l))
 
@@ -409,7 +420,8 @@ class GoldenEngine:
         last_ts = self.t0 + 60 * self.last_off
         self.synth = {ts: px for ts, px in self.synth.items() if ts > last_ts}
         self.prov = {ts: px for ts, px in self.prov.items() if ts > last_ts}
-        synthetic = not self.official[ib]
+        self.exact = {ts: v for ts, v in getattr(self, "exact", {}).items() if ts > last_ts}
+        synthetic = not self.official[ib] and bar not in self.exact
         if synthetic and spot_now is not None and np.isfinite(spot_now) and spot_now > 0:
             self.synth[bar] = float(spot_now)
         self._rebuild()
@@ -432,8 +444,24 @@ class GoldenEngine:
                 except requests.RequestException as e:
                     tick_px, tick_err = None, e
         bar = T - 60
-        # only a settled (official) bar may stand in for the live price; a just-published candle may not
-        have = 0 <= (bar - self.t0) // 60 < len(self.official) and self.official[(bar - self.t0) // 60]
+        source = "ticker"
+        if self.stream is not None:
+            # unsettled bars from the trade stream (the one that just closed: wait up to 1.5 s for it)
+            if not hasattr(self, "exact"):
+                self.exact = {}
+            for ts in range(bar - SETTLE_S, bar + 60, 60):
+                b = self.stream.bar(self.product, ts, wait_s=1.5 if ts == bar else 0.0)
+                if isinstance(b, tuple):
+                    self.exact[ts] = (b[3], b[1], b[2])                    # close, high, low
+                elif b == "empty":                                           # no trades: Coinbase has no candle
+                    self.exact.pop(ts, None)
+                    self.synth.pop(ts, None)
+            if bar in self.exact:
+                source = "stream"
+        # only a settled (official) bar or the trade stream may stand in for the live price; a just-published
+        # REST candle may not
+        have = (0 <= (bar - self.t0) // 60 < len(self.official) and self.official[(bar - self.t0) // 60]) \
+            or bar in getattr(self, "exact", {})
         if tick is not None:
             if tick_err is not None and not have:
                 raise tick_err
@@ -449,7 +477,7 @@ class GoldenEngine:
         self.stats["fetch_s"] += fetch_s
         self.stats["synthetic"] += int(synthetic)
         self._last_info = {"bar_ts": bar, "synthetic": bool(synthetic), "newest_candle_ts": int(last_ts),
-                           "fetch_s": round(fetch_s, 3)}
+                           "fetch_s": round(fetch_s, 3), "spot_source": source}
         return self._last_info
 
     # --- features (lab3.add_features, one market x one minute)

@@ -223,11 +223,31 @@ class KalshiAPI:
                 delay = min(delay * 2, 4.0)
 
     # --- market data (public)
+    books = None            # kalshi15m.streams.KalshiBooks, when the order-book stream is on
+
     def open_market(self, series: str, deadline=None):
-        ms = self.get("/markets", {"series_ticker": series, "status": "open"}, deadline=deadline).get("markets", [])
-        # the demo exchange keeps some long-closed markets listed as "open": only consider ones still running
-        ms = [m for m in ms if bot._ts(m["close_time"]) > self.clock()] if ms else ms
-        m = min(ms, key=lambda m: m["close_time"]) if ms else None
+        # market details (ticker, strike, times) don't change: one /markets call per market, not per minute
+        cache = self.__dict__.setdefault("_mkt_cache", {})
+        hit = cache.get(series)
+        if hit is not None and bot._ts(hit["close_time"]) > self.clock():
+            m = dict(hit)
+        else:
+            ms = self.get("/markets", {"series_ticker": series, "status": "open"}, deadline=deadline).get("markets", [])
+            # the demo exchange keeps some long-closed markets listed as "open": only consider ones still running
+            ms = [m for m in ms if bot._ts(m["close_time"]) > self.clock()] if ms else ms
+            m = min(ms, key=lambda m: m["close_time"]) if ms else None
+            if m is not None:
+                cache[series] = dict(m)
+        if m is not None and self.books is not None:
+            # the book as it stood at the minute boundary (= the backtest's 1-minute Kalshi candle close),
+            # from the order-book stream; REST below if the stream can't vouch for it
+            T = int(self.clock() // 60 * 60)
+            q = self.books.as_of(m["ticker"], T, wait_s=1.5, close_ts=bot._ts(m["close_time"]))
+            if q is not None:
+                yb, ybs, ya, yas = q
+                return {**m, "yes_bid_dollars": f"{yb:.4f}" if yb else "0.0000", "yes_bid_size_fp": f"{ybs:.2f}",
+                        "yes_ask_dollars": f"{ya:.4f}" if ya is not None else "1.0000", "yes_ask_size_fp": f"{yas:.2f}",
+                        "quote_source": "stream", "quote_at": T}
         if m is not None:
             # GET /markets quotes trail the live book by ~5-30 s (see bot.book_quote); deciding on them produced
             # phantom edges and unfillable orders on 2026-11-04. Always price from the live order book; if it
@@ -307,7 +327,8 @@ def observe(P: dict, m: dict, minute: int, spot: float, vol: float, vol240: floa
     for f in FIELDS:
         P[f][0, j] = vals.get(f, np.nan)
     P["p_model"] = model_prob(P)
-    return {"yes_bid": yb, "yes_ask": ya, "strike": strike, "spot": spot, "vol1m": vol, "vol240": vol240,
+    return {"quote_source": m.get("quote_source", "rest"),
+            "yes_bid": yb, "yes_ask": ya, "strike": strike, "spot": spot, "vol1m": vol, "vol240": vol240,
             "model": float(P["p_model"][0, j]) if np.isfinite(P["p_model"][0, j]) else None}
 
 
@@ -715,7 +736,7 @@ class Runner:
         info = self.engine.update(self.P, open_ts, minute)
         j = minute - 1
         pm = self.P["p_model"][0, j]
-        obs.update(spot=info["spot"], vol1m=info["vol1m"], vol240=info["vol240"],
+        obs.update(spot=info["spot"], vol1m=info["vol1m"], vol240=info["vol240"], spot_source=info.get("spot_source"),
                    model=float(pm) if np.isfinite(pm) else None, synthetic=info["synthetic"],
                    engine_s=info["update_s"])
         return obs
@@ -1351,6 +1372,9 @@ def _main(a) -> int:
             print("Confirmation phrase not entered. Not starting.")
             return EXIT_CONFIG
         runner_kw = dict(mode=mode, api=api, log_path=Path(a.log))
+        if not os.environ.get("KALSHI15M_NO_STREAMS"):
+            from . import streams
+            api.books = streams.KalshiBooks(api, "PROD" if a.live else "DEMO").start()
         if a.live:
             print("LIVE: real orders enabled. Create a file named STOP in the repo root, or press Ctrl+C, to stop.")
     if isinstance(cfg["series"], list):
