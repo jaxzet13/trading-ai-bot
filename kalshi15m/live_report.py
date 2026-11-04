@@ -519,12 +519,108 @@ def demo_summary(start_balance: float = 10.0) -> dict | None:
             "reported_balance": next((e["balance_crypto"] for e in reversed(ev) if isinstance(e.get("balance_crypto"), (int, float))), None)}
 
 
+REAL_LOG = OUT.parent / "data" / "kalshi15m" / "real_live_log.jsonl"
+# When the real-money runner's price bugs were fixed (2026-11-04 15:39:53 UTC). Real bets placed before this
+# used wrong prices, so the "Real money" tab counts the account from here, with all-time totals alongside.
+# Same moment as "daily_loss_ignore_before_ts" in kalshi15m/real_best_live.json.
+FIX_TS = 1793806793
+
+
+def realmoney_results(max_rows: int = 60) -> dict | None:
+    """The real-money test (labrm.py: each strategy replayed at the account's real bet size and limits, a bet
+    counting only if Kalshi's real trade records show it would have filled), or None if it hasn't started.
+    REALMONEY_RESULTS overrides the location, e.g. to render the dashboard from a test fixture."""
+    import os
+    p = os.environ.get("REALMONEY_RESULTS")
+    f = Path(p) if p else OUT.parent / "data" / "lab" / "realmoney_results.json"
+    try:
+        r = json.loads(f.read_text())
+    except (OSError, ValueError):
+        return None
+    if not isinstance(r, dict):
+        return None
+    allc = [c for c in (r.get("candidates") or []) if isinstance(c, dict)]
+    # true totals from the full file; the page (and the live db document) gets at most the best max_rows
+    r["counts"] = {"tested": len(allc), "golden": sum(c.get("status") == "real-money golden" for c in allc),
+                   **{k: sum(c.get("status") == k for c in allc) for k in ("pass", "fail")}}
+
+    def pnl(c):
+        t = c.get("total")
+        v = t.get("pnl") if isinstance(t, dict) else None
+        return v if isinstance(v, (int, float)) else float("-inf")
+    keep = sorted(allc, key=pnl, reverse=True)[:max_rows]
+    chosen = r.get("chosen").get("id") if isinstance(r.get("chosen"), dict) else None
+    if chosen is not None and all(c.get("id") != chosen for c in keep):
+        keep += [c for c in allc if c.get("id") == chosen][:1]
+    for c in keep:
+        if "curve" in c:
+            c["curve"] = _thin(c["curve"], 200)
+    r["candidates"] = keep
+    r["counts"]["shown"] = len(keep)
+    return r
+
+
+def real_account() -> dict | None:
+    """The REAL Kalshi account, from the real runner's log ("mode": "LIVE" rows only): closed bets, wins, profit
+    and a running-profit curve since FIX_TS and for all time, plus the last cash balance Kalshi reported.
+    A bet is one market (ticker): one partly sold early and then settled counts once, with both parts' profit."""
+    try:
+        lines = REAL_LOG.read_text().splitlines()
+    except OSError:
+        return None
+    ev = []
+    for line in lines:
+        try:
+            e = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(e, dict) and e.get("mode") == "LIVE" and isinstance(e.get("ts"), (int, float)):
+            ev.append(e)
+    if not ev:
+        return None
+    ev.sort(key=lambda e: e["ts"])
+    num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool)
+
+    def part(since):
+        bets = {}
+        for e in ev:
+            if e["ts"] >= since and e.get("event") in ("exit", "settle") and num(e.get("pnl")) and e.get("ticker"):
+                b = bets.setdefault(e["ticker"], {"pnl": 0.0, "ts": e["ts"]})
+                b["pnl"] += e["pnl"]
+                b["ts"] = max(b["ts"], e["ts"])
+        closed = sorted(bets.values(), key=lambda b: b["ts"])
+        cum, curve = 0.0, []
+        for b in closed:
+            cum += b["pnl"]
+            curve.append([int(b["ts"]), round(cum, 4)])
+        return {"since": int(since or ev[0]["ts"]), "closed": len(closed), "wins": sum(b["pnl"] > 0 for b in closed),
+                "pnl": round(cum, 2), "curve": _thin(curve, 400)}
+
+    out = {"fix_ts": FIX_TS, "since_fix": part(FIX_TS), "all_time": part(0), "last": int(ev[-1]["ts"])}
+    bal = next((e for e in reversed(ev) if num(e.get("balance_crypto"))), None)
+    if bal:
+        out["balance"], out["balance_ts"] = round(bal["balance_crypto"], 2), int(bal["ts"])
+    return out
+
+
 def build():
     live = summarise()
     try:  # Kalshi demo account, for the "How it works" tab
         live["demo"] = demo_summary()
     except Exception as e:
         print(f"demo summary: skipped ({e})")
+    try:  # the real-money test, for the "Real money" tab (live, so the page updates as the test runs)
+        rm = realmoney_results()
+        if rm:
+            live["realmoney"] = rm
+    except Exception as e:
+        print(f"real-money results: skipped ({e})")
+    try:  # the real Kalshi account, for the "Real money" tab
+        ra = real_account()
+        if ra:
+            live["real_account"] = ra
+    except Exception as e:
+        print(f"real account: skipped ({e})")
     try:  # research-only markets for the "Currencies & more" tab; never allowed to break the report
         live["other_markets"] = other_markets()
     except Exception as e:

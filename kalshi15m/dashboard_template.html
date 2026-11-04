@@ -856,6 +856,81 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   .stat-row .v { font-size: 21px; }
 }
 @media (prefers-reduced-motion: reduce) { .chev, :is(#huntBoard, #l4Board) tr.row { transition: none; } }
+
+/* ---------- Real money: the real account, and the test that replays each strategy at the real bet size ----------
+   Calm like "How it works" (its .how-sec / .how-card / .kvs pieces are reused); gold only for real-money golden. */
+.rm { gap: 44px; }
+.rm-strip { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px 16px; align-items: start; padding: 20px 24px; border-radius: 18px;
+  background: var(--surface); border: 1px solid var(--line); box-shadow: 0 1px 2px var(--shadow); }
+.rm-strip.done { border-color: var(--gold-line); background: linear-gradient(180deg, var(--gold-bg), var(--surface) 85%); }
+.rm-strip .om-pulse { margin-top: 5px; }
+.rm-strip.done .om-pulse { background: var(--gold); animation: none; }
+.rm-strip.idle .om-pulse { background: var(--muted); animation: none; }
+.rm-st { display: grid; gap: 4px; min-width: 0; }
+.rm-st > b { font: 600 19px/1.3 var(--f-display); letter-spacing: -0.01em; overflow-wrap: anywhere; margin-top: 4px; }
+.rm-st > span { color: var(--ink-2); font-size: 13.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.rm-bar { height: 6px; border-radius: 99px; background: var(--chip); overflow: hidden; margin-top: 8px; max-width: 560px; }
+.rm-bar i { display: block; height: 100%; border-radius: 99px; background: var(--accent); transition: width .6s; }
+.rm-chosen { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding-top: 14px; border-top: 1px solid var(--grid); font-size: 14.5px; color: var(--ink-2); }
+.rm-chosen b { color: var(--ink); font-weight: 600; }
+.rm-chosen .muted { font-size: 13px; }
+.rm-acct { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 22px 34px; align-items: start; }
+.rm-acct .kvs .span2 { grid-column: 1 / -1; }
+.rm-acct .kvs .span2 b { font-size: 34px; }
+.rm-acct .kvs .wide strong { color: var(--ink); font: 600 12.5px var(--f-mono); }
+.rm-acct .kvs .wide strong.pos { color: var(--good); } .rm-acct .kvs .wide strong.neg { color: var(--bad); }
+.rm-chart { height: 230px; margin-top: 10px; }
+.rm-acct .empty { padding: 30px 0; }
+.rm-how { margin: 0; display: grid; }
+.rm-how > div { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 20px; padding: 12px 0; border-bottom: 1px solid var(--grid); }
+.rm-how > div:first-child { padding-top: 0; }
+.rm-how > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.rm-how dt { font: 500 10.5px/1.6 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-top: 2px; }
+.rm-how dd { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink-2); max-width: 86ch; }
+.rm-how dd b { color: var(--ink); font-weight: 600; }
+.rm-how ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; }
+.rm-tnote { margin: -4px 0 14px; font-size: 13px; color: var(--ink-2); line-height: 1.55; max-width: 90ch; }
+.rm-tnote b { color: var(--ink); }
+.badge.muted { color: var(--muted); background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+#rmBoard { min-width: 1040px; }
+#rmBoard th { padding: 8px 10px 10px; white-space: normal; vertical-align: bottom; line-height: 1.35; }
+#rmBoard td.strat .rm-v { margin-bottom: 6px; }
+#rmBoard tr.detail .report { width: 0; min-width: 100%; } /* the detail takes the row's width instead of widening the table */
+#rmBoard td { vertical-align: middle; padding: 12px 10px; }
+#rmBoard td.rk { color: var(--muted); width: 34px; }
+#rmBoard td.strat { min-width: 220px; }
+#rmBoard tr.row { cursor: pointer; transition: background-color .15s; }
+#rmBoard tr.row:hover, #rmBoard tr.row.sel { background: var(--sel); }
+#rmBoard tr.row.sel { box-shadow: none; }
+#rmBoard tr.row.sel td { border-bottom-color: transparent; }
+#rmBoard tr.row.is-golden .sname { color: var(--gold-ink); }
+#rmBoard tr.row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+#rmBoard .lv-tags { margin-top: 5px; }
+#rmBoard .rp-why .badge { vertical-align: 1px; margin-right: 4px; }
+@media (max-width: 860px) { .rm-acct { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 720px) {
+  .rm { gap: 36px; }
+  .rm-strip { grid-template-columns: auto minmax(0, 1fr); padding: 16px 16px 18px; }
+  .rm-strip .sample-chip { grid-column: 1 / -1; justify-self: start; }
+  .rm-how > div { grid-template-columns: minmax(0, 1fr); }
+  #rmBoard { min-width: 0; }
+  #rmBoard thead { display: none; }
+  #rmBoard, #rmBoard tbody { display: block; }
+  /* one card per strategy; "dense" lets the short cells pack three to a row */
+  #rmBoard tr.row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 12px 10px; padding: 16px 4px; border-bottom: 1px solid var(--grid); }
+  #rmBoard tr.row > td { display: block; padding: 0; border: 0; text-align: left; min-width: 0; grid-column: span 2; }
+  #rmBoard tr.row > td.rk { display: none; }
+  #rmBoard tr.row > td.strat, #rmBoard tr.row > td.pnl { grid-column: 1 / -1; min-width: 0; }
+  #rmBoard tr.row > td.per, #rmBoard tr.row > td.tcol, #rmBoard tr.row > td.bt { grid-column: span 3; }
+  #rmBoard tr.row > td.chevc { display: none; }
+  #rmBoard td[data-label]::before { content: attr(data-label); display: block; font: 500 9.5px/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  #rmBoard .pnl-in { justify-content: flex-start; }
+  #rmBoard .tm { justify-content: start; }
+  #rmBoard .sub { white-space: normal; }
+  #rmBoard tr.detail, #rmBoard tr.detail > td { display: block; }
+  #rmBoard .exam tr { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, .8fr) minmax(0, .7fr); } /* profit, "99 of 141", wins, t */
+}
+@media (prefers-reduced-motion: reduce) { #rmBoard tr.row, .rm-bar i { transition: none; } }
 </style>
 
 <div class="wrap">
@@ -873,6 +948,8 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       <span class="pt-t">Crypto</span><span class="pt-s">9 coins · live paper trading</span></button>
     <button type="button" role="tab" id="tab-currencies" aria-controls="panel-currencies" aria-selected="false" tabindex="-1" data-tab="currencies">
       <span class="pt-t">Currencies &amp; more</span><span class="pt-s">FX, Treasury yields, stock indices · research only</span></button>
+    <button type="button" role="tab" id="tab-realmoney" aria-controls="panel-realmoney" aria-selected="false" tabindex="-1" data-tab="realmoney">
+      <span class="pt-t">Real money</span><span class="pt-s">your account · a realistic test</span></button>
   </div>
 
   <div class="tabpanel how" id="panel-how" role="tabpanel" aria-labelledby="tab-how" hidden>
@@ -1263,6 +1340,37 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       </div>
     </details>
     </section>
+  </div>
+
+  <div class="tabpanel rm" id="panel-realmoney" role="tabpanel" aria-labelledby="tab-realmoney" hidden>
+    <section class="rm-strip idle" id="rmStrip" aria-live="polite"></section>
+
+    <section class="how-sec" id="rm-account">
+      <div class="how-sh"><div class="eyebrow">Real money · your Kalshi account</div><h2>Your real account</h2><p id="rmAcctIntro"></p></div>
+      <div class="how-card rm-acct">
+        <div class="kvs" id="rmAcctStats"></div>
+        <div><div class="eyebrow">Running profit since the fixes, bet by bet</div>
+          <div class="chart rm-chart" id="rmAcctWrap"><canvas id="rmAcct" aria-label="Running profit of the real Kalshi account since the price fixes"></canvas></div>
+          <p class="empty" id="rmAcctEmpty" hidden></p></div>
+      </div>
+    </section>
+
+    <section class="how-sec" id="rm-how" hidden>
+      <div class="how-sh"><div class="eyebrow">How this test works</div><h2>Your bet size, your limits, Kalshi's real trades</h2>
+        <p>Backtests usually assume every order fills at the price the bot wanted. Real orders don't always: someone has to be trading at that price at that moment. This test replays each strategy as if it ran on your account, and only counts a bet if Kalshi's own trade records show it would have filled.</p></div>
+      <div class="how-card"><dl class="rm-how" id="rmHow"></dl></div>
+    </section>
+
+    <section class="how-sec" id="rm-results" hidden>
+      <div class="how-sh"><div class="eyebrow">Results</div><h2>Which strategies hold up with real money</h2><p id="rmBoardIntro"></p></div>
+      <div class="how-card">
+        <div class="status-key" id="rmKey"></div>
+        <p class="rm-tnote"><b>Consistency score (t)</b>: how steady the profit was from one bet to the next, not just how big it was. Around 2 or more is unlikely to be luck; under 1 is mostly noise.</p>
+        <div class="tablewrap"><table id="rmBoard"></table></div>
+      </div>
+    </section>
+
+    <p class="how-honest"><b>Evidence, not a promise.</b> Simulated with real Kalshi trade records; real fills can still differ. Past results don't guarantee future profit, and real money can lose.</p>
   </div>
   <div class="tip" id="tip" role="tooltip" hidden></div>
 </div>
@@ -1788,6 +1896,8 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     if (t) showTip(t.dataset.tip, e); else if (!(e.target.closest && e.target.closest("[data-hay]"))) hideTip(); });
   document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-lv]");
     if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); lvToggle(r); } });
+  document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-rm]");
+    if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); rmToggle(r); } });
   document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-cand]"), H = r && HUNTS[(r.closest("[data-hunt]") || {}).dataset?.hunt];
     if (H && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); H.toggle(r); } });
   document.addEventListener("change", e => {
@@ -1886,7 +1996,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     $("lvEqNote").textContent = comb.length ? `${comb.length.toLocaleString()} settled trades from all strategies, in the order they settled` : "";
     if (comb.length) profitChart("lvEq", [{ x: (since && since < comb[0][0] ? since : comb[0][0] - 60) * 1000, y: 0 }, ...comb.map(([t, v]) => ({ x: t * 1000, y: v }))], c.accent, "All strategies", c);
     else { killChart("lvEq"); }
-    lvBoard(L); lvLog(L); renderOther(); renderHow();
+    lvBoard(L); lvLog(L); renderOther(); renderHow(); renderRealMoney();
   }
 
   function lvBoard(L) {
@@ -2085,8 +2195,197 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
           <td>${t === true ? badge("pass", "Testable", "check") : t === false ? badge("fail", "Not enough data", "cross") : badge("neutral", "Unknown", "minus")}</td><td class="sdesc" style="max-width:52ch">${esc(note || "")}</td></tr>`; }).join("") + "</tbody>";
   }
 
+  // ---------- "Real money" tab: LIVE_DATA.realmoney (labrm.py's real-money test; any field may be missing) and
+  // LIVE_DATA.real_account (the real Kalshi account, from the real runner's log). renderRealMoney() is a pure
+  // re-render from LIVE_DATA: it runs on every live update; charts go through mk()/killChart(), clicks are delegated. ----------
+  const rms = { open: undefined };
+  const RM_ST = { "real-money golden": ["golden", "Real-money golden", "star"], pass: ["neutral", "Pass", "check"], fail: ["muted", "Fail", "cross"] };
+  const rmBadge = s => { const x = RM_ST[s] || ["muted", s || "Not rated", "minus"]; return badge(x[0], x[1], x[2]); };
+  const RM_SRC = { lab3: "from the golden hunt", lab5: "from the second hunt", live: "what the real bot runs today" };
+  const obj = v => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+  const okPts = cv => (Array.isArray(cv) ? cv : []).filter(p => Array.isArray(p) && nz(p[0]) && nz(p[1]));
+  const rmPeriods = m => (Array.isArray(m.periods) ? m.periods : []).filter(p => p && typeof p === "object" && p.id != null).map((p, i) => ({ ...p, id: String(p.id), name: `Period ${i + 1}` }));
+  const rmCands = R => (Array.isArray(R.candidates) ? R.candidates : []).filter(c => c && typeof c === "object" && c.id != null).map(c => ({ ...c, id: String(c.id) }));
+  const timeTick = span => v => span > 2 * 86400e3 ? new Date(v).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : new Date(v).toLocaleString(undefined, { weekday: "short", hour: "numeric" });
+  const refLine = (c, v) => ({ id: "ref", afterDatasetsDraw(ch) { const { ctx, chartArea: a, scales: { y } } = ch, py = y.getPixelForValue(v);
+    if (py < a.top || py > a.bottom) return; ctx.save(); ctx.strokeStyle = tok("--base-line"); ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(a.left, py); ctx.lineTo(a.right, py); ctx.stroke(); ctx.restore(); } });
+  const periodBands = (c, per) => ({ id: "rmBands", beforeDatasetsDraw(ch) { const { ctx, chartArea: a, scales: { x } } = ch; ctx.save(); ctx.font = `500 10px ${tok("--f-mono")}`; ctx.textBaseline = "top";
+    per.forEach((p, i) => { if (!nz(p.start) || !nz(p.end)) return; const l = Math.max(a.left, x.getPixelForValue(p.start * 1000)), r = Math.min(a.right, x.getPixelForValue(p.end * 1000));
+      if (r - l < 2) return; if (i % 2 === 0) { ctx.fillStyle = c.chip; ctx.fillRect(l, a.top, r - l, a.bottom - a.top); }
+      if (r - l > 64) { ctx.fillStyle = c.muted; ctx.fillText(p.name, l + 6, a.top + 5); } }); ctx.restore(); } });
+  // a stepped money line (small amounts, so cents on the axis), washed down to a reference level: $0 or the starting balance
+  function rmLine(id, data, { color, label, fmt, ref, bands }) {
+    const c = C(), o = base(c), x0 = data[0].x, x1 = data[data.length - 1].x;
+    o.interaction = { mode: "nearest", axis: "x", intersect: false }; o.layout = { padding: { top: 8, right: 10 } };
+    o.plugins.tooltip.callbacks = { title: i => fmtTime(i[0].parsed.x / 1000), label: i => `${label}: ${fmt(i.parsed.y)}` };
+    o.scales = { x: axis(c, { type: "linear", min: x0, max: x1, grid: { display: false }, ticks: { color: c.muted, maxTicksLimit: 5, callback: timeTick(x1 - x0) } }),
+                 y: axis(c, { suggestedMin: ref, suggestedMax: ref, ticks: { color: c.muted, maxTicksLimit: 5, callback: v => money(v, 2) } }) };
+    const plugins = [ref === 0 ? zeroLine(c) : refLine(c, ref)]; if (bands && bands.length) plugins.unshift(periodBands(c, bands));
+    mk(id, { type: "line", data: { datasets: [{ label, data, stepped: true, borderColor: color, backgroundColor: alpha(color, 0.1), fill: { value: ref }, borderWidth: 2, pointRadius: 0,
+      pointHoverRadius: 4, pointHoverBackgroundColor: color, pointHoverBorderColor: c.surface, pointHoverBorderWidth: 2 }] }, options: o, plugins });
+  }
+
+  function renderRealMoney() {
+    const L = LIVE_DATA, R = L && L.realmoney && typeof L.realmoney === "object" ? L.realmoney : null;
+    rmStrip(R); rmAccount(L ? obj(L.real_account) : {}, L);
+    $("rm-how").hidden = !R; $("rm-results").hidden = !R;
+    if (!R) { killChart("rmDet"); return; }
+    rmMethod(R); rmBoard(R);
+  }
+
+  function rmStrip(R) {
+    const el = $("rmStrip"), P = R ? obj(R.progress) : {}, done = !!R && R.status === "done", cs = R ? rmCands(R) : [], k = R ? obj(R.counts) : {};
+    const nT = nz(k.tested) ? k.tested : cs.length, nG = nz(k.golden) ? k.golden : cs.filter(c => c.status === "real-money golden").length;
+    el.className = "rm-strip" + (!R ? " idle" : done ? " done" : "");
+    let title, sub, bar = "";
+    if (!R) {
+      title = "The real-money test hasn't started yet.";
+      sub = "When it runs, every candidate strategy is replayed at your real bet size and limits, and a bet only counts if Kalshi's real trade records show it would have filled. Results will appear here.";
+    } else if (done) {
+      title = "Real-money test: done";
+      sub = esc([`${pl(nT, "strategy", "strategies")} tested`, `${NUM(nG)} real-money golden`, nz(R.generated) ? `finished ${fmtTime(R.generated)}` : "", P.note || ""].filter(Boolean).join(" · "));
+    } else {
+      const d = P.done, t = P.total, f = nz(d) && nz(t) && t > 0 ? Math.max(0, Math.min(1, d / t)) : null;
+      const inner = [P.stage ? String(P.stage) : "", f != null ? `${NUM(d)}/${NUM(t)}` : ""].filter(Boolean).join(", ");
+      title = esc(`Real-money test: running${inner ? ` (${inner})` : ""}`);
+      sub = esc([P.note || "", nT ? `${pl(nT, "strategy", "strategies")} finished so far` : "", nz(R.generated) ? `updated ${fmtTime(R.generated)}` : ""].filter(Boolean).join(" · "));
+      if (f != null) bar = `<div class="rm-bar" role="progressbar" aria-label="Real-money test progress" aria-valuemin="0" aria-valuemax="${t}" aria-valuenow="${d}"><i style="width:${(f * 100).toFixed(1)}%"></i></div>`;
+    }
+    const ch = R && R.chosen && typeof R.chosen === "object" && R.chosen.id != null ? R.chosen : null;
+    let chosen = "";
+    if (ch) {
+      const c = cs.find(x => x.id === String(ch.id)), on = nz(ch.applied_at);
+      chosen = `<div class="rm-chosen">${on ? badge("live", "Live now", "dot") : badge("neutral", "Chosen", "check")}<span>Live real-money strategy: <b>${esc((c && c.label) || ch.label || ch.id)}</b> ${on ? `(switched ${esc(fmtTime(ch.applied_at))})` : "(chosen, not switched on yet)"}</span>${ch.note ? `<span class="muted">${esc(ch.note)}</span>` : ""}</div>`;
+    }
+    el.innerHTML = `<span class="om-pulse" aria-hidden="true"></span><div class="rm-st"><div class="eyebrow">Real money · test status</div><b>${title}</b>${sub ? `<span>${sub}</span>` : ""}${bar}</div>` +
+      `${R && R.sample ? '<span class="sample-chip">Sample data · invented numbers</span>' : ""}${chosen}`;
+  }
+
+  function rmAccount(A, L) {
+    const S = obj(A.since_fix), AT = obj(A.all_time), fix = nz(A.fix_ts) ? A.fix_ts : null, bal = nz(A.balance);
+    const wrap = $("rmAcctWrap"), empty = $("rmAcctEmpty"), any = nz(S.closed) || nz(AT.closed);
+    $("rmAcctIntro").textContent = `Real dollars on Kalshi, from the real bot's own log.${fix ? ` Counted from ${fmtTime(fix)}, when bugs in how the bot priced its orders were fixed; bets before that are only in the all-time numbers.` : ""}`;
+    if (!any) {
+      $("rmAcctStats").innerHTML = `<div class="span2"><i>Status</i><b>No data yet</b><small>The real bot's log has no real-money rows in this update.</small></div>`;
+      wrap.hidden = true; empty.hidden = true; killChart("rmAcct"); return;
+    }
+    const tiles = [
+      ["Profit since the fixes", nz(S.pnl) ? `<span class="${cls(S.pnl)}">${SM(S.pnl, 2)}</span>` : DASH, nz(S.closed) ? `on ${pl(S.closed, "closed bet", "closed bets")}` : "", bal ? "" : "span2"],
+      bal ? ["Cash balance", money(A.balance, 2), `as Kalshi reported it${nz(A.balance_ts) ? ` at ${fmtTime(A.balance_ts)}` : ""}, not counting open bets`, ""] : null,
+      ["Closed bets", NUM(S.closed), nz(AT.closed) ? `${NUM(AT.closed)} all time` : "", ""],
+      ["Wins", NUM(S.wins), nz(S.closed) && S.closed ? `${pct(S.wins / S.closed)} of closed bets made money` : "no closed bets yet", ""]].filter(Boolean);
+    $("rmAcctStats").innerHTML = tiles.map(([k, v, s, c]) => `<div${c ? ` class="${c}"` : ""}><i>${k}</i><b>${v}</b>${s ? `<small>${esc(s)}</small>` : ""}</div>`).join("") +
+      `<div class="wide">All time, including the bets before the fixes: ${nz(AT.closed) ? pl(AT.closed, "closed bet", "closed bets") : DASH}, ${nz(AT.wins) ? pl(AT.wins, "win", "wins") : DASH}, <strong class="${cls(AT.pnl)}">${SM(AT.pnl, 2)}</strong>. A bet is one market: one sold partly early and then settled counts once.</div>`;
+    const pts = okPts(S.curve);
+    wrap.hidden = !pts.length; empty.hidden = !!pts.length;
+    if (!pts.length) { killChart("rmAcct"); empty.textContent = "No closed real bets since the fixes yet. The line starts with the first result."; return; }
+    const t0 = fix != null && fix < pts[0][0] ? fix : pts[0][0] - 60, last = pts[pts.length - 1], now = L && nz(L.generated) ? L.generated : last[0];
+    const data = [{ x: t0 * 1000, y: 0 }, ...pts.map(([t, v]) => ({ x: t * 1000, y: v }))];
+    if (now > last[0]) data.push({ x: now * 1000, y: last[1] });
+    rmLine("rmAcct", data, { color: C().accent, label: "Profit so far", fmt: v => signed(v, 2), ref: 0 });
+  }
+
+  function rmMethod(R) {
+    const m = obj(R.method), a = obj(m.account), per = rmPeriods(m), coins = (Array.isArray(m.coins) ? m.coins : []).filter(Boolean).map(x => COIN(String(x)));
+    const dollars = v => Math.abs(v - Math.round(v)) < 1e-9 ? "$" + Math.round(v) : "$" + v.toFixed(2);  // "$3", "$0.50"
+    const lim = [
+      nz(a.start_balance) ? `starts from a balance of <b>${dollars(a.start_balance)}</b>` : "",
+      nz(a.stake_usd) ? `bets about <b>${dollars(a.stake_usd)}</b> at a time${nz(a.max_contracts) ? `, never more than ${pl(a.max_contracts, "contract", "contracts")}` : ""}`
+        : nz(a.max_contracts) ? `never buys more than ${pl(a.max_contracts, "contract", "contracts")} at a time` : "",
+      nz(a.window_cap_usd) ? `spends at most ${dollars(a.window_cap_usd)} in any one 15-minute round` : "",
+      nz(a.same_side_per_window) ? `makes at most ${pl(a.same_side_per_window, "bet", "bets")} in the same direction (UP or DOWN) across all coins in one round` : "",
+      nz(a.max_open_risk_usd) ? `never has more than ${dollars(a.max_open_risk_usd)} riding on open bets` : "",
+      nz(a.daily_loss_usd) ? `stops for the day after losing ${dollars(a.daily_loss_usd)}` : ""].filter(Boolean);
+    const rules = (Array.isArray(m.rules) ? m.rules : []).filter(Boolean);
+    const rows = [
+      ["Test periods", per.length ? per.map(p => `<b>${esc(p.name)}</b>: ${esc(p.label || (nz(p.start) && nz(p.end) ? `${fmtTime(p.start)} – ${fmtTime(p.end)}` : p.id))}`).join("<br>") +
+        "<br>Each period is scored on its own, so you can see whether a strategy made money in both, not just in total." : DASH],
+      ["Coins", coins.length ? esc(coins.join(", ")) : DASH],
+      ["Which bets count", m.fill_model ? esc(m.fill_model) : DASH],
+      ["Your limits", lim.length ? `Every strategy runs as if on your account. It:<ul>${lim.map(x => `<li>${x}</li>`).join("")}</ul>` : DASH],
+      ["Compared with", "The classic backtest column replays the same days at $10 a bet and assumes every order fills, which is how these strategies were first found. The gap between the two shows what realistic fills and your limits cost."],
+      ["Real-money rules", rules.length ? `<ul>${rules.map(r => `<li>${esc(r)}</li>`).join("")}</ul>` : DASH]];
+    $("rmHow").innerHTML = rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+  }
+
+  function rmBoard(R) {
+    const m = obj(R.method), per = rmPeriods(m), k = obj(R.counts), done = R.status === "done";
+    const tp = c => { const v = obj(c.total).pnl; return nz(v) ? v : -Infinity; };
+    const rows = rmCands(R).sort((a, b) => tp(b) - tp(a));
+    const ch = R.chosen && typeof R.chosen === "object" && R.chosen.id != null ? String(R.chosen.id) : null;
+    if (rms.open === undefined && rows.length) rms.open = ch && rows.some(c => c.id === ch) ? ch : rows[0].id;
+    const a = obj(m.account), start = nz(a.start_balance) ? a.start_balance : null;
+    $("rmBoardIntro").textContent = `${done ? "Every strategy tested" : "Strategies finished so far"}, best realistic profit first${nz(k.tested) && k.tested > rows.length ? ` (the top ${NUM(rows.length)} of ${NUM(k.tested)})` : ""}. "Realistic profit" is at your bet size and limits, counting only bets that would have filled. Tap a row for its simulated balance and the reason for its verdict.`;
+    $("rmKey").innerHTML = `<span>${rmBadge("real-money golden")} passed every real-money rule</span><span>${rmBadge("pass")} made money, but missed a rule</span><span>${rmBadge("fail")} lost money with realistic fills</span>`;
+    const tmax = Math.max(3, ...rows.map(c => nz(obj(c.total).t) ? Math.min(c.total.t, 6) : 0));
+    const two = (main, sub) => `${main}<div class="sub">${sub}</div>`, cols = 9 + per.length;
+    const head = `<thead><tr><th>#</th><th>Strategy and verdict</th><th class="num" title="At your real bet size and limits, counting only bets Kalshi's trade records say would have filled">Realistic profit</th>` +
+      per.map(p => `<th class="num" title="${esc(p.label || p.name)}">${esc(p.name)}</th>`).join("") +
+      `<th class="num" title="Share of the strategy's orders that would really have filled">Orders filled</th><th class="num">Win rate</th>
+      <th class="num" title="How steady the profit was from bet to bet. Around 2 or more is unlikely to be luck.">Consistency (t)</th>
+      <th class="num" title="The biggest fall in the simulated balance from a high">Worst drop</th>
+      <th class="num" title="The same strategy on the same days at $10 a bet, assuming every order fills">Classic backtest</th><th><span class="sr">Details</span></th></tr></thead>`;
+    const body = rows.map((c, i) => {
+      const t = obj(c.total), bt = obj(c.backtest), P = obj(c.periods), open = c.id === rms.open, gold = c.status === "real-money golden", pts = okPts(c.curve);
+      const s0 = start != null ? start : pts.length ? pts[0][1] : 0;
+      const tags = [c.id === ch ? badge("live", nz(obj(R.chosen).applied_at) ? "Live now" : "Chosen", "dot") : "",
+        RM_SRC[c.source] ? `<span>${RM_SRC[c.source]}</span>` : c.source ? `<span>from ${esc(c.source)}</span>` : "",
+        c.live_ready === true ? "<span>the live bot can run it</span>" : c.live_ready === false ? "<span>the live bot can't run it yet</span>" : ""].filter(Boolean).join("");
+      return `<tr class="row${open ? " sel" : ""}${gold ? " is-golden" : ""}" tabindex="0" data-rm="${esc(c.id)}" aria-expanded="${open}">
+        <td class="rk mono">${i + 1}</td>
+        <td class="strat"><div class="rm-v">${rmBadge(c.status)}</div><div class="sname">${esc(c.label || c.id)}</div>${tags ? `<div class="lv-tags">${tags}</div>` : ""}</td>
+        <td class="num pnl" data-label="Realistic profit, your bet size"><div class="pnl-in">${spark(pts.map(p => [p[0], p[1] - s0]), gold ? "golden" : c.status === "fail" ? "fail" : "")}<span class="${cls(t.pnl)}">${SM(t.pnl, 2)}</span></div><div class="sub">${nz(t.end_balance) ? `ends at ${money(t.end_balance, 2)}` : "&nbsp;"}</div></td>` +
+        per.map(p => { const x = obj(P[p.id]); return `<td class="num per" data-label="${esc(p.name)}">${two(`<span class="${cls(x.pnl)}">${SM(x.pnl, 2)}</span>`, nz(x.filled) ? `${NUM(x.filled)} filled` : "&nbsp;")}</td>`; }).join("") +
+        `<td class="num fill" data-label="Orders filled">${two(PC(t.fill_rate), nz(t.filled) && nz(t.trades) ? `${NUM(t.filled)} of ${NUM(t.trades)}` : "&nbsp;")}</td>
+        <td class="num win" data-label="Win rate">${two(PC(t.win_rate), nz(t.wins) ? pl(t.wins, "win", "wins") : "&nbsp;")}</td>
+        <td class="num tcol" data-label="Consistency (t)">${tMeter(t.t, null, tmax)}</td>
+        <td class="num dd" data-label="Worst drop">${two(`<span class="${nz(t.max_dd) && t.max_dd < 0 ? "neg" : ""}">${M(t.max_dd, 2)}</span>`, "from a high")}</td>
+        <td class="num bt" data-label="Classic backtest">${two(`<span class="${cls(bt.pnl10)}">${M(bt.pnl10)}</span>`, nz(bt.pnl10) ? "$10, all fill" : "not run")}</td>
+        <td class="chevc"><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>` +
+        (open ? `<tr class="detail"><td colspan="${cols}">${rmDetail(c, per, s0)}</td></tr>` : "");
+    }).join("");
+    $("rmBoard").innerHTML = head + "<tbody>" + (body || `<tr><td colspan="${cols}" class="empty">${done ? "The results file lists no strategies." : "No strategy has finished yet. They appear here one by one as the test checks them."}</td></tr>`) + "</tbody>";
+    const o = rows.find(c => c.id === rms.open);
+    if (o) rmDetChart(o, per, start != null ? start : (okPts(o.curve)[0] || [0, 0])[1]); else killChart("rmDet");
+  }
+
+  function rmDetail(c, per, s0) {
+    const t = obj(c.total), P = obj(c.periods), bt = obj(c.backtest), gold = c.status === "real-money golden", pts = okPts(c.curve);
+    const end = nz(t.end_balance) ? t.end_balance : pts.length ? pts[pts.length - 1][1] : null;
+    const facts = [["Orders placed", NUM(t.trades)], ["Filled", NUM(t.filled)], ["Wins", NUM(t.wins)], ["Profit per $1 bet", nz(t.per_dollar) ? signed(t.per_dollar) : DASH],
+      ["Ending balance", M(end, 2)], ["Worst drop", M(t.max_dd, 2)]];
+    const prow = [...per.map(p => [p.name, p.label, obj(P[p.id])]), ["All together", "", t]];
+    const mk2 = x => nz(x.pnl) ? (x.pnl > 0 ? "good" : "bad") : "";
+    const table = `<table class="exam"><thead><tr><th>Period</th><th class="num">Profit</th><th class="num">Filled</th><th class="num">Wins</th><th class="num">t</th></tr></thead><tbody>` +
+      prow.map(([n, lab, x]) => `<tr><td><span class="mk ${mk2(x)}"></span><b>${esc(n)}</b>${lab ? `<div class="sub">${esc(lab)}</div>` : ""}</td><td class="num ${cls(x.pnl)}" data-label="Profit">${SM(x.pnl, 2)}</td>
+        <td class="num" data-label="Filled">${nz(x.filled) ? NUM(x.filled) + (nz(x.trades) ? ` of ${NUM(x.trades)}` : "") : DASH}</td><td class="num" data-label="Wins">${NUM(x.wins)}</td><td class="num" data-label="t">${T(x.t)}</td></tr>`).join("") + "</tbody></table>";
+    return `<div class="report">
+      <div class="rp-head"><h3>${esc(c.label || c.id)}</h3><p class="rp-why">${rmBadge(c.status)} ${c.why ? esc(c.why) : "No reason given in the results file."}</p></div>
+      <div class="rp-grid">
+        <div class="rp-box rp-chart"><div class="eyebrow">Simulated balance at your bet size</div>
+          <div class="legend" style="margin-top:10px"><span><i style="background:var(${gold ? "--gold" : "--accent"})"></i>${nz(s0) && nz(end) ? `${money(s0, 2)} → ${money(end, 2)}` : "Balance"}</span><span><i class="dash"></i>Starting balance</span>${per.length > 1 ? `<span><i class="dot" style="background:var(--chip)"></i>Shaded: ${esc(per[0].name)}</span>` : ""}</div>
+          <div class="chart short"><canvas id="rmDet" aria-label="Simulated balance of ${esc(c.label || c.id)} over the test periods"></canvas></div></div>
+        <div class="rp-box"><div class="eyebrow">Period by period</div>${table}
+          <div class="eyebrow" style="margin-top:16px">More from the test</div><div class="facts">${facts.map(([k, x]) => `<div><b>${x}</b><span>${k}</span></div>`).join("")}</div>
+          <div class="sdesc" style="max-width:none;margin-top:12px">${nz(bt.pnl10) ? `Classic backtest on the same days: ${M(bt.pnl10)} at $10 a bet${nz(bt.trades) ? ` on ${pl(bt.trades, "trade", "trades")}` : ""}, with every order filling.` : "No classic backtest for this one in the results file."}</div>
+          <div class="setting"><span class="eyebrow">Strategy id</span><code>${esc(c.id)}</code></div>
+        </div></div></div>`;
+  }
+  function rmDetChart(c, per, s0) {
+    const cv = $("rmDet"); if (!cv) return;
+    const pts = okPts(c.curve);
+    if (pts.length < 2) { killChart("rmDet"); cv.parentElement.innerHTML = '<p class="empty">No balance curve in the results file.</p>'; return; }
+    rmLine("rmDet", pts.map(([t, v]) => ({ x: t * 1000, y: v })), { color: c.status === "real-money golden" ? tok("--gold") : C().accent, label: "Balance", fmt: v => money(v, 2), ref: s0, bands: per });
+  }
+  function rmToggle(tr) {
+    const id = tr.dataset.rm, top0 = tr.getBoundingClientRect().top, R = LIVE_DATA && LIVE_DATA.realmoney;
+    rms.open = rms.open === id ? null : id; if (R) rmBoard(R);
+    const nt = document.querySelector(`#rmBoard tr[data-rm="${CSS.escape(id)}"]`);
+    if (nt) { const dy = nt.getBoundingClientRect().top - top0; if (Math.abs(dy) > 1) window.scrollBy(0, dy); nt.focus({ preventScroll: true }); }
+  }
+
   // ---------- page tabs: selected tab lives in the URL hash and in this browser ----------
-  const TABS = ["how", "crypto", "currencies"];
+  const TABS = ["how", "crypto", "currencies", "realmoney"];
   const tabOf = el => { const p = el && el.closest && el.closest(".tabpanel"); return p ? p.id.replace("panel-", "") : null; };
   function selectTab(name, how = {}) {
     if (!TABS.includes(name)) name = "how";
@@ -2466,6 +2765,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     const tb = e.target.closest("[data-tab]"); if (tb) { selectTab(tb.dataset.tab); return; }
     const lvf = e.target.closest("[data-lvf]"); if (lvf) { lvs.filt = lvf.dataset.lvf; if (LIVE_DATA) lvBoard(LIVE_DATA); return; }
     const lvr = e.target.closest("tr[data-lv]"); if (lvr) { lvToggle(lvr); return; }
+    const rmr = e.target.closest("tr[data-rm]"); if (rmr) { rmToggle(rmr); return; }
     const hroot = e.target.closest("[data-hunt]"), H = hroot && HUNTS[hroot.dataset.hunt];
     if (H) { const hf = e.target.closest("[data-hf]"); if (hf) { H.setFilter(hf.dataset.hf); return; }
       const smc = e.target.closest("[data-smc]"); if (smc) { H.open(smc.dataset.smc); return; }
@@ -2480,12 +2780,12 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   });
   document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-n]");
     if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); const n = r.dataset.n; r.click(); setTimeout(() => document.querySelector(`tr[data-n="${n}"]`)?.focus(), 0); } });
-  const rerender = () => { renderLive(); renderPortfolio(); renderCmp(); renderDetail(); renderCal(); Object.values(HUNTS).forEach(h => h.rerender()); renderHow(); };
+  const rerender = () => { renderLive(); renderPortfolio(); renderCmp(); renderDetail(); renderCal(); Object.values(HUNTS).forEach(h => h.rerender()); renderHow(); renderRealMoney(); };
   try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rerender); } catch (e) {}
   new MutationObserver(rerender).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   renderAll();
   Object.values(HUNTS).forEach(h => h.render());
-  renderResearch(); renderOther(); if (!LIVE_DATA) renderHow();
+  renderResearch(); renderOther(); if (!LIVE_DATA) { renderHow(); renderRealMoney(); }
   if (!routeHash()) { let saved = null; try { saved = localStorage.getItem("k15tab"); } catch (e) {} selectTab(TABS.includes(saved) ? saved : "how", { hash: false }); }
   document.querySelectorAll("a[data-jump]").forEach(a => { const t = $(a.dataset.jump); if (t && t.hidden && a.dataset.jump !== "livePanel") a.hidden = true; });
 
