@@ -1,5 +1,5 @@
 {
- "_note": "REAL MONEY, low-risk: only the 3 strongest golden rules (x_exit, sized_exit, scalp), flat $1 base stake (no compounding), at most 3 contracts and 85c a contract. Account-wide: at most $2 at risk at once across all 9 coins, and new bets stop for the day once today's losses plus money at risk reach $2. Per coin: $1 daily loss cap, 15 trades. Stops for good if cash + open bets fall below $6. Run only from the account holder's own verified (18+) Kalshi account. daily_loss_ignore_before_ts: on 2026-11-04 the account holder chose to leave the $1.82 lost to the stale-quote bug (fixed) out of that day's $2 loss cap.",
+ "_note": "REAL MONEY, low-risk: only the 3 strongest golden rules (x_exit, sized_exit, scalp), flat $1 base stake (no compounding), at most 3 contracts and 85c a contract. Account-wide: at most $2 at risk at once across all 9 coins, and new bets stop for the day once today's losses plus money at risk reach $4 (account holder raised from $2 on 2026-11-04). Per coin: $1 daily loss cap, 15 trades. Stops for good if cash + open bets fall below $4 (account holder lowered from $6 on 2026-11-04). Run only from the account holder's own verified (18+) Kalshi account. daily_loss_ignore_before_ts: on 2026-11-04 the account holder chose to leave the $1.82 lost to the stale-quote bug (fixed) out of that day's $2 loss cap.",
  "series": [
   "KXBTC15M",
   "KXETH15M",
@@ -69,7 +69,7 @@
   "max_daily_loss_usd": 1.0,
   "max_trades_per_day": 15,
   "max_open_positions": 1,
-  "min_balance_usd": 6.0,
+  "min_balance_usd": 4.0,
   "max_price": 0.85,
   "min_price": 0.03,
   "max_data_age_s": 5.0,
@@ -77,7 +77,7 @@
   "walk_cents": 5,
   "walk_keep_edge": 0.08,
   "max_total_open_risk_usd": 2.0,
-  "max_total_daily_loss_usd": 2.0,
+  "max_total_daily_loss_usd": 4.0,
   "min_balance_counts_open_bets": true,
   "daily_loss_ignore_before_ts": 1793791913
  }
