@@ -128,26 +128,39 @@ def tape(tk: str, t: int):
     k = (tk, int(t))
     if k in TAPE:
         return TAPE[k]
+    # recent markets: /markets/trades; older ones have moved to /historical/trades (same fields)
+    for path in ("/markets/trades", "/historical/trades"):
+        out = _fetch(path, tk, t)
+        if out:
+            break
+    TAPE[k] = out
+    _N[0] += 1
+    if _N[0] % 100 == 0:
+        pickle.dump(TAPE, open(TAPE_CACHE, "wb"))
+    return out
+
+
+_PACE = [0.45]
+
+
+def _fetch(path, tk, t):
     for a in range(40):
         try:
-            r = _S.get(f"{KALSHI}/markets/trades", params={"ticker": tk, "min_ts": int(t) - 3, "max_ts": int(t) + 7,
-                                                            "limit": 1000}, timeout=20)
+            r = _S.get(f"{KALSHI}{path}", params={"ticker": tk, "min_ts": int(t) - 3, "max_ts": int(t) + 7,
+                                                   "limit": 1000}, timeout=20)
         except requests.RequestException:
             time.sleep(5)
             continue
         if r.status_code == 429:
+            _PACE[0] = min(_PACE[0] * 1.3, 2.0)
             time.sleep(min(3 + 3 * a, 30))
             continue
         r.raise_for_status()
-        out = sorted((datetime.fromisoformat(x["created_time"].replace("Z", "+00:00")).timestamp(), x["taker_side"],
-                      float(x["yes_price_dollars"]), float(x["no_price_dollars"]), float(x["count_fp"]))
-                     for x in r.json().get("trades", []))
-        TAPE[k] = out
-        _N[0] += 1
-        if _N[0] % 50 == 0:
-            pickle.dump(TAPE, open(TAPE_CACHE, "wb"))
-        time.sleep(0.9)
-        return out
+        time.sleep(_PACE[0])
+        _PACE[0] = max(_PACE[0] * 0.98, 0.3)
+        return sorted((datetime.fromisoformat(x["created_time"].replace("Z", "+00:00")).timestamp(), x["taker_side"],
+                       float(x["yes_price_dollars"]), float(x["no_price_dollars"]), float(x["count_fp"]))
+                      for x in r.json().get("trades", []))
     raise RuntimeError("Kalshi trade tape: rate limited")
 
 
@@ -339,6 +352,8 @@ def load_periods(download=True):
 
 
 def main(args=None):
+    if args and "big" in args:
+        return main_big(args)
     download = not (args and "--no-download" in args)
     seen = load_periods(download)
     P = {p["id"]: p for p in STATE["periods"]}
@@ -388,4 +403,134 @@ def main(args=None):
         print(f"{r['status']:18s} {r['id']:16s} real ${r['total']['pnl']:+7.2f} (p1 {r['periods']['p1']['pnl']:+.2f}, "
               f"p2 {r['periods']['p2']['pnl']:+.2f}) filled {r['total']['filled']}/{r['total']['trades']} "
               f"t {r['total']['t']} | classic $10 backtest ${r['backtest']['pnl10']:+.2f}")
+    return STATE["candidates"]
+
+
+# =========================================================================== the big run (all data)
+BIG = ["live_combo", "x_exit:ALL", "sized_exit:ALL", "scalp:ALL", "fv_t:ALL", "sized:ALL", "x_entries:ALL"]
+OUT_OF_SAMPLE = ("arch", "hold", "recent")
+
+
+def daily(trades):
+    d = {}
+    for x in trades:
+        if x["filled"]:
+            k = int(x["t"] // 86400)
+            d[k] = d.get(k, 0.0) + x["pnl"]
+    v = np.array(list(d.values())) if d else np.zeros(0)
+    return {"days": int(len(v)), "winning_days": int((v > 0).sum()), "worst_day": round(float(v.min()), 2) if len(v) else None,
+            "best_day": round(float(v.max()), 2) if len(v) else None}
+
+
+def main_big(args=None):
+    """Every period with data: the Jul-Aug archive (SOL/NEAR/DOGE), the Sep 1 - Oct 17 search window (in-sample:
+    the rules' settings were chosen there), the Oct 18 - Nov 1 final exam, and Nov 1-4. Each period is its own
+    fresh $4.43 account. Verdict from the out-of-sample periods only."""
+    global OUT
+    OUT = ROOT / "data" / "lab" / "realmoney_results.json"
+    from . import lab3
+    STATE["progress"].update(stage="loading 2 months of market data", done=0, total=len(BIG), note="")
+    write()
+    lab3.G["quick"] = 0
+    lab3.load(verbose=False)
+    seen = load_periods(download=False)
+    rec_start, rec_end = STATE["periods"][0]["start"], STATE["periods"][1]["end"]
+    p2_start = STATE["periods"][1]["start"]
+    span = lambda where: (min(int(c.open_ts.min()) for c in L.G[where].values() if len(c)),
+                          max(int(c.open_ts.max()) for c in L.G[where].values() if len(c)) + 900)
+    fmt = lambda a, b: f"{datetime.utcfromtimestamp(a):%b %-d} – {datetime.utcfromtimestamp(b):%b %-d}"
+    periods = []
+    arch_coins = [c for c in L.G.get("arch", {}) if c in COINS]
+    if arch_coins:
+        a0, a1 = span("arch")
+        periods.append({"id": "arch", "label": f"{fmt(a0, a1)} archive ({', '.join(c[2:-3] for c in arch_coins)})",
+                        "start": a0, "end": a1})
+    s0, s1 = span("search")
+    periods.append({"id": "search", "label": f"{fmt(s0, s1)} (in-sample: settings were chosen here)", "start": s0, "end": s1})
+    h0, h1 = span("hold")
+    periods.append({"id": "hold", "label": f"{fmt(h0, h1)} final exam", "start": h0, "end": h1})
+    periods.append({"id": "recent", "label": f"{fmt(rec_start, rec_end)} newest", "start": rec_start, "end": rec_end})
+    STATE["periods"] = periods
+    STATE["candidates"] = []
+    write()
+
+    def where_positions(cfg, nm):
+        out = {}
+        for pid, wh in (("arch", "arch"), ("search", "search"), ("hold", "hold")):
+            if pid in [p["id"] for p in periods]:
+                out[pid] = [p for p in positions(wh, cfg, nm) if p["coin"] in COINS]
+        a = positions("p1", cfg, nm)
+        b = [p for p in positions("p2", cfg, nm) if p["tk"] not in seen and p["t"] >= p2_start]
+        out["recent"] = sorted(a + b, key=lambda p: (p["t"], p["coin"]))
+        return out
+
+    cands = {c[0]: c for c in CANDS}
+    per = {}
+    for cid in BIG:
+        if cid == "live_combo":
+            continue
+        _, label, src, cfg, ready = cands[cid]
+        per[cid] = where_positions(cfg, norm_for(cid, cfg))
+    per["live_combo"] = {pid: live_combo({r: per[r][pid] for r in LIVE_ORDER}) for pid in per["x_exit:ALL"]}
+    need = len({(p["tk"], p["t"]) for c in per.values() for v in c.values() for p in v} - set(TAPE))
+    STATE["progress"].update(stage="checking every bet against Kalshi's real trades",
+                             note=f"about {need} trade-record lookups to do")
+    write()
+    rows = []
+    for k, cid in enumerate(BIG):
+        _, label, src, cfg, ready = cands[cid]
+        res, chain, cum = {}, [], 0.0
+        allt_oos = []
+        for p in periods:
+            pos = per[cid].get(p["id"], [])
+            trades, curve = simulate(pos, f"{label} · {p['label']}")
+            s = stats(trades, curve, 0, 10 ** 12)
+            s.update(daily(trades), max_dd=max_dd(curve), backtest_pnl10=round(sum(x["pnl10"] for x in pos), 2))
+            res[p["id"]] = s
+            if p["id"] in OUT_OF_SAMPLE:
+                allt_oos += [x for x in trades if x["filled"]]
+            for x in sorted((x for x in trades if x["filled"]), key=lambda x: x["close"]):
+                cum += x["pnl"]
+                chain.append([int(x["close"]), round(ACCOUNT["start_balance"] + cum, 4)])
+        pn = np.array([x["pnl"] for x in allt_oos]) if allt_oos else np.zeros(0)
+        t_oos = float(pn.mean() / pn.std(ddof=1) * math.sqrt(len(pn))) if len(pn) > 2 and pn.std(ddof=1) > 0 else None
+        oos_ids = [p["id"] for p in periods if p["id"] in OUT_OF_SAMPLE]
+        tot_trades = sum(res[i]["trades"] for i in oos_ids)
+        nf = len(pn)
+        tot = {"pnl": round(float(pn.sum()), 2), "trades": tot_trades, "filled": nf,
+               "fill_rate": round(nf / tot_trades, 3) if tot_trades else None,
+               "wins": int((pn > 0).sum()), "win_rate": round(float((pn > 0).mean()), 3) if nf else None,
+               "t": round(t_oos, 2) if t_oos is not None else None,
+               "max_dd": min((res[i]["max_dd"] for i in oos_ids), default=None),
+               "end_balance": round(ACCOUNT["start_balance"] + float(pn.sum()), 2),
+               "per_dollar": round(float(pn.sum()) / sum(res[i]["staked"] for i in oos_ids), 3)
+               if sum(res[i]["staked"] for i in oos_ids) else None,
+               "scope": "out-of-sample periods only (archive, final exam, newest)"}
+        all_pos = all(res[i]["pnl"] > 0 for i in oos_ids)
+        if all_pos and nf >= 100 and (t_oos or 0) >= 2.0:
+            status, why = "real-money golden", (f"profitable in every out-of-sample period, {nf} filled bets, "
+                                                f"consistency t {t_oos:.2f}")
+        elif tot["pnl"] > 0:
+            bad = [p["label"] for p in periods if p["id"] in oos_ids and res[p["id"]]["pnl"] <= 0]
+            status = "pass"
+            why = ("profitable out of sample overall, but lost in: " + "; ".join(bad) if bad else
+                   f"profitable everywhere but consistency t {t_oos:.2f} < 2" if (t_oos or 0) < 2 else
+                   f"only {nf} filled bets")
+        else:
+            status, why = "fail", f"lost ${-tot['pnl']:.2f} out of sample with real fills"
+        rows.append({"id": cid, "label": label, "source": src, "live_ready": ready,
+                     "backtest": {"pnl10": round(sum(res[i]["backtest_pnl10"] for i in oos_ids), 2),
+                                  "trades": sum(len(per[cid].get(i, [])) for i in oos_ids)},
+                     "periods": res, "total": tot, "curve": chain[:: max(1, len(chain) // 300)] + chain[-1:],
+                     "status": status, "why": why})
+        STATE["candidates"] = sorted(rows, key=lambda r: -r["total"]["pnl"])
+        STATE["progress"].update(done=k + 1, note=f"finished {label}")
+        write()
+        pickle.dump(TAPE, open(TAPE_CACHE, "wb"))
+    STATE["progress"].update(stage="done", note="")
+    write("done")
+    for r in STATE["candidates"]:
+        print(f"{r['status']:18s} {r['id']:16s} out-of-sample ${r['total']['pnl']:+8.2f} t {r['total']['t']} "
+              f"filled {r['total']['filled']}/{r['total']['trades']} | " +
+              " ".join(f"{i} {v['pnl']:+.2f}" for i, v in r["periods"].items()))
     return STATE["candidates"]
