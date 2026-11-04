@@ -129,7 +129,9 @@ def tape(tk: str, t: int):
     if k in TAPE:
         return TAPE[k]
     # recent markets: /markets/trades; older ones have moved to /historical/trades (same fields)
-    for path in ("/markets/trades", "/historical/trades"):
+    # (Oct 1 onwards is on /markets/trades; September and earlier on /historical/trades)
+    paths = ("/markets/trades",) if t >= 1790812800 else ("/historical/trades", "/markets/trades")
+    for path in paths:
         out = _fetch(path, tk, t)
         if out:
             break
