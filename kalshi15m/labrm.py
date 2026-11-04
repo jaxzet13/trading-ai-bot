@@ -407,7 +407,7 @@ def main(args=None):
 
 
 # =========================================================================== the big run (all data)
-BIG = ["live_combo", "x_exit:ALL", "sized_exit:ALL", "scalp:ALL", "fv_t:ALL", "sized:ALL", "x_entries:ALL"]
+BIG = ["live_combo", "x_cap:ALL", "scalp:ALL", "x_exit:ALL", "fv_t:ALL", "sized_exit:ALL", "sized:ALL", "x_reentry:ALL"]
 OUT_OF_SAMPLE = ("arch", "hold", "recent")
 
 
