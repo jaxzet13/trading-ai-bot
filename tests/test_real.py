@@ -1075,6 +1075,34 @@ def test_daily_loss_ignore_before_ts():
     assert r.day_pnl() == -20.0 and "daily loss cap" in r.blocked()
 
 
+def test_window_caps_span_coins():
+    d, clock, fake, kp = setup()
+    lim = {"max_entries_per_window_side": 1, "max_open_positions": 5}
+    other = make_runner(d, clock, fake, kp, cfg=_account_cfg("KXBTC15M", **lim))
+    o = int(clock() // 900 * 900)
+    other.entries["KXBTC15M-X"] = (o + 900, "yes", 0.5)
+    r = make_runner(d, clock, fake, kp, cfg=_account_cfg(**lim))
+    at_minute(clock, T0, 2); r.step()
+    assert not fake.posts                                   # one YES already in this window on another coin
+    assert "window cap" in events(r, "signal_skipped")[-1]["reason"]
+    assert r.window_block(o + 900, "no", 0.5) is None       # the other side is still allowed
+    assert r.window_block(o + 1800, "yes", 0.5) is None     # and the next window
+
+
+def test_window_cost_cap_and_entries_survive_restart():
+    d, clock, fake, kp = setup()
+    lim = {"max_window_cost_usd": 3.0, "max_open_positions": 5}
+    r = make_runner(d, clock, fake, kp, cfg=_account_cfg(**lim))
+    at_minute(clock, T0, 2); r.step()
+    assert len(fake.posts) == 1
+    tk = next(iter(r.entries))
+    spent = r.entries[tk][2]
+    assert spent > 0
+    r2 = make_runner(d, clock, fake, kp, cfg=_account_cfg(**lim))     # rebuilt from the log
+    assert abs(r2.entries[tk][2] - spent) < 1e-9
+    assert "window cost cap" in r2.window_block(r2.entries[tk][0], "no", 3.0)
+
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):

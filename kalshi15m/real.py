@@ -462,6 +462,7 @@ class Runner:
     def rebuild(self):
         """Rebuild state from our own log: traded markets, open positions, today's numbers."""
         self.traded, self.pos, self.settled, self.trades_by_day, self.pnl_by_day = set(), {}, set(), {}, {}
+        self.entries = {}    # ticker -> (close_ts, side, cost incl. fees) of every entry that filled (kept after exit)
         for e in self.events():
             ev, tk = e.get("event"), e.get("ticker")
             if ev in ("order_intent", "would_order"):
@@ -477,6 +478,8 @@ class Runner:
             elif ev == "fill" and tk in self.pos:
                 self.pos[tk].update(n=e["n"], cost=e["cost"], fees=e["fees"], status="filled" if e["n"] > 0 else "none",
                                     order_id=e.get("order_id"))
+                if e["n"] > 0:
+                    self.entries[tk] = (self.pos[tk]["close_ts"], self.pos[tk]["side"], e["cost"] + e["fees"])
             elif ev == "order_unknown" and tk in self.pos:
                 self.pos[tk]["status"] = "unknown"
             elif ev in ("order_rejected",) and tk in self.pos:
@@ -538,6 +541,22 @@ class Runner:
 
     def account_day_pnl(self):
         return sum(r.day_pnl() for r in self.account_peers())
+
+    def window_block(self, close_ts, side, new_cost):
+        """Account-wide per-15-minute-window limits (optional): coins move together, so several bets in one window
+        are close to one big bet. max_entries_per_window_side: entries on the same side (YES or NO) across all
+        coins in one window. max_window_cost_usd: total paid (incl. fees) for entries in one window."""
+        k, cap = self.L.get("max_entries_per_window_side"), self.L.get("max_window_cost_usd")
+        if k is None and cap is None:
+            return None
+        ent = [v for r in self.account_peers() for v in r.entries.values() if v[0] == close_ts]
+        same = sum(1 for v in ent if v[1] == side)
+        spent = sum(v[2] for v in ent)
+        if k is not None and same >= k:
+            return f"window cap: already {same} {side.upper()} bets in this 15-minute window (max {k})"
+        if cap is not None and spent + new_cost > cap + 1e-9:
+            return f"window cost cap: ${spent:.2f} spent in this window + ${new_cost:.2f} > ${cap:.2f}"
+        return None
 
     def blocked(self, new_cost: float = 0.0):
         """Reason not to place a new order now, or None. new_cost: worst-case cost of the order being considered."""
@@ -702,7 +721,8 @@ class Runner:
         return obs
 
     def act(self, *a, **kw):
-        if self.L.get("max_total_open_risk_usd") is None and self.L.get("max_total_daily_loss_usd") is None:
+        if all(self.L.get(k) is None for k in ("max_total_open_risk_usd", "max_total_daily_loss_usd",
+                                                "max_entries_per_window_side", "max_window_cost_usd")):
             return self._act(*a, **kw)
         with _ACCOUNT_LOCK:        # check + reserve across coins atomically (orders on other coins wait briefly)
             return self._act(*a, **kw)
@@ -744,6 +764,8 @@ class Runner:
         if why is None and (self.L.get("max_total_open_risk_usd") is not None
                             or self.L.get("max_total_daily_loss_usd") is not None):
             why = self.blocked(max_cost)
+        if why is None:
+            why = self.window_block(open_ts + 900, side, max_cost)
         if why is None and not self.dry and self.balance is not None and self.balance < max_cost:
             why = f"balance ${self.balance:.2f} < order cost ${max_cost:.2f}"
         if why is None and not self.dry and self.L.get("stake_pct_of_balance") and self.crypto_balance is not None \
@@ -764,6 +786,7 @@ class Runner:
                         "minute": minute}
         if self.dry:
             self.pos[tk].update(n=n, cost=n * price, fees=kalshi_fee(price, n), status="filled")
+            self.entries[tk] = (open_ts + 900, side, n * price + kalshi_fee(price, n))
             self.out(f"  >>> WOULD BUY {n} {side.upper()} @ {price:.3f} (max ${max_cost:.2f}), {lag}s after the minute")
             self.log({"event": "would_order", "n": n, "max_cost": max_cost, "close_ts": open_ts + 900,
                       "order": body, **base})
@@ -864,6 +887,7 @@ class Runner:
         self.log(rec)
         if filled > 0:
             self.pos[tk].update(n=filled, cost=cost, fees=fees, status="filled", order_id=order_id)
+            self.entries[tk] = (self.pos[tk]["close_ts"], side, cost + fees)
             part = " (PARTIAL)" if filled < n else ""
             self.out(f"  filled {filled:g}/{n} {side.upper()}{part}, cost ${cost:.2f} + fees ${fees:.2f}")
             if not self.dry:
@@ -1181,7 +1205,11 @@ def load_config(path=CONFIG) -> dict:
                                                  or isinstance(lim["daily_loss_ignore_before_ts"], bool)
                                                  or lim["daily_loss_ignore_before_ts"] > time.time() + 60):
         raise Stop(f"{path}: daily_loss_ignore_before_ts must be a past unix time", EXIT_CONFIG)
-    for k in ("max_total_open_risk_usd", "max_total_daily_loss_usd"):
+    if "max_entries_per_window_side" in lim and (not isinstance(lim["max_entries_per_window_side"], int)
+                                                 or isinstance(lim["max_entries_per_window_side"], bool)
+                                                 or lim["max_entries_per_window_side"] < 1):
+        raise Stop(f"{path}: max_entries_per_window_side must be an integer >= 1", EXIT_CONFIG)
+    for k in ("max_total_open_risk_usd", "max_total_daily_loss_usd", "max_window_cost_usd"):
         if k in lim and (not isinstance(lim[k], (int, float)) or isinstance(lim[k], bool) or lim[k] <= 0):
             raise Stop(f"{path}: {k} must be a positive number", EXIT_CONFIG)
     if not 0 <= lim.get("walk_cents", 0) <= 10 or not 0 <= lim.get("walk_keep_edge", 0.06) <= 0.5:
