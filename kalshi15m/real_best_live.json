@@ -1,5 +1,5 @@
 {
- "_note": "REAL MONEY, backtest sizing at tiny scale: the 3 strongest golden rules (x_exit, sized_exit, scalp) in the backtest's priority, the backtest's Kelly sizing on a $0.25 base (up to 5x = $1.25 on the strongest gaps), at most 5 contracts; when a signal is worth less than one contract, exactly 1 contract is bought if it costs at most $1 (the backtest takes those trades at fractional size). Safety caps (the only deliberate differences from the backtest): per 15-minute window across all coins at most $1.50 spent and 2 bets on the same side; at most $1.50 at risk at once; new bets stop for the day once losses plus money at risk reach $1.50; per coin $1 daily loss cap and 15 trades. Stops for good below $0.50. Run only from the account holder's own verified (18+) Kalshi account. BNB excluded (2026-11-04): Coinbase's final BNB-USD candles include trades that never appear in the live trade feed (thinnest Coinbase market), so live BNB decisions cannot match the backtest's.",
+ "_note": "REAL MONEY, backtest sizing at tiny scale: the 3 strongest golden rules (x_exit, sized_exit, scalp) in the backtest's priority, the backtest's Kelly sizing on a $0.50 base (up to 5x = $2.50 on the strongest gaps), at most 10 contracts; when a signal is worth less than one contract, exactly 1 contract is bought if it costs at most $1 (the backtest takes those trades at fractional size). Safety caps (the only deliberate differences from the backtest): per 15-minute window across all coins at most $3 spent and 2 bets on the same side; at most $3 at risk at once; new bets stop for the day once losses plus money at risk reach $3; per coin $1.50 daily loss cap and 15 trades. Stops for good below $0.50. Run only from the account holder's own verified (18+) Kalshi account. BNB excluded (2026-11-04): Coinbase's final BNB-USD candles include trades that never appear in the live trade feed (thinnest Coinbase market), so live BNB decisions cannot match the backtest's.",
  "series": [
   "KXBTC15M",
   "KXETH15M",
@@ -63,9 +63,9 @@
  ],
  "log": "data/kalshi15m/real_live_log.jsonl",
  "limits": {
-  "stake_usd": 0.25,
-  "max_contracts_per_order": 5,
-  "max_daily_loss_usd": 1.0,
+  "stake_usd": 0.5,
+  "max_contracts_per_order": 10,
+  "max_daily_loss_usd": 1.5,
   "max_trades_per_day": 15,
   "max_open_positions": 1,
   "min_balance_usd": 0.5,
@@ -75,11 +75,11 @@
   "max_decision_lag_s": 5.0,
   "walk_cents": 5,
   "walk_keep_edge": 0.08,
-  "max_total_open_risk_usd": 1.5,
-  "max_total_daily_loss_usd": 1.5,
+  "max_total_open_risk_usd": 3.0,
+  "max_total_daily_loss_usd": 3.0,
   "min_balance_counts_open_bets": true,
   "daily_loss_ignore_before_ts": 1793806793,
-  "max_window_cost_usd": 1.5,
+  "max_window_cost_usd": 3.0,
   "max_entries_per_window_side": 2,
   "min_one_contract_max_usd": 1.0
  }
