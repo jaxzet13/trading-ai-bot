@@ -589,8 +589,13 @@ def judge():
                   "pyth_tie_rate": v.get("tie_rate"), "yahoo_sign_agreement": v.get("yahoo_sign_agreement"),
                   "underlying": f"Pyth {v.get('pyth_feed')} quarter-hour prints (Kalshi) + Yahoo {F.UNDERLYING[s][1]} path"})
     for c in res["candidates"]:
-        c["data"] = "pyth_exact" if c["family"] in PYTH_EXACT else ("yahoo_path" if c["family"] in Y_FAMS or
-                                                                    c["family"] in ("pertune", "ens_best") else "crypto")
+        fams = ([m["family"] for m in c["params"]["members"]] if c["family"] == "ens_best" else [c["family"]])
+        if all(f in PYTH_EXACT for f in fams):
+            c["data"] = "pyth_exact"
+        elif any(f in PYTH_EXACT for f in fams):
+            c["data"] = "mixed"
+        else:
+            c["data"] = "yahoo_path" if (fams[0] in Y_FAMS or fams[0] == "pertune") else "crypto"
     for b in res["baselines"]:
         b["data"] = "yahoo_path"
     for r in res["markets_surveyed"]:

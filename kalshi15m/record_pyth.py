@@ -15,8 +15,8 @@ Pyth: Hermes /v2/updates/price/latest, all feeds in one request. Since 2026 Herm
 set PYTH_API_KEY (sent as a Bearer token and x-api-key). Without a key the recorder still writes the Kalshi file
 (floor_strike is the exact Pyth print at each open) and warns once per hour that Pyth is unavailable.
 
-Kalshi: one GET /markets per series per minute (17 series -> ~0.3 requests/second, spaced >= 1 s apart; the bots share
-this IP), exponential back-off on 429. Nothing here trades.
+Kalshi: ONE GET /markets per minute (every open non-multivariate market closing within 16 minutes; one request per
+series only as a fallback), exponential back-off on 429 (the bots share this IP). Nothing here trades.
 """
 from __future__ import annotations
 
@@ -49,11 +49,19 @@ def _ts(s):
     return int(pd.Timestamp(s).timestamp()) if s else None
 
 
-def kalshi_open(series):
+def kalshi_open(series=None):
+    """Open markets of one series, or (series=None) every open non-multivariate market closing within 16 minutes,
+    in ONE request; the caller keeps the series it records."""
+    if series:
+        params = {"series_ticker": series, "status": "open", "limit": 50}
+    else:
+        now = int(time.time())
+        params = {"status": "open", "min_close_ts": now, "max_close_ts": now + 16 * 60, "limit": 1000,
+                  "mve_filter": "exclude"}
     for i in range(6):
         _KLIM.wait()
         try:
-            r = _k.get(f"{KALSHI}/markets", params={"series_ticker": series, "status": "open", "limit": 50}, timeout=15)
+            r = _k.get(f"{KALSHI}/markets", params=params, timeout=15)
         except requests.RequestException:
             time.sleep(min(20, 2 ** i))
             continue
@@ -121,8 +129,12 @@ def snapshot(state):
         print(f"  Pyth unavailable ({status}); set PYTH_API_KEY. Recording Kalshi only.", flush=True)
         state["warned"] = time.time()
     krows = []
-    for s in SERIES:
-        for m in kalshi_open(s):
+    allm = kalshi_open()
+    if not allm:                                   # fall back to one request per series
+        allm = [m for s in SERIES for m in kalshi_open(s)]
+    for m in allm:
+        s = m["ticker"].split("-")[0]
+        if s in PYTH:
             if m.get("status") not in ("active", "open"):
                 continue
             krows.append({"ts": minute, "fetched_ts": round(time.time(), 2), "series": s, "ticker": m["ticker"],
