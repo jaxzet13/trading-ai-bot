@@ -67,6 +67,7 @@ import math
 import os
 import signal
 import sys
+import threading
 import time
 import traceback
 import uuid
@@ -386,6 +387,13 @@ class Stop(Exception):
         self.reason, self.code = reason, code
 
 
+# Account-wide limits (optional; limits keys max_total_open_risk_usd / max_total_daily_loss_usd). In multi-coin
+# mode every coin has its own Runner (thread) and its own per-coin limits; these add caps across ALL coins that
+# share one account (same mode and log). The lock makes check-then-reserve atomic across coin threads.
+_ACCOUNT_LOCK = threading.RLock()
+_ACCOUNT_RUNNERS: list = []
+
+
 class Runner:
     def __init__(self, cfg: dict, mode: str, api: KalshiAPI, market_api: KalshiAPI | None = None,
                  log_path: Path = LOG, stop_path: Path = STOP_FILE, clock=time.time, sleep=time.sleep,
@@ -412,6 +420,10 @@ class Runner:
         self.stop_event = stop_event
         self.product = SERIES[self.series]
         self.log_path, self.stop_path = Path(log_path), Path(stop_path)
+        with _ACCOUNT_LOCK:
+            _ACCOUNT_RUNNERS[:] = [r for r in _ACCOUNT_RUNNERS if r.series != self.series
+                                   or r.mode != mode or r.log_path != self.log_path]   # in-process restarts
+            _ACCOUNT_RUNNERS.append(self)
         self.clock, self.sleep, self.out = clock, sleep, out
         self.spot_fn = spot_fn or bot._spot_and_vol
         self.max_minutes = max_minutes
@@ -506,10 +518,28 @@ class Runner:
         return sum(1 for p in self.pos.values() if p["status"] in ("filled", "unknown", "pending")
                    and p["close_ts"] > now)
 
-    def blocked(self):
-        """Reason not to place a new order now, or None."""
+    def account_peers(self):
+        """Every runner trading the same account in this process (this one included)."""
+        with _ACCOUNT_LOCK:
+            return [r for r in _ACCOUNT_RUNNERS if r.mode == self.mode and r.log_path == self.log_path]
+
+    def account_open_risk(self):
+        return sum(r.open_risk() for r in self.account_peers())
+
+    def account_day_pnl(self):
+        return sum(r.day_pnl() for r in self.account_peers())
+
+    def blocked(self, new_cost: float = 0.0):
+        """Reason not to place a new order now, or None. new_cost: worst-case cost of the order being considered."""
         if self.stop_path.exists():
             raise Stop(f"kill switch: {self.stop_path} exists")
+        tot_risk, tot_loss = self.L.get("max_total_open_risk_usd"), self.L.get("max_total_daily_loss_usd")
+        if tot_loss is not None and self.account_day_pnl() - self.account_open_risk() - new_cost <= -tot_loss:
+            return (f"account daily loss cap: all coins settled ${self.account_day_pnl():+.2f}, at risk "
+                    f"${self.account_open_risk():.2f} (+${new_cost:.2f}), cap ${tot_loss:.2f} (stopped until 00:00 UTC)")
+        if tot_risk is not None and self.account_open_risk() + new_cost > tot_risk:
+            return (f"account open-risk cap: ${self.account_open_risk():.2f} already at risk across all coins "
+                    f"+ ${new_cost:.2f} > ${tot_risk:.2f}")
         if self.day_pnl() - self.open_risk() <= -self.L["max_daily_loss_usd"]:
             return (f"daily loss cap: settled ${self.day_pnl():+.2f}, at risk ${self.open_risk():.2f}, "
                     f"cap ${self.L['max_daily_loss_usd']:.2f} (stopped until 00:00 UTC)")
@@ -661,7 +691,13 @@ class Runner:
                    engine_s=info["update_s"])
         return obs
 
-    def act(self, m, minute, sig, obs, lag, age, open_ts, signal=None):
+    def act(self, *a, **kw):
+        if self.L.get("max_total_open_risk_usd") is None and self.L.get("max_total_daily_loss_usd") is None:
+            return self._act(*a, **kw)
+        with _ACCOUNT_LOCK:        # check + reserve across coins atomically (orders on other coins wait briefly)
+            return self._act(*a, **kw)
+
+    def _act(self, m, minute, sig, obs, lag, age, open_ts, signal=None):
         side, price = sig
         tk = self.cur
         base = {"ticker": tk, "minute": minute, "side": side, "price": price, "lag_s": lag, "data_age_s": age,
@@ -695,6 +731,9 @@ class Runner:
         if why is None and n < 1:
             why = "stake too small for one contract"
         max_cost = round(n * limit + kalshi_fee(limit, n), 4)
+        if why is None and (self.L.get("max_total_open_risk_usd") is not None
+                            or self.L.get("max_total_daily_loss_usd") is not None):
+            why = self.blocked(max_cost)
         if why is None and not self.dry and self.balance is not None and self.balance < max_cost:
             why = f"balance ${self.balance:.2f} < order cost ${max_cost:.2f}"
         if why is None and not self.dry and self.L.get("stake_pct_of_balance") and self.crypto_balance is not None \
@@ -1084,8 +1123,12 @@ class Runner:
         except requests.RequestException as e:
             self.out(f"  balance check failed: {e}")
             return
-        if self.balance < self.L["min_balance_usd"]:
-            self.log({"event": "min_balance", "balance": self.balance})
+        if self.L.get("min_balance_counts_open_bets"):
+            equity = self.balance + self.account_open_risk()     # cash + what open bets cost (not yet won/lost)
+        else:
+            equity = self.balance
+        if equity < self.L["min_balance_usd"]:
+            self.log({"event": "min_balance", "balance": self.balance, "equity": round(equity, 4)})
             raise Stop(f"balance ${self.balance:.2f} below min_balance_usd ${self.L['min_balance_usd']:.2f}")
 
     def reconcile(self):
@@ -1124,6 +1167,9 @@ def load_config(path=CONFIG) -> dict:
                 or not 0 < pct <= 0.25 or mn <= 0:
             raise Stop(f"{path}: stake_pct_of_balance must be in (0, 0.25] and stake_usd_min > 0 (both set)",
                        EXIT_CONFIG)
+    for k in ("max_total_open_risk_usd", "max_total_daily_loss_usd"):
+        if k in lim and (not isinstance(lim[k], (int, float)) or isinstance(lim[k], bool) or lim[k] <= 0):
+            raise Stop(f"{path}: {k} must be a positive number", EXIT_CONFIG)
     if not 0 <= lim.get("walk_cents", 0) <= 10 or not 0 <= lim.get("walk_keep_edge", 0.06) <= 0.5:
         raise Stop(f"{path}: walk_cents must be 0-10 and walk_keep_edge 0-0.5", EXIT_CONFIG)
     if "golden_rules" in cfg:   # lab3's golden rules, frozen to the exact lab3 params (see golden_live.GOLDEN)

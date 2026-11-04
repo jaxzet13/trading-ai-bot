@@ -1,5 +1,5 @@
 {
- "_note": "REAL MONEY, low-risk: only the 3 strongest golden rules (x_exit, sized_exit, scalp; highest t-scores, smallest drawdowns), flat $1 base stake (no compounding), max $1 loss per coin per day, 15 trades per coin per day, stops for good if the crypto balance falls below $6. Run only from the account holder's own verified (18+) Kalshi account.",
+ "_note": "REAL MONEY, low-risk: only the 3 strongest golden rules (x_exit, sized_exit, scalp), flat $1 base stake (no compounding), at most 3 contracts and 85c a contract. Account-wide: at most $2 at risk at once across all 9 coins, and new bets stop for the day once today's losses plus money at risk reach $2. Per coin: $1 daily loss cap, 15 trades. Stops for good if cash + open bets fall below $6. Run only from the account holder's own verified (18+) Kalshi account.",
  "series": [
   "KXBTC15M",
   "KXETH15M",
@@ -75,6 +75,9 @@
   "max_data_age_s": 5.0,
   "max_decision_lag_s": 5.0,
   "walk_cents": 5,
-  "walk_keep_edge": 0.08
+  "walk_keep_edge": 0.08,
+  "max_total_open_risk_usd": 2.0,
+  "max_total_daily_loss_usd": 2.0,
+  "min_balance_counts_open_bets": true
  }
 }

@@ -976,6 +976,71 @@ def test_golden_engine_synthetic_bar_then_official():
     assert eng.official[(T0 - eng.t0) // 60]                      # bar T0 is now the published candle
 
 
+def _account_cfg(series="KXNEAR15M", **lim):
+    cfg = json.loads(json.dumps(CFG)); cfg["series"] = series; cfg["limits"].update(lim)
+    return cfg
+
+
+def test_account_open_risk_cap_spans_coins():
+    d, clock, fake, kp = setup()
+    lim = {"max_total_open_risk_usd": 3.0}
+    other = make_runner(d, clock, fake, kp, cfg=_account_cfg("KXBTC15M", **lim))
+    other.pos["KXBTC15M-X"] = {"side": "yes", "n": 3.0, "cost": 1.5, "fees": 0.05, "close_ts": T0 + 900,
+                               "status": "filled"}
+    r = make_runner(d, clock, fake, kp, cfg=_account_cfg(**lim))
+    assert abs(r.account_open_risk() - 1.55) < 1e-9
+    at_minute(clock, T0, 2); r.step()
+    assert not fake.posts                                          # 1.55 at risk + this order (~2) > 3
+    assert "account open-risk cap" in events(r, "signal_skipped")[-1]["reason"]
+    # a runner on another account (different log) does not count
+    d2 = tmpdir()
+    r2 = make_runner(d2, clock, fake, kp, cfg=_account_cfg(**lim))
+    assert r2.account_open_risk() == 0.0
+
+
+def test_account_daily_loss_cap_spans_coins():
+    d, clock, fake, kp = setup()
+    day = real._day(clock())
+    (d / "real_log.jsonl").write_text(json.dumps({"ts": clock() - 100, "mode": "LIVE", "series": "KXBTC15M",
+                                                  "event": "settle", "ticker": "KXBTC15M-OLD", "pnl": -1.9,
+                                                  "day": day}) + "\n")
+    lim = {"max_total_daily_loss_usd": 2.0}
+    make_runner(d, clock, fake, kp, cfg=_account_cfg("KXBTC15M", **lim))
+    r = make_runner(d, clock, fake, kp, cfg=_account_cfg(**lim))
+    assert r.day_pnl() == 0.0 and abs(r.account_day_pnl() + 1.9) < 1e-9   # NEAR itself lost nothing today
+    at_minute(clock, T0, 2); r.step()
+    assert not fake.posts
+    assert "account daily loss cap" in events(r, "signal_skipped")[-1]["reason"]
+
+
+def test_min_balance_can_count_open_bets():
+    d, clock, fake, kp = setup()
+    fake.balance_cents = 900                       # $9 cash < min 10, but $2 sits in an open bet
+    cfg = _account_cfg(min_balance_counts_open_bets=True)
+    r = make_runner(d, clock, fake, kp, cfg=cfg)
+    r.pos["KXNEAR15M-X"] = {"side": "yes", "n": 4.0, "cost": 2.0, "fees": 0.0, "close_ts": T0 + 900,
+                            "status": "filled"}
+    r.refresh_balance()                            # no Stop: equity $11
+    r.pos.clear()
+    try:
+        r.refresh_balance()
+        raise AssertionError("expected Stop")
+    except real.Stop:
+        pass
+
+
+def test_account_limits_validated():
+    d = tmpdir()
+    for bad in (0, -1, "2", True):
+        cfg = _account_cfg(max_total_open_risk_usd=bad)
+        (d / "c.json").write_text(json.dumps(cfg))
+        try:
+            real.load_config(d / "c.json")
+            raise AssertionError(f"accepted {bad!r}")
+        except real.Stop:
+            pass
+
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):
