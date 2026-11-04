@@ -1,0 +1,80 @@
+{
+ "_note": "REAL MONEY, low-risk: only the 3 strongest golden rules (x_exit, sized_exit, scalp; highest t-scores, smallest drawdowns), flat $1 base stake (no compounding), max $1 loss per coin per day, 15 trades per coin per day, stops for good if the crypto balance falls below $6. Run only from the account holder's own verified (18+) Kalshi account.",
+ "series": [
+  "KXBTC15M",
+  "KXETH15M",
+  "KXSOL15M",
+  "KXXRP15M",
+  "KXHYPE15M",
+  "KXBNB15M",
+  "KXNEAR15M",
+  "KXDOGE15M",
+  "KXZEC15M"
+ ],
+ "execution": "taker",
+ "poll": "minute",
+ "golden_rules": [
+  {
+   "id": "x_exit:ALL",
+   "family": "scalp",
+   "scope": "ALL",
+   "t": 10.15,
+   "params": {
+    "vm": 0.8,
+    "edge": 0.13,
+    "start": 2,
+    "end": 13,
+    "band": "05-95",
+    "cap": 5,
+    "pow": 1.5,
+    "exit": "conv2"
+   },
+   "norm": 0.22693348935173294
+  },
+  {
+   "id": "sized_exit:ALL",
+   "family": "sized",
+   "scope": "ALL",
+   "t": 6.95,
+   "params": {
+    "start": 2,
+    "end": 13,
+    "edge": 0.13,
+    "band": "05-95",
+    "vm": 1.0,
+    "cap": 5,
+    "exit": "conv0"
+   },
+   "norm": 0.26276383779910073
+  },
+  {
+   "id": "scalp:ALL",
+   "family": "scalp",
+   "scope": "ALL",
+   "t": 6.71,
+   "params": {
+    "vm": 0.8,
+    "edge": 0.12,
+    "start": 2,
+    "end": 13,
+    "band": "05-95",
+    "exit": "conv0"
+   }
+  }
+ ],
+ "log": "data/kalshi15m/real_live_log.jsonl",
+ "limits": {
+  "stake_usd": 1.0,
+  "max_contracts_per_order": 3,
+  "max_daily_loss_usd": 1.0,
+  "max_trades_per_day": 15,
+  "max_open_positions": 1,
+  "min_balance_usd": 6.0,
+  "max_price": 0.85,
+  "min_price": 0.03,
+  "max_data_age_s": 5.0,
+  "max_decision_lag_s": 5.0,
+  "walk_cents": 5,
+  "walk_keep_edge": 0.08
+ }
+}
