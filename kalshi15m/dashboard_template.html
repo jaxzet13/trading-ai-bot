@@ -448,9 +448,136 @@ td.coin { font-size: 12px; }
   .ptabs { gap: 0; }
   .ptabs button { flex: 1 1 0; padding: 10px 10px 13px; }
   .ptabs .pt-t { font-size: 15px; }
-  .ptabs .pt-s { font-size: 11.5px; }
+  .ptabs .pt-s { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .om-state i, .om-pulse { animation: none; } }
+
+/* ---------- How it works: calm, evidence first ---------- */
+.how { gap: 52px; }
+.how-hero { border-radius: 22px; padding: 34px 36px; display: grid; gap: 14px;
+  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--gold) 14%, transparent), transparent 60%), linear-gradient(180deg, var(--accent-bg), var(--surface)); }
+.how-hero h2 { font: 600 clamp(28px, 3.6vw, 40px)/1.1 var(--f-display); letter-spacing: -0.02em; max-width: 24ch; text-wrap: balance; }
+.how-lede { margin: 0; font-size: 16px; line-height: 1.65; color: var(--ink-2); max-width: 66ch; }
+.how-lede b { color: var(--ink); }
+.how-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px 24px; margin-top: 10px; }
+.how-stats > div { min-width: 0; }
+.how-stats .v { font: 600 34px/1.05 var(--f-display); font-variant-numeric: tabular-nums; margin-top: 6px; letter-spacing: -0.01em; }
+.how-stats .s { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; line-height: 1.45; }
+.how-honest { margin: 6px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.55; max-width: 80ch; padding: 12px 14px; border-radius: 12px; background: var(--surface); }
+.how-honest b { color: var(--ink); }
+.how-sec { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.how-sh h2 { font: 600 24px/1.2 var(--f-display); letter-spacing: -0.01em; margin-top: 6px; }
+.how-sh p { margin: 8px 0 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.6; max-width: 74ch; }
+.how-sh2 h3 { font: 600 18px/1.25 var(--f-display); margin: 6px 0 0; }
+.how-sh2 p { margin: 6px 0 14px; color: var(--ink-2); font-size: 13.5px; line-height: 1.55; max-width: 80ch; }
+.how-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px; min-width: 0; box-shadow: 0 1px 2px var(--shadow); }
+.how-grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+.how-chart { height: 270px; margin-top: 10px; }
+.flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; counter-reset: step; }
+.flow li { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 14px 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.flow li::before { counter-increment: step; content: counter(step); width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  font: 600 12px var(--f-mono); color: var(--accent); background: var(--accent-bg); }
+.flow li:not(:last-child)::after { content: ""; position: absolute; right: -9px; top: 26px; width: 8px; height: 8px; border-top: 2px solid var(--muted); border-right: 2px solid var(--muted); transform: rotate(45deg); opacity: .6; }
+.flow b { font: 600 14.5px/1.3 var(--f-display); }
+.flow span { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+.flow li.key { border-color: var(--gold-line); background: linear-gradient(180deg, var(--gold-bg), var(--surface) 75%); }
+.flow li.key::before { color: var(--gold-ink); background: var(--gold-bg); }
+.how-example { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: center; }
+.ex-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.ex-svg .grid { stroke: var(--grid); stroke-width: 1; }
+.ex-svg .axis { fill: var(--muted); font: 500 11px var(--f-mono); }
+.ex-svg .mkt { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; }
+.ex-svg .mkt.dash { stroke-dasharray: 5 5; }
+.ex-svg .mod { fill: none; stroke: var(--gold); stroke-width: 2.5; stroke-linecap: round; }
+.ex-svg .gap { fill: color-mix(in srgb, var(--gold) 28%, transparent); }
+.ex-svg .dot-m { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.ex-svg .dot-f { fill: var(--gold); stroke: var(--surface); stroke-width: 2; }
+.ex-svg .lbl { fill: var(--ink); font: 600 12px var(--f-body); }
+.ex-svg .lbl2 { fill: var(--ink-2); font: 500 11.5px var(--f-body); }
+.ex-svg .buy { animation: expulse 2.6s ease-out infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes expulse { 0% { opacity: .9; } 50% { opacity: .35; } 100% { opacity: .9; } }
+.ex-text h3 { font: 600 19px/1.3 var(--f-display); margin: 6px 0 8px; }
+.ex-text p { margin: 0 0 10px; font-size: 14px; line-height: 1.6; color: var(--ink-2); }
+.ex-text p b { color: var(--ink); }
+.ex-text .small { font-size: 12.5px; color: var(--muted); }
+.ladder { list-style: none; margin: 0; padding: 0 0 0 30px; display: grid; gap: 14px; position: relative; }
+.ladder::before { content: ""; position: absolute; left: 11px; top: 14px; bottom: 14px; width: 2px; background: linear-gradient(180deg, var(--accent), var(--gold)); opacity: .5; border-radius: 2px; }
+.ladder li { position: relative; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr); gap: 10px 24px; align-items: start; }
+.ladder li::before { content: ""; position: absolute; left: -26px; top: 18px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 3px solid var(--accent); }
+.ladder li.done::before { border-color: var(--good); background: var(--good); box-shadow: 0 0 0 3px var(--good-bg); }
+.ladder li.run::before { border-color: var(--gold); }
+.rung-t { padding: 14px 0 0; }
+.rung-t .eyebrow { display: block; }
+.rung-t b { display: block; font: 600 17px/1.25 var(--f-display); margin-top: 6px; }
+.rung-t span { display: block; font-size: 13px; color: var(--ink-2); margin-top: 4px; line-height: 1.5; }
+.rung-n { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; }
+.rung-n div { min-width: 0; }
+.rung-n i { display: block; font-style: normal; font: 500 10px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.rung-n b { display: block; font: 600 20px/1.2 var(--f-display); font-variant-numeric: tabular-nums; margin-top: 4px; }
+.rung-n small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.rung-n .note { grid-column: 1 / -1; font-size: 12.5px; color: var(--ink-2); line-height: 1.5; border-top: 1px solid var(--grid); padding-top: 10px; }
+.cons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.cons > div { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px 18px 16px; min-width: 0; }
+.cons .big { font: 600 40px/1 var(--f-display); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; margin-top: 10px; color: var(--ink); }
+.cons .big small { font-size: 16px; color: var(--muted); font-weight: 500; margin-left: 4px; }
+.cons .s { font-size: 12.5px; color: var(--ink-2); margin-top: 8px; line-height: 1.5; }
+.cons .pips { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 12px; }
+.cons .pips i { width: 9px; height: 9px; border-radius: 2px; background: var(--good); opacity: .85; }
+.cons .pips i.l { background: var(--bad); opacity: .85; }
+.cons .loss { border-color: color-mix(in srgb, var(--bad) 30%, var(--line)); }
+.bad-days { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px 18px; align-items: start; }
+.bad-days svg { width: 34px; height: 34px; color: var(--warn); }
+.bad-days h3 { font: 600 17px/1.3 var(--f-display); margin: 0 0 6px; }
+.bad-days p { margin: 0 0 6px; font-size: 14px; color: var(--ink-2); line-height: 1.6; max-width: 84ch; }
+.bad-days p b { color: var(--ink); }
+.kvs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
+.kvs div { min-width: 0; }
+.kvs i { display: block; font-style: normal; font: 500 10.5px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.kvs b { display: block; font: 600 24px/1.15 var(--f-display); font-variant-numeric: tabular-nums; margin-top: 5px; }
+.kvs small { display: block; font-size: 12px; color: var(--ink-2); margin-top: 3px; line-height: 1.45; }
+.kvs .wide { grid-column: 1 / -1; font-size: 12.5px; color: var(--ink-2); line-height: 1.55; border-top: 1px solid var(--grid); padding-top: 12px; }
+.plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.plan { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.plan.on { border-color: color-mix(in srgb, var(--good) 45%, var(--line)); }
+.plan.warn { border-color: color-mix(in srgb, var(--warn) 55%, var(--line)); }
+.plan.alert { border-color: color-mix(in srgb, var(--bad) 55%, var(--line)); }
+.plan-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.plan-top .eyebrow { font-size: 11.5px; }
+.light { display: inline-flex; align-items: center; gap: 7px; font: 600 10.5px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2);
+  padding: 6px 10px; border-radius: 99px; background: var(--chip); white-space: nowrap; }
+.light i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.light.green { color: var(--good); background: var(--good-bg); } .light.green i { background: var(--good); }
+.light.yellow { color: var(--warn); background: var(--warn-bg); } .light.yellow i { background: var(--warn); }
+.light.red { color: var(--bad); background: var(--bad-bg); } .light.red i { background: var(--bad); }
+.plan h3 { font: 600 19px/1.25 var(--f-display); margin: 0; }
+.plan p { margin: 0; font-size: 14px; color: var(--ink-2); line-height: 1.6; }
+.plan ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+.plan ul b { color: var(--ink); }
+.plan .when { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--grid); padding-top: 10px; margin-top: auto; }
+#howHealth { min-width: 760px; }
+#howHealth td { vertical-align: middle; }
+@media (max-width: 1000px) {
+  .flow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .flow li:nth-child(3)::after { display: none; }
+  .cons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .how-grid2, .how-example, .plans { grid-template-columns: minmax(0, 1fr); }
+  .ladder li { grid-template-columns: minmax(0, 1fr); }
+  .how-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .how-hero { padding: 24px 18px; border-radius: 18px; }
+  .how-stats .v { font-size: 28px; }
+  .flow { grid-template-columns: minmax(0, 1fr); }
+  .flow li::after { display: none; }
+  .rung-n { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cons { grid-template-columns: minmax(0, 1fr); }
+  .cons .big { font-size: 34px; }
+  .how-card, .plan { padding: 16px; }
+}
+@media (max-width: 560px) { .ex-svg .lbl { font-size: 19px; } .ex-svg .lbl2 { font-size: 17px; } .ex-svg .axis { font-size: 16px; } }
+@media (prefers-reduced-motion: reduce) { .ex-svg .buy { animation: none; } }
 
 /* ---------- Research lab: zone header, golden hunt, strategy search ---------- */
 table { font: 13px/1.45 var(--f-body); color: var(--ink); }
@@ -1249,7 +1376,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   let labKey = null;
   function renderLab() {
     const L = typeof LAB === "undefined" || !LAB ? null : LAB;
-    const keys = L ? Object.keys(L).filter(k => !/^lab\d/.test(k) && L[k]) : [];  // lab3/lab4 hunts and progress have their own views
+    const keys = L ? Object.keys(L).filter(k => !/^lab\d/.test(k) && L[k] && Array.isArray(L[k].finals)) : [];  // lab3/lab4 hunts and progress have their own views
     $("labPanel").hidden = !keys.length; if (!keys.length) return;
     if (!labKey || !L[labKey] || !keys.includes(labKey)) labKey = keys[0];
     const lbl = { m15: "15-minute", hourly: "Hourly", blind: "Blind tests" };
@@ -1688,7 +1815,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   // ---------- Live paper trading. renderLive() is a pure re-render from LIVE_DATA: it runs on every update. ----------
   const lvs = { open: undefined, filt: "all", coin: "all", strat: "all" };
   const isGold = s => !!s && (/^\s*★/.test(s.label || "") || /^G-/.test(String(s.id || "")));
-  const sLabel = s => String((s && s.label) || `${COIN(String((s && s.series) || ""))} · ${(s && (s.name || s.strategy)) || ""}`).replace(/^\s*★\s*/, "");
+  const sLabel = s => String((s && s.label) || `${COIN(String((s && s.series) || ""))} · ${(s && (s.name || s.strategy)) || ""}`).replace(/\s*★\s*/g, " ").trim();
   const mean = a => Array.isArray(a) && a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
   const coinTag = s => `<span class="coin-tag">${s === "ALL" ? "All coins" : esc(COIN(String(s || "")))}</span>`;
   const lvRef = s => s.lab ? s.lab : s.backtest && s.backtest.oos ? s.backtest.oos : null;
@@ -1759,7 +1886,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     $("lvEqNote").textContent = comb.length ? `${comb.length.toLocaleString()} settled trades from all strategies, in the order they settled` : "";
     if (comb.length) profitChart("lvEq", [{ x: (since && since < comb[0][0] ? since : comb[0][0] - 60) * 1000, y: 0 }, ...comb.map(([t, v]) => ({ x: t * 1000, y: v }))], c.accent, "All strategies", c);
     else { killChart("lvEq"); }
-    lvBoard(L); lvLog(L); renderOther();
+    lvBoard(L); lvLog(L); renderOther(); renderHow();
   }
 
   function lvBoard(L) {
@@ -1959,10 +2086,10 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   }
 
   // ---------- page tabs: selected tab lives in the URL hash and in this browser ----------
-  const TABS = ["crypto", "currencies"];
+  const TABS = ["how", "crypto", "currencies"];
   const tabOf = el => { const p = el && el.closest && el.closest(".tabpanel"); return p ? p.id.replace("panel-", "") : null; };
   function selectTab(name, how = {}) {
-    if (!TABS.includes(name)) name = "crypto";
+    if (!TABS.includes(name)) name = "how";
     TABS.forEach(t => { const on = t === name, b = $("tab-" + t); b.setAttribute("aria-selected", String(on)); b.tabIndex = on ? 0 : -1; $("panel-" + t).hidden = !on; });
     try { localStorage.setItem("k15tab", name); } catch (e) {}
     if (how.hash !== false && location.hash !== "#" + name) { try { history.replaceState(null, "", "#" + name); } catch (e) {} }
@@ -1983,6 +2110,226 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     const j = e.key === "ArrowRight" ? (i + 1) % TABS.length : e.key === "ArrowLeft" ? (i - 1 + TABS.length) % TABS.length : e.key === "Home" ? 0 : e.key === "End" ? TABS.length - 1 : null;
     if (j != null) { e.preventDefault(); selectTab(TABS[j], { focus: true }); } });
   window.addEventListener("hashchange", routeHash);
+
+  // ---------- "How it works" tab: every number comes from LAB.how (backtest constants + day series in live_report.py),
+  // LAB.lab3 (hunt candidates) or LIVE_DATA (paper strategies, demo account). ----------
+  const HOW = typeof LAB !== "undefined" && LAB && LAB.how && typeof LAB.how === "object" ? LAB.how : null;
+  const dayTs = d => d * 86400;
+  function howDays() {
+    const D = (HOW && HOW.combo_days) || {}, out = [];
+    ["arch", "search", "hold"].forEach(w => { const x = D[w]; if (x && Array.isArray(x.pnl)) x.pnl.forEach((v, i) => out.push({ w, day: x.day0 + i, pnl: v })); });
+    return out;
+  }
+  function winStats(v) {
+    const n = v.length, pos = v.filter(x => x > 0).length, srt = [...v].sort((a, b) => a - b), med = n ? (n % 2 ? srt[(n - 1) / 2] : (srt[n / 2 - 1] + srt[n / 2]) / 2) : null;
+    let streak = 0, c = 0; v.forEach(x => { c = x < 0 ? c + 1 : 0; streak = Math.max(streak, c); });
+    const r7 = []; for (let i = 0; i + 7 <= n; i++) r7.push(v.slice(i, i + 7).reduce((a, b) => a + b, 0));
+    const b5 = []; for (let i = 0; i < n; i += 5) b5.push(v.slice(i, i + 5).reduce((a, b) => a + b, 0));
+    return { n, pos, med, worst: n ? srt[0] : null, best: n ? srt[n - 1] : null, streak, r7: r7.length, r7pos: r7.filter(x => x > 0).length, b5: b5.length, b5pos: b5.filter(x => x > 0).length, worst5: b5.length ? Math.min(...b5) : null };
+  }
+  const pips = (v, max = 60) => `<div class="pips" aria-hidden="true">${v.slice(-max).map(x => `<i class="${x > 0 ? "" : "l"}"></i>`).join("")}</div>`;
+  const span = days => days.length ? `${dayFmt(dayTs(days[0].day))} – ${dayFmt(dayTs(days[days.length - 1].day))}` : "";
+
+  function renderHow() {
+    const days = howDays(), K = (HOW && HOW.combo) || {}, by = w => days.filter(d => d.w === w), vals = w => by(w).map(d => d.pnl);
+    const S = { arch: winStats(vals("arch")), search: winStats(vals("search")), hold: winStats(vals("hold")) };
+    const L = LIVE_DATA, strats = L && Array.isArray(L.strategies) ? L.strategies.filter(Boolean) : [], G = strats.filter(isGold), demo = L && L.demo;
+    const gp = G.reduce((a, s) => a + (s.pnl || 0), 0), gn = G.reduce((a, s) => a + (s.settled || 0), 0), gw = G.reduce((a, s) => a + (s.wins || 0), 0), gs = G.reduce((a, s) => a + (s.staked || 0), 0);
+    const gSince = G.map(s => s.since).filter(nz), h = K.hold || {}, sr = K.search || {}, ar = K.arch || {};
+    // months of the archive with at least 20 days of data
+    const months = {}; by("arch").forEach(d => { const k = new Date(dayTs(d.day) * 1000).toISOString().slice(0, 7); (months[k] = months[k] || { n: 0, p: 0 }); months[k].n++; months[k].p += d.pnl; });
+    const fullM = Object.entries(months).filter(([, m]) => m.n >= 20), posM = fullM.filter(([, m]) => m.p > 0);
+    const weakM = fullM.length ? fullM.reduce((a, b) => (b[1].p < a[1].p ? b : a)) : null;
+    const se = [...vals("search"), ...vals("hold")], seS = winStats(se);
+    const r7se = S.search.r7 + S.hold.r7, r7sePos = S.search.r7pos + S.hold.r7pos;
+
+    $("howLede").innerHTML = `The bot watches Kalshi's 15-minute crypto markets for moments when Kalshi's price lags behind the real coin price, and buys only when it is clearly too cheap. Each single bet is small and often loses. The edge shows up across hundreds of them: in the locked final exam the best combination made <b>${nz(h.pnl) ? money(h.pnl) : DASH}</b> over ${NUM(h.days)} days on ${NUM(h.trades)} trades at $10 a trade, and made money on <b>${S.hold.pos} of ${S.hold.n} days</b>.`;
+    $("howStats").innerHTML = [
+      ["Winning days in the final exam", S.hold.n ? pct(S.hold.pos / S.hold.n).replace(".0", "") : DASH, `${S.hold.pos} of ${S.hold.n} days the strategy had never seen`],
+      ["Every rolling week positive", r7se ? `${r7sePos} of ${r7se}` : DASH, "7-day stretches in the search period and final exam that ended in profit"],
+      ["Archive months in profit", fullM.length ? `${posM.length} of ${fullM.length}` : DASH, `older ${fullM.length ? fullM.map(([k]) => new Date(k + "-01T00:00:00Z").toLocaleDateString(undefined, { month: "short", timeZone: "UTC" })).join(", ") : ""} data it was never tuned on`],
+      ["Demo account", demo && nz(demo.balance) ? `${money(demo.start_balance)} → ${money(demo.balance, 2)}` : DASH, demo ? `real orders on Kalshi's demo exchange since ${fmtDate(demo.since)}` : "no demo data yet"],
+    ].map(([l, v, s]) => `<div><div class="eyebrow">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+
+    // 1) the edge
+    const edge = (HOW && HOW.runner && HOW.runner.rules) ? "12–13¢" : "12–13¢";
+    $("howFlow").innerHTML = [
+      ["The coin moves", "Coinbase shows each coin's price second by second."],
+      ["Kalshi lags behind", "Kalshi's price for \"will it finish up?\" can take seconds or minutes to catch up, especially after a quick move."],
+      ["We work out the fair chance", "How far is the coin from the starting line, against how much it normally moves in the minutes left? A bell curve turns that into a chance, like 54%."],
+      ["Buy only when it's cheap", `If Kalshi sells that chance for at least ${edge} less than it's worth, buy. Otherwise do nothing. Most minutes, it does nothing.`],
+      ["Sell when the price catches up", "As soon as Kalshi's price reaches the fair chance, sell and keep the difference. If it never does, hold to the end."],
+      ["Kalshi settles", "A right bet pays $1 a contract, a wrong one $0. Fees are included in every number on this page."],
+    ].map(([t, d], i) => `<li class="${i === 3 ? "key" : ""}"><b>${t}</b><span>${esc(d)}</span></li>`).join("");
+    const ex = demo && demo.example;
+    $("howExample").hidden = !ex;
+    if (ex) {
+      const X = m => 50 + (Math.max(0, Math.min(15, m)) / 15) * 480, Y = p => 255 - Math.max(0, Math.min(1, p)) * 225;
+      const mi = ex.minute_in, mo = ex.minute_out, coin = COIN(String(ex.series || "")), up = ex.side === "yes";
+      const gap = Math.round((ex.fair_in - ex.buy) * 100), gain = Math.round((ex.sell - ex.buy) * 100);
+      const grid = [0, .25, .5, .75, 1].map(p => `<line class="grid" x1="50" x2="530" y1="${Y(p)}" y2="${Y(p)}"/><text class="axis" x="42" y="${Y(p) + 4}" text-anchor="end">${Math.round(p * 100)}¢</text>`).join("") +
+        [0, 5, 10, 15].map(m => `<text class="axis" x="${X(m)}" y="276" text-anchor="middle">min ${m}</text>`).join("");
+      $("howExample").innerHTML = `<svg class="ex-svg" viewBox="0 0 560 290" role="img" aria-label="Real demo trade: bought at ${cents(ex.buy)} when the fair chance was ${pct(ex.fair_in)}, sold at ${cents(ex.sell)} in minute ${mo}">
+        ${grid}
+        <rect class="gap buy" x="${X(mi) - 7}" y="${Y(ex.fair_in)}" width="14" height="${Y(ex.buy) - Y(ex.fair_in)}" rx="4"/>
+        <line class="mod" x1="${X(mi)}" y1="${Y(ex.fair_in)}" x2="${nz(ex.fair_out) ? X(mo) : X(mi)}" y2="${Y(nz(ex.fair_out) ? ex.fair_out : ex.fair_in)}"/>
+        <line class="mkt dash" x1="${X(mi)}" y1="${Y(ex.buy)}" x2="${X(mo)}" y2="${Y(ex.sell)}"/>
+        <circle class="dot-f" cx="${X(mi)}" cy="${Y(ex.fair_in)}" r="6"/>${nz(ex.fair_out) ? `<circle class="dot-f" cx="${X(mo)}" cy="${Y(ex.fair_out)}" r="6"/>` : ""}
+        <circle class="dot-m" cx="${X(mi)}" cy="${Y(ex.buy)}" r="7"/><circle class="dot-m" cx="${X(mo)}" cy="${Y(ex.sell)}" r="7"/>
+        <text class="lbl" x="${X(mi) + 14}" y="${Y(ex.buy) + 4}">Bought at ${cents(ex.buy)}</text>
+        <text class="lbl2" x="${X(mi) + 14}" y="${Y(ex.buy) + 20}">fair chance ${pct(ex.fair_in)}: ${gap}¢ too cheap</text>
+        <text class="lbl" x="${X(mo) + 14}" y="${Y(ex.sell) - 2}">Sold at ${cents(ex.sell)}</text>
+        <text class="lbl2" x="${X(mo) + 14}" y="${Y(ex.sell) + 14}">+${gain}¢ a contract</text>
+      </svg>
+      <div class="ex-text"><div class="eyebrow">A real trade from the demo account · ${fmtTime(ex.ts)}</div>
+        <h3>${coin}: bought at ${cents(ex.buy)}, sold at ${cents(ex.sell)} four minutes later</h3>
+        <p>In minute ${mi}, ${coin} was ${usd(ex.spot)}, just ${ex.spot >= ex.strike ? "above" : "below"} its starting line of ${usd(ex.strike)}. The model put the chance of it finishing ${up ? "UP" : "DOWN"} at <b>${pct(ex.fair_in)}</b>, but Kalshi was selling that bet for <b>${cents(ex.buy)}</b>. It bought ${ex.lag_s != null ? `${ex.lag_s.toFixed(1)} seconds after the minute closed` : "right away"}.</p>
+        <p>By minute ${mo}, Kalshi's price had caught up${nz(ex.fair_out) ? ` with the model (now ${pct(ex.fair_out)})` : ""}, and the bot sold at <b>${cents(ex.sell)}</b> instead of waiting for the result: <b class="pos">+${money(ex.pnl, 2)}</b> after fees on ${NUM(ex.n)} contract${ex.n === 1 ? "" : "s"}.</p>
+        <p class="small">Gold line: the model's fair chance. Blue: what Kalshi charged, then paid. The dashed blue line just joins the buy and the sale; Kalshi's price in between isn't recorded. Demo order books are thin, so only ${NUM(ex.n)} contract filled. Many trades are not this clean, and plenty lose.</p></div>`;
+    }
+
+    // 2) evidence ladder
+    const cand = id => ((typeof LAB !== "undefined" && LAB && LAB.lab3 && LAB.lab3.candidates) || []).find(c => c && c.id === id);
+    const sc = cand("scalp:ALL:taker+exit"), sz = cand("sized:ALL:taker");
+    const cell = (k, v, sub) => `<div><i>${k}</i><b>${v}</b>${sub ? `<small>${sub}</small>` : ""}</div>`;
+    const bt = (k, x, st, extra) => ({ k, done: true, t: x.title, d: x.desc, nums: [cell("Profit", nz(k.pnl) ? money(k.pnl) : DASH, "$10 a trade"), cell("Trades", NUM(k.trades), nz(k.days) ? `${NUM(k.trades / k.days)} a day` : ""),
+      cell("t-score", nz(k.t) ? k.t.toFixed(2) : DASH, "luck rarely tops 3"), cell("Winning days", st.n ? `${st.pos} of ${st.n}` : DASH, nz(k.per_day) ? `avg ${money(k.per_day)} a day` : "")], note: extra });
+    const rungs = [
+      bt(sr, { title: "Search period", desc: `${span(by("search"))}. The data the settings were chosen on, so it flatters the strategy most.` }, S.search, ""),
+      bt(h, { title: "Final exam, locked days", desc: `${span(by("hold"))}. Days kept hidden until the very end.` }, S.hold,
+        sc && sz ? `Built from two golden strategies that each passed on their own: early selling (${money(sc.holdout.pnl)}, t ${sc.holdout.t}) and bigger bets when the gap is bigger (${money(sz.holdout.pnl)}, t ${sz.holdout.t}).` : ""),
+      bt(ar, { title: "Older archive", desc: `${span(by("arch"))}. Months it was never tuned on.` }, S.arch,
+        nz(ar.trades) && nz(sr.trades) ? `Only about ${NUM(ar.trades / ar.days)} trades a day in this older data, against ${NUM(sr.trades / sr.days)} recently, so profit per day is smaller. It still made money.` : ""),
+      { k: null, done: false, t: "Paper trading, live prices", d: G.length ? `${G.length} golden strategies trading pretend money on real Kalshi prices since ${fmtTime(Math.min(...gSince))}.` : "Golden strategies trading pretend money on real Kalshi prices.",
+        nums: [cell("Profit", G.length ? signed(gp) : DASH, "pretend money"), cell("Settled trades", NUM(gn), ""), cell("Win rate", gn ? pct(gw / gn) : DASH, "trades in profit"),
+          cell("Per $1 staked", gs > 0 ? signed(gp / gs) : DASH, gs > 0 ? `on ${money(gs)} staked` : "")], note: "Still early: it takes hundreds of trades per strategy before these numbers settle down." },
+      { k: null, done: false, t: "Kalshi demo account", d: demo ? `Real orders on Kalshi's demo exchange since ${fmtTime(demo.since)}, starting from ${money(demo.start_balance)}.` : "Real orders on Kalshi's demo exchange.",
+        nums: demo ? [cell("Balance", money(demo.balance, 2), `from ${money(demo.start_balance)}`), cell("Orders filled", NUM(demo.fills), `${NUM(demo.exits)} sold early`),
+          cell("Closed trades", NUM(demo.closed), `${NUM(demo.wins)} in profit`), cell("Per $1 staked", demo.staked > 0 ? signed(demo.pnl / demo.staked) : DASH, demo.staked > 0 ? `on ${money(demo.staked, 2)} staked` : "")] : [cell("Status", "No data yet", "")],
+        note: "Small and early. Demo order books are thin, so many orders only partly fill." }];
+    $("howLadder").innerHTML = rungs.map(r => `<li class="${r.done ? "done" : "run"}"><div class="rung-t"><span class="eyebrow">${r.done ? "Passed" : "Running now"}</span><b>${esc(r.t)}</b><span>${esc(r.d)}</span></div>
+      <div class="rung-n">${r.nums.join("")}${r.note ? `<div class="note">${esc(r.note)}</div>` : ""}</div></li>`).join("");
+
+    // 3) what normal looks like
+    $("howNormalIntro").textContent = `The best combination's results day by day, from the backtest data (${span(days)}). This is what the past data shows. Real trading usually earns less, and losing days are part of normal.`;
+    $("howCons").innerHTML = [
+      ["", "Winning days", seS.n ? `${pct(seS.pos / seS.n).replace(".0", "")}` : DASH, `${seS.pos} of ${seS.n} days in the search period and final exam. Older archive: ${S.arch.pos} of ${S.arch.n} (${S.arch.n ? pct(S.arch.pos / S.arch.n).replace(".0", "") : DASH}).`, pips(se)],
+      ["", "Rolling weeks in profit", r7se ? `${r7sePos}<small>of ${r7se}</small>` : DASH, `Every 7-day stretch of the search period and final exam. Older archive: ${S.arch.r7pos} of ${S.arch.r7}.`, ""],
+      ["", "5-day blocks in profit", `${S.search.b5pos + S.hold.b5pos}<small>of ${S.search.b5 + S.hold.b5}</small>`, `Consecutive 5-day blocks, search period and final exam. Older archive: ${S.arch.b5pos} of ${S.arch.b5}.`, ""],
+      ["", "Archive months in profit", fullM.length ? `${posM.length}<small>of ${fullM.length}</small>` : DASH, weakM ? `Weakest month: ${new Date(weakM[0] + "-01T00:00:00Z").toLocaleDateString(undefined, { month: "long", timeZone: "UTC" })}, ${signed(weakM[1].p, 0)}.` : "", ""],
+      ["loss", "Losing days", `${seS.n - seS.pos}<small>of ${seS.n}</small>`, `Search period and final exam. In the older archive, ${S.arch.n - S.arch.pos} of ${S.arch.n} days lost money.`, ""],
+      ["loss", "Worst single day", money(Math.min(S.search.worst, S.hold.worst, S.arch.worst)), `Search ${money(S.search.worst)}, final exam ${money(S.hold.worst)}, archive ${money(S.arch.worst)}.`, ""],
+      ["loss", "Longest losing streak", `${Math.max(S.search.streak, S.hold.streak, S.arch.streak)}<small>days</small>`, `In the older archive. Search period: ${S.search.streak}, final exam: ${S.hold.streak}. Worst 5-day block: ${money(Math.min(S.search.worst5, S.hold.worst5, S.arch.worst5))}.`, ""],
+      ["", "Typical day", money(seS.med), `The middle day in the search period and final exam. In the quieter archive: ${money(S.arch.med)}.`, ""],
+    ].map(([k, l, v, s, extra]) => `<div class="${k}"><div class="eyebrow">${l}</div><div class="big">${v}</div><div class="s">${s}</div>${extra}</div>`).join("");
+    howCharts(days);
+
+    // bad windows, from the real paper-trading total
+    const comb = combinedCurve(strats);
+    let peak = 0, pk = null, dd = 0, ddFrom = null, ddTo = null;
+    comb.forEach(([t, v]) => { if (v >= peak) { peak = v; pk = t; } if (v - peak < dd) { dd = v - peak; ddFrom = pk; ddTo = t; } });
+    const trough = ddTo ? comb.find(([t]) => t === ddTo)[1] : null, after = trough != null ? comb[comb.length - 1][1] - trough : null;
+    $("howBad").innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9.5 16.5h-19z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 10v4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.1" fill="currentColor"/></svg>
+      <div><h3>Bad stretches happen, and they're expected</h3>
+      <p>In the backtest the worst day lost ${money(Math.abs(Math.min(S.search.worst, S.hold.worst, S.arch.worst)))} and the worst 5-day block lost ${money(Math.abs(Math.min(S.search.worst5, S.hold.worst5, S.arch.worst5)))}, and the total still kept rising afterwards.</p>
+      ${dd < -1 ? `<p>Live paper trading has had one too: all strategies together fell <b class="neg">${money(Math.abs(dd), 2)}</b> from their high between ${fmtTime(ddFrom)} and ${fmtTime(ddTo)}${after != null ? `, and have ${after >= 0 ? "made" : "lost"} <b class="${cls(after)}">${signed(after)}</b> since that low` : ""}.</p>` : ""}
+      <p>A bad day on its own says little. The checks that matter are over hundreds of trades, which is what Plan B below watches.</p></div>`;
+
+    // 4) demo account
+    if (demo) {
+      const gper = gs > 0 ? gp / gs : null, dper = demo.staked > 0 ? demo.pnl / demo.staked : null;
+      $("howDemoStats").innerHTML = [
+        ["Balance", money(demo.balance, 2), `started at ${money(demo.start_balance)}, ${signed(demo.pnl)} so far`],
+        ["Kalshi's own number", nz(demo.reported_balance) ? money(demo.reported_balance, 2) : DASH, "cash balance at the last order, not counting open bets"],
+        ["Orders filled", NUM(demo.fills), `${NUM(demo.closed)} closed, ${NUM(demo.wins)} in profit, ${NUM(demo.exits)} sold early`],
+        ["Profit per $1 staked", dper != null ? signed(dper) : DASH, gper != null ? `paper trading: ${signed(gper)} per $1` : ""],
+      ].map(([k, v, s]) => `<div><i>${k}</i><b>${v}</b><small>${s}</small></div>`).join("") +
+        `<div class="wide">Bets are 10% of the balance, so they grow as the balance grows. Real-money trading would use the same code with a real account, and is a separate decision.</div>`;
+      const c = C(), pts = (demo.curve || []).map(([t, v]) => ({ x: t * 1000, y: v }));
+      const o = base(c); o.interaction = { mode: "nearest", axis: "x", intersect: false }; o.layout = { padding: { right: 62, top: 8 } };
+      o.plugins.tooltip.callbacks = { title: i => fmtTime(i[0].parsed.x / 1000), label: i => `Balance: ${money(i.parsed.y, 2)}` };
+      o.scales = { x: axis(c, { type: "linear", min: pts.length ? pts[0].x : undefined, max: pts.length ? pts[pts.length - 1].x : undefined, grid: { display: false }, ticks: { color: c.muted, maxTicksLimit: 5, callback: v => new Date(v).toLocaleTimeString(undefined, { hour: "numeric" }) } }),
+        y: axis(c, { ticks: { color: c.muted, maxTicksLimit: 5, callback: v => money(v) } }) };
+      const col = tok("--gold");
+      mk("howDemo", { type: "line", data: { datasets: [{ label: "Demo balance", data: pts, stepped: true, borderColor: col, backgroundColor: alpha(col, 0.12), fill: "origin", borderWidth: 2, pointRadius: 0, pointHoverRadius: 4 }] },
+        options: o, plugins: [endLabels(c)] });
+    } else { $("howDemoStats").innerHTML = `<div class="wide">No demo data in this update.</div>`; }
+
+    // 5) plans
+    renderPlans(strats, demo);
+  }
+
+  function howCharts(days) {
+    if (!days.length) return;
+    const c = C(), colW = { arch: c.ink2, search: c.accent, hold: tok("--gold") }, name = { arch: "Older archive", search: "Search period", hold: "Final exam" };
+    let cum = 0; const pts = days.map(d => ({ x: dayTs(d.day + 1) * 1000, y: (cum += d.pnl), w: d.w }));
+    const ds = ["arch", "search", "hold"].map(w => { const idx = pts.map((p, i) => p.w === w ? i : -1).filter(i => i >= 0); if (!idx.length) return null;
+      const seg = (idx[0] > 0 ? [pts[idx[0] - 1]] : [{ x: dayTs(days[0].day) * 1000, y: 0 }]).concat(idx.map(i => pts[i]));
+      return { label: name[w], data: seg.map(p => ({ x: p.x, y: p.y })), borderColor: colW[w], backgroundColor: alpha(colW[w], 0.08), fill: "origin", borderWidth: 2.2, pointRadius: 0, pointHoverRadius: 4 }; }).filter(Boolean);
+    $("howEqLegend").innerHTML = ds.map(d => `<span><i style="background:${d.borderColor}"></i>${d.label}</span>`).join("");
+    const o = base(c); o.interaction = { mode: "nearest", axis: "x", intersect: false }; o.layout = { padding: { right: 66, top: 8 } };
+    o.plugins.tooltip.callbacks = { title: i => dayFmt(i[0].parsed.x / 1000 - 86400), label: i => `${i.dataset.label}: ${money(i.parsed.y)} total` };
+    o.scales = { x: axis(c, { type: "linear", min: ds[0].data[0].x, max: pts[pts.length - 1].x, grid: { display: false }, ticks: { color: c.muted, maxTicksLimit: 6, callback: v => dayFmt(v / 1000) } }),
+      y: axis(c, { min: Math.floor(Math.min(0, ...pts.map(p => p.y)) / 1000) * 1000, ticks: { color: c.muted, maxTicksLimit: 5, callback: v => money(v) } }) };
+    mk("howEq", { type: "line", data: { datasets: ds }, options: o, plugins: [zeroLine(c), endLabels(c)] });
+    // histogram of daily results, $100 bins
+    const v = days.map(d => d.pnl), lo = Math.floor(Math.min(...v) / 100) * 100, hi = Math.ceil(Math.max(...v) / 100) * 100, bins = [];
+    for (let b = lo; b < hi; b += 100) bins.push({ b, n: v.filter(x => x >= b && x < b + 100).length });
+    $("howHistLegend").innerHTML = `<span><i style="background:${c.good}"></i>Days that made money</span><span><i style="background:${c.bad}"></i>Days that lost</span>`;
+    const oh = base(c);
+    oh.plugins.tooltip.callbacks = { title: i => `${money(bins[i[0].dataIndex].b)} to ${money(bins[i[0].dataIndex].b + 100)}`, label: i => `${i.parsed.y} day${i.parsed.y === 1 ? "" : "s"}` };
+    oh.scales = { x: axis(c, { grid: { display: false }, ticks: { color: c.muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } }), y: axis(c, { ticks: { color: c.muted, precision: 0 }, title: { display: true, text: "days", color: c.muted } }) };
+    mk("howHist", { type: "bar", data: { labels: bins.map(x => money(x.b)), datasets: [{ data: bins.map(x => x.n), backgroundColor: bins.map(x => x.b >= 0 ? c.good : c.bad), borderRadius: 3, borderSkipped: "start", maxBarThickness: 22 }] }, options: oh });
+  }
+
+  function healthOf(s) {
+    const h = s.lab, n = s.settled || 0;
+    if (!h || !nz(h.pnl) || !nz(h.trades) || !h.trades || !nz(h.t_stat) || !h.t_stat || !(s.staked > 0)) return { k: "", txt: "No backtest yardstick", n };
+    const roiH = h.pnl / (h.trades * 10), sd = Math.abs(h.pnl / h.trades) * Math.sqrt(h.trades) / Math.abs(h.t_stat) / 10;
+    const roiL = s.pnl / s.staked, se = n ? sd / Math.sqrt(n) : null;
+    const band = se != null ? [roiH - 2 * se, roiH + 2 * se] : null;
+    if (n < 30) return { k: "", txt: "Too early", n, roiH, roiL, band };
+    const z = (roiL - roiH) / se;
+    return z >= -1 ? { k: "green", txt: "In line", n, roiH, roiL, band } : z >= -2 ? { k: "yellow", txt: "Below par", n, roiH, roiL, band } : { k: "red", txt: n >= 150 ? "Bench it" : "Watch", n, roiH, roiL, band };
+  }
+  function renderPlans(strats, demo) {
+    const R = (HOW && HOW.runner) || {}, lim = R.limits || {}, rules = R.rules || [], now = Date.now() / 1000;
+    const H = strats.map(s => ({ s, h: healthOf(s) })), red = H.filter(x => x.h.k === "red"), benched = red.filter(x => x.h.n >= 150), yellow = H.filter(x => x.h.k === "yellow");
+    const liveAge = LIVE_DATA && nz(LIVE_DATA.generated) ? now - LIVE_DATA.generated : null, demoAge = demo && nz(demo.last) ? now - demo.last : null;
+    const running = strats.some(s => !s.stale);
+    const light = (k, t) => `<span class="light ${k}"><i></i>${t}</span>`;
+    const lm = (k, f) => nz(lim[k]) ? f(lim[k]) : DASH;
+    const plans = [
+      { id: "A", k: running || (demoAge != null && demoAge < 7200) ? "on" : "", l: running || (demoAge != null && demoAge < 7200) ? light("green", "Active") : light("", "Paused"), h: "Plan A · What runs now",
+        p: `On the demo account the best combination gets first pick of every market, and ${rules.length > 1 ? `the ${rules.length - 1} other golden strategies` : "the other golden strategies"}, best first, take the markets it passes on. Each bet is ${lm("stake_pct_of_balance", v => Math.round(v * 100) + "%")} of the balance, so bets grow and shrink with the account. Paper trading runs the golden strategies side by side with pretend money.`,
+        ul: [`One bet per market, ${lm("max_open_positions", v => v)} open position per coin at a time`, `Buys only between ${lm("min_price", v => cents(v))} and ${lm("max_price", v => cents(v))}`],
+        w: "Checked continuously by the bot; the evidence for it is on this page." },
+      { id: "B", k: benched.length ? "alert" : yellow.length || red.length ? "warn" : "", l: benched.length ? light("red", `Triggered · review ${benched.length}`) : red.length || yellow.length ? light("yellow", `Watching ${red.length + yellow.length}`) : light("", "Standing by"),
+        h: "Plan B · A strategy falls behind",
+        p: "Every strategy has a yardstick: its profit per $1 staked in the locked final exam, with a band for how much luck can move it at the number of trades it has made live. The table below shows each one's light.",
+        ul: ["<b>Green</b>: in line with the backtest or better", "<b>Yellow</b>: below par, keep watching", "<b>Red after 150+ trades</b>: bench it and let the next golden strategy in line take its place"],
+        w: "The rule is applied when results are reviewed; the bot doesn't bench strategies by itself yet." },
+      { id: "C", k: "", l: light("", "Standing by"), h: "Plan C · The edge fades everywhere",
+        p: "Markets change. If Kalshi's prices stop lagging, every strategy will fall behind together. Limits built into the bot cap the damage before anyone has to act:",
+        ul: [`Each coin stops for the day after losing ${lm("max_daily_loss_usd", v => money(v))}`, `Stops completely if the balance drops below ${lm("min_balance_usd", v => money(v, 2))}`,
+          `Skips a trade if prices are more than ${lm("max_data_age_s", v => v + " s")} old or the decision took over ${lm("max_decision_lag_s", v => v + " s")}`, `At most ${lm("max_contracts_per_order", v => v)} contracts per order and ${lm("max_trades_per_day", v => v)} trades per coin per day`],
+        w: "Then: go back to paper trading only, run the strategy hunt again on fresh data, and restart only what passes every test again." },
+      { id: "D", k: (liveAge != null && liveAge > 3600) || (demoAge != null && demoAge > 3600) ? "warn" : "",
+        l: (liveAge != null && liveAge > 3600) || (demoAge != null && demoAge > 3600) ? light("yellow", "Check the bots") : light("", "Standing by"), h: "Plan D · Tech or account problems",
+        p: (liveAge != null && liveAge > 3600) || (demoAge != null && demoAge > 3600) ? `Heads up: ${liveAge != null && liveAge > 3600 ? `the paper-trading data is ${dur(liveAge)} old` : `the demo runner has been quiet for ${dur(demoAge)}`}.` : "If the computer, connection or account has a problem, the bot is built to fail safe:",
+        ul: ["The runner restarts itself after a crash, rebuilding its state from its own log", "It marks a market as traded before sending the order, so a restart can never double-bet",
+          "Orders it can't confirm are never resent; they're reconciled against Kalshi's own fills and settlements", "A file named STOP in the project folder halts everything",
+          "This cloud session can end. To run non-stop, scripts/run_real.sh (or run_real.bat) runs the same bot on your own computer and restarts it after crashes"],
+        w: "The money rule: only ever use money you can afford to lose. Real money needs your own verified Kalshi account (18+)." }];
+    $("howPlans").innerHTML = plans.map(x => `<article class="plan ${x.k}"><div class="plan-top"><span class="eyebrow">Plan ${x.id}</span>${x.l}</div><h3>${esc(x.h.replace(/^Plan [A-D] · /, ""))}</h3><p>${esc(x.p)}</p>
+      <ul>${x.ul.map(u => `<li>${u}</li>`).join("")}</ul><div class="when">${esc(x.w)}</div></article>`).join("");
+    $("howHealthIntro").textContent = "Profit per $1 staked, live, against the same rule's final exam. The band is the range luck alone could explain at this many trades (two standard errors). It's approximate: live bets are smaller and some strategies size their bets.";
+    const rows = H.filter(x => isGold(x.s) || x.s.lab).sort((a, b) => (b.s.settled || 0) - (a.s.settled || 0));
+    const per = v => nz(v) ? (v > 0 ? "+" : v < 0 ? "−" : "") + "$" + Math.abs(v).toFixed(2) : DASH;
+    $("howHealth").innerHTML = `<thead><tr><th>Strategy</th><th class="num">Settled trades</th><th class="num">Live, per $1</th><th class="num">Backtest, per $1</th><th class="num">Luck band at this many trades</th><th>Light</th></tr></thead><tbody>` +
+      (rows.length ? rows.map(({ s, h }) => `<tr><td>${isGold(s) ? "★ " : ""}${esc(sLabel(s))}</td><td class="num">${NUM(h.n)}</td><td class="num ${nz(h.roiL) ? cls(h.roiL) : ""}">${per(h.roiL)}</td><td class="num">${per(h.roiH)}</td>
+        <td class="num">${h.band ? `${per(h.band[0])} to ${per(h.band[1])}` : DASH}</td><td>${light(h.k, h.txt)}</td></tr>`).join("") : `<tr><td colspan="6" class="empty">No paper strategies in this update.</td></tr>`) + "</tbody>";
+  }
 
   function renderPortfolio() {
     const P = DATA.portfolio; $("portPanel").hidden = !P; if (!P) return;
@@ -2133,13 +2480,13 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   });
   document.addEventListener("keydown", e => { const r = e.target.closest && e.target.closest("tr[data-n]");
     if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); const n = r.dataset.n; r.click(); setTimeout(() => document.querySelector(`tr[data-n="${n}"]`)?.focus(), 0); } });
-  const rerender = () => { renderLive(); renderPortfolio(); renderCmp(); renderDetail(); renderCal(); Object.values(HUNTS).forEach(h => h.rerender()); };
+  const rerender = () => { renderLive(); renderPortfolio(); renderCmp(); renderDetail(); renderCal(); Object.values(HUNTS).forEach(h => h.rerender()); renderHow(); };
   try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rerender); } catch (e) {}
   new MutationObserver(rerender).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   renderAll();
   Object.values(HUNTS).forEach(h => h.render());
-  renderResearch(); renderOther();
-  if (!routeHash()) { let saved = null; try { saved = localStorage.getItem("k15tab"); } catch (e) {} selectTab(TABS.includes(saved) ? saved : "crypto", { hash: false }); }
+  renderResearch(); renderOther(); if (!LIVE_DATA) renderHow();
+  if (!routeHash()) { let saved = null; try { saved = localStorage.getItem("k15tab"); } catch (e) {} selectTab(TABS.includes(saved) ? saved : "how", { hash: false }); }
   document.querySelectorAll("a[data-jump]").forEach(a => { const t = $(a.dataset.jump); if (t && t.hidden && a.dataset.jump !== "livePanel") a.hidden = true; });
 
   // ---- live updates: local server polls live.json; the published page listens to its database

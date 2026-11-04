@@ -469,6 +469,14 @@ FAM5 = {
                       grid=dict(entry=["lag", "shape", "drift", "emp", "vol", "ref", "t4", "ens_or4", "ens_or3",
                                        "ens_vote2"], dedge=[-0.01, 0.0, 0.01], timing=["none"],
                                 exit=["hold", "c-2", "c0", "c2", "c4"], size=S4)),
+    "x_combo": dict(name="Best pieces combined",
+                    idea="Designed after the search-window results of the families above (holdout untouched): the "
+                         "strongest entries (scalp, fresh-move/lagging quote, EWMA vol, recalibrated, 4-model "
+                         "ensemble) with edge offsets, edge-growing timing, exit at fair value or within 2c, one "
+                         "re-entry, Kelly stakes, and an optional 6-coin same-direction cap.",
+                    grid=dict(entry=["fv12v8", "lag", "vol", "shape", "ens_or4"], dedge=[0.0, 0.01, 0.02],
+                              timing=["none", "grow"], exit=["c0", "c2"], reentry=[1, 2], capk=[0, 6], prio=["first"],
+                              size=["flat", "k5", "k5p15"])),
 }
 REF_CFG = {"entry": "fv13", "dedge": 0.0, "timing": "none", "exit": "c0", "size": "k5"}  # = sized_exit:ALL
 
@@ -705,6 +713,42 @@ def search(fams, workers=2):
     return cache
 
 
+def _tv(a):
+    n, s, ss = a[..., 0], a[..., 1], a[..., 2]
+    nn = np.maximum(n, 2)
+    var = (ss - s * s / nn) / (nn - 1)
+    with np.errstate(all="ignore"):
+        t = s / nn / np.sqrt(var / nn)
+    return np.where((n >= lab3.MIN_TRADES) & (var > 0), t, -np.inf)
+
+
+def walk_t(agg):
+    """lab3.walk, but each fold's config is the one with the best t-stat (not P&L) on the earlier folds: the bar
+    is a t-stat, and stake-scaling variants can buy P&L with variance."""
+    oos = np.zeros(3)
+    picks, fold_pnl = [], []
+    for k in range(1, N_FOLDS):
+        sc = _tv(agg[:, :k, :].sum(1))
+        if not np.isfinite(sc).any():
+            picks.append(None)
+            fold_pnl.append(0.0)
+            continue
+        c = int(np.argmax(sc))
+        picks.append(c)
+        oos += agg[c, k]
+        fold_pnl.append(float(agg[c, k, 1]))
+    full = agg.sum(1)
+    sc = _tv(full)
+    final = int(np.argmax(sc)) if np.isfinite(sc).any() else None
+    return {"oos": {"pnl": round(float(oos[1]), 2), "trades": int(oos[0]), "t": round(lab3.tstat_agg(oos), 2),
+                    "fold_win": round(float(np.mean([x > 0 for x in fold_pnl])), 2)},
+            "picks": picks, "final": final,
+            "final_search": None if final is None else {"pnl": round(float(full[final, 1]), 2),
+                                                        "trades": int(full[final, 0]),
+                                                        "t": round(lab3.tstat_agg(full[final]), 2)},
+            "oos_by_pnl_selection": lab3.walk(agg)["oos"]}
+
+
 def ref_search(cache):
     """The bar's own search record: sized_exit:ALL is config REF_CFG of x_exit (fixed, so in-sample)."""
     cf = configs("x_exit")
@@ -717,7 +761,8 @@ def ref_search(cache):
 
 
 def is_ref(cfg):
-    return all(cfg.get(k) == v for k, v in REF_CFG.items()) and not any(cfg.get(k) for k in ("capk", "reentry", "wait"))
+    return all(cfg.get(k) == v for k, v in REF_CFG.items()) and not cfg.get("capk") and cfg.get("reentry", 1) <= 1 \
+        and not cfg.get("wait")
 
 
 def describe(cfg):
@@ -749,7 +794,7 @@ def describe(cfg):
     if "frac" in x:
         xs.append("sell half")
     parts.append(", ".join(xs) if xs else "hold to settlement")
-    if cfg.get("reentry"):
+    if cfg.get("reentry", 1) > 1:
         parts.append(f"re-enter up to {cfg['reentry']}x per market")
     if cfg.get("capk"):
         parts.append(f"max {cfg['capk']} same-direction coins per window ({cfg['prio']})")
@@ -809,7 +854,7 @@ def main(args=None):
     WF, cands = {}, []
     for f in fams:
         cf = configs(f)
-        w = lab3.walk(cache[f]["agg"])
+        w = walk_t(cache[f]["agg"])
         WF[f] = w
         fin = cf[w["final"]] if w["final"] is not None else None
         print(f"  {f:14s} WF ${w['oos']['pnl']:>9} n={w['oos']['trades']:>6} t={w['oos']['t']:>5} "
@@ -857,6 +902,8 @@ def main(args=None):
         judge(c, t_bar, live_best, ref)
         print(f"  {c['status']:6s} {c['id']:16s} {c['why']}", flush=True)
     cands.sort(key=lambda c: ({"golden": 0, "pass": 1, "fail": 2}[c["status"]], -c["holdout"]["t"]))
+    for c in cands:
+        c["label"] = "All 9 coins · " + FAM5[c["family"]]["name"] + " (" + describe(c["cfg"]) + ")"
     fam_rows = []
     for f in fams:
         mine = [c for c in cands if c["family"] == f]
@@ -876,8 +923,7 @@ def main(args=None):
     pub = []
     for c in cands:
         cfg = c["cfg"]
-        pub.append({"id": f"{c['id']}:{_exec(cfg)}", "label": "All 9 coins · " + FAM5[c["family"]]["name"] + " (" +
-                    describe(cfg) + ")", "family": c["family"], "scope": "ALL", "strategy": c["family"],
+        pub.append({"id": f"{c['id']}:{_exec(cfg)}", "label": c["label"], "family": c["family"], "scope": "ALL", "strategy": c["family"],
                     "execution": _exec(cfg), "params": {**cfg, "norm": c["norm"], "exit_rule": EX[cfg["exit"]]},
                     "search": c["search"], "holdout": c["holdout"], "archive": c["archive"], "fresh": c["fresh"],
                     "search_insample": c["search_insample"], "delay1": c["delay1"],
@@ -900,6 +946,7 @@ def main(args=None):
             "holdout_tests_breakdown": {"lab3": 112, "combo_sized_exit": 1, "lab5_validation_peeks": PEEKED,
                                         "lab5_candidates": len(cands)},
             "t_bar_strict": t_bar, "stake": STAKE, "scope": "ALL (all 9 coins pooled, one parameter set)",
+            "selection": "walk-forward and final tuning pick the config with the best search t-stat (lab3 used P&L)",
             "shortlist": "lab3's: walk-forward P&L > 0, t >= 1.5, >= 50 trades, >= half of test folds profitable; and "
                          "the family's final config is not sized_exit:ALL itself; one candidate per family",
             "sized_exit_search": ref_s,
