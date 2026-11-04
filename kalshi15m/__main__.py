@@ -12,6 +12,9 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] in ("real", "real-report"):   # own argument parsers
         from . import real
         raise SystemExit(real.main(sys.argv[2:]) if sys.argv[1] == "real" else real.report(sys.argv[2:]))
+    if len(sys.argv) > 1 and sys.argv[1] == "record-pyth":              # own argument parsing (--once, --minutes N)
+        from . import record_pyth
+        raise SystemExit(record_pyth.main(sys.argv[2:]))
     ap = argparse.ArgumentParser(prog="kalshi15m")
     sub = ap.add_subparsers(dest="cmd", required=True)
     d = sub.add_parser("download", help="fetch historical Kalshi + spot data")
@@ -42,6 +45,11 @@ def main():
     l3.add_argument("--diagnose", action="store_true", help="only re-run the diagnostics on an existing results file")
     l4 = sub.add_parser("lab4", help="golden hunt on FX / yields / indices / commodities + cross-market (see lab4.py)")
     l4.add_argument("args", nargs="*", help="survey | download [SERIES ...] | models [QUICK] | xmkt | range | judge")
+    l4p = sub.add_parser("lab4p", help="lab4 re-run with Pyth (Kalshi's settlement source) as the price anchor (see lab4p.py)")
+    l4p.add_argument("args", nargs="*", help="probe | validate | models [WORKERS] | judge | hermes")
+    rp = sub.add_parser("record-pyth", help="forward recorder: Pyth prices + Kalshi bid/ask of open non-crypto 15-min markets, every minute",
+                        add_help=False)
+    rp.add_argument("args", nargs=argparse.REMAINDER, help="[--once] [--minutes N]")
     sub.add_parser("live-report", help="refresh the dashboard with the live paper-trading log")
     rl = sub.add_parser("real", help="REAL-MONEY runner for KXNEAR15M fair_value (see REAL_MONEY.md); --demo by default",
                         add_help=False)
@@ -89,6 +97,12 @@ def main():
     elif a.cmd == "lab4":
         from . import lab4
         lab4.main(a.args)
+    elif a.cmd == "lab4p":
+        from . import lab4p
+        lab4p.main(a.args)
+    elif a.cmd == "record-pyth":
+        from . import record_pyth
+        raise SystemExit(record_pyth.main(a.args))
     elif a.cmd == "hourly":
         from . import hourly
         hourly.main(a.series, a.workers, a.days, a.skip_download)
