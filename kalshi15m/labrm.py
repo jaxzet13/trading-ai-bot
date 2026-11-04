@@ -422,6 +422,54 @@ def daily(trades):
             "best_day": round(float(v.max()), 2) if len(v) else None}
 
 
+def summarise_big(res, trades_by, per, periods, cands):
+    rows = []
+    done_ids = [p["id"] for p in periods if all(p["id"] in res[c] for c in res)]
+    for cid in BIG:
+        _, label, src, cfg, ready = cands[cid]
+        have = [p["id"] for p in periods if p["id"] in res[cid]]
+        oos_ids = [i for i in have if i in OUT_OF_SAMPLE]
+        allt = [x for i in oos_ids for x in trades_by[cid][i]]
+        pn = np.array([x["pnl"] for x in allt]) if allt else np.zeros(0)
+        t_oos = float(pn.mean() / pn.std(ddof=1) * math.sqrt(len(pn))) if len(pn) > 2 and pn.std(ddof=1) > 0 else None
+        tot_trades = sum(res[cid][i]["trades"] for i in oos_ids)
+        nf = len(pn)
+        staked = sum(res[cid][i]["staked"] for i in oos_ids)
+        tot = {"pnl": round(float(pn.sum()), 2), "trades": tot_trades, "filled": nf,
+               "fill_rate": round(nf / tot_trades, 3) if tot_trades else None,
+               "wins": int((pn > 0).sum()), "win_rate": round(float((pn > 0).mean()), 3) if nf else None,
+               "t": round(t_oos, 2) if t_oos is not None else None,
+               "max_dd": min((res[cid][i]["max_dd"] for i in oos_ids), default=None),
+               "end_balance": round(ACCOUNT["start_balance"] + float(pn.sum()), 2),
+               "per_dollar": round(float(pn.sum()) / staked, 3) if staked else None,
+               "scope": "out-of-sample periods tested so far: " + ", ".join(oos_ids)}
+        chain, cum = [], 0.0
+        for i in [p["id"] for p in periods if p["id"] in have]:
+            for x in sorted(trades_by[cid][i], key=lambda x: x["close"]):
+                cum += x["pnl"]
+                chain.append([int(x["close"]), round(ACCOUNT["start_balance"] + cum, 4)])
+        all_oos = [p["id"] for p in periods if p["id"] in OUT_OF_SAMPLE]
+        complete = all(i in have for i in all_oos)
+        all_pos = all(res[cid][i]["pnl"] > 0 for i in oos_ids)
+        if complete and all_pos and nf >= 100 and (t_oos or 0) >= 2.0:
+            status, why = "real-money golden", (f"profitable in every out-of-sample period, {nf} filled bets, "
+                                                f"consistency t {t_oos:.2f}")
+        elif tot["pnl"] > 0:
+            bad = [p["label"] for p in periods if p["id"] in oos_ids and res[cid][p["id"]]["pnl"] <= 0]
+            status = "pass"
+            why = ("lost in: " + "; ".join(bad) if bad else
+                   f"consistency t {t_oos:.2f} < 2" if (t_oos or 0) < 2 else
+                   "not all out-of-sample periods tested yet" if not complete else f"only {nf} filled bets")
+        else:
+            status, why = "fail", f"lost ${-tot['pnl']:.2f} out of sample with real fills"
+        rows.append({"id": cid, "label": label, "source": src, "live_ready": ready,
+                     "backtest": {"pnl10": round(sum(res[cid][i]["backtest_pnl10"] for i in oos_ids), 2),
+                                  "trades": sum(len(per[cid].get(i, [])) for i in oos_ids)},
+                     "periods": res[cid], "total": tot, "curve": chain[:: max(1, len(chain) // 300)] + chain[-1:],
+                     "status": status, "why": why})
+    return sorted(rows, key=lambda r: -r["total"]["pnl"])
+
+
 def main_big(args=None):
     """Every period with data: the Jul-Aug archive (SOL/NEAR/DOGE), the Sep 1 - Oct 17 search window (in-sample:
     the rules' settings were chosen there), the Oct 18 - Nov 1 final exam, and Nov 1-4. Each period is its own
@@ -441,8 +489,10 @@ def main_big(args=None):
     fmt = lambda a, b: f"{datetime.utcfromtimestamp(a):%b %-d} – {datetime.utcfromtimestamp(b):%b %-d}"
     periods = []
     arch_coins = [c for c in L.G.get("arch", {}) if c in COINS]
+    ARCH_FROM = 1782864000                      # 2026-07-01: the last two archive months (time budget)
     if arch_coins:
         a0, a1 = span("arch")
+        a0 = max(a0, ARCH_FROM)
         periods.append({"id": "arch", "label": f"{fmt(a0, a1)} archive ({', '.join(c[2:-3] for c in arch_coins)})",
                         "start": a0, "end": a1})
     s0, s1 = span("search")
@@ -458,7 +508,8 @@ def main_big(args=None):
         out = {}
         for pid, wh in (("arch", "arch"), ("search", "search"), ("hold", "hold")):
             if pid in [p["id"] for p in periods]:
-                out[pid] = [p for p in positions(wh, cfg, nm) if p["coin"] in COINS]
+                out[pid] = [p for p in positions(wh, cfg, nm) if p["coin"] in COINS
+                            and (pid != "arch" or p["t"] >= ARCH_FROM)]
         a = positions("p1", cfg, nm)
         b = [p for p in positions("p2", cfg, nm) if p["tk"] not in seen and p["t"] >= p2_start]
         out["recent"] = sorted(a + b, key=lambda p: (p["t"], p["coin"]))
@@ -476,57 +527,26 @@ def main_big(args=None):
     STATE["progress"].update(stage="checking every bet against Kalshi's real trades",
                              note=f"about {need} trade-record lookups to do")
     write()
-    rows = []
-    for k, cid in enumerate(BIG):
-        _, label, src, cfg, ready = cands[cid]
-        res, chain, cum = {}, [], 0.0
-        allt_oos = []
-        for p in periods:
-            pos = per[cid].get(p["id"], [])
-            trades, curve = simulate(pos, f"{label} · {p['label']}")
-            s = stats(trades, curve, 0, 10 ** 12)
-            s.update(daily(trades), max_dd=max_dd(curve), backtest_pnl10=round(sum(x["pnl10"] for x in pos), 2))
-            res[p["id"]] = s
-            if p["id"] in OUT_OF_SAMPLE:
-                allt_oos += [x for x in trades if x["filled"]]
-            for x in sorted((x for x in trades if x["filled"]), key=lambda x: x["close"]):
-                cum += x["pnl"]
-                chain.append([int(x["close"]), round(ACCOUNT["start_balance"] + cum, 4)])
-        pn = np.array([x["pnl"] for x in allt_oos]) if allt_oos else np.zeros(0)
-        t_oos = float(pn.mean() / pn.std(ddof=1) * math.sqrt(len(pn))) if len(pn) > 2 and pn.std(ddof=1) > 0 else None
-        oos_ids = [p["id"] for p in periods if p["id"] in OUT_OF_SAMPLE]
-        tot_trades = sum(res[i]["trades"] for i in oos_ids)
-        nf = len(pn)
-        tot = {"pnl": round(float(pn.sum()), 2), "trades": tot_trades, "filled": nf,
-               "fill_rate": round(nf / tot_trades, 3) if tot_trades else None,
-               "wins": int((pn > 0).sum()), "win_rate": round(float((pn > 0).mean()), 3) if nf else None,
-               "t": round(t_oos, 2) if t_oos is not None else None,
-               "max_dd": min((res[i]["max_dd"] for i in oos_ids), default=None),
-               "end_balance": round(ACCOUNT["start_balance"] + float(pn.sum()), 2),
-               "per_dollar": round(float(pn.sum()) / sum(res[i]["staked"] for i in oos_ids), 3)
-               if sum(res[i]["staked"] for i in oos_ids) else None,
-               "scope": "out-of-sample periods only (archive, final exam, newest)"}
-        all_pos = all(res[i]["pnl"] > 0 for i in oos_ids)
-        if all_pos and nf >= 100 and (t_oos or 0) >= 2.0:
-            status, why = "real-money golden", (f"profitable in every out-of-sample period, {nf} filled bets, "
-                                                f"consistency t {t_oos:.2f}")
-        elif tot["pnl"] > 0:
-            bad = [p["label"] for p in periods if p["id"] in oos_ids and res[p["id"]]["pnl"] <= 0]
-            status = "pass"
-            why = ("profitable out of sample overall, but lost in: " + "; ".join(bad) if bad else
-                   f"profitable everywhere but consistency t {t_oos:.2f} < 2" if (t_oos or 0) < 2 else
-                   f"only {nf} filled bets")
-        else:
-            status, why = "fail", f"lost ${-tot['pnl']:.2f} out of sample with real fills"
-        rows.append({"id": cid, "label": label, "source": src, "live_ready": ready,
-                     "backtest": {"pnl10": round(sum(res[i]["backtest_pnl10"] for i in oos_ids), 2),
-                                  "trades": sum(len(per[cid].get(i, [])) for i in oos_ids)},
-                     "periods": res, "total": tot, "curve": chain[:: max(1, len(chain) // 300)] + chain[-1:],
-                     "status": status, "why": why})
-        STATE["candidates"] = sorted(rows, key=lambda r: -r["total"]["pnl"])
-        STATE["progress"].update(done=k + 1, note=f"finished {label}")
-        write()
-        pickle.dump(TAPE, open(TAPE_CACHE, "wb"))
+    ORDER = [pid for pid in ("hold", "recent", "arch", "search") if pid in [p["id"] for p in periods]]
+    res = {cid: {} for cid in BIG}
+    trades_by = {cid: {} for cid in BIG}
+    STATE["progress"].update(total=len(BIG) * len(ORDER), done=0)
+    step = 0
+    for pid in ORDER:
+        plabel = next(p["label"] for p in periods if p["id"] == pid)
+        for cid in BIG:
+            _, label, src, cfg, ready = cands[cid]
+            pos = per[cid].get(pid, [])
+            trades, curve = simulate(pos, f"{plabel} · {label}")
+            s_ = stats(trades, curve, 0, 10 ** 12)
+            s_.update(daily(trades), max_dd=max_dd(curve), backtest_pnl10=round(sum(x["pnl10"] for x in pos), 2))
+            res[cid][pid] = s_
+            trades_by[cid][pid] = [x for x in trades if x["filled"]]
+            step += 1
+            STATE["progress"].update(done=step, note=f"finished {label} on {plabel}")
+            STATE["candidates"] = summarise_big(res, trades_by, per, periods, cands)
+            write()
+            pickle.dump(TAPE, open(TAPE_CACHE, "wb"))
     STATE["progress"].update(stage="done", note="")
     write("done")
     for r in STATE["candidates"]:
