@@ -238,7 +238,8 @@ def validate():
 
 # =========================================================================== panel
 def _candles(series):
-    parts = [p for p in (F.LDIR / f"{series}_candles.part.csv", PDIR / f"{series}_candles_ext.part.csv") if p.exists()]
+    parts = [p for p in (F.LDIR / f"{series}_candles.part.csv", PDIR / f"{series}_candles_ext.part.csv",
+                         PDIR / f"{series}_candles_hist.part.csv") if p.exists()]
     if not parts:
         return pd.DataFrame(columns=["ticker", "ts"])
     cd = pd.concat([pd.read_csv(p) for p in parts], ignore_index=True)
@@ -295,7 +296,7 @@ def build_panel_p(series):
     """lab4's panel over the whole Kalshi candle history (Sep 4+). Yahoo columns (spot, strike = Yahoo price at the
     open, vol1m, vol240, prev_ret) are NaN where Yahoo has no data; Pyth-exact columns are added by load_p."""
     mk = markets_all(series)
-    mk = mk[np.isfinite(mk.strike) & (mk.open_ts >= ARCH_BEFORE)]
+    mk = mk[np.isfinite(mk.strike)]          # markets before Sep 4 only where archive candles were fetched (blind test)
     cd = _candles(series)
     mk = mk[mk.ticker.isin(set(cd.ticker))].reset_index(drop=True)
     sp_path = L4.spot_path(series)
@@ -540,6 +541,15 @@ def models(workers=2):
     L4.SKIP_FAMILIES = set()
     L4.GROUPS.clear()
     part = L4.models(workers=workers, quick=0, families=FAMS, out=PART)
+    # The blind archive (Kalshi markets before Sep 4, fetched for copper and nat gas) has no Yahoo prices, so families
+    # that need the Yahoo path cannot be tested there: no archive verdict for them (as lab3 did for BTC-reference rules).
+    for c in part["candidates"]:
+        rule = c["rule"]
+        fams = [m["family"] for m in rule["members"]] if "members" in rule else [rule["family"]]
+        if c.get("archive") is not None and not all(f in PYTH_EXACT for f in fams):
+            c["archive_note"] = "needs the Yahoo intra-window path, which does not exist before Oct 5: not archive-tested"
+            c["archive"] = None
+    PART.write_text(json.dumps(part, default=L3._jd))
     return part
 
 
@@ -588,7 +598,11 @@ def judge():
                   "pyth_result_match": v.get("result_matches_pyth_updown"), "pyth_chain_continuity": v.get("chain_continuity"),
                   "pyth_tie_rate": v.get("tie_rate"), "yahoo_sign_agreement": v.get("yahoo_sign_agreement"),
                   "underlying": f"Pyth {v.get('pyth_feed')} quarter-hour prints (Kalshi) + Yahoo {F.UNDERLYING[s][1]} path"})
+    notes = {c["id"]: c["archive_note"] for c in pm["candidates"] if c.get("archive_note")}
     for c in res["candidates"]:
+        base_id = c["id"].rsplit(":", 1)[0]
+        if base_id in notes:
+            c["archive_note"] = notes[base_id]
         fams = ([m["family"] for m in c["params"]["members"]] if c["family"] == "ens_best" else [c["family"]])
         if all(f in PYTH_EXACT for f in fams):
             c["data"] = "pyth_exact"
