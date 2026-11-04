@@ -107,6 +107,12 @@ for _r in GOLDEN:
 # locked holdout and the older archive (scratchpad combo.py, Nov 3): #2's entries and Kelly stakes
 # (sized:ALL) with #1's early exit (conv0). Holdout $8,034 / t 6.95; archive $6,607 / t 5.81; search t 11.3.
 EXTRA = [
+    # lab5 (data/lab/lab5_results.json) x_exit:ALL: scalp entry at 13c, stakes on kelly**1.5 capped 5x, exit when the
+    # bid is within 2c of fair value. Holdout $7,025 / t 10.15; archive $6,763 / t 8.62; fresh $1,130 / t 3.89;
+    # cumulative Bonferroni bar 3.35 over 124 holdout tests.
+    {"id": "x_exit:ALL", "family": "scalp", "scope": "ALL", "t": 10.15, "kind": "sized_exit",
+     "params": {"vm": 0.8, "edge": 0.13, "start": 2, "end": 13, "band": "05-95", "cap": 5, "pow": 1.5, "exit": "conv2"},
+     "norm": 0.22693348935173294},
     {"id": "sized_exit:ALL", "family": "sized", "scope": "ALL", "t": 6.95, "kind": "sized_exit",
      "params": {"start": 2, "end": 13, "edge": 0.13, "band": "05-95", "vm": 1.0, "cap": 5, "exit": "conv0"},
      "norm": SIZED_NORMS["sized:ALL"]},
@@ -126,7 +132,8 @@ def sized_stake(rule_id: str, q: float, price: float, stake: float):
     -> (dollars to stake, kelly)."""
     r = RULES[rule_id]
     kel = max((q - price) / (1 - price), 1e-4)
-    return stake * min(kel / r["norm"], r["params"]["cap"]), kel
+    w = kel ** r["params"].get("pow", 1)          # lab5 x_exit sizes on kelly**1.5
+    return stake * min(w / r["norm"], r["params"]["cap"]), kel
 
 
 @dataclass

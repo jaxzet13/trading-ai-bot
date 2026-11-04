@@ -30,10 +30,8 @@ from __future__ import annotations
 import json
 import math
 import os
-import sys
 import time
 from multiprocessing import Pool
-from pathlib import Path
 from statistics import NormalDist
 
 import numpy as np
@@ -666,7 +664,8 @@ def exam(cfg, norm):
     srch = trades_df("search", cfg, norm)
     out = {"holdout": summ(hold), "curve": lab3.curve(hold), "archive": {**summ(arch), "coins": [lab3.cname(c) for c in G["arch"]]},
            "fresh": {**summ(fresh), "span": _span(fresh)}, "search_insample": summ(srch),
-           "delay1": {k: v for k, v in summ(d1).items() if k in ("pnl", "t", "trades")},
+           "delay1": ({k: v for k, v in summ(d1).items() if k in ("pnl", "t", "trades")} if not cfg.get("wait") else
+                      {"pnl": None, "t": None, "trades": None, "note": "latency check not modelled for maker entries"}),
            "holdout_by_coin": {lab3.cname(c): round(float(g.pnl.sum()), 2) for c, g in hold.groupby("series")}}
     if len(arch):
         mo = pd.to_datetime(arch.ts, unit="s").dt.strftime("%Y-%m")
@@ -934,7 +933,7 @@ def main(args=None):
                     "paired_vs_sized_exit_fresh": c["vs_sized_exit_fresh"],
                     "beats_sized_exit": c["beats_sized_exit"],
                     "holdout_by_coin": c["holdout_by_coin"], "status": c["status"], "why": c["why"],
-                    "checks": c["checks"], "curve": c["curve"]})
+                    "checks": c["checks"], "live_implementation": live_notes(cfg, c["norm"]), "curve": c["curve"]})
     out = {
         "generated": int(time.time()), "runtime_s": int(time.time() - t0),
         "method": {
@@ -960,6 +959,7 @@ def main(args=None):
                       "fresh_markets": len(G["fresh"][s]) if s in G["fresh"] else 0} for s in COINS},
         "families": fam_rows, "baselines": base, "candidates": pub, "heatmaps": [],
     }
+    out["method"]["decomposition"] = decomposition()
     gold = [c for c in pub if c["status"] == "golden"]
     out["method"]["summary"] = [
         f"{len(gold)} of {len(pub)} lab5 candidates that reached the holdout are golden (cumulative strict bar t >= {t_bar} "
@@ -971,6 +971,76 @@ def main(args=None):
     OUT.write_text(json.dumps(out, default=lab3._jd))
     print(f"done in {time.time() - t0:.0f}s -> {OUT}")
     return out
+
+
+DECOMP = [
+    ("scalp:ALL (scalp entry, flat $10, exit at fair value)", {"entry": "fv12v8", "dedge": 0.0, "exit": "c0", "size": "flat"}),
+    ("+ Kelly stakes", {"entry": "fv12v8", "dedge": 0.0, "exit": "c0", "size": "k5"}),
+    ("+ exit within 2c of fair value", {"entry": "fv12v8", "dedge": 0.0, "exit": "c2", "size": "k5"}),
+    ("+ 14c entry edge", {"entry": "fv12v8", "dedge": 0.02, "exit": "c2", "size": "k5"}),
+    ("+ one re-entry (= x_reentry:ALL)", {"entry": "fv12v8", "dedge": 0.02, "exit": "c2", "size": "k3", "reentry": 2}),
+    ("scalp entry, Kelly, hold to settlement", {"entry": "fv12v8", "dedge": 0.0, "exit": "hold", "size": "k5"}),
+    ("sized_exit:ALL", REF_CFG),
+    ("sized_exit:ALL with flat $10", {**REF_CFG, "size": "flat"}),
+    ("sized_exit:ALL, exit within 2c", {**REF_CFG, "exit": "c2"}),
+]
+
+
+def decomposition():
+    """Where the gain comes from, step by step. Search window, archive and fresh data only: these
+    intermediate rules were NOT run on the holdout (they would be extra holdout tests)."""
+    out = []
+    for name, c in DECOMP:
+        c = {"timing": "none", **c}
+        for ctx in G["search"].values():
+            ctx.cache = {}
+        nrm = norm_of(episodes("search", c), c)
+        row = {"step": name, "params": c}
+        for w in ("search", "arch", "fresh"):
+            s = summ(trades_df(w, c, nrm))
+            row[w] = {k: s.get(k) for k in ("pnl", "trades", "t", "t_by_window", "max_dd")}
+        out.append(row)
+    return out
+
+
+def live_notes(cfg, norm):
+    """How golden_live / real.py would run this rule live (golden_live already has the lab3 families, the
+    per-minute features, sized_stake and the convK exit_check)."""
+    fam, ecfg = ENTRY[cfg["entry"]] if cfg["entry"] in ENTRY else ("ensemble", {})
+    ecfg = {k: v for k, v in ecfg.items() if k not in ("cap", "exit")}
+    if "edge" in ecfg:
+        ecfg["edge"] = round(ecfg["edge"] + cfg.get("dedge", 0.0), 4)
+    sz = SIZES[cfg["size"]]
+    x = EX[cfg["exit"]]
+    steps = [f"Entry: lab3 family '{fam}' with params {ecfg} (golden_live._signal / lab3.FAMILIES[fam]['fn'] on the "
+             f"live 1-row panel); taker buy of the signalled side at its ask (YES: yes_ask, NO: 1 - yes_bid)."]
+    if sz is not None:
+        steps.append(f"Stake: base x min(w / {norm:.6f}, {sz[2]}), w = kelly" + (f"**{sz[1]}" if sz[1] != 1 else "")
+                     + ", kelly = max((q - price) / (1 - price), 1e-4), q = the rule's model value of the side at the "
+                     "decision minute (golden_live.sized_stake" + (" + a new power parameter" if sz[1] != 1 else "") + ").")
+    if "conv" in x:
+        steps.append(f"Exit: every later minute, sell all contracts at the held side's bid (YES: yes_bid, NO: 1 - yes_ask, "
+                     f"taker/IOC) once bid >= q - {x['conv'] / 100:.2f}, q = the entry family's model value of the held "
+                     f"side that minute (golden_live.exit_check with params exit='conv{x['conv']}', kind 'sized_exit').")
+    if cfg.get("timing") == "grow":
+        steps.append("NEW: entry filter 'edge growing': gap(minute) = q - ask of that side must exceed the same gap one "
+                     "minute earlier (previous column of the live panel; no quote a minute ago = allowed).")
+    if cfg.get("reentry", 1) > 1:
+        steps.append(f"NEW: re-entry. Per-market state (entries used, open position, exit minute). After an exit fills, "
+                     f"from the NEXT minute up to the rule's end minute, a fresh signal at the CURRENT minute (mask at "
+                     f"column minute-1, not lab3.signal's first-minute logic) opens a new position (either side), Kelly "
+                     f"stake again; at most {cfg['reentry']} entry signals per market (a signal with no valid ask still "
+                     f"uses one), one position at a time.")
+    if cfg.get("capk"):
+        steps.append(f"NEW: portfolio cap shared by the 9 coin threads: per 15-minute window at most {cfg['capk']} "
+                     f"positions on the same side (YES or NO), first come first served (lock-protected counter keyed "
+                     f"by window open time and side).")
+    if cfg.get("wait"):
+        steps.append(f"NEW: maker entry: rest a buy at best bid + 1c (or at the bid if that would cross) for "
+                     f"{cfg['wait']} minute(s), cancel if unfilled.")
+    if "maker" in x:
+        steps.append(f"NEW: resting sell at q + {x['maker']}c re-priced every minute (never at/below the bid).")
+    return steps
 
 
 def _exec(cfg):

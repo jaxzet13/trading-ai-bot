@@ -2182,7 +2182,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
         <text class="lbl2" x="${X(mo) + 14}" y="${Y(ex.sell) + 14}">+${gain}¢ a contract</text>
       </svg>
       <div class="ex-text"><div class="eyebrow">A real trade from the demo account · ${fmtTime(ex.ts)}</div>
-        <h3>${coin}: bought at ${cents(ex.buy)}, sold at ${cents(ex.sell)} four minutes later</h3>
+        <h3>${coin}: bought at ${cents(ex.buy)}, sold at ${cents(ex.sell)} ${mo - mi} minute${mo - mi === 1 ? "" : "s"} later</h3>
         <p>In minute ${mi}, ${coin} was ${usd(ex.spot)}, just ${ex.spot >= ex.strike ? "above" : "below"} its starting line of ${usd(ex.strike)}. The model put the chance of it finishing ${up ? "UP" : "DOWN"} at <b>${pct(ex.fair_in)}</b>, but Kalshi was selling that bet for <b>${cents(ex.buy)}</b>. It bought ${ex.lag_s != null ? `${ex.lag_s.toFixed(1)} seconds after the minute closed` : "right away"}.</p>
         <p>By minute ${mo}, Kalshi's price had caught up${nz(ex.fair_out) ? ` with the model (now ${pct(ex.fair_out)})` : ""}, and the bot sold at <b>${cents(ex.sell)}</b> instead of waiting for the result: <b class="pos">+${money(ex.pnl, 2)}</b> after fees on ${NUM(ex.n)} contract${ex.n === 1 ? "" : "s"}.</p>
         <p class="small">Gold line: the model's fair chance. Blue: what Kalshi charged, then paid. The dashed blue line just joins the buy and the sale; Kalshi's price in between isn't recorded. Demo order books are thin, so only ${NUM(ex.n)} contract filled. Many trades are not this clean, and plenty lose.</p></div>`;

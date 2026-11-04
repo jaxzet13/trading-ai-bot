@@ -1,5 +1,5 @@
 {
-  "_note": "DEMO (fake money), tuned for growth on thin demo books: the best combo (Kelly-sized entries + early exit) gets first pick of every market; the 16 golden rules, best first, take markets the combo doesn't signal on. 10% of the crypto balance per bet (compounding); IOC orders may reach up to 10c deeper while keeping >= 6c edge.",
+  "_note": "DEMO (fake money): best-first. lab5's x_exit (holdout t 10.15, archive t 8.62, fresh t 3.89) gets first pick, then the best combo, then the 16 lab3 golden rules. 10% of the crypto balance per bet (compounding); IOC orders may reach up to 10c deeper while keeping >= 6c edge.",
   "series": [
     "KXBTC15M",
     "KXETH15M",
@@ -14,6 +14,23 @@
   "execution": "taker",
   "poll": "minute",
   "golden_rules": [
+    {
+      "id": "x_exit:ALL",
+      "family": "scalp",
+      "scope": "ALL",
+      "t": 10.15,
+      "params": {
+        "vm": 0.8,
+        "edge": 0.13,
+        "start": 2,
+        "end": 13,
+        "band": "05-95",
+        "cap": 5,
+        "pow": 1.5,
+        "exit": "conv2"
+      },
+      "norm": 0.22693348935173294
+    },
     {
       "id": "sized_exit:ALL",
       "family": "sized",
