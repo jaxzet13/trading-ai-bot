@@ -739,11 +739,67 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     </div>
   </header>
 
-  <div class="ptabs" role="tablist" aria-label="Market groups" id="ptabs">
-    <button type="button" role="tab" id="tab-crypto" aria-controls="panel-crypto" aria-selected="true" tabindex="0" data-tab="crypto">
+  <div class="ptabs" role="tablist" aria-label="Dashboard sections" id="ptabs">
+    <button type="button" role="tab" id="tab-how" aria-controls="panel-how" aria-selected="false" tabindex="-1" data-tab="how">
+      <span class="pt-t">How it works</span><span class="pt-s">the edge, the evidence, plans A to D</span></button>
+    <button type="button" role="tab" id="tab-crypto" aria-controls="panel-crypto" aria-selected="false" tabindex="-1" data-tab="crypto">
       <span class="pt-t">Crypto</span><span class="pt-s">9 coins · live paper trading</span></button>
     <button type="button" role="tab" id="tab-currencies" aria-controls="panel-currencies" aria-selected="false" tabindex="-1" data-tab="currencies">
       <span class="pt-t">Currencies &amp; more</span><span class="pt-s">FX, Treasury yields, stock indices · research only</span></button>
+  </div>
+
+  <div class="tabpanel how" id="panel-how" role="tabpanel" aria-labelledby="tab-how" hidden>
+    <section class="how-hero">
+      <div class="eyebrow">How it works · what the evidence says · what happens when things go wrong</div>
+      <h2 id="howHead">A small edge, repeated many times, tested five different ways</h2>
+      <p class="how-lede" id="howLede"></p>
+      <div class="how-stats" id="howStats"></div>
+      <p class="how-honest"><b>Read this as evidence, not a promise.</b> Backtests and paper trading show what past data and pretend money did. Real trading usually earns less, there are losing days and losing weeks, and nothing here is guaranteed.</p>
+    </section>
+
+    <section class="how-sec" id="how-edge">
+      <div class="how-sh"><div class="eyebrow">The edge</div><h2>How it makes money, in six steps</h2>
+        <p>Each Kalshi market asks one question: will this coin finish the next 15 minutes at or above where it started? Kalshi's prices sometimes lag behind the real coin price. That lag is the whole idea.</p></div>
+      <ol class="flow" id="howFlow"></ol>
+      <div class="how-card how-example" id="howExample"></div>
+    </section>
+
+    <section class="how-sec" id="how-evidence">
+      <div class="how-sh"><div class="eyebrow">The evidence ladder</div><h2>Five tests, each harder to fool than the last</h2>
+        <p>The same strategy has to keep making money as the test gets more realistic: first on data it was tuned on, then on days it never saw, then on months it never saw, then with live prices, then with real orders on Kalshi's demo exchange.</p></div>
+      <ol class="ladder" id="howLadder"></ol>
+    </section>
+
+    <section class="how-sec" id="how-normal">
+      <div class="how-sh"><div class="eyebrow">What normal looks like</div><h2>How consistent it has been</h2>
+        <p id="howNormalIntro"></p></div>
+      <div class="cons" id="howCons"></div>
+      <div class="how-grid2">
+        <div class="how-card"><div class="eyebrow">Running total, day by day, $10 a trade</div><div class="legend" id="howEqLegend" style="margin-top:10px"></div>
+          <div class="chart how-chart"><canvas id="howEq" aria-label="Day-by-day running profit of the best combination across the archive, search and final exam"></canvas></div></div>
+        <div class="how-card"><div class="eyebrow">Every day's result, counted</div><div class="legend" id="howHistLegend" style="margin-top:10px"></div>
+          <div class="chart how-chart"><canvas id="howHist" aria-label="How many days made or lost each amount"></canvas></div></div>
+      </div>
+      <div class="how-card bad-days" id="howBad"></div>
+    </section>
+
+    <section class="how-sec" id="how-demo">
+      <div class="how-sh"><div class="eyebrow">The demo account</div><h2>Real orders, fake money</h2>
+        <p>Kalshi runs a demo exchange with its own order book and pretend dollars. The bot places real orders there, so fills, fees and slippage are real even though the money is not.</p></div>
+      <div class="how-grid2 demo-grid">
+        <div class="how-card"><div class="eyebrow">Demo balance over time</div><div class="chart how-chart"><canvas id="howDemo" aria-label="Demo account balance over time"></canvas></div></div>
+        <div class="how-card"><div class="kvs" id="howDemoStats"></div></div>
+      </div>
+    </section>
+
+    <section class="how-sec" id="how-plans">
+      <div class="how-sh"><div class="eyebrow">Plans A to D</div><h2>What happens when something goes wrong</h2>
+        <p>Every plan below describes something that already exists in the code or a rule we apply when reviewing results. The light on each card shows whether it is in use right now.</p></div>
+      <div class="plans" id="howPlans"></div>
+      <div class="how-card"><div class="how-sh2"><div><div class="eyebrow">Plan B health check</div><h3>Is each paper strategy living up to its backtest?</h3>
+        <p id="howHealthIntro"></p></div></div>
+        <div class="tablewrap"><table id="howHealth"></table></div></div>
+    </section>
   </div>
 
   <div class="tabpanel" id="panel-crypto" role="tabpanel" aria-labelledby="tab-crypto">

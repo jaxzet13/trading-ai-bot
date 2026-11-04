@@ -228,6 +228,7 @@ def summarise() -> dict:
             # display only: how many positions were sold before the close, and what they made
             "sold": sum(x.get("result") == "sold" for x in settles),
             "sold_pnl": round(sum(x["pnl"] for x in settles if x.get("result") == "sold"), 2),
+            "staked": round(sum(x["n"] * x["price"] for x in fills), 2),  # display only: profit per $1 staked
             "pnl": round(sum(x["pnl"] for x in settles), 2), "curve": pnl_curve,
             "open": [x["ticker"] for x in fills if x["ts"] not in settled_fills],
             "holding": [{k: x.get(k) for k in ("ticker", "series", "side", "n", "price", "strike", "close_ts", "model", "spot")}
@@ -301,6 +302,13 @@ def lab_summary():
     lab4 = _lab4()
     if lab4:
         out["lab4"] = lab4
+    out["how"] = {"combo": COMBO, "combo_days": COMBO_DAYS}  # the "How it works" tab's evidence
+    try:  # the demo runner's real safety limits and rule list, quoted on the page's Plan A / Plan C cards
+        cfg = json.loads((ROOT / "real_best_demo.json").read_text())
+        out["how"]["runner"] = {"limits": cfg.get("limits"), "rules": [r.get("id") for r in cfg.get("golden_rules") or []],
+                                "series": cfg.get("series"), "note": cfg.get("_note")}
+    except (OSError, ValueError):
+        pass
     try:   # progress of a running hunt (written by scripts/lab3_progress.py), shown as a banner
         out["lab3_progress"] = json.loads((OUT.parent / "data" / "lab" / "lab3_progress.json").read_text())
     except (OSError, ValueError):
@@ -441,8 +449,82 @@ def other_markets(budget_s: float = 6.0) -> dict:
     return {"generated": int(now), "series": rows}
 
 
+# Best fixed combination from the golden hunt ("sized" Kelly entries + "scalp" early exit, no tuning).
+# Copied from the one-off run scratchpad/combo.py (combo.json, 2026-11-03), which re-ran lab3's engine on the
+# search window, the locked 15-day holdout and the Apr-Aug archive. $10 base stake. Update by re-running it.
+COMBO = {"search": {"pnl": 21896, "trades": 13453, "t": 11.3, "days": 47, "per_day": 465.9, "worst_day": -352.6, "pos_days": 0.94},
+         "hold": {"pnl": 8034, "trades": 5537, "t": 6.95, "days": 17, "per_day": 472.6, "worst_day": -367.4, "pos_days": 0.82},
+         "arch": {"pnl": 6607, "trades": 4797, "t": 5.81, "days": 154, "per_day": 42.9, "worst_day": -194.6, "pos_days": 0.66}}
+# Day-by-day profit of that combination (UTC days, $; day0 = days since 1970-01-01), from the same re-run
+# (scratchpad/combo_days.py = combo.py with the per-day totals kept). Its sums match COMBO above.
+COMBO_DAYS = {
+    "arch": {"day0": 20544, "pnl": [5, -15, 85, 74, 10, 42, 146, 32, -24, -53, 142, 117, -148, 48, 83, 13, -57, 33, 27, -32, 27, 79, -111, 30, 281, 333, 1, 74, -49, 29, -40, -68, 19, -10, 65, 66, -47, 86, 50, -2, 135, -15, 34, 23, -37, -101, -28, -24, -67, -97, 18, 45, 222, 45, 86, -61, -54, -7, -25, -102, -72, 177, 56, 29, 28, 50, 39, -67, 91, 5, 73, 43, 5, 9, 100, 55, -23, 71, -42, -24, -27, 9, -50, -60, 98, -62, -88, 31, -33, 77, 151, 197, 31, -144, -156, 227, 96, 326, -53, -106, 43, 71, -20, 184, 80, -195, 63, -115, 201, 146, -50, 98, 185, 132, 95, -10, 67, 293, 7, 220, 175, 47, -64, 126, 375, 197, 370, 49, 83, 251, -28, 7, -88, 34, 42, 112, 39, 70, 92, 184, -72, 52, 25, 32, 29, -59, 284, 132, 109, 24, -24, -49, 93, 69]},
+    "search": {"day0": 20697, "pnl": [141, 217, 442, 365, 596, 342, 869, 305, 603, 693, 406, 1400, 1237, 312, 749, 656, 454, 437, 911, 1087, 190, 331, 496, 404, 279, 61, -324, 928, -353, 78, 232, 374, 433, -104, 261, 1048, 565, 504, 188, 294, 453, 1097, 179, 871, 169, 325, 695]},
+    "hold": {"day0": 20743, "pnl": [-192, 396, 414, 730, 1085, 490, 266, 358, 1424, 767, 749, 372, 926, -367, -135, 482, 268]},
+}
+DEMO_LOG = OUT.parent / "data" / "kalshi15m" / "real_all9_log.jsonl"
+
+
+def demo_summary(start_balance: float = 10.0) -> dict | None:
+    """The Kalshi demo account (fake money, real order book) from the real runner's log: realised P&L from
+    every settlement and early sale, as a balance curve from the $10 it started with. Display only."""
+    try:
+        lines = DEMO_LOG.read_text().splitlines()
+    except OSError:
+        return None
+    ev = []
+    for line in lines:
+        try:
+            e = json.loads(line)
+        except ValueError:
+            continue
+        if e.get("mode") == "DEMO":
+            ev.append(e)
+    if not ev:
+        return None
+    ev.sort(key=lambda e: e.get("ts", 0))
+    closes = [e for e in ev if e.get("event") in ("settle", "exit") and isinstance(e.get("pnl"), (int, float))]
+    fills = [e for e in ev if e.get("event") == "fill"]
+    bal, curve = start_balance, [[int(ev[0]["ts"]), start_balance]]
+    for e in closes:
+        bal += e["pnl"]
+        curve.append([int(e["ts"]), round(bal, 4)])
+    staked = sum(e.get("cost") or 0 for e in fills)
+    pnl = sum(e["pnl"] for e in closes)
+    # the clearest recent early sale (biggest move from buy price to sale price), for the "how it works" example
+    intents = {(e.get("ticker"), e.get("side")): e for e in ev if e.get("event") == "order_intent"}
+    exits = {(e.get("ticker"), e.get("side")): e for e in ev if e.get("event") == "exit_intent"}  # last one = the filled sale
+    example = None
+    for e in ev:
+        if e.get("event") != "exit" or not (e.get("pnl") or 0) > 0 or not e.get("n"):
+            continue
+        k = (e.get("ticker"), e.get("side"))
+        oi, xi = intents.get(k), exits.get(k)
+        if not oi or oi.get("model") is None or not xi:
+            continue
+        buy = (e.get("entry_cost") or 0) / e["n"]
+        held = (lambda q: q if e.get("side") == "yes" else 1 - q)
+        cand = {"ts": int(e["ts"]), "series": e.get("series"), "ticker": e.get("ticker"), "side": e.get("side"), "n": e["n"],
+                "minute_in": oi.get("minute"), "buy": round(buy, 4), "fair_in": round(held(oi["model"]), 4),
+                "spot": oi.get("spot"), "strike": oi.get("strike"), "lag_s": oi.get("lag_s"),
+                "minute_out": e.get("minute"), "sell": e.get("sell_avg"),
+                "fair_out": round(xi["model_value"], 4) if isinstance(xi.get("model_value"), (int, float)) else None,
+                "pnl": e.get("pnl"), "close_ts": e.get("close_ts")}
+        if example is None or (cand["sell"] or 0) - cand["buy"] > (example["sell"] or 0) - example["buy"]:
+            example = cand
+    return {"start_balance": start_balance, "balance": round(bal, 2), "pnl": round(pnl, 2), "fills": len(fills),
+            "closed": len(closes), "wins": sum(e["pnl"] > 0 for e in closes), "exits": sum(e["event"] == "exit" for e in closes),
+            "staked": round(staked, 2), "since": int(ev[0]["ts"]), "last": int(ev[-1]["ts"]), "curve": curve[-400:],
+            "example": example,
+            "reported_balance": next((e["balance_crypto"] for e in reversed(ev) if isinstance(e.get("balance_crypto"), (int, float))), None)}
+
+
 def build():
     live = summarise()
+    try:  # Kalshi demo account, for the "How it works" tab
+        live["demo"] = demo_summary()
+    except Exception as e:
+        print(f"demo summary: skipped ({e})")
     try:  # research-only markets for the "Currencies & more" tab; never allowed to break the report
         live["other_markets"] = other_markets()
     except Exception as e:

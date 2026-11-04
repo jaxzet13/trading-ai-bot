@@ -561,6 +561,9 @@ CAVEATS = [
     "Pyth print at both ends of every window (strike at the open, expiration value at the close). Those match Kalshi's "
     "result on 100% of markets (one silver market excepted) and chain perfectly (each window's strike = the previous "
     "window's close print), so they are Pyth.",
+    "Blind archive test: the plan was copper and nat gas markets before Sep 4 (Kalshi's /historical candles, one "
+    "request per market), but that endpoint answered 429 to every request for 20 minutes (the IP is shared with the "
+    "live bots), so it was abandoned: no archive check in this run.",
     "So the Pyth-exact families (pq_*) decide only from information that exists at that moment with exact Pyth data: "
     "Pyth quarter-hour prints up to the open, Kalshi's own quotes, and the clock. They run on the whole Kalshi candle "
     "history from Sep 4 (Kalshi's live-API cutoff; older candles cost one request per market and were not fetched). "
@@ -625,8 +628,11 @@ def judge():
         if cinfo:
             r["testable"] = True
             r["tested_markets"] = cinfo["markets"]
+            first = pd.Timestamp(v["first"]).timestamp()
+            late = first >= pm["start"] + 0.8 * (pm["cut"] - pm["start"])
             r["note"] = (f"Tested on {cinfo['markets']} markets with Kalshi candles (Sep 4+; Yahoo path for the control "
-                         f"only from Oct 5). " + base + ".")
+                         f"only from Oct 5). " + base + "." + (" Its markets start in the last search fold, so walk-forward "
+                         "had nothing to pick a setting from: effectively untestable until it has more history." if late else ""))
         else:
             r["note"] = (pm["why"].get(s, "not tested")[0].upper() + pm["why"].get(s, "not tested")[1:] + ". " + base + ".")
     m = res["method"]
