@@ -487,7 +487,8 @@ class Runner:
                          exited=p.get("exited", 0.0) + e["n"], exit_pnl=p.get("exit_pnl", 0.0) + e["pnl"])
                 p.setdefault("exit_orders", []).append(e.get("order_id"))
                 d = e.get("day") or _day(e["ts"])
-                self.pnl_by_day[d] = self.pnl_by_day.get(d, 0.0) + e["pnl"]
+                if e["ts"] >= self.L.get("daily_loss_ignore_before_ts", 0):
+                    self.pnl_by_day[d] = self.pnl_by_day.get(d, 0.0) + e["pnl"]
                 if e["remaining"] <= 1e-9:
                     self.settled.add(tk)
             elif ev == "exit_unknown" and tk in self.pos:
@@ -497,7 +498,10 @@ class Runner:
             elif ev in ("settle", "dry_settle"):
                 self.settled.add(tk)
                 d = e.get("day") or _day(e["ts"])
-                self.pnl_by_day[d] = self.pnl_by_day.get(d, 0.0) + e["pnl"]
+                # daily_loss_ignore_before_ts (optional): P&L logged before this time is left out of the daily
+                # loss cap (used once, by the account holder's choice, after losses caused by a fixed bug)
+                if e["ts"] >= self.L.get("daily_loss_ignore_before_ts", 0):
+                    self.pnl_by_day[d] = self.pnl_by_day.get(d, 0.0) + e["pnl"]
         for tk in list(self.pos):
             if tk in self.settled or self.pos[tk]["status"] == "none":
                 self.pos.pop(tk)
@@ -1173,6 +1177,10 @@ def load_config(path=CONFIG) -> dict:
                 or not 0 < pct <= 0.25 or mn <= 0:
             raise Stop(f"{path}: stake_pct_of_balance must be in (0, 0.25] and stake_usd_min > 0 (both set)",
                        EXIT_CONFIG)
+    if "daily_loss_ignore_before_ts" in lim and (not isinstance(lim["daily_loss_ignore_before_ts"], (int, float))
+                                                 or isinstance(lim["daily_loss_ignore_before_ts"], bool)
+                                                 or lim["daily_loss_ignore_before_ts"] > time.time() + 60):
+        raise Stop(f"{path}: daily_loss_ignore_before_ts must be a past unix time", EXIT_CONFIG)
     for k in ("max_total_open_risk_usd", "max_total_daily_loss_usd"):
         if k in lim and (not isinstance(lim[k], (int, float)) or isinstance(lim[k], bool) or lim[k] <= 0):
             raise Stop(f"{path}: {k} must be a positive number", EXIT_CONFIG)

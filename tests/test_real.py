@@ -1061,6 +1061,20 @@ def test_quotes_come_from_the_live_order_book():
     assert m["quote_source"] == "orderbook" and fake.book_reads == 1
 
 
+def test_daily_loss_ignore_before_ts():
+    d, clock, fake, kp = setup()
+    day = real._day(clock())
+    (d / "real_log.jsonl").write_text(json.dumps({"ts": clock() - 100, "mode": "LIVE", "series": "KXNEAR15M",
+                                                  "event": "settle", "ticker": "KXNEAR15M-OLD", "pnl": -20.0,
+                                                  "day": day}) + "\n")
+    cfg = _account_cfg(daily_loss_ignore_before_ts=clock() - 50)
+    r = make_runner(d, clock, fake, kp, cfg=cfg)
+    assert r.day_pnl() == 0.0 and r.blocked() is None       # the old loss is left out of the cap
+    cfg = _account_cfg(daily_loss_ignore_before_ts=clock() - 500)
+    r = make_runner(d, clock, fake, kp, cfg=cfg)
+    assert r.day_pnl() == -20.0 and "daily loss cap" in r.blocked()
+
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):
