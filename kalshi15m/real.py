@@ -227,7 +227,13 @@ class KalshiAPI:
         ms = self.get("/markets", {"series_ticker": series, "status": "open"}, deadline=deadline).get("markets", [])
         # the demo exchange keeps some long-closed markets listed as "open": only consider ones still running
         ms = [m for m in ms if bot._ts(m["close_time"]) > self.clock()] if ms else ms
-        return min(ms, key=lambda m: m["close_time"]) if ms else None
+        m = min(ms, key=lambda m: m["close_time"]) if ms else None
+        if m is not None:
+            # GET /markets quotes trail the live book by ~5-30 s (see bot.book_quote); deciding on them produced
+            # phantom edges and unfillable orders on 2026-11-04. Always price from the live order book; if it
+            # can't be read the step is skipped (never falls back to the stale quote).
+            m = {**m, **bot.book_quote(self.get(f"/markets/{m['ticker']}/orderbook", deadline=deadline))}
+        return m
 
     def market(self, ticker: str):
         return self.get(f"/markets/{ticker}").get("market", {})

@@ -63,7 +63,10 @@ class Kalshi:
 
     def _open_market(self, series: str):
         ms = self.req("GET", "/markets", params={"series_ticker": series, "status": "open"}).get("markets", [])
-        return min(ms, key=lambda m: m["close_time"]) if ms else None
+        m = min(ms, key=lambda m: m["close_time"]) if ms else None
+        if m is not None:   # the quote inside /markets lags the real book by ~5-30 s: use the live order book
+            m = {**m, **book_quote(self.req("GET", f"/markets/{m['ticker']}/orderbook"))}
+        return m
 
     def balance(self) -> float:
         return self.req("GET", "/portfolio/balance")["balance"] / 100
@@ -86,6 +89,24 @@ class Kalshi:
 
 
 _CACHE, _CACHE_LOCK = {}, __import__("threading").Lock()
+
+
+def book_quote(d: dict) -> dict:
+    """Best yes bid / yes ask (and sizes) from a GET /markets/{ticker}/orderbook answer.
+
+    Why: the yes_bid/yes_ask fields of GET /markets are a cached snapshot that trails the real order book by
+    roughly 5-30 seconds (checked against /markets/trades on 2026-11-04: NEAR showed 0.44/0.46 while it traded
+    at 0.22-0.30). The order book is live. Levels are [price, size] with the best price LAST (highest);
+    yes ask = 1 - best no bid. An empty side gives bid 0 / ask 1 (= no quote), like /markets does."""
+    ob = d.get("orderbook_fp") or {}
+
+    def best(levels):
+        lv = [(float(px), float(sz)) for px, sz in (levels or []) if float(sz) > 0]
+        return max(lv) if lv else None
+    y, n = best(ob.get("yes_dollars")), best(ob.get("no_dollars"))
+    return {"yes_bid_dollars": f"{y[0]:.4f}" if y else "0.0000", "yes_bid_size_fp": f"{y[1]:.2f}" if y else "0.00",
+            "yes_ask_dollars": f"{1 - n[0]:.4f}" if n else "1.0000", "yes_ask_size_fp": f"{n[1]:.2f}" if n else "0.00",
+            "quote_source": "orderbook"}
 
 
 def _cached(key, fn, ttl=4.0):

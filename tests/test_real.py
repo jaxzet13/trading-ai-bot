@@ -121,6 +121,12 @@ class FakeKalshi:
         params = params or {}
         if method == "GET" and p == "/markets":
             return Resp(200, {"markets": [self.market_at(self.clock())], "cursor": ""})
+        if method == "GET" and p.startswith("/markets/") and p.endswith("/orderbook"):
+            tk = p.split("/")[-2]
+            yb, ya = self.quotes(tk, int((self.clock() - int(tk.split("-T")[1])) // 60))
+            self.book_reads = getattr(self, "book_reads", 0) + 1
+            return Resp(200, {"orderbook_fp": {"yes_dollars": [[f"{yb - 0.01:.4f}", "50.00"], [f"{yb:.4f}", "100.00"]] if yb > 0 else [],
+                                               "no_dollars": [[f"{1 - ya - 0.01:.4f}", "50.00"], [f"{1 - ya:.4f}", "100.00"]] if ya < 1 else []}})
         if method == "GET" and p.startswith("/markets/"):
             tk = p.split("/")[-1]
             o = int(tk.split("-T")[1])
@@ -1039,6 +1045,20 @@ def test_account_limits_validated():
             raise AssertionError(f"accepted {bad!r}")
         except real.Stop:
             pass
+
+
+def test_quotes_come_from_the_live_order_book():
+    """GET /markets quotes are stale; the runner must price from /orderbook (best level = highest price)."""
+    from kalshi15m import bot as B
+    q = B.book_quote({"orderbook_fp": {"yes_dollars": [["0.3600", "10"], ["0.3800", "5"]],
+                                       "no_dollars": [["0.5800", "7"], ["0.5900", "3"]]}})
+    assert q["yes_bid_dollars"] == "0.3800" and q["yes_ask_dollars"] == "0.4100" and q["yes_ask_size_fp"] == "3.00"
+    e = B.book_quote({"orderbook_fp": {"yes_dollars": [], "no_dollars": None}})
+    assert e["yes_bid_dollars"] == "0.0000" and e["yes_ask_dollars"] == "1.0000"
+    d, clock, fake, kp = setup()
+    r = make_runner(d, clock, fake, kp)
+    m = r.mapi.open_market("KXNEAR15M")
+    assert m["quote_source"] == "orderbook" and fake.book_reads == 1
 
 
 if __name__ == "__main__":
