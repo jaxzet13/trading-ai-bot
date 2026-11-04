@@ -175,9 +175,11 @@ def _replay(coin, sub, seed):
 
     def fetch_candles(**kw):
         upto = state["T"] - (120 if state["late"] else 60)
-        lo, hi = np.searchsorted(bts, state["fed"], "right"), np.searchsorted(bts, upto, "right")
+        # like Coinbase without a range: the latest ~300 bars, newest first (so a bar seen while still
+        # provisional, younger than GL.SETTLE_S, is sent again once it has settled)
+        lo, hi = np.searchsorted(bts, upto - 300 * 60, "right"), np.searchsorted(bts, upto, "right")
         state["fed"] = max(state["fed"], upto)
-        return [list(r) for r in bars[max(lo - 3, 0):hi][::-1]]            # newest first, like Coinbase
+        return [list(r) for r in bars[lo:hi][::-1]]
 
     def fetch_ticker():
         return float(batch_spot.at(batch_spot.c, np.array([state["T"] - 60]))[0])
