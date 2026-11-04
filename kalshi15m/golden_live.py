@@ -54,6 +54,10 @@ from .strategies import model_prob
 ALL9 = list(SERIES)
 KEEP_DAYS = 22                    # spot history kept in memory (bootstrap lookback is 21 days)
 VOL_TAIL = 7200                   # bars used for the rolling/EWMA vols (EWMA half-life 120: 0.5**60 ~ 1e-18)
+SETTLE_S = 240                    # Coinbase revises a 1-minute candle for a few minutes after first publishing it
+                                  # (measured 2026-11-04: the bar that just closed was often 0.1-0.3% off its final
+                                  # close, the value lab3 trains/tests on). Candles younger than this are only a
+                                  # fallback; the bar that just closed always comes from the live ticker.
 MAX_CANDLE_LAG_S = 1800           # newest Coinbase bar older than this -> refuse (dead feed). Thin coins
                                   # legitimately go up to 13 min without a trade (HYPE, last 30 days)
 FETCH_GAP_S = 0.35                # pause between catch-up requests (the bots share one IP)
@@ -338,6 +342,7 @@ class GoldenEngine:
         self.official[idx] = True
         self.last_off = int(idx[-1])
         self.synth = {}
+        self.prov = {}
         self._rebuild()
 
     def _grow(self, n):
@@ -352,7 +357,7 @@ class GoldenEngine:
         """Effective bars = official, forward-filled (as lab3.Spot); after the newest official bar, the
         synthetic closes taken from the live ticker (high/low carried forward)."""
         c = self.oc.copy()
-        for ts, px in self.synth.items():
+        for ts, px in {**getattr(self, "prov", {}), **self.synth}.items():      # live ticker samples win
             i = (ts - self.t0) // 60
             if self.last_off < i < len(c):
                 c[i] = px
@@ -381,9 +386,13 @@ class GoldenEngine:
         bar with the live price."""
         bar = T - 60
         new_off = False
+        settled = T - 60 - SETTLE_S
         for row in candles:
             ts = int(row[0])
             if ts >= T or ts < self.t0:
+                continue
+            if ts > settled:                 # still being revised by Coinbase: fallback only, never "official"
+                self.prov[ts] = float(row[4])
                 continue
             i = (ts - self.t0) // 60
             self._grow(i + 1)
@@ -395,6 +404,7 @@ class GoldenEngine:
         self._grow(ib + 1)
         last_ts = self.t0 + 60 * self.last_off
         self.synth = {ts: px for ts, px in self.synth.items() if ts > last_ts}
+        self.prov = {ts: px for ts, px in self.prov.items() if ts > last_ts}
         synthetic = not self.official[ib]
         if synthetic and spot_now is not None and np.isfinite(spot_now) and spot_now > 0:
             self.synth[bar] = float(spot_now)
@@ -418,8 +428,8 @@ class GoldenEngine:
                 except requests.RequestException as e:
                     tick_px, tick_err = None, e
         bar = T - 60
-        have = any(int(r[0]) == bar for r in candles) or (
-            0 <= (bar - self.t0) // 60 < len(self.official) and self.official[(bar - self.t0) // 60])
+        # only a settled (official) bar may stand in for the live price; a just-published candle may not
+        have = 0 <= (bar - self.t0) // 60 < len(self.official) and self.official[(bar - self.t0) // 60]
         if tick is not None:
             if tick_err is not None and not have:
                 raise tick_err

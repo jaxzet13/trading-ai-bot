@@ -968,6 +968,7 @@ def test_stake_grows_with_balance():
 
 
 def test_golden_engine_synthetic_bar_then_official():
+    from kalshi15m import golden_live as GL
     clock = Clock(T0 + 60.5)
     eng = golden_engine(clock, flat_from=T0 + 10 ** 6)
     P = real.new_panel()
@@ -979,7 +980,10 @@ def test_golden_engine_synthetic_bar_then_official():
         assert math.isfinite(P[k][0, 0]), k
     clock.t += 60
     eng.update(P, T0, 2)
-    assert eng.official[(T0 - eng.t0) // 60]                      # bar T0 is now the published candle
+    assert not eng.official[(T0 - eng.t0) // 60]                  # published, but still provisional (GL.SETTLE_S)
+    clock.t += GL.SETTLE_S
+    eng.update(P, T0, 2 + GL.SETTLE_S // 60)
+    assert eng.official[(T0 - eng.t0) // 60]                      # bar T0 is now a settled, official candle
 
 
 def _account_cfg(series="KXNEAR15M", **lim):
@@ -1101,6 +1105,34 @@ def test_window_cost_cap_and_entries_survive_restart():
     r2 = make_runner(d, clock, fake, kp, cfg=_account_cfg(**lim))     # rebuilt from the log
     assert abs(r2.entries[tk][2] - spent) < 1e-9
     assert "window cost cap" in r2.window_block(r2.entries[tk][0], "no", 3.0)
+
+
+def test_golden_engine_ignores_provisional_candles():
+    """Coinbase revises a just-published 1-minute candle for a few minutes. The engine must price the bar that
+    just closed from the live ticker, and only take candles older than GL.SETTLE_S as official."""
+    import pandas as pd
+    from kalshi15m import golden_live as GL
+    clock = Clock(T0 + 600 + 0.5)
+    ts = list(range(T0 - 23 * 86400, T0 + 900, 60))
+    df = pd.DataFrame({"ts": ts, "low": 4.0, "high": 4.0, "open": 4.0, "close": 4.0, "volume": 1.0})
+    cols = ["ts", "low", "high", "open", "close", "volume"]
+
+    def fetch_candles(**kw):            # every bar published instantly, but the newest 3 carry a wrong close
+        T = int(clock() // 60 * 60)
+        rows = df[(df.ts < T) & (df.ts > T - 60 * 15)][cols].values.tolist()
+        for r in rows:
+            if r[0] >= T - 180:
+                r[4] = 9.0
+        return rows[::-1]
+    eng = GL.GoldenEngine("KXNEAR15M", history=df[df.ts <= T0 - 180], fetch_candles=fetch_candles,
+                          fetch_ticker=lambda: 4.0, clock=clock, data_dir=None)
+    eng.prepare()
+    T = T0 + 600
+    info = eng._ensure(T, None)
+    i = (T - 60 - eng.t0) // 60
+    assert info["synthetic"] and eng.sp.c[i] == 4.0                   # ticker, not the provisional 9.0
+    assert not eng.official[(T - 120 - eng.t0) // 60]                  # young candles are not official
+    assert eng.official[(T - 60 - GL.SETTLE_S - eng.t0) // 60]         # settled ones are
 
 
 if __name__ == "__main__":
