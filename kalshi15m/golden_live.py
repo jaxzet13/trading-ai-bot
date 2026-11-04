@@ -120,6 +120,13 @@ EXTRA = [
     {"id": "sized_exit:ALL", "family": "sized", "scope": "ALL", "t": 6.95, "kind": "sized_exit",
      "params": {"start": 2, "end": 13, "edge": 0.13, "band": "05-95", "vm": 1.0, "cap": 5, "exit": "conv0"},
      "norm": SIZED_NORMS["sized:ALL"]},
+    # lab5 x_cap:ALL: scalp entry (12c), Kelly stakes capped 3x, exit at fair value (conv0); lab5 also capped
+    # same-direction bets per 15-minute window at 6 across coins (the live runner's max_entries_per_window_side
+    # does that job, set per account). Holdout $7,144 / t 9.06 (lab5); the only strategy that passed the 3-day
+    # real-money test (labrm, Nov 1-4: +$14.62 at a $0.50 base, profitable in both periods, t 2.2).
+    {"id": "x_cap:ALL", "family": "scalp", "scope": "ALL", "t": 9.06, "kind": "sized_exit",
+     "params": {"vm": 0.8, "edge": 0.12, "start": 2, "end": 13, "band": "05-95", "cap": 3, "exit": "conv0"},
+     "norm": 0.3412936032571755},
 ]
 ORDER = EXTRA + GOLDEN                                        # best first
 RULES = {r["id"]: r for r in ORDER}
