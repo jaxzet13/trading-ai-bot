@@ -1135,6 +1135,21 @@ def test_golden_engine_ignores_provisional_candles():
     assert eng.official[(T - 60 - GL.SETTLE_S - eng.t0) // 60]         # settled ones are
 
 
+def test_min_one_contract():
+    d, clock, fake, kp = setup()
+    r = make_runner(d, clock, fake, kp, cfg=_account_cfg(stake_usd=0.1))      # $0.10 < one 40c contract
+    at_minute(clock, T0, 2); r.step()
+    assert not fake.posts and "stake too small" in events(r, "signal_skipped")[-1]["reason"]
+    d, clock, fake, kp = setup()
+    r = make_runner(d, clock, fake, kp, cfg=_account_cfg(stake_usd=0.1, min_one_contract_max_usd=1.0))
+    at_minute(clock, T0, 2); r.step()
+    assert len(fake.posts) == 1 and fake.posts[0]["count"] == "1"
+    d, clock, fake, kp = setup()
+    r = make_runner(d, clock, fake, kp, cfg=_account_cfg(stake_usd=0.1, min_one_contract_max_usd=0.2))  # too dear
+    at_minute(clock, T0, 2); r.step()
+    assert not fake.posts
+
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):

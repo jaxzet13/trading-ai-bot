@@ -779,6 +779,12 @@ class Runner:
                 limit = lim2
                 base["limit"] = limit
         n = contracts_for(stake, limit, self.L["max_contracts_per_order"])
+        # min_one_contract_max_usd (optional): with tiny stakes a signal can be worth less than one whole
+        # contract; the backtest still takes it (fractional size). Buy exactly 1 if it costs at most this.
+        one_max = self.L.get("min_one_contract_max_usd")
+        if n < 1 and one_max and limit + kalshi_fee(limit, 1) <= one_max + 1e-9:
+            n = 1
+            base["min_one_contract"] = True
         if why is None and n < 1:
             why = "stake too small for one contract"
         max_cost = round(n * limit + kalshi_fee(limit, n), 4)
@@ -1226,6 +1232,10 @@ def load_config(path=CONFIG) -> dict:
                                                  or isinstance(lim["daily_loss_ignore_before_ts"], bool)
                                                  or lim["daily_loss_ignore_before_ts"] > time.time() + 60):
         raise Stop(f"{path}: daily_loss_ignore_before_ts must be a past unix time", EXIT_CONFIG)
+    if "min_one_contract_max_usd" in lim and (not isinstance(lim["min_one_contract_max_usd"], (int, float))
+                                              or isinstance(lim["min_one_contract_max_usd"], bool)
+                                              or not 0 < lim["min_one_contract_max_usd"] <= 2):
+        raise Stop(f"{path}: min_one_contract_max_usd must be in (0, 2]", EXIT_CONFIG)
     if "max_entries_per_window_side" in lim and (not isinstance(lim["max_entries_per_window_side"], int)
                                                  or isinstance(lim["max_entries_per_window_side"], bool)
                                                  or lim["max_entries_per_window_side"] < 1):
