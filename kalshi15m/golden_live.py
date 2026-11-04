@@ -356,13 +356,17 @@ class GoldenEngine:
     def _rebuild(self):
         """Effective bars = official, forward-filled (as lab3.Spot); after the newest official bar, the
         synthetic closes taken from the live ticker (high/low carried forward)."""
-        c = self.oc.copy()
-        for ts, px in {**getattr(self, "prov", {}), **self.synth}.items():      # live ticker samples win
+        c, h, l = self.oc.copy(), self.oh.copy(), self.ol.copy()
+        for ts, (pc, ph, pl) in getattr(self, "prov", {}).items():    # provisional candles: fallback
+            i = (ts - self.t0) // 60
+            if self.last_off < i < len(c):
+                c[i], h[i], l[i] = pc, ph, pl
+        for ts, px in self.synth.items():                               # live ticker samples win for the close
             i = (ts - self.t0) // 60
             if self.last_off < i < len(c):
                 c[i] = px
         ff = lambda a: pd.Series(a).ffill().to_numpy()
-        self.sp = LiveSpot(self.t0, ff(c), ff(self.oh), ff(self.ol))
+        self.sp = LiveSpot(self.t0, ff(c), ff(h), ff(l))
 
     def _trim(self, T):
         ws = (T // 86400 - KEEP_DAYS) * 86400
@@ -392,7 +396,7 @@ class GoldenEngine:
             if ts >= T or ts < self.t0:
                 continue
             if ts > settled:                 # still being revised by Coinbase: fallback only, never "official"
-                self.prov[ts] = float(row[4])
+                self.prov[ts] = (float(row[4]), float(row[2]), float(row[1]))     # close, high, low
                 continue
             i = (ts - self.t0) // 60
             self._grow(i + 1)
