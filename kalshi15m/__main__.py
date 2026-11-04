@@ -47,6 +47,8 @@ def main():
     l4.add_argument("args", nargs="*", help="survey | download [SERIES ...] | models [QUICK] | xmkt | range | judge")
     l5 = sub.add_parser("lab5", help="execution variants (sizing/exits/re-entry/maker legs) of the best lab3 rules (see lab5.py)")
     l5.add_argument("args", nargs="*", help="download | run [WORKERS]")
+    lrm = sub.add_parser("labrm", help="real-money backtest of the golden strategies (real fills from Kalshi trades, the account limits; see labrm.py)")
+    lrm.add_argument("args", nargs="*")
     l4p = sub.add_parser("lab4p", help="lab4 re-run with Pyth (Kalshi's settlement source) as the price anchor (see lab4p.py)")
     l4p.add_argument("args", nargs="*", help="probe | validate | models [WORKERS] | judge | hermes")
     rp = sub.add_parser("record-pyth", help="forward recorder: Pyth prices + Kalshi bid/ask of open non-crypto 15-min markets, every minute",
@@ -102,6 +104,9 @@ def main():
     elif a.cmd == "lab5":
         from . import lab5
         lab5.main(a.args)
+    elif a.cmd == "labrm":
+        from . import labrm
+        labrm.main(a.args)
     elif a.cmd == "lab4p":
         from . import lab4p
         lab4p.main(a.args)
