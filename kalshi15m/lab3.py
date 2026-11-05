@@ -732,6 +732,39 @@ def _fee(price, n, rate):
     return np.ceil(rate * n * price * (1 - price) * 100 - 1e-9) / 100
 
 
+# --------------------------------------------------------------------------- real-money mode (LAB3_REAL=1)
+# Every trade is scored the way the owner's real account would trade it: a $0.50 base stake (whole contracts,
+# at least 1, at most 10, Kalshi's fee rounding at that size) and, for taker entries, weighted by the
+# probability that the IOC order really fills and adjusted by how real fills differ from the candle backtest
+# (data/lab/labx_fill_model.json, learned from 11,009 entries checked against Kalshi's trade tape).
+REAL = os.environ.get("LAB3_REAL") == "1"
+REAL_STAKE, REAL_MAX_N = 0.5, 10
+_FM = None
+
+
+def _fill_model():
+    global _FM
+    if _FM is None:
+        _FM = json.loads((D.DATA_DIR.parent / "lab" / "labx_fill_model.json").read_text())
+    return _FM
+
+
+def _real_adjust(series, yes, j, price, n):
+    """-> (fill probability, real - backtest $ per contract) per trade, from the fill model's cells."""
+    fm = _fill_model()
+    pb = np.clip(np.digitize(price, fm["price_bins"]) - 1, 0, len(fm["price_bins"]) - 2)
+    mb = np.clip(np.digitize(j + 1, fm["minute_bins"]) - 1, 0, len(fm["minute_bins"]) - 2)
+    grp = "thin" if series in fm["thin"] else "liquid"
+    fill, gap = np.empty(len(price)), np.empty(len(price))
+    for i in range(len(price)):
+        side = "yes" if yes[i] else "no"
+        c = (fm["cells"].get(f"{grp}|{side}|{pb[i]}|{mb[i]}") or fm["mid"].get(f"{grp}|{side}|{pb[i]}")
+             or fm["top"].get(f"{side}|{pb[i]}") or fm["overall"])
+        fill[i] = c["fill"] if c.get("fill") is not None else fm["overall"]["fill"]
+        gap[i] = c["gap"] if c.get("gap") is not None else 0.0
+    return fill, gap
+
+
 def execute(ctx, fam, cfg, side, minute, p, delay=0, norm=None):
     """-> dict of per-trade arrays (m, j, fj, yes, price, n, fee, pnl, win, cost, stake)."""
     kind = FAMILIES[fam]["kind"] if fam in FAMILIES else "hold"
@@ -770,13 +803,16 @@ def execute(ctx, fam, cfg, side, minute, p, delay=0, norm=None):
     else:
         idx, j, fj, yes, price = _taker_fill(ctx, side, minute, delay)
         rate = B.TAKER_RATE
-    stake = np.full(len(idx), STAKE)
+    base = REAL_STAKE if REAL else STAKE
+    stake = np.full(len(idx), base)
     if kind == "sized" and len(idx):
         q = np.where(yes, p[idx, j], 1 - p[idx, j])
         kel = np.clip((q - price) / (1 - price), 1e-4, None)
         nrm = norm if norm is not None else float(kel.mean())
-        stake = STAKE * np.minimum(kel / nrm, cfg["cap"])
+        stake = base * np.minimum(kel / nrm, cfg["cap"])
     n = np.maximum(1, np.floor(stake / price + 1e-9))
+    if REAL:
+        n = np.minimum(n, REAL_MAX_N)
     fee = _fee(price, n, rate)
     win = (ctx.result[idx] == 1) == yes
     pnl = n * (win.astype(float) - price) - fee
@@ -803,6 +839,10 @@ def execute(ctx, fam, cfg, side, minute, p, delay=0, norm=None):
         pnl = np.where(has, n * (sell - price) - fee - f2, pnl)
         win = np.where(has, pnl > 0, win)
         exit_j = np.where(has, ej, -1)
+    if REAL and len(idx) and kind not in ("maker", "makerfv"):
+        fp, gap = _real_adjust(ctx.series, yes, j, price, n)
+        pnl = fp * (pnl + n * gap)            # expected real result: it only counts when the order fills
+        cost = fp * cost
     return {"m": idx, "j": j, "fj": fj, "yes": yes, "price": price, "n": n, "fee": fee, "pnl": pnl,
             "win": win, "cost": cost, "stake": stake, "exit_j": exit_j}
 
