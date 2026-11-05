@@ -166,11 +166,22 @@ def _fetch(path, tk, t):
     raise RuntimeError("Kalshi trade tape: rate limited")
 
 
+# stress-test knobs (labx): the order's arrival window after the decision, a price penalty on every fill, a fee
+# multiplier. Defaults = the realistic model.
+STRESS = {"window": (1.0, 3.0), "worse": 0.0, "fee_mult": 1.0}
+
+
+def _fee(p, n):
+    return kalshi_fee(p, n) * STRESS["fee_mult"]
+
+
 def entry_fill(tk, side, t, limit):
     """(price, contracts available) of the first trade buying `side` at <= limit in [t+1, t+3], else None."""
     tr = tape(tk, t)
-    hit = [(ts, (yp if side == "yes" else np_), c) for ts, s, yp, np_, c in tr
-           if t + 1.0 <= ts <= t + 3.0 and s == side and (yp if side == "yes" else np_) <= limit + 1e-9]
+    lo, hi = STRESS["window"]
+    w = STRESS["worse"]
+    hit = [(ts, (yp if side == "yes" else np_) + w, c) for ts, s, yp, np_, c in tr
+           if t + lo <= ts <= t + hi and s == side and (yp if side == "yes" else np_) + w <= limit + 1e-9]
     if not hit:
         return None
     return hit[0][1], sum(c for _, _, c in hit)
@@ -178,8 +189,9 @@ def entry_fill(tk, side, t, limit):
 
 def exit_fill(tk, side, t, sell):
     """True if the held side traded at >= sell (someone bought the other side) in [t+1, t+3]."""
+    lo, hi = STRESS["window"]
     for ts, s, yp, np_, c in tape(tk, t):
-        if t + 1.0 <= ts <= t + 3.0 and s != side and (yp if side == "yes" else np_) >= sell - 1e-9:
+        if t + lo <= ts <= t + hi and s != side and (yp if side == "yes" else np_) >= sell + STRESS["worse"] - 1e-9:
             return True
     return False
 
@@ -268,7 +280,7 @@ def simulate(pos, label=""):
             n = 1
         if n < 1:
             continue
-        max_cost = n * limit + kalshi_fee(limit, n)
+        max_cost = n * limit + _fee(limit, n)
         risk = sum(o[1] for o in open_)
         wk = (p["win"], p["side"])
         if (day_pnl.get(day, 0.0) - risk - max_cost <= -A["daily_loss_usd"]
@@ -290,9 +302,9 @@ def simulate(pos, label=""):
         if nf < 1:
             trades.append({"t": t, "filled": False})
             continue
-        cost = nf * fp + kalshi_fee(fp, nf)
+        cost = nf * fp + _fee(fp, nf)
         if p["xpx"] is not None and exit_fill(p["tk"], p["side"], p["tx"], p["xpx"]):
-            pnl = nf * p["xpx"] - kalshi_fee(p["xpx"], nf) - cost
+            pnl = nf * (p["xpx"] - STRESS["worse"]) - _fee(p["xpx"], nf) - cost
             close_t = p["tx"] + 2
         else:
             pnl = nf * p["res"] - cost

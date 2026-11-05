@@ -163,9 +163,203 @@ def main(args=None):
     if stage == "calib":
         df = collect()
         fit(df)
+    elif stage == "validate":
+        validate()
     else:
         raise SystemExit(f"unknown stage {stage}")
 
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+
+
+# =========================================================================== validate (after the real-money search)
+REAL_RESULTS = LABDIR / "lab3_real_results.json"
+VALID_OUT = LABDIR / "labx_results.json"
+ACCOUNT_X = {"start_balance": 11.90, "min_balance": 6.0}
+
+
+def _positions_from_lab3(df):
+    """lab3 trade rows (candle backtest, $10 stakes) -> labrm position dicts."""
+    out = []
+    for r in df.itertuples(index=False):
+        em = int(r.exit_minute) if pd.notna(r.exit_minute) else 0
+        yes = r.side == "yes"
+        out.append({"coin": r.series, "tk": r.ticker, "win": int(r.open_ts), "t": int(r.ts), "minute": int(r.minute),
+                    "side": r.side, "px": float(r.price), "q": float(r.q) if pd.notna(r.q) else float(r.price) + 0.1,
+                    "tx": int(r.open_ts) + 60 * em if em > 0 and pd.notna(r.sell) else None,
+                    "xpx": float(r.sell) if em > 0 and pd.notna(r.sell) else None,
+                    "res": float((int(r.result) == 1) == yes), "stake10": float(r.stake),
+                    "pnl10": float(r.pnl)})
+    return sorted(out, key=lambda p: (p["t"], p["coin"]))
+
+
+def _daily(trades):
+    d = {}
+    for x in trades:
+        if x["filled"]:
+            d.setdefault(int(x["t"] // 86400), 0.0)
+            d[int(x["t"] // 86400)] += x["pnl"]
+    return d
+
+
+def _tstat(v):
+    v = np.asarray(v, float)
+    return float(v.mean() / v.std(ddof=1) * math.sqrt(len(v))) if len(v) > 2 and v.std(ddof=1) > 0 else None
+
+
+def _sim(pos, label, stress=None):
+    R.STRESS.update({"window": (1.0, 3.0), "worse": 0.0, "fee_mult": 1.0, **(stress or {})})
+    try:
+        trades, curve = R.simulate(pos, label)
+    finally:
+        R.STRESS.update({"window": (1.0, 3.0), "worse": 0.0, "fee_mult": 1.0})
+    f = [x for x in trades if x["filled"]]
+    pn = [x["pnl"] for x in f]
+    days = _daily(trades)
+    return {"pnl": round(float(sum(pn)), 2), "bets": len(trades), "filled": len(f),
+            "wins": int(sum(1 for v in pn if v > 0)), "t": _tstat(pn), "days": len(days),
+            "winning_days": int(sum(1 for v in days.values() if v > 0)),
+            "worst_day": round(min(days.values()), 2) if days else None, "max_dd": R.max_dd(curve),
+            "end": round(curve[-1][1], 2)}, trades, curve
+
+
+def _regimes(pos, trades, where):
+    """P&L of the filled bets split by side, by the coin's direction that day, and by the day's volatility."""
+    from . import lab3
+    by_t = {(x["t"]): x for x in trades if x["filled"]}
+    rows = []
+    for p in pos:
+        x = by_t.get(p["t"])
+        if x is None:
+            continue
+        rows.append({"coin": p["coin"], "side": p["side"], "day": int(p["t"] // 86400), "pnl": x["pnl"]})
+    if not rows:
+        return {}
+    df = pd.DataFrame(rows)
+    out = {"side": {s: round(float(g.pnl.sum()), 2) for s, g in df.groupby("side")}}
+    # coin direction + realised volatility per day from the (clean) spot series
+    lab = []
+    for coin, g in df.groupby("coin"):
+        sp = lab3.spot(coin, "archive" if where == "arch" and coin != "KXSOL15M" else "main")
+        for day in g.day.unique():
+            t0, t1 = day * 86400, day * 86400 + 86340
+            a = sp.at(sp.c, np.array([t0, t1]))
+            r = sp.at(sp.c, np.arange(t0, t1, 60))
+            ret = float(a[1] / a[0] - 1) if np.all(np.isfinite(a)) and a[0] > 0 else np.nan
+            vol = float(np.nanstd(np.diff(np.log(r)))) if np.isfinite(r).sum() > 100 else np.nan
+            lab.append({"coin": coin, "day": int(day), "ret": ret, "vol": vol})
+    L_ = pd.DataFrame(lab)
+    df = df.merge(L_, on=["coin", "day"], how="left")
+    df["dir"] = np.where(df.ret > 0.01, "up day", np.where(df.ret < -0.01, "down day", "flat day"))
+    q = df.vol.quantile([1 / 3, 2 / 3]).to_list() if df.vol.notna().sum() > 10 else [np.nan, np.nan]
+    df["volb"] = np.where(df.vol <= q[0], "calm", np.where(df.vol <= q[1], "normal", "wild"))
+    out["direction"] = {k: round(float(g.pnl.sum()), 2) for k, g in df.groupby("dir")}
+    out["volatility"] = {k: round(float(g.pnl.sum()), 2) for k, g in df.groupby("volb")}
+    return out
+
+
+def _bankroll(daily_all, days=1, start=11.90, stop=6.0, target=25.0, n=20000, seed=7):
+    """Bootstrap of real daily P&L: chance of hitting the target / the stop within `days` days."""
+    v = np.array(list(daily_all), float)
+    if len(v) < 5:
+        return None
+    rng = np.random.default_rng(seed)
+    hit_t = hit_s = 0
+    ends = []
+    for _ in range(n):
+        b = start
+        for _d in range(days):
+            b += rng.choice(v)
+            if b >= target:
+                hit_t += 1
+                break
+            if b <= stop:
+                hit_s += 1
+                break
+        ends.append(b)
+    ends = np.array(ends)
+    return {"days": days, "p_target": round(hit_t / n, 4), "p_stop": round(hit_s / n, 4),
+            "median_end": round(float(np.median(ends)), 2), "p10_end": round(float(np.percentile(ends, 10)), 2),
+            "p90_end": round(float(np.percentile(ends, 90)), 2)}
+
+
+def validate(top_per_scope=2, log=print):
+    from . import lab3
+    res = json.loads(REAL_RESULTS.read_text())
+    cands = [c for c in res.get("candidates", []) if c.get("status") in ("golden", "pass")]
+    by_scope = {}
+    for c in sorted(cands, key=lambda c: -((c.get("holdout") or {}).get("t") or -9)):
+        by_scope.setdefault(c["scope"], [])
+        if len(by_scope[c["scope"]]) < top_per_scope:
+            by_scope[c["scope"]].append(c)
+    picks = [c for v in by_scope.values() for c in v]
+    log(f"validating {len(picks)} finalists from {REAL_RESULTS.name}: " + ", ".join(c["id"] for c in picks))
+    lab3.REAL = False                                    # candle positions; reality comes from the tape
+    lab3.G["quick"] = 0
+    lab3.load(verbose=False)
+    seen = R.load_periods(download=False)
+    R.ACCOUNT.update(ACCOUNT_X)
+    p2_start = R.STATE["periods"][1]["start"]
+    rows = []
+    for k, c in enumerate(picks):
+        rule = {"family": c["family"], "params": c["params"]}
+        if c.get("members"):
+            rule = {"members": c["members"]}
+        norms = lab3._sized_norms(rule, c["scope"]) if c.get("family") and lab3.FAMILIES.get(c["family"], {}).get("kind") == "sized" else None
+        per = {}
+        per["hold"] = _positions_from_lab3(lab3.run_rule("hold", c["scope"], rule, norms=norms))
+        if any(x in L.G.get("arch", {}) for x in lab3._coins_of(c["scope"])):
+            arch_ok = [x for x in lab3._coins_of(c["scope"]) if x in L.G["arch"]]
+            per["arch"] = _positions_from_lab3(lab3.run_rule("arch", c["scope"], rule, norms=norms)) if arch_ok else []
+        rec = []
+        for wh in ("p1", "p2"):
+            if L.G.get(wh):
+                lab3.G[wh] = L.G[wh]
+                df = lab3.run_rule(wh, c["scope"], rule, norms=norms)
+                ps = _positions_from_lab3(df)
+                rec += [p for p in ps if wh == "p1" or (p["tk"] not in seen and p["t"] >= p2_start)]
+        per["recent"] = sorted(rec, key=lambda p: (p["t"], p["coin"]))
+        out = {"id": c["id"], "scope": c["scope"], "family": c.get("family"), "params": c.get("params"),
+               "search_t": (c.get("search") or {}).get("t"), "holdout_classic": c.get("holdout"), "periods": {},
+               "stress": {}, "regimes": {}}
+        daily_all = []
+        for pid, pos in per.items():
+            if not pos:
+                continue
+            s, trades, curve = _sim(pos, f"{c['id']} {pid}")
+            out["periods"][pid] = s
+            daily_all += list(_daily(trades).values())
+            out["regimes"][pid] = _regimes(pos, trades, pid)
+            st = {}
+            for name, kw in (("orders 3 s late", {"window": (3.0, 6.0)}), ("fills 1c worse", {"worse": 0.01}),
+                             ("fees +25%", {"fee_mult": 1.25})):
+                st[name] = _sim(pos, f"{c['id']} {pid} {name}", kw)[0]["pnl"]
+            d1 = lab3.run_rule("hold" if pid == "hold" else ("arch" if pid == "arch" else "p1"), c["scope"], rule, delay=1, norms=norms)
+            st["1 minute late (classic)"] = round(float(d1.pnl.sum()), 2) if len(d1) else 0.0
+            out["stress"][pid] = st
+            log(f"  {c['id']} {pid}: real ${s['pnl']:+.2f} ({s['filled']}/{s['bets']} filled, t {s['t']}) | " +
+                ", ".join(f"{k} ${v:+.2f}" for k, v in st.items()))
+        out["bankroll_1day"] = _bankroll(daily_all, 1)
+        out["bankroll_3days"] = _bankroll(daily_all, 3)
+        oos = [v for v in out["periods"].values()]
+        allpos = all(v["pnl"] > 0 for v in oos) and len(oos) >= 2
+        nf = sum(v["filled"] for v in oos)
+        stress_ok = all(all(v >= 0 for kk, v in st.items() if kk != "1 minute late (classic)") for st in out["stress"].values())
+        if allpos and nf >= 50 and stress_ok:
+            out["status"] = "real-money golden"
+        elif sum(v["pnl"] for v in oos) > 0:
+            out["status"] = "pass"
+        else:
+            out["status"] = "fail"
+        rows.append(out)
+        VALID_OUT.write_text(json.dumps({"generated": int(time.time()), "done": k + 1, "total": len(picks),
+                                         "account": ACCOUNT_X, "results": rows}, indent=1, default=float))
+        pickle_tape()
+    log("validation done")
+    return rows
+
+
+def pickle_tape():
+    import pickle
+    pickle.dump(R.TAPE, open(R.TAPE_CACHE, "wb"))
