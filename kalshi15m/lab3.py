@@ -749,20 +749,34 @@ def _fill_model():
     return _FM
 
 
+_FM_TAB = {}
+
+
+def _real_tables(series):
+    """(fill, gap) lookup arrays [side(0=no,1=yes), price band, minute band] for this coin's group."""
+    grp = "thin" if series in _fill_model()["thin"] else "liquid"
+    if grp not in _FM_TAB:
+        fm = _fill_model()
+        npb, nmb = len(fm["price_bins"]) - 1, len(fm["minute_bins"]) - 1
+        F, Gp = np.empty((2, npb, nmb)), np.empty((2, npb, nmb))
+        for si, side in enumerate(("no", "yes")):
+            for a in range(npb):
+                for b in range(nmb):
+                    c = (fm["cells"].get(f"{grp}|{side}|{a}|{b}") or fm["mid"].get(f"{grp}|{side}|{a}")
+                         or fm["top"].get(f"{side}|{a}") or fm["overall"])
+                    F[si, a, b] = c["fill"] if c.get("fill") is not None else fm["overall"]["fill"]
+                    Gp[si, a, b] = c["gap"] if c.get("gap") is not None else 0.0
+        _FM_TAB[grp] = (F, Gp, np.asarray(fm["price_bins"]), np.asarray(fm["minute_bins"]))
+    return _FM_TAB[grp]
+
+
 def _real_adjust(series, yes, j, price, n):
     """-> (fill probability, real - backtest $ per contract) per trade, from the fill model's cells."""
-    fm = _fill_model()
-    pb = np.clip(np.digitize(price, fm["price_bins"]) - 1, 0, len(fm["price_bins"]) - 2)
-    mb = np.clip(np.digitize(j + 1, fm["minute_bins"]) - 1, 0, len(fm["minute_bins"]) - 2)
-    grp = "thin" if series in fm["thin"] else "liquid"
-    fill, gap = np.empty(len(price)), np.empty(len(price))
-    for i in range(len(price)):
-        side = "yes" if yes[i] else "no"
-        c = (fm["cells"].get(f"{grp}|{side}|{pb[i]}|{mb[i]}") or fm["mid"].get(f"{grp}|{side}|{pb[i]}")
-             or fm["top"].get(f"{side}|{pb[i]}") or fm["overall"])
-        fill[i] = c["fill"] if c.get("fill") is not None else fm["overall"]["fill"]
-        gap[i] = c["gap"] if c.get("gap") is not None else 0.0
-    return fill, gap
+    F, Gp, pbins, mbins = _real_tables(series)
+    pb = np.clip(np.digitize(price, pbins) - 1, 0, F.shape[1] - 1)
+    mb = np.clip(np.digitize(j + 1, mbins) - 1, 0, F.shape[2] - 1)
+    si = np.asarray(yes, int)
+    return F[si, pb, mb], Gp[si, pb, mb]
 
 
 def execute(ctx, fam, cfg, side, minute, p, delay=0, norm=None):
