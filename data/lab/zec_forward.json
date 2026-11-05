@@ -1,5 +1,5 @@
 {
- "generated": 1793907802,
+ "generated": 1793914362,
  "rule": "scalp:KXZEC15M",
  "fwd_start": 1793823300,
  "gate": {
@@ -15,7 +15,7 @@
    "id": "days",
    "label": "At least 7 forward days",
    "ok": false,
-   "value": 1.0
+   "value": 1.1
   },
   {
    "id": "filled",
@@ -39,7 +39,7 @@
    "id": "paper",
    "label": "Paper run's orders match the replay (90%, once it has 10)",
    "ok": false,
-   "value": "0 of 0"
+   "value": "1 of 1"
   }
  ],
  "forward": {
@@ -53,7 +53,7 @@
   "worst_day": -0.5,
   "max_dd": -1.04,
   "end": 10.98,
-  "markets": 85,
+  "markets": 93,
   "daily": {
    "2026-11-04": -0.5,
    "2026-11-05": -0.415
@@ -119,11 +119,20 @@
   "t": 1.34
  },
  "paper": {
-  "orders": 0,
-  "agree": 0,
-  "would_fill": 0,
+  "orders": 1,
+  "agree": 1,
+  "would_fill": 1,
   "first_start": 1793907469.151,
-  "last_event": 1793907469,
-  "recent": []
+  "last_event": 1793914356,
+  "recent": [
+   {
+    "ticker": "KXZEC15M-26NOV051500-00",
+    "side": "no",
+    "minute": 13,
+    "same_as_replay": true,
+    "would_fill": true,
+    "ts": 1793908680
+   }
+  ]
  }
 }
