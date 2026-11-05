@@ -65,10 +65,14 @@ class CoinbaseBars:
         self.seen_until = {p: 0.0 for p in self.products}   # newest message time per product (trade/heartbeat)
         self.up_since = None                                 # stream time from which we have every trade
         self.last_seq = {p: None for p in self.products}
+        self.last_tid = {p: None for p in self.products}     # newest trade id received (Coinbase numbers trades 1, 2, 3...)
+        self.hb = {p: [] for p in self.products}             # (heartbeat time, last_trade_id at that time), recent
+        self.gap_bars = {p: set() for p in self.products}    # minutes in which a trade id was skipped (incomplete)
         self.messages = 0
         self.errors = 0
         self._thread = None
         self._stop = threading.Event()
+        self._last_trade_t = {}
 
     # ---- public
     def start(self):
@@ -87,8 +91,13 @@ class CoinbaseBars:
         deadline = time.monotonic() + wait_s
         while True:
             with self._lock:
+                # complete = connected for the whole minute AND a heartbeat timed at/after the minute's end whose
+                # last_trade_id we have already received (every trade up to then is in), AND no trade id skipped
+                hb = next((tid for ht, tid in self.hb.get(product, []) if ht >= start + 60), None)
+                have = self.last_tid.get(product)
                 ok = (self.up_since is not None and self.up_since <= start
-                      and self.seen_until.get(product, 0.0) >= start + 60)
+                      and hb is not None and have is not None and have >= hb
+                      and start not in self.gap_bars.get(product, set()))
                 if ok:
                     b = self.bars.get(product, {}).get(start)
                     return tuple(b) if b else "empty"
@@ -115,6 +124,17 @@ class CoinbaseBars:
                 if typ == "match" and last is not None and seq is not None and seq <= last:
                     return                                   # duplicate
                 t, px, sz = _iso_ts(m["time"]), float(m["price"]), float(m.get("size") or 0.0)
+                tid = m.get("trade_id")
+                if tid is not None:
+                    lt = self.last_tid[p]
+                    if typ == "match" and lt is not None and tid > lt + 1:
+                        # trades lt+1 .. tid-1 never arrived: every minute they could fall in is incomplete
+                        b = int(self._last_trade_t.get(p, t) // 60 * 60)
+                        while b <= t:
+                            self.gap_bars[p].add(b)
+                            b += 60
+                    self.last_tid[p] = tid if lt is None else max(lt, tid)
+                    self._last_trade_t[p] = t
                 if typ == "match":
                     self.last_seq[p] = seq
                     b0 = int(t // 60 * 60)
@@ -125,7 +145,12 @@ class CoinbaseBars:
                         b[1], b[2], b[3], b[4] = max(b[1], px), min(b[2], px), px, b[4] + sz
                 self.seen_until[p] = max(self.seen_until[p], t)
             elif typ == "heartbeat":
-                self.seen_until[p] = max(self.seen_until[p], _iso_ts(m["time"]))
+                ht = _iso_ts(m["time"])
+                self.seen_until[p] = max(self.seen_until[p], ht)
+                if m.get("last_trade_id") is not None:
+                    self.hb[p].append((ht, int(m["last_trade_id"])))
+                    if len(self.hb[p]) > 300:
+                        del self.hb[p][:150]
             cut = self.clock() - self.KEEP_S
             if self.messages % 5000 == 0:
                 for bp in self.bars.values():
@@ -134,6 +159,8 @@ class CoinbaseBars:
 
     def _mark_up(self, t: float):
         with self._lock:
+            self.last_tid = {p: None for p in self.products}
+            self.hb = {p: [] for p in self.products}
             # every trade from the next whole minute on will be seen (subscription confirmed before it)
             self.up_since = int(t // 60 * 60) + 60
             self.last_seq = {p: None for p in self.products}
