@@ -358,13 +358,21 @@ def order_body(ticker: str, side: str, price: float, n: int, client_order_id: st
             "post_only": False, "reduce_only": False}
 
 
-def exit_order_body(ticker: str, held: str, sell_price: float, n: int, client_order_id: str) -> dict:
+def _count_str(n) -> str:
+    """Order size: whole numbers as before ("3"); a fraction (left after a partial fill) with 2 decimals, which
+    Kalshi accepts for "count" (checked on the demo exchange 2026-11-05: a reduce-only sell of "0.50" filled 0.50)."""
+    n = math.floor(float(n) * 100 + 1e-9) / 100
+    return str(int(n)) if abs(n - round(n)) < 1e-9 else f"{n:.2f}"
+
+
+def exit_order_body(ticker: str, held: str, sell_price: float, n, client_order_id: str) -> dict:
     """Sell a held position (golden scalp exit), IOC + reduce-only, quoted on the YES book like order_body:
-    sell YES at the yes bid = "ask" @ bid; sell NO at the no bid = buy YES ("bid") @ 1 - no bid (= yes ask)."""
+    sell YES at the yes bid = "ask" @ bid; sell NO at the no bid = buy YES ("bid") @ 1 - no bid (= yes ask).
+    n may be fractional (what is left after a partial fill), so the whole position can be sold like the backtest."""
     yes_px = sell_price if held == "yes" else 1 - sell_price
     return {"ticker": ticker, "client_order_id": client_order_id,
             "side": "ask" if held == "yes" else "bid",
-            "count": str(int(n)), "price": f"{round(yes_px, 4):.4f}",
+            "count": _count_str(n), "price": f"{round(yes_px, 4):.4f}",
             "time_in_force": "immediate_or_cancel", "self_trade_prevention_type": "taker_at_cross",
             "post_only": False, "reduce_only": True}
 
@@ -945,7 +953,8 @@ class Runner:
         if not hit:
             return
         sell, q = hit
-        n = int(math.floor(p["n"] + 1e-9))
+        n = math.floor(p["n"] * 100 + 1e-9) / 100           # everything held, to the cent of a contract
+        n = int(n) if abs(n - round(n)) < 1e-9 else n
         base = {"ticker": tk, "minute": minute, "side": p["side"], "rule": p["rule"], "sell_price": sell,
                 "model_value": round(q, 6), "held": p["n"], "lag_s": lag, "data_age_s": age,
                 "yes_bid": obs.get("yes_bid"), "yes_ask": obs.get("yes_ask")}
@@ -954,8 +963,8 @@ class Runner:
             why = f"decision lag {lag}s > {self.L['max_decision_lag_s']}s"
         elif age > self.L["max_data_age_s"]:
             why = f"data {age}s old > {self.L['max_data_age_s']}s"
-        elif n < 1:
-            why = "less than one whole contract held"
+        elif n < 0.01:
+            why = "less than 0.01 contract held"
         if why:
             self.out(f"  exit signal {p['side'].upper()} @ {sell:.3f} skipped: {why}")
             self.log({"event": "exit_skipped", "reason": why, **base})

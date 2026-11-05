@@ -1179,6 +1179,13 @@ def test_money_limits_use_the_crypto_shard_only():
         pass
 
 
+def test_exit_order_can_sell_a_fraction():
+    b = real.exit_order_body("KXNEAR15M-X", "no", 0.81, 0.74, "id")
+    assert b["count"] == "0.74" and b["reduce_only"] is True and b["side"] == "bid"
+    assert real.exit_order_body("KXNEAR15M-X", "yes", 0.81, 3, "id")["count"] == "3"
+    assert real.exit_order_body("KXNEAR15M-X", "yes", 0.81, 2.999, "id")["count"] == "2.99"
+
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):
