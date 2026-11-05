@@ -5323,7 +5323,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   $("ageCheck").addEventListener("change", e => { $("gateEnter").disabled = !e.target.checked; });
   $("gateEnter").addEventListener("click", () => { state.ageOK = true; if (state.pendingCode) { const pc = state.pendingCode; delete state.pendingCode; setTimeout(() => redeem(pc), 400); } if (!state.history.length) grantSignup(); save(); renderAll(); $("gate").hidden = true; toast(`${money(SIGNUP_BONUS)} signup bonus added`); });
 
-  window.STIXX_PRINT = { packEV, BUYBACK, fxForCode, fxName, cardHTML, cardCode, packCode, parseCode, CARD_BY_NO, PACK_BY_ID, CARDS, APP_URL, RETAIL_KEY };
+  window.STIXX_PRINT = { BY_ID, MOVES, lineOf, crOf, CR, CR_ORDER, PACKS, LSETS, FX_STYLES, FX_VAR, SECRET, FTYPE, baseOf, itemVal, packEV, BUYBACK, fxForCode, fxName, cardHTML, cardCode, packCode, parseCode, CARD_BY_NO, PACK_BY_ID, CARDS, APP_URL, RETAIL_KEY };
   renderAll(); showTab();
   netInit();
   let lastDay = mktDay();
