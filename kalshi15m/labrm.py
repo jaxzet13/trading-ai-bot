@@ -71,7 +71,7 @@ CANDS = [
      {"entry": "lag", "dedge": 0.01, "timing": "none", "exit": "c2", "size": "k3", "norm": 0.3790633169048206}, False),
     ("x_timing:ALL", "Enter while the gap is growing + early sale", "lab5",
      {"entry": "fv12v8", "dedge": 0.02, "timing": "grow", "exit": "c2", "size": "k3", "norm": 0.3679145776670061}, False),
-    ("x_reentry:ALL", "Early sale + one re-entry", "lab5",
+    ("x_reentry:ALL", "Early sale, 14c gap, bets up to 3x (x_reentry, one bet per market)", "lab5",
      {"entry": "fv12v8", "dedge": 0.02, "timing": "none", "exit": "c2", "reentry": 2, "size": "k3",
       "norm": 0.3688183926949676}, False),
     ("x_combo:ALL", "Price-lag + growing gap + re-entry", "lab5",

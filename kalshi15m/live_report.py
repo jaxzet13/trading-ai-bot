@@ -277,6 +277,9 @@ def _hunt_results(env, fname):
     if not isinstance(r, dict):
         return None
     allc = [c for c in (r.get("candidates") or []) if isinstance(c, dict)]
+    for c in allc:   # labrm never re-enters a market (one bet per market), so name x_reentry for what was tested
+        if c.get("id") == "x_reentry:ALL":
+            c["label"] = "Early sale, 14c gap, bets up to 3x (x_reentry, one bet per market)"
     # true totals from the full file; the page gets at most the best 150 rows
     r["counts"] = {"reached": len(allc), **{k: sum(c.get("status") == k for c in allc) for k in ("golden", "pass", "fail")}}
     cands = allc[:150]
@@ -540,6 +543,9 @@ def realmoney_results(max_rows: int = 60) -> dict | None:
     if not isinstance(r, dict):
         return None
     allc = [c for c in (r.get("candidates") or []) if isinstance(c, dict)]
+    for c in allc:   # labrm never re-enters a market (one bet per market), so name x_reentry for what was tested
+        if c.get("id") == "x_reentry:ALL":
+            c["label"] = "Early sale, 14c gap, bets up to 3x (x_reentry, one bet per market)"
     # true totals from the full file; the page (and the live db document) gets at most the best max_rows
     r["counts"] = {"tested": len(allc), "golden": sum(c.get("status") == "real-money golden" for c in allc),
                    **{k: sum(c.get("status") == k for c in allc) for k in ("pass", "fail")}}
@@ -549,6 +555,18 @@ def realmoney_results(max_rows: int = 60) -> dict | None:
         v = t.get("pnl") if isinstance(t, dict) else None
         return v if isinstance(v, (int, float)) else float("-inf")
     keep = sorted(allc, key=pnl, reverse=True)[:max_rows]
+    if not isinstance(r.get("chosen"), dict):
+        # what the real account actually runs (kalshi15m/real_best_live.json), so the tab shows it
+        try:
+            cfg = json.loads((ROOT / "real_best_live.json").read_text())
+            ids = [g.get("id") for g in cfg.get("golden_rules") or []]
+            labels = {c.get("id"): c.get("label") for c in allc}
+            if ids:
+                r["chosen"] = {"id": ids[0], "ids": ids, "applied_at": int((ROOT / "real_best_live.json").stat().st_mtime),
+                               "note": "Live on the real account now: " + ", ".join(labels.get(i) or i for i in ids)
+                                       + (" (first one has priority)" if len(ids) > 1 else "")}
+        except (OSError, ValueError):
+            pass
     chosen = r.get("chosen").get("id") if isinstance(r.get("chosen"), dict) else None
     if chosen is not None and all(c.get("id") != chosen for c in keep):
         keep += [c for c in allc if c.get("id") == chosen][:1]
