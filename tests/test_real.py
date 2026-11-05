@@ -956,15 +956,16 @@ def test_stake_grows_with_balance():
     # the crypto shard cannot pay for the order -> skipped with the reason, no crash, nothing sent
     d, clock, fake, kp = setup(quotes=scalp_quotes)
     fake.shard2 = 0.50
-    r = golden_runner(d, clock, fake, kp, rule_ids={"scalp:ALL"}, compounding=True)
+    r = golden_runner(d, clock, fake, kp, rule_ids={"scalp:ALL"}, compounding=True, min_balance_usd=0.1)
     at_minute(clock, T0, 2); r.step()
     assert not fake.posts and "crypto (shard 2) balance $0.50 < order cost" in events(r, "signal_skipped")[-1]["reason"]
-    # the old configs never look at the breakdown and keep their fixed stake
+    # the old configs keep their fixed stake
     d, clock, fake, kp = setup()
     fake.shard2 = 500.0
     r = make_runner(d, clock, fake, kp)
     at_minute(clock, T0, 2); r.step()
-    assert r.crypto_balance is None and fake.posts[0]["count"] == "5" and "base_stake" not in events(r, "order_intent")[-1]
+    # (the crypto-shard balance is now always read, for the money limits; the stake stays fixed)
+    assert r.crypto_balance == 500.0 and fake.posts[0]["count"] == "5" and "base_stake" not in events(r, "order_intent")[-1]
 
 
 def test_golden_engine_synthetic_bar_then_official():
@@ -1160,6 +1161,22 @@ def test_take_profit_stops_for_good():
     fake.balance_cents = 500                         # even after a dip, a restarted runner does not trade again
     r2 = make_runner(d, clock, fake, kp, cfg=cfg)
     assert r2.run() == real.EXIT_CLEAN and not fake.posts
+
+
+def test_money_limits_use_the_crypto_shard_only():
+    """Money parked on another shard must not count: $10 on shard 0, $3 on the crypto shard."""
+    d, clock, fake, kp = setup()
+    fake.balance_cents, fake.shard2 = 1300, 3.0
+    cfg = _account_cfg(take_profit_balance_usd=7.0, min_balance_usd=0.5)
+    r = make_runner(d, clock, fake, kp, cfg=cfg)
+    r.refresh_balance()                               # $3 crypto < $7: no target
+    assert r.crypto_balance == 3.0 and not r.target_path.exists()
+    fake.shard2 = 0.4                                 # $0.40 crypto < $0.50 stop, though $13 total
+    try:
+        r.refresh_balance()
+        raise AssertionError("expected the min-balance stop")
+    except real.Stop:
+        pass
 
 
 if __name__ == "__main__":

@@ -802,8 +802,7 @@ class Runner:
             why = self.window_block(open_ts + 900, side, max_cost)
         if why is None and not self.dry and self.balance is not None and self.balance < max_cost:
             why = f"balance ${self.balance:.2f} < order cost ${max_cost:.2f}"
-        if why is None and not self.dry and self.L.get("stake_pct_of_balance") and self.crypto_balance is not None \
-                and self.crypto_balance < max_cost:
+        if why is None and not self.dry and self.crypto_balance is not None and self.crypto_balance < max_cost:
             why = f"crypto (shard 2) balance ${self.crypto_balance:.2f} < order cost ${max_cost:.2f}"
         if why:
             self.out(f"  signal {side.upper()} @ {price:.3f} skipped: {why}")
@@ -1180,21 +1179,21 @@ class Runner:
 
     def refresh_balance(self):
         try:
-            if self.L.get("stake_pct_of_balance"):
-                try:
-                    self.balance, self.crypto_balance = self.api.balances()
-                except (KeyError, ValueError, TypeError) as e:
-                    self.out(f"  balance check failed: unexpected answer ({e})")
-                    return
-            else:
-                self.balance = self.api.balance()
+            # always both: crypto markets trade only from the crypto shard (2), so every money limit (affordability,
+            # min balance, take profit) is about that shard, not money parked elsewhere on the account
+            try:
+                self.balance, self.crypto_balance = self.api.balances()
+            except (KeyError, ValueError, TypeError) as e:
+                self.out(f"  balance check failed: unexpected answer ({e})")
+                return
         except requests.RequestException as e:
             self.out(f"  balance check failed: {e}")
             return
+        cash = self.crypto_balance if self.crypto_balance is not None else self.balance
         if self.L.get("min_balance_counts_open_bets"):
-            equity = self.balance + self.account_open_risk()     # cash + what open bets cost (not yet won/lost)
+            equity = cash + self.account_open_risk()             # cash + what open bets cost (not yet won/lost)
         else:
-            equity = self.balance
+            equity = cash
         tp = self.L.get("take_profit_balance_usd")
         if tp and equity >= tp:
             # target reached: stop for good (the flag file keeps a restarted runner from trading again)
