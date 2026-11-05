@@ -354,6 +354,8 @@ def load_periods(download=True):
 
 
 def main(args=None):
+    if args and "coins5" in args:
+        return main_coins5(args)
     if args and "big" in args:
         return main_big(args)
     download = not (args and "--no-download" in args)
@@ -529,7 +531,8 @@ def main_big(args=None):
     STATE["progress"].update(stage="checking every bet against Kalshi's real trades",
                              note=f"about {need} trade-record lookups to do")
     write()
-    ORDER = [pid for pid in ("hold", "recent", "arch", "search") if pid in [p["id"] for p in periods]]
+    ORDER = [pid for pid in ("hold", "recent", "arch", "search") if pid in [p["id"] for p in periods]
+             and not (pid == "search" and COINS == COINS5)]
     res = {cid: {} for cid in BIG}
     trades_by = {cid: {} for cid in BIG}
     STATE["progress"].update(total=len(BIG) * len(ORDER), done=0)
@@ -556,3 +559,23 @@ def main_big(args=None):
               f"filled {r['total']['filled']}/{r['total']['trades']} | " +
               " ".join(f"{i} {v['pnl']:+.2f}" for i, v in r["periods"].items()))
     return STATE["candidates"]
+
+
+
+# =========================================================================== 5-coin re-test (Nov 5)
+COINS5 = ["KXBTC15M", "KXETH15M", "KXSOL15M", "KXXRP15M", "KXZEC15M"]
+LIVE5 = ["x_reentry:ALL", "x_exit:ALL", "sized_exit:ALL", "sized:ALL", "fv_t:ALL"]   # real_best_live.json order
+
+
+def main_coins5(args=None):
+    """The real-money test again, on only the coins whose live Coinbase data equals the final candles the
+    backtests use (BTC, ETH, SOL, XRP, ZEC: checked live Nov 5; NEAR, HYPE, DOGE and BNB candles include trades
+    the public trade feed never shows). Out-of-sample periods only (final exam, newest; the archive has SOL)."""
+    global COINS, BIG, LIVE_ORDER
+    COINS = COINS5
+    LIVE_ORDER = LIVE5
+    BIG = ["live_combo"] + LIVE5
+    for i, c in enumerate(CANDS):
+        if c[0] == "live_combo":
+            CANDS[i] = ("live_combo", "Current live setup (x_reentry, x_exit, sized_exit, sized, fv_t)", "live", None, True)
+    return main_big(args)
