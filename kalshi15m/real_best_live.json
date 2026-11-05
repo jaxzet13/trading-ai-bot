@@ -1,5 +1,5 @@
 {
- "_note": "REAL MONEY, backtest sizing at tiny scale: the top 4 of the real-money test by out-of-sample profit, x_reentry first (the only real-money golden one: profitable in every out-of-sample period, t 3.18), then sized_exit, sized, fv_t (each lost the whole test account in one period); account holder's choice 2026-11-05, for more trades. Stops for good once the crypto balance (incl. open bets) reaches $7 (take_profit_balance_usd), the backtest's Kelly sizing on a $0.50 base (up to 5x = $2.50 on the strongest gaps), at most 10 contracts; when a signal is worth less than one contract, exactly 1 contract is bought if it costs at most $1 (the backtest takes those trades at fractional size). Safety caps (the only deliberate differences from the backtest): per 15-minute window across all coins at most $3 spent and 2 bets on the same side; at most $3 at risk at once; new bets stop for the day once losses plus money at risk reach $3; per coin $1.50 daily loss cap and 15 trades. Stops for good below $0.50. Run only from the account holder's own verified (18+) Kalshi account. BNB excluded (2026-11-04): Coinbase's final BNB-USD candles include trades that never appear in the live trade feed (thinnest Coinbase market), so live BNB decisions cannot match the backtest's.",
+ "_note": "REAL MONEY, backtest sizing at tiny scale: the top 4 of the real-money test by out-of-sample profit, x_reentry first (the only real-money golden one: profitable in every out-of-sample period, t 3.18), then x_exit (added back by the account holder 2026-11-05), sized_exit, sized, fv_t (each lost the whole test account in one period); account holder's choice 2026-11-05, for more trades. Stops for good once the crypto balance (incl. open bets) reaches $7 (take_profit_balance_usd), the backtest's Kelly sizing on a $0.50 base (up to 5x = $2.50 on the strongest gaps), at most 10 contracts; when a signal is worth less than one contract, exactly 1 contract is bought if it costs at most $1 (the backtest takes those trades at fractional size). Safety caps (the only deliberate differences from the backtest): per 15-minute window across all coins at most $3 spent and 2 bets on the same side; at most $3 at risk at once; new bets stop for the day once losses plus money at risk reach $3; per coin $1.50 daily loss cap and 15 trades. Stops for good below $0.50. Run only from the account holder's own verified (18+) Kalshi account. BNB excluded (2026-11-04): Coinbase's final BNB-USD candles include trades that never appear in the live trade feed (thinnest Coinbase market), so live BNB decisions cannot match the backtest's.",
  "series": [
   "KXBTC15M",
   "KXETH15M",
@@ -28,6 +28,23 @@
     "exit": "conv2"
    },
    "norm": 0.3688183926949676
+  },
+  {
+   "id": "x_exit:ALL",
+   "family": "scalp",
+   "scope": "ALL",
+   "t": 10.15,
+   "params": {
+    "vm": 0.8,
+    "edge": 0.13,
+    "start": 2,
+    "end": 13,
+    "band": "05-95",
+    "cap": 5,
+    "pow": 1.5,
+    "exit": "conv2"
+   },
+   "norm": 0.22693348935173294
   },
   {
    "id": "sized_exit:ALL",
