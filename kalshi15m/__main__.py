@@ -47,6 +47,8 @@ def main():
     l4.add_argument("args", nargs="*", help="survey | download [SERIES ...] | models [QUICK] | xmkt | range | judge")
     l5 = sub.add_parser("lab5", help="execution variants (sizing/exits/re-entry/maker legs) of the best lab3 rules (see lab5.py)")
     l5.add_argument("args", nargs="*", help="download | run [WORKERS]")
+    lx = sub.add_parser("labx", help="the thorough real-money research: fill model, per-coin search, stress tests (see labx.py)")
+    lx.add_argument("args", nargs="*")
     cs = sub.add_parser("cleanspot", help="swap thin coins' candle spot files for trade-built bars (see cleanspot.py)")
     cs.add_argument("args", nargs="*")
     tb = sub.add_parser("tradebars", help="1-minute bars rebuilt from Coinbase's public trade list (see tradebars.py)")
@@ -108,6 +110,9 @@ def main():
     elif a.cmd == "lab5":
         from . import lab5
         lab5.main(a.args)
+    elif a.cmd == "labx":
+        from . import labx
+        labx.main(a.args)
     elif a.cmd == "cleanspot":
         from . import cleanspot
         cleanspot.main(a.args)
