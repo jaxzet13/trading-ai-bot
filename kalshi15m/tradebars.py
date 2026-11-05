@@ -119,3 +119,99 @@ def main(args=None):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+
+
+# --------------------------------------------------------------------------- parallel segments (by trade id)
+def trade_at(product, tid, s=None):
+    """(trade id, time) of the trade just below `tid` (Coinbase's `after` cursor)."""
+    s = s or requests.Session()
+    for a in range(20):
+        r = s.get(f"{API}/products/{product}/trades", params={"limit": 1, "after": str(tid)}, timeout=20)
+        if r.status_code == 429:
+            time.sleep(2 + a)
+            continue
+        r.raise_for_status()
+        x = r.json()[0]
+        return int(x["trade_id"]), _ts(x["time"])
+    raise RuntimeError("rate limited")
+
+
+def id_for_time(product, t_target, hi_id, s=None):
+    """Smallest trade id whose time is >= t_target (binary search on ids below hi_id)."""
+    s = s or requests.Session()
+    lo, hi = 1, hi_id
+    while hi - lo > 500:
+        mid = (lo + hi) // 2
+        _, t = trade_at(product, mid, s)
+        if t < t_target:
+            lo = mid
+        else:
+            hi = mid
+        time.sleep(0.2)
+    return lo
+
+
+def fetch_segment(product, id_hi, id_lo, out, pace=0.25, log=print):
+    """Every trade with id in (id_lo, id_hi] -> per-minute bars with first/last trade ids (for merging)."""
+    s = requests.Session()
+    bars, after, n = {}, id_hi + 1, 0
+    while True:
+        for a in range(30):
+            try:
+                r = s.get(f"{API}/products/{product}/trades", params={"limit": 1000, "after": str(after)}, timeout=20)
+            except requests.RequestException:
+                time.sleep(3)
+                continue
+            if r.status_code == 429:
+                time.sleep(min(2 + 2 * a, 20))
+                continue
+            r.raise_for_status()
+            break
+        tr = [x for x in r.json() if int(x["trade_id"]) > id_lo]
+        n += 1
+        for x in tr:
+            t, px, sz, tid = _ts(x["time"]), float(x["price"]), float(x["size"]), int(x["trade_id"])
+            m = int(t // 60 * 60)
+            b = bars.get(m)
+            if b is None:
+                bars[m] = [px, px, px, px, sz, tid, tid]
+            else:
+                if tid < b[5]:
+                    b[0], b[5] = px, tid
+                if tid > b[6]:
+                    b[3], b[6] = px, tid
+                b[1], b[2], b[4] = max(b[1], px), min(b[2], px), b[4] + sz
+        if not tr or min(int(x["trade_id"]) for x in r.json()) <= id_lo + 1:
+            break
+        after = min(int(x["trade_id"]) for x in tr)
+        if n % 100 == 0:
+            log(f"{product} segment {id_lo}-{id_hi}: {n} requests, back to "
+                f"{datetime.utcfromtimestamp(min(bars)):%Y-%m-%d %H:%M}")
+        time.sleep(pace)
+    pd.DataFrame([(ts, *b) for ts, b in sorted(bars.items())],
+                 columns=["ts", "open", "high", "low", "close", "volume", "first_tid", "last_tid"]).to_csv(out, index=False)
+    log(f"{product} segment {id_lo}-{id_hi}: done, {len(bars)} minutes ({n} requests)")
+
+
+def merge_segments(product, log=print):
+    """Merge segment files into {product}_bars.csv (a minute split across segments: open from the lower ids,
+    close from the higher ids, high/low/volume combined)."""
+    main = DIR / f"{product}_bars.csv"
+    parts = [pd.read_csv(main).assign(first_tid=None, last_tid=None)] if main.exists() else []
+    segs = sorted(DIR.glob(f"{product}_seg_*.csv"))
+    parts += [pd.read_csv(f) for f in segs]
+    df = pd.concat(parts, ignore_index=True)
+    rows = []
+    for ts, g in df.groupby("ts"):
+        if len(g) == 1:
+            r = g.iloc[0]
+            rows.append((ts, r.low, r.high, r.open, r.close, r.volume))
+            continue
+        g = g.assign(ft=pd.to_numeric(g.first_tid, errors="coerce"), lt=pd.to_numeric(g.last_tid, errors="coerce"))
+        o = g.loc[g.ft.idxmin()].open if g.ft.notna().any() else g.iloc[0].open
+        c = g.loc[g.lt.idxmax()].close if g.lt.notna().any() else g.iloc[-1].close
+        rows.append((ts, g.low.min(), g.high.max(), o, c, g.volume.sum()))
+    out = pd.DataFrame(rows, columns=["ts", "low", "high", "open", "close", "volume"]).sort_values("ts")
+    out.to_csv(main, index=False)
+    log(f"{product}: merged {len(segs)} segments -> {len(out)} minutes from "
+        f"{datetime.utcfromtimestamp(out.ts.min()):%Y-%m-%d}")

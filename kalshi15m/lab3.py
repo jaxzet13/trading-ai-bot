@@ -1264,6 +1264,9 @@ def load(verbose=True):
     for s in ARCH_COINS:
         if s == "KXSOL15M" or not (ARCH_DIR / f"{s}_candles.part.csv").exists():
             continue
+        if not (ARCH_DIR / f"{s}_spot.csv").exists():      # e.g. set aside by cleanspot until rebuilt from trades
+            print(f"  archive {s}: no spot file (not cleaned yet), skipped", flush=True)
+            continue
         with lab2._source(ARCH_DIR, "candles.part"):
             p = B.Panel(B.build_panel(s))
         f = lab2.FRESH / f"{s}_markets.csv"
