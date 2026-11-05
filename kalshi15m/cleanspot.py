@@ -61,7 +61,7 @@ def restore(log=print):
 
 
 def main(args=None):
-    restore() if args and "--restore" in args else swap()
+    restore() if args and ("--restore" in args or "restore" in args) else swap()
 
 
 if __name__ == "__main__":

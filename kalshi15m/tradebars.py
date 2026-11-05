@@ -207,9 +207,9 @@ def merge_segments(product, log=print):
             r = g.iloc[0]
             rows.append((ts, r.low, r.high, r.open, r.close, r.volume))
             continue
-        g = g.assign(ft=pd.to_numeric(g.first_tid, errors="coerce"), lt=pd.to_numeric(g.last_tid, errors="coerce"))
-        o = g.loc[g.ft.idxmin()].open if g.ft.notna().any() else g.iloc[0].open
-        c = g.loc[g.lt.idxmax()].close if g.lt.notna().any() else g.iloc[-1].close
+        g = g.assign(f_id=pd.to_numeric(g.first_tid, errors="coerce"), l_id=pd.to_numeric(g.last_tid, errors="coerce"))
+        o = g.loc[g.f_id.idxmin()].open if g.f_id.notna().any() else g.iloc[0].open
+        c = g.loc[g.l_id.idxmax()].close if g.l_id.notna().any() else g.iloc[-1].close
         rows.append((ts, g.low.min(), g.high.max(), o, c, g.volume.sum()))
     out = pd.DataFrame(rows, columns=["ts", "low", "high", "open", "close", "volume"]).sort_values("ts")
     out.to_csv(main, index=False)
