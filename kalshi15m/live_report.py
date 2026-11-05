@@ -784,6 +784,17 @@ def zec_forward() -> dict | None:
     return r
 
 
+def fwd_lab() -> dict | None:
+    """The forward lab (kalshi15m/fwdlab.py + fwdscore.py -> data/lab/fwd_results.json): thousands of strategies
+    frozen on Nov 5, scored on the days since with Kalshi's trade records deciding every fill."""
+    try:
+        r = json.loads((OUT.parent / "data" / "lab" / "fwd_results.json").read_text())
+    except (OSError, ValueError):
+        return None
+    r["top"] = (r.get("top") or [])[:40]
+    return r
+
+
 def build():
     live = summarise()
     try:  # Kalshi demo account, for the "How it works" tab
@@ -796,6 +807,12 @@ def build():
             live["realmoney"] = rm
     except Exception as e:
         print(f"real-money results: skipped ({e})")
+    try:  # the forward lab (thousands of frozen strategies on new days), for the "Real money" tab
+        fl = fwd_lab()
+        if fl:
+            live["fwd_lab"] = fl
+    except Exception as e:
+        print(f"forward lab: skipped ({e})")
     try:  # the ZEC forward test + paper run, for the "Real money" tab
         zf = zec_forward()
         if zf:

@@ -134,6 +134,6 @@ def main(args=None):
         pick(int(args[1]) if len(args) > 1 else 4)
     elif args[0] == "score":
         from . import fwdscore
-        fwdscore.score(download="--no-download" not in args)
+        fwdscore.score(download="no-download" not in args)
     else:
-        sys.exit("usage: python -m kalshi15m fwdlab pick [WORKERS] | score [--no-download]")
+        sys.exit("usage: python -m kalshi15m fwdlab pick [WORKERS] | score [no-download]")

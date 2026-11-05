@@ -1366,6 +1366,16 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   <div class="tabpanel rm" id="panel-realmoney" role="tabpanel" aria-labelledby="tab-realmoney" hidden>
     <section class="rm-strip idle" id="rmStrip" aria-live="polite"></section>
 
+    <section class="how-sec" id="rm-fwd" hidden>
+      <div class="how-sh"><div class="eyebrow">Real money · forward lab</div><h2>Thousands of strategies on brand-new days</h2><p id="flIntro"></p></div>
+      <div class="how-card">
+        <div class="kvs" id="flStats"></div>
+        <p class="rm-tnote" id="flVerdict" style="margin:16px 0 12px"></p>
+        <div class="tablewrap"><table class="exam" id="flTable"></table></div>
+        <p class="rm-tnote" id="flNote" style="margin:14px 0 0"></p>
+      </div>
+    </section>
+
     <section class="how-sec" id="rm-zec" hidden>
       <div class="how-sh"><div class="eyebrow">Real money · ZEC forward test</div><h2>ZEC, tested on days it has never seen</h2><p id="zfIntro"></p></div>
       <div class="how-card">
@@ -2282,9 +2292,33 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     rmStrip(R); rmAccount(L ? obj(L.real_account) : {}, L); rmRules(L ? obj(L.real_account) : {});
     rmRebuild(L ? L.rebuild : null);
     rmZec(L ? L.zec_forward : null);
+    rmFwd(L ? L.fwd_lab : null);
     $("rm-how").hidden = !R; $("rm-results").hidden = !R;
     if (!R) { killChart("rmDet"); return; }
     rmMethod(R); rmBoard(R);
+  }
+
+  // the forward lab (LIVE_DATA.fwd_lab from kalshi15m/fwdscore.py): thousands of strategies frozen on Nov 5, scored on
+  // the days since with Kalshi's trade records deciding every fill
+  function rmFwd(F) {
+    const sec = $("rm-fwd"); if (!sec) return;
+    sec.hidden = !F || typeof F !== "object"; if (sec.hidden) return;
+    const N = F.n_candidates, top = (Array.isArray(F.top) ? F.top : []).filter(r => r && r.id);
+    const name = s => s === "ALL" ? "All coins" : COIN(String(s));
+    $("flIntro").textContent = `${NUM(N)} strategies were picked on ${fmtTime(F.frozen_at)} from the 7.9 million-setting search (the top 20 settings of every strategy type, for each coin and for all coins together) and frozen before any new day was looked at. Each day they are run on every market since ${fmtTime(F.fwd_start)}, at your bet size and limits; a bet only counts if Kalshi's real trade records show it would have filled.`;
+    const kv = (k, v, sub) => `<div><i>${k}</i><b>${v}</b>${sub ? `<small>${sub}</small>` : ""}</div>`;
+    $("flStats").innerHTML = [kv("New days so far", nz(F.days) ? F.days.toFixed(1) : DASH, `${NUM(Object.values(obj(F.markets)).reduce((a, b) => a + (b || 0), 0))} markets`),
+      kv("Strategies that bet", NUM(F.traded), `of ${NUM(N)}`),
+      kv("Made money so far", NUM(F.profitable), F.traded ? `${Math.round(100 * F.profitable / F.traded)}% of those that bet` : ""),
+      kv("Pass bar", nz(F.bar_t) ? `t ≥ ${F.bar_t}` : DASH, `after ${obj(F.gate).min_days || 7} days and ${obj(F.gate).min_filled || 30} filled bets`)].join("");
+    $("flVerdict").innerHTML = F.passed ? `<b>${pl(F.passed, "strategy has", "strategies have")} passed.</b>` :
+      `<b>None has passed yet.</b> With ${NUM(N)} strategies, about half will be up on any given day by pure luck, so the bar is set where luck alone would almost never reach it (t ≥ ${F.bar_t}).`;
+    const ST = { pass: ["golden", "Passed", "star"], fail: ["muted", "Losing", "cross"], open: ["neutral", "Testing", "dot"] };
+    $("flTable").innerHTML = `<thead><tr><th>Strategy</th><th class="num">Profit</th><th class="num">Filled bets</th><th class="num">t</th><th class="num">Before (t)</th></tr></thead><tbody>` +
+      top.slice(0, 15).map(r => { const x = ST[r.status] || ST.open; return `<tr><td><b>${esc(name(r.scope))}</b> · ${esc(r.family)} #${NUM(r.rank)} ${badge(x[0], x[1], x[2])}</td>
+        <td class="num ${cls(r.pnl)}" data-label="Profit">${SM(r.pnl, 2)}</td><td class="num" data-label="Filled">${NUM(r.filled)}</td>
+        <td class="num" data-label="t">${T(r.t)}</td><td class="num" data-label="Before">${T(r.t_before)}</td></tr>`; }).join("") + "</tbody>";
+    $("flNote").innerHTML = `Best 15 by consistency (t) on the new days. "Before (t)" is the score that got it picked, on the old data. A strategy goes to real money only if it passes; one or two good days prove nothing with this many tries.`;
   }
 
   // the ZEC forward test (LIVE_DATA.zec_forward from kalshi15m/zecfwd.py): the frozen ZEC rule replayed on markets
