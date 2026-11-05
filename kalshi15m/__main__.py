@@ -43,6 +43,7 @@ def main():
     l3.add_argument("--quick", type=int, default=0, help="pipeline test: only every Nth config of each grid")
     l3.add_argument("--out", default=None, help="output file (default data/lab/lab3_results.json)")
     l3.add_argument("--diagnose", action="store_true", help="only re-run the diagnostics on an existing results file")
+    l3.add_argument("--regrade", action="store_true", help="re-score the live baselines and re-judge an existing results file (no new search)")
     l4 = sub.add_parser("lab4", help="golden hunt on FX / yields / indices / commodities + cross-market (see lab4.py)")
     l4.add_argument("args", nargs="*", help="survey | download [SERIES ...] | models [QUICK] | xmkt | range | judge")
     l5 = sub.add_parser("lab5", help="execution variants (sizing/exits/re-entry/maker legs) of the best lab3 rules (see lab5.py)")
@@ -103,7 +104,10 @@ def main():
         lab2.main(a.args)
     elif a.cmd == "lab3":
         from . import lab3
-        lab3.diagnose_file(a.out) if a.diagnose else lab3.main(a.workers, a.families, a.quick, a.out)
+        if a.regrade:
+            lab3.regrade(a.out)
+        else:
+            lab3.diagnose_file(a.out) if a.diagnose else lab3.main(a.workers, a.families, a.quick, a.out)
     elif a.cmd == "lab4":
         from . import lab4
         lab4.main(a.args)

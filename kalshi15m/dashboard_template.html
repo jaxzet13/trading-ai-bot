@@ -890,6 +890,9 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
 .rm-how dd { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink-2); max-width: 86ch; }
 .rm-how dd b { color: var(--ink); font-weight: 600; }
 .rm-how ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; }
+.how-old { border-left: 3px solid var(--warn); background: var(--warn-bg); padding: 10px 12px; border-radius: 6px; }
+.lab-old { margin-top: 6px; font-size: 13px; color: var(--ink-2); max-width: 90ch; }
+.lab-old b { color: var(--ink); }
 .rm-tnote { margin: -4px 0 14px; font-size: 13px; color: var(--ink-2); line-height: 1.55; max-width: 90ch; }
 .rm-tnote b { color: var(--ink); }
 .badge.muted { color: var(--muted); background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
@@ -964,6 +967,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
 
   <div class="tabpanel how" id="panel-how" role="tabpanel" aria-labelledby="tab-how" hidden>
     <section class="how-hero">
+      <p class="how-honest how-old" style="margin:0 0 18px"><b>Out of date: this evidence did not survive the clean rebuild.</b> Everything on this tab was measured on the old coin prices, at $10 a trade with every order filling. The old prices for NEAR, HYPE, DOGE and BNB included trades the bot can never see. Rebuilt on clean prices at your real bet size, with only the orders that would really fill, the edge described here is gone: the live all-coin rule lost money on the same exam days. See the <b>Real money</b> tab for the rebuilt results.</p>
       <div class="eyebrow">How it works · what the evidence says · what happens when things go wrong</div>
       <h2 id="howHead">A small edge, repeated many times, tested five different ways</h2>
       <p class="how-lede" id="howLede"></p>
@@ -1096,7 +1100,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
         <div class="hay" id="hayBox"><canvas id="hay" role="img" data-hay></canvas><div class="hay-legend" id="hayLegend"></div></div>
         <div class="hero-stats" id="huntStats"></div>
         <p class="caveat"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="4.8" r="1" fill="currentColor"/></svg>
-          <span><b>Paper results, not real money.</b> These numbers come from replaying past markets at $10 a trade. Real trading has delays, bigger orders move prices, and markets change, so a strategy that looked golden can still lose. Nothing here is guaranteed.</span></p>
+          <span class="hunt-cav"><b>Paper results, not real money.</b> These numbers come from replaying past markets at $10 a trade. Real trading has delays, bigger orders move prices, and markets change, so a strategy that looked golden can still lose. Nothing here is guaranteed.</span></p>
       </div>
 
       <section class="panel" id="huntBoardPanel">
@@ -1112,7 +1116,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       <section class="panel" id="huntCurvesPanel">
         <div class="panel-head">
           <div><div class="eyebrow">Same days, side by side</div><h2>Top candidates against what&rsquo;s running now</h2>
-            <p>Running profit over the locked final-exam days, $10 a trade. The dashed line is the strategy already in paper trading on the same coins, over the same days. A new strategy is only worth switching to if its line ends clearly higher.</p></div>
+            <p>Running profit over the locked final-exam days, <span class="hunt-stk">$10 a trade</span>. The dashed line is the strategy already in paper trading on the same coins, over the same days. A new strategy is only worth switching to if its line ends clearly higher.</p></div>
           <div class="legend" id="smLegend"></div>
         </div>
         <div class="sm-grid" id="smGrid"></div>
@@ -1152,7 +1156,8 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
 
   <section class="panel" id="labPanel" hidden>
     <div class="panel-head">
-      <div><div class="eyebrow">Earlier searches</div><h2>Strategy search</h2><p id="labIntro"></p></div>
+      <div><div class="eyebrow">Earlier searches · old prices</div><h2>Strategy search</h2><p id="labIntro"></p>
+        <p class="lab-old"><b>Run on the old candle prices, at $10 a trade with every order filling.</b> Kept for the record; the clean, real-money rebuild above replaces it.</p></div>
       <div class="seg" role="group" aria-label="Market type" id="labSeg"></div>
     </div>
     <div class="stat-row" id="labStats"></div>
@@ -1161,7 +1166,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   </section>
 
   <details class="research" id="research">
-  <summary><span><h2>Research: every strategy tested</h2><span class="sdesc">12 strategies × 2 order types, walk-forward on BTC, ETH and SOL. Where the two live strategies came from.</span></span></summary>
+  <summary><span><h2>Research: every strategy tested</h2><span class="sdesc" id="researchSub">Every classic strategy × 2 order types, walk-forward on every coin. Re-run on Nov 5 on the clean prices (NEAR, HYPE, DOGE and BNB rebuilt from Coinbase's real trades). Classic means $10 a trade and every order fills, so real results are lower.</span></span></summary>
   <div class="research-body">
     <div class="ctrls" style="margin-bottom:4px">
       <div class="ctrl" id="scopeCtrl" hidden><label for="scopeSeg">Markets</label>
@@ -1482,7 +1487,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     $("verdict").innerHTML = `
       <div><div class="eyebrow">Verdict · all strategies, both order types</div><div class="big">${head}</div>
         <p>${pos} of ${n} strategy and order-type combinations made money out of sample. A candidate needs a t-stat of at least 2, profit in 60% of folds${coins.length > 1 ? ", and profit on at least two coins" : ""}.${coins.length === 1 ? ` Picking one coin after seeing it do best overstates its results, so ${COIN(coins[0])} also gets a blind test on older data it was never tuned on.` : ""}</p></div>
-      <div class="stat"><div class="eyebrow">Best out-of-sample t-stat</div><div class="v">${best ? best.t.toFixed(2) : "–"}</div><div class="s">${best ? NAMES[best.name] + ", " + best.ex : ""}</div></div>
+      <div class="stat"><div class="eyebrow">Best out-of-sample t-stat</div><div class="v">${best ? best.t.toFixed(2) : "–"}</div><div class="s">${best ? (NAMES[best.name] || best.name) + ", " + best.ex : ""}</div></div>
       <div class="stat"><div class="eyebrow">Buy YES every market · taker</div><div class="v ${cls(bt.roi)}">${spct(bt.roi)}</div><div class="s">ROI per $ staked</div></div>
       <div class="stat"><div class="eyebrow">Same, as maker</div><div class="v ${cls(bm.roi)}">${bm.trades ? spct(bm.roi) : "–"}</div><div class="s">${bm.trades ? bm.trades.toLocaleString() + " fills" : "needs bid/ask high-low data"}</div></div>`;
   }
@@ -1655,6 +1660,11 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       const N = { reached: nz(k0.reached) ? k0.reached : C3.length, golden: nz(k0.golden) ? k0.golden : own("golden"), pass: nz(k0.pass) ? k0.pass : own("pass"), fail: nz(k0.fail) ? k0.fail : own("fail") };
       return { m, C3, B3, FAM, N, bar: nz(m.t_bar_strict) ? m.t_bar_strict : null, hd: nz(m.holdout_days) ? m.holdout_days : null };
     })() : null;
+    // real-money results (lab3 LAB3_REAL: ~$0.50 bets, modelled fills) show cents; the classic ($10 a trade) whole dollars
+    const REALM = !!(HX && nz(HX.m.stake) && HX.m.stake < 5);
+    const M = (v, d) => nz(v) ? money(v, d == null ? (REALM ? 2 : 0) : d) : DASH;
+    const SM = (v, d) => nz(v) ? (v > 0 ? "+" : "") + M(v, d) : DASH;
+    const STK = REALM ? "about $0.50 a bet, counting only orders that would really fill" : "$10 a trade";
     const hs = { sel: undefined, filter: "all" };
     let hayDots = [];
     const rowSel = id => document.querySelector(`#${I.board} tr[data-cand="${CSS.escape(id)}"]`);
@@ -1662,6 +1672,9 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     function renderHunt() {
       $(I.root).hidden = !D;
       if (!D) return;
+      document.querySelectorAll(`#${I.root} .hunt-stk`).forEach(e => { e.textContent = STK; });
+      const cav = document.querySelector(`#${I.root} .hunt-cav`);
+      if (cav && REALM) cav.innerHTML = "<b>Simulated, not a promise.</b> Every number here is at your real bet size (about $0.50) and counts an order only as often as real Kalshi orders like it filled, on prices rebuilt from Coinbase's real trades. Real trading can still differ, and markets change.";
       huntHero(); huntBoard(); huntCurves(); huntIdeas(); huntHeat(); huntMethod(); drawHay();
     }
 
@@ -1775,7 +1788,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       return `<div class="report">
         <div class="rp-head"><h3>${esc(c.label || c.id)}</h3>${c.why ? `<p class="rp-why">${esc(c.why)}</p>` : ""}</div>
         <div class="rp-grid">
-          <div class="rp-box rp-chart"><div class="eyebrow">Running profit over ${hd ? `the ${hd} locked days` : "the locked days"} · $10 a trade</div>
+          <div class="rp-box rp-chart"><div class="eyebrow">Running profit over ${hd ? `the ${hd} locked days` : "the locked days"} · ${STK}</div>
             <div class="legend" style="margin-top:10px"><span><i style="background:var(${c.status === "golden" ? "--gold" : "--accent"})"></i>This strategy</span>${b ? `<span><i class="dash"></i>${esc(b.label)}</span>` : ""}</div>
             <div class="chart short"><canvas id="${I.eq}" aria-label="Running profit of ${esc(c.label || c.id)} on the locked days${b ? ", against " + esc(b.label) : ""}"></canvas></div></div>
           <div class="rp-box"><div class="eyebrow">Report card</div>
@@ -1803,9 +1816,9 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       if (cur) ds.push({ label: c.label || "This strategy", data: step(cur), borderColor: col, backgroundColor: alpha(col, 0.1), fill: "origin", borderWidth: 2, pointRadius: 0,
         pointHoverRadius: 4, pointHoverBackgroundColor: col, pointHoverBorderColor: cc.surface, pointHoverBorderWidth: 2 });
       const o = base(cc); o.interaction = { mode: "index", intersect: false }; o.layout = { padding: { right: 62, top: 8 } };
-      o.plugins.tooltip.callbacks = { title: i => fmtTime(i[0].parsed.x / 1000), label: i => `${i.dataset.label}: ${money(i.parsed.y)}` };
+      o.plugins.tooltip.callbacks = { title: i => fmtTime(i[0].parsed.x / 1000), label: i => `${i.dataset.label}: ${M(i.parsed.y)}` };
       o.scales = { x: axis(cc, { type: "linear", min: t0 * 1000, max: t1 * 1000, grid: { display: false }, ticks: { color: cc.muted, maxTicksLimit: ticks || 5, callback: v => dayFmt(v / 1000) } }),
-                   y: axis(cc, { ticks: { color: cc.muted, maxTicksLimit: 5, callback: v => money(v) } }) };
+                   y: axis(cc, { ticks: { color: cc.muted, maxTicksLimit: 5, callback: v => M(v) } }) };
       mk(id, { type: "line", data: { datasets: ds }, options: o, plugins: [zeroLine(cc), endLabels(cc)] });
     }
 
@@ -1870,7 +1883,8 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
       segs.push(`<div class="t-search" style="flex:${w.days && hd ? (w.days / hd).toFixed(2) : 3} 1 0"><b>Search period</b><span>${w.text ? esc(w.text) + ". " : ""}Every setting is tried here${nz(m.n_folds) ? `, and results are checked in ${m.n_folds} separate time slices` : ""}.</span>${nz(m.n_folds) ? `<div class="folds" aria-hidden="true">${"<i></i>".repeat(Math.min(m.n_folds, 24))}</div>` : ""}</div>`);
       segs.push(`<div class="t-hold" style="flex:1 1 0"><b>Locked final exam</b><span>${h0 && hd ? `${dayFmt(h0)} – ${dayFmt(h0 + hd * 86400 - 1)}. ` : ""}Hidden during the search and opened once, for the finalists only.</span></div>`);
       $(I.timeline).innerHTML = segs.join("");
-      const rules = (Array.isArray(m.rules) ? m.rules : []).filter(Boolean);
+      const rules = (Array.isArray(m.rules) ? m.rules : []).filter(Boolean).filter(r => !(m.real_money && /^Every result assumes \$10/.test(r)));
+      if (m.real_money) rules.push(String(m.real_money));
       $(I.rules).innerHTML = rules.length ? rules.map(r => `<li><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="var(--gold-bg)"/><path d="M6.5 11.3l3 3 6-6.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>${esc(r)}</span></li>`).join("")
         : `<li class="muted">This results file doesn't list its rules.</li>`;
       $(I.gloss).innerHTML = [
@@ -2220,6 +2234,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   // LIVE_DATA.real_account (the real Kalshi account, from the real runner's log). renderRealMoney() is a pure
   // re-render from LIVE_DATA: it runs on every live update; charts go through mk()/killChart(), clicks are delegated. ----------
   const rms = { open: undefined };
+  const rmOn = () => !(LIVE_DATA && LIVE_DATA.real_account && LIVE_DATA.real_account.running === false);
   const RM_ST = { "real-money golden": ["golden", "Real-money golden", "star"], pass: ["neutral", "Pass", "check"], fail: ["muted", "Fail", "cross"] };
   const rmBadge = s => { const x = RM_ST[s] || ["muted", s || "Not rated", "minus"]; return badge(x[0], x[1], x[2]); };
   const RM_SRC = { lab3: "from the golden hunt", lab5: "from the second hunt", live: "what the real bot runs today" };
@@ -2303,7 +2318,8 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     let chosen = "";
     if (ch) {
       const c = cs.find(x => x.id === String(ch.id)), on = nz(ch.applied_at);
-      chosen = `<div class="rm-chosen">${on ? badge("live", "Live now", "dot") : badge("neutral", "Chosen", "check")}<span>Live real-money strategy: <b>${esc((c && c.label) || ch.label || ch.id)}</b> ${on ? `(switched ${esc(fmtTime(ch.applied_at))})` : "(chosen, not switched on yet)"}</span>${ch.note ? `<span class="muted">${esc(ch.note)}</span>` : ""}</div>`;
+      chosen = !rmOn() ? `<div class="rm-chosen">${badge("muted", "Paused", "minus")}<span>Real trading is paused: no strategy is placing real bets. Last set up with <b>${esc((c && c.label) || ch.label || ch.id)}</b>.</span></div>`
+        : `<div class="rm-chosen">${on ? badge("live", "Live now", "dot") : badge("neutral", "Chosen", "check")}<span>Live real-money strategy: <b>${esc((c && c.label) || ch.label || ch.id)}</b> ${on ? `(switched ${esc(fmtTime(ch.applied_at))})` : "(chosen, not switched on yet)"}</span>${ch.note ? `<span class="muted">${esc(ch.note)}</span>` : ""}</div>`;
     }
     el.innerHTML = `<span class="om-pulse" aria-hidden="true"></span><div class="rm-st"><div class="eyebrow">Real money · test status</div><b>${title}</b>${sub ? `<span>${sub}</span>` : ""}${bar}</div>` +
       `${R && R.sample ? '<span class="sample-chip">Sample data · invented numbers</span>' : ""}${chosen}`;
@@ -2316,7 +2332,8 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     const cents = v => nz(v) ? (Math.abs(v) < 1 ? `${(v * 100).toFixed(0)}¢` : money(v, 2)) : DASH;
     el.innerHTML = rs.map((r, i) => {
       const T = r.test && typeof r.test === "object" ? r.test : null, closed = nz(r.closed) ? r.closed : 0;
-      const chip = r.live ? badge("live", r.priority === 0 ? "Live now · priority 1" : `Live now · priority ${(r.priority ?? i) + 1}`, "dot")
+      const chip = r.live && !rmOn() ? badge("muted", "Paused", "minus")
+                 : r.live ? badge("live", r.priority === 0 ? "Live now · priority 1" : `Live now · priority ${(r.priority ?? i) + 1}`, "dot")
                           : badge("muted", "No longer used", "cross");
       const gold = T && T.status === "real-money golden" ? badge("golden", "Real-money golden", "star") : "";
       const last = r.last && typeof r.last === "object" ? r.last : null;
@@ -2406,7 +2423,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     const body = rows.map((c, i) => {
       const t = obj(c.total), bt = obj(c.backtest), P = obj(c.periods), open = c.id === rms.open, gold = c.status === "real-money golden", pts = okPts(c.curve);
       const s0 = start != null ? start : pts.length ? pts[0][1] : 0;
-      const tags = [c.id === ch ? badge("live", nz(obj(R.chosen).applied_at) ? "Live now" : "Chosen", "dot") : "",
+      const tags = [c.id === ch ? (!rmOn() ? badge("muted", "Paused", "minus") : badge("live", nz(obj(R.chosen).applied_at) ? "Live now" : "Chosen", "dot")) : "",
         RM_SRC[c.source] ? `<span>${RM_SRC[c.source]}</span>` : c.source ? `<span>from ${esc(c.source)}</span>` : "",
         c.live_ready === true ? "<span>the live bot can run it</span>" : c.live_ready === false ? "<span>the live bot can't run it yet</span>" : ""].filter(Boolean).join("");
       return `<tr class="row${open ? " sel" : ""}${gold ? " is-golden" : ""}" tabindex="0" data-rm="${esc(c.id)}" aria-expanded="${open}">
@@ -2566,7 +2583,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     }
 
     // 2) evidence ladder
-    const cand = id => ((typeof LAB !== "undefined" && LAB && LAB.lab3 && LAB.lab3.candidates) || []).find(c => c && c.id === id);
+    const cand = id => (LAB && LAB.how && LAB.how.old_cands && LAB.how.old_cands[id]) || ((typeof LAB !== "undefined" && LAB && LAB.lab3 && LAB.lab3.candidates) || []).find(c => c && c.id === id);
     const sc = cand("scalp:ALL:taker+exit"), sz = cand("sized:ALL:taker");
     const cell = (k, v, sub) => `<div><i>${k}</i><b>${v}</b>${sub ? `<small>${sub}</small>` : ""}</div>`;
     const bt = (k, x, st, extra) => ({ k, done: true, t: x.title, d: x.desc, nums: [cell("Profit", nz(k.pnl) ? money(k.pnl) : DASH, "$10 a trade"), cell("Trades", NUM(k.trades), nz(k.days) ? `${NUM(k.trades / k.days)} a day` : ""),
@@ -2754,7 +2771,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
 
   function renderDetail() {
     const s = R.strategies[cur.strat], r = s.runs[cur.ex], m = r.oos, c = C();
-    $("eqTitle").textContent = `Out-of-sample equity · ${NAMES[cur.strat]} · ${cur.ex}`;
+    $("eqTitle").textContent = `Out-of-sample equity · ${NAMES[cur.strat] || cur.strat} · ${cur.ex}`;
     $("sdesc").textContent = s.description;
     const kv = [["Trades", m.trades.toLocaleString()], ["Win rate", pct(m.win_rate)], ["Avg entry price", (m.avg_price * 100).toFixed(1) + "¢"],
       ["Profit", `<span class="${cls(m.pnl)}">${money(m.pnl)}</span>`], ["ROI per $ staked", `<span class="${cls(m.roi)}">${spct(m.roi)}</span>`],

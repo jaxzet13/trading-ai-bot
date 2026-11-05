@@ -41,6 +41,7 @@ def build_panel(series: str) -> pd.DataFrame:
     lr = np.log(spot).diff()
     vol60 = lr.rolling(60, min_periods=30).std()
     vol240 = lr.rolling(240, min_periods=120).std()
+    vol_ewma30 = np.sqrt((lr ** 2).ewm(halflife=30, min_periods=30).mean())   # fair_value_vol's "ewma30" (as in lab3 / bot.py)
 
     n = len(mk)
     df = pd.DataFrame({
@@ -62,6 +63,7 @@ def build_panel(series: str) -> pd.DataFrame:
     df["spot"] = at(df.ts)
     df["vol1m"] = vol60.reindex(df.ts - 60).to_numpy()
     df["vol240"] = vol240.reindex(df.ts - 60).to_numpy()
+    df["vol_ewma30"] = vol_ewma30.reindex(df.ts - 60).to_numpy()
     p_prev0, p_open = at(df.open_ts - 900), at(df.open_ts)
     df["prev_ret"] = p_open / p_prev0 - 1
     df["ret_from_open"] = df.spot / p_open - 1
@@ -73,7 +75,7 @@ def build_panel(series: str) -> pd.DataFrame:
 
 
 FIELDS = ("yes_ask", "no_ask", "yes_bid", "ask_low", "bid_high", "trade_low", "trade_high", "spot", "strike", "vol1m", "vol240",
-          "prev_ret", "ret_from_open", "volume")
+          "vol_ewma30", "prev_ret", "ret_from_open", "volume")
 
 
 class Panel:

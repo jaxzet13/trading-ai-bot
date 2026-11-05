@@ -43,6 +43,7 @@ def collect(log=print):
     lab3.G["quick"] = 0
     log("loading panels (original data) ...")
     lab3.load(verbose=False)
+    R.OUT = LABDIR / "labx_progress.json"   # labrm writes its progress to R.OUT: keep the real-money tab's file intact
     seen = R.load_periods(download=False)
     rows, keys = [], set()
     wheres = [w for w in ("search", "hold", "arch", "p1", "p2") if L.G.get(w)]
@@ -298,6 +299,7 @@ def validate(top_per_scope=2, log=print):
     lab3.REAL = False                                    # candle positions; reality comes from the tape
     lab3.G["quick"] = 0
     lab3.load(verbose=False)
+    R.OUT = LABDIR / "labx_progress.json"   # labrm writes its progress to R.OUT: keep the real-money tab's file intact
     seen = R.load_periods(download=False)
     R.ACCOUNT.update(ACCOUNT_X)
     p2_start = R.STATE["periods"][1]["start"]

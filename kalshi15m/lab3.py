@@ -739,6 +739,11 @@ def _fee(price, n, rate):
 # (data/lab/labx_fill_model.json, learned from 11,009 entries checked against Kalshi's trade tape).
 REAL = os.environ.get("LAB3_REAL") == "1"
 REAL_STAKE, REAL_MAX_N = 0.5, 10
+REAL_NOTE = ("Real-money scoring: every result here (new strategies and the live baselines alike) is at about $0.50 a "
+             "bet (1 to 10 whole contracts, Kalshi fees at that size), and each taker order counts only as often as "
+             "real orders like it filled (fill model learned from 11,009 entries checked against Kalshi's trade "
+             "records), with the real fill price instead of the candle price. Prices for NEAR, HYPE, DOGE and BNB "
+             "are rebuilt from Coinbase's public trade list.")
 _FM = None
 
 
@@ -1085,8 +1090,28 @@ def _bt(where, coins, name, params, delay=0):
     if delay:
         fn = lab2.delayed(fn, delay)
     dfs = [B.run(G[where][c].panel, fn, stake=STAKE, execution="taker", **params) for c in coins if c in G[where]]
-    dfs = [d for d in dfs if len(d)]
+    dfs = [_real_rescore(d) if REAL else d for d in dfs if len(d)]
     return pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame(columns=["ts", "pnl"])
+
+
+def _real_rescore(df):
+    """Classic taker trades ($10, every order fills) -> the real-money scoring every candidate gets in
+    LAB3_REAL mode: $0.50 a bet (1-10 whole contracts), Kalshi fees at that size, weighted by the fill model."""
+    if not len(df):
+        return df
+    df = df.copy()
+    price = df.price.to_numpy(float)
+    yes = (df.side == "yes").to_numpy()
+    j = df.minute.to_numpy(int) - 1
+    n = np.minimum(np.maximum(1, np.floor(REAL_STAKE / price + 1e-9)), REAL_MAX_N)
+    fee = _fee(price, n, B.TAKER_RATE)
+    win = df.win.to_numpy(bool)
+    pnl = n * (win.astype(float) - price) - fee
+    fp, gap = _real_adjust(str(df.series.iloc[0]), yes, j, price, n)
+    df["contracts"], df["fee"] = n, fee
+    df["pnl"] = fp * (pnl + n * gap)
+    df["cost"] = fp * (n * price + fee)
+    return df
 
 
 def baselines():
@@ -1427,6 +1452,7 @@ def main(workers=2, families=None, quick=0, out_path=None):
             "n_walk_forwards": len(WF), "n_holdout_tests": k, "t_bar_strict": t_bar, "stake": STAKE,
             "shortlist": f"walk-forward P&L > 0, t >= {T_SHORT}, >= {SHORT_TRADES} trades, >= half of test folds profitable",
             "rules": RULES(t_bar), "caveats": CAVEATS,
+            **({"stake": REAL_STAKE, "real_money": REAL_NOTE} if REAL else {}),
         },
         "coins": {s: {"markets": len(full[s]), "search_markets": len(G["search"][s]),
                       "holdout_markets": len(G["hold"][s]),
@@ -1450,6 +1476,41 @@ def main(workers=2, families=None, quick=0, out_path=None):
               f"arch {(c['archive'] or {}).get('t')} | d1 t={c['delay1']['t']} | {c['why']}")
     print(f"done in {time.time() - t0:.0f}s -> {dest}")
     return out
+
+
+def regrade(path=None, log=print):
+    """Re-score the live baselines and re-judge an existing results file's candidates against them, without
+    re-running the search (the candidates' own holdout / archive / delay numbers are kept as they are)."""
+    t0 = time.time()
+    dest = Path(path) if path else OUT
+    res = json.loads(dest.read_text())
+    log(f"regrade {dest.name}: loading panels ...")
+    load(verbose=False)
+    base = baselines()
+    t_bar = res["method"]["t_bar_strict"]
+    cands = res["candidates"]
+    for c in cands:
+        c["rule"] = _rule_from_public(c)
+    judge(cands, base, t_bar)
+    for c in cands:
+        c.pop("rule", None)
+    for fr in res["families"]:
+        mine = [c for c in cands if c["family"] == fr["id"]]
+        fr["status"] = "golden" if any(c["status"] == "golden" for c in mine) else (
+            "pass" if any(c["status"] == "pass" for c in mine) else "fail")
+    cands.sort(key=lambda c: ({"golden": 0, "pass": 1, "fail": 2}[c["status"]], -c["holdout"]["t"]))
+    res["baselines"] = base
+    if REAL:
+        res["method"].update({"stake": REAL_STAKE, "real_money": REAL_NOTE})
+    res["regraded"] = int(time.time())
+    diagnose(res)
+    dest.write_text(json.dumps(res, default=_jd))
+    for b in base:
+        log(f"  baseline {b['id']:34s} ${b['holdout']['pnl']:>8} n={b['holdout']['trades']:>5} t={b['holdout']['t']}")
+    for c in cands:
+        log(f"  {c['status']:6s} {c['id']:30s} ${c['holdout']['pnl']:>8} t={c['holdout']['t']} | {c['why']}")
+    log(f"regraded in {time.time() - t0:.0f}s -> {dest}")
+    return res
 
 
 # =========================================================================== diagnostics (do not change status)

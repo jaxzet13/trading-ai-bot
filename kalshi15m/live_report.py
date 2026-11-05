@@ -255,9 +255,25 @@ def _thin(curve, n=300):
 
 
 def _lab3():
-    """The golden-strategy hunt (lab3.py output), or None if it hasn't been run.
+    """The golden-strategy hunt (lab3.py output), or None if it hasn't been run: the clean real-money rebuild
+    (LAB3_REAL=1 on trade-built prices, lab3_real_results.json) when it exists, else the original hunt.
     LAB3_PATH overrides the location, e.g. to render the dashboard from a test fixture."""
+    import os
+    real = OUT.parent / "data" / "lab" / "lab3_real_results.json"
+    if not os.environ.get("LAB3_PATH") and real.exists():
+        return _hunt_results("LAB3_PATH", real.name)
     return _hunt_results("LAB3_PATH", "lab3_results.json")
+
+
+def _old_hunt_holdouts(ids=("scalp:ALL:taker+exit", "sized:ALL:taker")):
+    """Holdout numbers of the original hunt's two golden rules (old candle prices, $10 a trade), quoted on the
+    "How it works" tab's evidence ladder now that LAB.lab3 shows the clean rebuild."""
+    try:
+        r = json.loads((OUT.parent / "data" / "lab" / "lab3_results.json").read_text())
+    except (OSError, ValueError):
+        return {}
+    return {c["id"]: {"id": c["id"], "holdout": c.get("holdout")} for c in r.get("candidates") or []
+            if isinstance(c, dict) and c.get("id") in ids}
 
 
 def _lab4():
@@ -305,7 +321,8 @@ def lab_summary():
     lab4 = _lab4()
     if lab4:
         out["lab4"] = lab4
-    out["how"] = {"combo": COMBO, "combo_days": COMBO_DAYS}  # the "How it works" tab's evidence
+    out["how"] = {"combo": COMBO, "combo_days": COMBO_DAYS,  # the "How it works" tab's evidence
+                  "old_cands": _old_hunt_holdouts()}
     try:  # the demo runner's real safety limits and rule list, quoted on the page's Plan A / Plan C cards
         cfg = json.loads((ROOT / "real_best_demo.json").read_text())
         out["how"]["runner"] = {"limits": cfg.get("limits"), "rules": [r.get("id") for r in cfg.get("golden_rules") or []],
@@ -692,7 +709,9 @@ def real_account() -> dict | None:
         return {"since": int(since or ev[0]["ts"]), "closed": len(closed), "wins": sum(b["pnl"] > 0 for b in closed),
                 "pnl": round(cum, 2), "curve": _thin(curve, 400)}
 
-    out = {"fix_ts": FIX_TS, "since_fix": part(FIX_TS), "all_time": part(0), "last": int(ev[-1]["ts"])}
+    out = {"fix_ts": FIX_TS, "since_fix": part(FIX_TS), "all_time": part(0), "last": int(ev[-1]["ts"]),
+           # the runner logs every market it watches, so 30 minutes of silence means real trading is stopped
+           "running": time.time() - ev[-1]["ts"] < 1800}
     try:
         out["by_rule"] = real_by_rule(ev, num)
     except Exception as e:   # never allowed to break the report

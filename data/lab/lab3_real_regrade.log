@@ -1,0 +1,51 @@
+regrade lab3_real_results.json: loading panels ...
+  baseline live:KXNEAR15M:fair_value          $    -3.8 n=  752 t=-0.46
+  baseline live:KXHYPE15M:fair_value          $  -13.31 n=  734 t=-1.24
+  baseline live:KXDOGE15M:fair_value          $   -2.24 n=  982 t=-0.18
+  baseline live:KXDOGE15M:fair_value_v2       $   -2.72 n=  753 t=-0.43
+  baseline live:KXDOGE15M:fair_value_bid      $    0.35 n=  955 t=0.05
+  baseline live:KXDOGE15M:fair_value_bid@asia $   -1.32 n=  303 t=-0.34
+  baseline live:KXHYPE15M:fair_value@asia     $    5.21 n=  153 t=0.98
+  baseline live:ALL:fair_value                $  -28.26 n= 5548 t=-0.93
+  baseline live:ALL:fair_value_v2             $   -10.8 n= 4410 t=-0.53
+  baseline live:ALL:fair_value|KXBTC15M       $  -18.87 n=  413 t=-2.13
+  baseline live:ALL:fair_value|KXETH15M       $   23.33 n=  298 t=1.62
+  baseline live:ALL:fair_value|KXSOL15M       $    -7.7 n=  349 t=-0.78
+  baseline live:ALL:fair_value|KXXRP15M       $   -2.17 n=  557 t=-0.18
+  baseline live:ALL:fair_value|KXHYPE15M      $   -6.09 n=  643 t=-0.85
+  baseline live:ALL:fair_value|KXBNB15M       $  -25.58 n= 1186 t=-3.1
+  baseline live:ALL:fair_value|KXNEAR15M      $   -4.99 n=  778 t=-0.7
+  baseline live:ALL:fair_value|KXDOGE15M      $   -14.2 n=  908 t=-1.86
+  baseline live:ALL:fair_value|KXZEC15M       $    28.0 n=  416 t=2.1
+  baseline live:ALL:fair_value_v2|KXBTC15M    $   -3.01 n=  284 t=-0.44
+  baseline live:ALL:fair_value_v2|KXETH15M    $    4.22 n=  214 t=0.64
+  baseline live:ALL:fair_value_v2|KXSOL15M    $   -3.06 n=  253 t=-0.44
+  baseline live:ALL:fair_value_v2|KXXRP15M    $    0.14 n=  420 t=0.02
+  baseline live:ALL:fair_value_v2|KXHYPE15M   $   -8.29 n=  517 t=-1.55
+  baseline live:ALL:fair_value_v2|KXBNB15M    $  -15.01 n= 1026 t=-2.26
+  baseline live:ALL:fair_value_v2|KXNEAR15M   $     0.1 n=  618 t=0.02
+  baseline live:ALL:fair_value_v2|KXDOGE15M   $    1.03 n=  756 t=0.16
+  baseline live:ALL:fair_value_v2|KXZEC15M    $   13.07 n=  322 t=1.7
+  pass   scalp:KXZEC15M:taker+exit      $   29.55 t=2.15 | Made $30 (t = 2.15) but t = 2.15 is below the strict bar of 2.84.
+  fail   fv_season:KXZEC15M:taker       $   25.81 t=1.68 | Made $26 on the holdout but t = 1.68 is too weak to rule out luck (needs 2).
+  fail   fv_ref:KXZEC15M:taker          $   26.82 t=1.59 | Made $27 on the holdout but t = 1.59 is too weak to rule out luck (needs 2).
+  fail   ens_fixed:KXZEC15M:taker       $   23.29 t=1.49 | Made $23 on the holdout but t = 1.49 is too weak to rule out luck (needs 2).
+  fail   fv_tau:KXZEC15M:taker          $   22.46 t=1.29 | Made $22 on the holdout but t = 1.29 is too weak to rule out luck (needs 2).
+  fail   fv_dyn:KXZEC15M:taker          $   19.07 t=1.18 | Made $19 on the holdout but t = 1.18 is too weak to rule out luck (needs 2).
+  fail   fv_liq:KXZEC15M:taker          $   19.07 t=1.18 | Made $19 on the holdout but t = 1.18 is too weak to rule out luck (needs 2).
+  fail   ens_best:KXZEC15M:taker        $   21.48 t=1.07 | Made $21 on the holdout but t = 1.07 is too weak to rule out luck (needs 2).
+  fail   fv_t:KXZEC15M:taker            $   21.26 t=1.06 | Made $21 on the holdout but t = 1.06 is too weak to rule out luck (needs 2).
+  fail   fv_emp:KXZEC15M:taker          $   16.41 t=0.98 | Made $16 on the holdout but t = 0.98 is too weak to rule out luck (needs 2).
+  fail   fv_jump:KXZEC15M:taker         $    8.94 t=0.53 | Made $9 on the holdout but t = 0.53 is too weak to rule out luck (needs 2).
+  fail   fv_cross:KXZEC15M:taker        $    5.04 t=0.37 | Made $5 on the holdout but t = 0.37 is too weak to rule out luck (needs 2).
+  fail   fv_btcdrift:KXZEC15M:taker     $    0.24 t=0.02 | Made $0 on the holdout but t = 0.02 is too weak to rule out luck (needs 2).
+  fail   fv_vol:KXZEC15M:taker          $   -0.32 t=-0.02 | Lost $0 on the holdout (637 trades).
+  fail   fv_btcdrift:ALL:taker          $   -3.96 t=-0.14 | Lost $4 on the holdout (4491 trades).
+  fail   ens_fixed:KXSOL15M:taker       $  -11.11 t=-0.95 | Lost $11 on the holdout (496 trades).
+  fail   fv_liq:KXSOL15M:taker          $  -13.11 t=-0.97 | Lost $13 on the holdout (353 trades).
+  fail   fv_emp:KXSOL15M:taker          $  -14.48 t=-1.13 | Lost $14 on the holdout (409 trades).
+  fail   fv_dyn:KXSOL15M:taker          $  -17.57 t=-1.25 | Lost $18 on the holdout (352 trades).
+  fail   fv_t:KXSOL15M:taker            $   -17.9 t=-1.37 | Lost $18 on the holdout (433 trades).
+  fail   fv_tau:KXSOL15M:taker          $  -17.29 t=-1.4 | Lost $17 on the holdout (524 trades).
+  fail   ens_best:KXSOL15M:taker        $  -21.68 t=-1.55 | Lost $22 on the holdout (570 trades).
+regraded in 20s -> data/lab/lab3_real_results.json
