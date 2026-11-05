@@ -1,5 +1,5 @@
 {
- "_note": "REAL MONEY, backtest sizing at tiny scale: x_exit only (real-money backtest, Oct 18 - Nov 1 final exam at these limits: +$30.97, t 2.27, 12/17 winning days, vs +$12.08 / t 0.85 for the 3-rule mix; account holder's choice 2026-11-05), the backtest's Kelly sizing on a $0.50 base (up to 5x = $2.50 on the strongest gaps), at most 10 contracts; when a signal is worth less than one contract, exactly 1 contract is bought if it costs at most $1 (the backtest takes those trades at fractional size). Safety caps (the only deliberate differences from the backtest): per 15-minute window across all coins at most $3 spent and 2 bets on the same side; at most $3 at risk at once; new bets stop for the day once losses plus money at risk reach $3; per coin $1.50 daily loss cap and 15 trades. Stops for good below $0.50. Run only from the account holder's own verified (18+) Kalshi account. BNB excluded (2026-11-04): Coinbase's final BNB-USD candles include trades that never appear in the live trade feed (thinnest Coinbase market), so live BNB decisions cannot match the backtest's.",
+ "_note": "REAL MONEY, backtest sizing at tiny scale: x_reentry:ALL only, as the real-money test ran it (one bet per market): the only real-money golden strategy (Nov 5; profitable in every out-of-sample period at these limits with real fills: final exam +$19.98, Nov 1-4 +$10.09, Jul-Aug archive +$29.01; 1,653 filled bets, t 3.18), the backtest's Kelly sizing on a $0.50 base (up to 5x = $2.50 on the strongest gaps), at most 10 contracts; when a signal is worth less than one contract, exactly 1 contract is bought if it costs at most $1 (the backtest takes those trades at fractional size). Safety caps (the only deliberate differences from the backtest): per 15-minute window across all coins at most $3 spent and 2 bets on the same side; at most $3 at risk at once; new bets stop for the day once losses plus money at risk reach $3; per coin $1.50 daily loss cap and 15 trades. Stops for good below $0.50. Run only from the account holder's own verified (18+) Kalshi account. BNB excluded (2026-11-04): Coinbase's final BNB-USD candles include trades that never appear in the live trade feed (thinnest Coinbase market), so live BNB decisions cannot match the backtest's.",
  "series": [
   "KXBTC15M",
   "KXETH15M",
@@ -14,21 +14,20 @@
  "poll": "minute",
  "golden_rules": [
   {
-   "id": "x_exit:ALL",
+   "id": "x_reentry:ALL",
    "family": "scalp",
    "scope": "ALL",
-   "t": 10.15,
+   "t": 3.18,
    "params": {
     "vm": 0.8,
-    "edge": 0.13,
+    "edge": 0.14,
     "start": 2,
     "end": 13,
     "band": "05-95",
-    "cap": 5,
-    "pow": 1.5,
+    "cap": 3,
     "exit": "conv2"
    },
-   "norm": 0.22693348935173294
+   "norm": 0.3688183926949676
   }
  ],
  "log": "data/kalshi15m/real_live_log.jsonl",
