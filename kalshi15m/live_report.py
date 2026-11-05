@@ -578,6 +578,84 @@ def realmoney_results(max_rows: int = 60) -> dict | None:
     return r
 
 
+RULE_LABELS = {"x_reentry:ALL": "Early sale, 14c gap, bets up to 3x (x_reentry)",
+               "x_exit:ALL": "Early sale near fair value (x_exit)",
+               "sized_exit:ALL": "Bigger bets on bigger gaps + early sale (sized_exit)",
+               "sized:ALL": "Bigger bets on bigger gaps, hold to the end (sized)",
+               "fv_t:ALL": "Fair value, fat-tailed model (fv_t)",
+               "scalp:ALL": "Early sale at fair value (scalp)", "x_cap:ALL": "Scalp with a window cap (x_cap)"}
+
+
+def real_by_rule(ev, num):
+    """Live real-money stats per strategy since FIX_TS: which rule placed each bet (order_intent.rule), and how
+    each bet ended (exit / settle P&L, grouped per market). Rules in kalshi15m/real_best_live.json are 'live';
+    ones that traded earlier but are no longer configured are 'retired'. Each carries its real-money-test
+    average per bet (data/lab/realmoney_results.json, out-of-sample) for comparison."""
+    try:
+        live_ids = [g.get("id") for g in json.loads((ROOT / "real_best_live.json").read_text()).get("golden_rules") or []]
+    except (OSError, ValueError):
+        live_ids = []
+    test = {}
+    try:
+        rr = json.loads((OUT.parent / "data" / "lab" / "realmoney_results.json").read_text())
+        for c in rr.get("candidates") or []:
+            t = c.get("total") or {}
+            if num(t.get("pnl")) and t.get("filled"):
+                test[c.get("id")] = {"per_bet": round(t["pnl"] / t["filled"], 4), "status": c.get("status"),
+                                     "pnl": t["pnl"], "filled": t["filled"], "t": t.get("t")}
+    except (OSError, ValueError):
+        pass
+    rule_of, intent, bets = {}, {}, {}
+    for e in ev:
+        if e["ts"] < FIX_TS:
+            continue
+        tk, k = e.get("ticker"), e.get("event")
+        if k == "order_intent" and tk:
+            rule_of[tk] = e.get("rule")
+            intent[tk] = e
+        elif k == "fill" and tk in rule_of and num(e.get("n")) and e["n"] > 0:
+            b = bets.setdefault(tk, {"rule": rule_of[tk], "ts": e["ts"], "cost": 0.0, "pnl": 0.0, "closed_n": 0.0,
+                                     "n": 0.0, "side": e.get("side"), "price": e.get("avg_price"), "done": False})
+            b["cost"] += (e.get("cost") or 0) + (e.get("fees") or 0)
+            b["n"] += e["n"]
+        elif k in ("exit", "settle") and tk in bets and num(e.get("pnl")):
+            b = bets[tk]
+            b["pnl"] += e["pnl"]
+            b["closed_n"] += e.get("n") or 0
+            b["end"] = e["ts"]
+            if k == "settle" or (k == "exit" and (e.get("remaining") or 0) <= 1e-9):
+                b["done"] = True
+    rows = {}
+    for tk, b in sorted(bets.items(), key=lambda kv: kv[1]["ts"]):
+        rid = b["rule"] or "unknown"
+        r = rows.setdefault(rid, {"id": rid, "label": RULE_LABELS.get(rid, rid), "live": rid in live_ids,
+                                  "bets": 0, "closed": 0, "wins": 0, "pnl": 0.0, "open": 0, "at_risk": 0.0,
+                                  "first": int(b["ts"]), "curve": [], "test": test.get(rid)})
+        r["bets"] += 1
+        if b["done"]:
+            r["closed"] += 1
+            r["wins"] += b["pnl"] > 0
+            r["pnl"] += b["pnl"]
+            r["curve"].append([int(b.get("end", b["ts"])), round(r["pnl"], 4)])
+        else:
+            r["open"] += 1
+            r["at_risk"] += max(b["cost"] - 0, 0) if not b["closed_n"] else max(b["cost"] * (1 - b["closed_n"] / b["n"]), 0)
+        r["last"] = {"ticker": tk, "coin": tk.split("-")[0][2:-3], "side": b["side"], "price": b["price"], "ts": int(b["ts"]),
+                     "pnl": round(b["pnl"], 4) if b["done"] else None, "open": not b["done"]}
+    for rid in live_ids:
+        rows.setdefault(rid, {"id": rid, "label": RULE_LABELS.get(rid, rid), "live": True, "bets": 0, "closed": 0,
+                              "wins": 0, "pnl": 0.0, "open": 0, "at_risk": 0.0, "first": None, "curve": [],
+                              "test": test.get(rid), "last": None})
+    out = []
+    for r in rows.values():
+        r["pnl"], r["at_risk"] = round(r["pnl"], 2), round(r["at_risk"], 2)
+        r["per_bet"] = round(r["pnl"] / r["closed"], 4) if r["closed"] else None
+        r["priority"] = live_ids.index(r["id"]) if r["id"] in live_ids else None
+        r["curve"] = _thin(r["curve"], 200)
+        out.append(r)
+    return sorted(out, key=lambda r: (not r["live"], r["priority"] if r["priority"] is not None else 99, -r["bets"]))
+
+
 def real_account() -> dict | None:
     """The REAL Kalshi account, from the real runner's log ("mode": "LIVE" rows only): closed bets, wins, profit
     and a running-profit curve since FIX_TS and for all time, plus the last cash balance Kalshi reported.
@@ -615,6 +693,10 @@ def real_account() -> dict | None:
                 "pnl": round(cum, 2), "curve": _thin(curve, 400)}
 
     out = {"fix_ts": FIX_TS, "since_fix": part(FIX_TS), "all_time": part(0), "last": int(ev[-1]["ts"])}
+    try:
+        out["by_rule"] = real_by_rule(ev, num)
+    except Exception as e:   # never allowed to break the report
+        print(f"real account by rule: skipped ({e})")
     bal = next((e for e in reversed(ev) if num(e.get("balance_crypto"))), None)
     if bal:
         out["balance"], out["balance_ts"] = round(bal["balance_crypto"], 2), int(bal["ts"])

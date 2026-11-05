@@ -908,6 +908,15 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
 #rmBoard .lv-tags { margin-top: 5px; }
 #rmBoard .rp-why .badge { vertical-align: 1px; margin-right: 4px; }
 @media (max-width: 860px) { .rm-acct { grid-template-columns: minmax(0, 1fr); } }
+.rm-rules { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.rm-rule { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.rm-rule.retired { opacity: .72; }
+.rm-rule h3 { margin: 0; font-size: 15.5px; line-height: 1.3; }
+.rm-rule .rm-rule-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.rm-rule .rm-rule-pnl { font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
+.rm-rule .rm-rule-kv { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; font-size: 13.5px; color: var(--ink-2); }
+.rm-rule .rm-rule-kv b { color: var(--ink); font-weight: 600; }
+.rm-rule .rm-rule-foot { font-size: 13px; color: var(--ink-2); border-top: 1px solid var(--grid); padding-top: 8px; }
 @media (max-width: 720px) {
   .rm { gap: 36px; }
   .rm-strip { grid-template-columns: auto minmax(0, 1fr); padding: 16px 16px 18px; }
@@ -1353,6 +1362,12 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
           <div class="chart rm-chart" id="rmAcctWrap"><canvas id="rmAcct" aria-label="Running profit of the real Kalshi account since the price fixes"></canvas></div>
           <p class="empty" id="rmAcctEmpty" hidden></p></div>
       </div>
+    </section>
+
+    <section class="how-sec" id="rm-rules">
+      <div class="how-sh"><div class="eyebrow">Real money · by strategy</div><h2>Each strategy on your real account</h2>
+        <p id="rmRulesIntro">Real dollars per strategy, from the real bot's own log: which strategy placed each bet and how it ended. "Live now" strategies are the ones the real account runs at the moment (the first one has priority when two want the same market).</p></div>
+      <div class="rm-rules" id="rmRules"></div>
     </section>
 
     <section class="how-sec" id="rm-how" hidden>
@@ -2227,7 +2242,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
 
   function renderRealMoney() {
     const L = LIVE_DATA, R = L && L.realmoney && typeof L.realmoney === "object" ? L.realmoney : null;
-    rmStrip(R); rmAccount(L ? obj(L.real_account) : {}, L);
+    rmStrip(R); rmAccount(L ? obj(L.real_account) : {}, L); rmRules(L ? obj(L.real_account) : {});
     $("rm-how").hidden = !R; $("rm-results").hidden = !R;
     if (!R) { killChart("rmDet"); return; }
     rmMethod(R); rmBoard(R);
@@ -2259,6 +2274,36 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
     }
     el.innerHTML = `<span class="om-pulse" aria-hidden="true"></span><div class="rm-st"><div class="eyebrow">Real money · test status</div><b>${title}</b>${sub ? `<span>${sub}</span>` : ""}${bar}</div>` +
       `${R && R.sample ? '<span class="sample-chip">Sample data · invented numbers</span>' : ""}${chosen}`;
+  }
+
+  function rmRules(A) {
+    const el = $("rmRules"); if (!el) return;
+    const rs = (Array.isArray(A.by_rule) ? A.by_rule : []).filter(r => r && typeof r === "object");
+    if (!rs.length) { el.innerHTML = `<p class="empty">No strategy has traded on the real account since the fixes yet.</p>`; return; }
+    const cents = v => nz(v) ? (Math.abs(v) < 1 ? `${(v * 100).toFixed(0)}¢` : money(v, 2)) : DASH;
+    el.innerHTML = rs.map((r, i) => {
+      const T = r.test && typeof r.test === "object" ? r.test : null, closed = nz(r.closed) ? r.closed : 0;
+      const chip = r.live ? badge("live", r.priority === 0 ? "Live now · priority 1" : `Live now · priority ${(r.priority ?? i) + 1}`, "dot")
+                          : badge("muted", "No longer used", "cross");
+      const gold = T && T.status === "real-money golden" ? badge("golden", "Real-money golden", "star") : "";
+      const last = r.last && typeof r.last === "object" ? r.last : null;
+      const lastTxt = last ? `Latest bet: ${esc(last.coin || "")} ${esc(String(last.side || "").toUpperCase() === "YES" ? "UP" : "DOWN")} at ${cents(last.price)}` +
+        (last.open ? " · still open" : nz(last.pnl) ? ` · <span class="${cls(last.pnl)}">${SM(last.pnl, 2)}</span>` : "") + (nz(last.ts) ? ` · ${esc(fmtTime(last.ts))}` : "") : "No bets yet.";
+      return `<div class="how-card rm-rule${r.live ? "" : " retired"}">
+        <div class="rm-rule-top">${chip}${gold}</div>
+        <h3>${esc(r.label || r.id)}</h3>
+        <div class="rm-rule-pnl ${closed ? cls(r.pnl) : ""}">${closed ? SM(r.pnl, 2) : DASH}</div>
+        <div class="rm-rule-kv">
+          <div>Closed bets<br><b>${NUM(closed)}</b></div>
+          <div>Wins<br><b>${NUM(r.wins || 0)}</b>${closed ? ` (${pct((r.wins || 0) / closed)})` : ""}</div>
+          <div>Per bet, real<br><b class="${nz(r.per_bet) ? cls(r.per_bet) : ""}">${nz(r.per_bet) ? SM(r.per_bet, 2) : DASH}</b></div>
+          <div>Per bet, real-money test<br><b class="${T ? cls(T.per_bet) : ""}">${T ? SM(T.per_bet, 2) : DASH}</b></div>
+          <div>Open now<br><b>${NUM(r.open || 0)}</b>${nz(r.at_risk) && r.at_risk > 0 ? ` (${money(r.at_risk, 2)} at risk)` : ""}</div>
+          <div>Trading since<br><b>${nz(r.first) ? esc(fmtTime(r.first)) : DASH}</b></div>
+        </div>
+        <div class="rm-rule-foot">${lastTxt}</div>
+      </div>`;
+    }).join("") + `<p class="small" style="grid-column:1/-1">A few bets are too few to judge a strategy: in the real-money test these strategies lost on 51–57% of bets and made their money on bigger wins. "Per bet, real-money test" is the average result per filled bet in that test's out-of-sample periods, at your bet size.</p>`;
   }
 
   function rmAccount(A, L) {
