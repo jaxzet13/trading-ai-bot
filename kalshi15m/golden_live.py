@@ -127,6 +127,14 @@ EXTRA = [
     {"id": "x_cap:ALL", "family": "scalp", "scope": "ALL", "t": 9.06, "kind": "sized_exit",
      "params": {"vm": 0.8, "edge": 0.12, "start": 2, "end": 13, "band": "05-95", "cap": 3, "exit": "conv0"},
      "norm": 0.3412936032571755},
+    # lab5 x_reentry:ALL as the real-money test (labrm big) ran it: ONE bet per market (the live runner's rule;
+    # labrm never re-enters), i.e. scalp entry at 14c (dedge +0.02), Kelly stakes capped 3x, exit within 2c of
+    # fair value. The only real-money golden strategy (Nov 5): profitable in every out-of-sample period at the
+    # owner's limits with real fills: Oct 18 - Nov 1 +$19.98, Nov 1-4 +$10.09, Jul-Aug archive +$29.01;
+    # 1,653 filled bets, t 3.18.
+    {"id": "x_reentry:ALL", "family": "scalp", "scope": "ALL", "t": 3.18, "kind": "sized_exit",
+     "params": {"vm": 0.8, "edge": 0.14, "start": 2, "end": 13, "band": "05-95", "cap": 3, "exit": "conv2"},
+     "norm": 0.3688183926949676},
 ]
 ORDER = EXTRA + GOLDEN                                        # best first
 RULES = {r["id"]: r for r in ORDER}
