@@ -155,6 +155,12 @@ def fetch_segment(product, id_hi, id_lo, out, pace=0.25, log=print):
     """Every trade with id in (id_lo, id_hi] -> per-minute bars with first/last trade ids (for merging)."""
     s = requests.Session()
     bars, after, n = {}, id_hi + 1, 0
+    part = Path(str(out) + ".partial.json")
+    if part.exists():                                   # resume after a container restart
+        st = json.loads(part.read_text())
+        bars = {int(k): v for k, v in st["bars"].items()}
+        after = st["after"]
+        log(f"{product} segment {id_lo}-{id_hi}: resuming at trade id {after} ({len(bars)} minutes)")
     while True:
         for a in range(30):
             try:
@@ -185,11 +191,13 @@ def fetch_segment(product, id_hi, id_lo, out, pace=0.25, log=print):
             break
         after = min(int(x["trade_id"]) for x in tr)
         if n % 100 == 0:
+            part.write_text(json.dumps({"after": after, "bars": bars}))
             log(f"{product} segment {id_lo}-{id_hi}: {n} requests, back to "
                 f"{datetime.utcfromtimestamp(min(bars)):%Y-%m-%d %H:%M}")
         time.sleep(pace)
     pd.DataFrame([(ts, *b) for ts, b in sorted(bars.items())],
                  columns=["ts", "open", "high", "low", "close", "volume", "first_tid", "last_tid"]).to_csv(out, index=False)
+    part.unlink(missing_ok=True)
     log(f"{product} segment {id_lo}-{id_hi}: done, {len(bars)} minutes ({n} requests)")
 
 
