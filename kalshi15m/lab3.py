@@ -819,7 +819,8 @@ def execute(ctx, fam, cfg, side, minute, p, delay=0, norm=None):
     cost = n * price + fee
     exit_j = np.full(len(idx), -1)
     sell_px = np.full(len(idx), np.nan)
-    q_in = np.where(yes, p[idx, j], 1 - p[idx, j]) if len(idx) else np.zeros(0)
+    q_in = (np.where(yes, p[idx, j], 1 - p[idx, j]) if len(idx) and p is not None and np.ndim(p) == 2
+            else np.full(len(idx), np.nan))
     if kind == "scalp" and len(idx):
         ex = cfg["exit"]
         cols = np.arange(14)[None, :]
