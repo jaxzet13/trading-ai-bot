@@ -832,6 +832,7 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   .exam tr > td:first-child { grid-column: 1 / -1; }
   .exam tr > td.num { text-align: left; }
   .exam td.num::before { content: attr(data-label) " "; color: var(--muted); font-size: 11px; }
+  #rbTable tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   :is(#huntBoard, #l4Board) td[data-label]::before { content: attr(data-label); display: block; font: 500 9.5px/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
   :is(#huntBoard, #l4Board) .pnl-in { justify-content: flex-start; }
   :is(#huntBoard, #l4Board) .tm { justify-content: start; }
@@ -1353,6 +1354,11 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
 
   <div class="tabpanel rm" id="panel-realmoney" role="tabpanel" aria-labelledby="tab-realmoney" hidden>
     <section class="rm-strip idle" id="rmStrip" aria-live="polite"></section>
+
+    <section class="how-sec" id="rm-rebuild" hidden>
+      <div class="how-sh"><div class="eyebrow">Real money · clean rebuild, coin by coin</div><h2>Rebuilt from scratch on clean prices</h2><p id="rbIntro"></p></div>
+      <div class="how-card"><p class="rm-tnote" id="rbVerdict"></p><div class="tablewrap"><table class="exam" id="rbTable"></table></div><p class="rm-tnote" id="rbNote" style="margin:14px 0 0"></p></div>
+    </section>
 
     <section class="how-sec" id="rm-account">
       <div class="how-sh"><div class="eyebrow">Real money · your Kalshi account</div><h2>Your real account</h2><p id="rmAcctIntro"></p></div>
@@ -2243,9 +2249,36 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   function renderRealMoney() {
     const L = LIVE_DATA, R = L && L.realmoney && typeof L.realmoney === "object" ? L.realmoney : null;
     rmStrip(R); rmAccount(L ? obj(L.real_account) : {}, L); rmRules(L ? obj(L.real_account) : {});
+    rmRebuild(L ? L.rebuild : null);
     $("rm-how").hidden = !R; $("rm-results").hidden = !R;
     if (!R) { killChart("rmDet"); return; }
     rmMethod(R); rmBoard(R);
+  }
+
+  // the clean rebuild (LIVE_DATA.rebuild from live_report.rebuild_summary): best strategy per coin, its 15-day
+  // holdout at real bet size with modelled fills, and, for any finalist, the replay against Kalshi's trade records
+  function rmRebuild(B) {
+    const sec = $("rm-rebuild"); if (!sec) return;
+    const rows = B && Array.isArray(B.coins) ? B.coins.filter(r => r && r.coin) : [];
+    sec.hidden = !rows.length; if (!rows.length) return;
+    const k = obj(B.counts), bar = nz(B.t_bar) ? B.t_bar.toFixed(2) : "2.84";
+    $("rbIntro").textContent = `Every coin searched on its own with prices rebuilt from Coinbase's real trade list (the old candle prices for NEAR, HYPE, DOGE and BNB held trades the bot can never see). ` +
+      `${nz(B.configs) ? NUM(B.configs) + " settings" : "Every setting"} of ${nz(B.families) ? B.families + " strategy families" : "every strategy family"} were scored at your real bet size, with fills taken from 11,009 real Kalshi orders. ` +
+      `The best ones then sat a final exam on ${nz(B.holdout_days) ? B.holdout_days + " days" : "days"} they had never seen${nz(B.generated) ? ` (finished ${fmtTime(B.generated)})` : ""}.`;
+    const nG = nz(k.golden) ? k.golden : 0;
+    $("rbVerdict").innerHTML = nG ? `<b>${pl(nG, "strategy", "strategies")} passed as golden.</b>` :
+      `<b>No coin has a strategy good enough for real money yet.</b> ${pl(k.exam || 0, "strategy", "strategies")} reached the final exam, none passed as golden, and real trading stays paused.`;
+    const ST = { golden: ["golden", "Golden", "star"], pass: ["neutral", "Close, not enough", "check"], fail: ["muted", "Lost on the exam", "cross"], none: ["muted", "Nothing survived", "minus"] };
+    const b = s => { const x = ST[s] || ST.none; return badge(x[0], x[1], x[2]); };
+    const name = c => c === "ALL" ? "All coins together" : COIN(c);
+    const tape = r => { const TP = obj(r.tape), S = obj(r.stress), ids = Object.keys(TP); if (!ids.length) return "";
+      return ids.map(id => { const x = obj(TP[id]), s = obj(S[id]); const st = Object.entries(s).map(([n, v]) => `${n} ${SM(v, 2)}`).join(", ");
+        return `${id === "hold" ? "Exam days" : id === "recent" ? "Latest days" : esc(id)}: ${SM(x.pnl, 2)} (${NUM(x.filled)} of ${NUM(x.bets)} orders filled, t ${T(x.t)})${st ? `; ${esc(st)}` : ""}`; }).join("<br>"); };
+    $("rbTable").innerHTML = `<thead><tr><th>Coin and best strategy</th><th class="num">Exam profit</th><th class="num">Trades</th><th class="num">t</th><th class="num">1 min late, t</th></tr></thead><tbody>` +
+      rows.map(r => `<tr><td><b>${esc(name(r.coin))}</b> ${b(r.status)}<div class="sub">${r.label ? esc(r.label) : `Nothing got through the search${obj(r.search_best).family ? `: the best setting (${esc(r.search_best.family)}) made ${SM(r.search_best.pnl, 2)} on ${NUM(r.search_best.trades)} trades, t ${T(r.search_best.t)}, short of the 1.5 needed to reach the exam` : ""}.`}${r.tape ? `<br><b>Replayed on Kalshi's real trades</b>: ${tape(r)}` : ""}</div></td>
+        <td class="num ${cls(r.pnl)}" data-label="Exam profit">${SM(r.pnl, 2)}</td><td class="num" data-label="Trades">${NUM(r.trades)}</td>
+        <td class="num" data-label="t">${T(r.t)}</td><td class="num" data-label="1 min late">${T(r.late_t)}</td></tr>`).join("") + "</tbody>";
+    $("rbNote").innerHTML = `<b>Golden</b> needs a consistency score (t) of ${bar} or more on the exam days (the bar is raised because so many settings were tried), a profit when orders are 3 seconds late or fill 1 cent worse, and a profit when replayed on Kalshi's real trade records. Exam profit is at about $0.50 a bet.`;
   }
 
   function rmStrip(R) {

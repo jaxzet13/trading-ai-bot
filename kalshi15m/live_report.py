@@ -703,6 +703,51 @@ def real_account() -> dict | None:
     return out
 
 
+def rebuild_summary() -> dict | None:
+    """The clean real-money rebuild, coin by coin (lab3 LAB3_REAL search on trade-built prices, plus labx's
+    replay of any finalist against Kalshi's trade records), or None if it hasn't run."""
+    lab = OUT.parent / "data" / "lab"
+    try:
+        r = json.loads((lab / "lab3_real_results.json").read_text())
+    except (OSError, ValueError):
+        return None
+    try:
+        val = {x["id"]: x for x in json.loads((lab / "labx_results.json").read_text()).get("results", [])}
+    except (OSError, ValueError, KeyError, TypeError):
+        val = {}
+    m, cands = r.get("method") or {}, [c for c in (r.get("candidates") or []) if isinstance(c, dict)]
+    wf = {}   # best walk-forward (search) result per coin over every family, for coins where nothing got through
+    for f in r.get("families") or []:
+        for k, w in (f.get("walk_forward") or {}).items():
+            if isinstance(w, dict) and isinstance(w.get("t"), (int, float)) and (k not in wf or w["t"] > wf[k]["t"]):
+                wf[k] = {"family": f.get("name") or f.get("id"), "t": w["t"], "pnl": w.get("pnl"), "trades": w.get("trades")}
+    rows = []
+    for coin in [*(r.get("coins") or {}), "ALL"]:
+        cs = [c for c in cands if c.get("scope") == coin]
+        best = max(cs, key=lambda c: (c.get("holdout") or {}).get("t") or -9) if cs else None
+        row = {"coin": coin, "reached": len(cs), "status": best.get("status") if best else "none",
+               "search_best": wf.get("All 9 coins" if coin == "ALL" else coin.replace("KX", "").replace("15M", ""))}
+        if best:
+            h = best.get("holdout") or {}
+            row.update(id=best.get("id"), label=best.get("label"), pnl=h.get("pnl"), trades=h.get("trades"),
+                       t=h.get("t"), win_rate=h.get("win_rate"), late_t=(best.get("delay1") or {}).get("t"),
+                       why=best.get("why"))
+            v = val.get(best.get("id"))
+            if v:
+                row["tape"] = {pid: {k: x.get(k) for k in ("pnl", "bets", "filled", "t", "days", "winning_days")}
+                               for pid, x in (v.get("periods") or {}).items()}
+                row["stress"] = {pid: {k: x for k, x in st.items() if "classic" not in k}
+                                 for pid, st in (v.get("stress") or {}).items()}
+                row["bankroll_1day"] = v.get("bankroll_1day")
+        rows.append(row)
+    return {"generated": r.get("generated"), "configs": m.get("n_configs_tested"), "families": m.get("n_families"),
+            "t_bar": m.get("t_bar_strict"), "holdout_days": m.get("holdout_days"),
+            "search_window": m.get("search_window"), "shortlist": m.get("shortlist"),
+            "counts": {"exam": len(cands), "golden": sum(c.get("status") == "golden" for c in cands),
+                       "pass": sum(c.get("status") == "pass" for c in cands)},
+            "coins": rows}
+
+
 def build():
     live = summarise()
     try:  # Kalshi demo account, for the "How it works" tab
@@ -715,6 +760,12 @@ def build():
             live["realmoney"] = rm
     except Exception as e:
         print(f"real-money results: skipped ({e})")
+    try:  # the clean coin-by-coin rebuild, for the "Real money" tab
+        rb = rebuild_summary()
+        if rb:
+            live["rebuild"] = rb
+    except Exception as e:
+        print(f"rebuild summary: skipped ({e})")
     try:  # the real Kalshi account, for the "Real money" tab
         ra = real_account()
         if ra:
