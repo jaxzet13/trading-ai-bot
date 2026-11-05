@@ -437,6 +437,9 @@ class Runner:
             from . import golden_live as GL
             ids = {r["id"] for r in cfg["golden_rules"]}
             self.golden_ids = [rid for rid in GL.rules_for(self.series) if rid in ids]   # best first
+            if cfg.get("golden_priority") == "config":    # the config's own order decides ties instead of GL.ORDER
+                order = [r["id"] for r in cfg["golden_rules"]]
+                self.golden_ids = sorted(self.golden_ids, key=order.index)
             self.rules = [(rid, None, GL.RULES[rid]["params"]) for rid in self.golden_ids]
             self.engine = engine or GL.engine(self.series)
         else:
@@ -447,6 +450,7 @@ class Runner:
         self.stop_event = stop_event
         self.product = SERIES[self.series]
         self.log_path, self.stop_path = Path(log_path), Path(stop_path)
+        self.target_path = self.log_path.with_name(self.log_path.stem + "_TARGET_REACHED")
         with _ACCOUNT_LOCK:
             _ACCOUNT_RUNNERS[:] = [r for r in _ACCOUNT_RUNNERS if r.series != self.series
                                    or r.mode != mode or r.log_path != self.log_path]   # in-process restarts
@@ -632,6 +636,8 @@ class Runner:
                     raise Stop("Ctrl+C")
                 if self.stop_path.exists():
                     raise Stop(f"kill switch: {self.stop_path} exists")
+                if self.L.get("take_profit_balance_usd") and self.target_path.exists():
+                    raise Stop(f"target already reached ({self.target_path.name} exists)")
                 if self.today() != day:
                     self.print_day(day)
                     day = self.today()
@@ -716,6 +722,7 @@ class Runner:
             self.manage_exit(minute, obs, lag, age)
             if self.cur not in self.traded:
                 sigs = self.engine.signals(self.P, minute, self.golden_ids)
+                sigs = sorted(sigs, key=lambda s: self.golden_ids.index(s.rule))    # this runner's priority
                 if sigs:
                     best = sigs[0]
                     self.act(m, minute, (best.side, best.price),
@@ -1188,6 +1195,12 @@ class Runner:
             equity = self.balance + self.account_open_risk()     # cash + what open bets cost (not yet won/lost)
         else:
             equity = self.balance
+        tp = self.L.get("take_profit_balance_usd")
+        if tp and equity >= tp:
+            # target reached: stop for good (the flag file keeps a restarted runner from trading again)
+            self.target_path.write_text(json.dumps({"ts": self.clock(), "equity": round(equity, 4), "target": tp}))
+            self.log({"event": "target_reached", "balance": self.balance, "equity": round(equity, 4), "target": tp})
+            raise Stop(f"target reached: balance ${equity:.2f} >= take_profit_balance_usd ${tp:.2f}")
         if equity < self.L["min_balance_usd"]:
             self.log({"event": "min_balance", "balance": self.balance, "equity": round(equity, 4)})
             raise Stop(f"balance ${self.balance:.2f} below min_balance_usd ${self.L['min_balance_usd']:.2f}")
@@ -1232,6 +1245,10 @@ def load_config(path=CONFIG) -> dict:
                                                  or isinstance(lim["daily_loss_ignore_before_ts"], bool)
                                                  or lim["daily_loss_ignore_before_ts"] > time.time() + 60):
         raise Stop(f"{path}: daily_loss_ignore_before_ts must be a past unix time", EXIT_CONFIG)
+    if "take_profit_balance_usd" in lim and (not isinstance(lim["take_profit_balance_usd"], (int, float))
+                                             or isinstance(lim["take_profit_balance_usd"], bool)
+                                             or lim["take_profit_balance_usd"] <= lim["min_balance_usd"]):
+        raise Stop(f"{path}: take_profit_balance_usd must be a number above min_balance_usd", EXIT_CONFIG)
     if "min_one_contract_max_usd" in lim and (not isinstance(lim["min_one_contract_max_usd"], (int, float))
                                               or isinstance(lim["min_one_contract_max_usd"], bool)
                                               or not 0 < lim["min_one_contract_max_usd"] <= 2):

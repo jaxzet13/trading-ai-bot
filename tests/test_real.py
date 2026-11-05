@@ -1150,6 +1150,18 @@ def test_min_one_contract():
     assert not fake.posts
 
 
+def test_take_profit_stops_for_good():
+    d, clock, fake, kp = setup()
+    fake.balance_cents = 700                         # $7.00 >= target $7
+    cfg = _account_cfg(take_profit_balance_usd=7.0, min_balance_usd=0.5)
+    r = make_runner(d, clock, fake, kp, cfg=cfg)
+    assert r.run() == real.EXIT_CLEAN
+    assert events(r, "target_reached") and not fake.posts and r.target_path.exists()
+    fake.balance_cents = 500                         # even after a dip, a restarted runner does not trade again
+    r2 = make_runner(d, clock, fake, kp, cfg=cfg)
+    assert r2.run() == real.EXIT_CLEAN and not fake.posts
+
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):
