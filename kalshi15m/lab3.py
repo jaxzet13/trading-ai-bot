@@ -818,6 +818,8 @@ def execute(ctx, fam, cfg, side, minute, p, delay=0, norm=None):
     pnl = n * (win.astype(float) - price) - fee
     cost = n * price + fee
     exit_j = np.full(len(idx), -1)
+    sell_px = np.full(len(idx), np.nan)
+    q_in = np.where(yes, p[idx, j], 1 - p[idx, j]) if len(idx) else np.zeros(0)
     if kind == "scalp" and len(idx):
         ex = cfg["exit"]
         cols = np.arange(14)[None, :]
@@ -839,12 +841,13 @@ def execute(ctx, fam, cfg, side, minute, p, delay=0, norm=None):
         pnl = np.where(has, n * (sell - price) - fee - f2, pnl)
         win = np.where(has, pnl > 0, win)
         exit_j = np.where(has, ej, -1)
+        sell_px = np.where(has, sell, np.nan)
     if REAL and len(idx) and kind not in ("maker", "makerfv"):
         fp, gap = _real_adjust(ctx.series, yes, j, price, n)
         pnl = fp * (pnl + n * gap)            # expected real result: it only counts when the order fills
         cost = fp * cost
     return {"m": idx, "j": j, "fj": fj, "yes": yes, "price": price, "n": n, "fee": fee, "pnl": pnl,
-            "win": win, "cost": cost, "stake": stake, "exit_j": exit_j}
+            "win": win, "cost": cost, "stake": stake, "exit_j": exit_j, "sell": sell_px, "q": q_in}
 
 
 def to_df(ctx, tr):
@@ -852,7 +855,10 @@ def to_df(ctx, tr):
     return pd.DataFrame({"ticker": ctx.panel.ticker[m], "series": ctx.series,
                          "ts": ctx.open_ts[m] + 60 * (tr["fj"] + 1), "side": np.where(tr["yes"], "yes", "no"),
                          "minute": tr["j"] + 1, "price": tr["price"], "contracts": tr["n"], "fee": tr["fee"],
-                         "cost": tr["cost"], "win": tr["win"].astype(bool), "pnl": tr["pnl"], "stake": tr["stake"]})
+                         "cost": tr["cost"], "win": tr["win"].astype(bool), "pnl": tr["pnl"], "stake": tr["stake"],
+                         "q": tr.get("q", np.full(len(m), np.nan)), "exit_minute": tr.get("exit_j", np.full(len(m), -1)) + 1,
+                         "sell": tr.get("sell", np.full(len(m), np.nan)), "open_ts": ctx.open_ts[m],
+                         "result": ctx.result[m]})
 
 
 def fold_agg(ctx, tr):

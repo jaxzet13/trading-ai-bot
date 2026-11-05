@@ -38,8 +38,12 @@ def swap(log=print):
             orig = pd.read_csv(bk)
             lo, hi = int(orig.ts.min()), int(orig.ts.max())
             if bars.ts.min() > lo + 3600:
-                raise SystemExit(f"{prod}: trade bars start {pd.to_datetime(bars.ts.min(), unit='s')}, after "
-                                 f"{f} starts ({pd.to_datetime(lo, unit='s')}); fetch further back first")
+                # not covered yet: move the candle file aside, so nothing can silently use contaminated prices
+                hold = f.with_suffix(".candles_not_cleaned")
+                shutil.move(f, hold)
+                log(f"{(sub or 'main'):8s} {series}: trade bars only from {pd.to_datetime(bars.ts.min(), unit='s')}, "
+                    f"file starts {pd.to_datetime(lo, unit='s')} -> moved aside ({hold.name}); fetch further back")
+                continue
             new = bars[(bars.ts >= lo) & (bars.ts <= hi)][list(orig.columns)]
             new.to_csv(f, index=False)
             same = orig.merge(new, on="ts", suffixes=("_c", "_t"))
@@ -52,6 +56,7 @@ def restore(log=print):
     for sub in DIRS:
         for f in (BACKUP / (sub or "main")).glob("*_spot.csv"):
             shutil.copy2(f, D / sub / f.name)
+            (D / sub / f.name).with_suffix(".candles_not_cleaned").unlink(missing_ok=True)
             log(f"restored {sub or 'main'}/{f.name}")
 
 

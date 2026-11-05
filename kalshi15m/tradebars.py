@@ -41,9 +41,10 @@ def fetch(product: str, since: str, pace: float = 0.25, log=print):
     if out.exists():
         for r in pd.read_csv(out).itertuples(index=False):
             bars[int(r.ts)] = [r.open, r.high, r.low, r.close, r.volume, None, None]   # first/last trade id unknown
-    if st.get("done"):
-        log(f"{product}: already complete ({len(bars)} bars)")
+    if st.get("done") and st.get("oldest_ts") is not None and st["oldest_ts"] <= since_ts:
+        log(f"{product}: already complete back to {since} ({len(bars)} bars)")
         return out
+    st["done"] = False                        # (an earlier, shorter run can be extended further back)
     s = requests.Session()
     n_req, t0 = 0, time.time()
     newest_seen = {}            # minute -> highest trade id applied (to keep close = last trade, open = first)
@@ -109,9 +110,11 @@ def fetch(product: str, since: str, pace: float = 0.25, log=print):
 
 
 def main(args=None):
-    prods = [a for a in (args or []) if "-" in a] or list(DEFAULT_SINCE)
+    args = list(args or [])
+    since = next((a.split("=", 1)[1] for a in args if a.startswith(("--since=", "since="))), None)
+    prods = [a for a in args if a.endswith("-USD")] or list(DEFAULT_SINCE)
     for p in prods:
-        fetch(p, DEFAULT_SINCE.get(p, "2026-06-25"))
+        fetch(p, since or DEFAULT_SINCE.get(p, "2026-06-25"))
 
 
 if __name__ == "__main__":
