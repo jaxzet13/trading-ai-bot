@@ -136,7 +136,16 @@ EXTRA = [
      "params": {"vm": 0.8, "edge": 0.14, "start": 2, "end": 13, "band": "05-95", "cap": 3, "exit": "conv2"},
      "norm": 0.3688183926949676},
 ]
-ORDER = EXTRA + GOLDEN                                        # best first
+# Single-coin rules from the clean real-money rebuild (LAB3_REAL=1 lab3 on trade-built prices, Nov 5;
+# data/lab/lab3_real_results.json): the only one that passed. scalp:KXZEC15M = ZEC scalp entry at 8c below fair
+# value, sell once the bid reaches fair value (conv0), flat ~$0.50 stake. Holdout +$29.55 / t 2.15 (below the
+# strict 2.84 bar); replayed on Kalshi's trade tape: +$5.57 (85 of 252 filled, 17 days) and +$6.94 (Nov 1-4).
+# Runs only after a forward test (kalshi15m/zecfwd.py) passes. Appended after GOLDEN so no priority changes.
+SINGLE = [
+    {"id": "scalp:KXZEC15M", "family": "scalp", "scope": "KXZEC15M", "t": 2.15, "kind": "scalp",
+     "params": {"vm": 0.8, "edge": 0.08, "start": 2, "end": 13, "band": "05-95", "exit": "conv0"}},
+]
+ORDER = EXTRA + GOLDEN + SINGLE                               # best first
 RULES = {r["id"]: r for r in ORDER}
 PRIORITY = {r["id"]: i for i, r in enumerate(ORDER)}
 

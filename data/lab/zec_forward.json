@@ -1,0 +1,129 @@
+{
+ "generated": 1793907802,
+ "rule": "scalp:KXZEC15M",
+ "fwd_start": 1793823300,
+ "gate": {
+  "min_days": 7,
+  "min_filled": 30,
+  "t_all": 1.65,
+  "paper_agree": 0.9,
+  "paper_min": 10
+ },
+ "status": "waiting",
+ "checks": [
+  {
+   "id": "days",
+   "label": "At least 7 forward days",
+   "ok": false,
+   "value": 1.0
+  },
+  {
+   "id": "filled",
+   "label": "At least 30 forward bets that would have filled",
+   "ok": false,
+   "value": 6
+  },
+  {
+   "id": "profit",
+   "label": "Forward bets made money",
+   "ok": false,
+   "value": -0.92
+  },
+  {
+   "id": "t_all",
+   "label": "All out-of-sample bets together: t of at least 1.65",
+   "ok": false,
+   "value": 1.34
+  },
+  {
+   "id": "paper",
+   "label": "Paper run's orders match the replay (90%, once it has 10)",
+   "ok": false,
+   "value": "0 of 0"
+  }
+ ],
+ "forward": {
+  "pnl": -0.92,
+  "bets": 22,
+  "filled": 6,
+  "wins": 3,
+  "t": -0.9831636035896448,
+  "days": 2,
+  "winning_days": 0,
+  "worst_day": -0.5,
+  "max_dd": -1.04,
+  "end": 10.98,
+  "markets": 85,
+  "daily": {
+   "2026-11-04": -0.5,
+   "2026-11-05": -0.415
+  },
+  "curve": [
+   [
+    1793825400,
+    11.9
+   ],
+   [
+    1793831400,
+    11.29
+   ],
+   [
+    1793834100,
+    11.4
+   ],
+   [
+    1793856600,
+    11.59
+   ],
+   [
+    1793859182,
+    10.945
+   ],
+   [
+    1793859482,
+    10.855
+   ],
+   [
+    1793880900,
+    10.985
+   ]
+  ]
+ },
+ "exam": {
+  "pnl": 5.57,
+  "bets": 252,
+  "filled": 85,
+  "wins": 37,
+  "t": 0.8904104861905857,
+  "days": 17,
+  "winning_days": 8,
+  "worst_day": -1.55,
+  "max_dd": -4.15,
+  "end": 17.47
+ },
+ "recent": {
+  "pnl": 6.94,
+  "bets": 32,
+  "filled": 17,
+  "wins": 10,
+  "t": 1.1745977027287087,
+  "days": 3,
+  "winning_days": 2,
+  "worst_day": -0.49,
+  "max_dd": -0.86,
+  "end": 18.84
+ },
+ "all_oos": {
+  "bets": 108,
+  "pnl": 11.6,
+  "t": 1.34
+ },
+ "paper": {
+  "orders": 0,
+  "agree": 0,
+  "would_fill": 0,
+  "first_start": 1793907469.151,
+  "last_event": 1793907469,
+  "recent": []
+ }
+}

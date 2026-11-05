@@ -57,6 +57,12 @@ def test_rule_table_matches_lab3_results():
     assert GL.rules_for("KXBTC15M") == extra + [r["id"] for r in GL.GOLDEN if r["scope"] == "ALL"]
     assert len(GL.rules_for("KXDOGE15M")) == 13 + len(extra) and len(GL.rules_for("KXHYPE15M")) == 13 + len(extra)
     assert abs(GL.RULES["sized:ALL"]["norm"] - 0.26276) < 1e-5 and abs(GL.RULES["sized:KXHYPE15M"]["norm"] - 0.22610) < 1e-5
+    # the clean rebuild's ZEC rule: params exactly as in lab3_real_results.json
+    real = json.loads((ROOT / "data" / "lab" / "lab3_real_results.json").read_text())
+    zc = next(c for c in real["candidates"] if c["id"] == "scalp:KXZEC15M:taker+exit")
+    z = GL.RULES["scalp:KXZEC15M"]
+    assert z["params"] == zc["params"] and z["family"] == zc["family"] and z["scope"] == zc["scope"] == "KXZEC15M"
+    assert z["kind"] == lab3.FAMILIES[z["family"]]["kind"] == "scalp" and GL.rules_for("KXZEC15M")[-1] == z["id"]
 
 
 def test_sized_stake_formula():
@@ -295,7 +301,7 @@ def test_replay_rules_match_lab3_signal():
     R = replay_all()
     rows = []
     bad = []
-    for rid in [r["id"] for r in GL.GOLDEN]:
+    for rid in [r["id"] for r in GL.GOLDEN + GL.SINGLE]:
         n = match = trades_b = trades_l = 0
         for coin, r in R.items():
             if rid not in r["batch"]:

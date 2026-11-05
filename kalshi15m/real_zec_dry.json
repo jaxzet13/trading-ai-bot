@@ -1,0 +1,46 @@
+{
+ "_note": "NO MONEY: paper run of real_zec_live.json (same rule and limits) on live production prices. Its decisions are checked against Kalshi's trade records by python -m kalshi15m zecfwd.",
+ "series": [
+  "KXZEC15M"
+ ],
+ "execution": "taker",
+ "poll": "minute",
+ "golden_rules": [
+  {
+   "id": "scalp:KXZEC15M",
+   "family": "scalp",
+   "scope": "KXZEC15M",
+   "t": 2.15,
+   "params": {
+    "vm": 0.8,
+    "edge": 0.08,
+    "start": 2,
+    "end": 13,
+    "band": "05-95",
+    "exit": "conv0"
+   }
+  }
+ ],
+ "log": "data/kalshi15m/real_zec_dry_log.jsonl",
+ "limits": {
+  "stake_usd": 0.5,
+  "max_contracts_per_order": 10,
+  "max_daily_loss_usd": 1.5,
+  "max_trades_per_day": 15,
+  "max_open_positions": 1,
+  "min_balance_usd": 6.0,
+  "max_price": 0.95,
+  "min_price": 0.03,
+  "max_data_age_s": 5.0,
+  "max_decision_lag_s": 5.0,
+  "walk_cents": 5,
+  "walk_keep_edge": 0.08,
+  "max_total_open_risk_usd": 3.0,
+  "max_total_daily_loss_usd": 3.0,
+  "min_balance_counts_open_bets": true,
+  "max_window_cost_usd": 3.0,
+  "max_entries_per_window_side": 2,
+  "min_one_contract_max_usd": 1.0
+ },
+ "golden_priority": "config"
+}

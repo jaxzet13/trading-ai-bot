@@ -54,6 +54,8 @@ def main():
     cs.add_argument("args", nargs="*")
     tb = sub.add_parser("tradebars", help="1-minute bars rebuilt from Coinbase's public trade list (see tradebars.py)")
     tb.add_argument("args", nargs="*")
+    zf = sub.add_parser("zecfwd", help="ZEC forward test: replay the frozen ZEC rule on markets since Nov 4 on Kalshi's trade tape, check the paper run, grade the real-money gate")
+    zf.add_argument("args", nargs="*", help="--no-download")
     lrm = sub.add_parser("labrm", help="real-money backtest of the golden strategies (real fills from Kalshi trades, the account limits; see labrm.py)")
     lrm.add_argument("args", nargs="*")
     l4p = sub.add_parser("lab4p", help="lab4 re-run with Pyth (Kalshi's settlement source) as the price anchor (see lab4p.py)")
@@ -123,6 +125,9 @@ def main():
     elif a.cmd == "tradebars":
         from . import tradebars
         tradebars.main(a.args)
+    elif a.cmd == "zecfwd":
+        from . import zecfwd
+        zecfwd.main(a.args)
     elif a.cmd == "labrm":
         from . import labrm
         labrm.main(a.args)

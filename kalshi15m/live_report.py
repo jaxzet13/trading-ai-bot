@@ -767,6 +767,23 @@ def rebuild_summary() -> dict | None:
             "coins": rows}
 
 
+def zec_forward() -> dict | None:
+    """The ZEC forward test and paper run (kalshi15m/zecfwd.py -> data/lab/zec_forward.json), plus whether the
+    paper run is running now (its log has an entry in the last 30 minutes), or None if it hasn't run."""
+    try:
+        r = json.loads((OUT.parent / "data" / "lab" / "zec_forward.json").read_text())
+    except (OSError, ValueError):
+        return None
+    log = OUT.parent / "data" / "kalshi15m" / "real_zec_dry_log.jsonl"
+    try:
+        r["paper_running"] = time.time() - log.stat().st_mtime < 1800
+    except OSError:
+        r["paper_running"] = False
+    f = r.get("forward") or {}
+    f["curve"] = _thin(f.get("curve") or [], 200)
+    return r
+
+
 def build():
     live = summarise()
     try:  # Kalshi demo account, for the "How it works" tab
@@ -779,6 +796,12 @@ def build():
             live["realmoney"] = rm
     except Exception as e:
         print(f"real-money results: skipped ({e})")
+    try:  # the ZEC forward test + paper run, for the "Real money" tab
+        zf = zec_forward()
+        if zf:
+            live["zec_forward"] = zf
+    except Exception as e:
+        print(f"zec forward: skipped ({e})")
     try:  # the clean coin-by-coin rebuild, for the "Real money" tab
         rb = rebuild_summary()
         if rb:
