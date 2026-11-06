@@ -144,6 +144,11 @@ EXTRA = [
 SINGLE = [
     {"id": "scalp:KXZEC15M", "family": "scalp", "scope": "KXZEC15M", "t": 2.15, "kind": "scalp",
      "params": {"vm": 0.8, "edge": 0.08, "start": 2, "end": 13, "band": "05-95", "exit": "conv0"}},
+    # forward lab (data/lab/fwd_candidates.json) fv_emp:KXNEAR15M:14, the forward leader on Nov 5 (+$7.56 on 12 filled
+    # bets, t 2.33, below the 4.16 pass bar). Added for a 30-minute real-money execution test the account holder asked
+    # for; not a passed strategy.
+    {"id": "fv_emp:KXNEAR15M:14", "family": "fv_emp", "scope": "KXNEAR15M", "t": 2.33, "kind": "hold",
+     "params": {"start": 5, "end": 10, "edge": 0.12, "band": "05-95", "lb": 7, "vm": 1.1}},
 ]
 ORDER = EXTRA + GOLDEN + SINGLE                               # best first
 RULES = {r["id"]: r for r in ORDER}

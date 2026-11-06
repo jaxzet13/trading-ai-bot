@@ -1,0 +1,46 @@
+{
+ "_note": "REAL MONEY, 30-minute execution test the account holder asked for (Nov 5): the forward lab's leader fv_emp:KXNEAR15M:14 (+$7.56 on 12 filled forward bets, t 2.33 - NOT a passed strategy). NEAR only, ~$0.50 bets, at most $1 lost; uses only the crypto balance (~$1.57), the account's other $10 is not moved.",
+ "series": [
+  "KXNEAR15M"
+ ],
+ "execution": "taker",
+ "poll": "minute",
+ "golden_rules": [
+  {
+   "id": "fv_emp:KXNEAR15M:14",
+   "family": "fv_emp",
+   "scope": "KXNEAR15M",
+   "t": 2.33,
+   "params": {
+    "start": 5,
+    "end": 10,
+    "edge": 0.12,
+    "band": "05-95",
+    "lb": 7,
+    "vm": 1.1
+   }
+  }
+ ],
+ "log": "data/kalshi15m/real_test30_log.jsonl",
+ "limits": {
+  "stake_usd": 0.5,
+  "max_contracts_per_order": 10,
+  "max_daily_loss_usd": 1.0,
+  "max_trades_per_day": 15,
+  "max_open_positions": 1,
+  "min_balance_usd": 0.5,
+  "max_price": 0.95,
+  "min_price": 0.03,
+  "max_data_age_s": 5.0,
+  "max_decision_lag_s": 5.0,
+  "walk_cents": 5,
+  "walk_keep_edge": 0.08,
+  "max_total_open_risk_usd": 1.5,
+  "max_total_daily_loss_usd": 1.0,
+  "min_balance_counts_open_bets": true,
+  "max_window_cost_usd": 3.0,
+  "max_entries_per_window_side": 2,
+  "min_one_contract_max_usd": 1.0
+ },
+ "golden_priority": "config"
+}
