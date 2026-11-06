@@ -77,8 +77,19 @@ def fetch_markets(series, log=print):
     have = set(old_cd.ticker) if len(old_cd) else set()
     new = mk[~mk.ticker.isin(have)]
     if len(new):
-        cd = D.fetch_candles(series, new)
-        old_cd = pd.concat([old_cd, cd], ignore_index=True) if len(old_cd) else cd
+        cd = None
+        for attempt in range(3):           # Kalshi's candlestick endpoint rate-limits hard while the bots poll
+            try:
+                cd = D.fetch_candles(series, new)
+                break
+            except requests.HTTPError as e:
+                log(f"  {series} candles: {e.response.status_code if e.response is not None else e}; waiting 60 s")
+                time.sleep(60)
+        if cd is None:                     # leave these markets for the next check
+            log(f"  {series}: {len(new)} new markets skipped this time (Kalshi rate limit)")
+            mk = mk[~mk.ticker.isin(new.ticker)]
+        else:
+            old_cd = pd.concat([old_cd, cd], ignore_index=True) if len(old_cd) else cd
     mk.to_csv(mpath, index=False)
     old_cd.drop_duplicates(["ticker", "ts"]).to_csv(cpath, index=False)
     return mk
