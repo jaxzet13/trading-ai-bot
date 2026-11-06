@@ -290,7 +290,15 @@ def settle(ctx, fills, b):
         sold = has_exit & (fills.exit_max[m, np.clip(ej, 0, 13), yes] >= sell - 1e-9)
         pnl = np.where(sold, nf * sell - lab3._fee(np.where(sold, sell, 0.0), nf, TAKER_RATE) - cost, pnl)
     day = ((ctx.open_ts[m] + 60 * (j + 1)) // 86400).astype(int)
-    return {"placed": keep, "filled": filled, "pnl": np.where(filled, pnl, 0.0), "day": day}
+    out = {"placed": keep, "filled": filled, "pnl": np.where(filled, pnl, 0.0), "day": day}
+    # per-contract view for growth sizing (fwdgrowth): fill price, contracts that traded at our limit, what one
+    # contract paid back (early-sale price or the settlement), entry time
+    value = res.astype(float)
+    if has_exit.any():
+        value = np.where(sold, sell, value)
+    out.update(fp1=fills.first[m, j, yes, c], avail=avail, value=value, sold=has_exit & (fills.exit_max[m, np.clip(ej, 0, 13), yes] >= sell - 1e-9) if has_exit.any() else np.zeros(len(m), bool),
+               t=ctx.open_ts[m] + 60 * (j + 1), ok1=keep & (avail >= 1) & np.isfinite(fills.first[m, j, yes, c]))
+    return out
 
 
 # --------------------------------------------------------------------------- scoring
@@ -405,4 +413,72 @@ def score(download=True, log=print):
         f"{len(pos)} profitable; bar t >= {bar:.2f}; {out['passed']} passed ({time.time() - t0:.0f}s)")
     for r in top[:10]:
         log(f"  {r['id']:32s} ${r['pnl']:>7.2f}  {r['filled']:>4} filled  t {r['t']:>5}  [{r['status']}]")
+    return out
+
+
+# --------------------------------------------------------------------------- growth sizing (python -m kalshi15m fwdlab growth)
+GROWTH_FRACS = (0.10, 0.25, 0.50)
+
+
+def growth(log=print):
+    """Every frozen candidate on the forward days with compounding stakes: a $10 account, each bet stakes a fixed
+    share of the current balance (10 / 25 / 50%), contracts capped by what traded at our limit in the 1-3 s window
+    (early sales assumed to fill in full, a little optimistic). Same orders and fills as fwdlab score."""
+    from . import lab3
+    from .backtest import TAKER_RATE
+    C = json.loads((LABDIR / "fwd_candidates.json").read_text())
+    coins = C["coins"]
+    ctxs = contexts(coins, log)
+    tapes = {s: pickle.load(open(TAPE_DIR / f"{s}.pkl", "rb")) for s in coins}
+    fills = {s: Fills(ctxs[s], tapes[s]) for s in coins}
+    rows, fam = [], None
+    for c in sorted(C["candidates"], key=lambda c: c["family"]):
+        if c["family"] != fam:
+            fam = c["family"]
+            for x in ctxs.values():
+                x.cache = {}
+        parts = []
+        for coin in (coins if c["scope"] == "ALL" else [c["scope"]]):
+            ctx = ctxs[coin]
+            side, minute, p = lab3.signal(ctx, c["family"], c["params"])
+            tr = lab3.execute(ctx, c["family"], c["params"], side, minute, p, norm=(c.get("norms") or {}).get(coin))
+            if len(tr["m"]):
+                r = settle(ctx, fills[coin], _bets(tr))
+                k = r["ok1"]
+                parts.append(np.column_stack([r["t"][k], r["fp1"][k], r["avail"][k], r["value"][k]]))
+        B_ = np.concatenate(parts) if parts else np.zeros((0, 4))
+        B_ = B_[np.argsort(B_[:, 0], kind="stable")]
+        row = {"id": c["id"], "family": c["family"], "scope": c["scope"], "bets": int(len(B_))}
+        for f in GROWTH_FRACS:
+            bal, peak, low = 10.0, 10.0, 10.0
+            for t, fp, av, val in B_:
+                n = min(math.floor(bal * f / fp + 1e-9), math.floor(av + 1e-9))
+                if n < 1:
+                    continue
+                fee = float(lab3._fee(np.array([fp]), np.array([n]), TAKER_RATE)[0])
+                fee2 = float(lab3._fee(np.array([val]), np.array([n]), TAKER_RATE)[0]) if 0 < val < 1 else 0.0
+                bal += n * (val - fp) - fee - fee2
+                peak, low = max(peak, bal), min(low, bal)
+            row[f"end_{int(f * 100)}"] = round(bal, 2)
+            row[f"low_{int(f * 100)}"] = round(low, 2)
+        rows.append(row)
+    for x in ctxs.values():
+        x.cache = {}
+    days = (time.time() - _fwd_start()) / 86400
+    summ = {}
+    for f in GROWTH_FRACS:
+        k = f"end_{int(f * 100)}"
+        ends = np.array([r[k] for r in rows if r["bets"] >= 10])
+        summ[k] = {"strategies": int(len(ends)), "x4_or_more": int((ends >= 40).sum()), "x2_or_more": int((ends >= 20).sum()),
+                   "up": int((ends > 10).sum()), "down_half": int((ends <= 5).sum()), "busted": int((ends < 1).sum()),
+                   "median": round(float(np.median(ends)), 2) if len(ends) else None,
+                   "best": sorted(({"id": r["id"], "end": r[k], "bets": r["bets"]} for r in rows if r["bets"] >= 10),
+                                  key=lambda x: -x["end"])[:10]}
+    out = {"generated": int(time.time()), "days": round(days, 2), "fracs": GROWTH_FRACS, "summary": summ,
+           "note": "A $10 account per strategy; each bet stakes a fixed share of the current balance; contracts capped by "
+                   "what traded at our limit in the 1-3 s window on Kalshi's trade records."}
+    (LABDIR / "fwd_growth.json").write_text(json.dumps(out, indent=1, default=float))
+    for k, v in summ.items():
+        log(f"  {k}: {v['strategies']} strategies with 10+ bets; 4x+ {v['x4_or_more']}, 2x+ {v['x2_or_more']}, up {v['up']}, "
+            f"halved {v['down_half']}, busted {v['busted']}, median ${v['median']}; best {v['best'][:3]}")
     return out

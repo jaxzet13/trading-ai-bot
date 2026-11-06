@@ -132,6 +132,9 @@ def main(args=None):
     args = list(args or [])
     if not args or args[0] == "pick":
         pick(int(args[1]) if len(args) > 1 else 4)
+    elif args[0] == "growth":
+        from . import fwdscore
+        fwdscore.growth()
     elif args[0] == "score":
         from . import fwdscore
         fwdscore.score(download="no-download" not in args)
