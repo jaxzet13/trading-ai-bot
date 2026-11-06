@@ -1,26 +1,13 @@
 {
- "_note": "REAL MONEY, started Nov 6 at the account holder's request: 'start live trading the best strategy until i tell you to stop or if it loses more than 1.5 dollars'. The forward lab's leader fv_emp:KXNEAR15M:14 (NOT a passed strategy). Crypto balance at start $10.6467; new bets stop for good once balance incl. open bets is below $9.1467 (= -$1.50), and the daily loss cap is $1.50. Nov 6: fv_drift:KXNEAR15M:14 and fv_prev:KXDOGE15M:4 added at the account holder's request (forward leaders, NOT passed strategies); all three share the same stop (balance incl. open bets below $9.1467).",
+ "_note": "REAL MONEY, started Nov 6 at the account holder's request: 'start live trading the best strategy until i tell you to stop or if it loses more than 1.5 dollars'. The forward lab's leader fv_emp:KXNEAR15M:14 (NOT a passed strategy). Crypto balance at start $10.6467; new bets stop for good once balance incl. open bets is below $9.1467 (= -$1.50), and the daily loss cap is $1.50. Nov 6: fv_drift:KXNEAR15M:14 and fv_prev:KXDOGE15M:4 added at the account holder's request (forward leaders, NOT passed strategies); all three share the same stop (balance incl. open bets below $9.1467). Nov 6 14:45 UTC, account holder: fv_emp:KXNEAR15M:14 removed (10 real bets, -$0.82, 4 losses in a row); stop trading for good once the balance incl. open bets is below $9.00. Nov 6 ~14:50 UTC, account holder: added the forward lab's top 5 distinct by consistency (fv_emp/fv_shape/fv_tau/fv_ref on ETH, fv_prev #15 on DOGE; NOT passed strategies); stop for good once the balance incl. open bets is below $7.00.",
  "series": [
   "KXNEAR15M",
-  "KXDOGE15M"
+  "KXDOGE15M",
+  "KXETH15M"
  ],
  "execution": "taker",
  "poll": "minute",
  "golden_rules": [
-  {
-   "id": "fv_emp:KXNEAR15M:14",
-   "family": "fv_emp",
-   "scope": "KXNEAR15M",
-   "t": 2.33,
-   "params": {
-    "start": 5,
-    "end": 10,
-    "edge": 0.12,
-    "band": "05-95",
-    "lb": 7,
-    "vm": 1.1
-   }
-  },
   {
    "id": "fv_drift:KXNEAR15M:14",
    "family": "fv_drift",
@@ -50,6 +37,77 @@
     "pz": 0.0,
     "vm": 0.8
    }
+  },
+  {
+   "id": "fv_prev:KXDOGE15M:15",
+   "family": "fv_prev",
+   "scope": "KXDOGE15M",
+   "t": 2.83,
+   "params": {
+    "start": 5,
+    "end": 12,
+    "edge": 0.2,
+    "band": "20-80",
+    "pmode": "against",
+    "pz": 0.0,
+    "vm": 0.8
+   }
+  },
+  {
+   "id": "fv_emp:KXETH15M:3",
+   "family": "fv_emp",
+   "scope": "KXETH15M",
+   "t": 3.11,
+   "params": {
+    "start": 7,
+    "end": 13,
+    "edge": 0.16,
+    "band": "20-80",
+    "lb": 21,
+    "vm": 0.7
+   }
+  },
+  {
+   "id": "fv_shape:KXETH15M:15",
+   "family": "fv_shape",
+   "scope": "KXETH15M",
+   "t": 2.87,
+   "params": {
+    "start": 7,
+    "end": 13,
+    "edge": 0.13,
+    "band": "20-80",
+    "a": 1.1,
+    "vm": 0.8
+   }
+  },
+  {
+   "id": "fv_tau:KXETH15M:15",
+   "family": "fv_tau",
+   "scope": "KXETH15M",
+   "t": 2.83,
+   "params": {
+    "start": 4,
+    "end": 13,
+    "edge": 0.13,
+    "band": "20-80",
+    "tau_adj": 0.33,
+    "vm": 0.8
+   }
+  },
+  {
+   "id": "fv_ref:KXETH15M:18",
+   "family": "fv_ref",
+   "scope": "KXETH15M",
+   "t": 2.78,
+   "params": {
+    "start": 7,
+    "end": 13,
+    "edge": 0.13,
+    "band": "20-80",
+    "vol": "blend",
+    "vm": 0.7
+   }
   }
  ],
  "log": "data/kalshi15m/real_near_live_log.jsonl",
@@ -59,7 +117,7 @@
   "max_daily_loss_usd": 1.5,
   "max_trades_per_day": 15,
   "max_open_positions": 1,
-  "min_balance_usd": 9.1467,
+  "min_balance_usd": 7.0,
   "max_price": 0.95,
   "min_price": 0.03,
   "max_data_age_s": 5.0,

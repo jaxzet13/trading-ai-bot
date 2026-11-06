@@ -596,6 +596,11 @@ def realmoney_results(max_rows: int = 60) -> dict | None:
 
 
 RULE_LABELS = {
+    "fv_emp:KXETH15M:3": "ETH forward-lab top 5 (fv_emp #3)",
+    "fv_shape:KXETH15M:15": "ETH forward-lab top 5 (fv_shape #15)",
+    "fv_tau:KXETH15M:15": "ETH forward-lab top 5 (fv_tau #15)",
+    "fv_ref:KXETH15M:18": "ETH forward-lab top 5 (fv_ref #18)",
+    "fv_prev:KXDOGE15M:15": "DOGE forward-lab top 5 (fv_prev #15)",
     "fv_drift:KXNEAR15M:14": "NEAR forward-lab leader (fv_drift #14), live since Nov 6",
     "fv_prev:KXDOGE15M:4": "DOGE forward-lab leader (fv_prev #4), live since Nov 6",
     "fv_emp:KXNEAR15M:14": "NEAR forward-lab leader (fv_emp #14), live since Nov 6","x_reentry:ALL": "Early sale, 14c gap, bets up to 3x (x_reentry)",

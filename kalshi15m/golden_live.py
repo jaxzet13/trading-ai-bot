@@ -155,6 +155,18 @@ SINGLE = [
     # request, same $1.50 stop. Not a passed strategy.
     {"id": "fv_prev:KXDOGE15M:4", "family": "fv_prev", "scope": "KXDOGE15M", "t": 3.22, "kind": "hold",
      "params": {"start": 2, "end": 12, "edge": 0.2, "band": "20-80", "pmode": "against", "pz": 0.0, "vm": 0.8}},
+    # forward-lab top 5 by consistency (Nov 6 12:51 UTC, after near-duplicates of fv_prev:KXDOGE15M:4); added to the live run
+    # at the account holder's request. NOT passed strategies (all below the 4.16 bar).
+    {"id": "fv_emp:KXETH15M:3", "family": "fv_emp", "scope": "KXETH15M", "t": 3.11, "kind": "hold",
+     "params": {"start": 7, "end": 13, "edge": 0.16, "band": "20-80", "lb": 21, "vm": 0.7}},
+    {"id": "fv_shape:KXETH15M:15", "family": "fv_shape", "scope": "KXETH15M", "t": 2.87, "kind": "hold",
+     "params": {"start": 7, "end": 13, "edge": 0.13, "band": "20-80", "a": 1.1, "vm": 0.8}},
+    {"id": "fv_prev:KXDOGE15M:15", "family": "fv_prev", "scope": "KXDOGE15M", "t": 2.83, "kind": "hold",
+     "params": {"start": 5, "end": 12, "edge": 0.2, "band": "20-80", "pmode": "against", "pz": 0.0, "vm": 0.8}},
+    {"id": "fv_tau:KXETH15M:15", "family": "fv_tau", "scope": "KXETH15M", "t": 2.83, "kind": "hold",
+     "params": {"start": 4, "end": 13, "edge": 0.13, "band": "20-80", "tau_adj": 0.33, "vm": 0.8}},
+    {"id": "fv_ref:KXETH15M:18", "family": "fv_ref", "scope": "KXETH15M", "t": 2.78, "kind": "hold",
+     "params": {"start": 7, "end": 13, "edge": 0.13, "band": "20-80", "vol": "blend", "vm": 0.7}},
     {"id": "fv_drift:KXNEAR15M:14", "family": "fv_drift", "scope": "KXNEAR15M", "t": 2.76, "kind": "hold",
      "params": {"start": 4, "end": 10, "edge": 0.14, "band": "05-95", "L": 1, "a": -0.25, "vm": 1.0}},
 ]
