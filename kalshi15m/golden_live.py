@@ -149,6 +149,14 @@ SINGLE = [
     # for; not a passed strategy.
     {"id": "fv_emp:KXNEAR15M:14", "family": "fv_emp", "scope": "KXNEAR15M", "t": 2.33, "kind": "hold",
      "params": {"start": 5, "end": 10, "edge": 0.12, "band": "05-95", "lb": 7, "vm": 1.1}},
+    # forward lab fv_drift:KXNEAR15M:14, the forward leader on Nov 6 (t 2.76, below the 4.16 bar); added to the live
+    # NEAR run at the account holder's request, under the same $1.50 stop. Not a passed strategy.
+    # forward lab fv_prev:KXDOGE15M:4 (t 3.22 on 10 forward bets, below the 4.16 bar); added at the account holder's
+    # request, same $1.50 stop. Not a passed strategy.
+    {"id": "fv_prev:KXDOGE15M:4", "family": "fv_prev", "scope": "KXDOGE15M", "t": 3.22, "kind": "hold",
+     "params": {"start": 2, "end": 12, "edge": 0.2, "band": "20-80", "pmode": "against", "pz": 0.0, "vm": 0.8}},
+    {"id": "fv_drift:KXNEAR15M:14", "family": "fv_drift", "scope": "KXNEAR15M", "t": 2.76, "kind": "hold",
+     "params": {"start": 4, "end": 10, "edge": 0.14, "band": "05-95", "L": 1, "a": -0.25, "vm": 1.0}},
 ]
 ORDER = EXTRA + GOLDEN + SINGLE                               # best first
 RULES = {r["id"]: r for r in ORDER}

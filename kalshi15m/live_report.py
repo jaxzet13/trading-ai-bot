@@ -596,6 +596,8 @@ def realmoney_results(max_rows: int = 60) -> dict | None:
 
 
 RULE_LABELS = {
+    "fv_drift:KXNEAR15M:14": "NEAR forward-lab leader (fv_drift #14), live since Nov 6",
+    "fv_prev:KXDOGE15M:4": "DOGE forward-lab leader (fv_prev #4), live since Nov 6",
     "fv_emp:KXNEAR15M:14": "NEAR forward-lab leader (fv_emp #14), live since Nov 6","x_reentry:ALL": "Early sale, 14c gap, bets up to 3x (x_reentry)",
                "x_exit:ALL": "Early sale near fair value (x_exit)",
                "sized_exit:ALL": "Bigger bets on bigger gaps + early sale (sized_exit)",

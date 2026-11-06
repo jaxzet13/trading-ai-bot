@@ -55,7 +55,9 @@ def test_rule_table_matches_lab3_results():
     assert [r["t"] for r in GL.GOLDEN] == sorted([r["t"] for r in GL.GOLDEN], reverse=True)
     extra = [r["id"] for r in GL.EXTRA if r["scope"] == "ALL"]       # tested combinations, ranked first
     assert GL.rules_for("KXBTC15M") == extra + [r["id"] for r in GL.GOLDEN if r["scope"] == "ALL"]
-    assert len(GL.rules_for("KXDOGE15M")) == 13 + len(extra) and len(GL.rules_for("KXHYPE15M")) == 13 + len(extra)
+    single = lambda c: sum(r["scope"] == c for r in GL.SINGLE)            # single-coin rules added after GOLDEN
+    assert len(GL.rules_for("KXDOGE15M")) == 13 + len(extra) + single("KXDOGE15M")
+    assert len(GL.rules_for("KXHYPE15M")) == 13 + len(extra) + single("KXHYPE15M")
     assert abs(GL.RULES["sized:ALL"]["norm"] - 0.26276) < 1e-5 and abs(GL.RULES["sized:KXHYPE15M"]["norm"] - 0.22610) < 1e-5
     # the clean rebuild's ZEC rule: params exactly as in lab3_real_results.json
     real = json.loads((ROOT / "data" / "lab" / "lab3_real_results.json").read_text())
