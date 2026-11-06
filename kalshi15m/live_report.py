@@ -575,11 +575,11 @@ def realmoney_results(max_rows: int = 60) -> dict | None:
     if not isinstance(r.get("chosen"), dict):
         # what the real account actually runs (kalshi15m/real_best_live.json), so the tab shows it
         try:
-            cfg = json.loads((ROOT / "real_best_live.json").read_text())
+            cfg = json.loads((ROOT / "real_near_live.json").read_text())
             ids = [g.get("id") for g in cfg.get("golden_rules") or []]
             labels = {c.get("id"): c.get("label") for c in allc}
             if ids:
-                r["chosen"] = {"id": ids[0], "ids": ids, "applied_at": int((ROOT / "real_best_live.json").stat().st_mtime),
+                r["chosen"] = {"id": ids[0], "ids": ids, "applied_at": int((ROOT / "real_near_live.json").stat().st_mtime),
                                "note": "Live on the real account now: " + ", ".join(labels.get(i) or i for i in ids)
                                        + (" (first one has priority)" if len(ids) > 1 else "")}
         except (OSError, ValueError):
@@ -595,7 +595,8 @@ def realmoney_results(max_rows: int = 60) -> dict | None:
     return r
 
 
-RULE_LABELS = {"x_reentry:ALL": "Early sale, 14c gap, bets up to 3x (x_reentry)",
+RULE_LABELS = {
+    "fv_emp:KXNEAR15M:14": "NEAR forward-lab leader (fv_emp #14), live since Nov 6","x_reentry:ALL": "Early sale, 14c gap, bets up to 3x (x_reentry)",
                "x_exit:ALL": "Early sale near fair value (x_exit)",
                "sized_exit:ALL": "Bigger bets on bigger gaps + early sale (sized_exit)",
                "sized:ALL": "Bigger bets on bigger gaps, hold to the end (sized)",
@@ -609,7 +610,7 @@ def real_by_rule(ev, num):
     ones that traded earlier but are no longer configured are 'retired'. Each carries its real-money-test
     average per bet (data/lab/realmoney_results.json, out-of-sample) for comparison."""
     try:
-        live_ids = [g.get("id") for g in json.loads((ROOT / "real_best_live.json").read_text()).get("golden_rules") or []]
+        live_ids = [g.get("id") for g in json.loads((ROOT / "real_near_live.json").read_text()).get("golden_rules") or []]
     except (OSError, ValueError):
         live_ids = []
     test = {}
@@ -678,7 +679,8 @@ def real_account() -> dict | None:
     and a running-profit curve since FIX_TS and for all time, plus the last cash balance Kalshi reported.
     A bet is one market (ticker): one partly sold early and then settled counts once, with both parts' profit."""
     try:
-        lines = REAL_LOG.read_text().splitlines()
+        lines = [l for f in [REAL_LOG, *sorted(REAL_LOG.parent.glob("real_*_live_log.jsonl"))] if f.exists()
+                 for l in f.read_text().splitlines()]       # every real-money runner's log (e.g. the NEAR run)
     except OSError:
         return None
     ev = []
