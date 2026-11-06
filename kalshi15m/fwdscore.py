@@ -193,7 +193,7 @@ def fetch_tape(series, want, log=print):
     TAPE_DIR.mkdir(parents=True, exist_ok=True)
     path = TAPE_DIR / f"{series}.pkl"
     tape = pickle.load(open(path, "rb")) if path.exists() else {}
-    todo = sorted(set(want) - set(tape))
+    todo = sorted(w for w in set(want) if (w[0], w[1]) not in tape)      # cache key: (ticker, minute)
     t0 = time.time()
     with ThreadPoolExecutor(8) as ex:
         futs = {ex.submit(_window, tk, t): (tk, j) for tk, j, t in todo}
