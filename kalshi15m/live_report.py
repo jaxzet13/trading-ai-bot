@@ -804,6 +804,40 @@ def fwd_lab() -> dict | None:
     return r
 
 
+def live_run() -> dict | None:
+    """Today's real-money run (kalshi15m/real_near_live.json -> data/kalshi15m/real_near_live_log.jsonl): when it
+    started, its bets and profit per strategy, the latest balance and bets, and whether the bot is running now."""
+    log = OUT.parent / "data" / "kalshi15m" / "real_near_live_log.jsonl"
+    try:
+        ev = [json.loads(l) for l in log.read_text().splitlines() if l.strip()]
+        cfg = json.loads((ROOT / "real_near_live.json").read_text())
+    except (OSError, ValueError):
+        return None
+    if not ev:
+        return None
+    rule, bets = {}, []
+    for e in ev:
+        if e.get("event") == "order_intent":
+            rule[e.get("ticker")] = e.get("rule")
+        if e.get("event") in ("settle", "exit") and isinstance(e.get("pnl"), (int, float)):
+            bets.append({"ts": int(e["ts"]), "ticker": e.get("ticker"), "rule": rule.get(e.get("ticker")), "side": e.get("side"),
+                         "cost": e.get("cost"), "pnl": round(e["pnl"], 2)})
+    by = {}
+    for b in bets:
+        r = by.setdefault(b["rule"], {"rule": b["rule"], "bets": 0, "wins": 0, "pnl": 0.0})
+        r["bets"] += 1; r["wins"] += b["pnl"] > 0; r["pnl"] = round(r["pnl"] + b["pnl"], 2)
+    bal = next((e["balance_crypto"] for e in reversed(ev) if isinstance(e.get("balance_crypto"), (int, float))), None)
+    start_bal = 10.6467
+    pnl = round(sum(b["pnl"] for b in bets), 2)
+    return {"started": int(ev[0]["ts"]), "last_event": int(max(e["ts"] for e in ev)),
+            "running": time.time() - log.stat().st_mtime < 1800 or time.time() - max(e["ts"] for e in ev) < 1800,
+            "strategies": [g.get("id") for g in cfg.get("golden_rules") or []],
+            "stop_at": cfg.get("limits", {}).get("min_balance_usd"), "start_balance": start_bal,
+            "balance_est": round(start_bal + pnl, 2), "balance_reported": bal,
+            "bets": len(bets), "wins": sum(b["pnl"] > 0 for b in bets), "pnl": pnl,
+            "by_rule": sorted(by.values(), key=lambda r: -r["bets"]), "recent": bets[-8:][::-1]}
+
+
 def build():
     live = summarise()
     try:  # Kalshi demo account, for the "How it works" tab
@@ -816,6 +850,12 @@ def build():
             live["realmoney"] = rm
     except Exception as e:
         print(f"real-money results: skipped ({e})")
+    try:  # today's real-money run, at the top of the "Real money" tab
+        lr = live_run()
+        if lr:
+            live["live_run"] = lr
+    except Exception as e:
+        print(f"live run: skipped ({e})")
     try:  # the forward lab (thousands of frozen strategies on new days), for the "Real money" tab
         fl = fwd_lab()
         if fl:

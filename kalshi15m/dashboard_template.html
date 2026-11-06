@@ -1364,6 +1364,12 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   </div>
 
   <div class="tabpanel rm" id="panel-realmoney" role="tabpanel" aria-labelledby="tab-realmoney" hidden>
+    <section class="how-sec" id="rm-live" hidden>
+      <div class="how-sh"><div class="eyebrow">Real money · live now</div><h2 id="lrHead">Today's real-money run</h2><p id="lrIntro"></p></div>
+      <div class="how-card"><div class="kvs" id="lrStats"></div>
+        <div class="tablewrap" style="margin-top:16px"><table class="exam" id="lrRules"></table></div>
+        <div class="eyebrow" style="margin:16px 0 6px">Latest bets</div><div class="tablewrap"><table class="exam" id="lrRecent"></table></div></div>
+    </section>
     <section class="rm-strip idle" id="rmStrip" aria-live="polite"></section>
 
     <section class="how-sec" id="rm-fwd" hidden>
@@ -2290,12 +2296,29 @@ tr.detail > td { padding: 0; background: var(--sel); border-bottom: 1px solid va
   function renderRealMoney() {
     const L = LIVE_DATA, R = L && L.realmoney && typeof L.realmoney === "object" ? L.realmoney : null;
     rmStrip(R); rmAccount(L ? obj(L.real_account) : {}, L); rmRules(L ? obj(L.real_account) : {});
+    rmLive(L ? L.live_run : null, L);
     rmRebuild(L ? L.rebuild : null);
     rmZec(L ? L.zec_forward : null);
     rmFwd(L ? L.fwd_lab : null);
     $("rm-how").hidden = !R; $("rm-results").hidden = !R;
     if (!R) { killChart("rmDet"); return; }
     rmMethod(R); rmBoard(R);
+  }
+
+  // today's real-money run (LIVE_DATA.live_run from live_report.live_run)
+  function rmLive(R, L) {
+    const sec = $("rm-live"); if (!sec) return;
+    sec.hidden = !R || typeof R !== "object"; if (sec.hidden) return;
+    const NAME = r => String(r || "").replace(/:KX(\w+?)15M:/, (m, c) => ` ${c} #`).replace(/^(\w+)/, "$1");
+    $("lrHead").textContent = R.running ? "Live now: today's real-money run" : "Today's real-money run (bot asleep, restarts at the next check)";
+    const upd = L && nz(L.generated) ? L.generated : null;
+    $("lrIntro").innerHTML = `${R.running ? badge("live", "Running", "dot") : badge("muted", "Paused", "minus")} Started ${esc(fmtTime(R.started))} with ${money(R.start_balance, 2)}. ${pl((R.strategies || []).length, "strategy", "strategies")}: ${esc((R.strategies || []).map(NAME).join(", "))}. Stops for good below ${money(R.stop_at, 2)}.${upd ? ` <b>Updated ${esc(fmtTime(upd))}</b>.` : ""}`;
+    const kv = (k, v, sub) => `<div><i>${k}</i><b>${v}</b>${sub ? `<small>${sub}</small>` : ""}</div>`;
+    $("lrStats").innerHTML = [kv("Profit this run", `<span class="${cls(R.pnl)}">${SM(R.pnl, 2)}</span>`, `${NUM(R.bets)} bets, ${NUM(R.wins)} won`),
+      kv("Balance", money(R.balance_est, 2), `stop at ${money(R.stop_at, 2)}`)].join("");
+    $("lrRules").innerHTML = `<thead><tr><th>Strategy</th><th class="num">Bets</th><th class="num">Won</th><th class="num">Profit</th></tr></thead><tbody>` +
+      (R.by_rule || []).map(r => `<tr><td><b>${esc(NAME(r.rule))}</b>${(R.strategies || []).includes(r.rule) ? "" : ' <span class="muted">(removed)</span>'}</td><td class="num" data-label="Bets">${NUM(r.bets)}</td><td class="num" data-label="Won">${NUM(r.wins)}</td><td class="num ${cls(r.pnl)}" data-label="Profit">${SM(r.pnl, 2)}</td></tr>`).join("") + "</tbody>";
+    $("lrRecent").innerHTML = `<tbody>` + (R.recent || []).map(b => `<tr><td><b>${esc(fmtTime(b.ts))}</b> · ${esc(NAME(b.rule))} · bought ${esc(String(b.side || "").toUpperCase())}${nz(b.cost) ? ` for ${money(b.cost, 2)}` : ""}</td><td class="num ${cls(b.pnl)}" data-label="Result">${SM(b.pnl, 2)}</td></tr>`).join("") + "</tbody>";
   }
 
   // the forward lab (LIVE_DATA.fwd_lab from kalshi15m/fwdscore.py): thousands of strategies frozen on Nov 5, scored on
