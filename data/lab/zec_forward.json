@@ -1,5 +1,5 @@
 {
- "generated": 1794304385,
+ "generated": 1794315262,
  "rule": "scalp:KXZEC15M",
  "fwd_start": 1793823300,
  "gate": {
@@ -15,7 +15,7 @@
    "id": "days",
    "label": "At least 7 forward days",
    "ok": false,
-   "value": 5.6
+   "value": 5.7
   },
   {
    "id": "filled",
@@ -39,7 +39,7 @@
    "id": "paper",
    "label": "Paper run's orders match the replay (90%, once it has 10)",
    "ok": false,
-   "value": "13 of 31"
+   "value": "14 of 32"
   }
  ],
  "forward": {
@@ -53,7 +53,7 @@
   "worst_day": -1.86,
   "max_dd": -2.33,
   "end": 11.97,
-  "markets": 526,
+  "markets": 538,
   "daily": {
    "2026-11-04": -0.5,
    "2026-11-05": -0.415,
@@ -260,20 +260,12 @@
   "t": 1.35
  },
  "paper": {
-  "orders": 31,
-  "agree": 13,
-  "would_fill": 21,
+  "orders": 32,
+  "agree": 14,
+  "would_fill": 22,
   "first_start": 1793907469.151,
-  "last_event": 1794304364,
+  "last_event": 1794315250,
   "recent": [
-   {
-    "ticker": "KXZEC15M-26NOV061015-15",
-    "side": "yes",
-    "minute": 11,
-    "same_as_replay": false,
-    "would_fill": true,
-    "ts": 1793977861
-   },
    {
     "ticker": "KXZEC15M-26NOV061045-45",
     "side": "yes",
@@ -425,6 +417,14 @@
     "same_as_replay": false,
     "would_fill": true,
     "ts": 1794283440
+   },
+   {
+    "ticker": "KXZEC15M-26NOV100500-00",
+    "side": "no",
+    "minute": 11,
+    "same_as_replay": true,
+    "would_fill": true,
+    "ts": 1794304560
    }
   ]
  }
