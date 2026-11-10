@@ -1,5 +1,5 @@
 {
- "generated": 1794272039,
+ "generated": 1794282943,
  "rule": "scalp:KXZEC15M",
  "fwd_start": 1793823300,
  "gate": {
@@ -15,52 +15,53 @@
    "id": "days",
    "label": "At least 7 forward days",
    "ok": false,
-   "value": 5.2
+   "value": 5.3
   },
   {
    "id": "filled",
    "label": "At least 30 forward bets that would have filled",
    "ok": true,
-   "value": 36
+   "value": 40
   },
   {
    "id": "profit",
    "label": "Forward bets made money",
    "ok": true,
-   "value": 1.93
+   "value": 0.07
   },
   {
    "id": "t_all",
    "label": "All out-of-sample bets together: t of at least 1.65",
    "ok": false,
-   "value": 1.57
+   "value": 1.35
   },
   {
    "id": "paper",
    "label": "Paper run's orders match the replay (90%, once it has 10)",
    "ok": false,
-   "value": "12 of 29"
+   "value": "13 of 30"
   }
  ],
  "forward": {
-  "pnl": 1.93,
-  "bets": 85,
-  "filled": 36,
+  "pnl": 0.07,
+  "bets": 89,
+  "filled": 40,
   "wins": 18,
-  "t": 0.5695835647767515,
-  "days": 6,
+  "t": 0.02075469802829084,
+  "days": 7,
   "winning_days": 3,
-  "worst_day": -0.5,
-  "max_dd": -2.23,
-  "end": 13.83,
-  "markets": 490,
+  "worst_day": -1.86,
+  "max_dd": -2.33,
+  "end": 11.97,
+  "markets": 502,
   "daily": {
    "2026-11-04": -0.5,
    "2026-11-05": -0.415,
    "2026-11-06": 1.008,
    "2026-11-07": -0.15,
    "2026-11-08": 1.62,
-   "2026-11-09": 0.371
+   "2026-11-09": 0.371,
+   "2026-11-10": -1.86
   },
   "curve": [
    [
@@ -210,6 +211,22 @@
    [
     1794218400,
     13.834
+   ],
+   [
+    1794272822,
+    13.634
+   ],
+   [
+    1794274200,
+    13.214
+   ],
+   [
+    1794276000,
+    12.814
+   ],
+   [
+    1794278700,
+    11.974
    ]
   ]
  },
@@ -238,25 +255,17 @@
   "end": 18.84
  },
  "all_oos": {
-  "bets": 138,
-  "pnl": 14.45,
-  "t": 1.57
+  "bets": 142,
+  "pnl": 12.59,
+  "t": 1.35
  },
  "paper": {
-  "orders": 29,
-  "agree": 12,
-  "would_fill": 19,
+  "orders": 30,
+  "agree": 13,
+  "would_fill": 20,
   "first_start": 1793907469.151,
-  "last_event": 1794271965,
+  "last_event": 1794282764,
   "recent": [
-   {
-    "ticker": "KXZEC15M-26NOV060815-15",
-    "side": "no",
-    "minute": 11,
-    "same_as_replay": true,
-    "would_fill": true,
-    "ts": 1793970660
-   },
    {
     "ticker": "KXZEC15M-26NOV060845-45",
     "side": "no",
@@ -408,6 +417,14 @@
     "same_as_replay": true,
     "would_fill": false,
     "ts": 1794263160
+   },
+   {
+    "ticker": "KXZEC15M-26NOV092015-15",
+    "side": "yes",
+    "minute": 2,
+    "same_as_replay": true,
+    "would_fill": true,
+    "ts": 1794272520
    }
   ]
  }
