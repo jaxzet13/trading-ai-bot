@@ -785,7 +785,7 @@ def zec_forward() -> dict | None:
         return None
     log = OUT.parent / "data" / "kalshi15m" / "real_zec_dry_log.jsonl"
     try:
-        r["paper_running"] = time.time() - log.stat().st_mtime < 1800
+        r["paper_running"] = r.get("status") != "failed" and time.time() - log.stat().st_mtime < 1800
     except OSError:
         r["paper_running"] = False
     f = r.get("forward") or {}
