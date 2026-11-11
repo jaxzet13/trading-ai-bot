@@ -68,9 +68,15 @@ def fetch_markets(series, log=print):
     """Settled markets since FWD_START + their 1-minute candles (each market fetched once)."""
     t_start = _fwd_start()
     now = int(time.time())
-    mk = D.fetch_markets(series, max(1, math.ceil((now - t_start) / 86400) + 1))
-    mk = mk[mk.open_ts >= t_start] if len(mk) else mk
     mpath, cpath = FWD_DIR / f"{series}_markets.csv", FWD_DIR / f"{series}_candles.csv"
+    try:
+        mk = D.fetch_markets(series, max(1, math.ceil((now - t_start) / 86400) + 1))
+    except (requests.HTTPError, requests.ConnectionError) as e:
+        if not mpath.exists():
+            raise
+        log(f"  {series} market list: {e}; using the markets already saved (new ones next check)")
+        return pd.read_csv(mpath)
+    mk = mk[mk.open_ts >= t_start] if len(mk) else mk
     old_mk = pd.read_csv(mpath) if mpath.exists() else mk.iloc[:0]
     old_cd = pd.read_csv(cpath) if cpath.exists() else pd.DataFrame()
     mk = pd.concat([old_mk, mk], ignore_index=True).drop_duplicates("ticker").sort_values("open_ts")
