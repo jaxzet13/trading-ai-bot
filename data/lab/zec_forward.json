@@ -1,5 +1,5 @@
 {
- "generated": 1794369328,
+ "generated": 1794380180,
  "rule": "scalp:KXZEC15M",
  "fwd_start": 1793823300,
  "gate": {
@@ -15,45 +15,45 @@
    "id": "days",
    "label": "At least 7 forward days",
    "ok": false,
-   "value": 6.3
+   "value": 6.4
   },
   {
    "id": "filled",
    "label": "At least 30 forward bets that would have filled",
    "ok": true,
-   "value": 41
+   "value": 42
   },
   {
    "id": "profit",
    "label": "Forward bets made money",
-   "ok": false,
-   "value": -0.56
+   "ok": true,
+   "value": 0.03
   },
   {
    "id": "t_all",
    "label": "All out-of-sample bets together: t of at least 1.65",
    "ok": false,
-   "value": 1.28
+   "value": 1.34
   },
   {
    "id": "paper",
    "label": "Paper run's orders match the replay (90%, once it has 10)",
    "ok": false,
-   "value": "14 of 32"
+   "value": "14 of 33"
   }
  ],
  "forward": {
-  "pnl": -0.56,
-  "bets": 92,
-  "filled": 41,
-  "wins": 18,
-  "t": -0.153594802813625,
+  "pnl": 0.03,
+  "bets": 94,
+  "filled": 42,
+  "wins": 19,
+  "t": 0.009267274906987066,
   "days": 8,
   "winning_days": 3,
   "worst_day": -1.86,
   "max_dd": -2.96,
-  "end": 11.34,
-  "markets": 598,
+  "end": 11.93,
+  "markets": 610,
   "daily": {
    "2026-11-04": -0.5,
    "2026-11-05": -0.415,
@@ -62,7 +62,7 @@
    "2026-11-08": 1.62,
    "2026-11-09": 0.371,
    "2026-11-10": -1.86,
-   "2026-11-11": -0.63
+   "2026-11-11": -0.04
   },
   "curve": [
    [
@@ -232,6 +232,10 @@
    [
     1794360542,
     11.344
+   ],
+   [
+    1794375900,
+    11.934
    ]
   ]
  },
@@ -260,25 +264,17 @@
   "end": 18.84
  },
  "all_oos": {
-  "bets": 143,
-  "pnl": 11.96,
-  "t": 1.28
+  "bets": 144,
+  "pnl": 12.55,
+  "t": 1.34
  },
  "paper": {
-  "orders": 32,
+  "orders": 33,
   "agree": 14,
-  "would_fill": 22,
+  "would_fill": 23,
   "first_start": 1793907469.151,
-  "last_event": 1794369137,
+  "last_event": 1794379938,
   "recent": [
-   {
-    "ticker": "KXZEC15M-26NOV061045-45",
-    "side": "yes",
-    "minute": 2,
-    "same_as_replay": false,
-    "would_fill": false,
-    "ts": 1793979120
-   },
    {
     "ticker": "KXZEC15M-26NOV061100-00",
     "side": "no",
@@ -430,6 +426,14 @@
     "same_as_replay": true,
     "would_fill": true,
     "ts": 1794304560
+   },
+   {
+    "ticker": "KXZEC15M-26NOV102300-00",
+    "side": "no",
+    "minute": 12,
+    "same_as_replay": false,
+    "would_fill": true,
+    "ts": 1794369420
    }
   ]
  }
