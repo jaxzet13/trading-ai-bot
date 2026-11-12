@@ -1,0 +1,107 @@
+{
+ "_note": "REAL MONEY, started Nov 12 ~15:45 UTC at the account holder's request: 'Start running 5 of the most consistent strategies until you hit 4 dollars, make sure it's running 24/7 no stop'. The forward lab's 5 most consistent (one per family x coin, by share of forward days up then forward t, 7.8 forward days); NONE passed the 4.16 bar. Balance at start $7.54; new bets stop for good once the balance incl. open bets is below $4.00. Daily loss caps 3.6 so the $4 floor is the stop that binds. Stop by hand: touch STOP_TOP5.",
+ "series": [
+  "KXETH15M",
+  "KXHYPE15M",
+  "KXNEAR15M",
+  "KXSOL15M"
+ ],
+ "execution": "taker",
+ "poll": "minute",
+ "golden_rules": [
+  {
+   "id": "fv_drift:KXETH15M:9",
+   "family": "fv_drift",
+   "scope": "KXETH15M",
+   "t": 2.29,
+   "params": {
+    "start": 2,
+    "end": 12,
+    "edge": 0.2,
+    "band": "25-75",
+    "L": 15,
+    "a": -0.25,
+    "vm": 1.0
+   }
+  },
+  {
+   "id": "fv_jump:KXSOL15M:2",
+   "family": "fv_jump",
+   "scope": "KXSOL15M",
+   "t": 1.85,
+   "params": {
+    "start": 5,
+    "end": 12,
+    "edge": 0.11,
+    "band": "10-90",
+    "jmode": ">1",
+    "vm": 0.8
+   }
+  },
+  {
+   "id": "fv_drift:KXNEAR15M:14",
+   "family": "fv_drift",
+   "scope": "KXNEAR15M",
+   "t": 2.76,
+   "params": {
+    "start": 4,
+    "end": 10,
+    "edge": 0.14,
+    "band": "05-95",
+    "L": 1,
+    "a": -0.25,
+    "vm": 1.0
+   }
+  },
+  {
+   "id": "fv_vol:KXHYPE15M:20",
+   "family": "fv_vol",
+   "scope": "KXHYPE15M",
+   "t": 1.87,
+   "params": {
+    "start": 4,
+    "end": 10,
+    "edge": 0.06,
+    "band": "20-80",
+    "vol": "inmkt90",
+    "vm": 1.1
+   }
+  },
+  {
+   "id": "fv_season:KXHYPE15M:4",
+   "family": "fv_season",
+   "scope": "KXHYPE15M",
+   "t": 1.84,
+   "params": {
+    "start": 4,
+    "end": 11,
+    "edge": 0.08,
+    "band": "20-80",
+    "vol": "tod_ewma60",
+    "vm": 1.1
+   }
+  }
+ ],
+ "log": "data/kalshi15m/real_top5_live_log.jsonl",
+ "limits": {
+  "stake_usd": 0.5,
+  "max_contracts_per_order": 10,
+  "max_daily_loss_usd": 3.6,
+  "max_trades_per_day": 30,
+  "max_open_positions": 1,
+  "min_balance_usd": 4.0,
+  "max_price": 0.95,
+  "min_price": 0.03,
+  "max_data_age_s": 5.0,
+  "max_decision_lag_s": 5.0,
+  "walk_cents": 5,
+  "walk_keep_edge": 0.08,
+  "max_total_open_risk_usd": 2.0,
+  "max_total_daily_loss_usd": 3.6,
+  "min_balance_counts_open_bets": true,
+  "max_window_cost_usd": 3.0,
+  "max_entries_per_window_side": 2,
+  "min_one_contract_max_usd": 1.0
+ },
+ "golden_priority": "config"
+}

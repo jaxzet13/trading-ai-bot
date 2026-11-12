@@ -575,11 +575,11 @@ def realmoney_results(max_rows: int = 60) -> dict | None:
     if not isinstance(r.get("chosen"), dict):
         # what the real account actually runs (kalshi15m/real_best_live.json), so the tab shows it
         try:
-            cfg = json.loads((ROOT / "real_near_live.json").read_text())
+            cfg = json.loads((ROOT / "real_top5_live.json").read_text())
             ids = [g.get("id") for g in cfg.get("golden_rules") or []]
             labels = {c.get("id"): c.get("label") for c in allc}
             if ids:
-                r["chosen"] = {"id": ids[0], "ids": ids, "applied_at": int((ROOT / "real_near_live.json").stat().st_mtime),
+                r["chosen"] = {"id": ids[0], "ids": ids, "applied_at": int((ROOT / "real_top5_live.json").stat().st_mtime),
                                "note": "Live on the real account now: " + ", ".join(labels.get(i) or i for i in ids)
                                        + (" (first one has priority)" if len(ids) > 1 else "")}
         except (OSError, ValueError):
@@ -596,6 +596,10 @@ def realmoney_results(max_rows: int = 60) -> dict | None:
 
 
 RULE_LABELS = {
+    "fv_drift:KXETH15M:9": "ETH forward-lab top 5, Nov 12 (fv_drift #9)",
+    "fv_jump:KXSOL15M:2": "SOL forward-lab top 5, Nov 12 (fv_jump #2)",
+    "fv_vol:KXHYPE15M:20": "HYPE forward-lab top 5, Nov 12 (fv_vol #20)",
+    "fv_season:KXHYPE15M:4": "HYPE forward-lab top 5, Nov 12 (fv_season #4)",
     "fv_emp:KXETH15M:3": "ETH forward-lab top 5 (fv_emp #3)",
     "fv_shape:KXETH15M:15": "ETH forward-lab top 5 (fv_shape #15)",
     "fv_tau:KXETH15M:15": "ETH forward-lab top 5 (fv_tau #15)",
@@ -617,7 +621,7 @@ def real_by_rule(ev, num):
     ones that traded earlier but are no longer configured are 'retired'. Each carries its real-money-test
     average per bet (data/lab/realmoney_results.json, out-of-sample) for comparison."""
     try:
-        live_ids = [g.get("id") for g in json.loads((ROOT / "real_near_live.json").read_text()).get("golden_rules") or []]
+        live_ids = [g.get("id") for g in json.loads((ROOT / "real_top5_live.json").read_text()).get("golden_rules") or []]
     except (OSError, ValueError):
         live_ids = []
     test = {}
@@ -805,12 +809,12 @@ def fwd_lab() -> dict | None:
 
 
 def live_run() -> dict | None:
-    """Today's real-money run (kalshi15m/real_near_live.json -> data/kalshi15m/real_near_live_log.jsonl): when it
+    """Today's real-money run (kalshi15m/real_top5_live.json -> data/kalshi15m/real_top5_live_log.jsonl): when it
     started, its bets and profit per strategy, the latest balance and bets, and whether the bot is running now."""
-    log = OUT.parent / "data" / "kalshi15m" / "real_near_live_log.jsonl"
+    log = OUT.parent / "data" / "kalshi15m" / "real_top5_live_log.jsonl"
     try:
         ev = [json.loads(l) for l in log.read_text().splitlines() if l.strip()]
-        cfg = json.loads((ROOT / "real_near_live.json").read_text())
+        cfg = json.loads((ROOT / "real_top5_live.json").read_text())
     except (OSError, ValueError):
         return None
     if not ev:
@@ -827,7 +831,7 @@ def live_run() -> dict | None:
         r = by.setdefault(b["rule"], {"rule": b["rule"], "bets": 0, "wins": 0, "pnl": 0.0})
         r["bets"] += 1; r["wins"] += b["pnl"] > 0; r["pnl"] = round(r["pnl"] + b["pnl"], 2)
     bal = next((e["balance_crypto"] for e in reversed(ev) if isinstance(e.get("balance_crypto"), (int, float))), None)
-    start_bal = 10.6467
+    start_bal = 7.5443
     pnl = round(sum(b["pnl"] for b in bets), 2)
     return {"started": int(ev[0]["ts"]), "last_event": int(max(e["ts"] for e in ev)),
             "running": time.time() - log.stat().st_mtime < 1800 or time.time() - max(e["ts"] for e in ev) < 1800,

@@ -169,6 +169,17 @@ SINGLE = [
      "params": {"start": 7, "end": 13, "edge": 0.13, "band": "20-80", "vol": "blend", "vm": 0.7}},
     {"id": "fv_drift:KXNEAR15M:14", "family": "fv_drift", "scope": "KXNEAR15M", "t": 2.76, "kind": "hold",
      "params": {"start": 4, "end": 10, "edge": 0.14, "band": "05-95", "L": 1, "a": -0.25, "vm": 1.0}},
+    # Nov 12: the forward lab's 5 most consistent (one per family x coin, ranked by share of forward days up, then
+    # forward t; 7.8 forward days) at the account holder's request ("until you hit 4 dollars"). NOT passed strategies
+    # (best forward t 2.29 vs the 4.16 bar). fv_drift:KXNEAR15M:14 above is the fifth.
+    {"id": "fv_drift:KXETH15M:9", "family": "fv_drift", "scope": "KXETH15M", "t": 2.29, "kind": "hold",
+     "params": {"start": 2, "end": 12, "edge": 0.2, "band": "25-75", "L": 15, "a": -0.25, "vm": 1.0}},
+    {"id": "fv_jump:KXSOL15M:2", "family": "fv_jump", "scope": "KXSOL15M", "t": 1.85, "kind": "hold",
+     "params": {"start": 5, "end": 12, "edge": 0.11, "band": "10-90", "jmode": ">1", "vm": 0.8}},
+    {"id": "fv_vol:KXHYPE15M:20", "family": "fv_vol", "scope": "KXHYPE15M", "t": 1.87, "kind": "hold",
+     "params": {"start": 4, "end": 10, "edge": 0.06, "band": "20-80", "vol": "inmkt90", "vm": 1.1}},
+    {"id": "fv_season:KXHYPE15M:4", "family": "fv_season", "scope": "KXHYPE15M", "t": 1.84, "kind": "hold",
+     "params": {"start": 4, "end": 11, "edge": 0.08, "band": "20-80", "vol": "tod_ewma60", "vm": 1.1}},
 ]
 ORDER = EXTRA + GOLDEN + SINGLE                               # best first
 RULES = {r["id"]: r for r in ORDER}
