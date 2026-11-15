@@ -784,6 +784,8 @@ class Runner:
                 stake, kel = GL.sized_stake(signal.rule, signal.q, price, stake)
                 base.update(kelly=round(kel, 6), stake=round(stake, 4), norm=GL.RULES[signal.rule]["norm"])
         why = self.blocked()
+        if why is None and signal is not None:
+            why = self.rule_paused(signal.rule)
         if why is None and lag > self.L["max_decision_lag_s"]:
             why = f"decision lag {lag}s > {self.L['max_decision_lag_s']}s"
         if why is None and age > self.L["max_data_age_s"]:
@@ -1194,6 +1196,30 @@ class Runner:
             stake = max(self.L["stake_usd_min"], pct * self.crypto_balance)
         return stake * self.brake_factor()
 
+    def rule_paused(self, rule):
+        """limits.rule_pause_last_n / rule_pause_loss_usd: a rule whose last N closed real bets lost that much or
+        more in total places no new bets. It stays paused (its window cannot change while it is not betting)
+        until someone reviews it and sets limits.rule_pause_ignore_before_ts to restart its count."""
+        n, lim = self.L.get("rule_pause_last_n"), self.L.get("rule_pause_loss_usd")
+        if not n or not lim or not rule:
+            return None
+        since = self.L.get("rule_pause_ignore_before_ts") or 0
+        rule_of, pnl, order = {}, {}, []
+        for e in self.events():
+            tk, k = e.get("ticker"), e.get("event")
+            if k == "order_intent" and tk:
+                rule_of[tk] = e.get("rule")
+            elif k in ("settle", "exit") and tk and rule_of.get(tk) == rule and e.get("ts", 0) >= since \
+                    and isinstance(e.get("pnl"), (int, float)):
+                if tk not in pnl:
+                    order.append(tk)
+                pnl[tk] = pnl.get(tk, 0.0) + e["pnl"]
+        last = order[-int(n):]
+        if len(last) < n:
+            return None
+        tot = sum(pnl[t] for t in last)
+        return f"rule {rule} paused: its last {int(n)} bets lost ${-tot:.2f} (limit ${lim:.2f})" if tot <= -lim else None
+
     def brake_factor(self):
         """limits.drawdown_brake_usd: while equity is more than that below its high-water mark, bets shrink by
         limits.drawdown_brake_factor (default 0.5); back to full size once equity recovers to within it."""
@@ -1289,6 +1315,11 @@ def load_config(path=CONFIG) -> dict:
         raise Stop(f"{path}: drawdown_brake_usd must be a number > 0", EXIT_CONFIG)
     if "drawdown_brake_factor" in lim and (not num(lim["drawdown_brake_factor"]) or not 0 < lim["drawdown_brake_factor"] <= 1):
         raise Stop(f"{path}: drawdown_brake_factor must be in (0, 1]", EXIT_CONFIG)
+    if "rule_pause_last_n" in lim and (not isinstance(lim["rule_pause_last_n"], int) or isinstance(lim["rule_pause_last_n"], bool)
+                                       or lim["rule_pause_last_n"] < 5):
+        raise Stop(f"{path}: rule_pause_last_n must be an integer >= 5", EXIT_CONFIG)
+    if "rule_pause_loss_usd" in lim and (not num(lim["rule_pause_loss_usd"]) or lim["rule_pause_loss_usd"] <= 0):
+        raise Stop(f"{path}: rule_pause_loss_usd must be a number > 0", EXIT_CONFIG)
     if "drawdown_peak_usd" in lim and (not num(lim["drawdown_peak_usd"]) or lim["drawdown_peak_usd"] < 0):
         raise Stop(f"{path}: drawdown_peak_usd must be a number >= 0", EXIT_CONFIG)
     if "max_entries_per_window_side" in lim and (not isinstance(lim["max_entries_per_window_side"], int)

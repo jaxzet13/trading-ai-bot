@@ -1226,3 +1226,36 @@ def test_drawdown_brake_off_by_default():
     r = make_runner(d, clock, fake, kp)
     r.equity, r.peak_equity = 1.0, 100.0
     assert r.base_stake() == CFG["limits"]["stake_usd"]
+
+
+def test_rule_pause_after_losing_streak_and_reset():
+    d, clock, fake, kp = setup()
+    cfg = json.loads(json.dumps(CFG))
+    cfg["limits"].update(rule_pause_last_n=5, rule_pause_loss_usd=5.0)
+    r = make_runner(d, clock, fake, kp, cfg=cfg)
+
+    def bet(tk, pnl, rule="A"):
+        r.log({"event": "order_intent", "ticker": tk, "rule": rule})
+        r.log({"event": "settle", "ticker": tk, "pnl": pnl})
+
+    assert r.rule_paused("A") is None                          # no history: never paused
+    for i in range(4):
+        bet(f"KXT-{i}", -0.9)
+    assert r.rule_paused("A") is None                          # fewer than 5 closed bets
+    bet("KXT-4", -0.9)
+    assert r.rule_paused("A") is None                          # last 5 lost 4.50 < 5.00
+    bet("KXT-5", -1.5)
+    assert "paused" in r.rule_paused("A")                      # last 5 lost 5.10
+    bet("KXT-B", -9.0, rule="B")
+    assert r.rule_paused("B") is None                          # other rules keep their own count
+    r.L["rule_pause_ignore_before_ts"] = clock() + 1           # reviewed: count restarts
+    assert r.rule_paused("A") is None
+
+
+def test_rule_pause_off_by_default():
+    d, clock, fake, kp = setup()
+    r = make_runner(d, clock, fake, kp)
+    for i in range(50):
+        r.log({"event": "order_intent", "ticker": f"KXT-{i}", "rule": "A"})
+        r.log({"event": "settle", "ticker": f"KXT-{i}", "pnl": -1.0})
+    assert r.rule_paused("A") is None
