@@ -34,10 +34,20 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 LABDIR = ROOT / "data" / "lab"
-CANDS = LABDIR / "fwd_candidates.json"
+GEN = int(os.environ.get("FWD_GEN", "1"))     # 1 = the Nov 4 batch; 2+ = later batches (see pick)
+CANDS = LABDIR / ("fwd_candidates.json" if GEN == 1 else f"fwd{GEN}_candidates.json")
 TOP_K = 20
 MIN_SEARCH_N, MIN_HOLD_N = 100, 30
 FWD_START = 1793823300          # 2026-11-04 20:15 UTC, as kalshi15m/zecfwd.py: after all data used anywhere
+
+
+def fwd_start():
+    """This generation's first forward day. Gen 1: FWD_START. Later gens: written into their frozen candidates file
+    at pick time (the first 15-minute boundary at least 15 minutes after freezing), so it is always after every
+    market the pick could have seen."""
+    if GEN == 1:
+        return FWD_START
+    return int(json.loads(CANDS.read_text())["fwd_start"])
 
 
 def _families():
@@ -80,8 +90,25 @@ def pick(workers=4, log=print):
     t0 = time.time()
     lab3.G["quick"] = int(os.environ.get("FWD_QUICK", "0"))
     lab3._GRID_CACHE.clear()
+    hold2 = None
+    if GEN >= 2:
+        # Gen 2+: the exam is gen 1's forward days (FWD_START -> now, Kalshi-settled markets downloaded by
+        # fwdlab score), the search window is ALL the older data. Built first: contexts() swaps spot files.
+        from . import fwdscore
+        log(f"fwdlab pick gen {GEN}: exam = forward days since FWD_START ...")
+        hold2 = fwdscore.contexts(lab3.COINS, log, start=FWD_START)
+        lab3._SPOT.clear()
+        lab3.REAL = True
     log("fwdlab pick: loading panels (clean prices) ...")
-    lab3.load(verbose=False)
+    full = lab3.load(verbose=False)
+    if hold2 is not None:
+        for s_, p_ in full.items():
+            ots = np.asarray(p_.open_ts, np.int64)
+            sp_ = p_.subset(ots >= lab3.G["start"])
+            lab3.G["search"][s_] = lab3.Ctx(s_, sp_)
+            lab3.G["hold"][s_] = hold2[s_]
+        exam_end = int(max(int(np.asarray(c.open_ts).max()) for c in hold2.values()))
+        log("  exam markets: " + ", ".join(f"{k[2:-3]} {len(v.open_ts)}" for k, v in hold2.items()))
     fams = _families()
     tasks = sorted([(f, c) for f in fams for c in lab3.COINS], key=lambda t: -len(lab3.grid_list(lab3.FAMILIES[t[0]]["grid"])))
     log(f"  {len(fams)} families x {len(lab3.COINS)} coins, "
@@ -117,11 +144,16 @@ def pick(workers=4, log=print):
                     v = float(ks[0] / ks[1]) if ks[1] else 1.0
                     c["norms"] = {cc: v for cc in coins}
                 rows.append(c)
-    out = {"frozen_at": int(time.time()), "fwd_start": FWD_START, "top_k": TOP_K, "families": fams,
+    frozen = int(time.time())
+    start = FWD_START if GEN == 1 else (frozen // 900 + 2) * 900     # gen 2+: >= 15 min after freezing
+    out = {"generation": GEN, "frozen_at": frozen, "fwd_start": start, "top_k": TOP_K, "families": fams,
            "coins": lab3.COINS, "n_candidates": len(rows), "runtime_s": int(time.time() - t0),
            "selection": (f"Top {TOP_K} settings per family x scope by the t-stat of search window + exam days "
                          f"combined, at real-money scoring; profitable in both, >= {MIN_SEARCH_N} search and "
-                         f">= {MIN_HOLD_N} exam trades. Nothing from after the forward start was loaded."),
+                         f">= {MIN_HOLD_N} exam trades. Nothing from after the forward start was loaded."
+                         + ("" if GEN == 1 else f" Gen {GEN}: search = all data to Nov 1, exam = gen 1's forward "
+                            f"days (Nov 4 to {time.strftime('%b %d %H:%M', time.gmtime(exam_end + 900))} UTC), "
+                            f"forward scoring starts after the freeze.")),
            "candidates": rows}
     CANDS.write_text(json.dumps(out, default=float))
     log(f"fwdlab pick: {len(rows)} candidates frozen -> {CANDS} ({time.time() - t0:.0f}s)")

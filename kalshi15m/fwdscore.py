@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import pickle
 import time
 from datetime import datetime
@@ -25,7 +26,8 @@ LABDIR = ROOT / "data" / "lab"
 FWD_DIR = ROOT / "data" / "kalshi15m" / "fwd"
 TAPE_DIR = FWD_DIR / "tape"
 TB_DIR = ROOT / "data" / "kalshi15m" / "tradebars"
-OUT = LABDIR / "fwd_results.json"
+GEN = int(os.environ.get("FWD_GEN", "1"))
+OUT = LABDIR / ("fwd_results.json" if GEN == 1 else f"fwd{GEN}_results.json")
 KALSHI = "https://external-api.kalshi.com/trade-api/v2"
 COINBASE = "https://api.exchange.coinbase.com"
 THIN = {"KXNEAR15M", "KXHYPE15M", "KXDOGE15M", "KXBNB15M"}      # spot rebuilt from Coinbase's trade list
@@ -37,8 +39,20 @@ GATE = {"min_days": 7, "min_filled": 30, "alpha": 0.05}
 
 
 def _fwd_start():
+    """First forward day of this generation's candidates (FWD_GEN; gen 1 = the Nov 4 batch)."""
+    from .fwdlab import fwd_start
+    return fwd_start()
+
+
+def _data_start():
+    """All generations share one forward dataset, downloaded from gen 1's start."""
     from .fwdlab import FWD_START
     return FWD_START
+
+
+def _cands_path():
+    from .fwdlab import CANDS
+    return CANDS
 
 
 # --------------------------------------------------------------------------- data
@@ -66,7 +80,7 @@ def _get(url, params, tries=30):
 
 def fetch_markets(series, log=print):
     """Settled markets since FWD_START + their 1-minute candles (each market fetched once)."""
-    t_start = _fwd_start()
+    t_start = _data_start()
     now = int(time.time())
     mpath, cpath = FWD_DIR / f"{series}_markets.csv", FWD_DIR / f"{series}_candles.csv"
     try:
@@ -145,7 +159,7 @@ def fetch_spot(series, log=print):
     if series in THIN:
         if sp is None:                             # start from the full trade-built history
             sp = pd.read_csv(TB_DIR / f"{D.SERIES[series]}_bars.csv")
-            sp = sp[sp.ts >= _fwd_start() - SPOT_LOOKBACK]
+            sp = sp[sp.ts >= _data_start() - SPOT_LOOKBACK]
         last = int(sp.ts.max())
         new, oldest = _coinbase_trade_bars(D.SERIES[series], last - 120, log)
         if len(new) and oldest is not None:
@@ -153,7 +167,7 @@ def fetch_spot(series, log=print):
             sp = pd.concat([sp[sp.ts < cut], new[new.ts >= cut]], ignore_index=True)
         sp = sp[sp.ts < now // 60 * 60]            # the current minute is not finished
     else:
-        t0 = int(sp.ts.max()) + 60 if sp is not None and len(sp) else _fwd_start() - SPOT_LOOKBACK
+        t0 = int(sp.ts.max()) + 60 if sp is not None and len(sp) else _data_start() - SPOT_LOOKBACK
         if t0 < now - 120:
             new = D.fetch_spot(D.SERIES[series], t0, now - 60)
             sp = new if sp is None else pd.concat([sp, new], ignore_index=True)
@@ -313,7 +327,7 @@ def _t(v):
     return float(v.mean() / v.std(ddof=1) * math.sqrt(len(v))) if len(v) > 2 and v.std(ddof=1) > 0 else 0.0
 
 
-def contexts(coins, log=print):
+def contexts(coins, log=print, start=None):
     from . import backtest as B
     from . import lab2, lab3
     lab3.REAL = False                      # classic positions; reality comes from the tape
@@ -326,7 +340,7 @@ def contexts(coins, log=print):
             for s in coins:
                 p = B.Panel(B.build_panel(s))
                 lab3.add_features(p, s, "main")
-                out[s] = lab3.Ctx(s, p.subset(np.asarray(p.open_ts, np.int64) >= _fwd_start()))
+                out[s] = lab3.Ctx(s, p.subset(np.asarray(p.open_ts, np.int64) >= (_fwd_start() if start is None else start)))
     finally:
         lab3._SPOT.clear()
     return out
@@ -335,7 +349,7 @@ def contexts(coins, log=print):
 def score(download=True, log=print):
     from . import lab3
     t0 = time.time()
-    C = json.loads((LABDIR / "fwd_candidates.json").read_text())
+    C = json.loads(_cands_path().read_text())
     coins = C["coins"]
     FWD_DIR.mkdir(parents=True, exist_ok=True)
     if download:
@@ -432,7 +446,7 @@ def growth(log=print):
     (early sales assumed to fill in full, a little optimistic). Same orders and fills as fwdlab score."""
     from . import lab3
     from .backtest import TAKER_RATE
-    C = json.loads((LABDIR / "fwd_candidates.json").read_text())
+    C = json.loads(_cands_path().read_text())
     coins = C["coins"]
     ctxs = contexts(coins, log)
     tapes = {s: pickle.load(open(TAPE_DIR / f"{s}.pkl", "rb")) for s in coins}
@@ -483,7 +497,7 @@ def growth(log=print):
     out = {"generated": int(time.time()), "days": round(days, 2), "fracs": GROWTH_FRACS, "summary": summ,
            "note": "A $10 account per strategy; each bet stakes a fixed share of the current balance; contracts capped by "
                    "what traded at our limit in the 1-3 s window on Kalshi's trade records."}
-    (LABDIR / "fwd_growth.json").write_text(json.dumps(out, indent=1, default=float))
+    (LABDIR / ("fwd_growth.json" if GEN == 1 else f"fwd{GEN}_growth.json")).write_text(json.dumps(out, indent=1, default=float))
     for k, v in summ.items():
         log(f"  {k}: {v['strategies']} strategies with 10+ bets; 4x+ {v['x4_or_more']}, 2x+ {v['x2_or_more']}, up {v['up']}, "
             f"halved {v['down_half']}, busted {v['busted']}, median ${v['median']}; best {v['best'][:3]}")
