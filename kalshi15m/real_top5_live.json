@@ -1,5 +1,5 @@
 {
- "_note": "REAL MONEY, started Nov 12 ~15:45 UTC at the account holder's request: 'Start running 5 of the most consistent strategies until you hit 4 dollars, make sure it's running 24/7 no stop'. The forward lab's 5 most consistent (one per family x coin, by share of forward days up then forward t, 7.8 forward days); NONE passed the 4.16 bar. Balance at start $7.54; new bets stop for good once the balance incl. open bets is below $4.00. Daily loss caps 3.6 so the $4 floor is the stop that binds. Stop by hand: touch STOP_TOP5. Nov 15: fv_vol:KXHYPE15M:20 dropped at the account holder's OK (weakest in the forward lab; crowded out fv_season on HYPE). Nov 15: bets 1.5x ($0.75) with the daily-loss, open-risk and window limits raised 1.5x, at the account holder's choice.",
+ "_note": "REAL MONEY, started Nov 12 ~15:45 UTC at the account holder's request: 'Start running 5 of the most consistent strategies until you hit 4 dollars, make sure it's running 24/7 no stop'. The forward lab's 5 most consistent (one per family x coin, by share of forward days up then forward t, 7.8 forward days); NONE passed the 4.16 bar. Balance at start $7.54; new bets stop for good once the balance incl. open bets is below $4.00. Daily loss caps 3.6 so the $4 floor is the stop that binds. Stop by hand: touch STOP_TOP5. Nov 15: fv_vol:KXHYPE15M:20 dropped at the account holder's OK (weakest in the forward lab; crowded out fv_season on HYPE). Nov 15: bets 1.5x ($0.75) with the daily-loss, open-risk and window limits raised 1.5x, at the account holder's choice. Nov 15: drawdown brake - bets halve while equity is more than $7 below its high-water mark (start $25.17, Nov 14 high).",
  "series": [
   "KXETH15M",
   "KXHYPE15M",
@@ -87,7 +87,10 @@
   "min_balance_counts_open_bets": true,
   "max_window_cost_usd": 4.5,
   "max_entries_per_window_side": 2,
-  "min_one_contract_max_usd": 1.0
+  "min_one_contract_max_usd": 1.0,
+  "drawdown_brake_usd": 7.0,
+  "drawdown_brake_factor": 0.5,
+  "drawdown_peak_usd": 25.17
  },
  "golden_priority": "config"
 }

@@ -470,6 +470,12 @@ class Runner:
         self.cur, self.P, self.seen, self.minutes_run = None, None, set(), 0
         self.balance = None
         self.crypto_balance = None               # shard 2, only tracked with limits.stake_pct_of_balance
+        self.equity = None                       # crypto cash + open bets' cost, from the last balance check
+        self.peak_path = self.log_path.with_name(self.log_path.stem + "_peak.json")
+        try:                                     # drawdown brake: the high-water mark survives restarts
+            self.peak_equity = float(json.loads(self.peak_path.read_text())["peak"])
+        except (OSError, ValueError, KeyError, TypeError):
+            self.peak_equity = float(self.L.get("drawdown_peak_usd") or 0.0)
         self.rebuild()
 
     # --- persistence
@@ -1183,8 +1189,18 @@ class Runner:
         max(stake_usd_min, pct x crypto balance), stake_usd while the balance is unknown (e.g. dry run)."""
         pct = self.L.get("stake_pct_of_balance")
         if not pct or self.crypto_balance is None:
-            return self.L["stake_usd"]
-        return max(self.L["stake_usd_min"], pct * self.crypto_balance)
+            stake = self.L["stake_usd"]
+        else:
+            stake = max(self.L["stake_usd_min"], pct * self.crypto_balance)
+        return stake * self.brake_factor()
+
+    def brake_factor(self):
+        """limits.drawdown_brake_usd: while equity is more than that below its high-water mark, bets shrink by
+        limits.drawdown_brake_factor (default 0.5); back to full size once equity recovers to within it."""
+        brake = self.L.get("drawdown_brake_usd")
+        if not brake or self.equity is None or self.peak_equity <= 0:
+            return 1.0
+        return float(self.L.get("drawdown_brake_factor", 0.5)) if self.equity < self.peak_equity - brake else 1.0
 
     def refresh_balance(self):
         try:
@@ -1203,6 +1219,13 @@ class Runner:
             equity = cash + self.account_open_risk()             # cash + what open bets cost (not yet won/lost)
         else:
             equity = cash
+        self.equity = equity
+        if self.L.get("drawdown_brake_usd") and equity > self.peak_equity:
+            self.peak_equity = equity
+            try:
+                self.peak_path.write_text(json.dumps({"peak": round(equity, 4), "ts": self.clock()}))
+            except OSError:
+                pass
         tp = self.L.get("take_profit_balance_usd")
         if tp and equity >= tp:
             # target reached: stop for good (the flag file keeps a restarted runner from trading again)
@@ -1261,6 +1284,13 @@ def load_config(path=CONFIG) -> dict:
                                               or isinstance(lim["min_one_contract_max_usd"], bool)
                                               or not 0 < lim["min_one_contract_max_usd"] <= 2):
         raise Stop(f"{path}: min_one_contract_max_usd must be in (0, 2]", EXIT_CONFIG)
+    num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool)
+    if "drawdown_brake_usd" in lim and (not num(lim["drawdown_brake_usd"]) or lim["drawdown_brake_usd"] <= 0):
+        raise Stop(f"{path}: drawdown_brake_usd must be a number > 0", EXIT_CONFIG)
+    if "drawdown_brake_factor" in lim and (not num(lim["drawdown_brake_factor"]) or not 0 < lim["drawdown_brake_factor"] <= 1):
+        raise Stop(f"{path}: drawdown_brake_factor must be in (0, 1]", EXIT_CONFIG)
+    if "drawdown_peak_usd" in lim and (not num(lim["drawdown_peak_usd"]) or lim["drawdown_peak_usd"] < 0):
+        raise Stop(f"{path}: drawdown_peak_usd must be a number >= 0", EXIT_CONFIG)
     if "max_entries_per_window_side" in lim and (not isinstance(lim["max_entries_per_window_side"], int)
                                                  or isinstance(lim["max_entries_per_window_side"], bool)
                                                  or lim["max_entries_per_window_side"] < 1):

@@ -1200,3 +1200,29 @@ if __name__ == "__main__":
                 traceback.print_exc()
     print(f"{'ALL PASSED' if not fails else f'{fails} FAILED'}")
     sys.exit(1 if fails else 0)
+
+
+def test_drawdown_brake_halves_stake_until_recovered():
+    d, clock, fake, kp = setup()
+    cfg = json.loads(json.dumps(CFG))
+    cfg["limits"].update(drawdown_brake_usd=5.0, drawdown_brake_factor=0.5, drawdown_peak_usd=30.0)
+    r = make_runner(d, clock, fake, kp, cfg=cfg)
+    full = cfg["limits"]["stake_usd"]
+    r.equity = None
+    assert r.base_stake() == full                      # unknown equity: full size
+    r.equity = 26.0                                    # 4 below the 30 peak: inside the brake band
+    assert r.base_stake() == full
+    r.equity = 24.0                                    # 6 below: brake on
+    assert r.base_stake() == full * 0.5
+    fake.balance_cents = 3500                          # new high: peak moves up and is saved
+    r.refresh_balance()
+    assert r.peak_equity >= 35.0 and r.base_stake() == full
+    r2 = make_runner(d, clock, fake, kp, cfg=cfg)      # restart keeps the high-water mark
+    assert r2.peak_equity >= 35.0
+
+
+def test_drawdown_brake_off_by_default():
+    d, clock, fake, kp = setup()
+    r = make_runner(d, clock, fake, kp)
+    r.equity, r.peak_equity = 1.0, 100.0
+    assert r.base_stake() == CFG["limits"]["stake_usd"]
