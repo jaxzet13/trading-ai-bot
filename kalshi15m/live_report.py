@@ -842,6 +842,33 @@ def live_run() -> dict | None:
             "by_rule": sorted(by.values(), key=lambda r: -r["bets"]), "recent": bets[-8:][::-1]}
 
 
+def lab_vs_real() -> dict | None:
+    """Each live rule over the real run's window: the bets the forward lab says it made (data/lab/fwd_live_bets.json,
+    Kalshi's trade tape deciding fills) next to the bets the real bot made (real_top5_live_log.jsonl). Close
+    agreement means the lab can be trusted for that rule; gaps show where the bot's caps or reality differ."""
+    try:
+        lab = json.loads((OUT.parent / "data" / "lab" / "fwd_live_bets.json").read_text())["rules"]
+        ev = [json.loads(l) for l in (OUT.parent / "data" / "kalshi15m" / "real_top5_live_log.jsonl").read_text().splitlines() if l.strip()]
+    except (OSError, ValueError, KeyError):
+        return None
+    intent = {e["ticker"]: e for e in ev if e.get("event") == "order_intent" and e.get("ticker")}
+    settle = {e["ticker"]: e for e in ev if e.get("event") == "settle" and e.get("ticker")}
+    if not intent or not settle:
+        return None
+    t0, t1 = min(e["ts"] for e in intent.values()), max(e["ts"] for e in settle.values())
+    rows = []
+    for rid, bets in lab.items():
+        lb = {b["ticker"]: b for b in bets if t0 - 60 <= b["ts"] <= t1}
+        rb = {tk: e for tk, e in intent.items() if e.get("rule") == rid}
+        both = set(lb) & set(rb)
+        rows.append({"rule": rid, "lab_bets": len(lb), "lab_filled": sum(b["filled"] for b in lb.values()),
+                     "lab_pnl": round(sum(b["pnl"] for b in lb.values() if b["filled"]), 2),
+                     "real_bets": len(rb), "real_pnl": round(sum(settle[t]["pnl"] for t in rb if t in settle), 2),
+                     "both": len(both), "same_side": sum(lb[t]["side"] == rb[t]["side"] for t in both),
+                     "lab_only": len(set(lb) - set(rb)), "real_only": len(set(rb) - set(lb))})
+    return {"from": int(t0), "to": int(t1), "rules": rows}
+
+
 def build():
     live = summarise()
     try:  # Kalshi demo account, for the "How it works" tab
@@ -866,6 +893,12 @@ def build():
             live["fwd_lab"] = fl
     except Exception as e:
         print(f"forward lab: skipped ({e})")
+    try:  # lab vs real, bet by bet, for each live rule
+        lv = lab_vs_real()
+        if lv:
+            live["lab_vs_real"] = lv
+    except Exception as e:
+        print(f"lab vs real: skipped ({e})")
     try:  # the ZEC forward test + paper run, for the "Real money" tab
         zf = zec_forward()
         if zf:
