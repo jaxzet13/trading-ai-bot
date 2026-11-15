@@ -242,7 +242,7 @@ def summarise() -> dict:
             "near": sorted(([x["ticker"], x["max_gap"]] for x in ev if x["event"] == "watched"), key=lambda t: t[0])[-12:],
         })
     # the page's live log: skip bookkeeping events ("watched" is logged for every strategy x market and would crowd out bets)
-    out["events"] = [x for x in events if x["event"] not in ("start", "watched")][-80:]
+    out["events"] = [x for x in events if x["event"] not in ("start", "watched")][-60:]   # keeps live.json under the 256 KB doc limit
     return out
 
 
@@ -893,6 +893,9 @@ def build():
     html = html.replace("/*__RESULTS__*/null", results).replace("/*__LIVE__*/null", json.dumps(live))
     html = html.replace("/*__LAB__*/null", json.dumps(lab_summary()))
     (OUT / "index.html").write_text(html)
+    # the app's live/state doc is capped at 256 KB: drop the oldest recent events until it fits with room to spare
+    while len(json.dumps(live, separators=(",", ":")).encode()) > 240_000 and live.get("events"):
+        live["events"] = live["events"][len(live["events"]) // 4 + 1:]
     (OUT / "live.json").write_text(json.dumps(live))
     for s in live["strategies"]:
         print(f"{s['series']} {s['strategy']}: {s['orders']} orders, {s['fills']} fills, {s['settled']} settled, "

@@ -390,8 +390,23 @@ def score(download=True, log=print):
     fills = {s: Fills(ctxs[s], tapes[s]) for s in coins}
     log(f"  fills ready ({time.time() - t0:.0f}s)")
     rows = []
+    try:                                   # the real-money rules: keep their bets one by one (fwd_live_bets.json)
+        live_ids = {g.get("id") for g in json.loads((ROOT / "kalshi15m" / "real_top5_live.json").read_text()).get("golden_rules") or []}
+    except (OSError, ValueError):
+        live_ids = set()
+    live_bets = {}
     for c, per in bets:
         parts = [settle(ctxs[coin], fills[coin], b) for coin, b in per.items()]
+        if c["id"] in live_ids:
+            lst = live_bets.setdefault(c["id"], [])
+            for (coin, b), x in zip(per.items(), parts):
+                ctx = ctxs[coin]
+                for k in np.nonzero(x["placed"])[0]:
+                    mm = int(b["m"][k])
+                    lst.append({"ticker": str(ctx.panel.ticker[mm]), "minute": int(b["j"][k]) + 1,
+                                "side": "yes" if int(b["yes"][k]) == 1 else "no", "limit": round(float(b["limit"][k]), 4),
+                                "filled": bool(x["filled"][k]), "pnl": round(float(x["pnl"][k]), 4),
+                                "ts": int(ctx.open_ts[mm]) + 60 * (int(b["j"][k]) + 1)})
         if parts:
             f = np.concatenate([x["filled"] for x in parts])
             pn = np.concatenate([x["pnl"] for x in parts])[f]
@@ -405,6 +420,9 @@ def score(download=True, log=print):
                      "pnl": round(float(pn.sum()), 2), "t": round(_t(pn), 2),
                      "win_rate": round(float((pn > 0).mean()), 3) if len(pn) else None,
                      "days_up": int((daily > 0).sum()), "days": int(len(daily))})
+    if live_bets:
+        (LABDIR / ("fwd_live_bets.json" if GEN == 1 else f"fwd{GEN}_live_bets.json")).write_text(
+            json.dumps({"generated": int(time.time()), "rules": live_bets}, default=float))
     n = len(rows)
     bar = float(NormalDist().inv_cdf(1 - GATE["alpha"] / max(n, 1)))
     days = (time.time() - _fwd_start()) / 86400
