@@ -391,7 +391,8 @@ def score(download=True, log=print):
     log(f"  fills ready ({time.time() - t0:.0f}s)")
     rows = []
     try:                                   # the real-money rules: keep their bets one by one (fwd_live_bets.json)
-        live_ids = {g.get("id") for g in json.loads((ROOT / "kalshi15m" / "real_top5_live.json").read_text()).get("golden_rules") or []}
+        # gen 1 only: the live rules came from gen 1, and gen 2 reuses the same id pattern for other settings
+        live_ids = {g.get("id") for g in json.loads((ROOT / "kalshi15m" / "real_top5_live.json").read_text()).get("golden_rules") or []} if GEN == 1 else set()
     except (OSError, ValueError):
         live_ids = set()
     live_bets = {}
