@@ -395,7 +395,7 @@ def score(download=True, log=print):
         live_ids = {g.get("id") for g in json.loads((ROOT / "kalshi15m" / "real_top5_live.json").read_text()).get("golden_rules") or []} if GEN == 1 else set()
     except (OSError, ValueError):
         live_ids = set()
-    live_bets = {}
+    live_bets, daily_out = {}, {}
     for c, per in bets:
         parts = [settle(ctxs[coin], fills[coin], b) for coin, b in per.items()]
         if c["id"] in live_ids:
@@ -416,11 +416,17 @@ def score(download=True, log=print):
         else:
             pn, dy, placed = np.array([]), np.array([], int), 0
         daily = pd.Series(pn).groupby(dy).sum() if len(pn) else pd.Series(dtype=float)
+        if len(pn):                            # per-day results for walk-forward tests of the selection itself
+            cnt = pd.Series(np.ones(len(pn))).groupby(dy).sum()
+            sq = pd.Series(pn ** 2).groupby(dy).sum()
+            daily_out[c["id"]] = {int(d): [round(float(daily[d]), 4), int(cnt[d]), round(float(sq[d]), 5)] for d in daily.index}
         rows.append({"id": c["id"], "family": c["family"], "scope": c["scope"], "rank": c["rank"],
                      "params": c["params"], "t_before": c["t_before"], "placed": placed, "filled": int(len(pn)),
                      "pnl": round(float(pn.sum()), 2), "t": round(_t(pn), 2),
                      "win_rate": round(float((pn > 0).mean()), 3) if len(pn) else None,
                      "days_up": int((daily > 0).sum()), "days": int(len(daily))})
+    (LABDIR / ("fwd_daily.json" if GEN == 1 else f"fwd{GEN}_daily.json")).write_text(
+        json.dumps({"generated": int(time.time()), "fwd_start": _fwd_start(), "days": daily_out}, separators=(",", ":")))
     if live_bets:
         (LABDIR / ("fwd_live_bets.json" if GEN == 1 else f"fwd{GEN}_live_bets.json")).write_text(
             json.dumps({"generated": int(time.time()), "rules": live_bets}, default=float))

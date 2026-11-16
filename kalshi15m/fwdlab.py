@@ -167,8 +167,11 @@ def main(args=None):
     elif args[0] == "growth":
         from . import fwdscore
         fwdscore.growth()
+    elif args[0] == "walk":
+        from . import fwdwalk
+        fwdwalk.walk()
     elif args[0] == "score":
         from . import fwdscore
         fwdscore.score(download="no-download" not in args)
     else:
-        sys.exit("usage: python -m kalshi15m fwdlab pick [WORKERS] | score [no-download]")
+        sys.exit("usage: python -m kalshi15m fwdlab pick [WORKERS] | score [no-download] | walk")
