@@ -1,0 +1,176 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#333;display:flex;gap:40px;padding:40px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace}
+.card{width:750px;height:1050px;position:relative;overflow:hidden;flex:none}
+
+/* ============ A. STILL: the fighter stands on the card itself ============ */
+.A{background:#d7d8d4;color:#09090a}
+.A .bg{position:absolute;inset:0;width:100%;height:100%}
+.A .top{position:absolute;left:46px;right:46px;top:40px}
+.A .meta{display:flex;justify-content:space-between;font-size:15px;font-weight:500;letter-spacing:.14em}
+.A h1{font-family:Archivo;font-weight:900;font-stretch:62%;font-size:178px;line-height:.8;letter-spacing:-.012em;margin-top:14px;text-transform:uppercase}
+.A .sub{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;font-size:15px;font-weight:500;letter-spacing:.14em}
+.A .sub b{font-family:Archivo;font-weight:900;font-stretch:62%;font-size:40px;letter-spacing:0;line-height:.8}
+.A .sub b small{font-family:'IBM Plex Mono';font-size:13px;font-weight:600;letter-spacing:.14em;margin-right:6px;vertical-align:6px}
+.A .moves{position:absolute;left:46px;right:46px;bottom:150px}
+.A .mv{display:grid;grid-template-columns:44px 1fr auto;align-items:baseline;border-top:3px solid #09090a;padding:12px 0 10px}
+.A .mv .sl{font-family:Archivo;font-weight:900;font-stretch:62%;font-size:38px;color:#a70000;line-height:.9}
+.A .mv .nm{word-spacing:.14em;font-family:Archivo;font-weight:800;font-stretch:62%;font-size:46px;text-transform:uppercase;line-height:.9;letter-spacing:.005em}
+.A .mv .dm{font-family:Archivo;font-weight:900;font-stretch:62%;font-size:58px;line-height:.8}
+.A .mv .fx{grid-column:2/4;font-size:14px;margin-top:6px;letter-spacing:.02em}
+.A .line{position:absolute;left:46px;right:46px;bottom:86px;border-top:3px solid #09090a;padding-top:12px;font-size:16px;font-style:italic;letter-spacing:.01em}
+.A .foot{position:absolute;left:46px;right:46px;bottom:34px;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;letter-spacing:.16em}
+.A .rar{display:flex;align-items:center;gap:10px}
+.A .rar i{width:16px;height:16px;background:#09090a;transform:rotate(45deg)}
+.A .rar i+i{background:none;border:2.5px solid #09090a}
+
+/* ============ B. PLATE: one move, frame by frame ============ */
+.B{background:#0c0c0d;color:#e6e2d8}
+.B .top{position:absolute;left:44px;right:44px;top:38px}
+.B .meta{display:flex;justify-content:space-between;font-size:14px;font-weight:500;letter-spacing:.16em}
+.B .meta .r{color:#c4232b}
+.B h1{font-family:Archivo;font-weight:900;font-stretch:62%;font-size:120px;line-height:.82;text-transform:uppercase;margin-top:12px;display:flex;justify-content:space-between;align-items:flex-end}
+.B h1 span{font-size:15px;font-family:'IBM Plex Mono';font-weight:500;letter-spacing:.14em;text-align:right;line-height:1.45;padding-bottom:6px;color:#a9a59b}
+.B .plate{position:absolute;left:44px;right:44px;top:228px;border:2px solid #e6e2d8;padding:8px;background:#0c0c0d}
+.B .plate img{display:block;width:100%}
+.B .plate .n{position:absolute;font-size:13px;font-weight:600;color:#09090a;letter-spacing:.08em}
+.B .cap{position:absolute;left:44px;right:44px;top:654px;display:flex;justify-content:space-between;font-size:13px;letter-spacing:.14em;color:#a9a59b}
+.B .moves{position:absolute;left:44px;right:44px;bottom:146px}
+.B .mv{display:grid;grid-template-columns:44px 1fr auto;align-items:baseline;border-top:1.5px solid #4a4843;padding:12px 0 10px}
+.B .mv .sl{font-family:Archivo;font-weight:900;font-stretch:62%;font-size:36px;color:#c4232b}
+.B .mv .nm{word-spacing:.14em;font-family:Archivo;font-weight:800;font-stretch:62%;font-size:42px;text-transform:uppercase;line-height:.9}
+.B .mv .dm{font-family:Archivo;font-weight:900;font-stretch:62%;font-size:54px;line-height:.8}
+.B .mv .fx{grid-column:2/4;font-size:14px;margin-top:6px;color:#a9a59b}
+.B .line{position:absolute;left:44px;right:44px;bottom:84px;border-top:1.5px solid #4a4843;padding-top:12px;font-size:16px;font-style:italic}
+.B .foot{position:absolute;left:44px;right:44px;bottom:32px;display:flex;justify-content:space-between;font-size:13px;font-weight:600;letter-spacing:.16em;color:#a9a59b}
+.B .foot b{color:#e6e2d8}
+
+/* ============ C. BOOKING SHEET: two-ink print (separated later) ============ */
+.C{background:#fff;color:#000;font-family:'Special Elite',monospace}
+.C .hd{position:absolute;left:40px;right:40px;top:34px;display:flex;justify-content:space-between;align-items:flex-end;border-bottom:4px double #000;padding-bottom:10px}
+.C .hd .l{font-family:Archivo;font-weight:900;font-stretch:62%;font-size:44px;line-height:.85;letter-spacing:.01em}
+.C .hd .l small{display:block;font-family:'Special Elite';font-size:15px;font-weight:400;letter-spacing:.08em;margin-top:6px}
+.C .hd .r{text-align:right;font-size:16px;line-height:1.35}
+.C .photo{position:absolute;left:40px;top:136px;width:470px;height:520px;background-color:#fff;background-image:radial-gradient(circle,#000 0 1.15px,transparent 1.6px),radial-gradient(circle,#000 0 1.15px,transparent 1.6px);background-size:6px 6px;background-position:0 0,3px 3px;overflow:hidden;border:3px solid #000}
+.C .photo .ln{position:absolute;left:0;right:0;height:2px;background:#000}
+.C .photo .ln.t{height:1px;background:#6b6b6b}
+.C .photo .lb{position:absolute;left:6px;font-size:15px;transform:translateY(-50%);background:#fff;padding:1px 4px 0;line-height:1.1}
+.C .photo .lb.rt{left:auto;right:6px}
+.C .photo .fig{position:absolute;left:50%;transform:translateX(-50%);bottom:76px;height:400px}
+.C .board{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:#000;color:#fff;font-family:Archivo;font-weight:800;font-stretch:75%;font-size:22px;letter-spacing:.14em;padding:8px 16px 7px;text-align:center;line-height:1.1;white-space:nowrap}
+.C .board small{display:block;font-size:13px;letter-spacing:.3em;font-weight:600}
+.C .side{position:absolute;left:530px;right:40px;top:136px}
+.C .box{border:3px solid #000;padding:8px 8px 6px;text-align:center}
+.C .box img{width:100%;display:block}
+.C .box .k{font-size:13px;margin-top:4px;letter-spacing:.06em}
+.C .kv{margin-top:14px;font-size:16px;line-height:1.6}
+.C .kv div{border-bottom:1.5px solid #000;display:flex;justify-content:space-between;gap:8px}
+.C .kv b{font-weight:400;color:#7a7a7a}
+.C .stamp{position:absolute;color:#f00;border:5px solid #f00;font-family:Archivo;font-weight:900;font-stretch:70%;font-size:44px;letter-spacing:.06em;padding:4px 14px 2px;line-height:1;text-transform:uppercase;transform:rotate(var(--rot,-11deg));opacity:.95}
+.C .stamp small{display:block;font-size:13px;letter-spacing:.32em;font-family:'IBM Plex Mono';font-weight:600;text-align:center;padding-bottom:4px}
+.C .charges{position:absolute;left:40px;right:40px;top:676px}
+.C .charges h3{font-family:Archivo;font-weight:900;font-stretch:62%;font-size:26px;letter-spacing:.08em;border-bottom:3px solid #000;padding-bottom:4px}
+.C .ch{display:grid;grid-template-columns:34px 1fr auto;align-items:baseline;padding:9px 0 7px;border-bottom:1.5px dashed #000}
+.C .ch .i{font-size:20px;color:#f00}
+.C .ch .nm{font-size:26px;letter-spacing:.04em;text-transform:uppercase}
+.C .ch .dm{font-family:Archivo;font-weight:900;font-stretch:62%;font-size:44px;line-height:.85}
+.C .ch .fx{grid-column:2/4;font-size:14px;margin-top:2px;color:#555}
+.C .prop{position:absolute;left:40px;right:40px;top:868px;font-size:16px;line-height:1.5}
+.C .prop div{display:flex;gap:14px;align-items:flex-end;margin-top:10px}
+.C .prop b{font-weight:400;color:#6a6a6a;white-space:nowrap}
+.C .sig{flex:1;border-bottom:1.5px solid #000;height:22px}
+.C .note{position:absolute;left:40px;right:40px;bottom:72px;font-size:17px;line-height:1.35}
+.C .note b{font-weight:400;color:#f00;margin-right:8px}
+.C .foot{position:absolute;left:40px;right:40px;bottom:30px;display:flex;justify-content:space-between;font-size:14px;border-top:1.5px solid #000;padding-top:8px;letter-spacing:.06em}
+</style></head><body>
+
+<!-- A -->
+<div class="card A" id="A">
+  <img class="bg" src="out/A_card.png">
+  <div class="top">
+    <div class="meta"><span>INK &amp; STEEL</span><span>019 / 047</span></div>
+    <h1>Phantom</h1>
+    <div class="sub"><span>TWIN DAGGERS / SHADOW</span><b><small>PWR</small>230</b></div>
+  </div>
+  <div class="moves">
+    <div class="mv"><span class="sl">/</span><span class="nm">Cheap Shot</span><span class="dm">80</span></div>
+    <div class="mv"><span class="sl">//</span><span class="nm">Vanish</span><span class="dm">170</span><span class="fx">Can't be hit next turn. Good luck.</span></div>
+  </div>
+  <p class="line">Gone before the cape lands. So's your wallet.</p>
+  <div class="foot"><span class="rar"><i></i><i></i>FOIL RARE</span><span>STIXX</span></div>
+</div>
+
+<!-- B -->
+<div class="card B" id="B">
+  <div class="top">
+    <div class="meta"><span class="r">PLATE 019</span><span>INK &amp; STEEL &nbsp;019 / 047</span></div>
+    <h1>Phantom<span>TWIN DAGGERS<br>SHADOW &nbsp;·&nbsp; PWR 230</span></h1>
+  </div>
+  <div class="plate" id="plate"><img src="out/B_plate.png"></div>
+  <div class="cap"><span>FIG. 1 &nbsp;THE APPROACH. SIX FRAMES, 1/10 S APART.</span><span>FILM 07</span></div>
+  <div class="moves">
+    <div class="mv"><span class="sl">/</span><span class="nm">Cheap Shot</span><span class="dm">80</span></div>
+    <div class="mv"><span class="sl">//</span><span class="nm">Vanish</span><span class="dm">170</span><span class="fx">Can't be hit next turn. Good luck.</span></div>
+  </div>
+  <p class="line">Gone before the cape lands. So's your wallet.</p>
+  <div class="foot"><span><b>FOIL RARE</b></span><span>STIXX</span></div>
+</div>
+
+<!-- C -->
+<div class="card C" id="C">
+  <div class="hd">
+    <div class="l">STIXX CITY P.D.<small>ARREST &amp; BOOKING RECORD</small></div>
+    <div class="r">CASE NO. <span id="case">IS-019-000001</span><br>INK &amp; STEEL &nbsp;019/047</div>
+  </div>
+  <div class="photo" id="photo">
+    <img class="fig" src="out/C_fig.png">
+    <div class="board">PHANTOM<small>019 · <span id="bdate">11 19 26</span></small></div>
+  </div>
+  <div class="side">
+    <div class="box"><img id="thumb" src="out/C_thumb_19.png"><div class="k">R. THUMB</div></div>
+    <div class="kv">
+      <div><b>NAME</b>PHANTOM</div>
+      <div><b>ARMED</b>TWIN DAGGERS</div>
+      <div><b>CLASS</b>SHADOW</div>
+      <div><b>PWR</b>230</div>
+      <div><b>PRIORS</b>31</div>
+      <div><b>WITNESSES</b>0</div>
+    </div>
+  </div>
+  <div class="stamp" id="stamp" style="left:300px;top:150px"><small>GRADE</small>FOIL RARE</div>
+  <div class="charges">
+    <h3>CHARGES</h3>
+    <div class="ch"><span class="i">1.</span><span class="nm">Cheap Shot</span><span class="dm">80</span></div>
+    <div class="ch"><span class="i">2.</span><span class="nm">Vanish</span><span class="dm">170</span><span class="fx">Can't be hit next turn. Good luck.</span></div>
+  </div>
+  <div class="prop"><div><b>PROPERTY SEIZED</b>2 KNIVES · 1 CAPE · $0.00</div><div><b>BOOKING OFFICER</b><span class="sig"></span></div></div>
+  <p class="note"><b>OFFICER'S NOTE:</b>Gone before the cape lands. So's your wallet.</p>
+  <div class="foot"><span>STIXX</span><span>COPY <span id="copy">000001</span></span></div>
+</div>
+
+<script>
+// height chart behind the booking photo
+const ph = document.getElementById('photo');
+const FLOOR = 446, FT = 60;
+for (let i = 2; i <= 15; i++) {
+  const y = FLOOR - i * FT / 2, half = i % 2;
+  const l = document.createElement('div'); l.className = 'ln' + (half ? ' t' : ''); l.style.top = y + 'px'; ph.appendChild(l);
+  if (!half) for (const rt of [0, 1]) { const t = document.createElement('div'); t.className = 'lb' + (rt ? ' rt' : ''); t.style.top = y + 'px'; t.textContent = (i / 2) + "'"; ph.appendChild(t); }
+}
+// frame numbers on the plate
+const pl = document.getElementById('plate');
+for (let i = 0; i < 6; i++) { const n = document.createElement('div'); n.className = 'n';
+  n.style.left = (8 + (i % 3) * 220.6 + 10) + 'px'; n.style.top = (8 + Math.floor(i / 3) * 196 + 172) + 'px'; n.textContent = String(i + 1).padStart(2, '0'); pl.appendChild(n); }
+// a copy is set by its serial: case number, thumbprint, stamp angle and spot
+window.setCopy = (serial, thumb, rot, sx, sy) => {
+  const s = String(serial).padStart(6, '0');
+  document.getElementById('case').textContent = 'IS-019-' + s;
+  document.getElementById('copy').textContent = s;
+  document.getElementById('thumb').src = 'out/C_thumb_' + thumb + '.png';
+  const st = document.getElementById('stamp'); st.style.setProperty('--rot', rot + 'deg'); st.style.left = sx + 'px'; st.style.top = sy + 'px';
+};
+</script>
+</body></html>
