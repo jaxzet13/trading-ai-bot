@@ -1,0 +1,81 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#222;display:flex;gap:40px;padding:40px;flex-wrap:wrap}
+.card{width:750px;height:1050px;position:relative;overflow:hidden;background:#0a0a0b;color:#ebe6da;font-family:'IBM Plex Mono',monospace;flex:none}
+.card .bg,.card .fg{position:absolute;inset:0;width:100%;height:100%}
+.card .fg{z-index:5;pointer-events:none}
+/* matte black falls in from the top and bottom so the type sits on black */
+.card .shade{position:absolute;inset:0;background:
+  linear-gradient(180deg,rgba(10,10,11,.92) 0,rgba(10,10,11,.55) 17%,rgba(10,10,11,0) 30%),
+  linear-gradient(0deg,#0a0a0b 0,#0a0a0b 20%,rgba(10,10,11,.88) 28%,rgba(10,10,11,0) 40%)}
+.card .rule{position:absolute;inset:22px;border:1.5px solid rgba(235,230,218,.28);z-index:3}
+.meta{position:absolute;left:42px;right:42px;top:40px;display:flex;justify-content:space-between;font-size:13px;font-weight:500;letter-spacing:.24em;color:#9d988d;z-index:4}
+.meta b{color:#ebe6da;font-weight:600}
+h1{position:absolute;left:0;right:0;top:122px;text-align:center;font-family:Archivo;font-weight:900;font-stretch:62%;font-variation-settings:'wdth' 62;white-space:nowrap;font-size:226px;line-height:.8;letter-spacing:-.008em;text-transform:uppercase;z-index:4;color:#ebe6da}
+.side{position:absolute;left:44px;top:322px;z-index:4}
+.side .k{font-size:12px;letter-spacing:.24em;color:#9d988d}
+.side .v{font-family:Archivo;font-weight:900;font-stretch:62%;font-size:66px;line-height:.85;margin-top:4px}
+.side .t{font-size:12px;letter-spacing:.2em;color:#9d988d;margin-top:18px;line-height:1.7}
+.moves{position:absolute;left:42px;right:42px;bottom:156px;z-index:6}
+.mv{display:grid;grid-template-columns:42px 1fr auto;align-items:baseline;border-top:1.5px solid rgba(235,230,218,.22);padding:12px 0 10px}
+.mv .sl{font-family:Archivo;font-weight:900;font-stretch:62%;font-size:36px;color:#c4232b;line-height:.9}
+.mv .nm{font-family:Archivo;font-weight:800;font-stretch:62%;font-size:44px;text-transform:uppercase;line-height:.9;word-spacing:.14em}
+.mv .dm{font-family:Archivo;font-weight:900;font-stretch:62%;font-size:58px;line-height:.8}
+.mv .fx{grid-column:2/4;font-size:14px;margin-top:6px;color:#a29d92}
+.line{position:absolute;left:42px;right:42px;bottom:94px;border-top:1.5px solid rgba(235,230,218,.22);padding-top:12px;font-size:16px;font-style:italic;color:#cfc9bc;z-index:6}
+.foot{position:absolute;left:42px;right:42px;bottom:40px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;letter-spacing:.24em;color:#9d988d;z-index:6}
+.tag{background:#c4232b;color:#0a0a0b;font-weight:600;letter-spacing:.2em;padding:7px 16px 6px 14px;clip-path:polygon(0 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%)}
+.tag.bone{background:#ebe6da}
+</style></head><body>
+<div class="card" id="L1">
+  <img class="bg" src="out/L1.png"><div class="shade"></div><div class="rule"></div>
+  <div class="meta"><span>INK &amp; STEEL</span><span><b>019</b> / 047</span></div>
+  <h1>Phantom</h1>
+  <div class="side"><div class="k">PWR</div><div class="v">230</div><div class="t">TWIN<br>DAGGERS<br>—<br>SHADOW</div></div>
+  <img class="fg" src="out/L1_fg.png">
+  <div class="moves">
+    <div class="mv"><span class="sl">/</span><span class="nm">Cheap Shot</span><span class="dm">80</span></div>
+    <div class="mv"><span class="sl">//</span><span class="nm">Vanish</span><span class="dm">170</span><span class="fx">Can't be hit next turn. Good luck.</span></div>
+  </div>
+  <p class="line">Gone before the cape lands. So's your wallet.</p>
+  <div class="foot"><span>STIXX</span><span class="tag">TILT · FOIL RARE</span></div>
+</div>
+<div class="card" id="L2">
+  <img class="bg" src="out/L2.png"><div class="shade"></div><div class="rule"></div>
+  <div class="meta"><span>INK &amp; STEEL</span><span><b>019</b> / 047</span></div>
+  <h1>Phantom</h1>
+  <div class="side"><div class="k">PWR</div><div class="v">230</div><div class="t">TWIN<br>DAGGERS<br>—<br>SHADOW</div></div>
+  <img class="fg" src="out/L2_fg.png">
+  <div class="moves">
+    <div class="mv"><span class="sl">/</span><span class="nm">Cheap Shot</span><span class="dm">80</span></div>
+    <div class="mv"><span class="sl">//</span><span class="nm">Vanish</span><span class="dm">170</span><span class="fx">Can't be hit next turn. Good luck.</span></div>
+  </div>
+  <p class="line">Gone before the cape lands. So's your wallet.</p>
+  <div class="foot"><span>STIXX</span><span class="tag">TILT · FOIL RARE</span></div>
+</div>
+<div class="card" id="L3">
+  <img class="bg" src="out/L3.png"><div class="shade"></div><div class="rule"></div>
+  <div class="meta"><span>INK &amp; STEEL</span><span><b>019</b> / 047</span></div>
+  <h1>Phantom</h1>
+  <div class="side"><div class="k">PWR</div><div class="v">230</div><div class="t">TWIN<br>DAGGERS<br>—<br>SHADOW</div></div>
+  <img class="fg" src="out/L3_fg.png">
+  <div class="moves">
+    <div class="mv"><span class="sl">/</span><span class="nm">Cheap Shot</span><span class="dm">80</span></div>
+    <div class="mv"><span class="sl">//</span><span class="nm">Vanish</span><span class="dm">170</span><span class="fx">Can't be hit next turn. Good luck.</span></div>
+  </div>
+  <p class="line">Gone before the cape lands. So's your wallet.</p>
+  <div class="foot"><span>STIXX</span><span class="tag">TILT · FOIL RARE</span></div>
+</div>
+<script>
+// fit each name to the card's inner width
+for (const h of document.querySelectorAll('h1')) {
+  let fs = 260; h.style.fontSize = fs + 'px';
+  const r = document.createRange(); r.selectNodeContents(h);
+  while (r.getBoundingClientRect().width > 668 && fs > 60) { fs -= 2; h.style.fontSize = fs + 'px'; }
+  h.dataset.fs = fs;
+}
+</script>
+</body></html>
