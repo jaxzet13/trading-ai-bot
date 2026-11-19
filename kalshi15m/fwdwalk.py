@@ -77,15 +77,16 @@ def walk(daily_path=LABDIR / "fwd_daily.json", cands_path=LABDIR / "fwd_candidat
             top.append(st.mean(sday(s, d) for s in rank[:K]))
             allc.append(st.mean(sday(s, d) for s in scope))
         if top:
+            now = sorted(scope, key=lambda s: -sum(sday(s, x) for x in days))[:K]  # what this method picks today
             out["methods"][f"top{K}_coins"] = {"pick_per_day": round(st.mean(top), 4), "pick_days_up": sum(x > 0 for x in top),
                                                "all_per_day": round(st.mean(allc), 4), "n_days": len(top),
-                                               "beats_all": st.mean(top) > st.mean(allc)}
+                                               "beats_all": st.mean(top) > st.mean(allc), "current_pick": now}
     won = sum(m["beats_all"] for m in out["methods"].values())
     out["summary"] = (f"{won} of {len(out['methods'])} selection methods beat the plain average of all candidates "
                       f"over {out['test_days']} walk-forward test days")
     (LABDIR / "fwd_walk.json").write_text(json.dumps(out, indent=1))
     for k, m in out["methods"].items():
         log(f"  {k:16s} picks {m['pick_per_day']:+.3f}/day ({m['pick_days_up']}/{m['n_days']} up)  vs all {m['all_per_day']:+.3f}"
-            f"  {'BEATS' if m['beats_all'] else 'worse'}")
+            f"  {'BEATS' if m['beats_all'] else 'worse'}" + (f"  now: {', '.join(m['current_pick'])}" if m.get("current_pick") else ""))
     log("fwdlab walk: " + out["summary"])
     return out
