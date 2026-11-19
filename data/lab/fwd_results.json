@@ -1,18 +1,18 @@
 {
- "generated": 1795125239,
+ "generated": 1795126298,
  "fwd_start": 1793823300,
  "frozen_at": 1793916609,
- "days": 15.07,
+ "days": 15.08,
  "markets": {
-  "KXBTC15M": 1422,
-  "KXETH15M": 1422,
-  "KXSOL15M": 1422,
-  "KXXRP15M": 1422,
-  "KXHYPE15M": 1422,
-  "KXBNB15M": 1422,
-  "KXNEAR15M": 1422,
-  "KXDOGE15M": 1422,
-  "KXZEC15M": 1422
+  "KXBTC15M": 1423,
+  "KXETH15M": 1423,
+  "KXSOL15M": 1423,
+  "KXXRP15M": 1423,
+  "KXHYPE15M": 1423,
+  "KXBNB15M": 1423,
+  "KXNEAR15M": 1423,
+  "KXDOGE15M": 1423,
+  "KXZEC15M": 1423
  },
  "n_candidates": 3143,
  "bar_t": 4.16,
@@ -22,9 +22,9 @@
   "alpha": 0.05
  },
  "traded": 3143,
- "profitable": 1979,
+ "profitable": 1980,
  "traded10": 3135,
- "profitable10": 1977,
+ "profitable10": 1978,
  "passed": 0,
  "by_scope": {
   "ALL": {
@@ -86,9 +86,9 @@
   "KXXRP15M": {
    "n": 360,
    "traded": 360,
-   "profitable": 171,
+   "profitable": 172,
    "best_t": 1.16,
-   "median_pnl": -0.09
+   "median_pnl": -0.075
   },
   "KXZEC15M": {
    "n": 360,
@@ -172,9 +172,9 @@
   "fv_session": {
    "n": 188,
    "traded": 188,
-   "profitable": 93,
+   "profitable": 94,
    "best_t": 1.99,
-   "median_pnl": -0.005
+   "median_pnl": 0.105
   },
   "fv_shape": {
    "n": 176,
@@ -1429,6 +1429,30 @@
    "status": "open"
   },
   {
+   "id": "fv_drift:KXSOL15M:19",
+   "family": "fv_drift",
+   "scope": "KXSOL15M",
+   "rank": 19,
+   "params": {
+    "start": 5,
+    "end": 13,
+    "edge": 0.16,
+    "band": "05-95",
+    "L": 1,
+    "a": 0.25,
+    "vm": 0.8
+   },
+   "t_before": 2.6,
+   "placed": 208,
+   "filled": 163,
+   "pnl": 14.36,
+   "t": 2.0,
+   "win_rate": 0.466,
+   "days_up": 11,
+   "days": 16,
+   "status": "open"
+  },
+  {
    "id": "fv_drift:KXETH15M:4",
    "family": "fv_drift",
    "scope": "KXETH15M",
@@ -1616,33 +1640,8 @@
    "days_up": 10,
    "days": 16,
    "status": "open"
-  },
-  {
-   "id": "fv_dyn:KXZEC15M:17",
-   "family": "fv_dyn",
-   "scope": "KXZEC15M",
-   "rank": 17,
-   "params": {
-    "start": 2,
-    "end": 11,
-    "band": "25-75",
-    "e0": 0.08,
-    "e_tau": 0.06,
-    "k_spr": 1.0,
-    "rel": 0.0,
-    "vm": 0.8
-   },
-   "t_before": 4.95,
-   "placed": 91,
-   "filled": 59,
-   "pnl": 7.67,
-   "t": 1.95,
-   "win_rate": 0.61,
-   "days_up": 12,
-   "days": 15,
-   "status": "open"
   }
  ],
  "selection": "Top 20 settings per family x scope by the t-stat of search window + exam days combined, at real-money scoring; profitable in both, >= 100 search and >= 30 exam trades. Nothing from after the forward start was loaded.",
- "runtime_s": 125
+ "runtime_s": 46
 }
