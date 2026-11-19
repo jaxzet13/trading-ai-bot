@@ -1958,6 +1958,13 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
 .tokshop { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
 .tokshop .label { margin-right: 6px; color: var(--token); }
 .tcard .evo-neg { border-color: #6a080d; color: #ff9a9e; }
+
+/* ===== Copy ID: the code printed on the card, with the rarity cuts in red ===== */
+.cid{font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;white-space:nowrap}
+.cid b{font-weight:600;color:inherit}
+.cid i{font-style:normal;font-weight:700;color:var(--blood,#c4232b);margin-left:.45em;letter-spacing:.02em}
+.cid-big{display:block;font-size:clamp(15px,4.2vw,22px);margin:6px 0 2px;color:#ebe6da}
+.cid-big i{font-size:1.15em}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -2386,6 +2393,10 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   const cardCodeBase = card => card.set ? card.set + card.no.slice(2).padStart(2, "0") : "IS" + card.no;
   const cardCode = (card, serial) => { const pl = `${cardCodeBase(card)}-${String(serial).padStart(6, "0")}`; return `${pl}-${codeCheck(pl)}`; };
   const packCode = (key, serial) => { const pl = `PK-${key}-${String(serial).padStart(6, "0")}`; return `${pl}-${codeCheck(pl)}`; };
+  // The rarity mark: printed after a copy's ID as red cuts, matching the cut corners on the card.
+  const RAR_CUTS = { C: 0, U: 0, R: 1, H: 1, RR: 2, UR: 2, IR: 2, SIR: 2, HR: 3, CX: 3 };
+  const rarMark = rar => "/".repeat(RAR_CUTS[rar] || 0);
+  const cardIdHTML = (code, rar, big) => `<span class="cid${big ? " cid-big" : ""}"><b>${esc(code)}</b>${rarMark(rar) ? `<i>${rarMark(rar)}</i>` : ""}</span>`;
   function parseCode(raw) {
     const s = String(raw || "").toUpperCase().replace(/\s+/g, "");
     let m = s.match(/PK-([A-Z]{2})-(\d{6})-([A-Z0-9]{4})/);
@@ -3166,7 +3177,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     const copyRow = it => {
       const tag = it.slab ? `<span class="gpill${it.slab.black ? " bl" : ""}">IGC ${it.slab.g}</span>` : it.grading ? `<span class="gpill wait">At IGC · day ${it.grading.due}</span>` : `<span class="small-print">${condLine(it)}</span>`;
       const gain = itemVal(it) - costOf(it);
-      return `<div class="copy${it.phys ? " phys" : ""}"><div class="cp-l"><span>${it.evo != null ? `<b class="ppill evo-pill">EVO ${it.evo}</b>` : ""}${it.phys ? `<b class="ppill">Physical</b> #${String(it.serial).padStart(6, "0")}` : `No. ${String(it.serial).padStart(4, "0")}`}${it.rh ? " · Reverse Foil" : ""}${it.ed === "sketch" ? " · Sketch" : ""}</span>${it.phys ? `<span class="small-print">Scanned ${new Date(it.t).toLocaleDateString()} · ${ordinal(it.owners || 1)} owner · code ${esc(it.code)}</span>` : tag}</div>
+      return `<div class="copy${it.phys ? " phys" : ""}"><div class="cp-l"><span>${it.evo != null ? `<b class="ppill evo-pill">EVO ${it.evo}</b>` : ""}${it.phys ? `<b class="ppill">Physical</b> #${String(it.serial).padStart(6, "0")}` : `No. ${String(it.serial).padStart(4, "0")}`}${it.rh ? " · Reverse Foil" : ""}${it.ed === "sketch" ? " · Sketch" : ""}</span>${it.phys ? `<span class="small-print">${cardIdHTML(it.code, it.rar)} · scanned ${new Date(it.t).toLocaleDateString()} · ${ordinal(it.owners || 1)} owner</span>` : tag}</div>
         <div class="cp-v"><span class="num">${money(itemVal(it))}</span><small class="${gain >= 0 ? "up" : "dn"}">${gain >= 0 ? "+" : "−"}${money(Math.abs(gain))} since pulled</small></div>
         <div class="cp-a">${it.transit ? `<span class="small-print">In the mail · scan it when it arrives</span>` : `${it.phys ? `<button class="btn small ghost" data-release="${it.uid}">Transfer</button>` : ""}${!it.phys && !it.slab && !it.grading && it.ed !== "sketch" ? `<button class="btn small" data-gradeopen="${it.uid}">Grade</button>` : ""}${it.grading ? "" : `<button class="btn small" data-listopen="${it.uid}">List</button><button class="btn small" data-tradeopen="${it.uid}">Trade</button>`}${it.grading || it.phys ? "" : `<button class="btn small" data-sell="${it.uid}">Sell back ${money(itemSell(it))}</button>`}`}</div></div>
         <div class="gradeform" id="gf-${it.uid}" hidden>${IGC_TIERS.map(T => `<button class="btn small" data-grade="${it.uid}" data-tier="${T.id}">${T.name} · ${money(T.fee)} · ${T.days}d</button>`).join("")}<span class="small-print">Raw ${money(itemVal(it))} → IGC 10 would be ${money(itemVal(it) * gradeMult(card.rar, 10))}, IGC 8 ${money(itemVal(it) * gradeMult(card.rar, 8))}.</span></div>`;
@@ -4431,7 +4442,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     if (SS.scan) {
       const it = items[0], c = cardOf(it), R = crOf(c);
       $("stSummary").innerHTML = `<div class="sum-in">
-        <div class="sum-head"><span class="label">Physical card verified</span><div class="big num">${esc(BY_ID[it.id].name)}</div><span class="small-print"><b style="color:${R.col}">${R.sym} ${esc(R.name)}</b> · copy #${String(it.serial).padStart(6, "0")} · worth ${money(itemVal(it))}${it.fx ? ` · <b>${esc(fxName(it.fx))} variant, ${fxMult(it)}× value</b>` : ""}</span></div>
+        <div class="sum-head"><span class="label">Verified · this copy is yours</span>${cardIdHTML(it.code, c.rar, true)}<div class="big num">${esc(BY_ID[it.id].name)}</div><span class="small-print"><b style="color:${R.col}">${R.sym} ${esc(R.name)}</b> · ${ordinal(it.owners || 1)} owner · worth ${money(itemVal(it))}${it.fx ? ` · <b>${esc(fxName(it.fx))} variant, ${fxMult(it)}× value</b>` : ""}</span></div>
         <div class="fan"><div class="fan-c best phys-c" style="--c:${R.col};--i:0">${cardHTML(it)}</div></div>
         <div class="sum-btns"><button class="btn brass" id="sumKeep">Done</button><button class="btn" id="sumScan"><svg class="ico"><use href="#i-qr"/></svg>Scan another</button></div></div>`;
       $("stSummary").hidden = false; SS.sumAt = performance.now(); $("stHint").textContent = "";
@@ -5323,7 +5334,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   $("ageCheck").addEventListener("change", e => { $("gateEnter").disabled = !e.target.checked; });
   $("gateEnter").addEventListener("click", () => { state.ageOK = true; if (state.pendingCode) { const pc = state.pendingCode; delete state.pendingCode; setTimeout(() => redeem(pc), 400); } if (!state.history.length) grantSignup(); save(); renderAll(); $("gate").hidden = true; toast(`${money(SIGNUP_BONUS)} signup bonus added`); });
 
-  window.STIXX_PRINT = { BY_ID, MOVES, lineOf, crOf, CR, CR_ORDER, PACKS, LSETS, FX_STYLES, FX_VAR, SECRET, FTYPE, baseOf, itemVal, packEV, BUYBACK, fxForCode, fxName, cardHTML, cardCode, packCode, parseCode, CARD_BY_NO, PACK_BY_ID, CARDS, APP_URL, RETAIL_KEY };
+  window.STIXX_PRINT = { rarMark, RAR_CUTS, BY_ID, MOVES, lineOf, crOf, CR, CR_ORDER, PACKS, LSETS, FX_STYLES, FX_VAR, SECRET, FTYPE, baseOf, itemVal, packEV, BUYBACK, fxForCode, fxName, cardHTML, cardCode, packCode, parseCode, CARD_BY_NO, PACK_BY_ID, CARDS, APP_URL, RETAIL_KEY };
   renderAll(); showTab();
   netInit();
   let lastDay = mktDay();
