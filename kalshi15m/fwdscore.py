@@ -352,7 +352,7 @@ def score(download=True, log=print):
     C = json.loads(_cands_path().read_text())
     coins = C["coins"]
     FWD_DIR.mkdir(parents=True, exist_ok=True)
-    if download:
+    if download is True:                   # "tape": only the trade windows this batch needs (data already downloaded)
         for s in coins:
             mk = fetch_markets(s, log)
             fetch_spot(s, log)
@@ -391,8 +391,9 @@ def score(download=True, log=print):
     log(f"  fills ready ({time.time() - t0:.0f}s)")
     rows = []
     try:                                   # the real-money rules: keep their bets one by one (fwd_live_bets.json)
-        # gen 1 only: the live rules came from gen 1, and gen 2 reuses the same id pattern for other settings
-        live_ids = {g.get("id") for g in json.loads((ROOT / "kalshi15m" / "real_top5_live.json").read_text()).get("golden_rules") or []} if GEN == 1 else set()
+        # gen 1 and evolved batches (gen 3+, ids carry "@g<N>" on the live config); gen 2 reuses gen 1's id pattern
+        cfg_ids = {g.get("id") for g in json.loads((ROOT / "kalshi15m" / "real_top5_live.json").read_text()).get("golden_rules") or []}
+        live_ids = cfg_ids if GEN == 1 else {i.rsplit("@g", 1)[0] for i in cfg_ids if i.endswith(f"@g{GEN}")} if GEN >= 3 else set()
     except (OSError, ValueError):
         live_ids = set()
     live_bets, daily_out = {}, {}

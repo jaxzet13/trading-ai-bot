@@ -172,6 +172,6 @@ def main(args=None):
         fwdwalk.walk()
     elif args[0] == "score":
         from . import fwdscore
-        fwdscore.score(download="no-download" not in args)
+        fwdscore.score(download="tape" if "tape" in args else "no-download" not in args)
     else:
-        sys.exit("usage: python -m kalshi15m fwdlab pick [WORKERS] | score [no-download] | walk")
+        sys.exit("usage: python -m kalshi15m fwdlab pick [WORKERS] | score [no-download | tape] | walk")

@@ -35,6 +35,7 @@ How the spot history is kept (identical to the batch panel, which uses Coinbase 
 """
 from __future__ import annotations
 
+import json
 import math
 import os
 import threading
@@ -181,7 +182,14 @@ SINGLE = [
     {"id": "fv_season:KXHYPE15M:4", "family": "fv_season", "scope": "KXHYPE15M", "t": 1.84, "kind": "hold",
      "params": {"start": 4, "end": 11, "edge": 0.08, "band": "20-80", "vol": "tod_ewma60", "vm": 1.1}},
 ]
-ORDER = EXTRA + GOLDEN + SINGLE                               # best first
+# Rules the automatic rotation (kalshi15m/rotate.py) promoted from the forward lab, at the account holder's request
+# (Nov 19: "make sure all the most profitable strategies are always being updated into it and the bad strategies are
+# getting taken away"). Frozen params exactly as their batch froze them; ids end in "@g<batch>" for batches 2+.
+_EVOLVED_PATH = Path(__file__).resolve().parent / "evolved_rules.json"
+EVOLVED = json.loads(_EVOLVED_PATH.read_text())["rules"] if _EVOLVED_PATH.exists() else []
+for _r in EVOLVED:
+    _r["kind"] = lab3.FAMILIES[_r["family"]]["kind"]
+ORDER = EXTRA + GOLDEN + SINGLE + EVOLVED                     # best first
 RULES = {r["id"]: r for r in ORDER}
 PRIORITY = {r["id"]: i for i, r in enumerate(ORDER)}
 

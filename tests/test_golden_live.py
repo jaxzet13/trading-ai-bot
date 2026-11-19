@@ -55,7 +55,7 @@ def test_rule_table_matches_lab3_results():
     assert [r["t"] for r in GL.GOLDEN] == sorted([r["t"] for r in GL.GOLDEN], reverse=True)
     extra = [r["id"] for r in GL.EXTRA if r["scope"] == "ALL"]       # tested combinations, ranked first
     assert GL.rules_for("KXBTC15M") == extra + [r["id"] for r in GL.GOLDEN if r["scope"] == "ALL"]
-    single = lambda c: sum(r["scope"] == c for r in GL.SINGLE)            # single-coin rules added after GOLDEN
+    single = lambda c: sum(r["scope"] == c for r in GL.SINGLE + GL.EVOLVED)   # single-coin rules added after GOLDEN
     assert len(GL.rules_for("KXDOGE15M")) == 13 + len(extra) + single("KXDOGE15M")
     assert len(GL.rules_for("KXHYPE15M")) == 13 + len(extra) + single("KXHYPE15M")
     assert abs(GL.RULES["sized:ALL"]["norm"] - 0.26276) < 1e-5 and abs(GL.RULES["sized:KXHYPE15M"]["norm"] - 0.22610) < 1e-5
@@ -64,7 +64,9 @@ def test_rule_table_matches_lab3_results():
     zc = next(c for c in real["candidates"] if c["id"] == "scalp:KXZEC15M:taker+exit")
     z = GL.RULES["scalp:KXZEC15M"]
     assert z["params"] == zc["params"] and z["family"] == zc["family"] and z["scope"] == zc["scope"] == "KXZEC15M"
-    assert z["kind"] == lab3.FAMILIES[z["family"]]["kind"] == "scalp" and GL.rules_for("KXZEC15M")[-1] == z["id"]
+    evolved = {r["id"] for r in GL.EVOLVED}                                # rotation-promoted rules come after SINGLE
+    assert z["kind"] == lab3.FAMILIES[z["family"]]["kind"] == "scalp" and \
+        [i for i in GL.rules_for("KXZEC15M") if i not in evolved][-1] == z["id"]
 
 
 def test_sized_stake_formula():

@@ -56,6 +56,10 @@ def main():
     tb.add_argument("args", nargs="*")
     fl = sub.add_parser("fwdlab", help="forward lab: freeze thousands of strategies (pick), score them on new days with Kalshi's trade records (score)")
     fl.add_argument("args", nargs="*", help="pick [WORKERS] | score [no-download]")
+    ev = sub.add_parser("evolve", help="breed new strategies from the forward-test leaders, screen and freeze them for a fresh forward test; loop runs 24/7 (see evolve.py)")
+    ev.add_argument("args", nargs="*", help="once [WORKERS] | loop [WORKERS] | board")
+    ro = sub.add_parser("rotate", help="which strategies should trade real money: walk-forward test of the rotation policy, apply only if it beats the current set (see rotate.py)")
+    ro.add_argument("args", nargs="*", help="[apply]")
     zf = sub.add_parser("zecfwd", help="ZEC forward test: replay the frozen ZEC rule on markets since Nov 4 on Kalshi's trade tape, check the paper run, grade the real-money gate")
     zf.add_argument("args", nargs="*", help="--no-download")
     lrm = sub.add_parser("labrm", help="real-money backtest of the golden strategies (real fills from Kalshi trades, the account limits; see labrm.py)")
@@ -130,6 +134,12 @@ def main():
     elif a.cmd == "fwdlab":
         from . import fwdlab
         fwdlab.main(a.args)
+    elif a.cmd == "evolve":
+        from . import evolve
+        evolve.main(a.args)
+    elif a.cmd == "rotate":
+        from . import rotate
+        rotate.main(a.args)
     elif a.cmd == "zecfwd":
         from . import zecfwd
         zecfwd.main(a.args)
