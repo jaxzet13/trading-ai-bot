@@ -81,6 +81,30 @@ def walk(daily_path=LABDIR / "fwd_daily.json", cands_path=LABDIR / "fwd_candidat
             out["methods"][f"top{K}_coins"] = {"pick_per_day": round(st.mean(top), 4), "pick_days_up": sum(x > 0 for x in top),
                                                "all_per_day": round(st.mean(allc), 4), "n_days": len(top),
                                                "beats_all": st.mean(top) > st.mean(allc), "current_pick": now}
+    # Families: one strategy type on one coin (e.g. fv_dyn:KXZEC15M), all its parameter settings averaged. Ranking
+    # families instead of single settings asks whether the IDEA keeps working, which is less noisy than one setting.
+    fam = defaultdict(list)
+    for c in D:
+        fam[c.rsplit(":", 1)[0]].append(c)
+    fday = lambda f, d: st.mean(D[c].get(str(d), [0])[0] for c in fam[f])
+    fbets = lambda f, ds: sum(_agg(D[c], ds)[0] for c in fam[f]) / len(fam[f])
+    for K in (3, 10):
+        top, allf = [], []
+        for i, d in enumerate(days):
+            if i < WARMUP_DAYS:
+                continue
+            elig = [f for f in fam if fbets(f, days[:i]) >= MIN_BETS / 3]
+            if len(elig) < K:
+                continue
+            rank = sorted(elig, key=lambda f: -sum(fday(f, x) for x in days[:i]))
+            top.append(st.mean(fday(f, d) for f in rank[:K]))
+            allf.append(st.mean(fday(f, d) for f in elig))
+        if top:
+            elig = [f for f in fam if fbets(f, days) >= MIN_BETS / 3]
+            now = sorted(elig, key=lambda f: -sum(fday(f, x) for x in days))[:K]
+            out["methods"][f"top{K}_families"] = {"pick_per_day": round(st.mean(top), 4), "pick_days_up": sum(x > 0 for x in top),
+                                                  "all_per_day": round(st.mean(allf), 4), "n_days": len(top),
+                                                  "beats_all": st.mean(top) > st.mean(allf), "current_pick": now}
     won = sum(m["beats_all"] for m in out["methods"].values())
     out["summary"] = (f"{won} of {len(out['methods'])} selection methods beat the plain average of all candidates "
                       f"over {out['test_days']} walk-forward test days")
