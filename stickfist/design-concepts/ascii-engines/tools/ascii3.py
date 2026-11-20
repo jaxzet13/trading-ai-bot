@@ -62,7 +62,7 @@ def cell_colours(style, pal, t):
 
 # ------------------------------------------------------------------ engines
 def eng_braille(gray, cols, S, style, pal, black, white, gamma, fontname, seed=7, **_):
-    cw = W * S / cols; chh = cw * 2.0; rows = int(ART_H * S / chh)
+    cw = W * S / cols; chh = cw * A.ASPECT; rows = int(ART_H * S / chh)
     big = cv2.resize(gray, (cols * 2, rows * 4), interpolation=cv2.INTER_AREA)
     t = tone(big, black, white, gamma)
     rng = np.random.default_rng(seed)
@@ -85,7 +85,7 @@ def eng_braille(gray, cols, S, style, pal, black, white, gamma, fontname, seed=7
 
 
 def eng_edge(gray, cols, S, style, pal, black, white, gamma, fontname, edge_k=0.55, **_):
-    cw = W * S / cols; chh = cw * 1.73; rows = int(ART_H * S / chh)
+    cw = W * S / cols; chh = cw * A.ASPECT; rows = int(ART_H * S / chh)
     small = cv2.resize(gray, (cols, rows), interpolation=cv2.INTER_AREA)
     t = tone(small, black, white, gamma)
     tb = cv2.GaussianBlur(t, (0, 0), 0.8)
@@ -112,7 +112,7 @@ def eng_edge(gray, cols, S, style, pal, black, white, gamma, fontname, edge_k=0.
 
 
 def eng_blocks(gray, cols, S, style, pal, black, white, gamma, fontname, levels=6, smooth_until=0.0, smooth_band=0.22, **_):
-    cw = W * S / cols; chh = cw * 2.0; rows = int(ART_H * S / chh)
+    cw = W * S / cols; chh = cw * A.ASPECT; rows = int(ART_H * S / chh)
     big = cv2.resize(gray, (cols, rows * 2), interpolation=cv2.INTER_AREA)
     t = tone(big, black, white, gamma)
     q = np.round(t * (levels - 1)) / (levels - 1)                                     # a few flat colours: pixel art
@@ -136,7 +136,7 @@ def eng_blocks(gray, cols, S, style, pal, black, white, gamma, fontname, levels=
 
 
 def eng_text(gray, cols, S, style, pal, black, white, gamma, fontname, text='', thr=0.12, **_):
-    cw = W * S / cols; chh = cw * 1.73; rows = int(ART_H * S / chh)
+    cw = W * S / cols; chh = cw * A.ASPECT; rows = int(ART_H * S / chh)
     small = cv2.resize(gray, (cols, rows), interpolation=cv2.INTER_AREA)
     t = fade_rows(tone(small, black, white, gamma), rows, chh, S)
     font, adv = font_for(fontname, cw)
