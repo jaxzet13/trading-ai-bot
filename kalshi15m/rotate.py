@@ -147,12 +147,33 @@ def rid(g, c):
     return c["id"] if g == 1 else f"{c['id']}@g{g}"
 
 
+CLONE_CORR = 0.8          # same strategy type and coin as a removed rule, daily P&L this correlated: blocked too
+
+
+def _corr(a, b):
+    ds = sorted(set(a) | set(b))
+    if len(ds) < 5:
+        return 0.0
+    x = [a.get(d, [0])[0] for d in ds]
+    y = [b.get(d, [0])[0] for d in ds]
+    mx, my = sum(x) / len(x), sum(y) / len(y)
+    sxy = sum((u - mx) * (v - my) for u, v in zip(x, y))
+    sxx, syy = sum((u - mx) ** 2 for u in x), sum((v - my) ** 2 for v in y)
+    return sxy / math.sqrt(sxx * syy) if sxx > 0 and syy > 0 else 0.0
+
+
 def eligible(ALL, before, fams, gone=None):
     rows = []
     gone = removed_ids() if gone is None else gone
+    gone_daily = {(c["family"], c["scope"]): [] for g, _, c, _ in ALL if rid(g, c) in gone}
+    for g, _, c, daily in ALL:
+        if rid(g, c) in gone:
+            gone_daily[(c["family"], c["scope"])].append(daily)
     for g, start, c, daily in ALL:
         if rid(g, c) in gone:
             continue
+        if any(_corr(daily, gd) >= CLONE_CORR for gd in gone_daily.get((c["family"], c["scope"]), [])):
+            continue                          # a near-copy of a rule removed for losing real money
         if c["scope"] == "ALL" or c["family"] not in fams or (c.get("kind") == "sized" and not c.get("norms")):
             continue
         if (before * 86400 - start) / 86400 < MIN_DAYS:

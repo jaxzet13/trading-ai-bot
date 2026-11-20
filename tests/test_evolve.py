@@ -91,3 +91,15 @@ def test_parents_skip_exact_duplicates():
     b = dict(a, id="fv_dyn:KXZEC15M:19", params={"x": 2}, key="b")                 # identical forward record
     c = dict(_parent("fv_dyn", "KXZEC15M", {"x": 3}, t=3.0, filled=20), id="fv_dyn:KXZEC15M:8", key="c")
     assert [r["id"] for r in E.parents([a, b, c])] == ["fv_dyn:KXZEC15M:18", "fv_dyn:KXZEC15M:8"]
+
+
+def test_near_copies_of_removed_rules_are_blocked():
+    days = list(range(20000, 20020))
+    ALL = _ALL(days)
+    twin = {"id": "fv_drift:KXETH15M:7", "family": "fv_drift", "scope": "KXETH15M", "params": {"i": 7}}
+    ALL.append((1, days[0] * 86400, twin, {d: [1.0 + (d % 3) * 0.01, 5, 0.5] for d in days}))
+    for g, s, c, daily in ALL:                    # give the removed rule some day-to-day variation to correlate with
+        if c["id"] == "fv_drift:KXETH15M:1":
+            daily.update({d: [1.0 + (d % 3) * 0.01, 5, 0.5] for d in days})
+    ids = {r["rid"] for r in R.eligible(ALL, days[-1], {"fv_drift"}, gone={"fv_drift:KXETH15M:1"})}
+    assert "fv_drift:KXETH15M:7" not in ids and "fv_drift:KXNEAR15M:3" in ids
