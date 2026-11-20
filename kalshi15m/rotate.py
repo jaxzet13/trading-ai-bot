@@ -38,6 +38,78 @@ MAX_RULES, MIN_DAYS, MIN_FILLS = 5, 7.0, 30
 MIN_TEST_DAYS = 5
 HYSTERESIS = 0.5          # a challenger's strength must beat the incumbent's by this much to replace it
 MIN_GAP_S = 20 * 3600     # at most one rotation a day
+# Account holder, Nov 20: "remove anything thats unprofitable after 25+ bets". A live rule whose REAL bets number
+# CUT_MIN_BETS or more and add up to CUT_MAX_PNL or less is taken out at once, whatever the walk-forward says, and
+# never comes back (kalshi15m/removed_rules.json).
+CUT_MIN_BETS, CUT_MAX_PNL = 25, 0.0
+REAL_LOG = ROOT / "data" / "kalshi15m" / "real_top5_live_log.jsonl"
+REMOVED = ROOT / "kalshi15m" / "removed_rules.json"
+
+
+def removed_ids():
+    return set(json.loads(REMOVED.read_text())["rules"]) if REMOVED.exists() else set()
+
+
+def real_record(path=REAL_LOG):
+    """{rule id: [settled real bets, real P&L]} from the live run's log (each settlement credited to the rule that
+    placed the order on that market)."""
+    rule, out = {}, {}
+    if not Path(path).exists():
+        return out
+    for ln in open(path):
+        try:
+            e = json.loads(ln)
+        except ValueError:
+            continue
+        if e.get("event") == "order_intent" and e.get("rule"):
+            rule[e.get("ticker")] = e["rule"]
+        elif e.get("event") == "settle" and e.get("ticker") in rule:
+            a = out.setdefault(rule[e["ticker"]], [0, 0.0])
+            a[0] += 1
+            a[1] += float(e.get("pnl") or 0)
+    return out
+
+
+def cut_losers(apply=False, log=print):
+    """Remove live rules that lost (or broke even) over 25+ real bets. -> list of removed ids."""
+    cfg = json.loads(CFG.read_text())
+    rec = real_record()
+    cut = [r["id"] for r in cfg["golden_rules"]
+           if rec.get(r["id"], [0, 0])[0] >= CUT_MIN_BETS and rec[r["id"]][1] <= CUT_MAX_PNL]
+    if not cut:
+        return []
+    keep = [r for r in cfg["golden_rules"] if r["id"] not in cut]
+    desc = ", ".join(f"{i} (${rec[i][1]:+.2f} on {rec[i][0]} bets)" for i in cut)
+    if not keep:
+        log(f"  rotate: every live rule is unprofitable after {CUT_MIN_BETS}+ bets ({desc}); left as is, tell the account holder")
+        return []
+    if not apply:
+        log(f"  rotate: WOULD remove {desc} (dry run)")
+        return []
+    backup = CFG.read_text()
+    new = dict(cfg)
+    new["golden_rules"] = keep
+    new["series"] = sorted({r["scope"] for r in keep})
+    new["_note"] = cfg["_note"] + (f" {time.strftime('%b %d %H:%M UTC', time.gmtime())}: removed {desc}: unprofitable "
+                                   f"after {CUT_MIN_BETS}+ real bets (account holder's rule, Nov 20).")
+    CFG.write_text(json.dumps(new, indent=1) + "\n")
+    chk = subprocess.run([sys.executable, "-c", "import sys; from kalshi15m import real; real.load_config(sys.argv[1])", str(CFG)],
+                         cwd=ROOT, capture_output=True, text=True)
+    if chk.returncode != 0:
+        CFG.write_text(backup)
+        log("  rotate: removal reverted, config failed to load")
+        return []
+    gone = json.loads(REMOVED.read_text()) if REMOVED.exists() else {"rules": [], "why": {}}
+    for i in cut:
+        if i not in gone["rules"]:
+            gone["rules"].append(i)
+        gone["why"][i] = {"ts": int(time.time()), "real_bets": rec[i][0], "real_pnl": round(rec[i][1], 4)}
+    REMOVED.write_text(json.dumps(gone, indent=1))
+    with open(ROT_LOG, "a") as f:
+        f.write(json.dumps({"ts": int(time.time()), "applied": True, "removed": cut, "reason": f"unprofitable after {CUT_MIN_BETS}+ real bets",
+                            "live_before": [r["id"] for r in cfg["golden_rules"]], "live_after": [r["id"] for r in keep]}) + "\n")
+    log(f"  rotate: REMOVED {desc}")
+    return cut
 
 
 def _live_fams():
@@ -75,9 +147,12 @@ def rid(g, c):
     return c["id"] if g == 1 else f"{c['id']}@g{g}"
 
 
-def eligible(ALL, before, fams):
+def eligible(ALL, before, fams, gone=None):
     rows = []
+    gone = removed_ids() if gone is None else gone
     for g, start, c, daily in ALL:
+        if rid(g, c) in gone:
+            continue
         if c["scope"] == "ALL" or c["family"] not in fams or (c.get("kind") == "sized" and not c.get("norms")):
             continue
         if (before * 86400 - start) / 86400 < MIN_DAYS:
@@ -192,6 +267,7 @@ def _rule_entry(r):
 
 def run(apply=False, log=print):
     from . import golden_live as GL
+    cut_losers(apply, log)
     ALL = _load()
     fams = _live_fams()
     cfg = json.loads(CFG.read_text())

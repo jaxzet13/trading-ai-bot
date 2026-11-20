@@ -67,3 +67,20 @@ def test_parents_fixed_top_and_varied_rest():
     assert len(a) == len(b) == E.N_PARENTS
     assert [r["id"] for r in a[:15]] == [r["id"] for r in b[:15]] == [f"fv_drift:C{i}:1" for i in range(15)]
     assert {r["id"] for r in a} != {r["id"] for r in b}
+
+
+def test_real_record_credits_the_rule_that_bet(tmp_path):
+    log = tmp_path / "log.jsonl"
+    ev = [{"event": "order_intent", "ticker": "A-1", "rule": "r1"}, {"event": "settle", "ticker": "A-1", "pnl": -0.5},
+          {"event": "order_intent", "ticker": "B-1", "rule": "r2"}, {"event": "settle", "ticker": "B-1", "pnl": 0.4},
+          {"event": "settle", "ticker": "C-1", "pnl": 9.0}]                     # no intent: credited to nobody
+    log.write_text("\n".join(json.dumps(e) for e in ev) + "\n")
+    rec = R.real_record(log)
+    assert rec == {"r1": [1, -0.5], "r2": [1, 0.4]}
+
+
+def test_removed_rules_never_eligible():
+    days = list(range(20000, 20020))
+    ALL = _ALL(days)
+    assert any(r["rid"] == "fv_drift:KXETH15M:1" for r in R.eligible(ALL, days[-1], {"fv_drift"}, gone=set()))
+    assert not any(r["rid"] == "fv_drift:KXETH15M:1" for r in R.eligible(ALL, days[-1], {"fv_drift"}, gone={"fv_drift:KXETH15M:1"}))
