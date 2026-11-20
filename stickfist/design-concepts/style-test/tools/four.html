@@ -1,0 +1,44 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#222;padding:30px;display:flex;flex-wrap:wrap;gap:30px}
+.card{width:750px;height:1050px;position:relative;overflow:hidden;background:#09090a;flex:none}
+.card>img.art{position:absolute;inset:0;width:100%;height:100%}
+.nm{position:absolute;font-family:Archivo;font-weight:900;font-stretch:62%;font-variation-settings:'wdth' 62;line-height:.8;text-transform:uppercase;white-space:nowrap}
+.id{position:absolute;font-family:'IBM Plex Mono';font-size:14px;font-weight:500;letter-spacing:.36em;white-space:nowrap}
+.id i{font-style:normal;font-weight:700;letter-spacing:.04em;margin-left:.5em}
+
+/* 1 screenprint */
+#A .nm{right:34px;top:26px;font-size:150px;color:#ece6d9;text-shadow:0 0 22px rgba(9,9,10,.9)}
+#A .id{left:0;right:0;bottom:30px;text-align:center;color:rgba(236,230,217,.8)}
+#A .id i{color:#e0202c}
+#A .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,9,10,.55) 0,rgba(9,9,10,0) 14%),linear-gradient(0deg,#09090a 0,rgba(9,9,10,.9) 5%,rgba(9,9,10,0) 13%)}
+/* 2 papercut */
+#B .nm{left:0;right:0;bottom:62px;text-align:center;font-size:150px;color:#ece6d9;text-shadow:0 6px 0 rgba(9,9,10,.9),0 0 30px rgba(9,9,10,.85)}
+#B .id{left:0;right:0;bottom:26px;text-align:center;color:rgba(236,230,217,.75)}
+#B .id i{color:#ff4a4a}
+#B .shade{position:absolute;inset:0;background:linear-gradient(0deg,rgba(9,9,10,.85) 0,rgba(9,9,10,0) 24%)}
+/* 3 chrome */
+#C .nm{left:0;right:0;bottom:60px;text-align:center;font-size:150px;background:linear-gradient(180deg,#f4f5f8 0,#9fa3ad 38%,#2a2c33 52%,#b9bcc6 70%,#f4f5f8 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 #000) drop-shadow(0 0 14px rgba(0,0,0,.8))}
+#C .id{left:0;right:0;bottom:26px;text-align:center;color:#a9acb6}
+#C .id i{color:#e0202c}
+/* 4 ink wash */
+#D .nm{left:46px;bottom:96px;font-size:150px;color:#0b0b0c;opacity:.94;letter-spacing:-.004em}
+#D .id{left:48px;bottom:56px;color:#2b2926}
+#D .id i{color:#b3131c}
+</style></head><body>
+<div class="card" id="A"><img class="art" src="out/F_A.png"><div class="shade"></div><div class="nm">Phantom</div><div class="id">IS019-000007-JLVH<i>/</i></div></div>
+<div class="card" id="B"><img class="art" src="out/F_B.png"><div class="shade"></div><div class="nm">Harvester</div><div class="id">IS038-000012-F5QS<i>//</i></div></div>
+<div class="card" id="C"><img class="art" src="out/F_C.png"><div class="nm">Monolith</div><div class="id">IS022-000003-LHYW<i>//</i></div></div>
+<div class="card" id="D"><img class="art" src="out/F_D.png"><div class="nm">Ronin</div><div class="id">IS006-000041-4G9Y</div></div>
+<script>
+for (const h of document.querySelectorAll('.nm')) {
+  let fs = 220; h.style.fontSize = fs + 'px';
+  const r = document.createRange(); r.selectNodeContents(h);
+  const max = h.closest('#A') ? 340 : 650;
+  while (r.getBoundingClientRect().width > max && fs > 60) { fs -= 2; h.style.fontSize = fs + 'px'; }
+}
+</script>
+</body></html>
