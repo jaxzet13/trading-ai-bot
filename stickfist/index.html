@@ -428,8 +428,6 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .rays.on { opacity: 1; }
 .rays { display: none; }
 #aura { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
-.stage.void::after { opacity: .97; transition: opacity .35s; }
-.sc.lift .tilt { translate: 0 calc(var(--lift, 0) * -5%); rotate: calc(var(--spin, 0) * 1deg); }
 @keyframes spin { to { transform: rotate(360deg); } }
 .st-bar { position: relative; z-index: 7; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px max(16px, env(safe-area-inset-left, 0px)) 0; }
 .st-bar .pname { font-family: var(--f-display); font-style: italic; font-size: 22px; }
@@ -485,23 +483,7 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .st-tray:empty { display: none; }
 .st-tray .mini { width: 62px; animation: mini .4s cubic-bezier(.2,1.3,.4,1) both; }
 @keyframes mini { from { transform: translateY(30px) scale(.6); opacity: 0; } }
-.cut { position: fixed; inset: 0; z-index: 45; background: #000; display: grid; place-items: center; overflow: hidden; cursor: pointer; }
-.cut video, .cut canvas { width: 100%; height: 100%; object-fit: contain; transition: filter .5s, opacity .5s; }
-.cut canvas { width: min(100vw, calc(100vh * 16 / 9)); height: auto; aspect-ratio: 16 / 9; }
-.cut.ended video, .cut.ended canvas { filter: brightness(.35) saturate(.6); }
-.cut-bar { position: absolute; left: 0; right: 0; height: 0; background: #000; transition: height .5s cubic-bezier(.2,.8,.2,1); z-index: 2; }
-.cut-bar.t { top: 0; } .cut-bar.b { bottom: 0; }
-.cut.on .cut-bar { height: 11vh; } .cut.on .cut-bar.b { height: max(11vh, 96px); }
-.cut-tag { position: absolute; left: max(28px, 5vw); bottom: max(10px, 1.6vh); z-index: 3; display: grid; gap: 2px; opacity: 0; transform: translateX(-40px); transition: opacity .5s .5s, transform .6s .5s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
-.cut.on .cut-tag { opacity: 1; transform: none; }
-.cut-r { font-family: var(--f-mono); font-size: clamp(11px, 1.3vw, 15px); letter-spacing: .4em; text-transform: uppercase; color: var(--rc); }
-.cut-n { font-family: var(--f-display); font-style: italic; font-weight: 700; font-size: clamp(34px, 6.4vh, 64px); line-height: .9; color: #fff; -webkit-text-stroke: 1px rgba(0,0,0,.35); }
-.cut-card { position: absolute; z-index: 4; width: min(300px, 62vw, 50vh); animation: cutslam .6s cubic-bezier(.2,1.4,.4,1) both; }
-.cut-card .tcard { --go: 1; }
-@keyframes cutslam { from { transform: scale(2.6) rotate(-8deg); opacity: 0; filter: blur(6px); } to { transform: none; opacity: 1; filter: none; } }
-.cut-cont { position: absolute; z-index: 4; bottom: max(14px, 2.4vh); right: max(28px, 5vw); font-family: var(--f-mono); font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: #e9e4d8; animation: blink 1.4s infinite; }
 @keyframes blink { 50% { opacity: .35; } }
-.cut .cut-skip { position: absolute; z-index: 5; top: calc(11vh + 14px); right: max(16px, 3vw); left: auto; bottom: auto; width: auto; height: auto; justify-self: end; align-self: start; }
 .flash { position: fixed; inset: 0; z-index: 46; pointer-events: none; opacity: 0; background: #fff; }
 .flash.on { animation: flash .9s ease-out; }
 @keyframes flash { 0% { opacity: var(--fo, .8); } 100% { opacity: 0; } }
@@ -569,7 +551,6 @@ dl.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
 .pocket .pn { position: absolute; left: 0; right: 0; bottom: 36%; text-align: center; font-family: var(--f-mono); font-size: 13px; letter-spacing: .14em; color: rgba(233,228,216,.42); }
 .pocket .pr { position: absolute; left: 0; right: 0; bottom: 26%; text-align: center; font-size: 12px; opacity: .7; }
 .pocket .pc { position: absolute; top: -6px; right: -6px; z-index: 3; font-family: var(--f-mono); font-size: 11px; font-weight: 600; background: var(--bone); color: var(--void); padding: 2px 6px; border-radius: 10px; }
-.pocket .pplay { position: absolute; top: -6px; left: -6px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; background: rgba(179,18,27,.92); color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.6); }
 .pfoot { margin-top: 10px; text-align: center; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(233,228,216,.35); }
 .spine { display: flex; flex-direction: column; justify-content: space-around; align-items: center; background: linear-gradient(90deg, rgba(0,0,0,.5), rgba(0,0,0,.15) 50%, rgba(0,0,0,.5)); }
 .spine i { width: 30px; height: 16px; border-radius: 9px; background: linear-gradient(180deg, #f1f1f1, #8e8e94 45%, #d9d9de 60%, #6d6d72); box-shadow: 0 2px 4px rgba(0,0,0,.6); }
@@ -2175,14 +2156,6 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   </div>
   <div class="st-summary" id="stSummary" hidden></div>
 </div>
-<div class="cut" id="cut" hidden>
-  <video id="cutVideo" playsinline preload="auto"></video><canvas id="cutCanvas" width="1280" height="720" hidden></canvas>
-  <div class="cut-bar t"></div><div class="cut-bar b"></div>
-  <div class="cut-tag"><span id="cutRarity" class="cut-r">Rare pull · cutscene</span><span id="cutName" class="cut-n">Ronin</span></div>
-  <div class="cut-card" id="cutCard" hidden></div>
-  <div class="cut-cont" id="cutCont" hidden>Click to continue</div>
-  <button class="btn small ghost cut-skip" id="cutSkip">Skip</button>
-</div>
 <div class="flash" id="flash"></div>
 
 <!-- Fight -->
@@ -2337,7 +2310,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   ];
   const BY_ID = Object.fromEntries(FIGHTERS.map(f => [f.id, f]));
   // Every card is its own fighter. Cards that reuse an original fighter's look get their own name; they keep that
-  // fighter's stats, moves, art pose and cutscene through .base.
+  // fighter's stats, moves, art pose through .base.
   const VARIANTS = {"FB1":["rime","Rime"],"FB2":["sleet","Sleet"],"FB3":["hailshot","Hailshot"],"FB4":["shardblade","Icepick"],"FB5":["blizzard","Blizzard"],"FB6":["whiteout","Whiteout"],"VN1":["corrode","Corrode"],"VN2":["mire","Mire"],"VN3":["hex","Hex"],"VN4":["viper","Viper"],"VN5":["acid","Acid"],"VN6":["plague","Plague"],"021":["mourne","Mourne"],"022":["monolith","Monolith"],"023":["daimyo","Daimyo"],"024":["cipher","Cipher"],"026":["kensei","Kensei"],"027":["havoc","Havoc"],"028":["glyph","Omen"],"029":["gemini","Jinx"],"030":["quiver","Deadeye"],"031":["rattle","Riot"],"032":["brickfist","Mauler"],"033":["stiletto","Stiletto"],"034":["aegis","Lockdown"],"035":["lancer","Skewer"],"036":["sensei","Hermit"],"037":["cinder","Cinder"],"038":["harvester","Harvester"],"039":["oblivion","Oblivion"],"040":["emperor","Warlord"],"041":["gyre","Shackle"],"042":["wraith","Wraith"],"043":["eclipse","Eclipse"],"044":["sunblade","Kingpin"],"045":["epoch","Zero Hour"],"046":["quake","Quake"],"047":["doppel","Mimic"],"BM1":["bloodfang","Bloodfang"],"BM2":["thorn","Thorn"],"BM3":["penumbra","Penumbra"],"BM4":["vein","Vein"],"BM5":["hourglass","Hourglass"],"BM6":["nightfall","Nightfall"],"048":["kingmaker","Kingmaker"],"BM7":["bloodline","Bloodline"],"FB7":["permafrost","Permafrost"],"VN7":["outbreak","Outbreak"],"GS7":["goldstandard","Gold Standard"],"GS1":["willow","Willow"],"GS2":["crane","Crane"],"GS3":["rampart","Rampart"],"GS4":["regent","Regent"],"GS5":["heron","Heron"],"GS6":["tsunami","Tsunami"]};
   for (const c of CARDS) { const v = VARIANTS[c.no]; if (!v) continue; const b = BY_ID[c.id]; const f = Object.assign({}, b, { id: v[0], name: v[1], base: b.id }); FIGHTERS.push(f); BY_ID[f.id] = f; c.id = f.id; }
   const baseOf = id => (BY_ID[id] && BY_ID[id].base) || id;
@@ -2421,7 +2394,6 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
 
   // Fight films: every matchup needs two traced films, one where each fighter wins. The winner is rolled from the fighters'
   // stats before the film plays, then that ending is shown. A matchup unlocks only once both endings exist.
-  // Footage used for pull cutscenes is never used as a fight.
   const FILMS = [
     // { no: "01", a: "ronin", b: "breaker", title: "…", takes: { ronin: "films/ronin_breaker_A.mp4", breaker: "films/ronin_breaker_B.mp4" } },
   ];
@@ -2468,7 +2440,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   const MKT_T = 900;   // days for most of the scarcity trend to play out (~2 real weeks): packs dry up, supply stops growing
   const PER_PACK = { C: .4, U: .2, R: .05, H: .02, RR: .007, UR: .0025, IR: .003, SIR: .0006, HR: .0004, CX: .00008 };   // copies of one card per pack opened, by rarity
   const LIMITED = [["was vaulted: pulled from every pack", true], ["print run ended early", true], ["holders-only Arena event announced", false], ["a pro player is buying every copy", false], ["error print found in the first wave", false]];
-  const MKT_NEWS = [["won the Ink Cup", .2], ["cutscene went viral", .28], ["opened live by a big streamer", .14], ["topped the Arena win rate", .12],
+  const MKT_NEWS = [["won the Ink Cup", .2], ["pull went viral", .28], ["opened live by a big streamer", .14], ["topped the Arena win rate", .12],
     ["reprint announced", -.16], ["counterfeits reported", -.12], ["nerfed in the Arena", -.1], ["featured in a set trailer", .16]];
   const mktDay = () => Math.max(0, Math.floor((Date.now() - MKT_EPOCH) / DAY_MS) + ((typeof state !== "undefined" && state.dayOffset) || 0));
   function hashStr(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -3135,7 +3107,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
       </div><div class="slab-well">${cardHTML(it)}</div></div>`;
   }
   function showGradeReveal() {
-    if (!gradeQueue.length || !$("cardModal").hidden || !$("cut").hidden || !stage.hidden) return;
+    if (!gradeQueue.length || !$("cardModal").hidden || !stage.hidden) return;
     const uid = gradeQueue.shift(), it = state.vault.find(x => x.uid === uid); if (!it) return;
     openCardModal(cardOf(it).no, uid, true);
   }
@@ -3147,8 +3119,8 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   function pocketHTML(card) {
     const copies = copiesOf(card.no), R = crOf(card), f = BY_ID[card.id];
     if (!copies.length) return `<div class="pocket empty-p" title="${esc(f.name)} · ${R.name} · not collected"><div class="ghostcard"><img src="${portrait(f)}" alt="" draggable="false"></div><span class="pn">${card.no}</span><span class="pr" style="color:${R.col}">${R.sym}</span></div>`;
-    const best = copies[0], cut = copies.some(hasCutscene);
-    return `<button class="pocket${best.slab ? " slabbed" : ""}${copies.some(c => c.phys) ? " phys" : ""}" data-pocket="${card.no}" aria-label="${esc(f.name)}, ${R.name}, ${copies.length} owned">${best.slab ? slabHTML(best) : cardHTML(best)}${best.grading ? `<span class="atigc">AT IGC</span>` : ""}${copies.length > 1 ? `<span class="pc">×${copies.length}</span>` : ""}${cut ? `<span class="pplay" title="Has a cutscene">▶</span>` : ""}</button>`;
+    const best = copies[0];
+    return `<button class="pocket${best.slab ? " slabbed" : ""}${copies.some(c => c.phys) ? " phys" : ""}" data-pocket="${card.no}" aria-label="${esc(f.name)}, ${R.name}, ${copies.length} owned">${best.slab ? slabHTML(best) : cardHTML(best)}${best.grading ? `<span class="atigc">AT IGC</span>` : ""}${copies.length > 1 ? `<span class="pc">×${copies.length}</span>` : ""}</button>`;
   }
   function renderBinder(items) {
     const pages = [], groups = [CARDS.filter(c => !c.set), ...Object.keys(LSETS).map(k => CARDS.filter(c => c.set === k))];
@@ -3171,7 +3143,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     const card = CARD_BY_NO[no], f = BY_ID[card.id], R = crOf(card);
     const show = (focusUid && copies.find(x => x.uid === focusUid)) || copies.find(x => x.slab) || copies[0] || { id: card.id, cno: card.no, rar: card.rar, serial: 0, ed: "foil" };
     $("cmCard").innerHTML = show.slab ? slabHTML(show, true) : cardHTML(show);
-    const raw = rawPrice(no), cut = copies.find(hasCutscene);
+    const raw = rawPrice(no);
     const ladder = [["Raw", 1], ["IGC 7", gradeMult(card.rar, 7)], ["IGC 8", gradeMult(card.rar, 8)], ["IGC 9", gradeMult(card.rar, 9)], ["IGC 10", gradeMult(card.rar, 10)], ["Black Label", gradeMult(card.rar, 10, true)]];
     const condLine = it => { const c = condOf(it); const worst = Math.min(c.cor, c.edg, c.sur); return `Centering ${CENTER_TXT[c.cen]}${worst <= 8 ? " · visible wear" : worst <= 9 ? " · light wear" : " · looks clean"}`; };
     const copyRow = it => {
@@ -3191,7 +3163,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
       <div class="rng">${[30, 90, 365].map(d => `<button data-cmrange="${d}" aria-pressed="${cmRange === d}">${d === 365 ? "1y" : d + "d"}</button>`).join("")}</div>
       ${priceChart(no, cmRange)}
       <table class="ladder"><tr>${ladder.map(([k]) => `<th>${k}</th>`).join("")}</tr><tr>${ladder.map(([, m]) => `<td>${money(raw * m)}</td>`).join("")}</tr></table>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">${cut ? `<button class="btn brass" data-replay="${cut.uid}">▶ Replay cutscene</button>` : ""}<button class="btn small" data-guides="1">Print guides</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" data-guides="1">Print guides</button></div>
       <div class="label">${copies.length ? `Your copies · ${copies.length}` : "You don't own this card yet"}</div>
       <div class="copies">${copies.map(copyRow).join("")}</div>`;
     $("cardModal").hidden = false; $("closeCard").focus();
@@ -4082,9 +4054,9 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   }
 
   // --- stack ---
-  // Big pulls (Rare and up, reverse foils, variants, graded and cutscene cards) stay face-down for the build-up;
+  // Big pulls (Rare and up, reverse foils, variants and graded cards) stay face-down for the build-up;
   // everything else comes out of the pack face-up and you flick through it.
-  const isBigPull = it => (CR[rarOf(it)] || CR.C).tier >= 2 || !!it.rh || !!it.fx || !!it.g || hasCutscene(it);
+  const isBigPull = it => (CR[rarOf(it)] || CR.C).tier >= 2 || !!it.rh || !!it.fx || !!it.g;
   function buildStack() {
     const st = $("stStack");
     st.innerHTML = SS.items.map((it, i) => {
@@ -4128,19 +4100,18 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   }
 
   function reveal(el) {
-    const it = SS.items[SS.idx], f = BY_ID[it.id], r = rarOf(it), RC0 = CR[r] || CR.C, cut = hasCutscene(it);
+    const it = SS.items[SS.idx], f = BY_ID[it.id], r = rarOf(it), RC0 = CR[r] || CR.C;
     const RC = it.fx ? Object.assign({}, RC0, { build: Math.max(RC0.build, 1.7), tier: Math.max(RC0.tier, 5), col: "#f6f4ee" }) : RC0;
-    // rare cards get a long, staged build-up; cutscene cards the longest
-    const base = (RC.build + (it.rh ? .35 : 0)) * (it.ed === "sketch" ? .5 : 1), dur = reduceMotion() ? 0 : cut ? Math.max(6.8, base + 4) : RC.tier >= 4 ? base + 1.4 : RC.tier >= 2 ? base + .5 : base;
+    // rare cards get a long, staged build-up
+    const base = (RC.build + (it.rh ? .35 : 0)) * (it.ed === "sketch" ? .5 : 1), dur = reduceMotion() ? 0 : RC.tier >= 4 ? base + 1.4 : RC.tier >= 2 ? base + .5 : base;
     SS.busy = true;
-    if (dur <= 0) { cut ? flashToCutscene(el, it) : flipNow(el, it); return; }
+    if (dur <= 0) { flipNow(el, it); return; }
     el.classList.add("charging");
     stage.classList.add("dim");
     sfx.charge(dur, chimeKey(r));
-    const tilt = el.querySelector(".tilt"), t0 = performance.now(), big = RC.tier >= 4 || cut;
+    const tilt = el.querySelector(".tilt"), t0 = performance.now(), big = RC.tier >= 4;
     const amp = [2, 3, 5, 7, 9, 11, 14, 16][RC.tier] || 4;
-    const beats = cut ? [.12, .26, .38, .48, .57, .65, .72, .78, .83, .87, .905, .935, .96, .98] : big ? [.22, .42, .6, .74, .84, .91, .96] : RC.tier >= 2 ? [.5, .8] : [];
-    if (cut) el.classList.add("lift");
+    const beats = big ? [.22, .42, .6, .74, .84, .91, .96] : RC.tier >= 2 ? [.5, .8] : [];
     let bi = 0;
     (function run(now) {
       if (!SS || SS.phase !== "stack") return;
@@ -4149,7 +4120,6 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
       tilt.style.setProperty("--jy", ((rand() - .5) * 2 * a).toFixed(1) + "px");
       tilt.style.setProperty("--g", (k * .9).toFixed(3));
       aura.charge = big ? Math.min(1, k * 1.15) * (k > .35 ? 1 : .35) : 0;
-      if (cut) { el.style.setProperty("--lift", Math.min(1, k * 2.2).toFixed(3)); el.style.setProperty("--spin", (Math.sin(now / 160) * 3 * k * k).toFixed(2)); }
       // stage 1: neutral glow · stage 2 (35%): screen darkens, rays wake up · stage 3 (65%): light cracks out of the card, rarity colour bleeds in
       const tell = (RC.tier >= 2 || it.rh) && k > (big ? .65 : .5);
       el.style.setProperty("--c", tell ? (it.rh && RC.tier < 2 ? "#cfe9ff" : RC.col) : "rgba(233,228,216,.55)");
@@ -4163,16 +4133,14 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
       while (bi < beats.length && k >= beats[bi]) { bi++; sfx.boom(.18 + bi * .05); shake(2 + bi * 1.4, 160); const sc = $("stCenter"); sc.classList.remove("beat"); void sc.offsetWidth; sc.classList.add("beat"); }
       const c = center(el);
       if (rand() < .3 + k * (big ? 1.6 : 1)) fx.inward(c.x, c.y, tell ? RC.col : "#e9e4d8");
-      if (cut && k > .6 && rand() < k) fx.inward(c.x, c.y, "#ffffff");
       if (k < 1) requestAnimationFrame(run);
       else {
         tilt.style.setProperty("--jx", "0px"); tilt.style.setProperty("--jy", "0px"); el.classList.remove("charging"); aura.charge = 0;
-        if (cut) flashToCutscene(el, it); else { stage.classList.remove("dim2"); flipNow(el, it); }
+        stage.classList.remove("dim2"); flipNow(el, it);
       }
     })(t0);
   }
 
-  // the card stays face-down: white-out straight into the cutscene, the card is revealed only after it
   // =====================================================================
   // AURA: the light behind the card on the opening stage. Soft volumetric god-rays (tapered, blurred, additive),
   // a bloom, drifting coloured smoke and bokeh, shockwave rings. Driven by the #rays element's state + aura.charge.
@@ -4236,32 +4204,6 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     return api;
   })();
 
-  function flashToCutscene(el, it) {
-    SS.cutDone = SS.cutDone || {}; SS.cutDone[it.uid] = true;
-    const RC = crOf(cardOf(it)), tilt = el.querySelector(".tilt");
-    // 1. silence: everything goes black except the cracked card, which hangs still
-    stage.classList.add("void"); $("rays").classList.remove("on"); el.style.setProperty("--crk", 1); el.style.setProperty("--leak", 1);
-    tilt.style.setProperty("--g", "1.4"); el.style.setProperty("--c", RC.col); el.style.setProperty("--spin", 0);
-    // 2. one last heartbeat, a tremor, then it implodes and shatters into white
-    setTimeout(() => { if (!SS) return; sfx.boom(.6); shake(5, 200); tilt.style.setProperty("--jx", "0px"); }, 700);
-    setTimeout(() => { if (!SS) return; tilt.style.transition = "transform .28s cubic-bezier(.6,0,.9,.4)"; tilt.style.transform = "scale(.86)"; sfx.charge(.3, "secret"); }, 1150);
-    setTimeout(() => {
-      if (!SS) return;
-      tilt.style.transition = ""; tilt.style.transform = ""; stage.classList.remove("void"); el.classList.remove("lift");
-      const c0 = center(el); fx.burst(c0.x, c0.y, 260, [RC.col, "#ffffff", "#ffffff"], 1500); aura.shock();
-      const fl = $("flash"); fl.style.setProperty("--fo", 1); fl.style.background = "#fff"; fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on");
-      sfx.boom(1.4); shake(22, 420);
-    }, 1450);
-    setTimeout(() => {
-      if (!SS) return;
-      playCutscene(it, () => {
-        stage.classList.remove("dim2"); $("rays").classList.remove("on");
-        el.style.setProperty("--leak", 0); el.style.setProperty("--crk", 0);
-        setTimeout(() => flipNow(el, it), 250);
-      }, { pull: true });
-    }, 1450 + 420);
-  }
-
   function flipNow(el, it) {
     const f = BY_ID[it.id], r = rarOf(it), RC = CR[r] || CR.C, val = itemVal(it);
     el.classList.add("flipA");
@@ -4298,8 +4240,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
       if (!SS || SS.phase !== "stack") return;
       el.classList.remove("flipB");
       const done = () => { if (!SS || SS.phase !== "stack") return; SS.busy = false; if (SS.queued) { SS.queued = false; setTimeout(advance, 40); return; } $("stHint").textContent = SS.idx < SS.items.length - 1 ? "Swipe it away · or press Space" : "Swipe to see your pull · or press Space"; };
-      const after = () => hasCutscene(it) && !(SS.cutDone && SS.cutDone[it.uid]) ? setTimeout(() => playCutscene(it, done), 650) : done();
-      if (it.g) { $("stHint").textContent = "Grading…"; gradeRoll(el, it, after); } else after();
+      if (it.g) { $("stHint").textContent = "Grading…"; gradeRoll(el, it, done); } else done();
     }, 470);
   }
 
@@ -4331,51 +4272,6 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
       gr.classList.add("landed"); t.classList.remove("slam"); void t.offsetWidth; t.classList.add("slam");
       setTimeout(done, 450);
     })();
-  }
-
-  // ---------- Cutscenes: rare+ fighters that have one play it right after the pull ----------
-  // Cutscenes: the owner's own traced fights. Only rarer cards (Signature and up) play one.
-  const CUTSCENES = {
-    ronin: "films/reel_katana.mp4", shogun: "films/reel_katana.mp4", reaper: "films/reel_brawl.mp4", colossus: "films/reel_giant.mp4",
-    pike: "films/reel_spear.mp4", breaker: "films/reel_hammer.mp4", knuckles: "films/reel_crowd.mp4", reaver: "films/axes.mp4",
-    phantom: "films/daggers.mp4", chrono: "films/timestop.mp4", umbra: "films/shadow.mp4", fletch: "films/archer.mp4",
-    snap: "films/nunchaku.mp4", lash: "films/chainwhip.mp4", kusari: "films/sickle.mp4", bo: "films/bostaff.mp4"
-  };
-  const CUT_BY_CARD = { "038": "films/reel_scythe.mp4" };
-  const cutFor = it => CUT_BY_CARD[cardOf(it).no] || CUTSCENES[baseOf(it.id)];
-  let CUT = null;
-  const hasCutscene = it => it.ed !== "sketch" && !!cutFor(it) && (CR[rarOf(it)] || CR.C).tier >= 4;   // only footage traced from the owner's own videos
-  const DUMMY = () => Object.assign({}, BY_ID.knuckles, { id: "dummy", name: "Sparring dummy", body: "#434343", acc: "none" });
-  function playCutscene(it, done, opts) {
-    opts = opts || {};
-    const f = BY_ID[it.id], box = $("cut"), v = $("cutVideo");
-    CUT = { it, done, phase: "play", pull: !!opts.pull };
-    const RC = crOf(cardOf(it)); box.className = "cut"; box.style.setProperty("--rc", RC.col);
-    $("cutRarity").textContent = CUT.pull ? "Something rare is coming…" : `${RC.name} · cutscene replay`;
-    $("cutName").textContent = CUT.pull ? "" : f.name;
-    $("cutCard").innerHTML = cardHTML(it); $("cutCard").hidden = true; $("cutCont").hidden = true;
-    box.hidden = false; void box.offsetWidth; box.classList.add("on");
-    const cv = $("cutCanvas");
-    if (cutFor(it)) {
-      v.hidden = false; cv.hidden = true;
-      v.src = cutFor(it); v.currentTime = 0; v.muted = !!state.muted;
-      v.onerror = () => { if (CUT && CUT.phase === "play") endCutscene(); };
-      const pr = v.play(); if (pr && pr.catch) pr.catch(() => { v.muted = true; v.play().catch(() => endCutscene()); });
-    }
-  }
-  function endCutscene() {
-    if (!CUT || CUT.phase !== "play") return;
-    CUT.phase = "card";
-    const v = $("cutVideo"); v.pause();
-    if (CUT.pull) { const fl0 = $("flash"); fl0.style.setProperty("--fo", 1); fl0.style.background = "#fff"; fl0.classList.remove("on"); void fl0.offsetWidth; fl0.classList.add("on"); setTimeout(closeCutscene, 120); return; }
-    const box = $("cut"); box.classList.add("ended");
-    const fl = $("flash"); fl.style.setProperty("--fo", .9); fl.style.background = "#fff"; fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on");
-    sfx.boom(1.1); sfx.chime(chimeKey(rarOf(CUT.it)));
-    $("cutCard").hidden = false; setTimeout(() => { if (CUT) $("cutCont").hidden = false; }, 700);
-  }
-  function closeCutscene() {
-    if (!CUT) return; if (CUT.phase === "play") { endCutscene(); return; }
-    const d = CUT.done; CUT = null; const box = $("cut"); box.hidden = true; $("cutCanvas").hidden = true; box.classList.remove("on", "ended"); $("cutVideo").removeAttribute("src"); d && d();
   }
 
   function showTitle(f, it, val, pending) {
@@ -4455,7 +4351,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
       <div class="sum-head"><span class="label">${esc(p.name)} · best pull <b style="color:${bestR.col}">${esc(BY_ID[bestIt.id].name)}, ${esc(bestR.name)}</b></span>${head}${items.some(x => x.fx) ? `<div class="fxhit">Variant pulled: ${items.filter(x => x.fx).map(x => `<b>${esc(fxName(x.fx))}</b> ${esc(BY_ID[x.id].name)} · ${fxMult(x)}× value`).join(" &nbsp; ")}</div>` : ""}</div>${lv}
       <div class="fan">${items.map((x, i) => `<div class="fan-c${i === bestI ? " best" : ""}" style="--c:${crOf(cardOf(x)).col};--i:${i}">${cardHTML(x)}</div>`).join("")}</div>
       <div class="sum-btns"><button class="btn" id="sumSell">Sell all <span class="pr">${money(sell)}</span></button><button class="btn brass" id="sumKeep">Keep all</button>
-        ${items.some(hasCutscene) ? `<button class="btn ghost" id="sumReplay">Replay cutscene</button>` : ""}${SS.code ? `<button class="btn ghost" id="sumScan"><svg class="ico"><use href="#i-qr"/></svg>Scan another code</button>` : ""}<button class="btn ghost" id="sumAgain"${SS.code ? " hidden" : ""}>${can ? `Open another <span class="pr">${priceTxt(p)}</span>` : p.cur === "coin" ? "Add funds" : "Not enough tokens"}</button></div>
+        ${SS.code ? `<button class="btn ghost" id="sumScan"><svg class="ico"><use href="#i-qr"/></svg>Scan another code</button>` : ""}<button class="btn ghost" id="sumAgain"${SS.code ? " hidden" : ""}>${can ? `Open another <span class="pr">${priceTxt(p)}</span>` : p.cur === "coin" ? "Add funds" : "Not enough tokens"}</button></div>
     </div>`;
     if (hit) { sfx.chime("epic"); const c = { x: innerWidth / 2, y: innerHeight * .3 }; fx.confetti(c.x, c.y, 90, ["#8cbf94", "#e6d3a3", "#e9e4d8"]); }
     $("stSummary").hidden = false;
@@ -4820,7 +4716,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   // =====================================================================
   // INK FIGHTS — animated in the motion-kit look: flat light-grey paper, flat solid stickmen, static wide camera,
   // drawings held on twos (12 per second), ink crescents with a white inner edge and red rim, flat red blood shapes,
-  // grey brush dust, red-and-black spike bursts, a black close-up cutscene before finishers. No gradients, glow or lines.
+  // grey brush dust, red-and-black spike bursts, a black close-up before finishers. No gradients, glow or lines.
   // =====================================================================
   const INK_PAPER = "#c4c4c1", INK_SHADOW = "#b1b1ae", INK_BLACK = "#0d0d0e", INK_ENEMY = "#434343", INK_RED = "#8c161e", INK_RED2 = "#c4232b";
   const DRAW_FPS = 12;
@@ -4914,7 +4810,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
       ev(land, "dust", { x: landX, y: GROUND, n: heavy ? 22 : 14 }); ev(land, "sfx", { s: "hit" }); ev(land, "pool", { x: landX, w: 120 });
       return land;
     }
-    // (no cutscene beats in fights: cutscenes come only from the owner's traced videos)
+    // (no close-up beats in fights; the timing helper below is a plain offset)
     function cutscene(t) { return t + .12; }
     function finishBurst(t, d, dir, big) {
       const p = chest(d);
@@ -5224,7 +5120,6 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   function frame(now) {
     const dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
     if (fight && !$("fight").hidden && !fight.done) { fight.update(dt); fight.draw(); }
-    if (CUT && CUT.ink && CUT.phase === "play") { CUT.ink.update(dt); CUT.ink.draw(); }
     if (!stage.hidden) { fx.step(dt); aura.step(dt); }
     requestAnimationFrame(frame);
   }
@@ -5233,12 +5128,9 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   // =====================================================================
   // EVENTS
   // =====================================================================
-  $("cutVideo").addEventListener("ended", endCutscene);
-  $("cut").addEventListener("click", e => { e.stopPropagation(); if (e.target.id === "cutSkip") { endCutscene(); return; } closeCutscene(); });
   document.addEventListener("keydown", e => {
     const k = e.key.toLowerCase();
     if (!$("clash").hidden) { if ((k === " " || k === "enter") && !e.repeat) { e.preventDefault(); clAgain(); } if (k === "escape") clClose(); return; }
-    if (CUT) { if (k === " " || k === "enter" || k === "escape") { e.preventDefault(); if (!e.repeat) closeCutscene(); } return; }
     if (!$("fight").hidden && fight) {
       if (k === " " && !fight.done) { e.preventDefault(); fight.skip(); }
       if (k === "escape") closeFight();
@@ -5292,7 +5184,6 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
     if (t.dataset.bnav) { turnBinder(+t.dataset.bnav); return; }
     if (t.dataset.bspread) { const d = +t.dataset.bspread - binderSpread; if (d) turnBinder(d); return; }
     if (t.dataset.pocket) { openCardModal(t.dataset.pocket); return; }
-    if (t.dataset.replay) { const it = state.vault.find(x => x.uid === t.dataset.replay); if (it) playCutscene(it, null); return; }
     if (t.dataset.filter) { shelfFilter = t.dataset.filter; renderShelf(); return; }
     if (t.dataset.pick) { pickFighter = t.dataset.pick; pickOpp = null; renderArena(); return; }
     if (t.dataset.opp) { pickOpp = t.dataset.opp; renderArena(); return; }
@@ -5303,7 +5194,6 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
       case "sumSell": { const g = sellUids(SS.items.map(i => i.uid), `Sold back a ${SS.pack.name} pull`); closeStage(); toast(`Sold for ${money(g)}`); break; }
       case "sumKeep": { const sc = SS && (SS.scan || SS.unlock); closeStage(); toast(sc ? "Added to your vault" : "Kept in your vault"); break; }
       case "sumScan": closeStage(); openScan(); break;
-      case "sumReplay": { const it = SS.items.find(hasCutscene); if (it) playCutscene(it, null); break; }
       case "sumAgain": { const id = SS.pack.id; closeStage(); buy(id); break; }
       case "startFight": clashStart(); break;
       case "rematch": startFight(); break;
@@ -5338,7 +5228,7 @@ nav.tabs a[aria-current="page"] { --cut: 7px; }
   renderAll(); showTab();
   netInit();
   let lastDay = mktDay();
-  setInterval(() => { renderTick(); const d = mktDay(); if (d !== lastDay && stage.hidden && $("cut").hidden) { lastDay = d; renderAll(); if (cmNo && $("cardModal").hidden === false) openCardModal(cmNo); } if (currentTab === "packs" && stage.hidden && Date.now() % 60000 < 1000) renderHero(); }, 1000);
+  setInterval(() => { renderTick(); const d = mktDay(); if (d !== lastDay && stage.hidden) { lastDay = d; renderAll(); if (cmNo && $("cardModal").hidden === false) openCardModal(cmNo); } if (currentTab === "packs" && stage.hidden && Date.now() % 60000 < 1000) renderHero(); }, 1000);
   $("gate").hidden = !!state.ageOK;
 })();
 </script>
