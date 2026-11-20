@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#222;padding:40px}
+.card{width:750px;height:1050px;position:relative;overflow:hidden;background:#09090a;color:#ebe6da}
+.card img{position:absolute;inset:0;width:100%;height:100%}
+.fg{z-index:5}
+.shade{position:absolute;inset:0;background:
+  linear-gradient(180deg,rgba(9,9,10,.9) 0,rgba(9,9,10,.35) 15%,rgba(9,9,10,0) 26%),
+  linear-gradient(0deg,#09090a 0,rgba(9,9,10,.85) 6%,rgba(9,9,10,0) 16%)}
+h1{position:absolute;left:0;right:0;text-align:center;font-family:Archivo;font-weight:900;font-stretch:62%;font-variation-settings:'wdth' 62;white-space:nowrap;line-height:.8;letter-spacing:-.006em;text-transform:uppercase;z-index:4}
+.no{position:absolute;left:0;right:0;bottom:30px;text-align:center;font-family:'IBM Plex Mono';font-size:14px;font-weight:500;letter-spacing:.42em;color:rgba(235,230,218,.7);z-index:6}
+.no b{color:#ff3636;font-weight:600}
+</style></head><body>
+<div class="card" id="BL"><img src="out/GP_bg.png"><div class="shade"></div><h1 id="nm">Phantom</h1><div class="no">IS019-000007-K7QX <b>//</b></div></div>
+<script>
+const h = document.getElementById('nm'), headTop = 95;
+let fs = 260; h.style.fontSize = fs + 'px';
+const r = document.createRange(); r.selectNodeContents(h);
+while (r.getBoundingClientRect().width > 640 && fs > 60) { fs -= 2; h.style.fontSize = fs + 'px'; }
+// sit the name so the bottom third of the letters is behind his head
+const cap = fs * .73;
+h.style.top = '64px';
+</script>
+</body></html>
