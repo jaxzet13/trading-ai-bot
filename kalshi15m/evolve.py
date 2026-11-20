@@ -381,10 +381,49 @@ def loop(workers=3, log=print):
         time.sleep(max(ROUND_GAP_S - (time.time() - t0), 300))
 
 
+def compare(log=print):
+    """Is evolution working? Per day since the first evolved batch: average P&L per filled bet of evolved strategies
+    (batch 3+) vs the original ones (batch 1-2) on the SAME day, and on the same coins (each coin weighted by the
+    evolved bets on it, so a batch that leans on a coin having a bad day is not blamed for the day)."""
+    import collections
+    gs = [g for g in gens() if daily_path(g).exists()]
+    evo = [g for g in gs if g >= FIRST_GEN]
+    if not evo:
+        return []
+    first = min(json.loads(cands_path(g).read_text())["fwd_start"] for g in evo) // 86400 + 1   # first FULL day
+    agg = collections.defaultdict(lambda: [0.0, 0.0])
+    for g in gs:
+        C = {c["id"]: c["scope"] for c in json.loads(cands_path(g).read_text())["candidates"]}
+        grp = "evo" if g >= FIRST_GEN else "orig"
+        for cid, v in json.loads(daily_path(g).read_text())["days"].items():
+            for d, x in v.items():
+                if int(d) >= first:
+                    a = agg[(grp, int(d), C.get(cid))]
+                    a[0] += x[0]; a[1] += x[1]
+    out = []
+    for d in sorted({k[1] for k in agg}):
+        e = [(sc, agg[("evo", d, sc)]) for sc in {k[2] for k in agg if k[1] == d} if agg[("evo", d, sc)][1]]
+        n = sum(a[1] for _, a in e)
+        if not n:
+            continue
+        ev = sum(a[0] for _, a in e) / n
+        ow = [(a[1], agg[("orig", d, sc)]) for sc, a in e if agg[("orig", d, sc)][1]]
+        orig = sum(w * o[0] / o[1] for w, o in ow) / sum(w for w, _ in ow) if ow else None
+        out.append({"day": d, "evolved_per_bet": round(ev, 4), "original_same_coins_per_bet": None if orig is None else round(orig, 4),
+                    "evolved_bets": int(n)})
+        log(f"  {time.strftime('%b %d', time.gmtime(d * 86400))}: evolved {ev:+.3f}/bet ({int(n)} bets) vs original "
+            f"{'n/a' if orig is None else f'{orig:+.3f}'}/bet on the same coins")
+    if not out:
+        log("  evolved vs original: no full forward day yet")
+    return out
+
+
 def show_board(n=25, log=print):
     rows = [r for r in board() if r["filled"] >= 10]
     rows.sort(key=lambda r: -strength(r))
     log(f"{len(gens())} batches, {sum(1 for _ in board())} strategies; top {n} by forward strength (t shrunk by fills):")
+    log("evolved vs original strategies, same days:")
+    compare(log)
     for r in rows[:n]:
         log(f"  {r['id'] + '@g' + str(r['gen']):40s} {r['filled']:>4} fills  ${r['pnl']:>7.2f}  t {r['t']:>5.2f}  "
             f"{r['days_up']}/{r['days_traded']} days up  ({r['fwd_days']:.1f} forward days)")
