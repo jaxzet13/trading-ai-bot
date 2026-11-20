@@ -60,6 +60,51 @@ def colours(style, t, rows, cols, pal=None, seed=4):
     return np.clip(rgb * 255 * (0.62 + 0.38 * np.clip(t * 1.4, 0, 1))[..., None] + BONE * 0.30 * (t[..., None] ** 3), 0, 255)
 
 
+def spaced(d, x, y, text, font, fill, track, anchor='ls'):
+    """draw text letter by letter with extra tracking (px); returns the width. anchor is the left-baseline of the first glyph"""
+    w = 0
+    for ch in text:
+        d.text((x + w, y), ch, font=font, fill=fill, anchor='ls'); w += d.textlength(ch, font=font) + track
+    return w - track
+
+
+def spaced_w(d, text, font, track):
+    return sum(d.textlength(ch, font=font) for ch in text) + track * (len(text) - 1)
+
+
+def draw_type(im, S, name, code, mark, count, tint, typo='line'):
+    """the card's type. Everything sits on baselines in the clear strip under the picture."""
+    d = ImageDraw.Draw(im); f = lambda p, s: ImageFont.truetype(p, max(6, int(s * S)))
+    dim = tuple(int(x * 0.55) for x in tint); hair = tuple(int(x * 0.34) for x in tint)
+    L, R = 110 * S, (W - 110) * S; red = (224, 32, 44); num = f'{count:,}'
+    NAME = name.upper()
+    if typo == 'line':           # NAME ---------- 2,816 chars   (one line, then the copy ID tiny underneath)
+        fb, fr, fu = f(FONTB, 46), f(FONT, 46), f(FONT, 24); base = (H - 118) * S; tr = 9 * S
+        wn = spaced(d, L, base, NAME, fb, tint, tr)
+        unit = ' chars'; wu = d.textlength(unit, font=fu); wnum = d.textlength(num, font=fr)
+        d.text((R, base), unit, font=fu, fill=dim, anchor='rs'); d.text((R - wu, base), num, font=fr, fill=tint, anchor='rs')
+        x0, x1 = L + wn + 40 * S, R - wu - wnum - 40 * S
+        d.line([(x0, base - 16 * S), (x1, base - 16 * S)], fill=hair, width=max(1, int(2 * S)))
+        fi = f(FONT, 30); y2 = (H - 58) * S; wi = spaced(d, L, y2, code, fi, dim, 3 * S)
+        if mark: d.text((L + wi + 18 * S, y2), mark, font=f(FONTB, 30), fill=red, anchor='ls')
+    elif typo == 'quiet':        # name small on the left, the count alone on the right
+        fb, fr = f(FONTB, 26), f(FONT, 52); base = (H - 92) * S
+        spaced(d, L, base, NAME, fb, tint, 6 * S)
+        d.text((R, base), num, font=fr, fill=tint, anchor='rs')
+        fi = f(FONT, 16); y2 = (H - 56) * S
+        d.text((R, y2), code + ('  ' if mark else ''), font=fi, fill=dim, anchor='rs')
+        if mark: d.text((R, y2), mark, font=f(FONTB, 16), fill=red, anchor='rs')
+    else:                        # ledger: one centred line
+        fb, fr, fi = f(FONTB, 28), f(FONT, 28), f(FONT, 20); base = (H - 86) * S; gap = 34 * S
+        parts = [(NAME, fb, tint, 6 * S), (num, fr, tint, 0), (code, fi, dim, 2 * S)]
+        ws = [spaced_w(d, t, ft, tr) for t, ft, c, tr in parts]
+        wm = d.textlength(' ' + mark, font=fi) if mark else 0
+        x = (W * S - (sum(ws) + gap * 2 + wm)) / 2
+        for (t, ft, c, tr), w in zip(parts, ws):
+            spaced(d, x, base, t, ft, c, tr); x += w + gap
+        if mark: d.text((x - gap + 10 * S, base), mark, font=f(FONTB, 20), fill=red, anchor='ls')
+
+
 def glitch_post(arr, S, seed=9):
     """VHS: tear rows sideways, split the channels, smear, and lay scanlines"""
     h, w, _ = arr.shape; rng = np.random.default_rng(seed)
@@ -79,7 +124,7 @@ def glitch_post(arr, S, seed=9):
     return out
 
 
-def render(art, out, name, code, mark, style, cols, S=1, black=0.05, white=0.9, gamma=0.8, shift=0, glow=0.5, pad=0.0, pal=None, crop=None, thick=0):
+def render(art, out, name, code, mark, style, cols, S=1, black=0.05, white=0.9, gamma=0.8, shift=0, glow=0.5, pad=0.0, pal=None, crop=None, thick=0, typo='line'):
     cols, S, shift = int(cols), int(S), int(shift)
     cw = W * S / cols; chh = cw * ASPECT; rows = int(ART_H * S / chh); count = cols * rows
     img = cv2.imread(art)
@@ -119,19 +164,11 @@ def render(art, out, name, code, mark, style, cols, S=1, black=0.05, white=0.9, 
     rng = np.random.default_rng(3)
     arr += cv2.GaussianBlur(rng.normal(0, 1, arr.shape[:2]).astype(np.float32), (0, 0), 0.7 * S)[..., None] * 0.012
     im = Image.fromarray((np.clip(arr, 0, 1) * 255).astype(np.uint8)); d = ImageDraw.Draw(im)
-    f = lambda p, s: ImageFont.truetype(p, int(s * S))
     pn_ = pal or DEFAULT_PAL[style]
     if style == 'classic': tint = tuple(int(0.55 * c + 0.45 * 255) for c in PALETTES['classic'][pn_])
     elif style in ('duo', 'glitch'): tint = tuple(int(0.55 * c + 0.45 * 255) for c in PALETTES[style][pn_][0])
     else: tint = (236, 231, 220)
-    dim = tuple(int(x * 0.62) for x in tint); R_ = (W - 110) * S
-    num = f'{count:,}'; fn = f(FONTB, 104); nw = d.textlength(num, font=fn)
-    d.text((R_ - nw, (H - 268) * S), num, font=fn, fill=tint)
-    lab = 'C H A R A C T E R S'; fl = f(FONT, 22); d.text((R_ - d.textlength(lab, font=fl), (H - 150) * S), lab, font=fl, fill=dim)
-    fs2 = f(FONT, 24); fm = f(FONTB, 24); mw = d.textlength(mark, font=fm) if mark else 0
-    d.text((R_ - mw - (14 * S if mark else 0) - d.textlength(code, font=fs2), (H - 112) * S), code, font=fs2, fill=dim)
-    if mark: d.text((R_ - mw, (H - 112) * S), mark, font=fm, fill=(224, 32, 44))
-    d.text((110 * S, (H - 138) * S), ' '.join(name.upper()), font=f(FONTB, 46), fill=tint)
+    draw_type(im, S, name, code, mark, count, tint, typo)
     if out.lower().endswith('.png'): im.save(out)
     else: im.save(out, quality=94)
     return count
@@ -139,5 +176,5 @@ def render(art, out, name, code, mark, style, cols, S=1, black=0.05, white=0.9, 
 
 if __name__ == '__main__':
     a = sys.argv
-    kw = {k: (v if k == 'pal' else float(v)) for k, v in (s.split('=') for s in a[9:])}
+    kw = {k: (v if k in ('pal', 'typo') else float(v)) for k, v in (s.split('=') for s in a[9:])}
     n = render(a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], **kw); print('ok', a[2], f'{n:,}')
