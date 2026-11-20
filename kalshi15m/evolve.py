@@ -108,17 +108,25 @@ def strength(r):
     return r["t"] * math.sqrt(min(r["filled"], 30) / 30)
 
 
-def parents(rows, k=N_PARENTS):
+def parents(rows, k=N_PARENTS, fixed=15, pool=3, seed=None):
+    """The `fixed` strongest always breed; the rest are drawn from the next `pool` x k, weighted by strength, so
+    successive rounds explore different parents instead of re-breeding the same 40 while new batches mature."""
     ok = sorted((r for r in rows if r["filled"] >= MIN_PARENT_FILLS and r["pnl"] > 0), key=lambda r: -strength(r))
-    out, per = [], {}
+    cand, per = [], {}
     for r in ok:
         idea = (r["family"], r["scope"])
         if per.get(idea, 0) >= PER_IDEA:
             continue
         per[idea] = per.get(idea, 0) + 1
-        out.append(r)
-        if len(out) >= k:
+        cand.append(r)
+        if len(cand) >= pool * k:
             break
+    out, rest = cand[:fixed], cand[fixed:]
+    rng = random.Random(seed)
+    while rest and len(out) < k:
+        w = [math.exp(min(strength(r), 6)) for r in rest]
+        i = rng.choices(range(len(rest)), weights=w)[0]
+        out.append(rest.pop(i))
     return out
 
 
@@ -332,7 +340,7 @@ def once(workers=3, log=print, score=True):
     if score:
         score_all(log)
     rows = board()
-    par = parents(rows)
+    par = parents(rows, seed=int(t0))
     if not par:
         log("  no strategy has enough forward fills to breed from yet")
         return None

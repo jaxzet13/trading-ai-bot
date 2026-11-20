@@ -59,3 +59,11 @@ def test_rotation_walk_uses_only_earlier_days():
     # no look-ahead: on the first test day the stats only cover the 7 days before it
     r = next(r for r in R.eligible(ALL, days[7], {"fv_drift"}) if r["c"]["scope"] == "KXETH15M")
     assert r["filled"] == 35 and abs(r["pnl"] - 7.0) < 1e-9
+
+
+def test_parents_fixed_top_and_varied_rest():
+    rows = [dict(_parent("fv_drift", f"C{i}", {"x": i}, t=5 - i / 50), id=f"fv_drift:C{i}:1", key=str(i)) for i in range(150)]
+    a, b = E.parents(rows, seed=1), E.parents(rows, seed=2)
+    assert len(a) == len(b) == E.N_PARENTS
+    assert [r["id"] for r in a[:15]] == [r["id"] for r in b[:15]] == [f"fv_drift:C{i}:1" for i in range(15)]
+    assert {r["id"] for r in a} != {r["id"] for r in b}
