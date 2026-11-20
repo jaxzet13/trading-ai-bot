@@ -1,18 +1,18 @@
 {
- "generated": 1795186537,
+ "generated": 1795193918,
  "fwd_start": 1793823300,
  "frozen_at": 1793916609,
- "days": 15.78,
+ "days": 15.86,
  "markets": {
-  "KXBTC15M": 1490,
-  "KXETH15M": 1490,
-  "KXSOL15M": 1490,
-  "KXXRP15M": 1490,
-  "KXHYPE15M": 1490,
-  "KXBNB15M": 1490,
-  "KXNEAR15M": 1490,
-  "KXDOGE15M": 1490,
-  "KXZEC15M": 1490
+  "KXBTC15M": 1498,
+  "KXETH15M": 1498,
+  "KXSOL15M": 1498,
+  "KXXRP15M": 1498,
+  "KXHYPE15M": 1498,
+  "KXBNB15M": 1498,
+  "KXNEAR15M": 1498,
+  "KXDOGE15M": 1498,
+  "KXZEC15M": 1498
  },
  "n_candidates": 3143,
  "bar_t": 4.16,
@@ -22,9 +22,9 @@
   "alpha": 0.05
  },
  "traded": 3143,
- "profitable": 1953,
+ "profitable": 1940,
  "traded10": 3137,
- "profitable10": 1951,
+ "profitable10": 1938,
  "passed": 0,
  "by_scope": {
   "ALL": {
@@ -32,14 +32,14 @@
    "traded": 246,
    "profitable": 134,
    "best_t": 2.35,
-   "median_pnl": 1.4
+   "median_pnl": 1.35
   },
   "KXBNB15M": {
    "n": 53,
    "traded": 53,
-   "profitable": 29,
+   "profitable": 28,
    "best_t": 1.46,
-   "median_pnl": 0.44
+   "median_pnl": 0.42
   },
   "KXBTC15M": {
    "n": 343,
@@ -53,14 +53,14 @@
    "traded": 360,
    "profitable": 35,
    "best_t": 1.86,
-   "median_pnl": -5.55
+   "median_pnl": -5.615
   },
   "KXETH15M": {
    "n": 360,
    "traded": 360,
-   "profitable": 230,
-   "best_t": 1.95,
-   "median_pnl": 0.905
+   "profitable": 225,
+   "best_t": 2.06,
+   "median_pnl": 0.83
   },
   "KXHYPE15M": {
    "n": 341,
@@ -79,9 +79,9 @@
   "KXSOL15M": {
    "n": 360,
    "traded": 360,
-   "profitable": 277,
+   "profitable": 270,
    "best_t": 2.22,
-   "median_pnl": 2.6550000000000002
+   "median_pnl": 2.56
   },
   "KXXRP15M": {
    "n": 360,
@@ -111,7 +111,7 @@
    "traded": 175,
    "profitable": 101,
    "best_t": 2.17,
-   "median_pnl": 1.44
+   "median_pnl": 1.39
   },
   "fv_dyn": {
    "n": 180,
@@ -130,7 +130,7 @@
   "fv_jump": {
    "n": 180,
    "traded": 180,
-   "profitable": 113,
+   "profitable": 111,
    "best_t": 2.22,
    "median_pnl": 1.26
   },
@@ -158,37 +158,37 @@
   "fv_ref": {
    "n": 179,
    "traded": 179,
-   "profitable": 112,
+   "profitable": 110,
    "best_t": 1.7,
-   "median_pnl": 1.36
+   "median_pnl": 1.23
   },
   "fv_season": {
    "n": 167,
    "traded": 167,
-   "profitable": 111,
+   "profitable": 109,
    "best_t": 2.24,
    "median_pnl": 1.41
   },
   "fv_session": {
    "n": 188,
    "traded": 188,
-   "profitable": 94,
-   "best_t": 1.99,
-   "median_pnl": 0.045
+   "profitable": 93,
+   "best_t": 1.97,
+   "median_pnl": -0.005
   },
   "fv_shape": {
    "n": 176,
    "traded": 176,
    "profitable": 104,
    "best_t": 2.2,
-   "median_pnl": 0.655
+   "median_pnl": 0.5800000000000001
   },
   "fv_t": {
    "n": 177,
    "traded": 177,
-   "profitable": 121,
+   "profitable": 116,
    "best_t": 1.56,
-   "median_pnl": 1.32
+   "median_pnl": 1.27
   },
   "fv_tau": {
    "n": 164,
@@ -207,9 +207,9 @@
   "fv_vreg": {
    "n": 200,
    "traded": 200,
-   "profitable": 115,
+   "profitable": 114,
    "best_t": 2.02,
-   "median_pnl": 0.425
+   "median_pnl": 0.39
   },
   "scalp": {
    "n": 141,
@@ -1269,6 +1269,30 @@
    "status": "open"
   },
   {
+   "id": "fv_drift:KXETH15M:1",
+   "family": "fv_drift",
+   "scope": "KXETH15M",
+   "rank": 1,
+   "params": {
+    "start": 2,
+    "end": 13,
+    "edge": 0.2,
+    "band": "25-75",
+    "L": 15,
+    "a": -0.25,
+    "vm": 1.0
+   },
+   "t_before": 2.02,
+   "placed": 181,
+   "filled": 160,
+   "pnl": 12.68,
+   "t": 2.06,
+   "win_rate": 0.431,
+   "days_up": 12,
+   "days": 17,
+   "status": "open"
+  },
+  {
    "id": "fv_season:KXHYPE15M:14",
    "family": "fv_season",
    "scope": "KXHYPE15M",
@@ -1385,29 +1409,6 @@
    "status": "open"
   },
   {
-   "id": "fv_session:KXSOL15M:12",
-   "family": "fv_session",
-   "scope": "KXSOL15M",
-   "rank": 12,
-   "params": {
-    "start": 7,
-    "end": 12,
-    "edge": 0.09,
-    "band": "10-90",
-    "sess": "us",
-    "vm": 0.8
-   },
-   "t_before": 3.14,
-   "placed": 82,
-   "filled": 61,
-   "pnl": 11.06,
-   "t": 1.99,
-   "win_rate": 0.525,
-   "days_up": 10,
-   "days": 14,
-   "status": "open"
-  },
-  {
    "id": "fv_prev:KXNEAR15M:4",
    "family": "fv_prev",
    "scope": "KXNEAR15M",
@@ -1428,6 +1429,30 @@
    "t": 1.98,
    "win_rate": 0.411,
    "days_up": 9,
+   "days": 17,
+   "status": "open"
+  },
+  {
+   "id": "fv_drift:KXETH15M:9",
+   "family": "fv_drift",
+   "scope": "KXETH15M",
+   "rank": 9,
+   "params": {
+    "start": 2,
+    "end": 12,
+    "edge": 0.2,
+    "band": "25-75",
+    "L": 15,
+    "a": -0.25,
+    "vm": 1.0
+   },
+   "t_before": 1.7,
+   "placed": 167,
+   "filled": 146,
+   "pnl": 11.67,
+   "t": 1.98,
+   "win_rate": 0.432,
+   "days_up": 13,
    "days": 17,
    "status": "open"
   },
@@ -1628,33 +1653,8 @@
    "days_up": 6,
    "days": 8,
    "status": "open"
-  },
-  {
-   "id": "fv_liq:KXBTC15M:18",
-   "family": "fv_liq",
-   "scope": "KXBTC15M",
-   "rank": 18,
-   "params": {
-    "start": 4,
-    "end": 11,
-    "edge": 0.11,
-    "band": "10-90",
-    "max_spr": 0.03,
-    "quote": "stale",
-    "min_vol": 0,
-    "vm": 0.8
-   },
-   "t_before": 0.74,
-   "placed": 27,
-   "filled": 26,
-   "pnl": 4.35,
-   "t": 1.97,
-   "win_rate": 0.808,
-   "days_up": 6,
-   "days": 8,
-   "status": "open"
   }
  ],
  "selection": "Top 20 settings per family x scope by the t-stat of search window + exam days combined, at real-money scoring; profitable in both, >= 100 search and >= 30 exam trades. Nothing from after the forward start was loaded.",
- "runtime_s": 65
+ "runtime_s": 246
 }
