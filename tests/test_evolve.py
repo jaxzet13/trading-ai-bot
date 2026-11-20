@@ -33,7 +33,7 @@ def test_breed_children_are_valid_and_new():
 
 
 def test_parents_cap_per_idea():
-    rows = [dict(_parent("fv_drift", "KXETH15M", {"x": i}, t=3 + i / 10), id=f"fv_drift:KXETH15M:{i}", key=str(i)) for i in range(6)]
+    rows = [dict(_parent("fv_drift", "KXETH15M", {"x": i}, t=3 + i / 10, filled=40 + i), id=f"fv_drift:KXETH15M:{i}", key=str(i)) for i in range(6)]
     assert len(E.parents(rows)) == E.PER_IDEA
 
 
@@ -84,3 +84,10 @@ def test_removed_rules_never_eligible():
     ALL = _ALL(days)
     assert any(r["rid"] == "fv_drift:KXETH15M:1" for r in R.eligible(ALL, days[-1], {"fv_drift"}, gone=set()))
     assert not any(r["rid"] == "fv_drift:KXETH15M:1" for r in R.eligible(ALL, days[-1], {"fv_drift"}, gone={"fv_drift:KXETH15M:1"}))
+
+
+def test_parents_skip_exact_duplicates():
+    a = dict(_parent("fv_dyn", "KXZEC15M", {"x": 1}, t=3.5, filled=31), id="fv_dyn:KXZEC15M:18", key="a")
+    b = dict(a, id="fv_dyn:KXZEC15M:19", params={"x": 2}, key="b")                 # identical forward record
+    c = dict(_parent("fv_dyn", "KXZEC15M", {"x": 3}, t=3.0, filled=20), id="fv_dyn:KXZEC15M:8", key="c")
+    assert [r["id"] for r in E.parents([a, b, c])] == ["fv_dyn:KXZEC15M:18", "fv_dyn:KXZEC15M:8"]

@@ -112,8 +112,12 @@ def parents(rows, k=N_PARENTS, fixed=15, pool=3, seed=None):
     """The `fixed` strongest always breed; the rest are drawn from the next `pool` x k, weighted by strength, so
     successive rounds explore different parents instead of re-breeding the same 40 while new batches mature."""
     ok = sorted((r for r in rows if r["filled"] >= MIN_PARENT_FILLS and r["pnl"] > 0), key=lambda r: -strength(r))
-    cand, per = [], {}
+    cand, per, sigs = [], {}, set()
     for r in ok:
+        sig = (r["family"], r["scope"], r["filled"], round(r["pnl"], 2))   # same bets as a stronger one: skip
+        if sig in sigs:
+            continue
+        sigs.add(sig)
         idea = (r["family"], r["scope"])
         if per.get(idea, 0) >= PER_IDEA:
             continue
