@@ -108,29 +108,47 @@ def strength(r):
     return r["t"] * math.sqrt(min(r["filled"], 30) / 30)
 
 
-def parents(rows, k=N_PARENTS, fixed=15, pool=3, seed=None):
-    """The `fixed` strongest always breed; the rest are drawn from the next `pool` x k, weighted by strength, so
-    successive rounds explore different parents instead of re-breeding the same 40 while new batches mature."""
-    ok = sorted((r for r in rows if r["filled"] >= MIN_PARENT_FILLS and r["pnl"] > 0), key=lambda r: -strength(r))
-    cand, per, sigs = [], {}, set()
-    for r in ok:
+def parents(rows, k=N_PARENTS, per_idea=PER_IDEA, explore=10, seed=None):
+    """Breed from the best IDEAS, not the best single settings. Walk-forward on gen 1's forward days (Nov 20): the
+    40 strongest single strategies made +$0.09 per strategy the next day, less than the average (+$0.17), while the 3
+    strongest members of each of the best strategy-type x coin families made +$0.36. So: rank families by their
+    members' average forward $/day, take up to `per_idea` strongest members of each in order (exact duplicates
+    skipped), and draw the last `explore` slots from everything else, weighted by strength, so rounds differ."""
+    ok = [r for r in rows if r["filled"] >= MIN_PARENT_FILLS and r["pnl"] > 0]
+    fam = {}
+    for r in rows:
+        if r.get("fwd_days", 0) >= 1:
+            fam.setdefault((r["family"], r["scope"]), []).append(r["pnl"] / r["fwd_days"])
+    score = {f: sum(v) / len(v) for f, v in fam.items()}
+    by_idea = {}
+    for r in sorted(ok, key=lambda r: -strength(r)):
+        by_idea.setdefault((r["family"], r["scope"]), []).append(r)
+    out, sigs, per = [], set(), {}
+
+    def take(r):
         sig = (r["family"], r["scope"], r["filled"], round(r["pnl"], 2))   # same bets as a stronger one: skip
-        if sig in sigs:
-            continue
-        sigs.add(sig)
         idea = (r["family"], r["scope"])
-        if per.get(idea, 0) >= PER_IDEA:
-            continue
+        if sig in sigs or per.get(idea, 0) >= per_idea:
+            return False
+        sigs.add(sig)
         per[idea] = per.get(idea, 0) + 1
-        cand.append(r)
-        if len(cand) >= pool * k:
+        out.append(r)
+        return True
+
+    for idea in sorted(by_idea, key=lambda f: -score.get(f, 0)):
+        n = 0
+        for r in by_idea[idea]:
+            if n >= per_idea or len(out) >= k - explore:
+                break
+            n += take(r)
+        if len(out) >= k - explore:
             break
-    out, rest = cand[:fixed], cand[fixed:]
+    rest = [r for r in ok if r not in out and per.get((r["family"], r["scope"]), 0) < per_idea]
     rng = random.Random(seed)
     while rest and len(out) < k:
         w = [math.exp(min(strength(r), 6)) for r in rest]
-        i = rng.choices(range(len(rest)), weights=w)[0]
-        out.append(rest.pop(i))
+        r = rest.pop(rng.choices(range(len(rest)), weights=w)[0])
+        take(r)
     return out
 
 

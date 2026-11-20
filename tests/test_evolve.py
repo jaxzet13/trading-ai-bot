@@ -34,7 +34,7 @@ def test_breed_children_are_valid_and_new():
 
 def test_parents_cap_per_idea():
     rows = [dict(_parent("fv_drift", "KXETH15M", {"x": i}, t=3 + i / 10, filled=40 + i), id=f"fv_drift:KXETH15M:{i}", key=str(i)) for i in range(6)]
-    assert len(E.parents(rows)) == E.PER_IDEA
+    assert len(E.parents(rows, explore=0)) == E.PER_IDEA
 
 
 def _ALL(days):
@@ -61,12 +61,17 @@ def test_rotation_walk_uses_only_earlier_days():
     assert r["filled"] == 35 and abs(r["pnl"] - 7.0) < 1e-9
 
 
-def test_parents_fixed_top_and_varied_rest():
-    rows = [dict(_parent("fv_drift", f"C{i}", {"x": i}, t=5 - i / 50), id=f"fv_drift:C{i}:1", key=str(i)) for i in range(150)]
-    a, b = E.parents(rows, seed=1), E.parents(rows, seed=2)
-    assert len(a) == len(b) == E.N_PARENTS
-    assert [r["id"] for r in a[:15]] == [r["id"] for r in b[:15]] == [f"fv_drift:C{i}:1" for i in range(15)]
-    assert {r["id"] for r in a} != {r["id"] for r in b}
+def test_parents_follow_the_best_families():
+    rows = []
+    for i, (sc, per_day) in enumerate([("A", 1.0), ("B", 0.1), ("C", 0.5)]):    # family A best, then C, then B
+        for j in range(5):
+            r = dict(_parent("fv_drift", sc, {"x": j}, t=3 - j / 10, filled=40 + j), id=f"fv_drift:{sc}:{j}", key=f"{sc}{j}")
+            r["pnl"], r["fwd_days"] = per_day * 10 + j / 100, 10
+            rows.append(r)
+    p = E.parents(rows, k=8, explore=2, seed=1)
+    assert [r["scope"] for r in p[:6]] == ["A", "A", "A", "C", "C", "C"]       # 3 best members of the 2 best families
+    assert len(p) == 8 and len({r["id"] for r in p}) == 8
+    assert E.parents(rows, k=8, explore=2, seed=1)[:6] == p[:6]               # the family part does not depend on luck
 
 
 def test_real_record_credits_the_rule_that_bet(tmp_path):
