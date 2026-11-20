@@ -20,8 +20,7 @@ const TINT = { bw: '#ece7dc', blue: '#eeeadb', red: '#efe4d8', olive: '#e1e6c0',
   await p.setContent(`<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"><style>
     *{margin:0;padding:0;box-sizing:border-box}body{background:#161617;padding:24px;display:flex;gap:24px;width:max-content}
     .card{width:750px;height:1050px;position:relative;overflow:hidden;background:#000;flex:none}.card img{position:absolute;inset:0;width:100%;height:100%}
-    .card::after{content:'';position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(0deg,rgba(0,0,0,.92),rgba(0,0,0,.6) 55%,rgba(0,0,0,0));pointer-events:none}
-    .id{z-index:2;position:absolute;left:0;right:0;bottom:16px;text-align:center;font:600 13px 'IBM Plex Mono';letter-spacing:.38em;white-space:nowrap;text-shadow:0 0 6px #000,0 0 12px #000;opacity:.9}
+        .id{z-index:2;position:absolute;right:55px;bottom:52px;text-align:right;font:600 12px 'IBM Plex Mono';letter-spacing:.3em;white-space:nowrap;opacity:.85}
     .id.top{bottom:auto;top:26px}.id i{font-style:normal;font-weight:700;color:#e0202c;margin-left:.5em;letter-spacing:.04em}
   </style></head><body>${cards}</body></html>`);
   await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(800);
