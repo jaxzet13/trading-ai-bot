@@ -303,16 +303,16 @@ const RAR = {
 };
 // val is in cents. chars is the exact number printed on the card.
 const CARDS = [
-  { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "common",    chars: 2772,   val: 10,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
-  { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "common",    chars: 2816,   val: 10,    tint: "#a8ffbe", cap: "it is a colander. it works." },
-  { no: "004", id: "rook",    name: "Rook",    sub: "pool noodle", rar: "common",   chars: 2816,   val: 10,    tint: "#a8ffbe", cap: "reach: floppy." },
-  { no: "012", id: "orbit",   name: "Grimm",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 30,    tint: "#a9c9ff", cap: "already read the ending." },
-  { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "uncommon",  chars: 15750,  val: 55,    tint: "#ece7dc", cap: "gone before the cape lands." },
-  { no: "018", id: "null",    name: "Null",    sub: "star",       rar: "rare",      chars: 29260,  val: 130,   tint: "#a9c9ff", cap: "not on any record." },
-  { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "rare",      chars: 31970,  val: 170,   tint: "#ffd27a", cap: "rents you the air." },
-  { no: "006", id: "ronin",   name: "Ronin",   sub: "cliff",      rar: "epic",      chars: 71680,  val: 540,   tint: "#ff8ac9", cap: "" },
-  { no: "011", id: "grimm",   name: "Grimm",   sub: "cathedral",  rar: "legendary", chars: 219520, val: 3000,  tint: "#a8ffb0", cap: "" },
-  { no: "015", id: "reaper",  name: "Reaper",  sub: "ember",      rar: "mythic",    chars: 701000, val: 18000, tint: "#ffc87a", cap: "" }
+  { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "common",    chars: 2772,   val: 15,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
+  { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "common",    chars: 2816,   val: 15,    tint: "#a8ffbe", cap: "it is a colander. it works." },
+  { no: "004", id: "rook",    name: "Rook",    sub: "pool noodle", rar: "common",   chars: 2816,   val: 15,    tint: "#a8ffbe", cap: "reach: floppy." },
+  { no: "012", id: "orbit",   name: "Grimm",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 25,    tint: "#a9c9ff", cap: "already read the ending." },
+  { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "uncommon",  chars: 15750,  val: 90,    tint: "#ece7dc", cap: "gone before the cape lands." },
+  { no: "018", id: "null",    name: "Null",    sub: "star",       rar: "rare",      chars: 29260,  val: 260,   tint: "#a9c9ff", cap: "not on any record." },
+  { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "rare",      chars: 31970,  val: 490,   tint: "#ffd27a", cap: "rents you the air." },
+  { no: "006", id: "ronin",   name: "Ronin",   sub: "cliff",      rar: "epic",      chars: 71680,  val: 1100,   tint: "#ff8ac9", cap: "" },
+  { no: "011", id: "grimm",   name: "Grimm",   sub: "cathedral",  rar: "legendary", chars: 219520, val: 2600,  tint: "#a8ffb0", cap: "" },
+  { no: "015", id: "reaper",  name: "Reaper",  sub: "ember",      rar: "mythic",    chars: 701000, val: 20000, tint: "#ffc87a", cap: "" }
 ];
 const BY_NO = Object.fromEntries(CARDS.map(c => [c.no, c])), BY_ID = Object.fromEntries(CARDS.map(c => [c.id, c]));
 // The twelve styles a Stitch can come out in (odds per Stitch, value multiplier). The default is Bone.
@@ -327,14 +327,14 @@ const STYLES = {
 const STYLE_TINT = { "": "#ece7dc", steel: "#aaffbd", dots: "#ffd27a", vhs: "#c9a5ff", scratch: "#ece7dc", ice: "#a9c9ff", chain: "#ece7dc", wire: "#b6ff9c", print: "#ff9a94", glass: "#ff8ac9", blood: "#a8ffb0", leaf: "#d6c9ff", kin: "#a9c9ff" };
 const PACK = {
   name: "First Print", price: 499, n: 5,
-  slots: [   // each slot: [card id, weight]
+  slots: [   // each slot: [card id, weight]. Tuned so about 45% of packs sell back for at least what they cost (the exact figure is worked out below).
     [["stitch", 1], ["brick", 1], ["rook", 1]],
     [["stitch", 1], ["brick", 1], ["rook", 1]],
-    [["stitch", 23.3], ["brick", 23.3], ["rook", 23.4], ["orbit", 15], ["phantom", 15]],
-    [["orbit", 40], ["phantom", 40], ["null", 10], ["shogun", 10]],
-    [["orbit", 20], ["phantom", 22], ["null", 23], ["shogun", 20], ["ronin", 10.5], ["grimm", 3.9], ["reaper", .6]]
+    [["stitch", 26], ["brick", 26], ["rook", 26], ["orbit", 19], ["phantom", 3]],
+    [["orbit", 38], ["phantom", 47], ["null", 9], ["shogun", 6]],
+    [["orbit", 29.3], ["phantom", 13], ["null", 18.1], ["shogun", 32.5], ["ronin", 6.1], ["grimm", .9], ["reaper", .1]]
   ]
-};
+};;
 const SELLBACK = .9, START = 1000, TOPUP = 1000;
 
 /* ============================================================================
@@ -394,6 +394,27 @@ function slotP(slot, id) { let t = 0, w = 0; for (const [i, x] of slot) { t += x
 const packP = id => 1 - PACK.slots.reduce((a, s) => a * (1 - slotP(s, id)), 1);
 const slotEV = slot => { let t = 0, v = 0; for (const [i, w] of slot) { t += w; const c = BY_ID[i]; v += w * c.val * (c.styles ? 1 + Object.values(STYLES).reduce((a, s) => a + s.p * (s.x - 1), 0) : 1); } return v / t; };
 const packEV = () => PACK.slots.reduce((a, s) => a + slotEV(s), 0);
+// The exact distribution of what a whole pack sells back for: every slot's outcomes (including a Stitch's style roll) convolved together.
+const sellFor = (card, mult) => Math.floor(Math.max(1, Math.round(card.val * mult)) * SELLBACK);
+function cardSells(card) {
+  const m = new Map(), add = (k, p) => m.set(k, (m.get(k) || 0) + p);
+  if (!card.styles) { add(sellFor(card, 1), 1); return m; }
+  let rest = 1; for (const k in STYLES) { add(sellFor(card, STYLES[k].x), STYLES[k].p); rest -= STYLES[k].p; } add(sellFor(card, 1), rest); return m;
+}
+let _ps = null;
+function packStats() {
+  if (_ps) return _ps;
+  let dist = new Map([[0, 1]]);
+  for (const slot of PACK.slots) {
+    const t = slot.reduce((a, [, w]) => a + w, 0), sd = new Map();
+    for (const [id, w] of slot) for (const [v, p] of cardSells(BY_ID[id])) sd.set(v, (sd.get(v) || 0) + w / t * p);
+    const next = new Map(); for (const [a, pa] of dist) for (const [b, pb] of sd) next.set(a + b, (next.get(a + b) || 0) + pa * pb); dist = next;
+  }
+  let ev = 0, hit = 0, acc = 0, median = 0; const keys = [...dist.keys()].sort((a, b) => a - b);
+  for (const k of keys) { const p = dist.get(k); ev += k * p; if (k >= PACK.price) hit += p; }
+  for (const k of keys) { acc += dist.get(k); if (acc >= .5) { median = k; break; } }
+  return (_ps = { ev, hit, median, rtp: ev / PACK.price });
+}
 
 /* ============================================================================
    5. ASCII LIBRARY. Everything that moves on this site is text.
@@ -588,7 +609,7 @@ function renderHome() {
   const hp = $("homePack"); if (!hp.firstChild || hp.dataset.k !== "1") { hp.innerHTML = packHTML(); hp.dataset.k = "1"; const pk = hp.firstChild; tiltPack(pk); pk.style.cursor = "pointer"; pk.onclick = () => openPack(); liveWindow(pk, 2); }
   const rows = Object.keys(RAR).map(r => { const ids = CARDS.filter(c => c.rar === r), p = ids.reduce((a, c) => a + packP(c.id), 0) / 1; return `<div class="row"><span>${RAR[r].name}</span><span class="bar">${bar(Math.min(1, p / 3.2), 22)}</span><span class="pct">${p >= 1 ? "×" + p.toFixed(1) : oddsTxt(p)}</span></div>`; });
   $("homeOdds").innerHTML = `<div class="label" style="margin-bottom:4px">in every pack · how many of each, on average</div>` + rows.join("");
-  $("homeEv").textContent = `average sell-back ${Math.round(packEV() * SELLBACK / PACK.price * 100)}% of the price`;
+  const ps = packStats(); $("homeEv").textContent = `${Math.round(ps.hit * 100)}% of packs sell back for at least the price · ${Math.round(ps.rtp * 100)}% back on average`;
   if (!portrait) { portrait = new Portrait($("portrait"), 70); portrait.start(); let i = 0; const next = () => { const c = BY_ID[CHASE[i++ % CHASE.length]]; portrait.show(imgOf(c), c.tint); const cap = $("pcap"); cap.innerHTML = `<b></b><span class="dim"></span>`; scramble(cap.firstChild, c.name.toUpperCase(), 600); scramble(cap.lastChild, `${RAR[c.rar].name} · ${fmt(c.chars)} chars`, 700); }; next(); setInterval(next, 5200); }
   portrait.fit();
 }
@@ -621,11 +642,11 @@ function renderIndex() {
   $("sGrid").innerHTML = all.map(k => `<div class="tile"><div>${cardHTML({ no: "001", fx: k }, { sm: true, locked: !haveFx.has(k) })}</div><div class="meta"><b>${styleName(k)}</b><span class="small">${k ? "1 in " + fmt(1 / STYLES[k].p) + " · ×" + STYLES[k].x : "default · ×1"}</span></div></div>`).join("");
 }
 function renderOdds() {
-  const ev = packEV(), tot = Object.values(STYLES).reduce((a, s) => a + s.p, 0);
+  const ps = packStats(), tot = Object.values(STYLES).reduce((a, s) => a + s.p, 0);
   const slotName = ["1 · common", "2 · common", "3 · common or better", "4 · uncommon or better", "5 · the hit slot"];
   $("oBody").innerHTML = `
-    ${box("the pack", `<div class="two"><dl class="kv"><dt>price</dt><dd>${money(PACK.price)}</dd><dt>cards</dt><dd>${PACK.n}</dd><dt>average value inside</dt><dd>${money(ev)}</dd><dt>average sell-back (90%)</dt><dd>${money(ev * SELLBACK)}</dd><dt>return on the price</dt><dd>${Math.round(ev * SELLBACK / PACK.price * 100)}%</dd></dl>
-      <ul class="plain"><li>every pack returns less than it costs on average. the number is printed here.</li><li>rolls use your browser's random generator and never change with what you have spent or pulled.</li><li>the money is simulated. nothing is ever charged.</li></ul></div>`)}
+    ${box("the pack", `<div class="two"><dl class="kv"><dt>price</dt><dd>${money(PACK.price)}</dd><dt>cards</dt><dd>${PACK.n}</dd><dt>hit rate</dt><dd><b>${(ps.hit * 100).toFixed(1)}%</b></dd><dt>typical pack sells back</dt><dd>${money(ps.median)}</dd><dt>average sell-back (90%)</dt><dd>${money(ps.ev)}</dd><dt>return on the price</dt><dd>${(ps.rtp * 100).toFixed(1)}%</dd></dl>
+      <ul class="plain"><li>hit rate is the share of packs whose cards sell back for at least the price of the pack, worked out exactly from the odds below. every pack returns less than it costs on average, and that number is printed here too.</li><li>rolls use your browser's random generator and never change with what you have spent or pulled.</li><li>the money is simulated. nothing is ever charged.</li></ul></div>`)}
     ${box("rarity is characters", `<table><thead><tr><th>rarity</th><th>card</th><th class="r">characters</th><th class="r">value</th><th class="r">per pack</th><th>cuts</th></tr></thead><tbody>${CARDS.slice().sort((a, b) => a.chars - b.chars).map(c => `<tr><td>${RAR[c.rar].name}</td><td>${esc(c.name)} <span class="faint">${esc(c.sub)}</span></td><td class="r num">${fmt(c.chars)}</td><td class="r num">${money(c.val)}</td><td class="r num">${(packP(c.id) * 100).toFixed(packP(c.id) < .01 ? 2 : 1)}%</td><td style="color:var(--red)">${cuts(c.rar) || '<span class="faint">·</span>'}</td></tr>`).join("")}</tbody></table>
       <p class="small" style="margin-top:12px">the number on a card is exactly how many characters its picture is made of. the red slashes after a copy's id are its rarity cuts: none, one, two or three.</p>`)}
     ${box("what is in each slot", `<div class="stack">${PACK.slots.map((s, i) => { const t = s.reduce((a, [, w]) => a + w, 0); return `<div><div class="label" style="margin-bottom:6px">slot ${slotName[i]}</div><div class="odds">${s.map(([id, w]) => `<div class="row"><span>${esc(BY_ID[id].name)}${BY_ID[id].sub ? " " + esc(BY_ID[id].sub) : ""}</span><span class="bar">${bar(w / t, 26)}</span><span class="pct">${(w / t * 100).toFixed(w / t < .01 ? 1 : 1)}%</span></div>`).join("")}</div></div>`; }).join("")}</div>`)}
