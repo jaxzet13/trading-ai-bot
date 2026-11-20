@@ -292,8 +292,13 @@ def run(apply=False, log=print):
     else:
         # hysteresis: keep an incumbent unless its coin's challenger is clearly stronger
         info = {r["rid"]: r for r in eligible(ALL, today, fams | {GL.RULES[i]["family"] for i in live if i in GL.RULES})}
-        new, coins = [], set()
+        # real money outranks the lab: a live rule that is profitable over CUT_MIN_BETS+ real bets is never swapped out
+        real = real_record()
+        proven = {i for i in live if real.get(i, [0, 0])[0] >= CUT_MIN_BETS and real[i][1] > 0}
+        new, coins = [("keep", i) for i in live if i in proven], {GL.RULES[i]["scope"] for i in live if i in proven}
         for p in picks:
+            if p["c"]["scope"] in coins:
+                continue
             inc = [i for i in live if GL.RULES.get(i, {}).get("scope") == p["c"]["scope"]]
             if inc and inc[0] != p["rid"]:
                 ir = info.get(inc[0])
@@ -305,6 +310,7 @@ def run(apply=False, log=print):
             ir = info.get(i)
             if sc not in coins and ir is not None and len(new) < MAX_RULES:
                 new.append(("keep", i)); coins.add(sc)
+        new = new[:MAX_RULES]
         new_ids = [x[1] if x[0] == "keep" else x[1]["rid"] for x in new]
         rec["live_after"] = new_ids
         last = [json.loads(ln) for ln in ROT_LOG.read_text().splitlines()] if ROT_LOG.exists() else []
