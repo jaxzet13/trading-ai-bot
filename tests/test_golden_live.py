@@ -305,7 +305,7 @@ def test_replay_rules_match_lab3_signal():
     R = replay_all()
     rows = []
     bad = []
-    for rid in [r["id"] for r in GL.GOLDEN + GL.SINGLE]:
+    for rid in [r["id"] for r in GL.GOLDEN + GL.SINGLE + GL.EVOLVED]:
         n = match = trades_b = trades_l = 0
         for coin, r in R.items():
             if rid not in r["batch"]:

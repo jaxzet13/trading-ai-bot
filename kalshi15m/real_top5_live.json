@@ -1,10 +1,11 @@
 {
- "_note": "REAL MONEY, started Nov 12 ~15:45 UTC at the account holder's request: 'Start running 5 of the most consistent strategies until you hit 4 dollars, make sure it's running 24/7 no stop'. The forward lab's 5 most consistent (one per family x coin, by share of forward days up then forward t, 7.8 forward days); NONE passed the 4.16 bar. Balance at start $7.54; new bets stop for good once the balance incl. open bets is below $4.00. Daily loss caps 3.6 so the $4 floor is the stop that binds. Stop by hand: touch STOP_TOP5. Nov 15: fv_vol:KXHYPE15M:20 dropped at the account holder's OK (weakest in the forward lab; crowded out fv_season on HYPE). Nov 15: bets 1.5x ($0.75) with the daily-loss, open-risk and window limits raised 1.5x, at the account holder's choice. Nov 15: drawdown brake - bets halve while equity is more than $7 below its high-water mark (start $25.17, Nov 14 high). Nov 15: rule auto-pause - a rule whose last 40 closed bets lost $5+ places no new bets until reviewed (limits.rule_pause_ignore_before_ts restarts its count). Nov 16: compounding stake - 3% of the crypto balance per bet, never below $0.75 (same size as before at today's ~$25), so bets grow with the account; the account holder asked to use the data to make it more profitable.",
+ "_note": "REAL MONEY, started Nov 12 ~15:45 UTC at the account holder's request: 'Start running 5 of the most consistent strategies until you hit 4 dollars, make sure it's running 24/7 no stop'. The forward lab's 5 most consistent (one per family x coin, by share of forward days up then forward t, 7.8 forward days); NONE passed the 4.16 bar. Balance at start $7.54; new bets stop for good once the balance incl. open bets is below $4.00. Daily loss caps 3.6 so the $4 floor is the stop that binds. Stop by hand: touch STOP_TOP5. Nov 15: fv_vol:KXHYPE15M:20 dropped at the account holder's OK (weakest in the forward lab; crowded out fv_season on HYPE). Nov 15: bets 1.5x ($0.75) with the daily-loss, open-risk and window limits raised 1.5x, at the account holder's choice. Nov 15: drawdown brake - bets halve while equity is more than $7 below its high-water mark (start $25.17, Nov 14 high). Nov 15: rule auto-pause - a rule whose last 40 closed bets lost $5+ places no new bets until reviewed (limits.rule_pause_ignore_before_ts restarts its count). Nov 16: compounding stake - 3% of the crypto balance per bet, never below $0.75 (same size as before at today's ~$25), so bets grow with the account; the account holder asked to use the data to make it more profitable. Nov 20: fv_tau:KXZEC15M:10 added as a 5th rule at the account holder's OK (forward lab +$10.33 on 67 filled bets, t 2.55, 11/15 days up; the walk-forward test of the set rose from +2.77 to +3.42 $/day with it). Not a passed strategy (bar 4.16).",
  "series": [
   "KXETH15M",
   "KXHYPE15M",
   "KXNEAR15M",
-  "KXSOL15M"
+  "KXSOL15M",
+  "KXZEC15M"
  ],
  "execution": "taker",
  "poll": "minute",
@@ -65,6 +66,20 @@
     "band": "20-80",
     "vol": "tod_ewma60",
     "vm": 1.1
+   }
+  },
+  {
+   "id": "fv_tau:KXZEC15M:10",
+   "family": "fv_tau",
+   "scope": "KXZEC15M",
+   "t": 2.55,
+   "params": {
+    "start": 3,
+    "end": 11,
+    "edge": 0.11,
+    "band": "25-75",
+    "tau_adj": 1.0,
+    "vm": 1.0
    }
   }
  ],
