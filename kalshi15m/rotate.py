@@ -388,6 +388,47 @@ def run(apply=False, log=print):
     return rec
 
 
+def tracking(hours=24, log=print):
+    """Cold strategy or broken bot? For each live rule over the last `hours`: real bets and P&L vs the forward lab's
+    replay of the same rule (data/lab/fwd_live_bets.json, Kalshi's own trades deciding fills). Both losing = the
+    strategy is cold; real losing while the lab wins = an execution problem worth looking at."""
+    since = time.time() - hours * 3600
+    cfg = json.loads(CFG.read_text())
+    lab_path = LABDIR / "fwd_live_bets.json"
+    lab = json.loads(lab_path.read_text()) if lab_path.exists() else {"rules": {}, "generated": 0}
+    upto = min(time.time(), lab.get("generated", 0))
+    rule, real = {}, {}
+    for ln in open(REAL_LOG) if REAL_LOG.exists() else []:
+        try:
+            e = json.loads(ln)
+        except ValueError:
+            continue
+        if e.get("event") == "order_intent":
+            rule[e.get("ticker")] = (e.get("rule"), e.get("ts", 0))
+        elif e.get("event") == "settle" and e.get("ticker") in rule:
+            rid_, t = rule[e["ticker"]]
+            if since <= t <= upto:
+                a = real.setdefault(rid_, [0, 0.0])
+                a[0] += 1
+                a[1] += float(e.get("pnl") or 0)
+    out = {}
+    log(f"  real vs lab, last {hours} h (to {time.strftime('%H:%M UTC', time.gmtime(upto))}):")
+    for r in cfg["golden_rules"]:
+        i = r["id"]
+        lb = [b for b in lab["rules"].get(i, []) if b.get("filled") and since <= b["ts"] <= upto]
+        rn, rp = real.get(i, [0, 0.0])
+        lp = sum(b["pnl"] for b in lb)
+        verdict = ("no bets" if not rn and not lb else "cold strategy (lab lost too)" if rp < 0 and lp < 0
+                   else "CHECK EXECUTION (lab made money)" if rp < 0 <= lp and rn >= 3 else "ok")
+        out[i] = {"real_bets": rn, "real_pnl": round(rp, 2), "lab_bets": len(lb), "lab_pnl": round(lp, 2), "verdict": verdict}
+        log(f"    {i:26s} real {rn:3d} bets ${rp:+6.2f} | lab {len(lb):3d} bets ${lp:+6.2f} | {verdict}")
+    return out
+
+
 def main(args=None):
     args = list(args or [])
+    if "tracking" in args:
+        tracking()
+        return
     run(apply="apply" in args)
+    tracking()
