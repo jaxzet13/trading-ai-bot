@@ -2,7 +2,7 @@
    10. START
    ========================================================================== */
 MK.advance(); logWorth(); persist(); renderBal(); route(); renderTape();
-if (!state.ageOK) $("gate").hidden = false;
+if (!state.ageOK) $("gate").hidden = false; else setTimeout(() => Cut.maybeIntro(), 400);
 // the market moves every 20 seconds; redraw whatever is on screen when it does
 setInterval(() => { if (MK.advance()) { logWorth(); persist(); refreshLive(); renderTape(); checkAlerts(); } }, 2000);
 setTimeout(checkAlerts, 2500);

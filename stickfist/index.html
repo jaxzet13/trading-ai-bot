@@ -414,7 +414,7 @@ const imgOf = (card, fx) => `cards/${card.id}${fx ? "-" + fx : card.id === "stit
    4. STATE AND ECONOMY. Everything lives in this browser.
    ========================================================================== */
 const KEY = "stixx-first-print-v1";
-const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, ageOK: false, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0 } });
+const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0 } });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); } catch (e) {}
 const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
@@ -934,6 +934,7 @@ function renderOdds() {
   const tot = Object.values(STYLES).reduce((a, s) => a + s.p, 0), cap = id => MK.CAP[id];
   $("oBody").innerHTML = `
     <div class="facts"><div><div class="bignum sm" role="img" aria-label="${money(ps.price)}">${money(ps.price)}</div><span>per pack right now · ${PACK.n} cards</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.hit * 100).toFixed(0)}%">${(ps.hit * 100).toFixed(0) + "%"}</div><span>of packs are worth at least what you paid</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.rtp * 100).toFixed(0)}%">${(ps.rtp * 100).toFixed(0) + "%"}</div><span>comes back on average when you sell</span></div></div>
+    <p class="small" style="margin-bottom:18px"><button class="linkbtn" data-cut="intro">Watch the six-second intro</button></p>
     <h3 class="sec">What can be in a pack</h3>
     <div class="tablewrap"><table><thead><tr><th>Card</th><th>Rarity</th><th class="r">Characters</th><th class="r">Price now · 24h</th><th class="r">Chance per pack</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="small" style="margin-bottom:44px">Selling a card back pays 90% of its price. A typical pack sells back for ${money(ps.median)} right now.</p>
@@ -1334,7 +1335,56 @@ const Cut = (() => {
           y pointing down, so a circle with radius .2 is a circle. It may set g.pi to choose a palette, g.ch to force a character.
           over(g, t) draws what is not a formula: a figure, a line of type, a flash. */
   const FIG = ["  _o_  ", " / | \\ ", "   |   ", "  / \\  ", " /   \\ "];
+  const INTRO_SERIES = (() => { const a = [10, 11, 9.5, 12, 10.5, 14, 13, 24, 70, 150, 184], n = 80, out = []; for (let i = 0; i < n; i++) { const f = i / (n - 1) * (a.length - 1), j = Math.min(a.length - 2, Math.floor(f)), k = f - j, e = k * k * (3 - 2 * k); out.push(Math.exp(mixv(Math.log(a[j]), Math.log(a[j + 1]), e) + (hash(i, 3, 9) - .5) * .06)); } return out; })();   // a price that wobbles and then runs, for the intro
   const SCENES = {
+    /* INTRO: what the app is, in six seconds. A pack tears, a card runs, a sale. */
+    intro: {
+      dur: 5.4, fsMul: 1.3, pals: [mkpal([[0, 0, 0], [30, 30, 32], [120, 118, 110], [200, 195, 185], [236, 231, 220]])],
+      cell: () => 0,
+      over(g, tt) {
+        const t = tt * 1.15;   // written for six seconds, played in five and a bit
+        const C = g.C, R = g.R, cx = C >> 1, cy = R >> 1, INK = [236, 231, 220], GRN = [159, 216, 166], DIM = [141, 137, 127], RED = [232, 120, 109];
+        const vis = (a, b, f) => { f = f || .22; return sm(a, a + f, t) * (1 - sm(b - f, b, t)); };
+        const logo = (x0, y0, col, al, dec) => {      // the pixel lettering, two columns for every pixel, decoding from noise
+          const rows = blockText("STIXX").split("\n"), w = rows[0].length;
+          rows.forEach((row, r) => { for (let i = 0; i < w; i++) if (row[i] === "█") { const seed = hash(i, r, 1), k = dec == null ? 1 : dec * 1.5 - seed * .7; if (k <= 0) continue; const ch = k < .4 ? ".:*#"[(Math.floor(t * 28) + i * 3 + r) % 4] : "█"; g.put(x0 + i * 2, y0 + r, ch, col, al * (k < .4 ? .55 : 1)); g.put(x0 + i * 2 + 1, y0 + r, ch, col, al * (k < .4 ? .55 : 1)); } });
+        };
+        const box = (x0, y0, w, h, col, al) => { for (let i = 1; i < w - 1; i++) { g.put(x0 + i, y0, "─", col, al); g.put(x0 + i, y0 + h - 1, "─", col, al); } for (let j = 1; j < h - 1; j++) { g.put(x0, y0 + j, "│", col, al); g.put(x0 + w - 1, y0 + j, "│", col, al); } g.put(x0, y0, "┌", col, al); g.put(x0 + w - 1, y0, "┐", col, al); g.put(x0, y0 + h - 1, "└", col, al); g.put(x0 + w - 1, y0 + h - 1, "┘", col, al); };
+        const lx = cx - 29, ly = cy - 3, tall = R > C * .9 ? 1.55 : 1;   // on a tall screen the pictures are drawn taller
+        // 0 - 1.4: the name
+        const a0 = vis(-.3, 1.5, .3); if (a0 > 0) { logo(lx, ly, INK, a0, t / .8); g.text(typed("cards made of text.", t, .55, 20), .6, DIM); }
+        // 1.4 - 2.7: open a pack
+        const a1 = vis(1.4, 2.8, .25); if (a1 > 0) {
+          const PH = Math.round(10 * tall), k = ease((t - 1.4) / .45), dropY = Math.round((1 - k) * -16), shake = t > 1.85 && t < 2.05 ? (Math.floor(t * 40) % 2 ? 1 : -1) : 0, tear = t > 2.05, tx = cx - 13 + shake, ty = cy - Math.round(PH / 2) + dropY;
+          g.text(typed("1   open a pack", t, 1.5, 22), .16, INK);
+          const crimp = y => { for (let i = 0; i < 26; i++) g.put(tx + i, y, i % 2 ? "/" : "\\", INK, a1); };
+          const ty2 = tear ? ty - Math.round((t - 2.05) * 26) : ty, topA = tear ? a1 * (1 - sm(2.05, 2.5, t)) : a1;
+          for (let i = 0; i < 26; i++) g.put(tx + i, ty2, i % 2 ? "\\" : "/", INK, topA);
+          if (!tear || t < 2.6) { const bodyA = tear ? a1 * (1 - sm(2.15, 2.6, t)) : a1; for (let j = 1; j < PH; j++) { g.put(tx, ty + j, "|", INK, bodyA); g.put(tx + 25, ty + j, "|", INK, bodyA); } const m = Math.round(PH * .3), lab = [[m, "F I R S T"], [m + 1, "P R I N T"], [Math.round(PH * .75), "5 cards"]]; lab.forEach(([j, str]) => { for (let i = 0; i < str.length; i++) g.put(tx + 13 - (str.length >> 1) + i, ty + j, str[i], INK, bodyA); }); for (let i = 0; i < 12; i++) g.put(tx + 7 + i, ty + Math.round(PH * .5), "░▒▓█▓▒░░▒▓█▓▒"[i], DIM, bodyA); crimp(ty + PH); }
+          if (tear) { const CH = Math.round(11 * tall), tints = [[141, 137, 127], [141, 137, 127], [169, 201, 255], [255, 210, 122], [255, 138, 201]], arc = [[-22, 3], [-11, 1], [0, 0], [11, 1], [22, 3]], f = ease((t - 2.1) / .5);
+            for (let c = 0; c < 5; c++) { const x0 = Math.round(cx - 4 + arc[c][0] * f), y0 = Math.round(cy - CH / 2 + arc[c][1] * tall * f + (1 - f) * 2), col = tints[c], al = a1 * sm(2.1, 2.25, t); box(x0, y0, 9, CH, col, al);
+              for (let j = 1; j < CH - 1; j++) for (let i = 1; i < 8; i++) if (hash(i, j, c + 5) > .55) g.put(x0 + i, y0 + j, ".:+*"[Math.floor(hash(i, j, c) * 4)], col, al * .55); g.put(x0 + 4, y0 + (CH >> 1), c === 4 ? "*" : "o", col, al); } }
+        }
+        // 2.7 - 4.0: watch it move
+        const a2 = vis(2.7, 4.1, .25); if (a2 > 0) {
+          g.text(typed("2   watch the price move", t, 2.8, 22), .16, INK);
+          const W = Math.min(56, C - 12), H = Math.round(14 * tall), pg = plotGrid(INTRO_SERIES, W, H), p = ease((t - 2.85) / 1.05), head = Math.floor(p * (W - 1)), x0 = cx - (W >> 1), y0 = cy - (H >> 1) - 1, v = INTRO_SERIES[Math.round(p * (INTRO_SERIES.length - 1))];
+          for (let x = 0; x <= head; x++) for (let y = 0; y < H; y++) { const ch = pg.grid[y][x]; if (ch !== " ") g.put(x0 + x, y0 + y, ch, x > head - 3 ? [255, 255, 255] : GRN, a2); }
+          const hy = y0 + (H - 1 - pg.Y[head]); g.put(x0 + head, hy, "●", [255, 255, 255], a2);
+          const tag = "$" + (v / 100).toFixed(2), tw = tag.length + 4, tx = Math.min(Math.max(x0 + head - (tw >> 1), x0), x0 + W - tw), ty = Math.max(y0 - 3, hy - 4); box(tx, ty, tw, 3, GRN, a2); for (let i = 0; i < tag.length; i++) g.put(tx + 2 + i, ty + 1, tag[i], GRN, a2);
+          g.text("▲ +" + Math.round((v / 10 - 1) * 100).toLocaleString("en-US") + "%", .75, GRN); g.text("every card trades all day", .81, DIM);
+        }
+        // 4.0 - 5.2: sell when you like
+        const a3 = vis(4.0, 5.3, .22); if (a3 > 0) {
+          g.text(typed("3   sell whenever you like", t, 4.05, 22), .16, INK);
+          const press = t > 4.6, bx = cx - 12, by = cy - 2; box(bx, by, 25, 3, press ? GRN : INK, a3); const label = "sell  $1.66"; for (let i = 0; i < label.length; i++) g.put(bx + 7 + i, by + 1, label[i], press ? GRN : INK, a3);
+          if (press) { g.text("+$1.49", .64, GRN); g.text("paid at once, minus 10%", .72, DIM); for (let i = 0; i < 46; i++) { const age = (t - 4.6 - hash(i, 1, 7) * .25), life = 1.2; if (age < 0 || age > life) continue; g.put(Math.round(cx + (hash(i, 2, 7) - .5) * 30), Math.round(by - age * 16 + 4 * Math.sin(i)), "$+*"[i % 3], GRN, a3 * (1 - age / life)); } }
+        }
+        // 5.2 - 6.2: the name again
+        const a4 = sm(5.3, 5.7, t); if (a4 > 0) { logo(lx, ly, INK, a4); g.text("ASCII trading cards", .58, DIM); g.text("$10 of demo money to start", .64, GRN); g.text("tap to begin", .9, [90, 88, 84]); }
+        g.flash(sm(5.95, 6.2, t) * .0);
+      },
+    },
     /* ORBIT (uncommon): a galaxy turns and comes closer. */
     orbit: {
       dur: 4.6, pals: [mkpal([[0, 0, 0], [10, 20, 60], [40, 90, 200], [150, 200, 255], [255, 255, 255]])],
@@ -1468,14 +1518,14 @@ const Cut = (() => {
   };
 
   const has = id => !!SCENES[id];
-  let busy = false;
+  let busy = false, stopLive = null;
 
   function play(id, o) {
     const sc = SCENES[id]; if (!sc || busy || reduced) return Promise.resolve();
     busy = true; return new Promise(res => {
       const wrap = $("cut"), cv = $("cutCv"), ctx = cv.getContext("2d"), dpr = Math.min(2, devicePixelRatio || 1);
       wrap.hidden = false; wrap.style.opacity = 1; const W = wrap.clientWidth, H = wrap.clientHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const fs = Math.max(9, Math.min(17, W / 56)); ctx.font = `700 ${fs}px ${FONT}`; const cw = ctx.measureText("M").width, lh = fs * 1.12, C = Math.floor(W / cw), Rr = Math.floor(H / lh);
+      const fs = Math.max(9, Math.min(17, W / 56)) * (sc.fsMul || 1); ctx.font = `700 ${fs}px ${FONT}`; const cw = ctx.measureText("M").width, lh = fs * 1.12, C = Math.floor(W / cw), Rr = Math.floor(H / lh);
       const zoom = Math.min(1, W / H), px = Array.from({ length: C }, (_, x) => ((x + .5) * cw - W / 2) / (H * zoom)), py = Array.from({ length: Rr }, (_, y) => ((y + .5) * lh - H / 2) / (H * zoom));   // scenes are drawn on a square that always fits the screen
       const ov = [], tx = [], g = { W, H, C, R: Rr, pi: 0, ch: null,
         col: ux => Math.round((ux * H * zoom + W / 2) / cw - .5), row: uy => Math.round((uy * H * zoom + H / 2) / lh - .5), asp: W / H / zoom,
@@ -1483,7 +1533,7 @@ const Cut = (() => {
         sprite: (lines, x, y, c) => lines.forEach((s, j) => { for (let i = 0; i < s.length; i++) if (s[i] !== " ") ov.push([x + i, y + j, s[i], c, 1]); }),
         text: (str, fy, c) => tx.push([str, fy, c]),
         flash: a => { g._f = Math.max(g._f || 0, a); } };
-      let t0 = performance.now(), raf = 0, ended = false;
+      let t0 = performance.now(), raf = 0, ended = false; stopLive = () => { ended = true; cancelAnimationFrame(raf); document.removeEventListener("keydown", onKey, true); };
       const finish = () => { if (ended) return; ended = true; cancelAnimationFrame(raf); document.removeEventListener("keydown", onKey, true); wrap.style.opacity = 0; setTimeout(() => { wrap.hidden = true; busy = false; res(); }, 260); };
       const onKey = e => { if (e.key === "Escape" || e.key === " " || e.key === "Enter") { e.preventDefault(); e.stopPropagation(); skip(); } };
       const skip = () => { t0 = performance.now() - sc.dur * 1000 + 220; }; wrap.onclick = e => { e.stopPropagation(); skip(); }; document.addEventListener("keydown", onKey, true);
@@ -1505,8 +1555,10 @@ const Cut = (() => {
       raf = requestAnimationFrame(frame);
     });
   }
-  const close = () => { $("cut").hidden = true; busy = false; };
-  return { has, play, close, ids: Object.keys(SCENES), dur: id => SCENES[id].dur };
+  // the film that explains the app plays once, for someone who has not opened a pack yet
+  const maybeIntro = () => { if (!state.seenIntro && !state.s.packs && !state.vault.length && !busy) { state.seenIntro = true; save(); play("intro"); } };
+  const close = () => { if (stopLive) stopLive(); stopLive = null; $("cut").hidden = true; busy = false; };
+  return { has, play, close, maybeIntro, ids: Object.keys(SCENES), dur: id => SCENES[id].dur };
 })();
 
 /* ============================================================================
@@ -1543,7 +1595,7 @@ document.addEventListener("click", e => {
     case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { toast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`); renderCollection(); } break; }
     case "addCode": codeModal(); break;
     case "resetBtn": if (t.dataset.armed) { const ok = state.ageOK; state = fresh(); state.ageOK = ok; save(); renderBal(); show("home"); toast("Demo reset"); } else { t.dataset.armed = 1; t.textContent = "tap again to wipe everything"; setTimeout(() => { delete t.dataset.armed; t.textContent = "reset the demo"; }, 3000); } break;
-    case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; break;
+    case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); break;
   }
 });
 document.addEventListener("change", e => { if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; });
@@ -1561,7 +1613,7 @@ window.addEventListener("hashchange", route);
    10. START
    ========================================================================== */
 MK.advance(); logWorth(); persist(); renderBal(); route(); renderTape();
-if (!state.ageOK) $("gate").hidden = false;
+if (!state.ageOK) $("gate").hidden = false; else setTimeout(() => Cut.maybeIntro(), 400);
 // the market moves every 20 seconds; redraw whatever is on screen when it does
 setInterval(() => { if (MK.advance()) { logWorth(); persist(); refreshLive(); renderTape(); checkAlerts(); } }, 2000);
 setTimeout(checkAlerts, 2500);

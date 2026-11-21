@@ -32,7 +32,7 @@ document.addEventListener("click", e => {
     case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { toast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`); renderCollection(); } break; }
     case "addCode": codeModal(); break;
     case "resetBtn": if (t.dataset.armed) { const ok = state.ageOK; state = fresh(); state.ageOK = ok; save(); renderBal(); show("home"); toast("Demo reset"); } else { t.dataset.armed = 1; t.textContent = "tap again to wipe everything"; setTimeout(() => { delete t.dataset.armed; t.textContent = "reset the demo"; }, 3000); } break;
-    case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; break;
+    case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); break;
   }
 });
 document.addEventListener("change", e => { if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; });
