@@ -37,7 +37,7 @@ const STYLES = {
 };
 const STYLE_TINT = { "": "#ece7dc", steel: "#aaffbd", dots: "#ffd27a", vhs: "#c9a5ff", scratch: "#ece7dc", ice: "#a9c9ff", chain: "#ece7dc", wire: "#b6ff9c", print: "#ff9a94", glass: "#ff8ac9", blood: "#a8ffb0", leaf: "#d6c9ff", kin: "#a9c9ff" };
 const PACK = {
-  name: "First Print", price: 499, min: 349, max: 1299, n: 5,
+  name: "First Print", price: 499, min: 349, max: 4999, n: 5,
   slots: [   // each slot: [card id, weight]. Tuned so the pack sells back for at least its cost about 45% of the time across market states (worked out live below).
     [["stitch", 1], ["brick", 1], ["rook", 1]],
     [["stitch", 1], ["brick", 1], ["rook", 1]],
