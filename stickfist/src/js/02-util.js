@@ -3,6 +3,24 @@
    ========================================================================== */
 const $ = id => document.getElementById(id);
 const money = c => (c < 0 ? "-$" : "$") + (Math.abs(c) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// money for things that move: a 10 cent card needs four decimals for you to see it breathe
+const moneyS = c => { const a = Math.abs(c) / 100, d = a >= 1 ? 2 : a >= .1 ? 3 : 4; return (c < 0 ? "-$" : "$") + a.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
+// update a container in place instead of rebuilding it, so buttons you are pressing, scroll positions and pictures are never disturbed
+function patchKids(a, b) {
+  const an = a.childNodes, bn = b.childNodes;
+  for (let i = 0; i < bn.length; i++) {
+    const x = an[i], y = bn[i]; if (!x) { a.appendChild(y.cloneNode(true)); continue; }
+    if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y.cloneNode(true), x); continue; }
+    if (x.nodeType === 3) { if (x.nodeValue !== y.nodeValue) x.nodeValue = y.nodeValue; continue; }
+    if (x.nodeType !== 1) continue;
+    for (const at of [...x.attributes]) if (!y.hasAttribute(at.name)) x.removeAttribute(at.name);
+    for (const at of y.attributes) if (x.getAttribute(at.name) !== at.value) x.setAttribute(at.name, at.value);
+    patchKids(x, y);
+  }
+  while (an.length > bn.length) a.removeChild(a.lastChild);
+}
+Object.defineProperty(HTMLElement.prototype, "live", { set(html) { put(this, html); } });
+function put(el, html) { if (!el.firstChild) { el.innerHTML = html; return; } const t = document.createElement(el.tagName === "TABLE" ? "table" : el.tagName === "TBODY" ? "tbody" : "div"); t.innerHTML = html; patchKids(el, t); }
 const fmt = n => Math.round(n).toLocaleString("en-US");
 const esc = s => String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;

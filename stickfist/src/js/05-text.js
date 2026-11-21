@@ -95,7 +95,7 @@ function plotGrid(vals, w, h, extra) {
 }
 const pctShort = p => (p >= 0 ? "+" : "−") + (Math.abs(p * 100) >= 100 ? Math.round(Math.abs(p * 100)).toLocaleString("en-US") : Math.abs(p * 100).toFixed(1)) + "%";
 const heldText = ms => { const m = Math.round(ms / 6e4); if (m < 1) return "under a minute"; if (m < 90) return m + " min"; const h = Math.floor(m / 60); return h < 48 ? h + "h " + (m % 60) + "m" : Math.round(h / 24) + " days"; };
-const pnlHTML = (d, base) => `<span class="${d > 0 ? "up" : d < 0 ? "dn" : "fl"}">${d > 0 ? "▲ +" : d < 0 ? "▼ −" : "– "}${money(Math.abs(d))}${base > 0 ? ` <span class="dim">${Math.abs(d / base * 100).toFixed(Math.abs(d / base) >= 1 ? 0 : 1)}%</span>` : ""}</span>`;
+const pnlHTML = (d, base) => `<span class="${d > 0 ? "up" : d < 0 ? "dn" : "fl"}">${d > 0 ? "▲ +" : d < 0 ? "▼ −" : "– "}${moneyS(Math.abs(d))}${base > 0 ? ` <span class="dim">${Math.abs(d / base * 100).toFixed(Math.abs(d / base) >= 1 ? 0 : 1)}%</span>` : ""}</span>`;
 const pctHTML = p => `<span class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲ +" : p < -.0005 ? "▼ −" : "– "}${Math.abs(p * 100) >= 100 ? Math.round(Math.abs(p * 100)).toLocaleString("en-US") : Math.abs(p * 100).toFixed(1)}%</span>`;
 // a progress bar made of characters: [███░░] 
 const meter = (i, n) => "[" + fill("█", i) + fill("░", n - i) + "]";

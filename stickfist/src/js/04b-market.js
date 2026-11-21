@@ -65,8 +65,8 @@ const MK = (() => {
   }
   function build() {
     epoch = Math.floor(Date.now() / EPOCH) * EPOCH; t0 = Math.floor((epoch - PRE) / TICK) * TICK; base = t0 / TICK; const t1 = Math.floor((Date.now() - t0) / TICK); cards = CARDS.map((c, i) => {
-      const a = TASTE[c.id] - SHIFT[c.rar], x0 = a + norm(i, -1, 1) * .3, S = { a, x: x0, f: x0, s: x0, h: 1, xl: new Float32Array(10).fill(x0), bk: new Float32Array(24).fill(x0), cur: x0, old: x0, hb: Math.floor(base / 180) }, X = new Float32Array(LEN), V = new Float32Array(LEN), K = new Uint8Array(LEN), Z = new Float32Array(LEN);
-      X[0] = x0; for (let t = 1; t <= t1; t++) { X[t] = stepOne(S, c, i, base + t); V[t] = out.abs; K[t] = out.kind; Z[t] = out.z; } return { c, S, X, V, K, Z, n: t1 };
+      const a = TASTE[c.id] - SHIFT[c.rar], x0 = a + norm(i, -1, 1) * .3, amp = BOT[c.rar].vol * SD * 2.6, S = { a, x: x0, f: x0, s: x0, h: 1, xl: new Float32Array(10).fill(x0), bk: new Float32Array(24).fill(x0), cur: x0, old: x0, hb: Math.floor(base / 180) }, X = new Float32Array(LEN), V = new Float32Array(LEN), K = new Uint8Array(LEN), Z = new Float32Array(LEN);
+      X[0] = x0; for (let t = 1; t <= t1; t++) { X[t] = stepOne(S, c, i, base + t); V[t] = out.abs; K[t] = out.kind; Z[t] = out.z; } return { c, S, X, V, K, Z, n: t1, amp };
     });
   }
   function advance() {
@@ -75,9 +75,15 @@ const MK = (() => {
     for (const m of cards) while (m.n < t1) { m.n++; const i = idx[m.c.no]; m.X[m.n] = stepOne(m.S, m.c, i, base + m.n); m.V[m.n] = out.abs; m.K[m.n] = out.kind; m.Z[m.n] = out.z; moved = true; }
     return moved;
   }
-  const M = card => { if (!cards) advance(); return cards[idx[card.no]]; };
-  const logAt = (card, back) => { const m = M(card); return m.X[Math.max(0, m.n - back)]; };
-  const price = (card, back) => Math.max(1, Math.round(card.val * Math.exp(logAt(card, back || 0))));
+  const M = card => { if (!cards || Math.floor((Date.now() - t0) / TICK) > cards[0].n) advance(); return cards[idx[card.no]]; };   // always up to date: a read after a new round of trading lands catches the engine up first
+  /* A price is live: it glides from one 20-second round of trading to the next and trembles all the way, the way a market does between prints.
+     The screen shows the market one round behind the bots (so it always has both ends to glide between), and the tremble is zero at every round,
+     so the path through the rounds is exactly what the bots made. The tremble is a function of the clock, so it is the same for everybody. */
+  const nowPos = () => (Date.now() - t0) / TICK - 1;
+  const jitter = (m, i, pos) => { const f = pos - i, s = f * 20, k = Math.floor(s), u = s - k, e = u * u * (3 - 2 * u), ci = idx[m.c.no], a = (h3(ci, base + i, 100 + k) - .5) * 2, b = (h3(ci, base + i, 101 + k) - .5) * 2; return m.amp * Math.pow(Math.sin(Math.PI * f), .8) * (a + (b - a) * e); };
+  const logAt = (card, back) => { const m = M(card), pos = nowPos() - (back || 0); if (pos <= 0) return m.X[0]; const i = Math.min(Math.floor(pos), m.n - 1), f = Math.min(1, pos - i); return m.X[i] + (m.X[i + 1] - m.X[i]) * f + jitter(m, i, pos); };
+  const price = (card, back) => Math.max(.5, card.val * Math.exp(logAt(card, back)));                 // in cents, not rounded: a card worth 10c can be 10.07c
+  const tickPrice = card => { const m = M(card); return Math.max(1, Math.round(card.val * Math.exp(m.X[Math.max(0, m.n - 1)]))); };   // the same price all through a round, for the pack
   const pct = (card, hours) => Math.exp(logAt(card, 0) - logAt(card, Math.round(hours * 180))) - 1;
   const series = (card, hours, pts) => { const m = M(card), span = Math.round(hours * 180), out = []; for (let k = 0; k < pts; k++) out.push(price(card, Math.round(span * (1 - k / (pts - 1))))); return out; };
   const buzz = card => { const m = M(card), S = m.S; return clamp(Math.round(Math.abs(S.f - S.s) * 3 + Math.max(0, S.x - S.a) * .5 + .4), 0, 5); };   // 0 to 5: how much attention the bots are giving the card right now: it is running, or it is far above where the market makers think it belongs
@@ -124,5 +130,5 @@ const MK = (() => {
     }
     return (rn = { t, up: all.filter(x => x.up >= 1).sort((a, b) => b.up - a.up), dn: all.filter(x => x.dn <= -.5).sort((a, b) => a.dn - b.dn), all });
   }
-  return { advance, price, pct, series, buzz, feed, flips, runs, stats, total24, botFeed, tick: nowTick, TICK, CAP, BOT, KIND };
+  return { advance, price, tickPrice, pct, series, buzz, feed, flips, runs, stats, total24, botFeed, tick: nowTick, TICK, CAP, BOT, KIND };
 })();

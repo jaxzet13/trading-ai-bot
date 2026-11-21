@@ -380,6 +380,24 @@ const SELLBACK = .9, START = 1000, TOPUP = 1000;
    ========================================================================== */
 const $ = id => document.getElementById(id);
 const money = c => (c < 0 ? "-$" : "$") + (Math.abs(c) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// money for things that move: a 10 cent card needs four decimals for you to see it breathe
+const moneyS = c => { const a = Math.abs(c) / 100, d = a >= 1 ? 2 : a >= .1 ? 3 : 4; return (c < 0 ? "-$" : "$") + a.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
+// update a container in place instead of rebuilding it, so buttons you are pressing, scroll positions and pictures are never disturbed
+function patchKids(a, b) {
+  const an = a.childNodes, bn = b.childNodes;
+  for (let i = 0; i < bn.length; i++) {
+    const x = an[i], y = bn[i]; if (!x) { a.appendChild(y.cloneNode(true)); continue; }
+    if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y.cloneNode(true), x); continue; }
+    if (x.nodeType === 3) { if (x.nodeValue !== y.nodeValue) x.nodeValue = y.nodeValue; continue; }
+    if (x.nodeType !== 1) continue;
+    for (const at of [...x.attributes]) if (!y.hasAttribute(at.name)) x.removeAttribute(at.name);
+    for (const at of y.attributes) if (x.getAttribute(at.name) !== at.value) x.setAttribute(at.name, at.value);
+    patchKids(x, y);
+  }
+  while (an.length > bn.length) a.removeChild(a.lastChild);
+}
+Object.defineProperty(HTMLElement.prototype, "live", { set(html) { put(this, html); } });
+function put(el, html) { if (!el.firstChild) { el.innerHTML = html; return; } const t = document.createElement(el.tagName === "TABLE" ? "table" : el.tagName === "TBODY" ? "tbody" : "div"); t.innerHTML = html; patchKids(el, t); }
 const fmt = n => Math.round(n).toLocaleString("en-US");
 const esc = s => String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -421,7 +439,7 @@ const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); 
 const save = () => { logWorth(true); persist(); };
 
 // what a copy is worth right now: the card's live market price, times its style multiple
-const valueOf = c => Math.max(1, Math.round(MK.price(BY_NO[c.no]) * (c.fx ? STYLES[c.fx].x : 1)));
+const valueOf = c => Math.max(.5, MK.price(BY_NO[c.no]) * (c.fx ? STYLES[c.fx].x : 1));   // in cents, live, not rounded
 const sellOf = c => Math.floor(valueOf(c) * SELLBACK);                    // selling pays the price minus 10%
 const costOf = c => c.cost != null ? c.cost : valueOf(c);                 // what a copy cost you, or was worth the moment you pulled it
 const gainOf = c => valueOf(c) / Math.max(1, costOf(c)) - 1;
@@ -431,7 +449,7 @@ const gainOf = c => valueOf(c) / Math.max(1, costOf(c)) - 1;
    While the app is closed nothing in your wallet can change, so the gap is filled in from the market's own price path. Nothing on the profile is made up. */
 const holdingsValue = () => state.vault.reduce((a, c) => a + valueOf(c), 0);
 const netWorth = () => state.coins + holdingsValue();
-const valueAgo = (c, ticks) => Math.max(1, Math.round(MK.price(BY_NO[c.no], ticks) * (c.fx ? STYLES[c.fx].x : 1)));
+const valueAgo = (c, ticks) => Math.max(.5, MK.price(BY_NO[c.no], ticks) * (c.fx ? STYLES[c.fx].x : 1));
 function logWorth(force) {
   const h = state.hist, t = Date.now(), last = h[h.length - 1]; if (last && !force && t - last[0] < 15000) return;
   if (last && t - last[0] > 12 * 60000 && state.vault.length) for (let ts = Math.max(last[0] + 6e5, t - 7 * 864e5); ts < t - 3e5; ts += 6e5) { const ago = Math.round((t - ts) / MK.TICK); h.push([ts, state.coins + state.vault.reduce((a, c) => a + valueAgo(c, ago), 0), state.s.added]); }
@@ -480,7 +498,7 @@ let _base = 0; const baseEV = () => _base || (_base = evOf(c => c.val));
 let _ps = null;
 function packStats() {
   const t = MK.tick(); if (_ps && _ps.t === t) return _ps;
-  const val = card => MK.price(card), ev = evOf(val), price = clamp(Math.round(PACK.price * ev / baseEV()), PACK.min, PACK.max), cap = price * 3, dist = packDist(val, cap);
+  const val = card => MK.tickPrice(card), ev = evOf(val), price = clamp(Math.round(PACK.price * ev / baseEV()), PACK.min, PACK.max), cap = price * 3, dist = packDist(val, cap);
   let hit = 0, acc = 0, median = cap; for (let i = price; i <= cap; i++) hit += dist[i]; for (let i = 0; i <= cap; i++) { acc += dist[i]; if (acc >= .5) { median = i; break; } }
   return (_ps = { t, ev, hit, median, rtp: ev / price, price });
 }
@@ -553,8 +571,8 @@ const MK = (() => {
   }
   function build() {
     epoch = Math.floor(Date.now() / EPOCH) * EPOCH; t0 = Math.floor((epoch - PRE) / TICK) * TICK; base = t0 / TICK; const t1 = Math.floor((Date.now() - t0) / TICK); cards = CARDS.map((c, i) => {
-      const a = TASTE[c.id] - SHIFT[c.rar], x0 = a + norm(i, -1, 1) * .3, S = { a, x: x0, f: x0, s: x0, h: 1, xl: new Float32Array(10).fill(x0), bk: new Float32Array(24).fill(x0), cur: x0, old: x0, hb: Math.floor(base / 180) }, X = new Float32Array(LEN), V = new Float32Array(LEN), K = new Uint8Array(LEN), Z = new Float32Array(LEN);
-      X[0] = x0; for (let t = 1; t <= t1; t++) { X[t] = stepOne(S, c, i, base + t); V[t] = out.abs; K[t] = out.kind; Z[t] = out.z; } return { c, S, X, V, K, Z, n: t1 };
+      const a = TASTE[c.id] - SHIFT[c.rar], x0 = a + norm(i, -1, 1) * .3, amp = BOT[c.rar].vol * SD * 2.6, S = { a, x: x0, f: x0, s: x0, h: 1, xl: new Float32Array(10).fill(x0), bk: new Float32Array(24).fill(x0), cur: x0, old: x0, hb: Math.floor(base / 180) }, X = new Float32Array(LEN), V = new Float32Array(LEN), K = new Uint8Array(LEN), Z = new Float32Array(LEN);
+      X[0] = x0; for (let t = 1; t <= t1; t++) { X[t] = stepOne(S, c, i, base + t); V[t] = out.abs; K[t] = out.kind; Z[t] = out.z; } return { c, S, X, V, K, Z, n: t1, amp };
     });
   }
   function advance() {
@@ -563,9 +581,15 @@ const MK = (() => {
     for (const m of cards) while (m.n < t1) { m.n++; const i = idx[m.c.no]; m.X[m.n] = stepOne(m.S, m.c, i, base + m.n); m.V[m.n] = out.abs; m.K[m.n] = out.kind; m.Z[m.n] = out.z; moved = true; }
     return moved;
   }
-  const M = card => { if (!cards) advance(); return cards[idx[card.no]]; };
-  const logAt = (card, back) => { const m = M(card); return m.X[Math.max(0, m.n - back)]; };
-  const price = (card, back) => Math.max(1, Math.round(card.val * Math.exp(logAt(card, back || 0))));
+  const M = card => { if (!cards || Math.floor((Date.now() - t0) / TICK) > cards[0].n) advance(); return cards[idx[card.no]]; };   // always up to date: a read after a new round of trading lands catches the engine up first
+  /* A price is live: it glides from one 20-second round of trading to the next and trembles all the way, the way a market does between prints.
+     The screen shows the market one round behind the bots (so it always has both ends to glide between), and the tremble is zero at every round,
+     so the path through the rounds is exactly what the bots made. The tremble is a function of the clock, so it is the same for everybody. */
+  const nowPos = () => (Date.now() - t0) / TICK - 1;
+  const jitter = (m, i, pos) => { const f = pos - i, s = f * 20, k = Math.floor(s), u = s - k, e = u * u * (3 - 2 * u), ci = idx[m.c.no], a = (h3(ci, base + i, 100 + k) - .5) * 2, b = (h3(ci, base + i, 101 + k) - .5) * 2; return m.amp * Math.pow(Math.sin(Math.PI * f), .8) * (a + (b - a) * e); };
+  const logAt = (card, back) => { const m = M(card), pos = nowPos() - (back || 0); if (pos <= 0) return m.X[0]; const i = Math.min(Math.floor(pos), m.n - 1), f = Math.min(1, pos - i); return m.X[i] + (m.X[i + 1] - m.X[i]) * f + jitter(m, i, pos); };
+  const price = (card, back) => Math.max(.5, card.val * Math.exp(logAt(card, back)));                 // in cents, not rounded: a card worth 10c can be 10.07c
+  const tickPrice = card => { const m = M(card); return Math.max(1, Math.round(card.val * Math.exp(m.X[Math.max(0, m.n - 1)]))); };   // the same price all through a round, for the pack
   const pct = (card, hours) => Math.exp(logAt(card, 0) - logAt(card, Math.round(hours * 180))) - 1;
   const series = (card, hours, pts) => { const m = M(card), span = Math.round(hours * 180), out = []; for (let k = 0; k < pts; k++) out.push(price(card, Math.round(span * (1 - k / (pts - 1))))); return out; };
   const buzz = card => { const m = M(card), S = m.S; return clamp(Math.round(Math.abs(S.f - S.s) * 3 + Math.max(0, S.x - S.a) * .5 + .4), 0, 5); };   // 0 to 5: how much attention the bots are giving the card right now: it is running, or it is far above where the market makers think it belongs
@@ -612,7 +636,7 @@ const MK = (() => {
     }
     return (rn = { t, up: all.filter(x => x.up >= 1).sort((a, b) => b.up - a.up), dn: all.filter(x => x.dn <= -.5).sort((a, b) => a.dn - b.dn), all });
   }
-  return { advance, price, pct, series, buzz, feed, flips, runs, stats, total24, botFeed, tick: nowTick, TICK, CAP, BOT, KIND };
+  return { advance, price, tickPrice, pct, series, buzz, feed, flips, runs, stats, total24, botFeed, tick: nowTick, TICK, CAP, BOT, KIND };
 })();
 
 /* ============================================================================
@@ -712,7 +736,7 @@ function plotGrid(vals, w, h, extra) {
 }
 const pctShort = p => (p >= 0 ? "+" : "−") + (Math.abs(p * 100) >= 100 ? Math.round(Math.abs(p * 100)).toLocaleString("en-US") : Math.abs(p * 100).toFixed(1)) + "%";
 const heldText = ms => { const m = Math.round(ms / 6e4); if (m < 1) return "under a minute"; if (m < 90) return m + " min"; const h = Math.floor(m / 60); return h < 48 ? h + "h " + (m % 60) + "m" : Math.round(h / 24) + " days"; };
-const pnlHTML = (d, base) => `<span class="${d > 0 ? "up" : d < 0 ? "dn" : "fl"}">${d > 0 ? "▲ +" : d < 0 ? "▼ −" : "– "}${money(Math.abs(d))}${base > 0 ? ` <span class="dim">${Math.abs(d / base * 100).toFixed(Math.abs(d / base) >= 1 ? 0 : 1)}%</span>` : ""}</span>`;
+const pnlHTML = (d, base) => `<span class="${d > 0 ? "up" : d < 0 ? "dn" : "fl"}">${d > 0 ? "▲ +" : d < 0 ? "▼ −" : "– "}${moneyS(Math.abs(d))}${base > 0 ? ` <span class="dim">${Math.abs(d / base * 100).toFixed(Math.abs(d / base) >= 1 ? 0 : 1)}%</span>` : ""}</span>`;
 const pctHTML = p => `<span class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲ +" : p < -.0005 ? "▼ −" : "– "}${Math.abs(p * 100) >= 100 ? Math.round(Math.abs(p * 100)).toLocaleString("en-US") : Math.abs(p * 100).toFixed(1)}%</span>`;
 // a progress bar made of characters: [███░░] 
 const meter = (i, n) => "[" + fill("█", i) + fill("░", n - i) + "]";
@@ -868,13 +892,13 @@ function movers() {
   const rows = CARDS.map(c => { const s = MK.series(c, 24, 24); return { c, s, now: s[23], was: s[0], p24: MK.pct(c, 24) }; });
   return { rows, gain: rows.filter(r => r.p24 > .005).sort((a, b) => b.p24 - a.p24).slice(0, 3), drop: rows.filter(r => r.p24 < -.005).sort((a, b) => a.p24 - b.p24).slice(0, 3) };
 }
-const moverRow = m => `<button class="mover" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}<span class="pc">${pctHTML(m.p24)}</span><span class="dim">${money(m.was)} → ${money(m.now)}</span></button>`;
+const moverRow = m => `<button class="mover" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}<span class="pc">${pctHTML(m.p24)}</span><span class="dim">${moneyS(m.was)} → ${moneyS(m.now)}</span></button>`;
 
 function renderHome() {
   const ps = packStats(); $("banner").textContent = BANNER.join("\n");
   $("packLine").textContent = `${PACK.n} cards · ${money(ps.price)}`; $("openBtn").textContent = `open pack · ${money(ps.price)}`;
-  $("honest").innerHTML = `Every card is a picture made of text: the rarer the card, the more characters it holds. About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
-  const mv = movers(); $("hot").innerHTML = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
+  $("honest").live = `Every card is a picture made of text: the rarer the card, the more characters it holds. About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
+  const mv = movers(); $("hot").live = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
   const bf = MK.flips().best[0]; if (bf && bf.gain > 0) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip this week: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
   const hp = $("homePack"); if (!hp.firstChild) { hp.innerHTML = packHTML(); const pk = hp.firstChild; tiltPack(pk); pk.style.cursor = "pointer"; pk.onclick = () => openPack(); liveWindow(pk); }
 }
@@ -887,17 +911,17 @@ function renderMarket() {
   const mv = movers(), rows = mv.rows, ps = packStats(), n = rows.length, fl = MK.flips();
   const idxNow = rows.reduce((a, r) => a + r.now / r.c.val, 0) / n * 100, idxWas = rows.reduce((a, r) => a + r.was / r.c.val, 0) / n * 100, up = rows.filter(r => r.p24 > 0).length;
   const rn = MK.runs(); renderHero(rows, rn);
-  const runRow = (x, up) => `<button class="mover" data-card="${x.c.no}"><span class="nm">${esc(x.c.name)}</span>${sparkSVG(MK.series(x.c, 168, 28))}<span class="pc">${pctHTML(up ? x.up : x.dn)}</span><span class="dim">${up ? "peaked" : "dropped"} ${whenText(up ? x.upAgo : x.dnAgo)} · now ${money(x.now)}${up ? ` (${pctShort(x.now / x.upPrice - 1)} from the peak)` : ""}</span></button>`;
-  $("mRuns").innerHTML = `<div><h3 class="sec">Skyrocketed this week</h3>${rn.up.slice(0, 3).map(x => runRow(x, true)).join("") || `<p class="small">Nothing has doubled in a day this week.</p>`}</div><div><h3 class="sec">Biggest drops this week</h3>${rn.dn.slice(0, 3).map(x => runRow(x, false)).join("") || `<p class="small">Nothing has dropped by a third in a day this week.</p>`}</div>`;
-  $("mStats").innerHTML = `<div><span class="label">market index</span><b>${idxNow.toFixed(1)}</b> ${pctHTML(idxNow / idxWas - 1)}</div><div><span class="label">cards up in 24h</span><b>${up} of ${n}</b></div><div><span class="label">trading volume · 24h</span><b>${usd(MK.total24())}</b></div><div><span class="label">pack price right now</span><b>${money(ps.price)}</b></div>`;
-  $("mMovers").innerHTML = `<div><h3 class="sec">Skyrocketing · 24h</h3>${mv.gain.map(moverRow).join("") || `<p class="small">Nothing is up right now.</p>`}</div><div><h3 class="sec">Crashing · 24h</h3>${mv.drop.map(moverRow).join("") || `<p class="small">Nothing is down right now.</p>`}</div>`;
-  $("mFlips").innerHTML = `<div><h3 class="sec">Best flips · this week</h3>${fl.best.map(flipRow).join("")}</div><div><h3 class="sec">Worst flips · this week</h3>${fl.worst.map(flipRow).join("")}</div>`;
+  const runRow = (x, up) => `<button class="mover" data-card="${x.c.no}"><span class="nm">${esc(x.c.name)}</span>${sparkSVG(MK.series(x.c, 168, 28))}<span class="pc">${pctHTML(up ? x.up : x.dn)}</span><span class="dim">${up ? "peaked" : "dropped"} ${whenText(up ? x.upAgo : x.dnAgo)} · now ${moneyS(x.now)}${up ? ` (${pctShort(x.now / x.upPrice - 1)} from the peak)` : ""}</span></button>`;
+  $("mRuns").live = `<div><h3 class="sec">Skyrocketed this week</h3>${rn.up.slice(0, 3).map(x => runRow(x, true)).join("") || `<p class="small">Nothing has doubled in a day this week.</p>`}</div><div><h3 class="sec">Biggest drops this week</h3>${rn.dn.slice(0, 3).map(x => runRow(x, false)).join("") || `<p class="small">Nothing has dropped by a third in a day this week.</p>`}</div>`;
+  $("mStats").live = `<div><span class="label">market index</span><b>${idxNow.toFixed(1)}</b> ${pctHTML(idxNow / idxWas - 1)}</div><div><span class="label">cards up in 24h</span><b>${up} of ${n}</b></div><div><span class="label">trading volume · 24h</span><b>${usd(MK.total24())}</b></div><div><span class="label">pack price right now</span><b>${money(ps.price)}</b></div>`;
+  $("mMovers").live = `<div><h3 class="sec">Skyrocketing · 24h</h3>${mv.gain.map(moverRow).join("") || `<p class="small">Nothing is up right now.</p>`}</div><div><h3 class="sec">Crashing · 24h</h3>${mv.drop.map(moverRow).join("") || `<p class="small">Nothing is down right now.</p>`}</div>`;
+  $("mFlips").live = `<div><h3 class="sec">Best flips · this week</h3>${fl.best.map(flipRow).join("")}</div><div><h3 class="sec">Worst flips · this week</h3>${fl.worst.map(flipRow).join("")}</div>`;
   $("mFlipNote").textContent = `Simulated traders, worked out from the real price path and after the 10% selling fee. ${fl.won} of the last ${fl.n} sold for more than they got.`;
-  $("mTable").innerHTML = `<thead><tr><th>Card</th><th class="r">Price</th><th class="r">24h</th><th>24h chart</th><th class="r">Volume · 24h</th><th>Buzz</th><th class="r">You hold</th></tr></thead><tbody>` + rows.map(r => {
+  $("mTable").live = `<thead><tr><th>Card</th><th class="r">Price</th><th class="r">24h</th><th>24h chart</th><th class="r">Volume · 24h</th><th>Buzz</th><th class="r">You hold</th></tr></thead><tbody>` + rows.map(r => {
     const c = r.c, own = copiesOf(c.no).length, bz = MK.buzz(c), sv = MK.stats(c);
-    return `<tr><td><button class="linkbtn plain" data-card="${c.no}">${esc(c.name)}</button> <span class="faint">${RAR[c.rar].name}</span></td><td class="r num"><b>${money(r.now)}</b></td><td class="r">${pctHTML(r.p24)}</td>
+    return `<tr><td><button class="linkbtn plain" data-card="${c.no}">${esc(c.name)}</button> <span class="faint">${RAR[c.rar].name}</span></td><td class="r num"><b>${moneyS(r.now)}</b></td><td class="r">${pctHTML(r.p24)}</td>
       <td class="spk">${sparkSVG(r.s)}</td><td class="r num">${usd(sv.vol)}</td><td>${buzzDots(bz)}</td><td class="r">${own ? "×" + own : "–"}</td></tr>`; }).join("") + `</tbody>`;
-  $("mTrades").innerHTML = MK.botFeed(10).map(t => `<div class="trade"><span class="who">${t.name}</span><span>${t.buy ? "bought" : "sold"} ${usd(t.usd)} of ${esc(t.card.name)}</span><span class="dim">at ${money(t.price)}</span><span class="${t.buy ? "up" : "dn"}">${t.buy ? "▲ buy" : "▼ sell"}</span><span class="faint">${agoText(t.ago)}</span></div>`).join("");
+  $("mTrades").live = MK.botFeed(10).map(t => `<div class="trade"><span class="who">${t.name}</span><span>${t.buy ? "bought" : "sold"} ${usd(t.usd)} of ${esc(t.card.name)}</span><span class="dim">at ${money(t.price)}</span><span class="${t.buy ? "up" : "dn"}">${t.buy ? "▲ buy" : "▼ sell"}</span><span class="faint">${agoText(t.ago)}</span></div>`).join("");
 }
 
 // the profile: your money, live, and every card you hold with its price and profit or loss
@@ -908,13 +932,13 @@ function worthSeries(pts) {
 }
 function renderProfile() {
   const net = netWorth(), hold = holdingsValue(), back = state.vault.reduce((a, c) => a + sellOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0), all = profitAll(), d24 = profitSince(864e5);
-  $("pWorth").innerHTML = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}">${money(net)}</div><div class="wmeta"><span>${pnlHTML(d24, START + state.s.added)} <span class="dim">last 24h</span></span><span>${pnlHTML(all, START + state.s.added)} <span class="dim">since you started</span></span></div></div>
-    <div class="wsplit"><div><span class="label">cash</span><b>${money(state.coins)}</b></div><div><span class="label">your cards, at market price</span><b>${money(hold)}</b> ${state.vault.length ? pnlHTML(hold - basis, basis) : ""}</div><div><span class="label">they would sell for</span><b>${money(back)}</b><span class="dim">after the 10% fee</span></div><div><span class="label">made or lost on sales</span><b>${pnlHTML(state.s.realized, 0)}</b></div></div>`;
+  $("pWorth").live = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}">${money(net)}</div><div class="wmeta"><span>${pnlHTML(d24, START + state.s.added)} <span class="dim">last 24h</span></span><span>${pnlHTML(all, START + state.s.added)} <span class="dim">since you started</span></span></div></div>
+    <div class="wsplit"><div><span class="label">cash</span><b>${money(state.coins)}</b></div><div><span class="label">your cards, at market price</span><b>${moneyS(hold)}</b> ${state.vault.length ? pnlHTML(hold - basis, basis) : ""}</div><div><span class="label">they would sell for</span><b>${moneyS(back)}</b><span class="dim">after the 10% fee</span></div><div><span class="label">made or lost on sales</span><b>${pnlHTML(state.s.realized, 0)}</b></div></div>`;
   const ws = worthSeries(120);
-  $("pChart").innerHTML = ws ? `<div class="mk"><div class="label">Net worth · ${ws.mins >= 1380 ? "last 24 hours" : ws.mins < 90 ? "last " + ws.mins + " minutes" : "last " + Math.round(ws.mins / 60) + " hours"}</div>${lineChart(ws.out, { fmt: money, h: 190 })}</div>`
+  $("pChart").live = ws ? `<div class="mk"><div class="label">Net worth · ${ws.mins >= 1380 ? "last 24 hours" : ws.mins < 90 ? "last " + ws.mins + " minutes" : "last " + Math.round(ws.mins / 60) + " hours"}</div>${lineChart(ws.out, { fmt: money, h: 190 })}</div>`
     : `<div class="mk"><div class="label">Net worth</div><p class="small">Your line starts now and fills in as the market moves. Keep this page open and watch it.</p></div>`;
   const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), s: MK.series(c, 24, 24), p24: MK.pct(c, 24) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
-  $("pTable").innerHTML = groups.length ? `<thead><tr><th>Card</th><th class="r">Cost</th><th class="r">Worth now</th><th class="r">Profit / loss</th><th>24h chart</th></tr></thead><tbody>` + groups.map(g => `<tr><td><button class="linkbtn plain" data-card="${g.c.no}">${esc(g.c.name)}</button> <span class="faint">${g.n > 1 ? "×" + g.n + " · " : ""}${RAR[g.c.rar].name}</span></td><td class="r num">${money(g.cost)}</td><td class="r num"><b>${money(g.val)}</b></td><td class="r">${pnlHTML(g.val - g.cost, g.cost)}</td><td class="spk">${sparkSVG(g.s)}</td></tr>`).join("") + `</tbody><tfoot><tr><td>All cards</td><td class="r num">${money(basis)}</td><td class="r num"><b>${money(hold)}</b></td><td class="r">${pnlHTML(hold - basis, basis)}</td><td></td></tr></tfoot>` : "";
+  $("pTable").live = groups.length ? `<thead><tr><th>Card</th><th class="r">Cost</th><th class="r">Worth now</th><th class="r">Profit / loss</th><th>24h chart</th></tr></thead><tbody>` + groups.map(g => `<tr><td><button class="linkbtn plain" data-card="${g.c.no}">${esc(g.c.name)}</button> <span class="faint">${g.n > 1 ? "×" + g.n + " · " : ""}${RAR[g.c.rar].name}</span></td><td class="r num">${moneyS(g.cost)}</td><td class="r num"><b>${moneyS(g.val)}</b></td><td class="r">${pnlHTML(g.val - g.cost, g.cost)}</td><td class="spk">${sparkSVG(g.s)}</td></tr>`).join("") + `</tbody><tfoot><tr><td>All cards</td><td class="r num">${moneyS(basis)}</td><td class="r num"><b>${moneyS(hold)}</b></td><td class="r">${pnlHTML(hold - basis, basis)}</td><td></td></tr></tfoot>` : "";
   $("pNote").innerHTML = groups.length ? `Tap a card to see its chart and sell it. “Cost” is what the card was worth when you got it. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${money(state.s.spent)} spent on packs · ${money(state.s.sold)} back from sales</span>` : `You don't hold any cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they will show up here with a live price.`;
 }
 
@@ -922,11 +946,11 @@ function renderProfile() {
 function extras() { const out = []; for (const c of CARDS) copiesOf(c.no).slice(1).forEach(x => { if (!x.phys) out.push(x); }); return out; }
 function renderCollection() {
   const found = new Set(state.vault.map(c => c.no)), worth = state.vault.reduce((a, c) => a + valueOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0), ex = extras(), exSum = ex.reduce((a, c) => a + sellOf(c), 0);
-  $("cSub").innerHTML = state.vault.length ? `${found.size} of ${CARDS.length} cards found · ${state.vault.length} cop${state.vault.length === 1 ? "y" : "ies"} worth ${money(worth)} ${pctHTML(worth / Math.max(1, basis) - 1)} <span class="faint">since you got them</span>` : "Open the pack to start your collection.";
-  $("cActions").innerHTML = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + `<button class="linkbtn" id="addCode">add a card by its code</button>`;
-  $("cGrid").innerHTML = CARDS.map(c => { const cs = copiesOf(c.no), best = cs[0];
+  $("cSub").live = state.vault.length ? `${found.size} of ${CARDS.length} cards found · ${state.vault.length} cop${state.vault.length === 1 ? "y" : "ies"} worth ${money(worth)} ${pctHTML(worth / Math.max(1, basis) - 1)} <span class="faint">since you got them</span>` : "Open the pack to start your collection.";
+  $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + `<button class="linkbtn" id="addCode">add a card by its code</button>`;
+  $("cGrid").live = CARDS.map(c => { const cs = copiesOf(c.no), best = cs[0];
     return `<div class="tile"><button class="tilebtn" data-card="${c.no}" aria-label="${esc(c.name)}">${cardHTML(best || { no: c.no }, { sm: true, locked: !best })}</button>
-      <div class="meta">${best ? `<span><b>×${cs.length}</b></span><span>${money(valueOf(best))} ${pctHTML(gainOf(best))}</span>` : `<span>not found yet</span><span class="dim">${money(MK.price(c))}</span>`}</div></div>`; }).join("");
+      <div class="meta">${best ? `<span><b>×${cs.length}</b></span><span>${moneyS(valueOf(best))} ${pctHTML(gainOf(best))}</span>` : `<span>not found yet</span><span class="dim">${money(MK.price(c))}</span>`}</div></div>`; }).join("");
 }
 function renderOdds() {
   const ps = packStats(), slotName = ["Card 1: a common", "Card 2: a common", "Card 3: a common, sometimes better", "Card 4: an uncommon or better", "Card 5: the best card in the pack"];
@@ -962,28 +986,28 @@ function show(v) {
 function route() { const h = location.hash.replace(/^#\/?/, ""), sc = /^scene\/(\w+)(?:@([\d.]+))?$/.exec(h); if (sc && Cut.has(sc[1])) { Cut.close(); show("home"); setTimeout(() => Cut.play(sc[1], sc[2] != null ? { freeze: +sc[2] } : undefined), 250); return; } show(h === "vault" || h === "index" ? "collection" : h || "home"); }
 // the market moved: redraw whatever is on screen without jumping the page
 function refreshLive() {
-  if (SS) return; ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds })[view]();
-  if (modalNo && !$("modal").hidden) { const sc = $("mbox").scrollTop; cardModal(modalNo); $("mbox").scrollTop = sc; }
+  if (SS || !$("share").hidden || !$("cut").hidden) return; ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds })[view]();
+  if (modalNo && !$("modal").hidden) cardModal(modalNo, true);   // updated in place: the buttons you are pressing stay where they are
 }
 
 /* ---- the card window ---- */
-function openModal(html, slim) { $("mbox").className = "mbox" + (slim ? " slim" : ""); $("mbox").innerHTML = `<button class="x" data-close aria-label="Close">×</button>` + html; $("modal").hidden = false; }
+function openModal(html, slim, keep) { $("mbox").className = "mbox" + (slim ? " slim" : ""); const full = `<button class="x" data-close aria-label="Close">×</button>` + html; if (keep) put($("mbox"), full); else $("mbox").innerHTML = full; $("modal").hidden = false; }
 const closeModal = () => { $("modal").hidden = true; $("mbox").innerHTML = ""; modalNo = null; };
-function cardModal(no) {
+function cardModal(no, keep) {
   modalNo = no; const card = BY_NO[no], R = RAR[card.rar], cs = copiesOf(no), best = cs[0], p = packP(card.id), have = new Set(cs.map(c => c.fx)), keys = [""].concat(Object.keys(STYLES));
   const styles = card.styles ? `<div><div class="label" style="margin-bottom:8px">Styles found: ${keys.filter(k => have.has(k)).length} of ${keys.length}</div><div class="stylerow">${keys.map(k => `<figure class="${have.has(k) ? "" : "off"}" title="${styleName(k)}${k ? " · 1 in " + fmt(1 / STYLES[k].p) + " · ×" + STYLES[k].x : ""}"><img src="${imgOf(card, k)}" alt=""><figcaption>${styleName(k)}</figcaption></figure>`).join("")}</div></div>` : "";
   const ser = MK.series(card, 168, 56), now = MK.price(card), bz = MK.buzz(card);
-  const sv = MK.stats(card), market = `<div class="mk"><div class="label">Market · last 7 days</div><div class="mkrow"><b>${money(now)}</b> ${pctHTML(MK.pct(card, 24))} <span class="dim">24h</span> ${pctHTML(MK.pct(card, 168))} <span class="dim">7d</span></div>
-    ${lineChart(ser, { log: true, fmt: money, h: 160 })}
+  const sv = MK.stats(card), market = `<div class="mk"><div class="label">Market · last 7 days</div><div class="mkrow"><b>${moneyS(now)}</b> ${pctHTML(MK.pct(card, 24))} <span class="dim">24h</span> ${pctHTML(MK.pct(card, 168))} <span class="dim">7d</span></div>
+    ${lineChart(ser, { log: true, fmt: moneyS, h: 160 })}
     <div class="mstat"><div><span class="label">market cap</span><b>${usd(sv.mcap)}</b></div><div><span class="label">volume · 24h</span><b>${usd(sv.vol)}</b></div><div><span class="label">liquidity</span><b>${usd(sv.liq)}</b></div><div><span class="label">buys · sells</span><b>${Math.round(sv.buyShare * 100)}% · ${Math.round((1 - sv.buyShare) * 100)}%</b></div></div>
     <div class="row small"><span>buzz ${buzzDots(bz)}</span><span class="dim">simulated · selling pays the price minus 10%</span></div></div>`;
   openModal(`<div class="mcard">${cardHTML(best || { no }, { locked: !best })}</div><div class="minfo">
     <div><span class="label" style="color:${R.col}">${R.name} · No. ${card.no}</span><h2>${esc(card.name)}</h2></div>
     <p class="dim">${fmt(card.chars)} characters · base worth ${money(card.val)} · turns up in ${chance(p)}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
     ${market}
-    ${cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div>${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${money(costOf(c))}</small></div><div class="r"><span><b>${money(valueOf(c))}</b><br>${pctHTML(gainOf(c))}</span><button class="btn small ghost" data-share="${c.uid}">share</button><button class="btn small" data-sell="${c.uid}" data-no="${no}">sell ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<p class="small">You haven't found this card yet.</p>`}
+    ${cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div>${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${moneyS(costOf(c))}</small></div><div class="r"><span><b>${moneyS(valueOf(c))}</b><br>${pctHTML(gainOf(c))}</span><button class="btn small ghost" data-share="${c.uid}">share</button><button class="btn small" data-sell="${c.uid}" data-no="${no}">sell ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<p class="small">You haven't found this card yet.</p>`}
     ${Cut.has(card.id) ? `<div><button class="btn small" data-cut="${card.id}">▶ ${cs.length ? "Watch" : "Preview"} its cutscene</button></div>` : ""}
-    ${styles}</div>`);
+    ${styles}</div>`, false, keep);
 }
 function codeModal() {
   openModal(`<div class="minfo"><h2 style="font-size:18px">Add a card by its code</h2><p class="dim">Every printed card has an id under its picture, like <b>IS015-000003-A2JM</b>. Type it in and that exact copy is added to your collection.</p>
@@ -1655,7 +1679,9 @@ window.addEventListener("hashchange", route);
 MK.advance(); logWorth(); persist(); renderBal(); route(); renderTape();
 if (!state.ageOK) $("gate").hidden = false; else setTimeout(() => Cut.maybeIntro(), 400);
 // the market moves every 20 seconds; redraw whatever is on screen when it does
-setInterval(() => { if (MK.advance()) { logWorth(); persist(); refreshLive(); renderTape(); checkAlerts(); } }, 2000);
+let lastTick = MK.tick();
+// the market is live: every number on screen is redrawn once a second, in place, and the once-a-round jobs run when a new round of trading lands
+setInterval(() => { MK.advance(); if (MK.tick() !== lastTick) { lastTick = MK.tick(); logWorth(); persist(); renderTape(); checkAlerts(); } refreshLive(); }, 1000);
 setTimeout(checkAlerts, 2500);
 tickLive(); setInterval(tickLive, 1000);
 setTimeout(() => CARDS.forEach(c => loadImg(imgOf(c))), 700);   // warm the pictures so a reveal never waits on one
