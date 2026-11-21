@@ -5,8 +5,10 @@
 <canvas id="o" width="1080" height="1920"></canvas>
 <script>
 /* ============================================================================================================================================
-   STIXX teaser: a 33 second vertical film made entirely of text. Nothing here is a recording. Every frame is worked out from the clock, the way the
-   in-app cutscenes are, then pushed through a pixel pass (tear, RGB split, grain, scanlines, bloom) and handed to ffmpeg by render.js.
+   STIXX teaser, take two: a 33 second vertical film. Six steps (buy a pack, get cards, watch the value go up, sell at the peak, watch your profit
+   fly, collect your favourites) and then a cliffhanger. The cards are the app's own pictures, drawn the way the app draws them; ASCII is the
+   language of everything around them: the captions, the charts, the way a card decodes out of text, the static. Every frame is worked out from the
+   clock, pushed through a pixel pass (tear, RGB split, grain, scanlines, bloom) and handed to ffmpeg by render.js.
    ?handle=@name puts an account name on the end card. Without it the end card says "follow this account".
    ========================================================================================================================================== */
 const W = 1080, H = 1920, FPS = 30;
@@ -27,46 +29,53 @@ const vn = (x, y, s) => { const xi = Math.floor(x), yi = Math.floor(y), xf = x -
 const fbm = (x, y, s) => (vn(x, y, s) * .5 + vn(x * 2, y * 2, s + 1) * .25 + vn(x * 4, y * 4, s + 2) * .125 + vn(x * 8, y * 8, s + 3) * .0625) / .9375;
 const kf = (tab, t) => { if (t <= tab[0][0]) return tab[0][1]; for (let i = 1; i < tab.length; i++) if (t < tab[i][0]) { const a = tab[i - 1], b = tab[i]; return mixv(a[1], b[1], (t - a[0]) / (b[0] - a[0])); } return tab[tab.length - 1][1]; };
 const rgb = c => `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+const rgba = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
 const mul = (c, k) => [c[0] * k, c[1] * k, c[2] * k];
 const mkpal = stops => Array.from({ length: 32 }, (_, i) => { const k = i / 31 * (stops.length - 1), j = Math.min(stops.length - 2, Math.floor(k)), f = k - j, a = stops[j], b = stops[j + 1]; return [mixv(a[0], b[0], f), mixv(a[1], b[1], f), mixv(a[2], b[2], f)]; });
 const INK = [236, 231, 220], DIM = [141, 137, 127], FAINT = [74, 74, 82], GRN = [159, 216, 166], RED = [232, 120, 109], GOLD = [255, 210, 122], AMB = [255, 181, 74], WHT = [255, 255, 255];
 const pad = (n, k) => String(n).padStart(k || 2, "0");
+const moneyC = c => "$" + (c / 100).toFixed(c < 100 ? 3 : 2);        // cents to dollars, with the extra digit a small number needs
+const pctS = p => (p >= 0 ? "▲ +" : "▼ −") + Math.round(Math.abs(p)).toLocaleString("en-US") + "%";
 
 /* ---------------------------------------------------------------- the timeline: the one place the film's timing lives. render.js hands it to audio.py */
-const T = { cold: [0, 8.0], pack: [8.0, 10.0], cards: [10.0, 12.6], chart: [12.6, 15.6], bots: [15.6, 18.2], sell: [18.2, 20.2], build: [20.2, 23.8], rip: [23.8, 24.6], reveal: [24.6, 28.0], black: [28.0, 29.0], end: [29.0, 33.5] };
-const DUR = 33.5;
+const T = { cold: [0, 3.2], buy: [3.2, 6.0], cards: [6.0, 10.0], rise: [10.0, 13.6], sell: [13.6, 16.4], profit: [16.4, 19.0], collect: [19.0, 22.8], build: [22.8, 25.0], rip: [25.0, 25.7], reveal: [25.7, 28.3], black: [28.3, 29.1], end: [29.1, 33.3] };
+const DUR = 33.3;
+const STEPY = .095;
 const LINES = [
-  { s: "you've seen cards.", t0: .9, cps: 12, t1: 3.05, fy: .40, c: INK, size: 68 },
-  { s: "you've seen charts.", t0: 3.3, cps: 12, t1: 5.25, fy: .40, c: INK, size: 68 },
-  { s: "you've never seen both.", t0: 5.5, cps: 10, t1: 8.0, fy: .40, c: WHT, size: 68, em: [17, 22] },
-  { s: "it starts with a pack.", t0: 8.3, cps: 14, t1: 10.0, fy: .80, c: INK, size: 60 },
-  { s: "five cards. all different.", t0: 10.15, cps: 16, t1: 12.6, fy: .80, c: INK, size: 56 },
-  { s: "prices move every second.", t0: 12.85, cps: 16, t1: 15.6, fy: .80, c: INK, size: 56 },
-  { s: "run by AI bots.", t0: 15.8, cps: 14, t1: 18.2, fy: .105, c: INK, size: 64 },
-  { s: "they never sleep.", t0: 16.9, cps: 14, t1: 18.2, fy: .80, c: DIM, size: 56 },
-  { s: "sell whenever you want.", t0: 18.4, cps: 14, t1: 20.2, fy: .105, c: INK, size: 60 },
-  { s: "you've seen how it works.", t0: 20.55, cps: 15, t1: 23.8, fy: .145, c: DIM, size: 52 },
-  { s: "now see what's inside.", t0: 22.0, cps: 14, t1: 23.7, fy: .205, c: WHT, size: 58 },
-  { s: "U M B R A", t0: 25.8, cps: 6, t1: 28.0, fy: .765, c: AMB, size: 68, rot: 27.45 },
-  { s: "S E C R E T", t0: 26.9, cps: 9, t1: 28.0, fy: .815, c: [255, 232, 180], size: 40, rot: 27.6 },
-  { s: "beta drops soon.", t0: 30.35, cps: 11, t1: 99, fy: .44, c: WHT, size: 84 },
-  { s: "follow this account.", t0: 31.8, cps: 14, t1: 99, fy: .54, c: GRN, size: 58 },
+  { s: "trading cards", t0: .7, cps: 11, t1: 3.1, fy: .39, c: INK, size: 76 },
+  { s: "that move like memecoins.", t0: 1.35, cps: 17, t1: 3.1, fy: .455, c: WHT, size: 62, hl: [14, 24, WHT] },
+  { s: "1  buy a pack", t0: 3.35, cps: 18, t1: 6.0, fy: STEPY, c: INK, size: 60, hl: [0, 1, GOLD] },
+  { s: "2  get cards", t0: 6.2, cps: 18, t1: 10.0, fy: STEPY, c: INK, size: 60, hl: [0, 1, GOLD] },
+  { s: "3  watch the value go up", t0: 10.1, cps: 22, t1: 13.6, fy: STEPY, c: INK, size: 58, hl: [0, 1, GOLD] },
+  { s: "like stocks. like memecoins.", t0: 11.0, cps: 22, t1: 13.6, fy: .80, c: DIM, size: 44 },
+  { s: "4  sell at the peak", t0: 13.7, cps: 20, t1: 16.4, fy: STEPY, c: INK, size: 60, hl: [0, 1, GOLD] },
+  { s: "whenever you feel it's the highest.", t0: 14.2, cps: 26, t1: 16.4, fy: .80, c: DIM, size: 40 },
+  { s: "5  watch your profit fly", t0: 16.5, cps: 22, t1: 19.0, fy: STEPY, c: INK, size: 58, hl: [0, 1, GOLD] },
+  { s: "6  collect your favorites", t0: 19.1, cps: 22, t1: 22.8, fy: STEPY, c: INK, size: 56, hl: [0, 1, GOLD] },
+  { s: "hoping they skyrocket.", t0: 20.4, cps: 20, t1: 22.8, fy: .80, c: GRN, size: 48 },
+  { s: "that's how it works.", t0: 23.0, cps: 18, t1: 24.9, fy: .145, c: DIM, size: 52 },
+  { s: "now see what's inside.", t0: 23.65, cps: 18, t1: 24.9, fy: .205, c: WHT, size: 58 },
+  { s: "S E C R E T", t0: 25.85, cps: 12, t1: 28.3, fy: .105, c: [255, 232, 180], size: 34, rot: 27.7 },
+  { s: "U M B R A", t0: 26.0, cps: 9, t1: 28.3, fy: .165, c: AMB, size: 76, rot: 27.55 },
+  { s: "beta drops soon.", t0: 30.3, cps: 11, t1: 99, fy: .44, c: WHT, size: 84 },
+  { s: "follow this account.", t0: 31.5, cps: 14, t1: 99, fy: .54, c: GRN, size: 58 },
 ];
-if (HANDLE) LINES.push({ s: HANDLE, t0: 32.7, cps: 14, t1: 99, fy: .60, c: WHT, size: 62 });
-const KEYS = { rip: T.rip[0], flash: 24.0, reveal: T.reveal[0], cutBlack: T.reveal[1], logo: 29.35, handle: 32.7, end: DUR };
+if (HANDLE) LINES.push({ s: HANDLE, t0: 32.3, cps: 14, t1: 99, fy: .60, c: WHT, size: 62 });
+const KEYS = { rip: T.rip[0], reveal: T.reveal[0], cutBlack: T.reveal[1], logo: 29.4, end: DUR };
 // glitch hits: a cut, a slam, a tear. Each is a flash of tear + RGB split + snow that dies away in about a fifth of a second.
 const HITS = [];
-for (const k of ["pack", "cards", "chart", "bots", "sell", "build", "rip"]) HITS.push({ t: T[k][0], a: 1 });
-HITS.push({ t: T.cold[0] + .05, a: 1.1 }, { t: 3.05, a: .55 }, { t: 5.25, a: .6 }, { t: 7.3, a: .35 }, { t: 7.62, a: .5 });
-for (const t of [10.5, 11.0, 11.5, 12.0]) HITS.push({ t, a: .85 });
-HITS.push({ t: 13.35, a: .5 }, { t: 14.35, a: .4 }, { t: 14.85, a: .6 });
-HITS.push({ t: 16.9, a: .4 }, { t: 17.6, a: .5 });
-HITS.push({ t: 19.15, a: .8 });                                   // the click on SELL
-HITS.push({ t: 22.0, a: .5 }, { t: 22.9, a: .7 }, { t: 23.3, a: .8 }, { t: 23.6, a: 1 });
-HITS.push({ t: 25.05, a: .6 }, { t: 25.9, a: .5 }, { t: 26.5, a: .6 }, { t: 27.1, a: .8 }, { t: 27.45, a: 1.1 });
-HITS.push({ t: T.end[0] + .35, a: 1 }, { t: 30.3, a: .5 }, { t: 31.75, a: .4 }, { t: 33.25, a: 1.4 });
-// the heartbeat: it starts slow and speeds up until the pack rips. lub, then a softer dub
-const HEART = []; { let t = .6; while (t < T.reveal[1]) { const k = cl((t - .6) / 23.2), iv = mixv(1.15, .3, k * k * (3 - 2 * k)); HEART.push({ t, a: 1 }, { t: t + Math.min(.2, iv * .3), a: .55 }); t += iv; } }
+for (const k of ["buy", "cards", "rise", "sell", "profit", "collect", "build", "rip"]) HITS.push({ t: T[k][0], a: 1 });
+HITS.push({ t: .05, a: 1.1 }, { t: 1.35, a: .5 }, { t: 3.0, a: .6 }, { t: T.buy[0] + 1.7, a: .6 });
+for (let i = 0; i < 5; i++) HITS.push({ t: T.cards[0] + .75 + i * .62, a: .6 });
+HITS.push({ t: 12.2, a: .35 }, { t: 12.95, a: .4 }, { t: T.sell[0] + 1.5, a: .7 }, { t: T.profit[0] + .05, a: .5 });
+HITS.push({ t: T.collect[0] + 2.2, a: .5 }, { t: T.collect[0] + 2.55, a: .4 });
+HITS.push({ t: 23.4, a: .5 }, { t: 24.0, a: .7 }, { t: 24.5, a: .8 }, { t: 24.8, a: 1 });
+HITS.push({ t: 26.3, a: .5 }, { t: 26.9, a: .6 }, { t: 27.4, a: .8 }, { t: 27.9, a: 1.1 });
+HITS.push({ t: T.end[0] + .35, a: 1 }, { t: 30.3, a: .5 }, { t: 31.5, a: .4 }, { t: 33.1, a: 1.4 });
+// the heartbeat: slow in the cold open, then it comes back at the end and speeds up until the pack rips. lub, then a softer dub
+const HEART = []; for (const t of [.6, 1.7, 2.8]) HEART.push({ t, a: 1 }, { t: t + .2, a: .55 });
+{ let t = 22.9; while (t < T.reveal[1]) { const iv = mixv(.62, .3, Math.pow(cl((t - 22.9) / 5.4), 1.2)); HEART.push({ t, a: 1 }, { t: t + Math.min(.18, iv * .3), a: .55 }); t += iv; } }
+const beatIv = t => t < 4 ? 1.1 : mixv(.62, .3, Math.pow(cl((t - 22.9) / 5.4), 1.2));
 const TL = { dur: DUR, fps: FPS, T, LINES: LINES.map(l => ({ s: l.s, t0: l.t0, cps: l.cps, t1: Math.min(l.t1, DUR) })), HITS, HEART, KEYS };
 
 /* ---------------------------------------------------------------- canvases */
@@ -85,33 +94,26 @@ function sampleImage(key, n) {                       // a picture read into char
   return gridCache[id] = { cols: n, rows, l };
 }
 
-/* ---------------------------------------------------------------- drawing: everything goes through these, which only queue; flush() paints in order */
-let ops = [], flashA = 0, HIT = 0;
+/* ---------------------------------------------------------------- drawing: everything goes through these, which only queue; render() paints in order */
+let ops = [], flashA = 0, clock = 0;
 const put = (x, y, ch, c, a) => ops.push([0, x, y, ch, c, a == null ? 1 : a]);                                   // one character on the 20px grid
 const pch = (px, py, size, ch, c, a) => ops.push([1, px, py, size, ch, c, a == null ? 1 : a]);                    // one character anywhere, any size
 const rect = (px, py, w, h, c, a) => ops.push([2, px, py, w, h, c, a == null ? 1 : a]);
+const later = fn => ops.push([3, fn]);                                                                            // anything else, painted in its turn
 const flash = a => { flashA = Math.max(flashA, a); };
-// lines of art in pixel space. c is a colour or a function (i, j, ch) -> colour. rev (0..1) builds it from static, the way the app's cutscenes do.
-function art(lines, px, py, size, c, a, rev) {
+function art(lines, px, py, size, c, a, rev) {       // lines of art in pixel space. c is a colour or a function (i, j, ch) -> colour. rev (0..1) builds it from static
   const adv = size * ADV, lh = size * LHR, al = a == null ? 1 : a, rv = rev == null ? 1 : rev;
   for (let j = 0; j < lines.length; j++) { const s = lines[j]; for (let i = 0; i < s.length; i++) { const ch = s[i]; if (ch === " ") continue; const k = rv * 1.5 - hash(i, j, 3) * .6; if (k <= 0) continue; const col = typeof c === "function" ? c(i, j, ch) : c; if (!col) continue; pch(px + i * adv, py + j * lh, size, k < .35 ? ".:*#"[(i + j + Math.floor(clock * 18)) % 4] : ch, col, k < .35 ? al * .5 : al); } }
 }
 const artW = (lines, size) => Math.max(...lines.map(s => s.length)) * size * ADV;
 const artC = (lines, cx, py, size, c, a, rev) => art(lines, Math.round(cx - artW(lines, size) / 2), py, size, c, a, rev);
-// a picture as characters. rows (0..1) reveals it top to bottom, rev builds it from static.
-function pimg(gr, px, py, size, tint, a, rev, rows) {   // tint is one colour, or a 32 step palette
-  const adv = size * ADV, lh = size * LHR, rv = rev == null ? 1 : rev, rmax = rows == null ? gr.rows : Math.ceil(gr.rows * rows), isPal = Array.isArray(tint[0]);
-  for (let j = 0; j < rmax; j++) for (let i = 0; i < gr.cols; i++) { const l = gr.l[j * gr.cols + i]; if (l < .09) continue; const k = rv * 1.5 - hash(i, j, 4) * .6; if (k <= 0) continue; const m = .45 + .55 * l; pch(px + i * adv, py + j * lh, size, k < .3 ? ".:*#"[(i + j) % 4] : RAMP[Math.min(RAMP.length - 1, Math.floor(l * RAMP.length))], isPal ? tint[Math.min(31, Math.round(l * 31))] : [tint[0] * m, tint[1] * m, tint[2] * m], k < .3 ? a * .5 : a); }
-}
 function box(px, py, w, h, size, c, a, dbl) {          // a frame of box-drawing characters, w and h in characters
   const adv = size * ADV, lh = size * LHR, [hz, vt, tl, tr, bl, br] = dbl ? ["═", "║", "╔", "╗", "╚", "╝"] : ["─", "│", "┌", "┐", "└", "┘"];
   for (let i = 1; i < w - 1; i++) { pch(px + i * adv, py, size, hz, c, a); pch(px + i * adv, py + (h - 1) * lh, size, hz, c, a); }
   for (let j = 1; j < h - 1; j++) { pch(px, py + j * lh, size, vt, c, a); pch(px + (w - 1) * adv, py + j * lh, size, vt, c, a); }
   pch(px, py, size, tl, c, a); pch(px + (w - 1) * adv, py, size, tr, c, a); pch(px, py + (h - 1) * lh, size, bl, c, a); pch(px + (w - 1) * adv, py + (h - 1) * lh, size, br, c, a);
 }
-// a character shader over the whole screen: l = fn(x, y), x and y in screen widths from the centre
-let cellPal = null;
-function field(fn, pal, alpha) {
+function field(fn, pal, alpha) {                      // a character shader over the whole screen: l = fn(x, y), x and y in screen widths from the centre
   const al = alpha == null ? 1 : alpha;
   for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) {
     const l = fn(((x + .5) * CW - W / 2) / W, ((y + .5) * LH - H / 2) / W, x, y); if (l < .035) continue;
@@ -119,26 +121,26 @@ function field(fn, pal, alpha) {
     put(x, y, ch, pal[Math.min(31, Math.round(k * 31))], al);
   }
 }
+const glowAt = (x, y, r, c, a) => later(() => { const g = sx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rgba(c, a)); g.addColorStop(.45, rgba(c, a * .35)); g.addColorStop(1, rgba(c, 0)); sx.globalAlpha = 1; sx.fillStyle = g; sx.fillRect(x - r, y - r, r * 2, r * 2); });
 const typed = (str, t, t0, cps) => str.slice(0, Math.max(0, Math.floor((t - t0) * cps)));
+const spaced = s => s.split("").join(" ");
 
 /* ---------------------------------------------------------------- the big captions, one character at a time */
 function drawLines(t) {
   for (const L of LINES) {
     if (t < L.t0 || t > L.t1) continue;
-    const full = L.s, n = Math.min(full.length, Math.max(0, Math.floor((t - L.t0) * L.cps)) + (t >= L.t0 ? 1 : 0)), adv = L.size * ADV, x0 = (W - full.length * adv) / 2 + adv / 2, y = H * L.fy;
+    const full = L.s, n = Math.min(full.length, Math.max(0, Math.floor((t - L.t0) * L.cps)) + 1), adv = L.size * ADV, x0 = (W - full.length * adv) / 2 + adv / 2, y = H * L.fy;
     const out = cl((t - (L.t1 - .3)) / .3), typing = n < full.length, frame = Math.floor(t * 30);
     sx.font = `700 ${L.size}px ${FONT}`; sx.textAlign = "center"; sx.textBaseline = "middle";
     for (let i = 0; i < n; i++) {
       let ch = full[i]; if (ch === " ") continue;
-      const age = t - (L.t0 + i / L.cps);
-      let c = L.c, jx = 0, jy = 0, a = 1;
+      const age = t - (L.t0 + i / L.cps); let c = L.c, jx = 0;
+      if (L.hl && i >= L.hl[0] && i < L.hl[1]) { c = L.hl[2]; if (L.hl[2] === WHT && hash(i, frame, 8) < .2 * (1 - out)) jx = (hash(i, frame, 9) - .5) * 14; }
       if (age < .09) { ch = "▒░#%@"[hash(i, frame, 7) * 5 | 0]; c = WHT; }                        // each letter lands as static and settles
-      if (L.em && i >= L.em[0] && i < L.em[1]) { c = WHT; if (hash(i, frame, 8) < .22 * (1 - out)) { jx = (hash(i, frame, 9) - .5) * 14; } if (hash(i, frame, 10) < .05) ch = "▒"; }
-      if (L.rot && t > L.rot && hash(i, Math.floor(t * 12), 11) < .35) { ch = "▒░█"[hash(i, frame, 12) * 3 | 0]; c = [255, 255, 255]; }
+      if (L.rot && t > L.rot && hash(i, Math.floor(t * 12), 11) < .35) { ch = "▒░█"[hash(i, frame, 12) * 3 | 0]; c = WHT; }
       if (out > 0 && hash(i, frame, 13) < out * 1.1) ch = "▒░#%@&"[hash(i, frame, 14) * 6 | 0];     // it dissolves into static on its way out
-      a = 1 - out * .85;
-      sx.globalAlpha = a; sx.shadowColor = rgb(c); sx.shadowBlur = 9; sx.fillStyle = rgb(c);
-      sx.fillText(ch, x0 + i * adv + jx, y + jy);
+      sx.globalAlpha = 1 - out * .85; sx.shadowColor = rgb(c); sx.shadowBlur = 9; sx.fillStyle = rgb(c);
+      sx.fillText(ch, x0 + i * adv + jx, y);
     }
     if (typing || (Math.floor(t * 2.4) % 2 === 0 && t < L.t1 - .3)) { sx.shadowBlur = 16; sx.globalAlpha = 1 - out; sx.fillStyle = rgb(L.c); sx.fillText("▌", x0 + n * adv, y); }
     sx.globalAlpha = 1; sx.shadowBlur = 0;
@@ -147,22 +149,81 @@ function drawLines(t) {
 function bigText(str, cx, y, size, c, a, blur) {     // one line, centred, for the numbers and tags
   sx.font = `700 ${size}px ${FONT}`; sx.textAlign = "center"; sx.textBaseline = "middle"; sx.globalAlpha = a == null ? 1 : a; sx.shadowColor = rgb(c); sx.shadowBlur = blur == null ? 18 : blur; sx.fillStyle = rgb(c); sx.fillText(str, cx, y); sx.globalAlpha = 1; sx.shadowBlur = 0;
 }
+const textOp = (str, cx, y, size, c, a, blur) => later(() => bigText(str, cx, y, size, c, a, blur));   // the same, but in its place in the stack, so a card can sit on top of it
+
+/* ---------------------------------------------------------------- the cards: the app's own pictures, drawn the way the app draws them */
+const CD = {   // name, rarity, characters on the card, colour, the line under the name: all from the app's data
+  "stitch-kin": { name: "STITCH", rar: "common", chars: 2772, tint: [236, 231, 220], cap: "frog hat. zero regrets." },
+  orbit: { name: "ORBIT", rar: "uncommon", chars: 7260, tint: [169, 201, 255], cap: "already read the ending." },
+  "orbit-kin": { name: "ORBIT", rar: "uncommon", chars: 7260, tint: [169, 201, 255], cap: "already read the ending." },
+  "null-kin": { name: "NULL", rar: "rare", chars: 29260, tint: [169, 201, 255], cap: "not on any record." },
+  ronin: { name: "RONIN", rar: "epic", chars: 71680, tint: [255, 138, 201], cap: "" },
+  grimm: { name: "GRIMM", rar: "legendary", chars: 219520, tint: [168, 255, 176], cap: "" },
+  umbra: { name: "UMBRA", rar: "secret", chars: 1578000, tint: [255, 181, 74], cap: "the sun blinked first." },
+  "umbra-kin": { name: "UMBRA", rar: "secret", chars: 1578000, tint: [169, 201, 255], cap: "" },
+  shogun: { name: "SHOGUN", rar: "rare", chars: 31970, tint: [255, 210, 122], cap: "rents you the air." },
+  "grimm-glass": { name: "GRIMM", rar: "legendary", chars: 219520, tint: [255, 138, 201], cap: "" },
+  "phantom-kin": { name: "PHANTOM", rar: "uncommon", chars: 15750, tint: [169, 201, 255], cap: "gone before the cape lands." },
+  "reaper-ice": { name: "REAPER", rar: "mythic", chars: 701000, tint: [169, 201, 255], cap: "" },
+};
+const CARD_KEYS = Object.keys(CD);
+function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+// o: rot, s (scale), a (alpha), glow, decode (0 = still text, 1 = the picture), sheen (0..1 sweeps a glint across), label (false for thumbnails), chip {s, c}, heart, ring
+function drawCardNow(key, cx, cy, w, o) {
+  const d = CD[key] || {}, img = IMG[key]; if (!img) return;
+  const h = w * 1092 / 900, r = w * .045, tint = d.tint || INK, al = o.a == null ? 1 : o.a, s = o.s == null ? 1 : o.s; if (al <= .003) return;
+  sx.save(); sx.translate(cx, cy); sx.rotate(o.rot || 0); sx.scale(s, s); sx.globalAlpha = al;
+  const gl = o.glow == null ? 1 : o.glow; if (gl > 0) { sx.shadowColor = rgba(tint, .55 * gl); sx.shadowBlur = w * .2; }
+  rr(sx, -w / 2, -h / 2, w, h, r); sx.fillStyle = "#050506"; sx.fill(); sx.shadowBlur = 0;
+  sx.save(); rr(sx, -w / 2, -h / 2, w, h, r); sx.clip();
+  sx.imageSmoothingQuality = "high"; sx.drawImage(img, -w / 2, -h / 2, w, h);
+  if (o.label !== false) {
+    const gy = h / 2 - h * .19, g = sx.createLinearGradient(0, gy, 0, h / 2); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(.5, "rgba(0,0,0,.7)"); g.addColorStop(1, "rgba(0,0,0,.92)"); sx.fillStyle = g; sx.fillRect(-w / 2, gy, w, h * .19);
+    const fs = w * .056, lx = -w / 2 + w * .055, ly = h / 2 - h * .085; sx.textBaseline = "alphabetic"; sx.textAlign = "left"; sx.font = `700 ${fs}px ${FONT}`; sx.fillStyle = rgb(tint);
+    const nm = d.name || ""; for (let i = 0; i < nm.length; i++) sx.fillText(nm[i], lx + i * fs * .86, ly);
+    sx.strokeStyle = rgba(tint, .35); sx.lineWidth = 1.5; const lx2 = lx + nm.length * fs * .86 + fs * .5; sx.beginPath(); sx.moveTo(lx2, ly - fs * .3); sx.lineTo(w / 2 - w * .3, ly - fs * .3); sx.stroke();
+    sx.textAlign = "right"; sx.fillStyle = rgb(mul(tint, 1.1)); sx.font = `700 ${fs}px ${FONT}`; sx.fillText((d.chars || 0).toLocaleString("en-US"), w / 2 - w * .17, ly); sx.fillStyle = rgb(DIM); sx.font = `700 ${fs * .5}px ${FONT}`; sx.fillText("chars", w / 2 - w * .055, ly);
+    if (d.cap) { sx.textAlign = "left"; sx.fillStyle = rgb(DIM); sx.font = `700 ${w * .033}px ${FONT}`; sx.fillText(d.cap, lx, h / 2 - h * .035); }
+  }
+  if (o.sheen != null) {                                                                                        // a glint crossing the card
+    const p = -.3 + 1.6 * o.sheen, x1 = -w / 2 + p * w, g = sx.createLinearGradient(x1 - w * .22, -h / 2, x1 + w * .22, h / 2); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(.5, "rgba(255,255,255,.34)"); g.addColorStop(1, "rgba(255,255,255,0)"); sx.globalCompositeOperation = "lighter"; sx.fillStyle = g; sx.fillRect(-w / 2, -h / 2, w, h); sx.globalCompositeOperation = "source-over";
+  }
+  if (o.decode != null && o.decode < 1) {                                                                       // the picture is still text: it resolves from the top down
+    const n = Math.max(16, Math.round(w / 15)), gr = sampleImage(key, n), cwc = w / n, chc = h / gr.rows, size = cwc / ADV; sx.font = `700 ${size}px ${FONT}`; sx.textBaseline = "top"; sx.textAlign = "left";
+    for (let j = 0; j < gr.rows; j++) for (let i = 0; i < n; i++) {
+      const rv = o.decode * 3 - hash(i, j, 4) * .5 - (j / gr.rows); if (rv >= 1) continue;
+      const x = -w / 2 + i * cwc, y = -h / 2 + j * chc, l = gr.l[j * n + i], cover = rv < .55 ? 1 : 1 - (rv - .55) / .45;
+      sx.globalAlpha = al * cover; sx.fillStyle = "#050506"; sx.fillRect(x - .5, y - .5, cwc + 1, chc + 1);
+      if (l > .09) { const m = .45 + .55 * l; sx.globalAlpha = al * Math.min(1, cover * 1.6) * (rv > 0 && rv < .3 ? .6 : .95); sx.fillStyle = rgb([tint[0] * m, tint[1] * m, tint[2] * m]); sx.fillText(rv > 0 && rv < .22 ? ".:*#"[(i + j + Math.floor(clock * 18)) % 4] : RAMP[Math.min(16, Math.floor(l * 17))], x, y); }
+    }
+    sx.globalAlpha = al;
+  }
+  sx.restore();
+  sx.strokeStyle = rgba(o.ring || tint, o.ring ? .95 : .45); sx.lineWidth = o.ring ? 6 : Math.max(1.5, w * .004); if (o.ring) { sx.shadowColor = rgba(o.ring, .9); sx.shadowBlur = 24; } rr(sx, -w / 2, -h / 2, w, h, r); sx.stroke(); sx.shadowBlur = 0;
+  if (o.chip) {                                                                                                  // a price move, pinned to the corner
+    const fs = w * .075, tw = o.chip.s.length * fs * ADV + fs * 1.1, cxp = w / 2 - w * .04 - tw, cyp = -h / 2 + w * .04;
+    sx.fillStyle = "rgba(4,4,5,.84)"; rr(sx, cxp, cyp, tw, fs * 1.6, fs * .3); sx.fill(); sx.strokeStyle = rgba(o.chip.c, .8); sx.lineWidth = 1.5; sx.stroke();
+    sx.textBaseline = "middle"; sx.textAlign = "left"; sx.font = `700 ${fs}px ${FONT}`; sx.fillStyle = rgb(o.chip.c); sx.fillText(o.chip.s, cxp + fs * .55, cyp + fs * .82);
+  }
+  if (o.heart) { sx.textBaseline = "middle"; sx.textAlign = "center"; sx.font = `700 ${w * .13}px ${FONT}`; sx.fillStyle = "#ff6b8b"; sx.shadowColor = "#ff6b8b"; sx.shadowBlur = 20; sx.fillText("♥", -w / 2 + w * .11, -h / 2 + w * .11); sx.shadowBlur = 0; }
+  sx.restore();
+}
+const card = (key, cx, cy, w, o) => later(() => drawCardNow(key, cx, cy, w, o || {}));
+function sparks(cx, cy, n, tint, t, spread, rise) {   // little characters that drift up around something precious
+  for (let i = 0; i < n; i++) { const ph = (t * (.35 + hash(i, 1, 55) * .5) + hash(i, 2, 55)) % 1, x = cx + (hash(i, 3, 55) - .5) * spread, y = cy + spread * .5 - ph * (rise || spread * 1.1); pch(x, y, 18 + hash(i, 4, 55) * 22, "*+.'"[i % 4], tint, Math.sin(ph * Math.PI) * .8); }
+}
 
 /* ---------------------------------------------------------------- art */
 const LOGO = ["███████╗████████╗██╗██╗  ██╗██╗  ██╗", "██╔════╝╚══██╔══╝██║╚██╗██╔╝╚██╗██╔╝", "███████╗   ██║   ██║ ╚███╔╝  ╚███╔╝ ", "╚════██║   ██║   ██║ ██╔██╗  ██╔██╗ ", "███████║   ██║   ██║██╔╝ ██╗██╔╝ ██╗", "╚══════╝   ╚═╝   ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝"];
-const ROBOTS = [[" .---. ", "( o o )", " \\ ~ / ", ".-|=|-.", "d |_| b"], [" .---. ", "( ! ! )", " \\ O / ", ".-|=|-.", "d |_| b"], [" .---. ", "( + + )", " \\ - / ", ".-|=|-.", "d |_| b"]];
 const CURSOR = ["█▙   ", "███▙  ", "████▙ ", "█████▙", "███▛▀ ", "█▛ ▜▙ ", "▀   ▜▙"].map(s => s.trimEnd());
+const ROCKET = ["  /\\  ", " /__\\ ", "  ||  "];
 function packLines(t) {
   const IW = 40, ctr = s => { const l = Math.floor((IW - s.length) / 2); return "|" + " ".repeat(l) + s + " ".repeat(IW - s.length - l) + "|"; }, plate = "┌" + "─".repeat(26) + "┐", plateB = "└" + "─".repeat(26) + "┘";
   const emblem = Array.from({ length: 11 }, (_, j) => Array.from({ length: 27 }, (_, i) => { const dx = (i - 13) / 13, dy = (j - 5) / 5, d = Math.hypot(dx, dy) + .05 * Math.sin(t * 2.4 + i * .7 + j); return d < .3 ? "#" : d < .5 ? "*" : d < .68 ? ":" : d < .84 ? "." : d < .95 ? (j === 5 || i === 13 ? "+" : "'") : " "; }).join(""));
   return [" " + "/\\".repeat(20) + " ", ctr(""), ctr(plate), ctr("│        F I R S T         │"), ctr("│        P R I N T         │"), ctr(plateB), ctr(""), ...emblem.map(ctr), ctr(""), ctr("5    C A R D S"), ctr(""), " " + "\\/".repeat(20) + " "];
 }
-// foil: the pack catches a moving band of light
 function packColor(t, sheenOn) { return (i, j, ch) => { const sh = sheenOn ? Math.max(0, 1 - Math.abs(((i + j * 1.7) - ((t * 22) % 90 - 20)) / 7)) : 0; const base = (ch === "*" || ch === "#" || ch === "+") ? [255, 210, 122] : j > 5 && j < 18 ? [200, 195, 185] : INK; return sh > .08 ? [mixv(base[0], 255, sh), mixv(base[1], 255, sh), mixv(base[2], 255, sh)] : base; }; }
-const PACK_SIZE = 34, PACK_ROWS = 24;
-
-/* ---------------------------------------------------------------- series for the chart: a price that wobbles, runs, drops and runs again */
-const SER = (() => { const a = [10, 11, 9.5, 12, 10.5, 14, 13, 24, 70, 41, 96, 150, 184], n = 96, out = []; for (let i = 0; i < n; i++) { const f = i / (n - 1) * (a.length - 1), j = Math.min(a.length - 2, Math.floor(f)), k = f - j, e = k * k * (3 - 2 * k); out.push(Math.exp(mixv(Math.log(a[j]), Math.log(a[j + 1]), e) + (hash(i, 3, 9) - .5) * .09)); } return out; })();
+const PACK_SIZE = 34, PACK_ROWS = 24, PACK_H = PACK_ROWS * PACK_SIZE * LHR;
 function lineGrid(Y, h) {                            // Y[x] is the height of the line at each column, 0 = bottom row
   const w = Y.length, grid = Array.from({ length: h }, () => Array(w).fill(" "));
   for (let x = 0; x < w - 1; x++) { const y0 = Y[x], y1 = Y[x + 1]; if (y0 === y1) grid[h - 1 - y0][x] = "─"; else { grid[h - 1 - y1][x] = y0 > y1 ? "╰" : "╭"; grid[h - 1 - y0][x] = y0 > y1 ? "╮" : "╯"; for (let y = Math.min(y0, y1) + 1; y < Math.max(y0, y1); y++) grid[h - 1 - y][x] = "│"; } }
@@ -173,9 +234,7 @@ function plotGrid(vals, w, h) {
   const L = v.map(Math.log), mn = Math.min(...L), sp = Math.max(Math.max(...L) - mn, .1), Y = L.map(x => Math.round((x - mn) / sp * (h - 1)));
   return { grid: lineGrid(Y, h), Y, v };
 }
-// the film's pulse as a trace, newest on the right: a spike for every lub, a smaller one for every dub
-const beatIv = t => { const k = cl((t - .6) / 23.2); return mixv(1.15, .3, k * k * (3 - 2 * k)); };
-function ecg(t, x0, y0, cols, rows, size, c, a, span, amp, bpm) {
+function ecg(t, x0, y0, cols, rows, size, c, a, span, amp, bpm) {   // the film's pulse as a trace, newest on the right
   const Y = [];
   for (let i = 0; i < cols; i++) {
     const tau = t - (cols - 1 - i) / cols * span; let v = (vn(tau * 14, 3, 2) - .5) * .05;
@@ -184,153 +243,166 @@ function ecg(t, x0, y0, cols, rows, size, c, a, span, amp, bpm) {
   }
   const grid = lineGrid(Y, rows);
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) { const ch = grid[y][x]; if (ch !== " ") pch(x0 + x * size * ADV, y0 + y * size * LHR, size, ch, x > cols - 4 ? WHT : c, a * (.35 + .65 * x / cols)); }
-  if (bpm) { const iv = beatIv(t), n = Math.round(60 / iv); art(["♥ " + n + " BPM"], x0, y0 + rows * size * LHR + 6, 24, n > 120 ? [232, 120, 109] : DIM, a); }
+  if (bpm) { const n = Math.round(60 / beatIv(t)); art(["♥ " + n + " BPM"], x0, y0 + rows * size * LHR + 6, 24, n > 120 ? RED : DIM, a); }
 }
-const PG = plotGrid(SER, 62, 32);
-TL.chartV = Array.from({ length: 301 }, (_, i) => PG.v[Math.floor(ease2((i / 100 - .3) / 2.4) * 61)]);   // the price over the chart scene, for audio.py to turn into a pitch
-const BOTN = ["DegenBot-12", "FomoBot-7", "WhaleBot-3", "SniperBot-9", "MakerBot-2", "DegenBot-41", "WhaleBot-8", "FomoBot-30"], CARDN = ["STITCH", "PHANTOM", "NULL", "RONIN", "GRIMM", "ORBIT", "SHOGUN", "REAPER", "BRICK", "ROOK"];
-const logLine = n => { const b = BOTN[hash(n, 1, 70) * BOTN.length | 0], cn = CARDN[hash(n, 2, 70) * CARDN.length | 0], buy = hash(n, 3, 70) > .42, amt = Math.round(Math.exp(hash(n, 4, 70) * 4.2 + 3.4)), tm = 43200 + n * 7 + (hash(n, 5, 70) * 5 | 0); return { s: `${pad(tm / 3600 % 24 | 0)}:${pad(tm / 60 % 60 | 0)}:${pad(tm % 60 | 0)}  ${b.padEnd(11)} ${buy ? "BOUGHT" : "SOLD  "} ${cn.padEnd(7)} $${amt >= 1000 ? (amt / 1000).toFixed(1) + "K" : amt}`, c: buy ? GRN : RED, big: amt > 400 }; };
+
+/* ---------------------------------------------------------------- the story card's price: a run, a dip, a run, a peak, and then it falls. Orbit, bought for twelve cents. */
+const PRICE0 = 12;
+const SERX = (() => { const a = [1, 1.1, .95, 1.2, 1.05, 1.4, 1.3, 2.4, 7, 4.1, 9.6, 15, 18.4, 15.5, 12, 9.2, 7.6], n = 96, out = []; for (let i = 0; i < n; i++) { const f = i / (n - 1) * (a.length - 1), j = Math.min(a.length - 2, Math.floor(f)), k = f - j, e = k * k * (3 - 2 * k); out.push(Math.exp(mixv(Math.log(a[j]), Math.log(a[j + 1]), e) + (hash(i, 3, 9) - .5) * .09)); } return out; })();
+const CHW = 62, CHH = 20, PG = plotGrid(SERX, CHW, CHH);
+const HEAD = (() => { const pk = PG.v.indexOf(Math.max(...PG.v)), HR = pk - 12, sellAt = T.sell[0] + 1.5;
+  return { pk, HR, sellAt, at(t) { if (t < 10.25) return 0; if (t < T.sell[0]) return HR * Math.pow((t - 10.25) / (T.sell[0] - 10.25), 1.2); if (t < sellAt - .2) return HR + (pk - HR) * (t - T.sell[0]) / (sellAt - .2 - T.sell[0]); if (t < sellAt + .1) return pk; return pk + (CHW - 1 - pk) * ease((t - sellAt - .1) / 1.05); } }; })();
+const headV = h => { const i = Math.min(CHW - 2, Math.floor(h)); return PG.v[i] + (PG.v[i + 1] - PG.v[i]) * (h - i); };
+const priceC = h => PRICE0 * headV(h) / PG.v[0];                     // cents
+const SOLD = PRICE0 * PG.v[HEAD.pk] / PG.v[0], GAIN = SOLD - PRICE0;
+TL.price = { t0: 10.25, dt: 1 / 30, v: Array.from({ length: Math.round((HEAD.sellAt - 10.25) * 30) }, (_, i) => priceC(HEAD.at(10.25 + i / 30))) };
+TL.EV = { buyClick: T.buy[0] + 1.7, cardPops: [0, 1, 2, 3, 4].map(i => T.cards[0] + .75 + i * .62), sellClick: HEAD.sellAt, profit: T.profit[0] + .05, collectPops: Array.from({ length: 9 }, (_, k) => T.collect[0] + .1 + k * .1), favClick: T.collect[0] + 2.2, sky: T.collect[0] + 2.5, endThumps: [31.3, 31.9], sold: SOLD, cross: [5, 10, 15].map(m => { for (let t = 10.25; t < HEAD.sellAt; t += .01) if ((headV(HEAD.at(t)) / PG.v[0] - 1) * 100 >= m * 100) return t; return null; }) };
 
 /* ---------------------------------------------------------------- the acts. each draws its own picture; the captions, hud, snow and post effects are added around them */
-let clock = 0;
 const PAL_WARM = mkpal([[0, 0, 0], [30, 30, 32], [120, 118, 110], [200, 195, 185], [236, 231, 220]]);
 const PAL_GOLD = mkpal([[0, 0, 0], [70, 40, 0], [190, 130, 20], [255, 210, 110], [255, 250, 220]]);
 const PAL_GRN = mkpal([[0, 0, 0], [10, 40, 20], [60, 130, 80], [159, 216, 166], [230, 255, 235]]);
-const PAL_UMBRA = mkpal([[60, 14, 0], [140, 55, 6], [225, 125, 22], [255, 190, 72], [255, 246, 215]]);
-function cardAt(key, n, cy, w0) { const gr = sampleImage(key, n), size = w0 / (n * ADV), h = gr.rows * size * LHR; return { gr, size, px: Math.round((W - w0) / 2), py: Math.round(cy - h / 2), w: w0, h }; }
+const buyButton = (px, py, size, bw, label, press, a, col) => {          // the same button as the app's: a frame of characters that fills with colour when it is pressed
+  const rows = ["╔" + "═".repeat(bw - 2) + "╗", "║" + " ".repeat(bw - 2) + "║", "╚" + "═".repeat(bw - 2) + "╝"];
+  rect(px, py, bw * size * ADV, 3 * size * LHR, [3, 3, 4], .75 * a); if (press != null) rect(px, py, bw * size * ADV, 3 * size * LHR, col, press);
+  art(rows, px, py, size, press > .5 ? [8, 10, 8] : INK, a); art([label], px + ((bw - label.length) / 2) * size * ADV, py + size * LHR, size, press > .5 ? [8, 10, 8] : INK, a);
+};
+const cursorAt = (u, u0, u1, from, to, clickU, a) => { const m = ease((u - u0) / (u1 - u0)), x = mixv(from[0], to[0], m), y = mixv(from[1], to[1], m), pr = u > clickU - .1 && u < clickU + .05; if (u > u0 && u < clickU + .45) art(CURSOR, x + (pr ? 6 : 0), y + (pr ? 6 : 0), 34, WHT, a * (1 - sm(clickU + .1, clickU + .45, u))); };
+function ripPack(u, t, cyp) {                          // the foil splits along the top, the pack drops away, there is a flash
+  const py = Math.round(cyp - PACK_H / 2), L = packLines(t), tear = ease(u / .5), fall = u * u * 700, fade = 1 - sm(.2, .8, u);
+  field((x, y) => Math.exp(-Math.abs(x) * 9) * (.5 + .5 * fbm(x * 30, y * 4 - t * 6, 4)) * sm(0, .08, u) * 1.1 + Math.exp(-Math.hypot(x, y - (cyp - H / 2) / W) * 2.2) * .5 * (1 - u), PAL_WARM, 1);
+  L.forEach((s, j) => { const top = j < 3, dx = top ? tear * 320 : 0, dy = top ? -tear * 520 : fall, rot = top ? tear * 6 : 0; for (let i = 0; i < s.length; i++) { if (s[i] === " ") continue; pch(W / 2 - 21 * PACK_SIZE * ADV + i * PACK_SIZE * ADV + dx + (top ? Math.sin(i + t * 30) * 6 * tear : 0), py + j * PACK_SIZE * LHR + dy + (top ? i * rot : 0), PACK_SIZE, s[i], INK, fade); } });
+  for (let i = 0; i < 90; i++) { const age = u - hash(i, 1, 41) * .05, life = .75; if (age < 0 || age > life) continue; const ang = (hash(i, 2, 41) - .5) * 3.14 - 1.57, sp = 500 + 1300 * hash(i, 3, 41); pch(W / 2 + Math.cos(ang) * sp * age, py + 3 * PACK_SIZE * LHR + Math.sin(ang) * sp * age, 20 + hash(i, 4, 41) * 24, "*+.'#"[i % 5], [255, 225 + hash(i, 5, 41) * 30 | 0, 160], 1 - age / life); }
+  flash(Math.max(.9 * (1 - sm(0, .35, u)), 0));
+}
+const TICKS = [["ORBIT", 1740], ["NULL", 212], ["GRIMM", 86], ["STITCH", -9], ["RONIN", 640], ["UMBRA", 4120], ["REAPER", 377], ["SHOGUN", -14], ["PHANTOM", 305]];
+function ticker(y, t, a) {                              // a tape across the screen, the way a market shows its movers
+  const size = 26, adv = size * ADV, segs = TICKS.map(([n, p]) => ({ s: `${n} ${p >= 0 ? "▲ +" : "▼ −"}${Math.abs(p).toLocaleString("en-US")}%    `, c: p >= 0 ? GRN : RED })), total = segs.reduce((a2, s) => a2 + s.s.length * adv, 0);
+  for (let i = 0; i < C; i++) { pch(i * CW, y - 30, 20, "─", FAINT, a * .6); pch(i * CW, y + 36, 20, "─", FAINT, a * .6); }
+  for (let rep = 0; rep < 2; rep++) { let x = rep * total - ((t * 150) % total); for (const sg of segs) { if (x < W && x + sg.s.length * adv > 0) art([sg.s], x, y, size, sg.c, a); x += sg.s.length * adv; } }
+}
+// the chart that rise and sell share: Orbit's price, drawn as a line of characters with the card beside it
+function story(u, t, mode) {
+  const size = 22, adv = size * ADV, lh = size * LHR, x0 = Math.round((W - CHW * adv) / 2), y0 = 790, head = HEAD.at(t), hc = Math.floor(head), sold = t >= HEAD.sellAt, price = priceC(head), v = headV(head), pct = (v / PG.v[0] - 1) * 100, hy = y0 + (CHH - 1 - PG.Y[hc]) * lh, rising = hc < 3 || PG.v[hc] >= PG.v[Math.max(0, hc - 3)] * .999;
+  glowAt(W / 2, 1000, 760, sold ? [232, 120, 109] : GRN, .12 + .06 * Math.sin(t * 3));
+  // the card, bobbing a little, its glow following the price
+  const bob = Math.sin(t * 1.8) * 7, cardA = mode === "rise" ? ease((u) / .35) : 1;
+  card("orbit", 290, 490 + bob, 360, { rot: -.045 + Math.sin(t * 1.3) * .012, glow: sold ? .5 : .8 + .4 * Math.sin(t * 4), sheen: (t * .35) % 1.4 > 1 ? null : (t * .35) % 1.4, a: cardA, decode: mode === "rise" ? ease((u - .05) / .6) : 1 });
+  // the numbers beside it
+  const tint = CD.orbit.tint; bigText(spaced("UNCOMMON"), 760, 300, 24, DIM, cardA, 0); bigText(spaced("ORBIT"), 760, 366, 62, tint, cardA, 14);
+  if (!sold) { bigText("worth", 760, 440, 28, DIM, cardA, 0); bigText(moneyC(price), 760, 520, 96, INK, cardA, 22); bigText(Math.abs(pct) < 1 ? "▲ +0%" : pctS(pct), 760, 618, 62, Math.abs(pct) < 1 ? DIM : rising ? GRN : RED, cardA, 22); }
+  else { bigText("sold at", 760, 440, 28, GOLD, 1, 0); bigText(moneyC(SOLD), 760, 520, 96, GOLD, 1, 24); bigText("now " + moneyC(price) + "  ▼", 760, 618, 40, RED, 1, 12); }
+  // the chart
+  const ca = mode === "rise" ? sm(.05, .4, u) : 1;
+  for (let j = 0; j < CHH; j += 5) for (let i = 0; i < CHW; i += 2) pch(x0 + i * adv, y0 + j * lh, size, "·", FAINT, .5 * ca);
+  const ey = y0 + (CHH - 1 - PG.Y[0]) * lh; for (let i = 0; i < CHW; i += 2) pch(x0 + i * adv, ey, size, "┄", DIM, .8 * ca);
+  for (let x = 0; x <= hc; x++) { const dn = x > 0 && PG.v[x] < PG.v[x - 1] * .998, post = x > HEAD.pk; for (let y = 0; y < CHH; y++) { const ch = PG.grid[y][x]; if (ch !== " ") pch(x0 + x * adv, y0 + y * lh, size, ch, x > hc - 3 && !post ? WHT : (dn || post) ? RED : GRN, 1); } }
+  for (let x = 0; x <= hc; x++) { const top = CHH - 1 - PG.Y[x], post = x > HEAD.pk; for (let y = top + 1; y < CHH; y++) if ((x + y) % 2 === 0) pch(x0 + x * adv, y0 + y * lh, size, ".", post ? RED : GRN, .2 * (1 - (y - top) / (CHH - top + 4))); }
+  for (let x = 0; x <= hc; x++) { const vv = hash(x, 2, 90) * .6 + .25 * Math.abs(Math.log(PG.v[Math.min(CHW - 1, x + 1)] / PG.v[x])) * 12, k = Math.min(7, Math.floor(vv * 8)); pch(x0 + x * adv, y0 + CHH * lh + 8, size, "▁▂▃▄▅▆▇█"[k], (PG.v[x] < (PG.v[x - 1] || 0) || x > HEAD.pk) ? [150, 80, 74] : [90, 130, 98], .75); }
+  const tag = moneyC(price), tw = tag.length + 4, tx = Math.max(x0, Math.min(x0 + head * adv - tw * adv - 20, x0 + (CHW - tw) * adv)), ty = Math.min(Math.max(hy - lh, y0), y0 + (CHH - 3) * lh), tc = (!rising || sold) ? RED : GRN;
+  rect(tx, ty, tw * adv, 3 * lh, [3, 3, 4], .9 * ca); box(tx, ty, tw, 3, size, tc, ca); art([tag], tx + 2 * adv, ty + lh, size, tc, ca);
+  if (!sold && head > 1) art(ROCKET, x0 + head * adv - 2.5 * adv, hy - 3 * lh - 8 + Math.sin(t * 9) * 4, size, GOLD, rising ? 1 : 0);
+  // the moment you sell: a flag on the peak
+  if (sold) { const px = x0 + HEAD.pk * adv, py = y0 + (CHH - 1 - PG.Y[HEAD.pk]) * lh, a = ease((t - HEAD.sellAt) / .25), lab = "SOLD " + moneyC(SOLD), lw = lab.length + 4; for (let j = 1; j < 9; j++) pch(px, py + j * lh * .8, size, "┊", GOLD, a * .7); rect(px - lw * adv / 2, py - lh * 4.4, lw * adv, 3 * lh, [3, 3, 4], .92 * a); box(px - lw * adv / 2, py - lh * 4.4, lw, 3, size, GOLD, a); art([lab], px - lw * adv / 2 + 2 * adv, py - lh * 3.4, size, GOLD, a); pch(px - adv / 2, py - lh * .9, size + 8, "◆", GOLD, a); }
+}
 
 const ACTS = {
-  /* COLD OPEN: static, a cursor, three lines. The heartbeat is the only thing that moves the picture. */
+  /* COLD OPEN: static, a heartbeat, two lines. */
   cold(u, t) {
-    // a faint ASCII horizon far away: three bars of text that drift, so the black is not dead
     field((x, y) => { const d = Math.abs(y - .12); return d < .22 ? .12 * fbm(x * 5 + t * .15, y * 20, 5) * (1 - d / .22) * sm(1, 3, t) : 0; }, PAL_WARM, .55);
     ecg(t, 0, H * .60, C, 14, FS, GRN, sm(.6, 1.6, t) * .9, 4.2, 6.5, true);
   },
-  /* THE PACK: foil, a moving glint, light behind it. */
-  pack(u, t) {
-    const k = ease(u / .55), bob = Math.sin(t * 2.2) * 8, py = Math.round(H * .47 - PACK_ROWS * PACK_SIZE * LHR / 2 + bob + (1 - k) * -260);
-    field((x, y, gx, gy) => { const dx = x, dy = y - (py + 400 - H / 2) / W, r = Math.hypot(dx, dy), th = Math.atan2(dy, dx); return (Math.pow(.5 + .5 * Math.cos(11 * th + t * .45), 7) * Math.exp(-r * 2.6) * .55 + Math.exp(-r * 5) * .35) * sm(0, .5, u); }, PAL_WARM, .75);
-    const L = packLines(t); rect(W / 2 - 440, py - 14, 880, PACK_ROWS * PACK_SIZE * LHR + 28, [3, 3, 4], .82 * k);
-    artC(L, W / 2, py, PACK_SIZE, packColor(t, true), k);
-    // glint tag
-    if (u > .7) { const q = Math.floor(t * 5); put(Math.floor(C / 2 + (hash(q, 1, 3) - .5) * 40), Math.floor(R * .46 + (hash(q, 2, 3) - .5) * 30), "+", WHT, .9); }
+  /* 1. BUY A PACK: the foil pack drops in, the button, the click. */
+  buy(u, t) {
+    const k = ease(u / .55), bob = Math.sin(t * 2.2) * 8, cyp = H * .43, shake = u > 1.7 ? Math.sin(t * 60) * 7 * sm(1.7, 2.8, u) : 0, py = Math.round(cyp - PACK_H / 2 + bob + (1 - k) * -300);
+    field((x, y) => { const dy = y - (cyp - H / 2) / W, r = Math.hypot(x, dy), th = Math.atan2(dy, x); return (Math.pow(.5 + .5 * Math.cos(11 * th + t * .45), 7) * Math.exp(-r * 2.6) * .55 + Math.exp(-r * 5) * .35) * sm(0, .5, u); }, PAL_WARM, .75);
+    rect(W / 2 - 440 + shake, py - 14, 880, PACK_H + 28, [3, 3, 4], .82 * k);
+    artC(packLines(t), W / 2 + shake, py, PACK_SIZE, packColor(t, true), k);
+    if (u > .7) { const q = Math.floor(t * 5); put(Math.floor(C / 2 + (hash(q, 1, 3) - .5) * 40), Math.floor(R * .41 + (hash(q, 2, 3) - .5) * 30), "+", WHT, .9); }
+    // the button
+    const bs = 36, bw = 31, bx = W / 2 - bw * bs * ADV / 2, by = 1370, press = u > 1.7 ? .9 - .55 * sm(2.0, 2.5, u) : null, a = sm(.5, .9, u);
+    buyButton(bx, by, bs, bw, "B U Y   P A C K   $ 4 . 9 9", press, a, GRN);
+    cursorAt(u, 1.0, 1.7, [W / 2 + 340, by + 440], [bx + bw * bs * ADV * .7, by + bs * LHR * 1.4], 1.7, a);
+    if (u > 1.75) { const ag = u - 1.75; bigText("−$4.99", W / 2, by - 40 - ag * 150, 56, RED, 1 - sm(.3, 1.0, ag), 14); }
   },
-  /* FIVE CARDS: real cards, read into characters, one every half second. The last one is blacked out. */
+  /* 2. GET CARDS: the pack rips and five cards come out one at a time, each decoding from text into its picture. */
   cards(u, t) {
-    const keys = ["stitch", "phantom", "null", "ronin", "grimm"], tints = [[200, 196, 186], [236, 231, 220], [169, 201, 255], [255, 138, 201], [168, 255, 176]], names = ["STITCH", "PHANTOM", "NULL", "RONIN", "GRIMM"], rars = ["common", "uncommon", "rare", "epic", "legendary"];
-    const idx = Math.min(4, Math.floor(u / .5)), lu = u - idx * .5, N = 56, b = cardAt(keys[idx], N, H * .425, 840), tint = tints[idx], wipe = ease(lu / .2);
-    field((x, y) => { const r = Math.hypot(x, y + .05); return Math.exp(-r * 3) * .22 * (.6 + .6 * fbm(x * 4 + idx * 7, y * 4 - t, 3)); }, mkpal([[0, 0, 0], [20, 20, 22], [60, 60, 66], [110, 108, 100]]), .6);
-    rect(b.px - 6, b.py - 6, b.w + 12, b.h + 12, [3, 3, 4], .9);
-    pimg(b.gr, b.px, b.py, b.size, tint, 1, 1, wipe);
-    box(b.px - b.size * ADV * 2, b.py - b.size * LHR, N + 4, b.gr.rows + 2, b.size, tint, .85 * sm(0, .12, lu));
-    // number, name, rarity
-    const ty = b.py + b.h + 62; bigText(typed(names[idx].split("").join(" "), lu, .12, 28), W / 2, ty, 46, INK, 1);
-    bigText(typed(rars[idx].toUpperCase().split("").join(" "), lu, .2, 30), W / 2, ty + 54, 26, tint, .9, 10);
-    bigText(`#${pad(idx * 4 + 3, 3)} / 020`, W / 2 + b.w / 2 - 84, b.py - 62, 24, DIM, .9, 0);
-    if (idx === 4) {                                    // redacted
-      const q = Math.floor(t * 24);
-      for (let i = 0; i < 7; i++) { const y0 = b.py + (hash(i, 3, 80) * .74 + .08) * b.h, w = (.25 + hash(i, 4, 80) * .5) * b.w * ease((lu - .1 - i * .03) / .22), x0 = b.px + (hash(i, 5, 80) * .5) * b.w; rect(x0, y0, w, 26 + hash(i, 6, 80) * 40, [3, 3, 4], 1); if (w > 200) bigText("[ REDACTED ]", x0 + w / 2, y0 + 24, 22, hash(i, q, 81) > .5 ? WHT : DIM, .9, 8); }
+    const ids = ["stitch-kin", "orbit", "null-kin", "ronin", "grimm"], worth = [11, 14, 306, 890, 2340], tier = [0, 0, 1, 2, 3], k0 = .75, per = .62;
+    if (u < .8) ripPack(u, t, H * .43);
+    const cur = u < k0 ? -1 : Math.min(4, Math.floor((u - k0) / per));
+    if (cur >= 0) {
+      const key = ids[cur], d = CD[key], lu = u - (k0 + cur * per), tint = d.tint, pop = ease(lu / .2), cy = 880;
+      glowAt(W / 2, cy, 800, tint, .28);
+      card(key, W / 2, cy + (1 - pop) * 60, 600, { s: mixv(1.18, 1, pop), rot: (1 - pop) * (cur % 2 ? .08 : -.08), decode: ease((lu - .02) / .4), sheen: lu > .4 ? cl((lu - .4) / .5) : null, glow: 1 + .3 * Math.sin(t * 6), a: sm(0, .08, lu) });
+      sparks(W / 2, cy, [0, 0, 22, 42, 70][cur], tint, t, 760);
+      const ta = sm(.05, .2, lu);
+      bigText(spaced(d.rar.toUpperCase()), W / 2, 318, 28, tint, ta, 10); bigText(spaced(d.name), W / 2, 392, 82, INK, ta, 20); bigText("worth $" + (worth[cur] / 100).toFixed(2), W / 2, 466, 36, GOLD, ta, 8);
+      // the ones already out, in a row underneath
+      for (let i = 0; i <= cur; i++) { const lt = u - (k0 + i * per), p = ease((lt - .3) / .2); if (i < cur || lt > .3) card(ids[i], W / 2 + (i - 2) * 130, 1330, 104, { label: false, s: mixv(.5, 1, p), a: p, glow: .6, decode: 1, ring: i === cur ? CD[ids[i]].tint : null }); }
     }
   },
-  /* THE CHART: a price runs from ten cents to a dollar eighty-four, drops, and runs again. Every column is coloured by which way it moved. */
-  chart(u, t) {
-    const w = PG.grid[0].length, h = PG.grid.length, size = 22, x0 = Math.round((W - w * size * ADV) / 2), y0 = 450, p = ease2((u - .3) / 2.4), head = Math.floor(p * (w - 1));
-    field((x, y) => Math.exp(-Math.hypot(x, y + .1) * 2.8) * .16 * (.6 + .6 * fbm(x * 3, y * 3 + t * .3, 8)), PAL_GRN, .5);
-    // grid
-    for (let j = 0; j < h; j += 8) for (let i = 0; i < w; i += 2) pch(x0 + i * size * ADV, y0 + j * size * LHR, size, "·", FAINT, .5);
-    // entry price line
-    const ey = y0 + (h - 1 - PG.Y[0]) * size * LHR; for (let i = 0; i < w; i += 2) pch(x0 + i * size * ADV, ey, size, "┄", DIM, .8 * sm(.2, .5, u));
-    // the line
-    for (let x = 0; x <= head; x++) { const dn = x > 0 && PG.v[x] < PG.v[x - 1] * .998; for (let y = 0; y < h; y++) { const ch = PG.grid[y][x]; if (ch !== " ") pch(x0 + x * size * ADV, y0 + y * size * LHR, size, ch, x > head - 3 ? WHT : dn ? RED : GRN, 1); } }
-    // a glow under it: columns of dots below the line fade towards the bottom
-    for (let x = 0; x <= head; x += 1) { const top = h - 1 - PG.Y[x]; for (let y = top + 1; y < h; y++) if ((x + y) % 2 === 0) pch(x0 + x * size * ADV, y0 + y * size * LHR, size, ".", PG.v[x] < (PG.v[x - 1] || 0) ? RED : GRN, .22 * (1 - (y - top) / (h - top + 4))); }
-    const hy = y0 + (h - 1 - PG.Y[head]) * size * LHR, v = PG.v[head], pct = (v / PG.v[0] - 1) * 100, up = !(head > 3 && PG.v[head] < PG.v[head - 3]);
-    // price tag riding the head
-    const tag = "$" + (v / 100).toFixed(2), tw = tag.length + 4, tx = Math.max(x0, Math.min(x0 + head * size * ADV - tw * size * ADV - 20, x0 + (w - tw) * size * ADV)), ty = Math.min(Math.max(hy - size * LHR, y0), y0 + (h - 3) * size * LHR);
-    rect(tx, ty, tw * size * ADV, 3 * size * LHR, [3, 3, 4], .9); box(tx, ty, tw, 3, size, up ? GRN : RED, 1); art([tag], tx + 2 * size * ADV, ty + size * LHR, size, up ? GRN : RED, 1);
-    if (p > .05 && p < .98) art(["  /\\  ", " /__\\ ", "  ||  "], x0 + head * size * ADV - 2.5 * size * ADV, hy - 3 * size * LHR - 8 + Math.sin(t * 9) * 4, size, GOLD, up ? 1 : 0);
-    // volume under the chart
-    for (let x = 0; x <= head; x++) { const vv = hash(x, 2, 90) * .6 + .25 * Math.abs(Math.log(PG.v[Math.min(w - 1, x + 1)] / PG.v[x])) * 12, k = Math.min(7, Math.floor(vv * 8)); pch(x0 + x * size * ADV, y0 + h * size * LHR + 14, size, "▁▂▃▄▅▆▇█"[k], PG.v[x] < (PG.v[x - 1] || 0) ? [150, 80, 74] : [90, 130, 98], .75); }
-    // the bots leave their marks on the line
-    [[34, "DegenBot-12 bought", GRN, -1], [43, "WhaleBot-3 bought $1.2M", GRN, -1], [50, "FomoBot-7 sold $49K", RED, 1], [57, "SniperBot-9 bought", GRN, -1]].forEach(([c, s2, col, side]) => {
-      const age = head - c; if (age < 0 || age > 11) return; const al2 = sm(0, 1.5, age) * (1 - sm(7, 11, age)), lw = s2.length * 13.2, lx = Math.max(50, Math.min(W - 50 - lw, x0 + c * size * ADV - lw / 2)), ly = y0 + (h - 1 - PG.Y[c]) * size * LHR + side * 80;
-      art([s2], lx, ly, 22, col, al2); pch(x0 + c * size * ADV, ly + side * -32 + (side < 0 ? 40 : -8), 22, side < 0 ? "▼" : "▲", col, al2);
-    });
-    // the number
-    const s = Math.abs(pct) < 1 ? "▲ +0%" : (pct >= 0 ? "▲ +" : "▼ −") + Math.round(Math.abs(pct)).toLocaleString("en-US") + "%"; bigText(s, W / 2, 290 + (hash(Math.floor(t * 30), 1, 91) - .5) * 4 * (1 - p), 118, Math.abs(pct) < 1 ? INK : up ? GRN : RED, 1, 28);
-    bigText(typed("you got it for $0.10", u, .5, 20), W / 2, 372, 30, DIM, 1, 0);
-  },
-  /* THE BOTS: three of them, and a log that scrolls faster and faster. */
-  bots(u, t) {
-    field((x, y) => Math.exp(-Math.hypot(x, y - .1) * 3) * .14 * (.6 + .6 * fbm(x * 3 + t * .2, y * 3, 12)), PAL_WARM, .5);
-    const names = ["DegenBot-12", "FomoBot-7", "WhaleBot-3"], say = [["bought $212K", GRN], ["sold $49K", RED], ["bought $1.2M", GRN]], si = Math.max(0, Math.floor((u - .5) / .55));
-    ROBOTS.forEach((rb, b) => {
-      const bx = 118 + b * 300, by = 215 + Math.sin(t * 3 + b * 2) * 6, size = 44;
-      art(rb, bx, by, size, (i, j, ch) => (j === 1 && "o!+".includes(ch) && Math.floor(t * 4 + b) % 7 === 0) ? WHT : INK, 1, ease((u - .1 - b * .15) / .5));
-      if (u > .5) { bigText(names[b], bx + 3.5 * size * ADV, by + 5.5 * size * LHR + 8, 24, DIM, 1, 0); const [m, c] = say[(si + b) % 3]; bigText(typed(m, u - .55 * si - .5, 0, 18), bx + 3.5 * size * ADV, by + 5.5 * size * LHR + 42, 28, c, 1, 8); }
-    });
-    // the log
-    const ly = 600, rows = 26, size = 26, speed = mixv(4, 22, ease2(u / 2.4)), top = u * speed, x0 = 70;
-    rect(x0 - 30, ly - 18, W - 2 * (x0 - 30), rows * LH * 1.3 + 36, [3, 3, 4], .8); box(x0 - 30, ly - 18, Math.floor((W - 2 * (x0 - 30)) / (size * ADV)), Math.round((rows * LH * 1.3 + 36) / (size * LHR)), size, FAINT, .8);
-    for (let r = 0; r < rows; r++) { const n = Math.floor(top) - rows + r + 60, ln = logLine(n), fadeTop = sm(0, 5, r) , a = fadeTop * (r === rows - 1 ? .6 + .4 * Math.sin(t * 20) : 1); art([ln.s], x0, ly + r * LH * 1.3, 20, ln.big && r > 20 ? mul(ln.c, 1.15) : ln.c, a * .9); }
-    pch(x0 - 28, ly - 56, 24, "●", [255, 90, 80], Math.floor(t * 2) % 2 ? 1 : .3); art(["LIVE  AI TRADING  ·  simulated"], x0 + 2, ly - 56, 24, DIM, 1);
-  },
-  /* SELL: a button, a click, a payout. */
+  /* 3. WATCH THE VALUE GO UP: Orbit's price runs. The tape runs along under it. */
+  rise(u, t) { story(u, t, "rise"); ticker(1400, t, sm(.3, .8, u)); },
+  /* 4. SELL AT THE PEAK: the line tops out, you press SELL, and it falls without you. */
   sell(u, t) {
-    field((x, y) => Math.exp(-Math.hypot(x, y) * 3) * .15 * (.6 + .6 * fbm(x * 3, y * 3 + t * .2, 15)), PAL_GRN, .5);
-    const size = 42, clickAt = .95, press = u > clickAt, bw = 28, bx = W / 2 - bw * size * ADV / 2, by = 640;
-    const rows = ["╔" + "═".repeat(bw - 2) + "╗", "║" + " ".repeat(bw - 2) + "║", "╚" + "═".repeat(bw - 2) + "╝"], lab = "S E L L   $ 1 . 6 6";
-    const a = sm(.1, .4, u);
-    if (press) rect(bx, by, bw * size * ADV, 3 * size * LHR, GRN, .9 - .55 * sm(clickAt + .3, clickAt + .8, u));
-    art(rows, bx, by, size, press ? [8, 10, 8] : INK, a);
-    art([lab], bx + ((bw - lab.length) / 2) * size * ADV, by + size * LHR, size, press ? [8, 10, 8] : INK, a);
-    if (u > .35 && u < clickAt + .4) { const m = ease((u - .35) / .6), cxp = mixv(W / 2 + 330, bx + bw * size * ADV * .72, m), cyp = mixv(by + 520, by + size * LHR * 1.4, m), pr = u > clickAt - .1 && u < clickAt + .05; art(CURSOR, cxp + (pr ? 6 : 0), cyp + (pr ? 6 : 0), 34, WHT, 1 - sm(clickAt + .1, clickAt + .4, u)); }
-    if (press) {
-      for (let i = 0; i < 40; i++) { const age = u - clickAt - hash(i, 1, 43) * .35, life = 1.0; if (age < 0 || age > life) continue; const x = W / 2 + (hash(i, 2, 43) - .5) * 900, y = by - 40 + age * age * 900 + age * 300, bounce = y > H * .76 ? H * .76 - (y - H * .76) * .4 : y; art(["(\\$)"], x, bounce, 34, GOLD, 1 - age / life); }
-      bigText("+$1.66", W / 2, 960, 150, GRN, 1, 30); bigText(typed("paid at once.", u, clickAt + .5, 14), W / 2, 1090, 38, DIM, 1, 0);
-    } else bigText("a card is worth what the market says.", W / 2, 860, 32, DIM, a, 0);
+    story(u, t, "sell");
+    const bs = 36, bw = 27, bx = W / 2 - bw * bs * ADV / 2, by = 1345, clickU = HEAD.sellAt - T.sell[0], press = u > clickU ? .9 - .55 * sm(clickU + .3, clickU + .8, u) : null;
+    buyButton(bx, by, bs, bw, "S E L L   " + spaced(moneyC(SOLD)).replace(/\s\s/g, "  "), press, sm(0, .3, u), GRN);
+    cursorAt(u, .35, clickU, [W / 2 + 360, by + 380], [bx + bw * bs * ADV * .72, by + bs * LHR * 1.4], clickU, 1);
+    if (u > clickU) for (let i = 0; i < 20; i++) { const age = u - clickU - hash(i, 1, 43) * .25, life = .8; if (age < 0 || age > life) continue; art(["(\\$)"], W / 2 + (hash(i, 2, 43) - .5) * 800, by + 60 - age * 520 + age * age * 900, 30, GOLD, 1 - age / life); }
   },
-  /* BUILD: back to the pack, alone in the dark. It shakes. The count is not a count. */
+  /* 5. WATCH YOUR PROFIT FLY: the number counts up and money goes everywhere. */
+  profit(u, t) {
+    glowAt(W / 2, 830, 900, GRN, .22);
+    field((x, y) => { const r = Math.hypot(x, y + .06), rad = u * 1.1; return Math.exp(-Math.pow((r - rad) / .03, 2)) * (1 - u / 1.6) * .8; }, PAL_GRN, .9);
+    // bills and coins, thrown up and out, then falling
+    for (let i = 0; i < 190; i++) {
+      const born = hash(i, 1, 50) * .5, age = u - born; if (age < 0 || age > 2.0) continue; const ang = -Math.PI / 2 + (hash(i, 2, 50) - .5) * 2.7, sp = 500 + 1200 * hash(i, 3, 50), x = W / 2 + Math.cos(ang) * sp * age, y = 830 + Math.sin(ang) * sp * age + 820 * age * age, size = 26 + hash(i, 4, 50) * 46, a = 1 - sm(1.4, 2.0, age);
+      if (i % 9 === 0) art(Math.floor(age * 9) % 2 ? ["┌──┐", "│$$│", "└──┘"] : ["╔══╗", "║$$║", "╚══╝"], x, y, 30, GRN, a); else pch(x, y, size, ["$", "$", "$", "¢", "+", "%"][i % 6], i % 3 ? GRN : GOLD, a);
+    }
+    const c = ease(u / 1.0), g = GAIN * c, a = sm(0, .15, u);
+    bigText("+$" + (g / 100).toFixed(2), W / 2, 830, 190, GRN, a, 36); bigText("profit", W / 2, 960, 40, DIM, a * sm(.3, .6, u), 0);
+    bigText("paid " + moneyC(PRICE0) + "  ·  sold " + moneyC(SOLD), W / 2, 1060, 34, INK, sm(.5, .9, u), 0); bigText(pctS((SOLD / PRICE0 - 1) * 100), W / 2, 1160, 76, GRN, sm(.6, 1.0, u), 24);
+  },
+  /* 6. COLLECT YOUR FAVOURITES: nine cards, a click on one, and it takes off. */
+  collect(u, t) {
+    const ids = ["shogun", "umbra-kin", "grimm-glass", "phantom-kin", "ronin", "reaper-ice", "stitch-kin", "orbit-kin", "grimm"], base = [312, 86, -9, 41, 64, 377, -14, 205, 1206], w = 290, gap = 36, favU = 2.2, skyU = 2.5, FAV = 4;
+    const chosen = u > favU, rocket = cl((u - skyU) / 1.25);
+    field((x, y) => Math.exp(-Math.hypot(x, y) * 2.4) * .12 * (.6 + .6 * fbm(x * 3, y * 3 + t * .3, 8)), mkpal([[0, 0, 0], [30, 20, 40], [120, 70, 110], [255, 138, 201]]), .5);
+    ids.forEach((key, k) => {
+      const col = k % 3, row = Math.floor(k / 3), cx = 69 + w / 2 + col * (w + gap), cy = 426 + row * 386, born = .1 + k * .1, p = ease((u - born) / .4); if (u < born) return;
+      const isFav = k === FAV, wob = Math.sin(t * 1.6 + k) * 3, pct = isFav ? mixv(base[k], 3480, Math.pow(rocket, 2.2)) : base[k] * (1 + .04 * Math.sin(t * 3 + k * 2)), up = pct >= 0, s = isFav && chosen ? mixv(1, 1.13, ease((u - favU) / .3)) : 1, dim = chosen && !isFav ? .5 : 1;
+      card(key, cx, cy + wob + (1 - p) * 70, w, { s: mixv(.6, 1, p) * s, a: p * dim, glow: isFav && chosen ? 1.6 : .5, decode: ease((u - born - .03) / .3), sheen: (u - born) > .4 && (u - born) < 1.2 ? (u - born - .4) / .8 : null, chip: { s: (up ? "▲ +" : "▼ −") + Math.round(Math.abs(pct)).toLocaleString("en-US") + "%", c: up ? GRN : RED }, heart: isFav && chosen, ring: isFav && chosen ? GOLD : null, rot: isFav && rocket > 0 ? Math.sin(t * 50) * .012 * rocket : 0 });
+      if (isFav && rocket > .02 && rocket < 1) { art(ROCKET, cx - 3 * 30 * ADV, cy - 250 - rocket * 40 + Math.sin(t * 9) * 4, 30, GOLD, 1); for (let i = 0; i < 16; i++) { const ag = (t * 2 + hash(i, 1, 56)) % 1; pch(cx + (hash(i, 2, 56) - .5) * 240, cy - 190 - ag * 340, 24, "$+*"[i % 3], i % 2 ? GRN : GOLD, 1 - ag); } }
+    });
+    cursorAt(u, 1.5, favU, [W - 120, 1500], [W / 2 + 20, 826], favU, 1);
+  },
+  /* BUILD: the pack again, alone in the dark. It shakes. The count is not a count. */
   build(u, t) {
-    const k = sm(0, 3.6, u), bob = Math.sin(t * 2.2) * 6 * (1 - k), cyp = H * .585, py = Math.round(cyp - PACK_ROWS * PACK_SIZE * LHR / 2 + bob);
-    // digits fall down both edges
+    const k = sm(0, 2.2, u), bob = Math.sin(t * 2.2) * 6 * (1 - k), cyp = H * .585, py = Math.round(cyp - PACK_H / 2 + bob);
     for (let c = 0; c < 9; c++) for (const side of [0, 1]) { const col = side ? C - 1 - c : c, sp = 8 + hash(col, 1, 60) * 16, ph = hash(col, 2, 60) * 90; for (let j = 0; j < 14; j++) { const y = Math.floor((t * sp + ph) % (R + 14)) - j; if (y < 0 || y >= R) continue; put(col, y, hash(col, y + Math.floor(t * 9), 61) > .5 ? "1" : "0", j === 0 ? WHT : GRN, (1 - j / 14) * .5 * (.3 + k * .9) * (1 - c / 11)); } }
-    field((x, y) => { const dx = x, dy = y - (cyp - H / 2) / W, r = Math.hypot(dx, dy), th = Math.atan2(dy, dx); return (Math.pow(.5 + .5 * Math.cos(9 * th - t * (.4 + k)), 8) * Math.exp(-r * 3) * .5 + Math.exp(-r * 4.2) * .5) * (.18 + .9 * k) * (.85 + .15 * Math.sin(t * 7)); }, PAL_WARM, .85);
-    rect(W / 2 - 440, py - 14, 880, PACK_ROWS * PACK_SIZE * LHR + 28, [3, 3, 4], .9);
+    field((x, y) => { const dy = y - (cyp - H / 2) / W, r = Math.hypot(x, dy), th = Math.atan2(dy, x); return (Math.pow(.5 + .5 * Math.cos(9 * th - t * (.4 + k)), 8) * Math.exp(-r * 3) * .5 + Math.exp(-r * 4.2) * .5) * (.18 + .9 * k) * (.85 + .15 * Math.sin(t * 7)); }, PAL_WARM, .85);
+    rect(W / 2 - 440, py - 14, 880, PACK_H + 28, [3, 3, 4], .9);
     artC(packLines(t), W / 2, py, PACK_SIZE, packColor(t, false), 1);
-    // light through the seam: it grows from the middle outwards and the pack starts to give
-    const seamY = py + 2.5 * PACK_SIZE * LHR, sw = Math.floor(sm(1.6, 3.6, u) * 40);
-    for (let i = 0; i < sw; i++) for (const sgn of [-1, 1]) { const x = W / 2 + sgn * i * PACK_SIZE * ADV * .55; pch(x, seamY, PACK_SIZE, i < sw - 4 ? "═" : "*", WHT, .5 + .5 * hash(i, Math.floor(t * 30), 62)); }
+    const seamY = py + 2.5 * PACK_SIZE * LHR, sw = Math.floor(sm(.6, 2.2, u) * 40);
+    for (let i = 0; i < sw; i++) for (const sgn of [-1, 1]) pch(W / 2 + sgn * i * PACK_SIZE * ADV * .55, seamY, PACK_SIZE, i < sw - 4 ? "═" : "*", WHT, .5 + .5 * hash(i, Math.floor(t * 30), 62));
     for (let i = 0; i < Math.floor(k * 50); i++) { const sx2 = W / 2 + (hash(i, 1, 63) - .5) * 700, sy = seamY - ((t * 120 * (.4 + hash(i, 2, 63)) + hash(i, 3, 63) * 500) % 420); pch(sx2, sy, 22, "*+.'"[i % 4], GOLD, .7 * (1 - Math.abs(sy - seamY) / 420)); }
-    // the count
     const digit = n => hash(n, Math.floor(t * 14), 64) < (.75 - k * .55) ? "0123456789"[hash(n, Math.floor(t * 20), 65) * 10 | 0] : "█";
     ecg(t, 0, 410, C, 9, FS, GRN, sm(0, .5, u) * .9, 3.6, 4.6, true);
-    bigText("T-MINUS  " + digit(1) + digit(2) + ":" + digit(3) + digit(4) + ":" + digit(5) + digit(6), W / 2, H * .07, 40, mixv(1, 1, 0) && (hash(0, Math.floor(t * 8), 66) > .85 ? WHT : RED), .9, 10);
+    bigText("T-MINUS  " + digit(1) + digit(2) + ":" + digit(3) + digit(4) + ":" + digit(5) + digit(6), W / 2, H * .07, 40, hash(0, Math.floor(t * 8), 66) > .85 ? WHT : RED, .9, 10);
   },
-  /* RIP: the foil splits, the screen goes white, something comes up out of it. */
+  /* RIP: the foil splits, the screen goes white, a card comes up out of it, still made of text. */
   rip(u, t) {
-    const cyp = H * .585, py = Math.round(cyp - PACK_ROWS * PACK_SIZE * LHR / 2), L = packLines(t), tear = ease(u / .5), fall = u * u * 700, fade = 1 - sm(.2, .8, u);
-    field((x, y) => { const beam = Math.exp(-Math.abs(x) * 9) * (.5 + .5 * fbm(x * 30, y * 4 - t * 6, 4)) * sm(0, .08, u) * 1.1 + Math.exp(-Math.hypot(x, y - .1) * 2.2) * .5 * (1 - u); return beam; }, PAL_WARM, 1);
-    // the pack: top three rows rip up and away, the rest drops
-    L.forEach((s, j) => { const top = j < 3, dx = top ? tear * 320 : 0, dy = top ? -tear * 520 : fall, rot = top ? tear * 6 : 0; for (let i = 0; i < s.length; i++) { if (s[i] === " ") continue; pch(W / 2 - 21 * PACK_SIZE * ADV + i * PACK_SIZE * ADV + dx + (top ? Math.sin(i + t * 30) * 6 * tear : 0), py + j * PACK_SIZE * LHR + dy + (top ? i * rot : 0), PACK_SIZE, s[i], INK, fade); } });
-    // shards
-    for (let i = 0; i < 90; i++) { const age = u - hash(i, 1, 41) * .05, life = .75; if (age < 0 || age > life) continue; const ang = (hash(i, 2, 41) - .5) * 3.14 - 1.57, sp = 500 + 1300 * hash(i, 3, 41); pch(W / 2 + Math.cos(ang) * sp * age, py + 3 * PACK_SIZE * LHR + Math.sin(ang) * sp * age, 20 + hash(i, 4, 41) * 24, "*+.'#"[i % 5], [255, 225 + hash(i, 5, 41) * 30 | 0, 160], 1 - age / life); }
-    // the card rises, still just a few big characters
-    const b = cardAt("umbra", 8, mixv(cyp + 160, H * .43, ease((u - .15) / .6)), 800); rect(b.px - 6, b.py - 6, b.w + 12, b.h + 12, [3, 3, 4], .9 * sm(.15, .3, u)); pimg(b.gr, b.px, b.py, b.size, PAL_UMBRA, sm(.15, .35, u), 1);
-    flash(Math.max(.9 * (1 - sm(0, .35, u)), 0));
+    const cyp = H * .585; ripPack(u, t, cyp);
+    const e = ease((u - .15) / .55); card("umbra", W / 2, mixv(cyp + 120, H * .47, e), 760, { s: mixv(.55, 1, e), a: sm(.15, .3, u), decode: 0, glow: 1.4 });
   },
-  /* REVEAL: the card resolves out of big blocks into fine text while an eclipse behind it opens. The film ends before it is done. */
+  /* REVEAL: the card decodes out of text into its picture while an eclipse behind it opens. The film ends before it is done. */
   reveal(u, t) {
-    const cyp = H * .43, k = ease(u / 1.5), res = [[0, 8], [.45, 12], [.85, 18], [1.25, 26], [1.65, 38], [2.05, 52], [2.45, 62]], n = res.filter(r => u >= r[0]).pop()[1], b = cardAt("umbra", n, cyp, 800);
-    field((x, y) => { const dx = x, dy = y - (cyp - H / 2) / W, r = Math.hypot(dx, dy), th = Math.atan2(dy, dx), rays = Math.pow(.5 + .5 * Math.cos(16 * th + t * .5 + 3 * fbm(r * 4, th, 3)), 5), hal = Math.exp(-r * 3) * (.5 + .5 * fbm(dx * 6, dy * 6 + t * .4, 7)); return (rays * Math.exp(-r * 1.9) * .95 + hal * .85) * (.35 + .65 * k) * (.9 + .1 * Math.sin(t * 8)); }, PAL_GOLD, 1);
-    const fin = cardAt("umbra", 62, cyp, 800), cw2 = fin.w, ch2 = fin.h;
-    rect((W - cw2) / 2 - 8, cyp - ch2 / 2 - 8, cw2 + 16, ch2 + 16, [3, 3, 4], .92);
-    pimg(b.gr, b.px, b.py, b.size, PAL_UMBRA, 1, 1);
-    box(Math.round((W - cw2) / 2 - fin.size * ADV * 2), Math.round(cyp - ch2 / 2 - fin.size * LHR * 1.2), 62 + 4, fin.gr.rows + 3, fin.size, AMB, .85 * sm(.3, .8, u), true);
-    // a scan bar crosses the card now and then
-    const sy = cyp - ch2 / 2 + ((t * 420) % (ch2 + 200)) - 100; if (sy > cyp - ch2 / 2 && sy < cyp + ch2 / 2) rect((W - cw2) / 2, sy, cw2, 6, WHT, .28);
-    // the end: the corona flares and the picture is gone
-    flash(sm(2.75, 3.38, u) * 1);
+    const cyp = H * .47, k = ease(u / 1.5);
+    field((x, y) => { const dy = y - (cyp - H / 2) / W, r = Math.hypot(x, dy), th = Math.atan2(dy, x), rays = Math.pow(.5 + .5 * Math.cos(16 * th + t * .5 + 3 * fbm(r * 4, th, 3)), 5), hal = Math.exp(-r * 3) * (.5 + .5 * fbm(x * 6, dy * 6 + t * .4, 7)); return (rays * Math.exp(-r * 1.9) * .95 + hal * .85) * (.35 + .65 * k) * (.9 + .1 * Math.sin(t * 8)); }, PAL_GOLD, .7);
+    glowAt(W / 2, cyp, 900, AMB, .2 * k);
+    card("umbra", W / 2, cyp, 760, { s: 1 + .03 * u, decode: .7 * ease((u - .1) / 2.3), sheen: u > 1.1 && u < 2.1 ? (u - 1.1) / 1 : null, glow: 1.1 + .2 * Math.sin(t * 7) });
+    flash(sm(2.25, 2.6, u));
   },
   black(u, t) { },
   /* END: the name, the line, the ask. */
@@ -342,64 +414,57 @@ const ACTS = {
       for (let i = 0; i < 36; i++) pch(x0 + i * size * ADV, y0 + 6.6 * size * LHR, size, "═", FAINT, a * sm(.9, 1.4, lu));
       bigText(typed("ASCII trading cards", lu, 1.0, 16), W / 2, y0 + 8.3 * size * LHR, 28, DIM, 1, 0);
     }
-    if (t > 31.7) { const bl = Math.floor(t * 2) % 2; bigText(bl ? "▼" : "▽", W / 2, H * (HANDLE ? .68 : .62), 54, GRN, .9, 14); }
-    if (t > 32.4) bigText("so you're first in line.", W / 2, H * (HANDLE ? .735 : .69), 32, DIM, sm(32.4, 32.7, t), 0);
+    if (t > 31.3) { const bl = Math.floor(t * 2) % 2; bigText(bl ? "▼" : "▽", W / 2, H * (HANDLE ? .68 : .62), 54, GRN, .9, 14); }
+    if (t > 32.1) bigText("so you're first in line.", W / 2, H * (HANDLE ? .735 : .69), 32, DIM, sm(32.1, 32.4, t), 0);
   },
 };
 
 /* ---------------------------------------------------------------- the viewfinder and the footnote */
-function hud(t) {
-  if (t < T.reveal[1] + .001 || t > KEYS.logo - .2) { }
+function hud(t, q) {
   if (t >= T.reveal[1] && t < T.end[0] + .35) return;
-  const al = t < 1 ? sm(.1, .8, t) : 1, fin = t >= T.end[0];
-  if (!fin) {
-    // corners
-    const m = 46, L = 54; for (const [cx, cy, sx2, sy2] of [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]]) { for (let i = 0; i < 4; i++) { pch(cx + sx2 * i * 14 - 6, cy - 12, 22, "─", FAINT, al); pch(cx - 6, cy + sy2 * i * 25 - 12, 22, "│", FAINT, al); } }
-    pch(66, 70, 24, "●", [255, 80, 70], (Math.floor(t * 1.6) % 2 ? 1 : .15) * al); art(["REC"], 98, 66, 24, DIM, al);
-    const ff = Math.floor(t * FPS), tc = `${pad(Math.floor(ff / 1800))}:${pad(Math.floor(ff / 30) % 60)}:${pad(ff % 30)}`; art([tc], 66, 100, 22, FAINT, al);
-    const bars = "▁▃▅▇"; art([...Array(4)].map((_, i) => bars[Math.min(3, Math.floor(hash(i, Math.floor(t * 4), 33) * 4 * (.6 + .4 * Math.min(1, t / 3))))]).join(" "), W - 66 - 7 * 13, 70, 24, DIM, al);
-    if (t >= T.pack[0] && t < T.reveal[0]) art(["demo mode · simulated market"], W / 2 - 14 * 12, H * .845, 22, [110, 108, 100], al * .9);
-  } else {
-    art(["demo money · simulated market · beta coming soon"], W / 2 - 46 * 13.2 / 2, H * .845, 22, [110, 108, 100], sm(T.end[0] + .9, T.end[0] + 1.4, t));
-  }
+  const fin = t >= T.end[0];
+  if (fin) { art(["demo money · simulated market · beta coming soon"], W / 2 - 46 * 13.2 / 2, H * .845, 22, [110, 108, 100], sm(T.end[0] + .9, T.end[0] + 1.4, t)); return; }
+  const al = (t < 1 ? sm(.1, .8, t) : 1) * (1 - .5 * q);
+  const m = 46; for (const [cx, cy, sx2, sy2] of [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]]) { for (let i = 0; i < 4; i++) { pch(cx + sx2 * i * 14 - 6, cy - 12, 22, "─", FAINT, al); pch(cx - 6, cy + sy2 * i * 25 - 12, 22, "│", FAINT, al); } }
+  pch(66, 70, 24, "●", [255, 80, 70], (Math.floor(t * 1.6) % 2 ? 1 : .15) * al); art(["REC"], 98, 66, 24, DIM, al);
+  const ff = Math.floor(t * FPS), tc = `${pad(Math.floor(ff / 1800))}:${pad(Math.floor(ff / 30) % 60)}:${pad(ff % 30)}`; art([tc], 66, 100, 22, FAINT, al);
+  const bars = "▁▃▅▇"; art([...Array(4)].map((_, i) => bars[Math.min(3, Math.floor(hash(i, Math.floor(t * 4), 33) * 4 * (.6 + .4 * Math.min(1, t / 3))))]).join(" "), W - 66 - 7 * 13, 70, 24, DIM, al);
+  if (t >= T.buy[0] && t < T.reveal[0]) art(["demo mode · simulated market"], W / 2 - 14 * 13.2, H * .845, 22, [110, 108, 100], al * 1.1);
 }
 
 /* ---------------------------------------------------------------- ascii snow: noise that is made of letters */
-const SNOW = [[0, .55], [.35, .16], [1.2, .02], [3.0, .02], [3.1, .1], [3.3, .02], [5.2, .02], [5.3, .12], [5.5, .02], [7.0, .03], [8.0, .02], [15, .02], [17, .06], [18.2, .1], [20.2, .02], [21.5, .03], [23.8, .22], [24.6, .12], [26, .05], [27.5, .2], [28.0, .2], [28.01, 0], [29, 0], [29.3, .05], [30, .01], [33, .02], [33.5, .12]];
-function snow(t, hit) {
-  const lvl = Math.min(.8, kf(SNOW, t) + hit * .45), frame = Math.floor(t * 30); if (lvl < .004) return;
+const SNOW = [[0, .55], [.35, .16], [1.2, .02], [3.0, .02], [3.1, .1], [3.3, .02], [6, .015], [22.7, .015], [23.8, .2], [25.7, .12], [27, .06], [28.2, .2], [28.3, .2], [28.31, 0], [29.1, 0], [29.3, .05], [30, .01], [33, .02], [33.3, .12]];
+function snow(t, hit, q) {
+  const lvl = Math.min(.8, (kf(SNOW, t) + hit * .45) * (1 - .6 * q)), frame = Math.floor(t * 30); if (lvl < .004) return;
   const ch = ".:'`,;-~+*xX#%@&";
-  for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) { const r = hash(x + y * 131, frame, 5); if (r < lvl) { const q = hash(x, y + frame * 3, 6); put(x, y, ch[q * ch.length | 0], q > .9 ? WHT : mul(INK, .45 + q * .5), .25 + q * .55); } }
+  for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) { const r = hash(x + y * 131, frame, 5); if (r < lvl) { const qq = hash(x, y + frame * 3, 6); put(x, y, ch[qq * ch.length | 0], qq > .9 ? WHT : mul(INK, .45 + qq * .5), (.25 + qq * .55) * (1 - .4 * q)); } }
 }
 
-/* ---------------------------------------------------------------- the pixel pass */
+/* ---------------------------------------------------------------- the pixel pass. q is how clean the picture should stay: the cards get almost none of the damage. */
 const VIG = new Float32Array(W * H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const dx = (x - W / 2) / (W / 2), dy = (y - H / 2) / (H / 2), r = dx * dx * .8 + dy * dy * .55; VIG[y * W + x] = 1 - Math.min(.82, r * .5); }
 const NOI = new Uint8Array(512 * 512); for (let i = 0; i < NOI.length; i++) NOI[i] = hash(i, 7, 7) * 255;
-const GRAIN = [[0, .22], [.9, .07], [8, .06], [15, .07], [18, .13], [20.2, .08], [23.8, .25], [24.6, .2], [27.9, .24], [28.0, 0], [29.0, 0], [29.2, .05], [33.2, .07], [33.5, .2]];
-const TRACK = [[0, 1.2], [1.2, .35], [8, .3], [10, .1], [15, .1], [18.2, .3], [20.2, .12], [23.8, .7], [24.6, .5], [28.0, .7], [28.01, 0], [29.2, 0], [29.5, .2], [33, .15]];
-const SPLIT = [[0, 6], [1, 1.6], [8, 1.5], [18, 2.2], [20.2, 1.8], [23.8, 4.5], [28.0, 4.5], [28.01, 0], [29.2, 1.2], [33, 1.6]];
-const SHAKE = [[0, 0], [8, 0], [15, 2], [18.2, 4], [20.2, 1], [22, 4], [23.7, 20], [24.6, 24], [26, 9], [27.9, 14], [28.0, 0], [29, 0], [33, 0]];
+const QUAL = [[0, 0], [3.1, 0], [3.4, .6], [5.9, .6], [6.1, .3], [6.9, .9], [22.7, .9], [22.9, 0], [25.6, 0], [25.9, .7], [28.2, .7], [28.3, 0], [33.3, 0]];
+const GRAIN = [[0, .22], [.9, .07], [3.2, .06], [6, .06], [22.8, .08], [25, .25], [25.7, .2], [28.2, .24], [28.3, 0], [29.1, 0], [29.3, .05], [33.1, .07], [33.3, .2]];
+const TRACK = [[0, 1.2], [1.2, .35], [3.2, .3], [4, .1], [22.7, .1], [25, .7], [25.7, .5], [28.2, .7], [28.31, 0], [29.3, 0], [29.6, .2], [33, .15]];
+const SPLIT = [[0, 6], [1, 1.6], [3.2, 1.5], [22.8, 1.8], [25, 4.5], [28.2, 4.5], [28.31, 0], [29.3, 1.2], [33, 1.6]];
+const SHAKE = [[0, 0], [3.2, 0], [4, 1], [22.8, 1], [24, 18], [25.7, 24], [27, 9], [28.2, 14], [28.31, 0], [29.1, 0], [33, 0]];
 const sbuf = new Uint8ClampedArray(W * H * 4), s32 = new Uint32Array(sbuf.buffer), dx = new Int16Array(H);
-function post(t, hit, grain, split, track, bright, fadeK) {
+function post(t, hit, grain, split, track, bright, scanK) {
   const id = ox.getImageData(0, 0, W, H); sbuf.set(id.data); const o32 = new Uint32Array(id.data.buffer);
   dx.fill(0);
-  // the tracking band: a tilted strip that wobbles sideways and rolls down the picture
   if (track > .02) { const yb = ((t * 380) % (H + 600)) - 300, hb = 260; for (let y = Math.max(0, Math.floor(yb)); y < Math.min(H, yb + hb); y++) { const q = (y - yb) / hb, env = Math.sin(q * Math.PI); dx[y] += Math.round(Math.sin(y * .06 + t * 40) * 9 * track * env + (hash(y, Math.floor(t * 30), 21) - .5) * 5 * track * env); } }
-  // slices thrown sideways by a hit
   if (hit > .04) { const n = 2 + Math.floor(hit * 7), fr = Math.floor(t * 30); for (let s = 0; s < n; s++) { const y0 = Math.floor(hash(s, fr, 22) * H), h = 8 + Math.floor(hash(s, fr, 23) * 120 * Math.min(1.5, hit)), d = Math.round((hash(s, fr, 24) - .5) * 2 * Math.min(1.6, hit) * 190); for (let y = y0; y < Math.min(H, y0 + h); y++) dx[y] += d; } }
-  // every so often a single line jumps
   for (let k = 0; k < 3; k++) { const y = Math.floor(hash(k, Math.floor(t * 30), 25) * H); if (hash(k, Math.floor(t * 30), 26) < .25 * (grain + .05) * 4) dx[y] += Math.round((hash(k, Math.floor(t * 30), 27) - .5) * 60); }
-  const sp = Math.round(split + hit * 26), ngo = Math.floor(hash(Math.floor(t * 30), 1, 30) * 512), ngy = Math.floor(hash(Math.floor(t * 30), 2, 30) * 512), gk = grain * 255;
-  const fr2 = Math.floor(t * 30), roll = ((t * 300) % (H + 400)) - 200;
+  const sp = Math.round(split + hit * 26), ngo = Math.floor(hash(Math.floor(t * 30), 1, 30) * 512), ngy = Math.floor(hash(Math.floor(t * 30), 2, 30) * 512), gk = grain * 255, roll = ((t * 300) % (H + 400)) - 200;
   for (let y = 0; y < H; y++) {
-    const row = y * W, d = dx[y], scan = (y % 3 === 0 ? .8 : 1) * (1 + .09 * Math.max(0, 1 - Math.abs(y - roll) / 160)), nrow = (((y >> 1) + ngy) & 511) * 512;
+    const row = y * W, d = dx[y], scan = (y % 3 === 0 ? 1 - scanK : 1) * (1 + .09 * Math.max(0, 1 - Math.abs(y - roll) / 160)), nrow = (((y >> 1) + ngy) & 511) * 512;
     for (let x = 0; x < W; x++) {
       let xs = x - d; if (xs < 0) xs = 0; else if (xs >= W) xs = W - 1;
       let xr = xs + sp, xb = xs - sp; if (xr >= W) xr = W - 1; if (xb < 0) xb = 0; if (xr < 0) xr = 0; if (xb >= W) xb = W - 1;
-      const r = s32[row + xr] & 255, g = (s32[row + xs] >> 8) & 255, b = (s32[row + xb] >> 16) & 255, m = VIG[row + x] * scan * bright, n = (NOI[nrow + (((x >> 1) + ngo) & 511)] - 127.5) * gk / 127.5 * 1.0;
-      let rr = r * m + n * 255 / 255 * 1, gg = g * m + n, bb = b * m + n;
-      rr = rr < 0 ? 0 : rr > 255 ? 255 : rr; gg = gg < 0 ? 0 : gg > 255 ? 255 : gg; bb = bb < 0 ? 0 : bb > 255 ? 255 : bb;
-      o32[row + x] = 0xff000000 | (bb << 16) | (gg << 8) | rr;
+      const r = s32[row + xr] & 255, g = (s32[row + xs] >> 8) & 255, b = (s32[row + xb] >> 16) & 255, m = VIG[row + x] * scan * bright, n = (NOI[nrow + (((x >> 1) + ngo) & 511)] - 127.5) * gk / 127.5;
+      let rr2 = r * m + n, gg = g * m + n, bb = b * m + n;
+      rr2 = rr2 < 0 ? 0 : rr2 > 255 ? 255 : rr2; gg = gg < 0 ? 0 : gg > 255 ? 255 : gg; bb = bb < 0 ? 0 : bb > 255 ? 255 : bb;
+      o32[row + x] = 0xff000000 | (bb << 16) | (gg << 8) | rr2;
     }
   }
   ox.putImageData(id, 0, 0);
@@ -407,48 +472,40 @@ function post(t, hit, grain, split, track, bright, fadeK) {
 
 /* ---------------------------------------------------------------- one frame */
 function actAt(t) { for (const k of Object.keys(T)) if (t >= T[k][0] && t < T[k][1]) return k; return "end"; }
-function hitAt(t) { let a = 0; for (const h of HITS) { const d = t - h.t; if (d >= -.001 && d < .6) a += h.a * Math.exp(-Math.max(0, d) * 11) * (d < .01 ? 1 : 1); } return Math.min(2, a); }
+function hitAt(t) { let a = 0; for (const h of HITS) { const d = t - h.t; if (d >= -.001 && d < .6) a += h.a * Math.exp(-Math.max(0, d) * 11); } return Math.min(2, a); }
 function heartAt(t) { let a = 0; for (const h of HEART) { const d = t - h.t; if (d >= 0 && d < .5) a += h.a * Math.exp(-d * 15); } return Math.min(1.2, a); }
 function render(t) {
   t = Math.max(0, Math.min(DUR - 1 / FPS / 2, t)); clock = t; ops = []; flashA = 0;
-  const act = actAt(t), u = t - T[act][0], hit = hitAt(t), hb = (t < T.reveal[1] ? heartAt(t) : 0), grain = kf(GRAIN, t) * (1 + hit * .8);
+  const act = actAt(t), u = t - T[act][0], q = kf(QUAL, t), hit = hitAt(t) * (1 - .55 * q), hb = (t < T.reveal[1] ? heartAt(t) : 0), grain = kf(GRAIN, t) * (1 + hit * .8) * (1 - .75 * q);
   sx.setTransform(1, 0, 0, 1, 0, 0); sx.globalAlpha = 1; sx.shadowBlur = 0; sx.fillStyle = "#030304"; sx.fillRect(0, 0, W, H);
   const black = act === "black";
-  if (!black) {
-    ACTS[act](u, t); hud(t); snow(t, hit);
-  }
-  // paint the queue
-  sx.textBaseline = "top"; sx.textAlign = "left"; let cur = 0, fnt = -1;
+  if (!black) { ACTS[act](u, t); hud(t, q); snow(t, hit, q); }
+  sx.textBaseline = "top"; sx.textAlign = "left"; let fnt = -1;
   for (const o of ops) {
+    if (o[0] === 3) { o[1](); sx.globalAlpha = 1; sx.shadowBlur = 0; sx.textBaseline = "top"; sx.textAlign = "left"; fnt = -1; continue; }
     if (o[0] === 2) { sx.globalAlpha = o[6]; sx.fillStyle = rgb(o[5]); sx.fillRect(o[1], o[2], o[3], o[4]); continue; }
     const size = o[0] === 0 ? FS : o[3]; if (size !== fnt) { sx.font = `700 ${size}px ${FONT}`; fnt = size; }
     if (o[0] === 0) { sx.globalAlpha = o[5]; sx.fillStyle = rgb(o[4]); sx.fillText(o[3], o[1] * CW, o[2] * LH); }
     else { sx.globalAlpha = o[6]; sx.fillStyle = rgb(o[5]); sx.fillText(o[4], o[1], o[2]); }
   }
   sx.globalAlpha = 1;
-  if (!black) { drawLines(t); }
-  // the cut at the end of the film: it does not fade, it collapses
-  let bright = 1, fadeK = 0; const endCut = t > 33.3 ? 1 - sm(33.3, 33.48, t) : 1; bright *= endCut;
+  if (!black) drawLines(t);
+  const endCut = t > DUR - .2 ? 1 - sm(DUR - .2, DUR - .02, t) : 1;       // the film does not fade, it collapses
   if (flashA > .003) { sx.fillStyle = `rgba(255,255,255,${Math.min(1, flashA)})`; sx.fillRect(0, 0, W, H); }
-  // camera: heartbeat punches in, shake grows through the film
-  const shk = kf(SHAKE, t) * (1 + hit * 1.4) + hb * (t > 20 ? 6 : 2), z = 1 + .016 * hb + .02 * hit * (hit > .6 ? 1 : 0) + (act === "reveal" ? .06 * ease(u / 3.4) : 0), sxo = (hash(Math.floor(t * 30), 1, 40) - .5) * 2 * shk, syo = (hash(Math.floor(t * 30), 2, 40) - .5) * 2 * shk;
+  const shk = kf(SHAKE, t) * (1 + hit * 1.4) + hb * (t > 20 ? 6 : 2), z = 1 + .016 * hb + .02 * hit * (hit > .6 ? 1 : 0) + (act === "reveal" ? .05 * ease(u / 2.6) : 0), sxo = (hash(Math.floor(t * 30), 1, 40) - .5) * 2 * shk, syo = (hash(Math.floor(t * 30), 2, 40) - .5) * 2 * shk;
   ox.setTransform(1, 0, 0, 1, 0, 0); ox.globalCompositeOperation = "source-over"; ox.globalAlpha = 1; ox.fillStyle = "#000"; ox.fillRect(0, 0, W, H);
-  ox.save(); ox.translate(W / 2 + sxo, H / 2 + syo); ox.scale(z, z); ox.translate(-W / 2, -H / 2); ox.drawImage(S, 0, 0); ox.restore();
-  // bloom: the picture, blurred by shrinking it, added back on top
-  b1.clearRect(0, 0, 270, 480); b1.drawImage(S, 0, 0, 270, 480); b2.clearRect(0, 0, 90, 160); b2.drawImage(B1, 0, 0, 90, 160);
-  ox.globalCompositeOperation = "lighter"; ox.globalAlpha = .55 + .25 * hb; ox.drawImage(B1, 0, 0, W, H); ox.globalAlpha = .5 + .3 * hb; ox.drawImage(B2, 0, 0, W, H); ox.globalAlpha = 1; ox.globalCompositeOperation = "source-over";
-  if (!black) post(t, hit, grain, kf(SPLIT, t), kf(TRACK, t) * (black ? 0 : 1), bright * (1 + .1 * hb), fadeK);
-  else { ox.fillStyle = "#000"; ox.fillRect(0, 0, W, H); if (t > 28.62 && Math.floor((t - 28.62) * 2) % 2 === 0) { ox.font = `700 40px ${FONT}`; ox.fillStyle = "rgba(120,118,110,.9)"; ox.textAlign = "center"; ox.textBaseline = "middle"; ox.fillText("▌", W / 2, H / 2); } }
+  ox.save(); ox.translate(W / 2 + sxo, H / 2 + syo); ox.scale(z, z); ox.translate(-W / 2, -H / 2); ox.imageSmoothingQuality = "high"; ox.drawImage(S, 0, 0); ox.restore();
+  b1.clearRect(0, 0, 270, 480); b1.drawImage(S, 0, 0, 270, 480); b2.clearRect(0, 0, 90, 160); b2.drawImage(B1, 0, 0, 90, 160);          // bloom: the picture, softened by shrinking it, added back on top
+  const bk = act === "reveal" ? .22 : 1 - .4 * q; ox.globalCompositeOperation = "lighter"; ox.globalAlpha = (.55 + .25 * hb) * bk; ox.drawImage(B1, 0, 0, W, H); ox.globalAlpha = (.5 + .3 * hb) * bk; ox.drawImage(B2, 0, 0, W, H); ox.globalAlpha = 1; ox.globalCompositeOperation = "source-over";
+  if (!black) post(t, hit, grain, kf(SPLIT, t) * (1 - .7 * q), kf(TRACK, t) * (1 - .85 * q), endCut * (1 + .1 * hb), .2 * (1 - .8 * q));
+  else { ox.fillStyle = "#000"; ox.fillRect(0, 0, W, H); if (t > T.black[0] + .62 && Math.floor((t - T.black[0] - .62) * 2) % 2 === 0) { ox.font = `700 40px ${FONT}`; ox.fillStyle = "rgba(120,118,110,.9)"; ox.textAlign = "center"; ox.textBaseline = "middle"; ox.fillText("▌", W / 2, H / 2); } }
 }
 window.TL = TL;
 window.renderAt = t => { render(t); return true; };
-window.frameJpeg = (t, q) => { render(t); return O.toDataURL("image/jpeg", q || .93); };
+window.frameJpeg = (t, q) => { render(t); return O.toDataURL("image/jpeg", q || .95); };
 window.READY = (async () => {
   await document.fonts.load(`700 20px "JetBrains Mono"`); await document.fonts.load(`700 60px "JetBrains Mono"`);
-  const keys = ["stitch-bone", "phantom", "null", "ronin", "grimm", "umbra"];
-  await Promise.all(keys.map(async k => { IMG[k.replace("-bone", "")] = await loadImg("../cards/" + k + ".jpg"); }));
-  for (const k of ["stitch", "phantom", "null", "ronin", "grimm"]) sampleImage(k, 56);
-  [8, 12, 18, 26, 38, 52, 62].forEach(n => sampleImage("umbra", n));
+  await Promise.all(CARD_KEYS.map(async k => { IMG[k] = await loadImg("../cards/" + k + ".jpg"); }));
   render(0); return true;
 })();
 </script>

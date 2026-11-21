@@ -1,0 +1,454 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>STIXX teaser</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<canvas id="o" width="1080" height="1920"></canvas>
+<script>
+/* ============================================================================================================================================
+   STIXX teaser: a 33 second vertical film made entirely of text. Nothing here is a recording. Every frame is worked out from the clock, the way the
+   in-app cutscenes are, then pushed through a pixel pass (tear, RGB split, grain, scanlines, bloom) and handed to ffmpeg by render.js.
+   ?handle=@name puts an account name on the end card. Without it the end card says "follow this account".
+   ========================================================================================================================================== */
+const W = 1080, H = 1920, FPS = 30;
+const HANDLE = (new URLSearchParams(location.search).get("handle") || "").trim();
+const FONT = "'JetBrains Mono','DejaVu Sans Mono',ui-monospace,monospace";
+const RAMP = " .'`,:;-~=+*xX#%@";
+const ADV = .6, LHR = 1.12;                       // a character is .6 em wide and 1.12 em tall
+const FS = 20, CW = FS * ADV, LH = Math.round(FS * LHR), C = Math.floor(W / CW), R = Math.floor(H / LH);
+
+/* ---------------------------------------------------------------- helpers */
+const hash = (a, b, c) => { let h = Math.imul(a | 0, 374761393) ^ Math.imul(b | 0, 668265263) ^ Math.imul((c || 0) | 0, 2147483647); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+const cl = (x, a, b) => { a = a == null ? 0 : a; b = b == null ? 1 : b; return x < a ? a : x > b ? b : x; };
+const sm = (a, b, x) => { x = cl((x - a) / (b - a)); return x * x * (3 - 2 * x); };
+const mixv = (a, b, k) => a + (b - a) * k;
+const ease = x => 1 - Math.pow(1 - cl(x), 3);
+const ease2 = x => { x = cl(x); return x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; };
+const vn = (x, y, s) => { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf); return mixv(mixv(hash(xi, yi, s), hash(xi + 1, yi, s), u), mixv(hash(xi, yi + 1, s), hash(xi + 1, yi + 1, s), u), v); };
+const fbm = (x, y, s) => (vn(x, y, s) * .5 + vn(x * 2, y * 2, s + 1) * .25 + vn(x * 4, y * 4, s + 2) * .125 + vn(x * 8, y * 8, s + 3) * .0625) / .9375;
+const kf = (tab, t) => { if (t <= tab[0][0]) return tab[0][1]; for (let i = 1; i < tab.length; i++) if (t < tab[i][0]) { const a = tab[i - 1], b = tab[i]; return mixv(a[1], b[1], (t - a[0]) / (b[0] - a[0])); } return tab[tab.length - 1][1]; };
+const rgb = c => `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+const mul = (c, k) => [c[0] * k, c[1] * k, c[2] * k];
+const mkpal = stops => Array.from({ length: 32 }, (_, i) => { const k = i / 31 * (stops.length - 1), j = Math.min(stops.length - 2, Math.floor(k)), f = k - j, a = stops[j], b = stops[j + 1]; return [mixv(a[0], b[0], f), mixv(a[1], b[1], f), mixv(a[2], b[2], f)]; });
+const INK = [236, 231, 220], DIM = [141, 137, 127], FAINT = [74, 74, 82], GRN = [159, 216, 166], RED = [232, 120, 109], GOLD = [255, 210, 122], AMB = [255, 181, 74], WHT = [255, 255, 255];
+const pad = (n, k) => String(n).padStart(k || 2, "0");
+
+/* ---------------------------------------------------------------- the timeline: the one place the film's timing lives. render.js hands it to audio.py */
+const T = { cold: [0, 8.0], pack: [8.0, 10.0], cards: [10.0, 12.6], chart: [12.6, 15.6], bots: [15.6, 18.2], sell: [18.2, 20.2], build: [20.2, 23.8], rip: [23.8, 24.6], reveal: [24.6, 28.0], black: [28.0, 29.0], end: [29.0, 33.5] };
+const DUR = 33.5;
+const LINES = [
+  { s: "you've seen cards.", t0: .9, cps: 12, t1: 3.05, fy: .40, c: INK, size: 68 },
+  { s: "you've seen charts.", t0: 3.3, cps: 12, t1: 5.25, fy: .40, c: INK, size: 68 },
+  { s: "you've never seen both.", t0: 5.5, cps: 10, t1: 8.0, fy: .40, c: WHT, size: 68, em: [17, 22] },
+  { s: "it starts with a pack.", t0: 8.3, cps: 14, t1: 10.0, fy: .80, c: INK, size: 60 },
+  { s: "five cards. all different.", t0: 10.15, cps: 16, t1: 12.6, fy: .80, c: INK, size: 56 },
+  { s: "prices move every second.", t0: 12.85, cps: 16, t1: 15.6, fy: .80, c: INK, size: 56 },
+  { s: "run by AI bots.", t0: 15.8, cps: 14, t1: 18.2, fy: .105, c: INK, size: 64 },
+  { s: "they never sleep.", t0: 16.9, cps: 14, t1: 18.2, fy: .80, c: DIM, size: 56 },
+  { s: "sell whenever you want.", t0: 18.4, cps: 14, t1: 20.2, fy: .105, c: INK, size: 60 },
+  { s: "you've seen how it works.", t0: 20.55, cps: 15, t1: 23.8, fy: .145, c: DIM, size: 52 },
+  { s: "now see what's inside.", t0: 22.0, cps: 14, t1: 23.7, fy: .205, c: WHT, size: 58 },
+  { s: "U M B R A", t0: 25.8, cps: 6, t1: 28.0, fy: .765, c: AMB, size: 68, rot: 27.45 },
+  { s: "S E C R E T", t0: 26.9, cps: 9, t1: 28.0, fy: .815, c: [255, 232, 180], size: 40, rot: 27.6 },
+  { s: "beta drops soon.", t0: 30.35, cps: 11, t1: 99, fy: .44, c: WHT, size: 84 },
+  { s: "follow this account.", t0: 31.8, cps: 14, t1: 99, fy: .54, c: GRN, size: 58 },
+];
+if (HANDLE) LINES.push({ s: HANDLE, t0: 32.7, cps: 14, t1: 99, fy: .60, c: WHT, size: 62 });
+const KEYS = { rip: T.rip[0], flash: 24.0, reveal: T.reveal[0], cutBlack: T.reveal[1], logo: 29.35, handle: 32.7, end: DUR };
+// glitch hits: a cut, a slam, a tear. Each is a flash of tear + RGB split + snow that dies away in about a fifth of a second.
+const HITS = [];
+for (const k of ["pack", "cards", "chart", "bots", "sell", "build", "rip"]) HITS.push({ t: T[k][0], a: 1 });
+HITS.push({ t: T.cold[0] + .05, a: 1.1 }, { t: 3.05, a: .55 }, { t: 5.25, a: .6 }, { t: 7.3, a: .35 }, { t: 7.62, a: .5 });
+for (const t of [10.5, 11.0, 11.5, 12.0]) HITS.push({ t, a: .85 });
+HITS.push({ t: 13.35, a: .5 }, { t: 14.35, a: .4 }, { t: 14.85, a: .6 });
+HITS.push({ t: 16.9, a: .4 }, { t: 17.6, a: .5 });
+HITS.push({ t: 19.15, a: .8 });                                   // the click on SELL
+HITS.push({ t: 22.0, a: .5 }, { t: 22.9, a: .7 }, { t: 23.3, a: .8 }, { t: 23.6, a: 1 });
+HITS.push({ t: 25.05, a: .6 }, { t: 25.9, a: .5 }, { t: 26.5, a: .6 }, { t: 27.1, a: .8 }, { t: 27.45, a: 1.1 });
+HITS.push({ t: T.end[0] + .35, a: 1 }, { t: 30.3, a: .5 }, { t: 31.75, a: .4 }, { t: 33.25, a: 1.4 });
+// the heartbeat: it starts slow and speeds up until the pack rips. lub, then a softer dub
+const HEART = []; { let t = .6; while (t < T.reveal[1]) { const k = cl((t - .6) / 23.2), iv = mixv(1.15, .3, k * k * (3 - 2 * k)); HEART.push({ t, a: 1 }, { t: t + Math.min(.2, iv * .3), a: .55 }); t += iv; } }
+const TL = { dur: DUR, fps: FPS, T, LINES: LINES.map(l => ({ s: l.s, t0: l.t0, cps: l.cps, t1: Math.min(l.t1, DUR) })), HITS, HEART, KEYS };
+
+/* ---------------------------------------------------------------- canvases */
+const O = document.getElementById("o"), ox = O.getContext("2d", { willReadFrequently: true });
+const mk = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+const S = mk(W, H), sx = S.getContext("2d"), B1 = mk(270, 480), b1 = B1.getContext("2d"), B2 = mk(90, 160), b2 = B2.getContext("2d");
+const IMG = {};
+const loadImg = src => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+const gridCache = {};
+const TONE = { umbra: [1.5, 1.45] };                  // [gain, power]: the eclipse is bright everywhere, so it needs a harder curve to keep its rays
+function sampleImage(key, n) {                       // a picture read into characters: n columns, as many rows as keep its shape
+  const id = key + n, [gain, pw] = TONE[key] || [2.6, .7]; if (gridCache[id]) return gridCache[id];
+  const img = IMG[key], rows = Math.max(2, Math.round(n * (img.height / img.width) / (LHR / ADV))), c = mk(n, rows), x = c.getContext("2d"); x.drawImage(img, 0, 0, n, rows);
+  const d = x.getImageData(0, 0, n, rows).data, l = new Float32Array(n * rows);
+  for (let i = 0; i < n * rows; i++) l[i] = Math.pow(cl(((d[i * 4] * .299 + d[i * 4 + 1] * .587 + d[i * 4 + 2] * .114) / 255 - .03) * gain), pw);
+  return gridCache[id] = { cols: n, rows, l };
+}
+
+/* ---------------------------------------------------------------- drawing: everything goes through these, which only queue; flush() paints in order */
+let ops = [], flashA = 0, HIT = 0;
+const put = (x, y, ch, c, a) => ops.push([0, x, y, ch, c, a == null ? 1 : a]);                                   // one character on the 20px grid
+const pch = (px, py, size, ch, c, a) => ops.push([1, px, py, size, ch, c, a == null ? 1 : a]);                    // one character anywhere, any size
+const rect = (px, py, w, h, c, a) => ops.push([2, px, py, w, h, c, a == null ? 1 : a]);
+const flash = a => { flashA = Math.max(flashA, a); };
+// lines of art in pixel space. c is a colour or a function (i, j, ch) -> colour. rev (0..1) builds it from static, the way the app's cutscenes do.
+function art(lines, px, py, size, c, a, rev) {
+  const adv = size * ADV, lh = size * LHR, al = a == null ? 1 : a, rv = rev == null ? 1 : rev;
+  for (let j = 0; j < lines.length; j++) { const s = lines[j]; for (let i = 0; i < s.length; i++) { const ch = s[i]; if (ch === " ") continue; const k = rv * 1.5 - hash(i, j, 3) * .6; if (k <= 0) continue; const col = typeof c === "function" ? c(i, j, ch) : c; if (!col) continue; pch(px + i * adv, py + j * lh, size, k < .35 ? ".:*#"[(i + j + Math.floor(clock * 18)) % 4] : ch, col, k < .35 ? al * .5 : al); } }
+}
+const artW = (lines, size) => Math.max(...lines.map(s => s.length)) * size * ADV;
+const artC = (lines, cx, py, size, c, a, rev) => art(lines, Math.round(cx - artW(lines, size) / 2), py, size, c, a, rev);
+// a picture as characters. rows (0..1) reveals it top to bottom, rev builds it from static.
+function pimg(gr, px, py, size, tint, a, rev, rows) {   // tint is one colour, or a 32 step palette
+  const adv = size * ADV, lh = size * LHR, rv = rev == null ? 1 : rev, rmax = rows == null ? gr.rows : Math.ceil(gr.rows * rows), isPal = Array.isArray(tint[0]);
+  for (let j = 0; j < rmax; j++) for (let i = 0; i < gr.cols; i++) { const l = gr.l[j * gr.cols + i]; if (l < .09) continue; const k = rv * 1.5 - hash(i, j, 4) * .6; if (k <= 0) continue; const m = .45 + .55 * l; pch(px + i * adv, py + j * lh, size, k < .3 ? ".:*#"[(i + j) % 4] : RAMP[Math.min(RAMP.length - 1, Math.floor(l * RAMP.length))], isPal ? tint[Math.min(31, Math.round(l * 31))] : [tint[0] * m, tint[1] * m, tint[2] * m], k < .3 ? a * .5 : a); }
+}
+function box(px, py, w, h, size, c, a, dbl) {          // a frame of box-drawing characters, w and h in characters
+  const adv = size * ADV, lh = size * LHR, [hz, vt, tl, tr, bl, br] = dbl ? ["═", "║", "╔", "╗", "╚", "╝"] : ["─", "│", "┌", "┐", "└", "┘"];
+  for (let i = 1; i < w - 1; i++) { pch(px + i * adv, py, size, hz, c, a); pch(px + i * adv, py + (h - 1) * lh, size, hz, c, a); }
+  for (let j = 1; j < h - 1; j++) { pch(px, py + j * lh, size, vt, c, a); pch(px + (w - 1) * adv, py + j * lh, size, vt, c, a); }
+  pch(px, py, size, tl, c, a); pch(px + (w - 1) * adv, py, size, tr, c, a); pch(px, py + (h - 1) * lh, size, bl, c, a); pch(px + (w - 1) * adv, py + (h - 1) * lh, size, br, c, a);
+}
+// a character shader over the whole screen: l = fn(x, y), x and y in screen widths from the centre
+let cellPal = null;
+function field(fn, pal, alpha) {
+  const al = alpha == null ? 1 : alpha;
+  for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) {
+    const l = fn(((x + .5) * CW - W / 2) / W, ((y + .5) * LH - H / 2) / W, x, y); if (l < .035) continue;
+    const k = cl(l), ch = RAMP[Math.min(RAMP.length - 1, Math.floor(k * RAMP.length))];
+    put(x, y, ch, pal[Math.min(31, Math.round(k * 31))], al);
+  }
+}
+const typed = (str, t, t0, cps) => str.slice(0, Math.max(0, Math.floor((t - t0) * cps)));
+
+/* ---------------------------------------------------------------- the big captions, one character at a time */
+function drawLines(t) {
+  for (const L of LINES) {
+    if (t < L.t0 || t > L.t1) continue;
+    const full = L.s, n = Math.min(full.length, Math.max(0, Math.floor((t - L.t0) * L.cps)) + (t >= L.t0 ? 1 : 0)), adv = L.size * ADV, x0 = (W - full.length * adv) / 2 + adv / 2, y = H * L.fy;
+    const out = cl((t - (L.t1 - .3)) / .3), typing = n < full.length, frame = Math.floor(t * 30);
+    sx.font = `700 ${L.size}px ${FONT}`; sx.textAlign = "center"; sx.textBaseline = "middle";
+    for (let i = 0; i < n; i++) {
+      let ch = full[i]; if (ch === " ") continue;
+      const age = t - (L.t0 + i / L.cps);
+      let c = L.c, jx = 0, jy = 0, a = 1;
+      if (age < .09) { ch = "▒░#%@"[hash(i, frame, 7) * 5 | 0]; c = WHT; }                        // each letter lands as static and settles
+      if (L.em && i >= L.em[0] && i < L.em[1]) { c = WHT; if (hash(i, frame, 8) < .22 * (1 - out)) { jx = (hash(i, frame, 9) - .5) * 14; } if (hash(i, frame, 10) < .05) ch = "▒"; }
+      if (L.rot && t > L.rot && hash(i, Math.floor(t * 12), 11) < .35) { ch = "▒░█"[hash(i, frame, 12) * 3 | 0]; c = [255, 255, 255]; }
+      if (out > 0 && hash(i, frame, 13) < out * 1.1) ch = "▒░#%@&"[hash(i, frame, 14) * 6 | 0];     // it dissolves into static on its way out
+      a = 1 - out * .85;
+      sx.globalAlpha = a; sx.shadowColor = rgb(c); sx.shadowBlur = 9; sx.fillStyle = rgb(c);
+      sx.fillText(ch, x0 + i * adv + jx, y + jy);
+    }
+    if (typing || (Math.floor(t * 2.4) % 2 === 0 && t < L.t1 - .3)) { sx.shadowBlur = 16; sx.globalAlpha = 1 - out; sx.fillStyle = rgb(L.c); sx.fillText("▌", x0 + n * adv, y); }
+    sx.globalAlpha = 1; sx.shadowBlur = 0;
+  }
+}
+function bigText(str, cx, y, size, c, a, blur) {     // one line, centred, for the numbers and tags
+  sx.font = `700 ${size}px ${FONT}`; sx.textAlign = "center"; sx.textBaseline = "middle"; sx.globalAlpha = a == null ? 1 : a; sx.shadowColor = rgb(c); sx.shadowBlur = blur == null ? 18 : blur; sx.fillStyle = rgb(c); sx.fillText(str, cx, y); sx.globalAlpha = 1; sx.shadowBlur = 0;
+}
+
+/* ---------------------------------------------------------------- art */
+const LOGO = ["███████╗████████╗██╗██╗  ██╗██╗  ██╗", "██╔════╝╚══██╔══╝██║╚██╗██╔╝╚██╗██╔╝", "███████╗   ██║   ██║ ╚███╔╝  ╚███╔╝ ", "╚════██║   ██║   ██║ ██╔██╗  ██╔██╗ ", "███████║   ██║   ██║██╔╝ ██╗██╔╝ ██╗", "╚══════╝   ╚═╝   ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝"];
+const ROBOTS = [[" .---. ", "( o o )", " \\ ~ / ", ".-|=|-.", "d |_| b"], [" .---. ", "( ! ! )", " \\ O / ", ".-|=|-.", "d |_| b"], [" .---. ", "( + + )", " \\ - / ", ".-|=|-.", "d |_| b"]];
+const CURSOR = ["█▙   ", "███▙  ", "████▙ ", "█████▙", "███▛▀ ", "█▛ ▜▙ ", "▀   ▜▙"].map(s => s.trimEnd());
+function packLines(t) {
+  const IW = 40, ctr = s => { const l = Math.floor((IW - s.length) / 2); return "|" + " ".repeat(l) + s + " ".repeat(IW - s.length - l) + "|"; }, plate = "┌" + "─".repeat(26) + "┐", plateB = "└" + "─".repeat(26) + "┘";
+  const emblem = Array.from({ length: 11 }, (_, j) => Array.from({ length: 27 }, (_, i) => { const dx = (i - 13) / 13, dy = (j - 5) / 5, d = Math.hypot(dx, dy) + .05 * Math.sin(t * 2.4 + i * .7 + j); return d < .3 ? "#" : d < .5 ? "*" : d < .68 ? ":" : d < .84 ? "." : d < .95 ? (j === 5 || i === 13 ? "+" : "'") : " "; }).join(""));
+  return [" " + "/\\".repeat(20) + " ", ctr(""), ctr(plate), ctr("│        F I R S T         │"), ctr("│        P R I N T         │"), ctr(plateB), ctr(""), ...emblem.map(ctr), ctr(""), ctr("5    C A R D S"), ctr(""), " " + "\\/".repeat(20) + " "];
+}
+// foil: the pack catches a moving band of light
+function packColor(t, sheenOn) { return (i, j, ch) => { const sh = sheenOn ? Math.max(0, 1 - Math.abs(((i + j * 1.7) - ((t * 22) % 90 - 20)) / 7)) : 0; const base = (ch === "*" || ch === "#" || ch === "+") ? [255, 210, 122] : j > 5 && j < 18 ? [200, 195, 185] : INK; return sh > .08 ? [mixv(base[0], 255, sh), mixv(base[1], 255, sh), mixv(base[2], 255, sh)] : base; }; }
+const PACK_SIZE = 34, PACK_ROWS = 24;
+
+/* ---------------------------------------------------------------- series for the chart: a price that wobbles, runs, drops and runs again */
+const SER = (() => { const a = [10, 11, 9.5, 12, 10.5, 14, 13, 24, 70, 41, 96, 150, 184], n = 96, out = []; for (let i = 0; i < n; i++) { const f = i / (n - 1) * (a.length - 1), j = Math.min(a.length - 2, Math.floor(f)), k = f - j, e = k * k * (3 - 2 * k); out.push(Math.exp(mixv(Math.log(a[j]), Math.log(a[j + 1]), e) + (hash(i, 3, 9) - .5) * .09)); } return out; })();
+function lineGrid(Y, h) {                            // Y[x] is the height of the line at each column, 0 = bottom row
+  const w = Y.length, grid = Array.from({ length: h }, () => Array(w).fill(" "));
+  for (let x = 0; x < w - 1; x++) { const y0 = Y[x], y1 = Y[x + 1]; if (y0 === y1) grid[h - 1 - y0][x] = "─"; else { grid[h - 1 - y1][x] = y0 > y1 ? "╰" : "╭"; grid[h - 1 - y0][x] = y0 > y1 ? "╮" : "╯"; for (let y = Math.min(y0, y1) + 1; y < Math.max(y0, y1); y++) grid[h - 1 - y][x] = "│"; } }
+  grid[h - 1 - Y[w - 1]][w - 1] = "─"; return grid;
+}
+function plotGrid(vals, w, h) {
+  const n = vals.length, v = []; for (let x = 0; x < w; x++) { const f = x / (w - 1) * (n - 1), i = Math.floor(f), j = Math.min(n - 1, i + 1); v.push(vals[i] + (vals[j] - vals[i]) * (f - i)); }
+  const L = v.map(Math.log), mn = Math.min(...L), sp = Math.max(Math.max(...L) - mn, .1), Y = L.map(x => Math.round((x - mn) / sp * (h - 1)));
+  return { grid: lineGrid(Y, h), Y, v };
+}
+// the film's pulse as a trace, newest on the right: a spike for every lub, a smaller one for every dub
+const beatIv = t => { const k = cl((t - .6) / 23.2); return mixv(1.15, .3, k * k * (3 - 2 * k)); };
+function ecg(t, x0, y0, cols, rows, size, c, a, span, amp, bpm) {
+  const Y = [];
+  for (let i = 0; i < cols; i++) {
+    const tau = t - (cols - 1 - i) / cols * span; let v = (vn(tau * 14, 3, 2) - .5) * .05;
+    for (const h of HEART) { const d = tau - h.t; if (d < -.1 || d > .4) continue; v += h.a * (Math.exp(-Math.pow(d / .02, 2)) - .3 * Math.exp(-Math.pow((d - .05) / .035, 2)) + .1 * Math.exp(-Math.pow((d - .17) / .05, 2))); }
+    Y.push(Math.max(0, Math.min(rows - 1, Math.round((rows - 1) * .45 + v * amp))));
+  }
+  const grid = lineGrid(Y, rows);
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) { const ch = grid[y][x]; if (ch !== " ") pch(x0 + x * size * ADV, y0 + y * size * LHR, size, ch, x > cols - 4 ? WHT : c, a * (.35 + .65 * x / cols)); }
+  if (bpm) { const iv = beatIv(t), n = Math.round(60 / iv); art(["♥ " + n + " BPM"], x0, y0 + rows * size * LHR + 6, 24, n > 120 ? [232, 120, 109] : DIM, a); }
+}
+const PG = plotGrid(SER, 62, 32);
+TL.chartV = Array.from({ length: 301 }, (_, i) => PG.v[Math.floor(ease2((i / 100 - .3) / 2.4) * 61)]);   // the price over the chart scene, for audio.py to turn into a pitch
+const BOTN = ["DegenBot-12", "FomoBot-7", "WhaleBot-3", "SniperBot-9", "MakerBot-2", "DegenBot-41", "WhaleBot-8", "FomoBot-30"], CARDN = ["STITCH", "PHANTOM", "NULL", "RONIN", "GRIMM", "ORBIT", "SHOGUN", "REAPER", "BRICK", "ROOK"];
+const logLine = n => { const b = BOTN[hash(n, 1, 70) * BOTN.length | 0], cn = CARDN[hash(n, 2, 70) * CARDN.length | 0], buy = hash(n, 3, 70) > .42, amt = Math.round(Math.exp(hash(n, 4, 70) * 4.2 + 3.4)), tm = 43200 + n * 7 + (hash(n, 5, 70) * 5 | 0); return { s: `${pad(tm / 3600 % 24 | 0)}:${pad(tm / 60 % 60 | 0)}:${pad(tm % 60 | 0)}  ${b.padEnd(11)} ${buy ? "BOUGHT" : "SOLD  "} ${cn.padEnd(7)} $${amt >= 1000 ? (amt / 1000).toFixed(1) + "K" : amt}`, c: buy ? GRN : RED, big: amt > 400 }; };
+
+/* ---------------------------------------------------------------- the acts. each draws its own picture; the captions, hud, snow and post effects are added around them */
+let clock = 0;
+const PAL_WARM = mkpal([[0, 0, 0], [30, 30, 32], [120, 118, 110], [200, 195, 185], [236, 231, 220]]);
+const PAL_GOLD = mkpal([[0, 0, 0], [70, 40, 0], [190, 130, 20], [255, 210, 110], [255, 250, 220]]);
+const PAL_GRN = mkpal([[0, 0, 0], [10, 40, 20], [60, 130, 80], [159, 216, 166], [230, 255, 235]]);
+const PAL_UMBRA = mkpal([[60, 14, 0], [140, 55, 6], [225, 125, 22], [255, 190, 72], [255, 246, 215]]);
+function cardAt(key, n, cy, w0) { const gr = sampleImage(key, n), size = w0 / (n * ADV), h = gr.rows * size * LHR; return { gr, size, px: Math.round((W - w0) / 2), py: Math.round(cy - h / 2), w: w0, h }; }
+
+const ACTS = {
+  /* COLD OPEN: static, a cursor, three lines. The heartbeat is the only thing that moves the picture. */
+  cold(u, t) {
+    // a faint ASCII horizon far away: three bars of text that drift, so the black is not dead
+    field((x, y) => { const d = Math.abs(y - .12); return d < .22 ? .12 * fbm(x * 5 + t * .15, y * 20, 5) * (1 - d / .22) * sm(1, 3, t) : 0; }, PAL_WARM, .55);
+    ecg(t, 0, H * .60, C, 14, FS, GRN, sm(.6, 1.6, t) * .9, 4.2, 6.5, true);
+  },
+  /* THE PACK: foil, a moving glint, light behind it. */
+  pack(u, t) {
+    const k = ease(u / .55), bob = Math.sin(t * 2.2) * 8, py = Math.round(H * .47 - PACK_ROWS * PACK_SIZE * LHR / 2 + bob + (1 - k) * -260);
+    field((x, y, gx, gy) => { const dx = x, dy = y - (py + 400 - H / 2) / W, r = Math.hypot(dx, dy), th = Math.atan2(dy, dx); return (Math.pow(.5 + .5 * Math.cos(11 * th + t * .45), 7) * Math.exp(-r * 2.6) * .55 + Math.exp(-r * 5) * .35) * sm(0, .5, u); }, PAL_WARM, .75);
+    const L = packLines(t); rect(W / 2 - 440, py - 14, 880, PACK_ROWS * PACK_SIZE * LHR + 28, [3, 3, 4], .82 * k);
+    artC(L, W / 2, py, PACK_SIZE, packColor(t, true), k);
+    // glint tag
+    if (u > .7) { const q = Math.floor(t * 5); put(Math.floor(C / 2 + (hash(q, 1, 3) - .5) * 40), Math.floor(R * .46 + (hash(q, 2, 3) - .5) * 30), "+", WHT, .9); }
+  },
+  /* FIVE CARDS: real cards, read into characters, one every half second. The last one is blacked out. */
+  cards(u, t) {
+    const keys = ["stitch", "phantom", "null", "ronin", "grimm"], tints = [[200, 196, 186], [236, 231, 220], [169, 201, 255], [255, 138, 201], [168, 255, 176]], names = ["STITCH", "PHANTOM", "NULL", "RONIN", "GRIMM"], rars = ["common", "uncommon", "rare", "epic", "legendary"];
+    const idx = Math.min(4, Math.floor(u / .5)), lu = u - idx * .5, N = 56, b = cardAt(keys[idx], N, H * .425, 840), tint = tints[idx], wipe = ease(lu / .2);
+    field((x, y) => { const r = Math.hypot(x, y + .05); return Math.exp(-r * 3) * .22 * (.6 + .6 * fbm(x * 4 + idx * 7, y * 4 - t, 3)); }, mkpal([[0, 0, 0], [20, 20, 22], [60, 60, 66], [110, 108, 100]]), .6);
+    rect(b.px - 6, b.py - 6, b.w + 12, b.h + 12, [3, 3, 4], .9);
+    pimg(b.gr, b.px, b.py, b.size, tint, 1, 1, wipe);
+    box(b.px - b.size * ADV * 2, b.py - b.size * LHR, N + 4, b.gr.rows + 2, b.size, tint, .85 * sm(0, .12, lu));
+    // number, name, rarity
+    const ty = b.py + b.h + 62; bigText(typed(names[idx].split("").join(" "), lu, .12, 28), W / 2, ty, 46, INK, 1);
+    bigText(typed(rars[idx].toUpperCase().split("").join(" "), lu, .2, 30), W / 2, ty + 54, 26, tint, .9, 10);
+    bigText(`#${pad(idx * 4 + 3, 3)} / 020`, W / 2 + b.w / 2 - 84, b.py - 62, 24, DIM, .9, 0);
+    if (idx === 4) {                                    // redacted
+      const q = Math.floor(t * 24);
+      for (let i = 0; i < 7; i++) { const y0 = b.py + (hash(i, 3, 80) * .74 + .08) * b.h, w = (.25 + hash(i, 4, 80) * .5) * b.w * ease((lu - .1 - i * .03) / .22), x0 = b.px + (hash(i, 5, 80) * .5) * b.w; rect(x0, y0, w, 26 + hash(i, 6, 80) * 40, [3, 3, 4], 1); if (w > 200) bigText("[ REDACTED ]", x0 + w / 2, y0 + 24, 22, hash(i, q, 81) > .5 ? WHT : DIM, .9, 8); }
+    }
+  },
+  /* THE CHART: a price runs from ten cents to a dollar eighty-four, drops, and runs again. Every column is coloured by which way it moved. */
+  chart(u, t) {
+    const w = PG.grid[0].length, h = PG.grid.length, size = 22, x0 = Math.round((W - w * size * ADV) / 2), y0 = 450, p = ease2((u - .3) / 2.4), head = Math.floor(p * (w - 1));
+    field((x, y) => Math.exp(-Math.hypot(x, y + .1) * 2.8) * .16 * (.6 + .6 * fbm(x * 3, y * 3 + t * .3, 8)), PAL_GRN, .5);
+    // grid
+    for (let j = 0; j < h; j += 8) for (let i = 0; i < w; i += 2) pch(x0 + i * size * ADV, y0 + j * size * LHR, size, "·", FAINT, .5);
+    // entry price line
+    const ey = y0 + (h - 1 - PG.Y[0]) * size * LHR; for (let i = 0; i < w; i += 2) pch(x0 + i * size * ADV, ey, size, "┄", DIM, .8 * sm(.2, .5, u));
+    // the line
+    for (let x = 0; x <= head; x++) { const dn = x > 0 && PG.v[x] < PG.v[x - 1] * .998; for (let y = 0; y < h; y++) { const ch = PG.grid[y][x]; if (ch !== " ") pch(x0 + x * size * ADV, y0 + y * size * LHR, size, ch, x > head - 3 ? WHT : dn ? RED : GRN, 1); } }
+    // a glow under it: columns of dots below the line fade towards the bottom
+    for (let x = 0; x <= head; x += 1) { const top = h - 1 - PG.Y[x]; for (let y = top + 1; y < h; y++) if ((x + y) % 2 === 0) pch(x0 + x * size * ADV, y0 + y * size * LHR, size, ".", PG.v[x] < (PG.v[x - 1] || 0) ? RED : GRN, .22 * (1 - (y - top) / (h - top + 4))); }
+    const hy = y0 + (h - 1 - PG.Y[head]) * size * LHR, v = PG.v[head], pct = (v / PG.v[0] - 1) * 100, up = !(head > 3 && PG.v[head] < PG.v[head - 3]);
+    // price tag riding the head
+    const tag = "$" + (v / 100).toFixed(2), tw = tag.length + 4, tx = Math.max(x0, Math.min(x0 + head * size * ADV - tw * size * ADV - 20, x0 + (w - tw) * size * ADV)), ty = Math.min(Math.max(hy - size * LHR, y0), y0 + (h - 3) * size * LHR);
+    rect(tx, ty, tw * size * ADV, 3 * size * LHR, [3, 3, 4], .9); box(tx, ty, tw, 3, size, up ? GRN : RED, 1); art([tag], tx + 2 * size * ADV, ty + size * LHR, size, up ? GRN : RED, 1);
+    if (p > .05 && p < .98) art(["  /\\  ", " /__\\ ", "  ||  "], x0 + head * size * ADV - 2.5 * size * ADV, hy - 3 * size * LHR - 8 + Math.sin(t * 9) * 4, size, GOLD, up ? 1 : 0);
+    // volume under the chart
+    for (let x = 0; x <= head; x++) { const vv = hash(x, 2, 90) * .6 + .25 * Math.abs(Math.log(PG.v[Math.min(w - 1, x + 1)] / PG.v[x])) * 12, k = Math.min(7, Math.floor(vv * 8)); pch(x0 + x * size * ADV, y0 + h * size * LHR + 14, size, "▁▂▃▄▅▆▇█"[k], PG.v[x] < (PG.v[x - 1] || 0) ? [150, 80, 74] : [90, 130, 98], .75); }
+    // the bots leave their marks on the line
+    [[34, "DegenBot-12 bought", GRN, -1], [43, "WhaleBot-3 bought $1.2M", GRN, -1], [50, "FomoBot-7 sold $49K", RED, 1], [57, "SniperBot-9 bought", GRN, -1]].forEach(([c, s2, col, side]) => {
+      const age = head - c; if (age < 0 || age > 11) return; const al2 = sm(0, 1.5, age) * (1 - sm(7, 11, age)), lw = s2.length * 13.2, lx = Math.max(50, Math.min(W - 50 - lw, x0 + c * size * ADV - lw / 2)), ly = y0 + (h - 1 - PG.Y[c]) * size * LHR + side * 80;
+      art([s2], lx, ly, 22, col, al2); pch(x0 + c * size * ADV, ly + side * -32 + (side < 0 ? 40 : -8), 22, side < 0 ? "▼" : "▲", col, al2);
+    });
+    // the number
+    const s = Math.abs(pct) < 1 ? "▲ +0%" : (pct >= 0 ? "▲ +" : "▼ −") + Math.round(Math.abs(pct)).toLocaleString("en-US") + "%"; bigText(s, W / 2, 290 + (hash(Math.floor(t * 30), 1, 91) - .5) * 4 * (1 - p), 118, Math.abs(pct) < 1 ? INK : up ? GRN : RED, 1, 28);
+    bigText(typed("you got it for $0.10", u, .5, 20), W / 2, 372, 30, DIM, 1, 0);
+  },
+  /* THE BOTS: three of them, and a log that scrolls faster and faster. */
+  bots(u, t) {
+    field((x, y) => Math.exp(-Math.hypot(x, y - .1) * 3) * .14 * (.6 + .6 * fbm(x * 3 + t * .2, y * 3, 12)), PAL_WARM, .5);
+    const names = ["DegenBot-12", "FomoBot-7", "WhaleBot-3"], say = [["bought $212K", GRN], ["sold $49K", RED], ["bought $1.2M", GRN]], si = Math.max(0, Math.floor((u - .5) / .55));
+    ROBOTS.forEach((rb, b) => {
+      const bx = 118 + b * 300, by = 215 + Math.sin(t * 3 + b * 2) * 6, size = 44;
+      art(rb, bx, by, size, (i, j, ch) => (j === 1 && "o!+".includes(ch) && Math.floor(t * 4 + b) % 7 === 0) ? WHT : INK, 1, ease((u - .1 - b * .15) / .5));
+      if (u > .5) { bigText(names[b], bx + 3.5 * size * ADV, by + 5.5 * size * LHR + 8, 24, DIM, 1, 0); const [m, c] = say[(si + b) % 3]; bigText(typed(m, u - .55 * si - .5, 0, 18), bx + 3.5 * size * ADV, by + 5.5 * size * LHR + 42, 28, c, 1, 8); }
+    });
+    // the log
+    const ly = 600, rows = 26, size = 26, speed = mixv(4, 22, ease2(u / 2.4)), top = u * speed, x0 = 70;
+    rect(x0 - 30, ly - 18, W - 2 * (x0 - 30), rows * LH * 1.3 + 36, [3, 3, 4], .8); box(x0 - 30, ly - 18, Math.floor((W - 2 * (x0 - 30)) / (size * ADV)), Math.round((rows * LH * 1.3 + 36) / (size * LHR)), size, FAINT, .8);
+    for (let r = 0; r < rows; r++) { const n = Math.floor(top) - rows + r + 60, ln = logLine(n), fadeTop = sm(0, 5, r) , a = fadeTop * (r === rows - 1 ? .6 + .4 * Math.sin(t * 20) : 1); art([ln.s], x0, ly + r * LH * 1.3, 20, ln.big && r > 20 ? mul(ln.c, 1.15) : ln.c, a * .9); }
+    pch(x0 - 28, ly - 56, 24, "●", [255, 90, 80], Math.floor(t * 2) % 2 ? 1 : .3); art(["LIVE  AI TRADING  ·  simulated"], x0 + 2, ly - 56, 24, DIM, 1);
+  },
+  /* SELL: a button, a click, a payout. */
+  sell(u, t) {
+    field((x, y) => Math.exp(-Math.hypot(x, y) * 3) * .15 * (.6 + .6 * fbm(x * 3, y * 3 + t * .2, 15)), PAL_GRN, .5);
+    const size = 42, clickAt = .95, press = u > clickAt, bw = 28, bx = W / 2 - bw * size * ADV / 2, by = 640;
+    const rows = ["╔" + "═".repeat(bw - 2) + "╗", "║" + " ".repeat(bw - 2) + "║", "╚" + "═".repeat(bw - 2) + "╝"], lab = "S E L L   $ 1 . 6 6";
+    const a = sm(.1, .4, u);
+    if (press) rect(bx, by, bw * size * ADV, 3 * size * LHR, GRN, .9 - .55 * sm(clickAt + .3, clickAt + .8, u));
+    art(rows, bx, by, size, press ? [8, 10, 8] : INK, a);
+    art([lab], bx + ((bw - lab.length) / 2) * size * ADV, by + size * LHR, size, press ? [8, 10, 8] : INK, a);
+    if (u > .35 && u < clickAt + .4) { const m = ease((u - .35) / .6), cxp = mixv(W / 2 + 330, bx + bw * size * ADV * .72, m), cyp = mixv(by + 520, by + size * LHR * 1.4, m), pr = u > clickAt - .1 && u < clickAt + .05; art(CURSOR, cxp + (pr ? 6 : 0), cyp + (pr ? 6 : 0), 34, WHT, 1 - sm(clickAt + .1, clickAt + .4, u)); }
+    if (press) {
+      for (let i = 0; i < 40; i++) { const age = u - clickAt - hash(i, 1, 43) * .35, life = 1.0; if (age < 0 || age > life) continue; const x = W / 2 + (hash(i, 2, 43) - .5) * 900, y = by - 40 + age * age * 900 + age * 300, bounce = y > H * .76 ? H * .76 - (y - H * .76) * .4 : y; art(["(\\$)"], x, bounce, 34, GOLD, 1 - age / life); }
+      bigText("+$1.66", W / 2, 960, 150, GRN, 1, 30); bigText(typed("paid at once.", u, clickAt + .5, 14), W / 2, 1090, 38, DIM, 1, 0);
+    } else bigText("a card is worth what the market says.", W / 2, 860, 32, DIM, a, 0);
+  },
+  /* BUILD: back to the pack, alone in the dark. It shakes. The count is not a count. */
+  build(u, t) {
+    const k = sm(0, 3.6, u), bob = Math.sin(t * 2.2) * 6 * (1 - k), cyp = H * .585, py = Math.round(cyp - PACK_ROWS * PACK_SIZE * LHR / 2 + bob);
+    // digits fall down both edges
+    for (let c = 0; c < 9; c++) for (const side of [0, 1]) { const col = side ? C - 1 - c : c, sp = 8 + hash(col, 1, 60) * 16, ph = hash(col, 2, 60) * 90; for (let j = 0; j < 14; j++) { const y = Math.floor((t * sp + ph) % (R + 14)) - j; if (y < 0 || y >= R) continue; put(col, y, hash(col, y + Math.floor(t * 9), 61) > .5 ? "1" : "0", j === 0 ? WHT : GRN, (1 - j / 14) * .5 * (.3 + k * .9) * (1 - c / 11)); } }
+    field((x, y) => { const dx = x, dy = y - (cyp - H / 2) / W, r = Math.hypot(dx, dy), th = Math.atan2(dy, dx); return (Math.pow(.5 + .5 * Math.cos(9 * th - t * (.4 + k)), 8) * Math.exp(-r * 3) * .5 + Math.exp(-r * 4.2) * .5) * (.18 + .9 * k) * (.85 + .15 * Math.sin(t * 7)); }, PAL_WARM, .85);
+    rect(W / 2 - 440, py - 14, 880, PACK_ROWS * PACK_SIZE * LHR + 28, [3, 3, 4], .9);
+    artC(packLines(t), W / 2, py, PACK_SIZE, packColor(t, false), 1);
+    // light through the seam: it grows from the middle outwards and the pack starts to give
+    const seamY = py + 2.5 * PACK_SIZE * LHR, sw = Math.floor(sm(1.6, 3.6, u) * 40);
+    for (let i = 0; i < sw; i++) for (const sgn of [-1, 1]) { const x = W / 2 + sgn * i * PACK_SIZE * ADV * .55; pch(x, seamY, PACK_SIZE, i < sw - 4 ? "═" : "*", WHT, .5 + .5 * hash(i, Math.floor(t * 30), 62)); }
+    for (let i = 0; i < Math.floor(k * 50); i++) { const sx2 = W / 2 + (hash(i, 1, 63) - .5) * 700, sy = seamY - ((t * 120 * (.4 + hash(i, 2, 63)) + hash(i, 3, 63) * 500) % 420); pch(sx2, sy, 22, "*+.'"[i % 4], GOLD, .7 * (1 - Math.abs(sy - seamY) / 420)); }
+    // the count
+    const digit = n => hash(n, Math.floor(t * 14), 64) < (.75 - k * .55) ? "0123456789"[hash(n, Math.floor(t * 20), 65) * 10 | 0] : "█";
+    ecg(t, 0, 410, C, 9, FS, GRN, sm(0, .5, u) * .9, 3.6, 4.6, true);
+    bigText("T-MINUS  " + digit(1) + digit(2) + ":" + digit(3) + digit(4) + ":" + digit(5) + digit(6), W / 2, H * .07, 40, mixv(1, 1, 0) && (hash(0, Math.floor(t * 8), 66) > .85 ? WHT : RED), .9, 10);
+  },
+  /* RIP: the foil splits, the screen goes white, something comes up out of it. */
+  rip(u, t) {
+    const cyp = H * .585, py = Math.round(cyp - PACK_ROWS * PACK_SIZE * LHR / 2), L = packLines(t), tear = ease(u / .5), fall = u * u * 700, fade = 1 - sm(.2, .8, u);
+    field((x, y) => { const beam = Math.exp(-Math.abs(x) * 9) * (.5 + .5 * fbm(x * 30, y * 4 - t * 6, 4)) * sm(0, .08, u) * 1.1 + Math.exp(-Math.hypot(x, y - .1) * 2.2) * .5 * (1 - u); return beam; }, PAL_WARM, 1);
+    // the pack: top three rows rip up and away, the rest drops
+    L.forEach((s, j) => { const top = j < 3, dx = top ? tear * 320 : 0, dy = top ? -tear * 520 : fall, rot = top ? tear * 6 : 0; for (let i = 0; i < s.length; i++) { if (s[i] === " ") continue; pch(W / 2 - 21 * PACK_SIZE * ADV + i * PACK_SIZE * ADV + dx + (top ? Math.sin(i + t * 30) * 6 * tear : 0), py + j * PACK_SIZE * LHR + dy + (top ? i * rot : 0), PACK_SIZE, s[i], INK, fade); } });
+    // shards
+    for (let i = 0; i < 90; i++) { const age = u - hash(i, 1, 41) * .05, life = .75; if (age < 0 || age > life) continue; const ang = (hash(i, 2, 41) - .5) * 3.14 - 1.57, sp = 500 + 1300 * hash(i, 3, 41); pch(W / 2 + Math.cos(ang) * sp * age, py + 3 * PACK_SIZE * LHR + Math.sin(ang) * sp * age, 20 + hash(i, 4, 41) * 24, "*+.'#"[i % 5], [255, 225 + hash(i, 5, 41) * 30 | 0, 160], 1 - age / life); }
+    // the card rises, still just a few big characters
+    const b = cardAt("umbra", 8, mixv(cyp + 160, H * .43, ease((u - .15) / .6)), 800); rect(b.px - 6, b.py - 6, b.w + 12, b.h + 12, [3, 3, 4], .9 * sm(.15, .3, u)); pimg(b.gr, b.px, b.py, b.size, PAL_UMBRA, sm(.15, .35, u), 1);
+    flash(Math.max(.9 * (1 - sm(0, .35, u)), 0));
+  },
+  /* REVEAL: the card resolves out of big blocks into fine text while an eclipse behind it opens. The film ends before it is done. */
+  reveal(u, t) {
+    const cyp = H * .43, k = ease(u / 1.5), res = [[0, 8], [.45, 12], [.85, 18], [1.25, 26], [1.65, 38], [2.05, 52], [2.45, 62]], n = res.filter(r => u >= r[0]).pop()[1], b = cardAt("umbra", n, cyp, 800);
+    field((x, y) => { const dx = x, dy = y - (cyp - H / 2) / W, r = Math.hypot(dx, dy), th = Math.atan2(dy, dx), rays = Math.pow(.5 + .5 * Math.cos(16 * th + t * .5 + 3 * fbm(r * 4, th, 3)), 5), hal = Math.exp(-r * 3) * (.5 + .5 * fbm(dx * 6, dy * 6 + t * .4, 7)); return (rays * Math.exp(-r * 1.9) * .95 + hal * .85) * (.35 + .65 * k) * (.9 + .1 * Math.sin(t * 8)); }, PAL_GOLD, 1);
+    const fin = cardAt("umbra", 62, cyp, 800), cw2 = fin.w, ch2 = fin.h;
+    rect((W - cw2) / 2 - 8, cyp - ch2 / 2 - 8, cw2 + 16, ch2 + 16, [3, 3, 4], .92);
+    pimg(b.gr, b.px, b.py, b.size, PAL_UMBRA, 1, 1);
+    box(Math.round((W - cw2) / 2 - fin.size * ADV * 2), Math.round(cyp - ch2 / 2 - fin.size * LHR * 1.2), 62 + 4, fin.gr.rows + 3, fin.size, AMB, .85 * sm(.3, .8, u), true);
+    // a scan bar crosses the card now and then
+    const sy = cyp - ch2 / 2 + ((t * 420) % (ch2 + 200)) - 100; if (sy > cyp - ch2 / 2 && sy < cyp + ch2 / 2) rect((W - cw2) / 2, sy, cw2, 6, WHT, .28);
+    // the end: the corona flares and the picture is gone
+    flash(sm(2.75, 3.38, u) * 1);
+  },
+  black(u, t) { },
+  /* END: the name, the line, the ask. */
+  end(u, t) {
+    const lu = t - KEYS.logo, a = sm(0, .5, lu), size = 30, w = LOGO[0].length * size * ADV, x0 = (W - w) / 2, y0 = H * .20;
+    if (lu > 0) {
+      art(LOGO, x0, y0, size, (i, j, ch) => ch === "█" ? INK : [150, 146, 136], a, ease(lu / 1.3));
+      if (lu > .6 && lu < 2.4) { const sh = (lu - .6) / 1.8 * 56 - 6; art(LOGO, x0, y0, size, (i, j, ch) => Math.max(0, 1 - Math.abs(i + j * 2 - sh) / 4) > .1 ? WHT : null, a, 1); }
+      for (let i = 0; i < 36; i++) pch(x0 + i * size * ADV, y0 + 6.6 * size * LHR, size, "═", FAINT, a * sm(.9, 1.4, lu));
+      bigText(typed("ASCII trading cards", lu, 1.0, 16), W / 2, y0 + 8.3 * size * LHR, 28, DIM, 1, 0);
+    }
+    if (t > 31.7) { const bl = Math.floor(t * 2) % 2; bigText(bl ? "▼" : "▽", W / 2, H * (HANDLE ? .68 : .62), 54, GRN, .9, 14); }
+    if (t > 32.4) bigText("so you're first in line.", W / 2, H * (HANDLE ? .735 : .69), 32, DIM, sm(32.4, 32.7, t), 0);
+  },
+};
+
+/* ---------------------------------------------------------------- the viewfinder and the footnote */
+function hud(t) {
+  if (t < T.reveal[1] + .001 || t > KEYS.logo - .2) { }
+  if (t >= T.reveal[1] && t < T.end[0] + .35) return;
+  const al = t < 1 ? sm(.1, .8, t) : 1, fin = t >= T.end[0];
+  if (!fin) {
+    // corners
+    const m = 46, L = 54; for (const [cx, cy, sx2, sy2] of [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]]) { for (let i = 0; i < 4; i++) { pch(cx + sx2 * i * 14 - 6, cy - 12, 22, "─", FAINT, al); pch(cx - 6, cy + sy2 * i * 25 - 12, 22, "│", FAINT, al); } }
+    pch(66, 70, 24, "●", [255, 80, 70], (Math.floor(t * 1.6) % 2 ? 1 : .15) * al); art(["REC"], 98, 66, 24, DIM, al);
+    const ff = Math.floor(t * FPS), tc = `${pad(Math.floor(ff / 1800))}:${pad(Math.floor(ff / 30) % 60)}:${pad(ff % 30)}`; art([tc], 66, 100, 22, FAINT, al);
+    const bars = "▁▃▅▇"; art([...Array(4)].map((_, i) => bars[Math.min(3, Math.floor(hash(i, Math.floor(t * 4), 33) * 4 * (.6 + .4 * Math.min(1, t / 3))))]).join(" "), W - 66 - 7 * 13, 70, 24, DIM, al);
+    if (t >= T.pack[0] && t < T.reveal[0]) art(["demo mode · simulated market"], W / 2 - 14 * 12, H * .845, 22, [110, 108, 100], al * .9);
+  } else {
+    art(["demo money · simulated market · beta coming soon"], W / 2 - 46 * 13.2 / 2, H * .845, 22, [110, 108, 100], sm(T.end[0] + .9, T.end[0] + 1.4, t));
+  }
+}
+
+/* ---------------------------------------------------------------- ascii snow: noise that is made of letters */
+const SNOW = [[0, .55], [.35, .16], [1.2, .02], [3.0, .02], [3.1, .1], [3.3, .02], [5.2, .02], [5.3, .12], [5.5, .02], [7.0, .03], [8.0, .02], [15, .02], [17, .06], [18.2, .1], [20.2, .02], [21.5, .03], [23.8, .22], [24.6, .12], [26, .05], [27.5, .2], [28.0, .2], [28.01, 0], [29, 0], [29.3, .05], [30, .01], [33, .02], [33.5, .12]];
+function snow(t, hit) {
+  const lvl = Math.min(.8, kf(SNOW, t) + hit * .45), frame = Math.floor(t * 30); if (lvl < .004) return;
+  const ch = ".:'`,;-~+*xX#%@&";
+  for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) { const r = hash(x + y * 131, frame, 5); if (r < lvl) { const q = hash(x, y + frame * 3, 6); put(x, y, ch[q * ch.length | 0], q > .9 ? WHT : mul(INK, .45 + q * .5), .25 + q * .55); } }
+}
+
+/* ---------------------------------------------------------------- the pixel pass */
+const VIG = new Float32Array(W * H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const dx = (x - W / 2) / (W / 2), dy = (y - H / 2) / (H / 2), r = dx * dx * .8 + dy * dy * .55; VIG[y * W + x] = 1 - Math.min(.82, r * .5); }
+const NOI = new Uint8Array(512 * 512); for (let i = 0; i < NOI.length; i++) NOI[i] = hash(i, 7, 7) * 255;
+const GRAIN = [[0, .22], [.9, .07], [8, .06], [15, .07], [18, .13], [20.2, .08], [23.8, .25], [24.6, .2], [27.9, .24], [28.0, 0], [29.0, 0], [29.2, .05], [33.2, .07], [33.5, .2]];
+const TRACK = [[0, 1.2], [1.2, .35], [8, .3], [10, .1], [15, .1], [18.2, .3], [20.2, .12], [23.8, .7], [24.6, .5], [28.0, .7], [28.01, 0], [29.2, 0], [29.5, .2], [33, .15]];
+const SPLIT = [[0, 6], [1, 1.6], [8, 1.5], [18, 2.2], [20.2, 1.8], [23.8, 4.5], [28.0, 4.5], [28.01, 0], [29.2, 1.2], [33, 1.6]];
+const SHAKE = [[0, 0], [8, 0], [15, 2], [18.2, 4], [20.2, 1], [22, 4], [23.7, 20], [24.6, 24], [26, 9], [27.9, 14], [28.0, 0], [29, 0], [33, 0]];
+const sbuf = new Uint8ClampedArray(W * H * 4), s32 = new Uint32Array(sbuf.buffer), dx = new Int16Array(H);
+function post(t, hit, grain, split, track, bright, fadeK) {
+  const id = ox.getImageData(0, 0, W, H); sbuf.set(id.data); const o32 = new Uint32Array(id.data.buffer);
+  dx.fill(0);
+  // the tracking band: a tilted strip that wobbles sideways and rolls down the picture
+  if (track > .02) { const yb = ((t * 380) % (H + 600)) - 300, hb = 260; for (let y = Math.max(0, Math.floor(yb)); y < Math.min(H, yb + hb); y++) { const q = (y - yb) / hb, env = Math.sin(q * Math.PI); dx[y] += Math.round(Math.sin(y * .06 + t * 40) * 9 * track * env + (hash(y, Math.floor(t * 30), 21) - .5) * 5 * track * env); } }
+  // slices thrown sideways by a hit
+  if (hit > .04) { const n = 2 + Math.floor(hit * 7), fr = Math.floor(t * 30); for (let s = 0; s < n; s++) { const y0 = Math.floor(hash(s, fr, 22) * H), h = 8 + Math.floor(hash(s, fr, 23) * 120 * Math.min(1.5, hit)), d = Math.round((hash(s, fr, 24) - .5) * 2 * Math.min(1.6, hit) * 190); for (let y = y0; y < Math.min(H, y0 + h); y++) dx[y] += d; } }
+  // every so often a single line jumps
+  for (let k = 0; k < 3; k++) { const y = Math.floor(hash(k, Math.floor(t * 30), 25) * H); if (hash(k, Math.floor(t * 30), 26) < .25 * (grain + .05) * 4) dx[y] += Math.round((hash(k, Math.floor(t * 30), 27) - .5) * 60); }
+  const sp = Math.round(split + hit * 26), ngo = Math.floor(hash(Math.floor(t * 30), 1, 30) * 512), ngy = Math.floor(hash(Math.floor(t * 30), 2, 30) * 512), gk = grain * 255;
+  const fr2 = Math.floor(t * 30), roll = ((t * 300) % (H + 400)) - 200;
+  for (let y = 0; y < H; y++) {
+    const row = y * W, d = dx[y], scan = (y % 3 === 0 ? .8 : 1) * (1 + .09 * Math.max(0, 1 - Math.abs(y - roll) / 160)), nrow = (((y >> 1) + ngy) & 511) * 512;
+    for (let x = 0; x < W; x++) {
+      let xs = x - d; if (xs < 0) xs = 0; else if (xs >= W) xs = W - 1;
+      let xr = xs + sp, xb = xs - sp; if (xr >= W) xr = W - 1; if (xb < 0) xb = 0; if (xr < 0) xr = 0; if (xb >= W) xb = W - 1;
+      const r = s32[row + xr] & 255, g = (s32[row + xs] >> 8) & 255, b = (s32[row + xb] >> 16) & 255, m = VIG[row + x] * scan * bright, n = (NOI[nrow + (((x >> 1) + ngo) & 511)] - 127.5) * gk / 127.5 * 1.0;
+      let rr = r * m + n * 255 / 255 * 1, gg = g * m + n, bb = b * m + n;
+      rr = rr < 0 ? 0 : rr > 255 ? 255 : rr; gg = gg < 0 ? 0 : gg > 255 ? 255 : gg; bb = bb < 0 ? 0 : bb > 255 ? 255 : bb;
+      o32[row + x] = 0xff000000 | (bb << 16) | (gg << 8) | rr;
+    }
+  }
+  ox.putImageData(id, 0, 0);
+}
+
+/* ---------------------------------------------------------------- one frame */
+function actAt(t) { for (const k of Object.keys(T)) if (t >= T[k][0] && t < T[k][1]) return k; return "end"; }
+function hitAt(t) { let a = 0; for (const h of HITS) { const d = t - h.t; if (d >= -.001 && d < .6) a += h.a * Math.exp(-Math.max(0, d) * 11) * (d < .01 ? 1 : 1); } return Math.min(2, a); }
+function heartAt(t) { let a = 0; for (const h of HEART) { const d = t - h.t; if (d >= 0 && d < .5) a += h.a * Math.exp(-d * 15); } return Math.min(1.2, a); }
+function render(t) {
+  t = Math.max(0, Math.min(DUR - 1 / FPS / 2, t)); clock = t; ops = []; flashA = 0;
+  const act = actAt(t), u = t - T[act][0], hit = hitAt(t), hb = (t < T.reveal[1] ? heartAt(t) : 0), grain = kf(GRAIN, t) * (1 + hit * .8);
+  sx.setTransform(1, 0, 0, 1, 0, 0); sx.globalAlpha = 1; sx.shadowBlur = 0; sx.fillStyle = "#030304"; sx.fillRect(0, 0, W, H);
+  const black = act === "black";
+  if (!black) {
+    ACTS[act](u, t); hud(t); snow(t, hit);
+  }
+  // paint the queue
+  sx.textBaseline = "top"; sx.textAlign = "left"; let cur = 0, fnt = -1;
+  for (const o of ops) {
+    if (o[0] === 2) { sx.globalAlpha = o[6]; sx.fillStyle = rgb(o[5]); sx.fillRect(o[1], o[2], o[3], o[4]); continue; }
+    const size = o[0] === 0 ? FS : o[3]; if (size !== fnt) { sx.font = `700 ${size}px ${FONT}`; fnt = size; }
+    if (o[0] === 0) { sx.globalAlpha = o[5]; sx.fillStyle = rgb(o[4]); sx.fillText(o[3], o[1] * CW, o[2] * LH); }
+    else { sx.globalAlpha = o[6]; sx.fillStyle = rgb(o[5]); sx.fillText(o[4], o[1], o[2]); }
+  }
+  sx.globalAlpha = 1;
+  if (!black) { drawLines(t); }
+  // the cut at the end of the film: it does not fade, it collapses
+  let bright = 1, fadeK = 0; const endCut = t > 33.3 ? 1 - sm(33.3, 33.48, t) : 1; bright *= endCut;
+  if (flashA > .003) { sx.fillStyle = `rgba(255,255,255,${Math.min(1, flashA)})`; sx.fillRect(0, 0, W, H); }
+  // camera: heartbeat punches in, shake grows through the film
+  const shk = kf(SHAKE, t) * (1 + hit * 1.4) + hb * (t > 20 ? 6 : 2), z = 1 + .016 * hb + .02 * hit * (hit > .6 ? 1 : 0) + (act === "reveal" ? .06 * ease(u / 3.4) : 0), sxo = (hash(Math.floor(t * 30), 1, 40) - .5) * 2 * shk, syo = (hash(Math.floor(t * 30), 2, 40) - .5) * 2 * shk;
+  ox.setTransform(1, 0, 0, 1, 0, 0); ox.globalCompositeOperation = "source-over"; ox.globalAlpha = 1; ox.fillStyle = "#000"; ox.fillRect(0, 0, W, H);
+  ox.save(); ox.translate(W / 2 + sxo, H / 2 + syo); ox.scale(z, z); ox.translate(-W / 2, -H / 2); ox.drawImage(S, 0, 0); ox.restore();
+  // bloom: the picture, blurred by shrinking it, added back on top
+  b1.clearRect(0, 0, 270, 480); b1.drawImage(S, 0, 0, 270, 480); b2.clearRect(0, 0, 90, 160); b2.drawImage(B1, 0, 0, 90, 160);
+  ox.globalCompositeOperation = "lighter"; ox.globalAlpha = .55 + .25 * hb; ox.drawImage(B1, 0, 0, W, H); ox.globalAlpha = .5 + .3 * hb; ox.drawImage(B2, 0, 0, W, H); ox.globalAlpha = 1; ox.globalCompositeOperation = "source-over";
+  if (!black) post(t, hit, grain, kf(SPLIT, t), kf(TRACK, t) * (black ? 0 : 1), bright * (1 + .1 * hb), fadeK);
+  else { ox.fillStyle = "#000"; ox.fillRect(0, 0, W, H); if (t > 28.62 && Math.floor((t - 28.62) * 2) % 2 === 0) { ox.font = `700 40px ${FONT}`; ox.fillStyle = "rgba(120,118,110,.9)"; ox.textAlign = "center"; ox.textBaseline = "middle"; ox.fillText("▌", W / 2, H / 2); } }
+}
+window.TL = TL;
+window.renderAt = t => { render(t); return true; };
+window.frameJpeg = (t, q) => { render(t); return O.toDataURL("image/jpeg", q || .93); };
+window.READY = (async () => {
+  await document.fonts.load(`700 20px "JetBrains Mono"`); await document.fonts.load(`700 60px "JetBrains Mono"`);
+  const keys = ["stitch-bone", "phantom", "null", "ronin", "grimm", "umbra"];
+  await Promise.all(keys.map(async k => { IMG[k.replace("-bone", "")] = await loadImg("../cards/" + k + ".jpg"); }));
+  for (const k of ["stitch", "phantom", "null", "ronin", "grimm"]) sampleImage(k, 56);
+  [8, 12, 18, 26, 38, 52, 62].forEach(n => sampleImage("umbra", n));
+  render(0); return true;
+})();
+</script>
