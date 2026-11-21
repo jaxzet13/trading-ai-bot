@@ -1,5 +1,5 @@
 /* ============================================================================
-   8c. THE TAPE AND THE ALERTS. A ticker that never stops, and ASCII pictures that tell you when a card you hold moons or gets rugged.
+   8c. THE TAPE AND THE ALERTS. A ticker that never stops, and ASCII pictures that tell you when a card you hold takes off or drops fast.
    ========================================================================== */
 // ---- the tape: every card and the latest simulated trades, scrolling across the top of every page
 let tapeAt = 0;
@@ -26,20 +26,24 @@ const ROCKET = f => `      /\\
     ${["\\||/", "(||)", "/||\\"][f % 3]}
      ${["\\/ ", "() ", "'' "][f % 3]}
    ${[" . ' .", "'  . '", ". '  ."][f % 3]}`;
-const SKULL = f => `   _.-"""""-._
-  /  _   _  \\
- |  (o) (o)  |
-  \\    ^    /
-   | ||||| |
-    \\_____/
-   ${["x  x  x", " x  x  x", "x   x  x", "  x x x "][f % 4]}`;
+const FALL = f => `    .---.
+    |   |
+    |   |
+ ___|   |___
+ \\         /
+  \\       /
+   \\     /
+    \\   /
+     \\ /
+      v
+   ${["v  v  v", " v  v  v", "v   v  v", "  v v v "][f % 4]}`;
 let alertIv = 0, alertTo = 0;
 function hideAlert() { clearInterval(alertIv); clearTimeout(alertTo); $("alert").hidden = true; }
 function showAlert(card, p) {
   const up = p > 0, cs = copiesOf(card.no), worth = cs.reduce((a, c) => a + valueOf(c), 0), cost = cs.reduce((a, c) => a + costOf(c), 0), d = worth - cost, a = $("alert");
   a.className = "alert " + (up ? "up" : "dn"); a.hidden = false;
-  a.innerHTML = `<div class="art"><pre id="alertArt"></pre></div><div class="txt"><b>${esc(card.name)} ${up ? "is mooning" : "just got rugged"}</b><span>${up ? "Up" : "Down"} ${pctShort(Math.abs(p)).slice(1)} in 6 hours. ${cs.length === 1 ? "Your copy is" : "Your " + cs.length + " copies are"} worth ${money(worth)} now, ${d >= 0 ? "+" : "\u2212"}${money(Math.abs(d))} against what they were worth when you got them.</span><div class="row"><button class="btn small" data-card="${card.no}">See it</button><button class="btn small ghost" id="alertX">Dismiss</button></div></div>`;
-  let f = 0; const art = $("alertArt"), step = () => { art.textContent = up ? ROCKET(f++) : SKULL(f++); }; step(); clearInterval(alertIv); if (!reduced) alertIv = setInterval(step, 140);
+  a.innerHTML = `<div class="art"><pre id="alertArt"></pre></div><div class="txt"><b>${esc(card.name)} ${up ? "is taking off" : "is dropping fast"}</b><span>${up ? "Up" : "Down"} ${pctShort(Math.abs(p)).slice(1)} in 6 hours. ${cs.length === 1 ? "Your copy is" : "Your " + cs.length + " copies are"} worth ${money(worth)} now, ${d >= 0 ? "+" : "\u2212"}${money(Math.abs(d))} against what they were worth when you got them.</span><div class="row"><button class="btn small" data-card="${card.no}">See it</button><button class="btn small ghost" id="alertX">Dismiss</button></div></div>`;
+  let f = 0; const art = $("alertArt"), step = () => { art.textContent = up ? ROCKET(f++) : FALL(f++); }; step(); clearInterval(alertIv); if (!reduced) alertIv = setInterval(step, 140);
   clearTimeout(alertTo); alertTo = setTimeout(hideAlert, 14000);
 }
 function checkAlerts() {
@@ -47,7 +51,7 @@ function checkAlerts() {
   const now = Date.now(); state.alertAt = state.alertAt || {};
   for (const no of new Set(state.vault.map(c => c.no))) {
     const card = BY_NO[no], p = MK.pct(card, 6); if (now - (state.alertAt[no] || 0) < 6 * 36e5) continue;
-    if (p >= 1 || p <= -.6) { state.alertAt[no] = now; persist(); showAlert(card, p); return; }
+    if (p >= 1 || p <= -.4) { state.alertAt[no] = now; persist(); showAlert(card, p); return; }
   }
 }
 
@@ -60,13 +64,13 @@ function renderHero(rows, rn) {
   cands.sort((a, b) => b.size - a.size); const hero = cands[0]; if (!hero || hero.size < Math.log(1.15)) { el.innerHTML = ""; heroKey = ""; return; }
   const up = hero.up, key = hero.c.no + hero.kind + (up ? "u" : "d") + MK.tick(); if (key === heroKey) return; const fresh = heroKey.slice(0, 5) !== key.slice(0, 5); heroKey = key;
   const hours = hero.kind === "now" ? 24 : 168, pg = plotGrid(MK.series(hero.c, hours, 96), innerWidth > 760 ? 100 : 40, innerWidth > 760 ? 9 : 7).grid.map(r => r.join("")).join("\n");
-  const title = hero.kind === "now" ? `${esc(hero.c.name)} ${up ? "is mooning" : "is getting rugged"}` : `${esc(hero.c.name)} ${up ? "mooned" : "got rugged"} ${whenText(hero.ago)}`;
+  const title = hero.kind === "now" ? `${esc(hero.c.name)} ${up ? "is taking off" : "is dropping"}` : `${esc(hero.c.name)} ${up ? "took off" : "dropped"} ${whenText(hero.ago)}`;
   const sub = hero.kind === "now" ? `${money(hero.was)} → ${money(hero.nowP)} in 24 hours` : `${up ? "a run of" : "a fall of"} ${pctShort(hero.pct)} in a day · now ${money(hero.nowP)}${up ? ` (${pctShort(hero.nowP / hero.peak - 1)} from the peak)` : ""}`;
-  el.innerHTML = `<button class="hero ${up ? "up" : "dn"}" data-card="${hero.c.no}"><pre class="sprite" id="heroArt" aria-hidden="true">${up ? ROCKET(0) : SKULL(0)}</pre><div class="info"><h2>${title}</h2><div class="big">${pctShort(hero.pct)}</div><div class="dim">${sub}</div><pre class="plot${fresh ? " wipe" : ""}" aria-hidden="true">${pg}</pre></div></button>`;
+  el.innerHTML = `<button class="hero ${up ? "up" : "dn"}" data-card="${hero.c.no}"><pre class="sprite" id="heroArt" aria-hidden="true">${up ? ROCKET(0) : FALL(0)}</pre><div class="info"><h2>${title}</h2><div class="big">${pctShort(hero.pct)}</div><div class="dim">${sub}</div><pre class="plot${fresh ? " wipe" : ""}" aria-hidden="true">${pg}</pre></div></button>`;
 }
 // the countdown to the next price: a line that fills up over 20 seconds
 function tickLive() {
   const s = 20 - Math.floor((Date.now() % 20000) / 1000), n = 12, k = Math.round((20 - s) / 20 * n);
   document.querySelectorAll(".live").forEach(e => { e.innerHTML = `<i></i>live · next price in ${s}s <span>${"━".repeat(k)}${"─".repeat(n - k)}</span>`; });
-  const a = $("heroArt"); if (a && !reduced) { heroFrame++; a.textContent = a.closest(".hero").classList.contains("up") ? ROCKET(heroFrame) : SKULL(heroFrame); }
+  const a = $("heroArt"); if (a && !reduced) { heroFrame++; a.textContent = a.closest(".hero").classList.contains("up") ? ROCKET(heroFrame) : FALL(heroFrame); }
 }
