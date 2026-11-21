@@ -1,10 +1,10 @@
 /* ============================================================================
    8. OPENING A PACK: tear it, reveal the cards one at a time, then keep or sell
    ========================================================================== */
-let SS = null; const stage = $("stage"), hint = t => { $("stHint").textContent = t; };
+let SS = null, SS_PRICE = 0; const stage = $("stage"), hint = t => { $("stHint").textContent = t; };
 function openPack() {
-  if (SS) return; if (state.coins < PACK.price) { toast(`You need ${money(PACK.price - state.coins)} more. Tap “add $10”.`); return; }
-  state.coins -= PACK.price; state.s.packs++; state.s.spent += PACK.price; const items = pullPack(); state.vault.push(...items); save(); renderBal(true);
+  if (SS) return; const price = packPrice(); if (state.coins < price) { toast(`You need ${money(price - state.coins)} more. Tap “add $10”.`); return; }
+  state.coins -= price; state.s.packs++; state.s.spent += price; SS_PRICE = price; const items = pullPack(); state.vault.push(...items); save(); renderBal(true);
   SS = { items, idx: 0, phase: "pack", busy: false };
   $("stName").textContent = PACK.name; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
   $("stBox").innerHTML = `<div class="st-pack enter" id="stPack">${packHTML()}</div><div class="cstack" id="stStack"></div>`;
@@ -56,13 +56,13 @@ async function dismiss(el, c) {
 }
 function skipAll() { if (!SS || SS.phase === "summary") return; SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
 function summary() {
-  SS.phase = "summary"; const items = SS.items, worth = items.reduce((a, c) => a + valueOf(c), 0), back = items.reduce((a, c) => a + sellOf(c), 0), net = back - PACK.price;
+  SS.phase = "summary"; const items = SS.items, worth = items.reduce((a, c) => a + valueOf(c), 0), back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE;
   const best = items.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no];
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${esc(PACK.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(worth)}">${blockSVG(money(worth))}</div><span class="dim" style="font-size:13px">of cards</span></div>
-    <div class="net ${net >= 0 ? "up" : "dn"}">Sell them all for ${money(back)}: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))} against the ${money(PACK.price)} pack.</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
+    <div class="net ${net >= 0 ? "up" : "dn"}">Sell them all for ${money(back)}: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))} against the ${money(SS_PRICE)} pack.</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
     <div class="fan">${items.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>
-    <div class="row" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn ghost" id="sumAgain">${state.coins >= PACK.price ? "open another · " + money(PACK.price) : "add $10 first"}</button></div></div>`;
+    <div class="row" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn ghost" id="sumAgain">${state.coins >= packPrice() ? "open another · " + money(packPrice()) : "add $10 first"}</button></div></div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, net >= 0 ? 90 : 30, net >= 0 ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
 function closeStage() { stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view); }

@@ -2,7 +2,7 @@
   <div class="wrap">
     <a class="logo" href="#/">STIXX</a>
     <nav class="tabs" id="tabs" aria-label="Sections">
-      <a href="#/" data-v="home">pack</a><a href="#/collection" data-v="collection">collection</a><a href="#/odds" data-v="odds">odds</a>
+      <a href="#/" data-v="home">pack</a><a href="#/market" data-v="market">market</a><a href="#/collection" data-v="collection">collection</a><a href="#/odds" data-v="odds">odds</a>
     </nav>
     <div class="wallet"><span class="bal" id="bal">$0.00</span><button class="btn small" id="addFunds" title="Demo money. Nothing is ever charged.">+ add $10</button></div>
   </div>
@@ -17,7 +17,20 @@
       <div class="packmeta"><h1>First Print</h1><p class="dim" id="packLine"></p></div>
       <button class="btn solid big" id="openBtn" data-open>open pack</button>
       <p class="honest" id="honest"></p>
+      <div class="hot" id="hot"></div>
     </div>
+  </section>
+
+  <!-- MARKET -->
+  <section class="view" id="v-market">
+    <div class="page-head"><div class="ttl" data-block="MARKET" role="img" aria-label="Market"></div><p>Live demo market. Prices move every 20 seconds and are the same for everyone. The other traders are simulated.</p></div>
+    <div class="mstats" id="mStats"></div>
+    <div class="two" id="mMovers"></div>
+    <h3 class="sec" style="margin-top:44px">All cards</h3>
+    <div class="tablewrap"><table class="mtable" id="mTable"></table></div>
+    <p class="small" style="margin-bottom:44px">Buying costs the price plus 10%. Selling pays the price minus 10%. Listings change every hour. <a class="linkbtn" href="#/odds">How the market works</a></p>
+    <h3 class="sec">Recent trades <span class="faint">· simulated traders · after the 10% spread</span></h3>
+    <div class="trades" id="mTrades"></div>
   </section>
 
   <!-- COLLECTION -->

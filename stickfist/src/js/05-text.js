@@ -64,5 +64,15 @@ function blockReveal(el, str, ms) {
   const n = String(str).length, t0 = performance.now(); ms = ms || 420; cancelAnimationFrame(el._br);
   (function step(now) { const k = Math.min(1, (now - t0) / ms); el.innerHTML = blockSVG(String(str).slice(0, Math.max(1, Math.ceil(k * n)))); if (k < 1) el._br = requestAnimationFrame(step); })(t0);
 }
+// a sparkline: one block character per value, scaled between the lowest and highest
+const SPARKS = "▁▂▃▄▅▆▇█";
+const spark = v => { const mn = Math.min(...v), sp = Math.max(...v) - mn || 1; return v.map(x => SPARKS[clamp(Math.round((x - mn) / sp * 7), 0, 7)]).join(""); };
+// a small chart: `h` rows of block characters, one column per value
+function asciiChart(vals, h) {
+  const mn = Math.min(...vals), sp = Math.max(...vals) - mn || 1, B = " ▁▂▃▄▅▆▇█", rows = [];
+  for (let r = h - 1; r >= 0; r--) { let line = ""; for (const v of vals) line += B[clamp(Math.round((v - mn) / sp * h * 8 - r * 8), 0, 8)]; rows.push(line); }
+  return rows.join("\n");
+}
+const pctHTML = p => `<span class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲ +" : p < -.0005 ? "▼ −" : "– "}${Math.abs(p * 100).toFixed(Math.abs(p) >= 1 ? 0 : 1)}%</span>`;
 // a progress bar made of characters: [███░░] 
 const meter = (i, n) => "[" + fill("█", i) + fill("░", n - i) + "]";
