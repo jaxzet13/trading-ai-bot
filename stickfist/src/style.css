@@ -144,6 +144,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 .alert .art { flex: none; overflow: hidden; } .alert pre { font-family: var(--m); font-size: 10.5px; line-height: 1.1; margin: 0; } .alert.up pre { color: var(--ok); } .alert.dn pre { color: var(--bad); }
 .alert.up .art { animation: lift 1.2s ease-in-out infinite alternate; } @keyframes lift { from { transform: translateY(5px); } to { transform: translateY(-5px); } }
 .alert .txt { display: grid; gap: 6px; min-width: 0; } .alert b { font-size: 17px; } .alert .txt > span { font-size: 13px; color: var(--dim); line-height: 1.45; }
+.cut { position: fixed; inset: 0; z-index: 95; background: #030304; transition: opacity .25s; cursor: pointer; } .cut canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; } .cut-skip { position: absolute; left: 0; right: 0; bottom: 18px; text-align: center; font-family: var(--m); font-size: 12px; color: #4a4a52; pointer-events: none; }
 .share { position: fixed; inset: 0; z-index: 70; background: rgba(3,3,4,.96); display: grid; place-items: center; padding: 14px; overflow-y: auto; }
 .sh-box { display: grid; gap: 14px; justify-items: center; } .sh-box canvas { width: min(92vw, calc((100vh - 190px) * 4 / 5)); height: auto; aspect-ratio: 4 / 5; border-radius: 14px; background: #050506; box-shadow: 0 0 0 1px var(--ln2), 0 24px 80px rgba(0,0,0,.8); }
 .sh-player { display: flex; align-items: center; gap: 12px; width: min(92vw, calc((100vh - 190px) * 4 / 5)); font-family: var(--m); font-size: 13px; color: var(--dim); }
