@@ -65,10 +65,22 @@ const MK = (() => {
     return { name: "anon_" + (1000 + Math.floor(h3(a, 33, 3) * 9000)), card: c, hours, got, sold, gain: sold - got, pct: sold / got - 1, ago: Math.round((nowTick() - b) / 3) };   // ago: minutes
   }
   const feed = n => { const t = nowTick(), out = []; for (let k = 0; out.length < n && k < n * 3; k++) { const e = event(t - k * 9); if (e) out.push(e); } return out; };
-  let fl = null;   // the last 24 hours of simulated trades, one every three minutes: the best and the worst of them by dollars
+  let fl = null;   // the last 7 days of simulated trades, one every three minutes: the best and the worst of them by dollars
   function flips() {
-    const t = nowTick(); if (fl && fl.t === t) return fl; const all = []; for (let k = 0; k < 480; k++) { const e = event(t - k * 9); if (e) all.push(e); }
+    const t = nowTick(); if (fl && fl.t === t) return fl; const all = []; for (let k = 0; k < 3360; k++) { const e = event(t - k * 9); if (e) all.push(e); }
     const byGain = all.slice().sort((x, y) => y.gain - x.gain); return (fl = { t, n: all.length, best: byGain.slice(0, 3), worst: byGain.slice(-3).reverse(), won: all.filter(e => e.gain > 0).length });
   }
-  return { advance, price, pct, series, buzz, feed, flips, tick: nowTick, TICK, CAP, VOL, RATE };
+  /* The biggest runs each card has made in the last week, in both directions. A run up is the price against its lowest in the 24 hours before it;
+     a run down is the price against its highest in the 24 hours before it. Both are read straight off the real price path. */
+  let rn = null;
+  function runs() {
+    const t = nowTick(); if (rn && rn.t === t) return rn; const H = 180, all = [];   // 180 ticks = one hour
+    for (let i = 0; i < CARDS.length; i++) {
+      const c = CARDS[i], m = cards[i], px = h => Math.max(1, Math.round(c.val * Math.exp(m.X[Math.max(0, t - h * H)]))); let up = { r: 1, h: 0 }, dn = { r: 1, h: 0 };
+      for (let h = 0; h <= 7 * 24; h++) { const p = px(h); let lo = p, hi = p; for (let k = 1; k <= 24; k++) { const q = px(h + k); if (q < lo) lo = q; if (q > hi) hi = q; } if (p / lo > up.r) up = { r: p / lo, h }; if (p / hi < dn.r) dn = { r: p / hi, h }; }
+      all.push({ c, up: up.r - 1, upAgo: up.h, upPrice: px(up.h), dn: dn.r - 1, dnAgo: dn.h, dnPrice: px(dn.h), now: px(0) });
+    }
+    return (rn = { t, up: all.filter(x => x.up >= 1).sort((a, b) => b.up - a.up), dn: all.filter(x => x.dn <= -.5).sort((a, b) => a.dn - b.dn), all });
+  }
+  return { advance, price, pct, series, buzz, feed, flips, runs, tick: nowTick, TICK, CAP, VOL, RATE };
 })();

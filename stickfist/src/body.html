@@ -27,6 +27,7 @@
   <section class="view" id="v-market">
     <div class="page-head"><h1 class="ttl">Market</h1><p>Prices move every 20 seconds and are the same for everyone. You get cards from packs, and sell them any time. The other traders are simulated.</p><p class="live"></p></div>
     <div id="mHero"></div>
+    <div class="two" id="mRuns" style="margin-bottom:40px"></div>
     <div class="mstats" id="mStats"></div>
     <div class="two" id="mMovers"></div>
     <div class="two" id="mFlips" style="margin-top:40px"></div>
@@ -76,7 +77,8 @@
 <div class="share" id="share" hidden>
   <div class="sh-box">
     <canvas id="shCv" width="1080" height="1350" aria-label="Your result, as a picture"></canvas>
-    <div class="sh-actions"><button class="btn solid" id="shSave">Save image</button><button class="btn" id="shShare">Share</button><button class="btn" id="shVideo" hidden>Save video</button><button class="btn ghost" id="shReplay">Replay</button><button class="btn ghost" id="shClose">Close</button></div>
+    <div class="sh-player"><button class="sh-play" id="shPlay">▶ Replay trade</button><button class="sh-track" id="shTrack" aria-label="Seek the replay"><i id="shFill"></i></button><span id="shLeft">-0:14</span><button class="sh-spd" id="shSpeed" aria-label="Replay speed">1x</button></div>
+    <div class="sh-actions"><button class="btn solid" id="shVideo" hidden>Save video</button><button class="btn" id="shSave">Save image</button><button class="btn" id="shShare">Share</button><button class="btn ghost" id="shSummary">Summary</button><button class="btn ghost" id="shClose">Close</button></div>
   </div>
 </div>
 <div class="modal" id="modal" hidden><div class="mbox" id="mbox"></div></div>

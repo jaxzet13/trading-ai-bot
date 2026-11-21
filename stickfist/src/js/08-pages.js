@@ -17,18 +17,22 @@ function renderHome() {
   $("packLine").textContent = `${PACK.n} cards · ${money(ps.price)}`; $("openBtn").textContent = `open pack · ${money(ps.price)}`;
   $("honest").innerHTML = `Every card is a picture made of text: the rarer the card, the more characters it holds. About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
   const mv = movers(); $("hot").innerHTML = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
-  const bf = MK.flips().best[0]; if (bf && bf.gain > 0) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip in 24h: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
+  const bf = MK.flips().best[0]; if (bf && bf.gain > 0) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip this week: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
   const hp = $("homePack"); if (!hp.firstChild) { hp.innerHTML = packHTML(); const pk = hp.firstChild; tiltPack(pk); pk.style.cursor = "pointer"; pk.onclick = () => openPack(); liveWindow(pk); }
 }
 
 const flipRow = e => `<button class="flip" data-card="${e.card.no}"><span class="nm">${esc(e.name)} <span class="faint">sold ${esc(e.card.name)}</span></span><span class="pc">${pctHTML(e.pct)}</span><span class="dim">held ${e.hours}h · ${money(e.got)} → ${money(e.sold)} · ${e.gain >= 0 ? "+" : "−"}${money(Math.abs(e.gain))}</span></button>`;
-const agoText = m => m === 0 ? "just now" : m < 60 ? m + " min ago" : Math.floor(m / 60) + "h ago";
+const agoText = m => m === 0 ? "just now" : m < 60 ? m + " min ago" : m < 2880 ? Math.floor(m / 60) + "h ago" : Math.floor(m / 1440) + " days ago";
+const whenText = h => h < 2 ? "just now" : h < 48 ? h + " hours ago" : Math.round(h / 24) + " days ago";
 function renderMarket() {
   const mv = movers(), rows = mv.rows, ps = packStats(), n = rows.length, fl = MK.flips();
   const idxNow = rows.reduce((a, r) => a + r.now / r.c.val, 0) / n * 100, idxWas = rows.reduce((a, r) => a + r.was / r.c.val, 0) / n * 100, up = rows.filter(r => r.p24 > 0).length;
-  renderHero(rows); $("mStats").innerHTML = `<div><span class="label">market index</span><b>${idxNow.toFixed(1)}</b> ${pctHTML(idxNow / idxWas - 1)}</div><div><span class="label">cards up in 24h</span><b>${up} of ${n}</b></div><div><span class="label">pack price right now</span><b>${money(ps.price)}</b></div>`;
+  const rn = MK.runs(); renderHero(rows, rn);
+  const runRow = (x, up) => `<button class="mover" data-card="${x.c.no}"><span class="nm">${esc(x.c.name)}</span>${sparkSVG(MK.series(x.c, 168, 28))}<span class="pc">${pctHTML(up ? x.up : x.dn)}</span><span class="dim">${up ? "peaked" : "fell"} ${whenText(up ? x.upAgo : x.dnAgo)} · now ${money(x.now)}${up ? ` (${pctShort(x.now / x.upPrice - 1)} from the peak)` : ""}</span></button>`;
+  $("mRuns").innerHTML = `<div><h3 class="sec">Skyrocketed this week</h3>${rn.up.slice(0, 3).map(x => runRow(x, true)).join("") || `<p class="small">Nothing has doubled in a day this week.</p>`}</div><div><h3 class="sec">Rugged this week</h3>${rn.dn.slice(0, 3).map(x => runRow(x, false)).join("") || `<p class="small">Nothing has lost half its price in a day this week.</p>`}</div>`;
+  $("mStats").innerHTML = `<div><span class="label">market index</span><b>${idxNow.toFixed(1)}</b> ${pctHTML(idxNow / idxWas - 1)}</div><div><span class="label">cards up in 24h</span><b>${up} of ${n}</b></div><div><span class="label">pack price right now</span><b>${money(ps.price)}</b></div>`;
   $("mMovers").innerHTML = `<div><h3 class="sec">Skyrocketing · 24h</h3>${mv.gain.map(moverRow).join("") || `<p class="small">Nothing is up right now.</p>`}</div><div><h3 class="sec">Crashing · 24h</h3>${mv.drop.map(moverRow).join("") || `<p class="small">Nothing is down right now.</p>`}</div>`;
-  $("mFlips").innerHTML = `<div><h3 class="sec">Best flips · 24h</h3>${fl.best.map(flipRow).join("")}</div><div><h3 class="sec">Worst flips · 24h</h3>${fl.worst.map(flipRow).join("")}</div>`;
+  $("mFlips").innerHTML = `<div><h3 class="sec">Best flips · this week</h3>${fl.best.map(flipRow).join("")}</div><div><h3 class="sec">Worst flips · this week</h3>${fl.worst.map(flipRow).join("")}</div>`;
   $("mFlipNote").textContent = `Simulated traders, worked out from the real price path and after the 10% selling fee. ${fl.won} of the last ${fl.n} sold for more than they got.`;
   $("mTable").innerHTML = `<thead><tr><th>Card</th><th class="r">Price</th><th class="r">24h</th><th>24h chart</th><th>Buzz</th><th class="r">You hold</th></tr></thead><tbody>` + rows.map(r => {
     const c = r.c, own = copiesOf(c.no).length, bz = MK.buzz(c);

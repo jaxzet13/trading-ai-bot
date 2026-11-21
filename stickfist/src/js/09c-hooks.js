@@ -5,8 +5,9 @@
 let tapeAt = 0;
 function renderTape() {
   const el = $("tapeIn"); if (!el || (el.firstChild && Date.now() - tapeAt < 60000)) return; tapeAt = Date.now();
-  const mv = movers().rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24)), fd = MK.feed(6), items = [];
+  const mv = movers().rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24)), fd = MK.feed(6), items = [], rn = MK.runs();
   const tk = (cls, a, b) => `<span class="tk ${cls}"><b>${a}</b> ${b}</span>`;
+  if (rn.up[0]) items.push(tk("up", "BEST RUN THIS WEEK", `${esc(rn.up[0].c.name.toUpperCase())} ▲ ${pctShort(rn.up[0].up)}`));
   for (let i = 0; i < Math.max(mv.length, fd.length); i++) {
     if (mv[i]) items.push(tk(mv[i].p24 >= 0 ? "up" : "dn", esc(mv[i].c.name.toUpperCase()), `${money(mv[i].now)} ${mv[i].p24 >= 0 ? "▲" : "▼"} ${pctShort(mv[i].p24)}`));
     if (fd[i]) items.push(tk(fd[i].pct >= 0 ? "up" : "dn", esc(fd[i].name), `sold ${esc(fd[i].card.name)} ${fd[i].pct >= 0 ? "▲" : "▼"} ${pctShort(fd[i].pct)}`));
@@ -52,11 +53,16 @@ function checkAlerts() {
 
 // ---- the hottest card in the market, as a picture: an ASCII rocket or skull, and its day drawn as an ASCII line chart
 let heroKey = "", heroFrame = 0;
-function renderHero(rows) {
-  const el = $("mHero"); if (!el) return; const top = rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24))[0]; if (!top || Math.abs(top.p24) < .15) { el.innerHTML = ""; heroKey = ""; return; }
-  const up = top.p24 > 0, key = top.c.no + (up ? "u" : "d") + MK.tick(); if (key === heroKey) return; const fresh = heroKey.slice(0, 4) !== key.slice(0, 4); heroKey = key;
-  const pg = plotGrid(MK.series(top.c, 24, 96), innerWidth > 760 ? 100 : 40, innerWidth > 760 ? 9 : 7).grid.map(r => r.join("")).join("\n");
-  el.innerHTML = `<button class="hero ${up ? "up" : "dn"}" data-card="${top.c.no}"><pre class="sprite" id="heroArt" aria-hidden="true">${up ? ROCKET(0) : SKULL(0)}</pre><div class="info"><h2>${esc(top.c.name)} ${up ? "is mooning" : "is getting rugged"}</h2><div class="big">${pctShort(top.p24)}</div><div class="dim">${money(top.was)} → ${money(top.now)} in 24 hours</div><pre class="plot${fresh ? " wipe" : ""}" aria-hidden="true">${pg}</pre></div></button>`;
+function renderHero(rows, rn) {
+  const el = $("mHero"); if (!el) return; const top = rows.slice().sort((a, b) => Math.abs(Math.log(1 + b.p24)) - Math.abs(Math.log(1 + a.p24)))[0], bu = rn.up[0], bd = rn.dn[0];
+  // the biggest thing: a move happening right now, or the biggest run of the week, whichever is larger in either direction
+  const cands = []; if (top) cands.push({ kind: "now", size: Math.abs(Math.log(1 + top.p24)), up: top.p24 > 0, c: top.c, pct: top.p24, was: top.was, nowP: top.now }); if (bu) cands.push({ kind: "run", size: Math.log(1 + bu.up), up: true, c: bu.c, pct: bu.up, ago: bu.upAgo, peak: bu.upPrice, nowP: bu.now }); if (bd) cands.push({ kind: "run", size: Math.abs(Math.log(1 + bd.dn)), up: false, c: bd.c, pct: bd.dn, ago: bd.dnAgo, peak: bd.dnPrice, nowP: bd.now });
+  cands.sort((a, b) => b.size - a.size); const hero = cands[0]; if (!hero || hero.size < Math.log(1.15)) { el.innerHTML = ""; heroKey = ""; return; }
+  const up = hero.up, key = hero.c.no + hero.kind + (up ? "u" : "d") + MK.tick(); if (key === heroKey) return; const fresh = heroKey.slice(0, 5) !== key.slice(0, 5); heroKey = key;
+  const hours = hero.kind === "now" ? 24 : 168, pg = plotGrid(MK.series(hero.c, hours, 96), innerWidth > 760 ? 100 : 40, innerWidth > 760 ? 9 : 7).grid.map(r => r.join("")).join("\n");
+  const title = hero.kind === "now" ? `${esc(hero.c.name)} ${up ? "is mooning" : "is getting rugged"}` : `${esc(hero.c.name)} ${up ? "mooned" : "got rugged"} ${whenText(hero.ago)}`;
+  const sub = hero.kind === "now" ? `${money(hero.was)} → ${money(hero.nowP)} in 24 hours` : `${up ? "a run of" : "a fall of"} ${pctShort(hero.pct)} in a day · now ${money(hero.nowP)}${up ? ` (${pctShort(hero.nowP / hero.peak - 1)} from the peak)` : ""}`;
+  el.innerHTML = `<button class="hero ${up ? "up" : "dn"}" data-card="${hero.c.no}"><pre class="sprite" id="heroArt" aria-hidden="true">${up ? ROCKET(0) : SKULL(0)}</pre><div class="info"><h2>${title}</h2><div class="big">${pctShort(hero.pct)}</div><div class="dim">${sub}</div><pre class="plot${fresh ? " wipe" : ""}" aria-hidden="true">${pg}</pre></div></button>`;
 }
 // the countdown to the next price: a line that fills up over 20 seconds
 function tickLive() {

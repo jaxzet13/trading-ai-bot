@@ -82,16 +82,16 @@ function lineChart(vals, o) {
 const buzzDots = n => `<span class="dots" role="img" aria-label="buzz ${n} of 5">${[0, 1, 2, 3, 4].map(i => `<i class="${i < n ? "on" : ""}"></i>`).join("")}</span>`;
 // An ASCII line chart, drawn the way people draw them by hand with ╭ ╮ ╰ ╯ ─ │. Values are resampled to `w` columns and plotted on a log scale.
 // Returns the character grid (row 0 is the top), each column's height Y (0 = bottom row) and the resampled values.
-function plotGrid(vals, w, h) {
+function plotGrid(vals, w, h, extra) {
   const n = vals.length, v = []; for (let x = 0; x < w; x++) { const f = x / (w - 1) * (n - 1), i = Math.floor(f), j = Math.min(n - 1, i + 1); v.push(vals[i] + (vals[j] - vals[i]) * (f - i)); }
-  const L = v.map(Math.log), mn = Math.min(...L), sp = Math.max(Math.max(...L) - mn, .1), Y = L.map(x => Math.round((x - mn) / sp * (h - 1))), grid = Array.from({ length: h }, () => Array(w).fill(" "));
+  const L = v.map(Math.log), all = L.concat((extra || []).map(Math.log)), mn = Math.min(...all), sp = Math.max(Math.max(...all) - mn, .1), Y = L.map(x => Math.round((x - mn) / sp * (h - 1))), grid = Array.from({ length: h }, () => Array(w).fill(" "));
   for (let x = 0; x < w - 1; x++) {
     const y0 = Y[x], y1 = Y[x + 1];
     if (y0 === y1) grid[h - 1 - y0][x] = "─";
     else { grid[h - 1 - y1][x] = y0 > y1 ? "╰" : "╭"; grid[h - 1 - y0][x] = y0 > y1 ? "╮" : "╯"; for (let y = Math.min(y0, y1) + 1; y < Math.max(y0, y1); y++) grid[h - 1 - y][x] = "│"; }
   }
   grid[h - 1 - Y[w - 1]][w - 1] = "─";
-  return { grid, Y, v };
+  return { grid, Y, v, mn, sp };
 }
 const pctShort = p => (p >= 0 ? "+" : "−") + (Math.abs(p * 100) >= 100 ? Math.round(Math.abs(p * 100)).toLocaleString("en-US") : Math.abs(p * 100).toFixed(1)) + "%";
 const heldText = ms => { const m = Math.round(ms / 6e4); if (m < 1) return "under a minute"; if (m < 90) return m + " min"; const h = Math.floor(m / 60); return h < 48 ? h + "h " + (m % 60) + "m" : Math.round(h / 24) + " days"; };

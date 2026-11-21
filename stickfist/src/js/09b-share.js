@@ -1,127 +1,154 @@
 /* ============================================================================
-   8b. THE RESULT CARD. What a card did between the pack and the sale, drawn as an ASCII line chart that draws itself,
-   with a headline number that rises and falls with the line. The animation is a canvas, so what you watch is what you save.
+   8b. THE TRADE REPLAY. Your card's whole trade as a picture: first a position card with a pile of ASCII coins, then a replay where an ASCII line chart
+   redraws itself from the moment you got the card, an ASCII face rides the line, and the profit or loss changes live. It is a canvas, so it can be
+   saved as a picture or recorded as a video.
    ========================================================================== */
 // everything the picture needs, worked out from the card's own price path while it was yours
 function receiptOf(c, sold) {
-  const card = BY_NO[c.no], now = Date.now(), held = Math.max(0, now - (c.t || now)), span = Math.max(held, 3 * 36e5), n = 120;
+  const card = BY_NO[c.no], now = Date.now(), held = Math.max(0, now - (c.t || now)), span = Math.max(held, 2 * 36e5), n = 240;
   const ago0 = Math.min(MK.tick(), Math.round(span / MK.TICK)), agoPull = Math.min(ago0, Math.round(held / MK.TICK)), vals = [];
   for (let i = 0; i < n; i++) vals.push(valueAgo(c, Math.round(ago0 * (1 - i / (n - 1)))));
   const cost = costOf(c), got = sellOf(c), pi = ago0 ? Math.round((1 - agoPull / ago0) * (n - 1)) : 0; let pk = pi;
   for (let i = pi; i < n; i++) if (vals[i] > vals[pk]) pk = i;
-  return { card, fx: c.fx || "", code: c.code, sold, cost, got, held, vals, pi, pk, gain: got - cost, pct: got / Math.max(1, cost) - 1, peakPct: vals[pk] * SELLBACK / Math.max(1, cost) - 1, at: now };
+  return { card, fx: c.fx || "", code: c.code, sold, cost, got, held, vals, pi, pk, startMs: now - ago0 * MK.TICK, endMs: now, gain: got - cost, pct: got / Math.max(1, cost) - 1, peakPct: vals[pk] * SELLBACK / Math.max(1, cost) - 1, at: now };
 }
 
 const Share = (() => {
   const W = 1080, H = 1350, FONT = "'JetBrains Mono', 'DejaVu Sans Mono', ui-monospace, Menlo, Consolas, monospace";
-  const GREEN = "#9fd8a6", RED = "#e8786d", INK = "#ece7dc", DIM = "#8d897f", FAINT = "#4a4a52", BG = "#050506";
-  const CH0 = .9, CH1 = 3.7, ROWS = 24, LH = 19, CF = 16, X0 = 60, Y0 = 668;               // when the chart starts and stops drawing, and where it sits
-  let cv, ctx, rec = null, img = null, plot = null, t0 = 0, raf = 0, last = 0, parts = [], burst = false, rain = null, recording = false;
-  const ease = x => 1 - Math.pow(1 - x, 3), lerp = (a, b, k) => a + (b - a) * k, clampK = x => x < 0 ? 0 : x > 1 ? 1 : x;
-  const scramble = (str, k) => { const n = Math.floor(str.length * k); let o = ""; for (let i = 0; i < str.length; i++) o += i < n || str[i] === " " ? str[i] : "#%&*+=<>/"[Math.floor(Math.random() * 9)]; return o; };
-  const dateStr = ms => { const d = new Date(ms), p = x => String(x).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+  const GREEN = "#9fd8a6", RED = "#e8786d", INK = "#ece7dc", DIM = "#8d897f", FAINT = "#4a4a52", BG = "#050507", PANEL = "#0b0b10";
+  const DUR = 14, CF = 16, LH = 19, PX0 = 60, PY0 = 214, PW = 876, ROWS = 27;      // seconds a replay lasts, and where the chart sits
+  let cv, ctx, rec = null, img = null, raf = 0, last = 0, mode = "position", intro = 0, rt = 0, paused = false, speed = 1, auto = true, parts = [], burst = false, rain = null, recording = false, lastUi = "";
+  let clock = 0, dtLast = .016, endAge = 0;
+  const ease = x => 1 - Math.pow(1 - x, 3), clampK = x => x < 0 ? 0 : x > 1 ? 1 : x;
+  const dateStr = ms => new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const timeStr = (ms, span) => span > 40 * 36e5 ? new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : new Date(ms).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const sgn = x => (x >= 0 ? "+" : "−") + money(Math.abs(x));
 
-  function T(str, x, y, size, color, weight, align, alpha) {
-    ctx.font = `${weight || 500} ${size}px ${FONT}`; ctx.textAlign = align || "left"; ctx.fillStyle = color; ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.fillText(str, x, y); ctx.globalAlpha = 1; ctx.textAlign = "left";
-  }
-  function pix(str, x, y, px, color, alpha) {   // the pixel lettering, drawn as squares
-    const rows = blockText(str).split("\n"); ctx.fillStyle = color; ctx.globalAlpha = alpha == null ? 1 : alpha;
-    rows.forEach((row, r) => { for (let i = 0; i < row.length; i++) if (row[i] === "█") ctx.fillRect(x + i * px, y + r * px, px - 1, px - 1); }); ctx.globalAlpha = 1; return rows[0].length * px;
-  }
+  function T(str, x, y, size, color, weight, align, alpha) { ctx.font = `${weight || 500} ${size}px ${FONT}`; ctx.textAlign = align || "left"; ctx.fillStyle = color; ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.fillText(str, x, y); ctx.globalAlpha = 1; ctx.textAlign = "left"; }
+  function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  function pix(str, x, y, px, color, alpha) { const rows = blockText(str).split("\n"); ctx.fillStyle = color; ctx.globalAlpha = alpha == null ? 1 : alpha; rows.forEach((row, r) => { for (let i = 0; i < row.length; i++) if (row[i] === "█") ctx.fillRect(x + i * px, y + r * px, px - 1, px - 1); }); ctx.globalAlpha = 1; return rows[0].length * px; }
   function rainLayer(t, col) {
     if (!rain) rain = Array.from({ length: 44 }, (_, i) => ({ x: 20 + i * 24.2, y: Math.random() * H, v: 24 + Math.random() * 70, s: Math.random() }));
     ctx.font = `500 16px ${FONT}`; ctx.fillStyle = col;
-    for (const r of rain) { const y0 = (r.y + t * r.v) % (H + 300) - 150; for (let k = 0; k < 7; k++) { ctx.globalAlpha = .075 * (1 - k / 7); ctx.fillText("01+-$.:%"[(Math.floor(t * 6 + r.s * 40) + k * 3) % 8], r.x, y0 - k * 18); } }
+    for (const r of rain) { const y0 = (r.y + t * r.v) % (H + 300) - 150; for (let k = 0; k < 7; k++) { ctx.globalAlpha = .06 * (1 - k / 7); ctx.fillText("01+-$.:%"[(Math.floor(t * 6 + r.s * 40) + k * 3) % 8], r.x, y0 - k * 18); } }
     ctx.globalAlpha = 1;
   }
 
-  function draw(t, live) {
-    const r = rec, up = r.pct >= 0, col = up ? GREEN : RED, c = ctx;
-    c.save(); c.globalAlpha = 1; c.fillStyle = BG; c.fillRect(0, 0, W, H); c.textBaseline = "top";
-    if (live) rainLayer(t, col);
-    c.strokeStyle = FAINT; c.lineWidth = 2; c.globalAlpha = .7; c.strokeRect(24, 24, W - 48, H - 48); c.globalAlpha = 1;
-
-    // top bar
-    T("[ STIXX ]", 60, 54, 30, INK, 700); T(dateStr(r.at), W - 60, 60, 20, DIM, 500, "right");
-
-    // the card picture, decoding from the top
-    const ik = ease(clampK(t / .9)), ix = 60, iy = 140, iw = 360, ih = 437;
-    c.fillStyle = "#040405"; c.fillRect(ix, iy, iw, ih);
-    if (img) { c.save(); c.beginPath(); c.rect(ix, iy, iw, ih * ik); c.clip(); c.drawImage(img, ix, iy, iw, ih); c.restore(); }
-    if (ik < 1 && live) { c.font = `500 14px ${FONT}`; c.fillStyle = col; const ey = iy + ih * ik; for (let i = 0; i < 26; i++) { c.globalAlpha = .5; c.fillText("01+-$.:%#"[Math.floor(Math.random() * 9)], ix + i * 14, ey - 6); } c.globalAlpha = 1; }
-    c.strokeStyle = FAINT; c.lineWidth = 2; c.strokeRect(ix - 1, iy - 1, iw + 2, ih + 2);
-
-    // the right column: status, name, the headline number
-    const nameFull = r.card.name.toUpperCase() + (r.fx ? " · " + STYLES[r.fx].name.toUpperCase() : "");
-    T(r.sold ? "[ SOLD ]" : "[ STILL HOLDING ]", 470, 142, 28, col, 700);
-    T(t < .6 ? scramble(nameFull, t / .6) : nameFull, 470, 192, nameFull.length > 18 ? 34 : 44, INK, 700);
-    T(`${RAR[r.card.rar].name} · ${fmt(r.card.chars)} characters`, 470, 250, 22, DIM, 500);
-
-    // chart geometry and the character grid
-    c.font = `500 ${CF}px ${FONT}`; const cw = c.measureText("M").width, cols = Math.floor(960 / cw);
-    if (!plot || plot.cols !== cols) plot = Object.assign({ cols }, plotGrid(r.vals, cols, ROWS));
-    const p = ease(clampK((t - CH0) / (CH1 - CH0))), hc = p * (cols - 1), hi = Math.floor(hc), pullCol = Math.round(r.pi / (r.vals.length - 1) * (cols - 1)), peakCol = Math.round(r.pk / (r.vals.length - 1) * (cols - 1));
-    const vAt = x => { const i = Math.floor(x), j = Math.min(cols - 1, i + 1); return plot.v[i] + (plot.v[j] - plot.v[i]) * (x - i); };
-    const vHead = vAt(hc), pctHead = p >= 1 ? r.pct : hc < pullCol ? 0 : vHead * SELLBACK / Math.max(1, r.cost) - 1;
-
-    // the headline: it moves with the line
-    const txt = pctShort(pctHead).replace("−", "-"), full = pctShort(r.pct).replace("−", "-"), colsN = blockText(full).split("\n")[0].length, px = Math.min(16, Math.floor(560 / colsN));
-    const hcol = pctHead >= 0 ? GREEN : RED; pix(txt, 470, 292, px, hcol, 1);
-    const by = 292 + 5 * px + 26;
-    T(`${money(r.cost)}  →  ${money(p >= 1 ? r.got : Math.round(vHead * SELLBACK))}`, 470, by, 38, INK, 700);
-    T(`${r.gain >= 0 ? "+" : "−"}${money(Math.abs(r.gain))} ${r.sold ? (r.gain >= 0 ? "made" : "lost") : "if you sold now"}`, 470, by + 56, 26, col, 600, "left", p >= 1 ? 1 : .35);
-    T(`held ${heldText(r.held)} · after the 10% fee`, 470, by + 96, 21, DIM, 500);
-
-    // the ASCII line chart
-    T(`HIGH ${money(Math.max(...r.vals))}   LOW ${money(Math.min(...r.vals))}`, X0, Y0 - 40, 19, DIM, 500);
-    T(r.pi > 0 ? "the dim part is before you got it" : "", W - 60, Y0 - 40, 19, FAINT, 500, "right");
-    c.font = `500 ${CF}px ${FONT}`;
-    for (let x = 0; x <= hi; x++) {
-      const before = x < pullCol, age = hc - x, ly = ROWS - 1 - plot.Y[x];
-      for (let y = 0; y < ROWS; y++) { const ch = plot.grid[y][x]; if (ch === " ") continue; c.globalAlpha = before ? .5 : 1; c.fillStyle = before ? FAINT : age < 2.5 ? "#ffffff" : age < 7 ? INK : col; c.fillText(ch, X0 + x * cw, Y0 + y * LH); }
-      for (let y = ly + 1; y < ROWS && y - ly < 9; y++) { c.globalAlpha = (before ? .1 : .3) * (1 - (y - ly) / 9.5); c.fillStyle = before ? FAINT : col; c.fillText(y - ly === 1 ? ":" : ".", X0 + x * cw, Y0 + y * LH); }
-    }
-    c.globalAlpha = 1;
-    // pulled and peak markers
-    if (hi >= pullCol && r.pi > 0) { c.fillStyle = DIM; c.font = `500 ${CF}px ${FONT}`; for (let y = ROWS - 1 - plot.Y[pullCol] + 1; y < ROWS; y++) { c.globalAlpha = .35; c.fillText("┆", X0 + pullCol * cw, Y0 + y * LH); } c.globalAlpha = 1; }
-    const baseY = Y0 + ROWS * LH + 14, pullX = Math.min(X0 + pullCol * cw, W - 60 - 230);
-    if (hi >= pullCol) T(`▲ pulled ${money(r.cost)}`, Math.max(X0, pullX), baseY, 22, DIM, 600);
-    if (hi >= peakCol && r.peakPct > r.pct + .08 && r.pk > r.pi) { const pyy = Y0 + (ROWS - 1 - plot.Y[peakCol]) * LH - 36, ptx = `PEAK ${pctShort(r.peakPct)}`; T(ptx, Math.min(Math.max(X0 + peakCol * cw - 40, X0), W - 60 - 220), Math.max(pyy, Y0 - 12), 22, INK, 700, "left", .95); }
-    // the head
-    if (p < 1 || live) {
-      const hx = X0 + hc * cw, hy = Y0 + (ROWS - 1 - plot.Y[Math.min(cols - 1, Math.round(hc))]) * LH;
-      c.fillStyle = col; c.globalAlpha = .16 + .06 * Math.sin(t * 9); c.beginPath(); c.arc(hx + cw / 2, hy + LH / 2, 13, 0, 6.3); c.fill(); c.globalAlpha = 1;
-      c.font = `700 22px ${FONT}`; c.fillStyle = "#ffffff"; c.fillText("●", hx - 1, hy - 2);
-      if (p < 1) { const lx = hx > X0 + 760 ? hx - 120 : hx + 24; T(money(Math.round(vHead)), lx, hy - 36, 24, "#ffffff", 700); }
-    }
-    if (p >= 1) T(`${r.sold ? "sold" : "now"} ${money(r.got)} ▶`, W - 60, baseY, 22, col, 700, "right");
-
-    // footer
-    c.strokeStyle = FAINT; c.lineWidth = 1; c.beginPath(); c.moveTo(60, 1168); c.lineTo(W - 60, 1168); c.stroke();
-    T("Demo money. Prices follow a fixed public formula and the other traders are simulated.", 60, 1190, 19, DIM, 500);
-    T("Nothing here is real and nothing was charged.", 60, 1218, 19, DIM, 500);
-    pix("STIXX", 60, 1262, 7, INK, .95); T(`first print · ${r.code}`, W - 60, 1284, 19, DIM, 500, "right");
-
-    // after the line has run: profit throws characters up, a loss glitches
-    if (live && p >= 1 && !burst) { burst = true; for (let i = 0; i < (up ? 90 : 60); i++) parts.push({ x: 470 + Math.random() * 520, y: 310, vx: (Math.random() - .5) * 420, vy: up ? -140 - Math.random() * 360 : 40 + Math.random() * 120, ch: up ? "$+*·"[i % 4] : "-x/\\"[i % 4], life: 1.4 + Math.random() * 1.2, age: 0 }); }
-    if (live && parts.length) { const dt = Math.min(.05, (performance.now() - last) / 1000 || .016); c.font = `700 24px ${FONT}`; c.fillStyle = col; for (const q of parts) { q.age += dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += (up ? 380 : 220) * dt; c.globalAlpha = Math.max(0, 1 - q.age / q.life); c.fillText(q.ch, q.x, q.y); } c.globalAlpha = 1; parts = parts.filter(q => q.age < q.life); }
-    if (live && !up && t > CH1 && t < CH1 + .7) { for (let i = 0; i < 7; i++) { const by2 = 140 + Math.random() * 1000, bh = 8 + Math.random() * 40, dx = (Math.random() - .5) * 46; c.drawImage(cv, 0, by2, W, bh, dx, by2, W, bh); } }
-    c.restore(); last = performance.now();
+  // ---- the chart for the part of the trade replayed so far: it is redrawn to fit what has happened, like a live chart
+  function chartAt(k) {
+    const n = rec.vals.length, kf = k * (n - 1), ki = Math.floor(kf), shown = rec.vals.slice(0, ki + 1), vh = rec.vals[ki] + (rec.vals[Math.min(n - 1, ki + 1)] - rec.vals[ki]) * (kf - ki);
+    shown.push(vh); if (shown.length < 3) shown.unshift(shown[0]);
+    ctx.font = `500 ${CF}px ${FONT}`; const cw = ctx.measureText("M").width, cols = Math.floor(PW / cw), entry = rec.vals[rec.pi];
+    return { pl: plotGrid(shown, cols, ROWS, [entry]), cw, cols, vh, kf, len: shown.length, entry };
   }
 
-  function loop(now) { draw((now - t0) / 1000, true); raf = requestAnimationFrame(loop); }
-  function play() { cancelAnimationFrame(raf); parts = []; burst = false; t0 = performance.now(); last = t0; if (reduced) draw(99, false); else raf = requestAnimationFrame(loop); }
+  function drawFace(x, y, up, size) {
+    ctx.font = `700 ${size}px ${FONT}`; const f = up ? "(^_^)" : "(;_;)", w = ctx.measureText(f).width + 20; rr(x - w / 2, y - size * .9, w, size * 1.8, size * .9); ctx.fillStyle = "#0b0b10"; ctx.fill();
+    ctx.strokeStyle = up ? GREEN : RED; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(f, x, y + 1); ctx.textAlign = "left"; ctx.textBaseline = "top";
+  }
+  function coin(x, y, ch, col, a) { ctx.globalAlpha = a; ctx.font = `700 22px ${FONT}`; const s = "(" + ch + ")", w = ctx.measureText(s).width; ctx.fillStyle = col === RED ? "#1a0907" : "#07140b"; ctx.fillRect(x - 3, y - 2, w + 6, 26); ctx.fillStyle = col; ctx.fillText(s, x, y); ctx.globalAlpha = 1; }
+
+  function draw(live) {
+    const r = rec, c = ctx, t = clock; c.save(); c.globalAlpha = 1; c.fillStyle = BG; c.fillRect(0, 0, W, H); c.textBaseline = "top";
+    const rep = mode === "replay"; let ch = null, pnl = r.gain, pct = r.pct, price = r.got, before = false;
+    if (rep) { ch = chartAt(rt); before = ch.kf < r.pi; price = Math.round(ch.vh * SELLBACK); pnl = before ? 0 : price - r.cost; pct = before ? 0 : price / Math.max(1, r.cost) - 1; if (rt >= 1) { pnl = r.gain; pct = r.pct; price = r.got; } }
+    else { const k = ease(clampK(intro / 1.2)); pnl = Math.round(r.gain * k); pct = r.pct * k; }
+    const up = pnl >= 0, col = up ? GREEN : RED, finalUp = r.pct >= 0;
+    if (live) rainLayer(t, finalUp ? GREEN : RED);
+
+    // the card, and its header: the card's picture as an avatar, a handle, a tag, the date
+    rr(30, 30, W - 60, H - 60, 34); c.fillStyle = "#07070b"; c.fill(); c.strokeStyle = finalUp ? "#3d6b46" : "#7a3a35"; c.lineWidth = 4; c.stroke();
+    const ax = 104, ay = 112; c.save(); c.beginPath(); c.arc(ax, ay, 40, 0, 6.3); c.clip(); c.fillStyle = "#0e0e14"; c.fillRect(ax - 40, ay - 40, 80, 80); if (img) { const s = 80 / img.width; c.drawImage(img, ax - 40, ay - 40, 80, img.height * s); } c.restore();
+    c.strokeStyle = col; c.lineWidth = 3; c.beginPath(); c.arc(ax, ay, 41, 0, 6.3); c.stroke();
+    T("you", 166, 76, 34, INK, 700); const tag = r.sold ? (finalUp ? "Profit" : "Loss") : "Holding"; c.font = `700 20px ${FONT}`; const tw = c.measureText(tag).width + 24;
+    rr(166, 124, tw, 32, 8); c.fillStyle = finalUp ? "#10261a" : "#2a1210"; c.fill(); T(tag, 178, 130, 20, finalUp ? GREEN : RED, 700);
+    T(dateStr(r.at), W - 62, 80, 22, DIM, 500, "right"); T("[ STIXX ]", W - 62, 118, 22, INK, 700, "right");
+
+    if (!rep) drawPile(finalUp); else drawChart(ch, col);
+
+    // the profit and loss panel
+    rr(60, 800, W - 120, 262, 26); c.fillStyle = PANEL; c.fill(); c.strokeStyle = "#1b1b24"; c.lineWidth = 2; c.stroke();
+    const name = r.card.name.toUpperCase() + (r.fx ? " · " + STYLES[r.fx].name.toUpperCase() : ""); T("◆ " + name, W / 2, 824, 30, INK, 700, "center");
+    const big = rep && before ? "–" : sgn(pnl), pc = rep && before ? "" : (pct >= 0 ? "▲ " : "▼ ") + (Math.abs(pct) >= 1 ? Math.round(Math.abs(pct) * 100).toLocaleString("en-US") : (Math.abs(pct) * 100).toFixed(1)) + "%";
+    c.font = `700 84px ${FONT}`; const bw = c.measureText(big).width; c.font = `700 42px ${FONT}`; const pw = c.measureText(pc).width, x0 = W / 2 - (bw + 26 + pw) / 2;
+    T(big, x0, 868, 84, col, 700); T(pc, x0 + bw + 26, 902, 42, col, 700);
+    const sx = [W / 2 - 300, W / 2, W / 2 + 300]; T("Pulled at", sx[0], 986, 20, DIM, 500, "center"); T(r.sold && (!rep || rt >= 1) ? "Sold for" : "Worth now", sx[1], 986, 20, DIM, 500, "center"); T("Held", sx[2], 986, 20, DIM, 500, "center");
+    T(money(r.cost), sx[0], 1014, 28, INK, 700, "center"); T(money(rep ? price : r.got), sx[1], 1014, 28, INK, 700, "center"); T(heldText(r.held), sx[2], 1014, 28, INK, 700, "center");
+
+    // the footer band
+    c.save(); rr(30, 1090, W - 60, H - 1090 - 30, 34); c.clip(); c.fillStyle = "#0e0e18"; c.fillRect(30, 1090, W - 60, 240); c.restore();
+    pix("STIXX", 66, 1140, 10, INK, .95); T("demo money · simulated", W - 66, 1142, 24, INK, 600, "right"); T("nothing here is real or charged", W - 66, 1180, 20, DIM, 500, "right");
+    T(`${RAR[r.card.rar].name} · ${fmt(r.card.chars)} characters`, 66, 1240, 19, DIM, 500); T(r.code, 66, 1270, 19, DIM, 500); T(r.sold ? "after the 10% selling fee" : "if you sold now, after the 10% fee", W - 66, 1270, 19, DIM, 500, "right");
+
+    // when the replay ends: profit throws characters up, a loss glitches
+    if (live && rep && rt >= 1 && !burst) { burst = true; for (let i = 0; i < (finalUp ? 90 : 60); i++) parts.push({ x: 540 + (Math.random() - .5) * 600, y: 860, vx: (Math.random() - .5) * 460, vy: finalUp ? -160 - Math.random() * 380 : 40 + Math.random() * 120, ch: finalUp ? "$+*·"[i % 4] : "-x/\\"[i % 4], life: 1.4 + Math.random() * 1.2, age: 0 }); }
+    if (live && parts.length) { c.font = `700 26px ${FONT}`; c.fillStyle = finalUp ? GREEN : RED; for (const q of parts) { q.age += dtLast; q.x += q.vx * dtLast; q.y += q.vy * dtLast; q.vy += (finalUp ? 380 : 220) * dtLast; c.globalAlpha = Math.max(0, 1 - q.age / q.life); c.fillText(q.ch, q.x, q.y); } c.globalAlpha = 1; parts = parts.filter(q => q.age < q.life); }
+    if (live && !finalUp && rep && rt >= 1 && endAge < .7) for (let i = 0; i < 7; i++) { const by = 120 + Math.random() * 1000, bh = 8 + Math.random() * 40, dx = (Math.random() - .5) * 46; c.drawImage(cv, 0, by, W, bh, dx, by, W, bh); }
+    c.restore();
+  }
+
+  // ---- the position card: a pile of ASCII coins, green for what you bought and red for what you sold
+  function drawPile(finalUp) {
+    const c = ctx, r = rec, base = 690, big = clampK(Math.log10(1 + Math.abs(r.pct)) / 2.6), heights = [3, 5, 8, 6, 4].map(h => Math.max(2, Math.round(h * (.7 + big * .9)))), xs = [230, 350, 470, 590, 710];
+    c.font = `500 15px ${FONT}`; c.fillStyle = FAINT; c.globalAlpha = .45; for (let y = PY0 + 20; y < base + 30; y += 38) c.fillText("┄".repeat(98), 60, y); c.globalAlpha = 1;
+    let idx = 0; heights.forEach((n, ci) => { const sell = r.sold && ci >= 3, ch = sell ? "S" : "P", col = sell ? RED : GREEN;
+      for (let i = 0; i < n; i++, idx++) { const k = clampK((intro - idx * .045) / .35); if (k <= 0) continue; coin(xs[ci], base - i * 27 - (1 - ease(k)) * 160 - ((i + ci) % 2) * 5, ch, col, Math.min(1, k * 2)); } });
+    T(r.sold ? "green: what you pulled · red: what you sold" : "what you pulled, still in your hands", 540, 736, 22, DIM, 500, "center");
+  }
+
+  // ---- the replay: an ASCII line chart that redraws itself, the entry line, a coin where you got it, an ASCII face on the head and a price tag
+  function drawChart(ch, col) {
+    const c = ctx, r = rec, { pl, cw, cols, vh, entry } = ch, pullCol = Math.round(r.pi / (ch.len - 1) * (cols - 1)), hasPull = ch.kf >= r.pi;
+    const ey = PY0 + (ROWS - 1 - Math.round((Math.log(entry) - pl.mn) / pl.sp * (ROWS - 1))) * LH;
+    c.font = `500 ${CF}px ${FONT}`;
+    for (let i = 0; i < 3; i++) { const row = Math.round(i * (ROWS - 1) / 2), p = Math.exp(pl.mn + pl.sp * (ROWS - 1 - row) / (ROWS - 1)); T(money(Math.round(p)), PX0 + PW + 14, PY0 + row * LH - 8, 18, FAINT, 500); }
+    const full = r.endMs - r.startMs, span = full * ch.kf / (r.vals.length - 1);
+    [0, .5, 1].forEach(f => T(timeStr(r.startMs + span * f, full), PX0 + f * (PW - 70), PY0 + ROWS * LH + 12, 18, FAINT, 500));
+    if (ey >= PY0 - 4 && ey < PY0 + ROWS * LH) { c.font = `500 ${CF}px ${FONT}`; c.fillStyle = DIM; c.globalAlpha = .5; c.fillText("┄".repeat(cols), PX0, ey); c.globalAlpha = 1; T("you got it here", PX0 + PW - 4, ey + 4, 17, DIM, 500, "right", .8); }
+    c.font = `500 ${CF}px ${FONT}`;
+    for (let x = 0; x < cols; x++) {   // green above the entry line, red below it, grey before you had the card
+      const before = x < pullCol, above = pl.v[x] >= entry, lc = before ? FAINT : above ? GREEN : RED, ly = ROWS - 1 - pl.Y[x], age = cols - 1 - x;
+      for (let y = 0; y < ROWS; y++) { const chr = pl.grid[y][x]; if (chr === " ") continue; c.globalAlpha = before ? .55 : 1; c.fillStyle = before ? FAINT : age < 3 ? "#ffffff" : lc; c.fillText(chr, PX0 + x * cw, PY0 + y * LH); }
+      for (let y = ly + 1; y < ROWS && y - ly < 12; y++) { c.globalAlpha = (before ? .08 : .26) * (1 - (y - ly) / 12.5); c.fillStyle = lc; c.fillText(y - ly === 1 ? ":" : ".", PX0 + x * cw, PY0 + y * LH); }
+    }
+    c.globalAlpha = 1;
+    if (hasPull && pullCol >= 0 && pullCol < cols) coin(PX0 + pullCol * cw - 14, PY0 + (ROWS - 1 - pl.Y[pullCol]) * LH - 32, "P", GREEN, 1);
+    const hy = PY0 + (ROWS - 1 - pl.Y[cols - 1]) * LH + LH / 2, hx = PX0 + (cols - 1) * cw;
+    if (ch.kf >= r.pk && r.peakPct > r.pct + .08 && r.pk > r.pi) { const pc = Math.round(r.pk / (ch.len - 1) * (cols - 1)), py = PY0 + (ROWS - 1 - pl.Y[pc]) * LH - 36; T("PEAK " + pctShort(r.peakPct), Math.min(Math.max(PX0 + pc * cw - 40, PX0), PX0 + PW - 200), Math.max(py, PY0 - 14), 20, INK, 700, "left", .9); }
+    if (rt >= 1 && r.sold) { coin(hx - 70, hy - 56, "S", RED, 1); T(sgn(r.gain), hx - 80, hy - 90, 22, r.gain >= 0 ? GREEN : RED, 700, "right"); }
+    drawFace(hx - 40, hy - 2, vh >= entry, 17);
+    const tag = money(Math.round(vh)), tx = PX0 + PW + 8, ty = Math.min(Math.max(hy - 16, PY0 - 6), PY0 + ROWS * LH - 28); rr(tx, ty, 108, 32, 8); c.fillStyle = vh >= entry ? "#6fbf7c" : "#e0584c"; c.fill(); T(tag, tx + 54, ty + 6, 20, "#07070b", 700, "center");
+  }
+
+  // ---- the loop and the controls
+  function loop(now) {
+    dtLast = Math.min(.05, (now - last) / 1000 || .016); last = now; clock += dtLast;
+    if (mode === "position") { intro += dtLast; if (auto && intro > 2.4 && !reduced) replay(); }
+    else if (!paused && rt < 1) { rt = Math.min(1, rt + dtLast * speed / DUR); if (rt >= 1) endAge = 0; } else if (rt >= 1) endAge += dtLast;
+    draw(true); ui(); raf = requestAnimationFrame(loop);
+  }
+  function ui() {
+    const left = mode === "replay" ? Math.ceil((1 - rt) * DUR / speed) : Math.ceil(DUR / speed), key = [mode, paused, speed, Math.round(rt * 400), left].join("|"); if (key === lastUi) return; lastUi = key;
+    $("shFill").style.width = (mode === "replay" ? rt * 100 : 0) + "%"; $("shLeft").textContent = "-0:" + String(left).padStart(2, "0"); $("shSpeed").textContent = speed + "x";
+    $("shPlay").textContent = mode === "position" ? "▶ Replay trade" : rt >= 1 ? "▶ Replay" : paused ? "▶ Play" : "❚❚ Pause";
+  }
+  function start() { cancelAnimationFrame(raf); clock = 0; last = performance.now(); parts = []; burst = false; lastUi = ""; if (reduced) { mode = "position"; intro = 9; draw(false); ui(); return; } raf = requestAnimationFrame(loop); }
+  function replay() { mode = "replay"; rt = 0; paused = false; burst = false; parts = []; endAge = 0; auto = false; }
+  function summary() { mode = "position"; intro = 9; auto = false; paused = false; }
+  function toggle() { if (mode === "position" || rt >= 1) { replay(); return; } paused = !paused; }
+  function seek(e) { const b = $("shTrack").getBoundingClientRect(); if (mode !== "replay") replay(); rt = clampK((e.clientX - b.left) / b.width); burst = rt >= 1; }
+  function cycle() { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; lastUi = ""; }
   const fontReady = () => Promise.race([document.fonts && document.fonts.load ? document.fonts.load("700 22px 'JetBrains Mono'").catch(() => 0) : 0, new Promise(r => setTimeout(r, 1200))]);
 
   async function open(r) {
-    rec = r; plot = null; rain = null; $("share").hidden = false; document.body.style.overflow = "hidden"; cv = $("shCv"); ctx = cv.getContext("2d");
-    $("shVideo").hidden = !(window.MediaRecorder && cv.captureStream);
-    draw(0, false); await fontReady(); img = await loadImg(imgOf(r.card, r.fx)); if ($("share").hidden) return; play();
+    rec = r; rain = null; mode = "position"; intro = 0; rt = 0; speed = 1; auto = true; paused = false; $("share").hidden = false; document.body.style.overflow = "hidden"; cv = $("shCv"); ctx = cv.getContext("2d");
+    $("shVideo").hidden = !(window.MediaRecorder && cv.captureStream); img = null; clock = 0; draw(false);
+    await fontReady(); img = await loadImg(imgOf(r.card, r.fx)); if ($("share").hidden) return; start();
   }
-  function close() { cancelAnimationFrame(raf); $("share").hidden = true; document.body.style.overflow = ""; rec = null; }
+  function close() { cancelAnimationFrame(raf); raf = 0; $("share").hidden = true; document.body.style.overflow = ""; rec = null; }
 
-  // a still picture of the finished chart
-  function still() { return new Promise(res => { cancelAnimationFrame(raf); draw(99, false); cv.toBlob(b => { res(b); if (!$("share").hidden && !reduced) { t0 = performance.now() - 20000; raf = requestAnimationFrame(loop); } }, "image/png"); }); }
+  // a still picture of the position card
+  function still() { return new Promise(res => { cancelAnimationFrame(raf); const m = mode, i = intro; mode = "position"; intro = 9; draw(false); cv.toBlob(b => { res(b); mode = m; intro = i; if (!$("share").hidden && !reduced) { last = performance.now(); raf = requestAnimationFrame(loop); } }, "image/png"); }); }
   async function saveBlob(blob, name) {
     try { const dl = window.claude && claude.use ? await claude.use("downloads") : null; if (dl) { await dl.save({ filename: name, data: blob }); toast("Saved"); return; } } catch (e) { if (e && e.code === "declined") return; }
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Saved");
@@ -134,12 +161,12 @@ const Share = (() => {
     try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: "STIXX", text: caption() }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
     saveBlob(b, fileName("png"));
   }
-  // record the animation itself as a short video
+  // record the replay itself as a short video
   async function video() {
     if (recording) return; const mime = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"].find(m => MediaRecorder.isTypeSupported(m)); if (!mime) { toast("This browser can't record video. Save the image instead."); return; }
-    recording = true; const btn = $("shVideo"), label = btn.textContent; btn.textContent = "recording…"; const chunks = [], mr = new MediaRecorder(cv.captureStream(30), { mimeType: mime, videoBitsPerSecond: 5e6 });
+    recording = true; const btn = $("shVideo"), label = btn.textContent; btn.textContent = "recording…"; const chunks = [], mr = new MediaRecorder(cv.captureStream(30), { mimeType: mime, videoBitsPerSecond: 6e6 });
     mr.ondataavailable = e => { if (e.data.size) chunks.push(e.data); }; mr.onstop = () => { recording = false; btn.textContent = label; saveBlob(new Blob(chunks, { type: mime }), fileName(mime.startsWith("video/mp4") ? "mp4" : "webm")); };
-    play(); mr.start(); setTimeout(() => mr.stop(), (CH1 + 2.2) * 1000);
+    speed = 1; if (!raf) start(); replay(); mr.start(); setTimeout(() => mr.stop(), (DUR + 2) * 1000);
   }
-  return { open, close, play, save, share, video };
+  return { open, close, replay, summary, toggle, seek, cycle, save, share, video };
 })();

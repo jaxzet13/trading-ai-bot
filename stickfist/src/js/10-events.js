@@ -17,7 +17,10 @@ document.addEventListener("click", e => {
     case "shSave": Share.save(); break;
     case "shShare": Share.share(); break;
     case "shVideo": Share.video(); break;
-    case "shReplay": Share.play(); break;
+    case "shPlay": Share.toggle(); break;
+    case "shTrack": Share.seek(e); break;
+    case "shSpeed": Share.cycle(); break;
+    case "shSummary": Share.summary(); break;
     case "shClose": Share.close(); break;
     case "alertX": hideAlert(); break;
     case "addFunds": state.coins += TOPUP; state.s.added += TOPUP; save(); renderBal(true); toast("Added $10 of demo money"); break;
