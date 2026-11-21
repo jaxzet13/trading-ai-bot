@@ -16,7 +16,7 @@ const CARDS = [
   { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "common",    chars: 2772,   val: 11,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
   { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "common",    chars: 2816,   val: 11,    tint: "#a8ffbe", cap: "it is a colander. it works.", styles: true },
   { no: "004", id: "rook",    name: "Rook",    sub: "pool noodle", rar: "common",   chars: 2816,   val: 11,    tint: "#a8ffbe", cap: "reach: floppy.", styles: true },
-  { no: "012", id: "orbit",   name: "Grimm",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 16,    tint: "#a9c9ff", cap: "already read the ending.", styles: true },
+  { no: "012", id: "orbit",   name: "Orbit",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 16,    tint: "#a9c9ff", cap: "already read the ending.", styles: true },
   { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "uncommon",  chars: 15750,  val: 70,    tint: "#ece7dc", cap: "gone before the cape lands.", styles: true },
   { no: "018", id: "null",    name: "Null",    sub: "star",       rar: "rare",      chars: 29260,  val: 445,   tint: "#a9c9ff", cap: "not on any record.", styles: true },
   { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "rare",      chars: 31970,  val: 660,   tint: "#ffd27a", cap: "rents you the air.", styles: true },

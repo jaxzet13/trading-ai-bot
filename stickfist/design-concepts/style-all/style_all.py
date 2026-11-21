@@ -53,20 +53,32 @@ STYLE_KEYS = [s[0] for s in STYLES]
 
 # ---------------------------------------------------------------------------------------------------------------- cards
 # count / cols / aspect: the grid of the card's default look (cols x rows = count, rows = int(1820 / (1500 / cols * aspect))).
-# src: its own base image (relative to design-concepts/). crop = (x0, y0, x1, y1) as fractions of the source, pad = black margin,
+# src: its own base image (relative to design-concepts/). Framing, either of
+#   view = (cx, cy, vh): the card shows the source centred on (cx, cy) with vh = the fraction of the source HEIGHT that is visible
+#          (the card is 1500 x 1820, so the width follows; anything outside the source is black). Fitted to the default card.
+#   crop = (x0, y0, x1, y1) as fractions of the source and pad = black margin (ascii2's own options, used by brick / rook / umbra).
 # thick = ascii2's stroke thickener (<0 fattens dark strokes, >0 bright ones). text = the Typeset line.
-# tone = black / white / gamma overrides for every style of the card; over = per-style overrides {key: {...}}.
+# tone = black / white / gamma overrides for every style of the card (except the keys in tone_except); over = per-style overrides.
 CARDS = {
     'brick':   dict(src='funny-commons/sources/brick.png', count=2816, cols=64, aspect=1.73, crop=(0.01, 0, 0.99, 0.99), text='it is a colander. it works.'),
     'rook':    dict(src='funny-commons/sources/rook.png', count=2816, cols=64, aspect=1.73, crop=(0.01, 0, 1, 0.99), text='reach: floppy.'),
-    'orbit':   dict(src='ascii-engines/sources/galaxy.png', count=7260, cols=110, aspect=2.0, crop=(0.06, 0.04, 0.94, 0.99), pad=0.04, text='already read the ending.'),
-    'phantom': dict(src='ascii-engines/sources/winged.png', count=15750, cols=150, aspect=1.73, crop=(0.02, 0.02, 0.98, 0.98), text='gone before the cape lands.'),
-    'null':    dict(src='ascii-engines/sources/star.png', count=29260, cols=220, aspect=2.0, crop=(0.02, 0.02, 0.98, 0.98), pad=0.08, text='not on any record.'),
-    'shogun':  dict(src='ascii-engines/sources/wings.png', count=31970, cols=230, aspect=2.0, text='rents you the air.',
-                    tone=dict(black=0.5, white=0.95)),
-    'ronin':   dict(src='stick-figures-four/sources/2-rare-ronin-71680.png', count=71680, cols=320, aspect=1.73, crop=(0.14, 0.095, 0.72, 0.565), text='no master. no map.'),
-    'grimm':   dict(src='stick-figures-four/sources/3-epic-grimm-219520.png', count=219520, cols=560, aspect=1.73, crop=(0.12, 0.28, 0.88, 0.90), text='the walls remember.'),
-    'reaper':  dict(src='stick-figures-four/sources/4-legendary-reaper-701000.png', count=701000, cols=1000, aspect=1.73, crop=(0.30, 0.335, 0.70, 0.665), text='still warm.'),
+    'orbit':   dict(src='ascii-engines/sources/galaxy.png', count=7260, cols=110, aspect=2.0, view=(0.5, 0.37, 0.74), text='already read the ending.',
+                    tone=dict(black=0.02, white=0.5, gamma=0.55), tone_except=('kin', 'wire', 'ice')),
+    'phantom': dict(src='ascii-engines/sources/winged.png', count=15750, cols=150, aspect=1.73, view=(0.5, 0.42, 0.82), text='gone before the cape lands.',
+                    tone=dict(black=0.01, white=0.34, gamma=0.5, thick=3), tone_except=('kin', 'wire', 'ice', 'chain', 'scratch'),
+                    over=dict(scratch=dict(black=0.05, white=0.4, gamma=0.6, thr=0.2))),
+    'null':    dict(src='ascii-engines/sources/star.png', count=29260, cols=220, aspect=2.0, view=(0.5, 0.38, 0.86), text='not on any record.'),
+    'shogun':  dict(src='ascii-engines/sources/wings.png', count=31970, cols=230, aspect=2.0, view=(0.5, 0.40, 0.80), text='rents you the air.',
+                    tone=dict(black=0.5, white=0.95), over=dict(chain=dict(white=1.2, gamma=1.0))),
+    'ronin':   dict(src='stick-figures-four/sources/2-rare-ronin-71680.png', count=71680, cols=320, aspect=1.73, view=(0.43, 0.33, 0.47), text='no master. no map.',
+                    tone=dict(black=0.03, white=0.42, gamma=0.6), tone_except=('kin', 'wire', 'ice', 'scratch'),
+                    over=dict(wire=dict(black=0.08, white=1.0, gamma=1.1), scratch=dict(black=0.12, white=0.7, gamma=0.8, thr=0.22))),
+    'grimm':   dict(src='stick-figures-four/sources/3-epic-grimm-219520.png', count=219520, cols=560, aspect=1.73, view=(0.50, 0.59, 0.62), text='the walls remember.',
+                    tone=dict(black=0.03, white=0.65, gamma=0.68), tone_except=('kin', 'wire', 'ice', 'scratch', 'vhs', 'blood', 'leaf'),
+                    over=dict(wire=dict(black=0.10, white=1.0, gamma=1.1), chain=dict(white=0.5, gamma=0.6, edge_k=0.22))),
+    'reaper':  dict(src='stick-figures-four/sources/4-legendary-reaper-701000.png', count=701000, cols=1000, aspect=1.73, view=(0.50, 0.50, 0.33), text='still warm.',
+                    tone=dict(black=0.08, white=1.0, gamma=1.0), tone_except=('wire', 'scratch'),
+                    over=dict(wire=dict(black=0.12, white=1.0, gamma=1.3), scratch=dict(black=0.25, white=1.0, gamma=1.0, thr=0.25), chain=dict(white=1.3))),
     'umbra':   dict(src='umbra/eclipse.png', count=1578000, cols=1500, aspect=1.73, crop=(0.07, 0.05, 0.93, 0.985), text='the sun blinked first.'),
 }
 HEAVY_FIRST = ['umbra', 'reaper', 'grimm', 'ronin', 'shogun', 'null', 'phantom', 'orbit', 'rook', 'brick']
@@ -81,7 +93,7 @@ def grid(cfg):
 def style_args(cfg, key):
     """the style's render arguments for this card (style_deck's, with the card's tone / per-style tweaks on top)"""
     kw = dict(dict((k, kw) for k, _, _, kw in STYLES)[key])
-    kw.update(cfg.get('tone', {}))
+    if key not in cfg.get('tone_except', ()): kw.update(cfg.get('tone', {}))
     kw.update(cfg.get('over', {}).get(key, {}))
     return kw
 
@@ -107,6 +119,19 @@ def _prep_thick(art, crop, pad, shift):
 E.prep = _prep_thick
 
 
+def place_source(cfg, png):
+    """cfg['view'] -> a 1500 x 1820 PNG of exactly what the card's picture area shows (black outside the source)"""
+    img = cv2.imread(os.path.join(DC, cfg['src'])); H0, W0 = img.shape[:2]
+    cx, cy, vh = cfg['view']; scale = ART_H / (vh * H0)
+    s = cv2.resize(img, (int(round(W0 * scale)), int(round(H0 * scale))), interpolation=cv2.INTER_AREA)
+    ox = int(round(W / 2 - cx * s.shape[1])); oy = int(round(ART_H / 2 - cy * s.shape[0]))
+    canvas = np.zeros((ART_H, W, 3), np.uint8)
+    sx, sy, dx, dy = max(0, -ox), max(0, -oy), max(0, ox), max(0, oy)
+    w, h = min(s.shape[1] - sx, W - dx), min(s.shape[0] - sy, ART_H - dy)
+    canvas[dy:dy + h, dx:dx + w] = s[sy:sy + h, sx:sx + w]
+    cv2.imwrite(png, canvas)
+
+
 def render_full(card_id, key, out_png):
     """render one style of one card as the full 1500 x 2100 card; returns the printed character count"""
     cfg = CARDS[card_id]; kw = style_args(cfg, key)
@@ -115,7 +140,9 @@ def render_full(card_id, key, out_png):
     A.ASPECT = cfg['aspect']
     if cfg['aspect'] > 1.8: A.ImageFont = _CapFont(A.ImageFont if not isinstance(A.ImageFont, _CapFont) else A.ImageFont.real, int(W / cols / 0.6))
     art = os.path.join(DC, cfg['src']); crop, pad = cfg.get('crop'), cfg.get('pad', 0.0)
-    thick = cfg.get('thick', 0); _THICK[0] = thick
+    if 'view' in cfg:
+        art = out_png[:-4] + '-src.png'; place_source(cfg, art); crop, pad = None, 0.0
+    thick = kw.pop('thick', cfg.get('thick', 0)); _THICK[0] = thick
     name = card_id.title(); code = 'IS000-000000-XXXX'; cap = cfg['text']
     if kind == 'ramp':
         style = kw.pop('style')
@@ -144,7 +171,8 @@ def job(args):
     t0 = time.time(); png = os.path.join(tmp, f'{card_id}-{key}.png'); jpg = os.path.join(out_dir, f'{card_id}-{key}.jpg')
     n = render_full(card_id, key, png)
     q, kb = to_picture(png, jpg, quality, max_kb)
-    os.remove(png)
+    for f in (png, png[:-4] + '-src.png'):
+        if os.path.exists(f): os.remove(f)
     return card_id, key, n, q, kb, time.time() - t0
 
 

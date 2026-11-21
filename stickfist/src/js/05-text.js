@@ -64,17 +64,19 @@ function blockReveal(el, str, ms) {
   const n = String(str).length, t0 = performance.now(); ms = ms || 420; cancelAnimationFrame(el._br);
   (function step(now) { const k = Math.min(1, (now - t0) / ms); el.innerHTML = blockSVG(String(str).slice(0, Math.max(1, Math.ceil(k * n)))); if (k < 1) el._br = requestAnimationFrame(step); })(t0);
 }
-// a sparkline: one block character per value, scaled between the lowest and highest
-const SPARKS = "▁▂▃▄▅▆▇█";
-const spark = v => { const mn = Math.min(...v), sp = Math.max(...v) - mn || 1; return v.map(x => SPARKS[clamp(Math.round((x - mn) / sp * 7), 0, 7)]).join(""); };
-// a small chart: `h` rows of block characters, one column per value
-function asciiChart(vals, h, lo, hi) {
-  const mn = lo != null ? lo : Math.min(...vals), sp = (hi != null ? hi : Math.max(...vals)) - mn || 1, B = " ▁▂▃▄▅▆▇█", rows = [];
-  for (let r = h - 1; r >= 0; r--) { let line = ""; for (const v of vals) line += B[clamp(Math.round((v - mn) / sp * h * 8 - r * 8), 0, 8)]; rows.push(line); }
-  return rows.join("\n");
+// Charts are plain lines. A sparkline is a thin line; a chart is a line over a soft fill with a dot on the latest value and the high and low beside it.
+// `log` plots ratios, so +100% and −50% look the same size.
+let _lg = 0;
+function sparkSVG(v) {
+  const W = 84, H = 26, mn = Math.min(...v), sp = Math.max(...v) - mn || 1, pts = v.map((x, i) => (i / (v.length - 1) * W).toFixed(1) + " " + (H - 3 - (x - mn) / sp * (H - 6)).toFixed(1));
+  return `<svg class="sp ${v[v.length - 1] >= v[0] ? "up" : "dn"}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><path class="ln" d="M${pts.join(" L")}"/></svg>`;
 }
-// a chart with a little headroom, so a quiet line sits in the middle instead of on the floor; `log` plots ratios, so +100% and −50% look the same size
-function chartRows(vals, h, log) { const v = log ? vals.map(Math.log) : vals, mn = Math.min(...v), mx = Math.max(...v), mid = (mn + mx) / 2, sp = Math.max(mx - mn, log ? .06 : Math.abs(mid) * .01) * 1.16; return asciiChart(v, h, mid - sp / 2, mid + sp / 2); }
+function lineChart(vals, o) {
+  o = o || {}; const W = 600, H = 200, P = 8, v = o.log ? vals.map(Math.log) : vals, mn = Math.min(...v), mx = Math.max(...v), mid = (mn + mx) / 2, sp = Math.max(mx - mn, o.log ? .06 : Math.abs(mid) * .01) * 1.2, lo = mid - sp / 2;
+  const Y = x => P + (H - 2 * P) * (1 - (x - lo) / sp), pts = v.map((x, i) => (P + (W - 2 * P) * i / (v.length - 1)).toFixed(1) + " " + Y(x).toFixed(1)), d = "M" + pts.join(" L"), id = "lg" + (++_lg), fmt = o.fmt || String;
+  return `<div class="lcbox ${vals[vals.length - 1] >= vals[0] ? "up" : "dn"}" style="--h:${o.h || 170}px"><div class="lcwrap"><svg class="lc" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="price chart"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--c);stop-opacity:.28"/><stop offset="1" style="stop-color:var(--c);stop-opacity:0"/></linearGradient></defs><path d="${d} L${W - P} ${H} L${P} ${H} Z" fill="url(#${id})"/><path class="ln" d="${d}"/></svg><i class="dot" style="top:${(Y(v[v.length - 1]) / H * 100).toFixed(1)}%"></i></div><div class="axis"><span>${fmt(Math.max(...vals))}</span><span>${fmt(Math.min(...vals))}</span></div></div>`;
+}
+const buzzDots = n => `<span class="dots" role="img" aria-label="buzz ${n} of 5">${[0, 1, 2, 3, 4].map(i => `<i class="${i < n ? "on" : ""}"></i>`).join("")}</span>`;
 const pnlHTML = (d, base) => `<span class="${d > 0 ? "up" : d < 0 ? "dn" : "fl"}">${d > 0 ? "▲ +" : d < 0 ? "▼ −" : "– "}${money(Math.abs(d))}${base > 0 ? ` <span class="dim">${Math.abs(d / base * 100).toFixed(Math.abs(d / base) >= 1 ? 0 : 1)}%</span>` : ""}</span>`;
 const pctHTML = p => `<span class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲ +" : p < -.0005 ? "▼ −" : "– "}${Math.abs(p * 100).toFixed(Math.abs(p) >= 1 ? 0 : 1)}%</span>`;
 // a progress bar made of characters: [███░░] 

@@ -1,7 +1,6 @@
 /* ============================================================================
    10. START
    ========================================================================== */
-document.querySelectorAll("[data-block]").forEach(e => { e.innerHTML = blockSVG(e.dataset.block); });
 MK.advance(); logWorth(); persist(); renderBal(); route();
 if (!state.ageOK) $("gate").hidden = false;
 // the market moves every 20 seconds; redraw whatever is on screen when it does

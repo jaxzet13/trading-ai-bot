@@ -2,7 +2,7 @@
    2. UTILITIES
    ========================================================================== */
 const $ = id => document.getElementById(id);
-const money = c => (c < 0 ? "-$" : "$") + (Math.abs(c) / 100).toFixed(2);
+const money = c => (c < 0 ? "-$" : "$") + (Math.abs(c) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt = n => Math.round(n).toLocaleString("en-US");
 const esc = s => String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;

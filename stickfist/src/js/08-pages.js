@@ -10,13 +10,13 @@ function movers() {
   const rows = CARDS.map(c => { const s = MK.series(c, 24, 24); return { c, s, now: s[23], was: s[0], p24: MK.pct(c, 24) }; });
   return { rows, gain: rows.filter(r => r.p24 > .005).sort((a, b) => b.p24 - a.p24).slice(0, 3), drop: rows.filter(r => r.p24 < -.005).sort((a, b) => a.p24 - b.p24).slice(0, 3) };
 }
-const moverRow = m => `<button class="mover" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span><span class="spark ${m.p24 >= 0 ? "up" : "dn"}">${spark(m.s)}</span><span class="pc">${pctHTML(m.p24)}</span><span class="dim">${money(m.was)} → ${money(m.now)}</span></button>`;
+const moverRow = m => `<button class="mover" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}<span class="pc">${pctHTML(m.p24)}</span><span class="dim">${money(m.was)} → ${money(m.now)}</span></button>`;
 
 function renderHome() {
   const ps = packStats(); $("banner").textContent = BANNER.join("\n");
   $("packLine").textContent = `${PACK.n} cards · ${money(ps.price)}`; $("openBtn").textContent = `open pack · ${money(ps.price)}`;
   $("honest").innerHTML = `Every card is a picture made of text: the rarer the card, the more characters it holds. About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
-  const mv = movers(); $("hot").innerHTML = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span><span class="spark ${m.p24 >= 0 ? "up" : "dn"}">${spark(m.s)}</span>${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
+  const mv = movers(); $("hot").innerHTML = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
   const bf = MK.flips().best[0]; if (bf && bf.gain > 0) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip in 24h: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
   const hp = $("homePack"); if (!hp.firstChild) { hp.innerHTML = packHTML(); const pk = hp.firstChild; tiltPack(pk); pk.style.cursor = "pointer"; pk.onclick = () => openPack(); liveWindow(pk); }
 }
@@ -33,7 +33,7 @@ function renderMarket() {
   $("mTable").innerHTML = `<thead><tr><th>Card</th><th class="r">Price</th><th class="r">24h</th><th>24h chart</th><th>Buzz</th><th class="r">You hold</th></tr></thead><tbody>` + rows.map(r => {
     const c = r.c, own = copiesOf(c.no).length, bz = MK.buzz(c);
     return `<tr><td><button class="linkbtn plain" data-card="${c.no}">${esc(c.name)}</button> <span class="faint">${RAR[c.rar].name}</span></td><td class="r num"><b>${money(r.now)}</b></td><td class="r">${pctHTML(r.p24)}</td>
-      <td class="spk ${r.p24 >= 0 ? "up" : "dn"}">${spark(r.s)}</td><td class="buzz">${fill("■", bz)}${fill("□", 5 - bz)}</td><td class="r">${own ? "×" + own : "–"}</td></tr>`; }).join("") + `</tbody>`;
+      <td class="spk">${sparkSVG(r.s)}</td><td>${buzzDots(bz)}</td><td class="r">${own ? "×" + own : "–"}</td></tr>`; }).join("") + `</tbody>`;
   $("mTrades").innerHTML = MK.feed(10).map(t => `<div class="trade"><span class="who">${t.name}</span><span>sold ${esc(t.card.name)} after ${t.hours}h</span><span class="dim">${money(t.got)} → ${money(t.sold)}</span><span>${pctHTML(t.pct)}</span><span class="faint">${agoText(t.ago)}</span></div>`).join("");
 }
 
@@ -45,13 +45,13 @@ function worthSeries(pts) {
 }
 function renderProfile() {
   const net = netWorth(), hold = holdingsValue(), back = state.vault.reduce((a, c) => a + sellOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0), all = profitAll(), d24 = profitSince(864e5);
-  $("pWorth").innerHTML = `<div class="worth"><div class="bx" role="img" aria-label="${money(net)}">${blockSVG(money(net))}</div><div class="wmeta"><span>${pnlHTML(d24, START + state.s.added)} <span class="dim">last 24h</span></span><span>${pnlHTML(all, START + state.s.added)} <span class="dim">since you started</span></span></div></div>
+  $("pWorth").innerHTML = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}">${money(net)}</div><div class="wmeta"><span>${pnlHTML(d24, START + state.s.added)} <span class="dim">last 24h</span></span><span>${pnlHTML(all, START + state.s.added)} <span class="dim">since you started</span></span></div></div>
     <div class="wsplit"><div><span class="label">cash</span><b>${money(state.coins)}</b></div><div><span class="label">your cards, at market price</span><b>${money(hold)}</b> ${state.vault.length ? pnlHTML(hold - basis, basis) : ""}</div><div><span class="label">they would sell for</span><b>${money(back)}</b><span class="dim">after the 10% fee</span></div><div><span class="label">made or lost on sales</span><b>${pnlHTML(state.s.realized, 0)}</b></div></div>`;
-  const ws = worthSeries(innerWidth > 760 ? 96 : 56);
-  $("pChart").innerHTML = ws ? `<div class="mk"><div class="label">Net worth · ${ws.mins >= 1380 ? "last 24 hours" : ws.mins < 90 ? "last " + ws.mins + " minutes" : "last " + Math.round(ws.mins / 60) + " hours"}</div><div class="chartbox ${ws.out[ws.out.length - 1] >= ws.out[0] ? "up" : "dn"}"><pre class="chart" style="--cols:${ws.out.length}">${chartRows(ws.out, 6, false)}</pre><div class="axis"><span>${money(Math.max(...ws.out))}</span><span>${money(Math.min(...ws.out))}</span></div></div></div>`
+  const ws = worthSeries(120);
+  $("pChart").innerHTML = ws ? `<div class="mk"><div class="label">Net worth · ${ws.mins >= 1380 ? "last 24 hours" : ws.mins < 90 ? "last " + ws.mins + " minutes" : "last " + Math.round(ws.mins / 60) + " hours"}</div>${lineChart(ws.out, { fmt: money, h: 190 })}</div>`
     : `<div class="mk"><div class="label">Net worth</div><p class="small">Your line starts now and fills in as the market moves. Keep this page open and watch it.</p></div>`;
   const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), s: MK.series(c, 24, 24), p24: MK.pct(c, 24) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
-  $("pTable").innerHTML = groups.length ? `<thead><tr><th>Card</th><th class="r">Cost</th><th class="r">Worth now</th><th class="r">Profit / loss</th><th>24h chart</th></tr></thead><tbody>` + groups.map(g => `<tr><td><button class="linkbtn plain" data-card="${g.c.no}">${esc(g.c.name)}</button> <span class="faint">${g.n > 1 ? "×" + g.n + " · " : ""}${RAR[g.c.rar].name}</span></td><td class="r num">${money(g.cost)}</td><td class="r num"><b>${money(g.val)}</b></td><td class="r">${pnlHTML(g.val - g.cost, g.cost)}</td><td class="spk ${g.p24 >= 0 ? "up" : "dn"}">${spark(g.s)}</td></tr>`).join("") + `</tbody><tfoot><tr><td>All cards</td><td class="r num">${money(basis)}</td><td class="r num"><b>${money(hold)}</b></td><td class="r">${pnlHTML(hold - basis, basis)}</td><td></td></tr></tfoot>` : "";
+  $("pTable").innerHTML = groups.length ? `<thead><tr><th>Card</th><th class="r">Cost</th><th class="r">Worth now</th><th class="r">Profit / loss</th><th>24h chart</th></tr></thead><tbody>` + groups.map(g => `<tr><td><button class="linkbtn plain" data-card="${g.c.no}">${esc(g.c.name)}</button> <span class="faint">${g.n > 1 ? "×" + g.n + " · " : ""}${RAR[g.c.rar].name}</span></td><td class="r num">${money(g.cost)}</td><td class="r num"><b>${money(g.val)}</b></td><td class="r">${pnlHTML(g.val - g.cost, g.cost)}</td><td class="spk">${sparkSVG(g.s)}</td></tr>`).join("") + `</tbody><tfoot><tr><td>All cards</td><td class="r num">${money(basis)}</td><td class="r num"><b>${money(hold)}</b></td><td class="r">${pnlHTML(hold - basis, basis)}</td><td></td></tr></tfoot>` : "";
   $("pNote").innerHTML = groups.length ? `Tap a card to see its chart and sell it. “Cost” is what the card was worth when you got it. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${money(state.s.spent)} spent on packs · ${money(state.s.sold)} back from sales</span>` : `You don't hold any cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they will show up here with a live price.`;
 }
 
@@ -70,7 +70,7 @@ function renderOdds() {
   const rows = CARDS.slice().sort((a, b) => a.chars - b.chars).map(c => { const p = packP(c.id); return `<tr><td>${esc(c.name)} <span class="faint">${esc(c.sub)}</span></td><td>${RAR[c.rar].name}</td><td class="r num">${fmt(c.chars)}</td><td class="r num">${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}</td><td class="r num">${p >= .5 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p)}</td></tr>`; }).join("");
   const tot = Object.values(STYLES).reduce((a, s) => a + s.p, 0), cap = r => MK.CAP[r], vol = r => Math.round(MK.VOL[r] * 100);
   $("oBody").innerHTML = `
-    <div class="facts"><div><div class="bx" role="img" aria-label="${money(ps.price)}">${blockSVG(money(ps.price))}</div><span>per pack right now · ${PACK.n} cards</span></div><div><div class="bx" role="img" aria-label="${(ps.hit * 100).toFixed(0)}%">${blockSVG((ps.hit * 100).toFixed(0) + "%")}</div><span>of packs are worth at least what you paid</span></div><div><div class="bx" role="img" aria-label="${(ps.rtp * 100).toFixed(0)}%">${blockSVG((ps.rtp * 100).toFixed(0) + "%")}</div><span>comes back on average when you sell</span></div></div>
+    <div class="facts"><div><div class="bignum sm" role="img" aria-label="${money(ps.price)}">${money(ps.price)}</div><span>per pack right now · ${PACK.n} cards</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.hit * 100).toFixed(0)}%">${(ps.hit * 100).toFixed(0) + "%"}</div><span>of packs are worth at least what you paid</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.rtp * 100).toFixed(0)}%">${(ps.rtp * 100).toFixed(0) + "%"}</div><span>comes back on average when you sell</span></div></div>
     <h3 class="sec">What can be in a pack</h3>
     <div class="tablewrap"><table><thead><tr><th>Card</th><th>Rarity</th><th class="r">Characters</th><th class="r">Price now · 24h</th><th class="r">Chance per pack</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="small" style="margin-bottom:44px">Selling a card back pays 90% of its price. A typical pack sells back for ${money(ps.median)} right now.</p>
@@ -108,8 +108,8 @@ function cardModal(no) {
   const styles = card.styles ? `<div><div class="label" style="margin-bottom:8px">Styles found: ${keys.filter(k => have.has(k)).length} of ${keys.length}</div><div class="stylerow">${keys.map(k => `<figure class="${have.has(k) ? "" : "off"}" title="${styleName(k)}${k ? " · 1 in " + fmt(1 / STYLES[k].p) + " · ×" + STYLES[k].x : ""}"><img src="${imgOf(card, k)}" alt=""><figcaption>${styleName(k)}</figcaption></figure>`).join("")}</div></div>` : "";
   const ser = MK.series(card, 168, 56), now = MK.price(card), bz = MK.buzz(card);
   const market = `<div class="mk"><div class="label">Market · last 7 days</div><div class="mkrow"><b>${money(now)}</b> ${pctHTML(MK.pct(card, 24))} <span class="dim">24h</span> ${pctHTML(MK.pct(card, 168))} <span class="dim">7d</span></div>
-    <div class="chartbox ${ser[55] >= ser[0] ? "up" : "dn"}"><pre class="chart" style="--cols:56">${chartRows(ser, 5, true)}</pre><div class="axis"><span>${money(Math.max(...ser))}</span><span>${money(Math.min(...ser))}</span></div></div>
-    <div class="row small"><span>buzz ${fill("■", bz)}${fill("□", 5 - bz)}</span><span class="dim">selling pays the price minus 10%</span></div></div>`;
+    ${lineChart(ser, { log: true, fmt: money, h: 160 })}
+    <div class="row small"><span>buzz ${buzzDots(bz)}</span><span class="dim">selling pays the price minus 10%</span></div></div>`;
   openModal(`<div class="mcard">${cardHTML(best || { no }, { locked: !best })}</div><div class="minfo">
     <div><span class="label" style="color:${R.col}">${R.name} · No. ${card.no}</span><h2>${esc(card.name)}</h2></div>
     <p class="dim">${fmt(card.chars)} characters · base worth ${money(card.val)} · turns up in ${chance(p)}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
