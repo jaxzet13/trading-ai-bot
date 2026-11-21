@@ -29,7 +29,7 @@ const MK = (() => {
   };
   const CAP = { stitch: 40, brick: 40, rook: 40, orbit: 35, phantom: 25, null: 16, shogun: 12, ronin: 16, grimm: 10, reaper: 5, umbra: 3.5 };   // the most a card can multiply its base worth by
   const TASTE = { stitch: .04, brick: .14, rook: -.07, orbit: .08, phantom: -.03, null: .15, shogun: 0, ronin: .08, grimm: .05, reaper: -.04, umbra: .1 };   // how good each card looks next to its rarity, in log units
-  const SHIFT = { common: .27, uncommon: .2, rare: .12, epic: .05, legendary: .03, mythic: -.1, secret: 0 };   // keeps a typical price near the card's base worth
+  const SHIFT = { common: .52, uncommon: .45, rare: .37, epic: .3, legendary: .28, mythic: .15, secret: .25 };   // keeps a typical price near the card's base worth
   // simulated size of each card's market: market cap at base worth in dollars, and how many times a day the whole cap changes hands
   const MCAP = { stitch: 420e3, brick: 420e3, rook: 420e3, orbit: 650e3, phantom: 2.2e6, null: 9e6, shogun: 15e6, ronin: 26e6, grimm: 70e6, reaper: 180e6, umbra: 420e6 };
   const TURN = { common: 3, uncommon: 2, rare: 1.2, epic: .8, legendary: .5, mythic: .3, secret: .2 };
