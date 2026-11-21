@@ -220,6 +220,21 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
   .fan { flex-wrap: wrap; } .fan > div { width: min(112px, 28vw); } .slot .row { grid-template-columns: 110px max-content 1fr; gap: 8px; } .slot .bar { font-size: 11px; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 22px 14px; }
 }
+/* ---------- habit layer: chips, recap, progress, rank, limits ---------- */
+.chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border: 1px solid var(--ln3); border-radius: 999px; background: transparent; color: var(--ink); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+.chip:hover { background: #131316; border-color: var(--dim); } .chip.soft { color: var(--dim); border-color: var(--ln2); }
+.chip.ready { border-color: var(--ok); color: var(--ok); } .chip.ready i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
+.mono-meter { font-family: var(--m); font-size: 13px; color: var(--ink); letter-spacing: .02em; white-space: nowrap; }
+.rank { display: flex; align-items: center; gap: 8px 20px; flex-wrap: wrap; border: 1px solid var(--ln2); border-radius: 12px; padding: 14px 18px; margin-bottom: 26px; } .rank b { font-size: 18px; margin-left: 10px; } .rank .small { flex-basis: 100%; }
+.prog { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; margin-bottom: 26px; } .prog > div { display: grid; gap: 4px; align-content: start; } .prog b { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.chase { display: flex; gap: 8px 16px; align-items: center; flex-wrap: wrap; justify-content: center; font-size: 13px; color: var(--dim); max-width: 760px; } .chase:empty { display: none; } .chase .mover.mini .faint { font-size: 12px; }
+.alertrow { display: grid; gap: 8px; } .alertrow .btn.small { border-color: var(--ln2); }
+.oddsT { border-collapse: collapse; font-size: 14px; } .oddsT td { padding: 3px 24px 3px 0; border-bottom: 1px solid var(--ln); } .oddsT td.r { text-align: right; padding-right: 0; font-variant-numeric: tabular-nums; }
+.recap h2.up { color: var(--ok); } .recap h2.dn { color: var(--bad); } .recap .rows { display: grid; }
+#pLimits select { background: #0a0a0c; color: var(--ink); }
+@media (max-width: 760px) { .prog { grid-template-columns: 1fr; gap: 14px; } .chip.soft { display: none; } header.top .wrap .wallet { gap: 7px; margin-left: auto; } .chip { padding: 4px 9px; font-size: 12px; } .wallet .btn.small { padding: 5px 9px; font-size: 12px; } .wallet .bal { font-size: 14px; } }
+
 @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 </style>
 </head>
@@ -230,7 +245,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
     <nav class="tabs" id="tabs" aria-label="Sections">
       <a href="#/" data-v="home">pack</a><a href="#/market" data-v="market">market</a><a href="#/profile" data-v="profile">profile</a><a href="#/collection" data-v="collection">collection</a><a href="#/odds" data-v="odds">odds</a>
     </nav>
-    <div class="wallet"><span class="bal" id="bal">$0.00</span><button class="btn small" id="addFunds" title="Demo money. Nothing is ever charged.">+ add $10</button></div>
+    <div class="wallet"><button class="chip" id="dailyBtn"></button><button class="chip soft" id="muteBtn" aria-pressed="false"></button><span class="bal" id="bal">$0.00</span><button class="btn small" id="addFunds" title="Demo money. Nothing is ever charged.">+ add $10</button></div>
   </div>
 </header>
 <div class="tape" aria-hidden="true"><div class="tape-in" id="tapeIn"></div></div>
@@ -246,6 +261,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
       <button class="btn solid big" id="openBtn" data-open>open pack</button>
       <p class="honest" id="honest"></p>
       <div class="hot" id="hot"></div>
+      <div class="chase" id="chase"></div>
     </div>
   </section>
 
@@ -268,16 +284,19 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
   <!-- PROFILE -->
   <section class="view" id="v-profile">
     <div class="page-head"><h1 class="ttl">Profile</h1><p>Your demo wallet. It moves with the market, so keep it open and watch.</p><p class="live"></p></div>
+    <div id="pRank"></div>
     <div id="pWorth"></div>
     <div id="pChart" style="margin-bottom:40px"></div>
     <h3 class="sec">Your cards</h3>
     <div class="tablewrap"><table class="mtable" id="pTable"></table></div>
-    <p class="small" id="pNote" style="margin-bottom:44px"></p>
+    <p class="small" id="pNote" style="margin-bottom:30px"></p>
+    <div id="pLimits" style="margin-bottom:44px"></div>
   </section>
 
   <!-- COLLECTION -->
   <section class="view" id="v-collection">
     <div class="page-head"><h1 class="ttl">Collection</h1><p id="cSub"></p></div>
+    <div class="prog" id="cProg"></div>
     <div class="actions" id="cActions"></div>
     <div class="grid" id="cGrid"></div>
   </section>
@@ -432,7 +451,7 @@ const imgOf = (card, fx) => `cards/${card.id}${fx ? "-" + fx : card.id === "stit
    4. STATE AND ECONOMY. Everything lives in this browser.
    ========================================================================== */
 const KEY = "stixx-first-print-v1";
-const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0 } });
+const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0 } });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); } catch (e) {}
 const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
@@ -900,6 +919,7 @@ function renderHome() {
   $("honest").live = `Every card is a picture made of text: the rarer the card, the more characters it holds. About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
   const mv = movers(); $("hot").live = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
   const bf = MK.flips().best[0]; if (bf && bf.gain > 0) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip this week: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
+  $("chase").live = chaseHTML();
   const hp = $("homePack"); if (!hp.firstChild) { hp.innerHTML = packHTML(); const pk = hp.firstChild; tiltPack(pk); pk.style.cursor = "pointer"; pk.onclick = () => openPack(); liveWindow(pk); }
 }
 
@@ -931,6 +951,7 @@ function worthSeries(pts) {
   return { out, mins: Math.round((now - t0) / 60000) };
 }
 function renderProfile() {
+  $("pRank").live = rankHTML(); $("pLimits").live = limitsHTML();
   const net = netWorth(), hold = holdingsValue(), back = state.vault.reduce((a, c) => a + sellOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0), all = profitAll(), d24 = profitSince(864e5);
   $("pWorth").live = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}">${money(net)}</div><div class="wmeta"><span>${pnlHTML(d24, START + state.s.added)} <span class="dim">last 24h</span></span><span>${pnlHTML(all, START + state.s.added)} <span class="dim">since you started</span></span></div></div>
     <div class="wsplit"><div><span class="label">cash</span><b>${money(state.coins)}</b></div><div><span class="label">your cards, at market price</span><b>${moneyS(hold)}</b> ${state.vault.length ? pnlHTML(hold - basis, basis) : ""}</div><div><span class="label">they would sell for</span><b>${moneyS(back)}</b><span class="dim">after the 10% fee</span></div><div><span class="label">made or lost on sales</span><b>${pnlHTML(state.s.realized, 0)}</b></div></div>`;
@@ -945,12 +966,13 @@ function renderProfile() {
 // every copy beyond the best one of each card (copies you added by code are never sold in bulk)
 function extras() { const out = []; for (const c of CARDS) copiesOf(c.no).slice(1).forEach(x => { if (!x.phys) out.push(x); }); return out; }
 function renderCollection() {
+  $("cProg").live = progressHTML();
   const found = new Set(state.vault.map(c => c.no)), worth = state.vault.reduce((a, c) => a + valueOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0), ex = extras(), exSum = ex.reduce((a, c) => a + sellOf(c), 0);
   $("cSub").live = state.vault.length ? `${found.size} of ${CARDS.length} cards found · ${state.vault.length} cop${state.vault.length === 1 ? "y" : "ies"} worth ${money(worth)} ${pctHTML(worth / Math.max(1, basis) - 1)} <span class="faint">since you got them</span>` : "Open the pack to start your collection.";
   $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + `<button class="linkbtn" id="addCode">add a card by its code</button>`;
   $("cGrid").live = CARDS.map(c => { const cs = copiesOf(c.no), best = cs[0];
     return `<div class="tile"><button class="tilebtn" data-card="${c.no}" aria-label="${esc(c.name)}">${cardHTML(best || { no: c.no }, { sm: true, locked: !best })}</button>
-      <div class="meta">${best ? `<span><b>×${cs.length}</b></span><span>${moneyS(valueOf(best))} ${pctHTML(gainOf(best))}</span>` : `<span>not found yet</span><span class="dim">${money(MK.price(c))}</span>`}</div></div>`; }).join("");
+      <div class="meta">${best ? `<span><b>×${cs.length}</b></span><span>${moneyS(valueOf(best))} ${pctHTML(gainOf(best))}</span>` : `<span>not found yet</span><span class="dim">${money(MK.price(c))} · ${chance(packP(c.id))}</span>`}</div></div>`; }).join("");
 }
 function renderOdds() {
   const ps = packStats(), slotName = ["Card 1: a common", "Card 2: a common", "Card 3: a common, sometimes better", "Card 4: an uncommon or better", "Card 5: the best card in the pack"];
@@ -1005,6 +1027,7 @@ function cardModal(no, keep) {
     <div><span class="label" style="color:${R.col}">${R.name} · No. ${card.no}</span><h2>${esc(card.name)}</h2></div>
     <p class="dim">${fmt(card.chars)} characters · base worth ${money(card.val)} · turns up in ${chance(p)}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
     ${market}
+    ${alertRow(card)}
     ${cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div>${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${moneyS(costOf(c))}</small></div><div class="r"><span><b>${moneyS(valueOf(c))}</b><br>${pctHTML(gainOf(c))}</span><button class="btn small ghost" data-share="${c.uid}">share</button><button class="btn small" data-sell="${c.uid}" data-no="${no}">sell ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<p class="small">You haven't found this card yet.</p>`}
     ${Cut.has(card.id) ? `<div><button class="btn small" data-cut="${card.id}">▶ ${cs.length ? "Watch" : "Preview"} its cutscene</button></div>` : ""}
     ${styles}</div>`, false, keep);
@@ -1019,15 +1042,15 @@ function addByCode(raw) {
   if (state.vault.some(c => c.code === r.code)) { msg.style.color = "var(--bad)"; msg.textContent = "That copy is already in your collection."; return; }
   const c = mint(r.card, true, r.serial); state.vault.push(c); save(); closeModal(); if (view === "collection") renderCollection(); toast(`Added ${r.card.name} · ${r.code}`); cardModal(r.card.no);
 }
-function sell(uids) { let g = 0; for (const u of uids) { const c = state.vault.find(x => x.uid === u); if (c) { g += sellOf(c); state.s.realized += sellOf(c) - costOf(c); state.vault = state.vault.filter(x => x !== c); } } if (g) { state.coins += g; state.s.sold += g; save(); renderBal(true); } return g; }
+function sell(uids) { let g = 0; for (const u of uids) { const c = state.vault.find(x => x.uid === u); if (c) { g += sellOf(c); state.s.realized += sellOf(c) - costOf(c); state.vault = state.vault.filter(x => x !== c); } } if (g) { state.coins += g; state.s.sold += g; save(); renderBal(true); Snd.sell(); buzz([25, 35, 25]); } return g; }
 
 /* ============================================================================
    8. OPENING A PACK: tear it, reveal the cards one at a time, then keep or sell
    ========================================================================== */
 let SS = null, SS_PRICE = 0; const stage = $("stage"), hint = t => { $("stHint").textContent = t; };
 function openPack() {
-  if (SS) return; const price = packPrice(); if (state.coins < price) { toast(`You need ${money(price - state.coins)} more. Tap “add $10”.`); return; }
-  state.coins -= price; state.s.packs++; state.s.spent += price; SS_PRICE = price; const items = pullPack(); state.vault.push(...items); save(); renderBal(true);
+  if (SS) return; const gate = packGate(); if (gate) { toast(gate); return; } const price = packPrice(); if (state.coins < price) { toast(`You need ${money(price - state.coins)} more. Tap “add $10”.`); return; }
+  state.coins -= price; state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; const items = pullPack(); state.vault.push(...items); save(); renderBal(true);
   SS = { items, idx: 0, phase: "pack", busy: false };
   $("stName").textContent = PACK.name; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
   $("stBox").innerHTML = `<div class="st-pack enter" id="stPack">${packHTML()}</div><div class="cstack" id="stStack"></div>`;
@@ -1035,7 +1058,7 @@ function openPack() {
   const pk = $("stPack").firstChild; SS.ps = liveWindow(pk); tiltPack(pk); $("stPack").addEventListener("click", tear);
 }
 async function tear() {
-  if (!SS || SS.phase !== "pack") return; SS.phase = "tearing"; hint(""); const wrap = $("stPack"), pk = wrap.querySelector(".pk");
+  if (!SS || SS.phase !== "pack") return; SS.phase = "tearing"; hint(""); Snd.tear(); buzz(35); const wrap = $("stPack"), pk = wrap.querySelector(".pk");
   let snap = ""; try { snap = pk.querySelector("canvas.scr").toDataURL("image/png"); } catch (e) {} if (SS.ps) SS.ps.stop();
   const dir = rand() < .5 ? 1 : -1, A = 13 + rand() * 6, B = 13 + rand() * 6, top = pk.cloneNode(true), bot = pk.cloneNode(true); freezeScreen(top, snap); freezeScreen(bot, snap);
   top.classList.add("cutp", "top"); bot.classList.add("cutp"); top.style.setProperty("--dx", dir);
@@ -1066,6 +1089,7 @@ async function reveal(el, c, card, R, v) {
   const ms = reduced ? 10 : [650, 850, 1300, 1900, 2700, 3500, 5200][R.tier], rect = el.getBoundingClientRect(), mid = [rect.left + rect.width / 2, rect.top + rect.height / 2]; hint(""); $("stTitle").innerHTML = ""; stage.style.setProperty("--rc", R.col);
   if (Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); await Cut.play(card.id); }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest
   await v.play(ms, () => { if (R.tier >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + R.tier * 40); FX.burst(mid[0], mid[1], 6 + R.tier * 4, [R.col, "#fff"], 260 + R.tier * 60); } });
+  Snd.reveal(R.tier); if (R.tier >= 2) buzz(R.tier >= 5 ? [40, 30, 60, 30, 90] : R.tier >= 3 ? [30, 25, 50] : [25]);
   FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][R.tier], R.tier >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + R.tier * 130);
   if (R.tier >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + R.tier * 14, [R.col, "#fff"]);
   if (R.tier >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
@@ -1305,16 +1329,16 @@ const FALL = f => `    .---.
    ${["v  v  v", " v  v  v", "v   v  v", "  v v v "][f % 4]}`;
 let alertIv = 0, alertTo = 0;
 function hideAlert() { clearInterval(alertIv); clearTimeout(alertTo); $("alert").hidden = true; }
-function showAlert(card, p) {
+function showAlert(card, p, custom) {
   const up = p > 0, cs = copiesOf(card.no), worth = cs.reduce((a, c) => a + valueOf(c), 0), cost = cs.reduce((a, c) => a + costOf(c), 0), d = worth - cost, a = $("alert");
   a.className = "alert " + (up ? "up" : "dn"); a.hidden = false;
-  a.innerHTML = `<div class="art"><pre id="alertArt"></pre></div><div class="txt"><b>${esc(card.name)} ${up ? "is taking off" : "is dropping fast"}</b><span>${up ? "Up" : "Down"} ${pctShort(Math.abs(p)).slice(1)} in 6 hours. ${cs.length === 1 ? "Your copy is" : "Your " + cs.length + " copies are"} worth ${money(worth)} now, ${d >= 0 ? "+" : "\u2212"}${money(Math.abs(d))} against what they were worth when you got them.</span><div class="row"><button class="btn small" data-card="${card.no}">See it</button><button class="btn small ghost" id="alertX">Dismiss</button></div></div>`;
+  a.innerHTML = `<div class="art"><pre id="alertArt"></pre></div><div class="txt"><b>${custom ? esc(custom.title) : esc(card.name) + (up ? " is taking off" : " is dropping fast")}</b><span>${custom ? esc(custom.text) + (cs.length ? ` Your ${cs.length === 1 ? "copy is" : cs.length + " copies are"} worth ${money(worth)}.` : "") : `${up ? "Up" : "Down"} ${pctShort(Math.abs(p)).slice(1)} in 6 hours. ${cs.length === 1 ? "Your copy is" : "Your " + cs.length + " copies are"} worth ${money(worth)} now, ${d >= 0 ? "+" : "\u2212"}${money(Math.abs(d))} against what they were worth when you got them.`}</span><div class="row"><button class="btn small" data-card="${card.no}">See it</button><button class="btn small ghost" id="alertX">Dismiss</button></div></div>`;
   let f = 0; const art = $("alertArt"), step = () => { art.textContent = up ? ROCKET(f++) : FALL(f++); }; step(); clearInterval(alertIv); if (!reduced) alertIv = setInterval(step, 140);
-  clearTimeout(alertTo); alertTo = setTimeout(hideAlert, 14000);
+  clearTimeout(alertTo); alertTo = setTimeout(hideAlert, 14000); Snd.alert(up); buzz(up ? [20, 30, 20] : [50]);
 }
 function checkAlerts() {
   if (!state.ageOK || SS || !$("share").hidden || !$("alert").hidden) return;
-  const now = Date.now(); state.alertAt = state.alertAt || {};
+  if (checkTargets()) return; const now = Date.now(); state.alertAt = state.alertAt || {};
   for (const no of new Set(state.vault.map(c => c.no))) {
     const card = BY_NO[no], p = MK.pct(card, 6); if (now - (state.alertAt[no] || 0) < 6 * 36e5) continue;
     if (p >= 1 || p <= -.4) { state.alertAt[no] = now; persist(); showAlert(card, p); return; }
@@ -1626,6 +1650,177 @@ const Cut = (() => {
 })();
 
 /* ============================================================================
+   8e. THE HABIT LAYER. What brings someone back, and what keeps coming back healthy.
+   The pulls here are the honest ones: a market that really moves while you are away, a collection with holes in it and the odds of filling them,
+   a free drop each day, a streak that forgives a missed day, a sound and a buzz for every win, price targets you set yourself. Nothing in this file
+   shows a made-up number, a fake timer or a fake crowd, hides a cost, or nudges you to spend to win something back. It also keeps the other side
+   in plain sight: a reminder every half hour, a limit on packs per day, a break button, and the pack's average return stated flatly.
+   ========================================================================== */
+
+/* ---- sound and touch: a small synthesiser, so a win can be heard and felt. Off with one tap, remembered. ---- */
+const Snd = (() => {
+  let ac = null, out = null;
+  const ready = () => {
+    if (state.mute || !tapped()) return false;
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); out = ac.createGain(); out.gain.value = .5; const cp = ac.createDynamicsCompressor(); out.connect(cp); cp.connect(ac.destination); } catch (e) { ac = null; return false; } }
+    if (ac.state === "suspended") ac.resume(); return true;
+  };
+  const env = (g, t, a, d, v) => { g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + a); g.gain.exponentialRampToValueAtTime(.0001, t + a + d); };
+  const tone = (f, dur, type, v, at, f2) => { const t = ac.currentTime + (at || 0), o = ac.createOscillator(), g = ac.createGain(); o.type = type || "sine"; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur); env(g, t, .006, dur, v || .2); o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + .05); };
+  const hiss = (dur, v, at, lo, hi) => { const t = ac.currentTime + (at || 0), n = Math.floor(ac.sampleRate * dur), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; const s = ac.createBufferSource(); s.buffer = b; const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = Math.sqrt(lo * hi); f.Q.value = .5; const g = ac.createGain(); env(g, t, .005, dur, v); s.connect(f); f.connect(g); g.connect(out); s.start(t); s.stop(t + dur + .05); };
+  const NOTE = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1318.5, 1568];
+  return {
+    unlock() { ready(); },
+    tear() { if (!ready()) return; hiss(.4, .35, 0, 1400, 9000); tone(140, .22, "sine", .3, 0, 50); },
+    reveal(tier) {                                              // the better the card, the longer and fuller the sound
+      if (!ready()) return; const n = [1, 2, 3, 4, 5, 6, 8][tier] || 1;
+      for (let i = 0; i < n; i++) tone(NOTE[Math.min(7, i + (tier > 3 ? 0 : 1))], .35 + tier * .08, "triangle", .13 + tier * .01, i * .07);
+      if (tier >= 2) tone(90, .35, "sine", .3, 0, 45); if (tier >= 4) { hiss(.8, .18, 0, 2000, 12000); tone(NOTE[0] / 2, 1.2, "sine", .16, .05); } if (tier >= 6) { [1, 1.25, 1.5, 2].forEach((m, i) => tone(NOTE[0] * m, 1.8, "sine", .12, .1 + i * .02)); }
+    },
+    sell() { if (!ready()) return; tone(1568, .25, "triangle", .14); tone(2093, .5, "triangle", .12, .06); for (let i = 0; i < 7; i++) tone([2093, 2637, 3136, 3520][i % 4], .12, "sine", .06, .14 + i * .045 + Math.random() * .02); },
+    alert(up) { if (!ready()) return; if (up) { tone(300, .5, "sawtooth", .08, 0, 1200); tone(880, .3, "triangle", .12, .35); tone(1318, .5, "triangle", .1, .45); } else { tone(420, .6, "sawtooth", .08, 0, 110); tone(110, .5, "sine", .2, .15); } },
+    claim(big) { if (!ready()) return; [0, 2, 4, big ? 6 : 5].forEach((k, i) => tone(NOTE[k], .4, "triangle", .13, i * .08)); },
+    level() { if (!ready()) return; [0, 2, 4, 6, 7].forEach((k, i) => tone(NOTE[k], .5, "triangle", .12, i * .09)); },
+    click() { if (!ready()) return; tone(900, .05, "sine", .07); },
+  };
+})();
+const tapped = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;       // browsers allow sound and vibration only after you have tapped something
+const buzz = p => { if (!state.mute && !reduced && navigator.vibrate && tapped()) { try { navigator.vibrate(p); } catch (e) {} } };
+document.addEventListener("pointerdown", () => Snd.unlock(), { once: true }); document.addEventListener("keydown", () => Snd.unlock(), { once: true });
+
+/* ---- the daily drop and the streak ---- */
+const dayKey = d => (d || new Date()).toLocaleDateString("en-CA");                       // 2026-11-21, in the player's own time
+const DAILY = [[50, 70], [100, 22], [200, 7], [500, 1]];                               // cents, and the chance in percent; the same table is shown in the window
+const STREAK_BONUS = { 3: 50, 7: 150, 14: 300, 30: 1000 };
+const dailyReady = () => state.streak.last !== dayKey();
+function claimDaily() {
+  const st = state.streak; if (!dailyReady()) return null;
+  const y = dayKey(new Date(Date.now() - 864e5)), y2 = dayKey(new Date(Date.now() - 2 * 864e5)); let used = false;
+  if (st.last === y) st.n++; else if (st.last === y2 && st.freezes > 0) { st.freezes--; st.n++; used = true; } else st.n = 1;      // one missed day is forgiven if you have a freeze
+  st.last = dayKey(); st.best = Math.max(st.best, st.n); if (st.n % 7 === 0) st.freezes = Math.min(2, st.freezes + 1);
+  const bonus = STREAK_BONUS[st.n] || 0; let r = rand() * 100, win = DAILY[0][0]; for (const [c, p] of DAILY) { if ((r -= p) < 0) { win = c; break; } }
+  const total = win + bonus; state.coins += total; state.s.added += total; save(); renderBal(true); renderChips(); Snd.claim(win >= 200 || bonus > 0); buzz([30, 40, 30]);
+  return { win, bonus, n: st.n, used, total };
+}
+function dailyModal(res) {
+  const st = state.streak, ready = dailyReady(), n = st.n, nextM = [3, 7, 14, 30].find(m => m > n), wk = n > 0 && n % 7 === 0 ? 7 : n % 7, ev = DAILY.reduce((a, [c, p]) => a + c * p / 100, 0);
+  openModal(`<div class="minfo"><div><span class="label">Daily drop</span><h2>${res ? "+" + money(res.total) : ready ? "Today's drop is ready" : "That's today's drop"}</h2></div>
+    ${res ? `<p class="dim">${res.bonus ? `You drew ${money(res.win)} and the day ${res.n} streak bonus added ${money(res.bonus)}.` : `You drew ${money(res.win)}.`}${res.used ? " A streak freeze covered the day you missed." : ""}</p>` : ready ? `<p class="dim">Free demo money, once a day. Nothing to buy.</p>` : `<p class="dim">Come back tomorrow for the next one.</p>`}
+    <div><div class="label">Streak · day ${n}</div><div class="mono-meter" aria-hidden="true">${meter(wk, 7)}</div><p class="small" style="margin-top:6px">${nextM ? `Day ${nextM} pays a ${money(STREAK_BONUS[nextM])} bonus. ` : ""}Miss a day and your streak survives if you have a freeze (you have ${st.freezes}). You earn one every 7 days, up to 2.</p></div>
+    <div><div class="label" style="margin-bottom:6px">The odds of the draw</div><table class="oddsT"><tbody>${DAILY.map(([c, p]) => `<tr><td>${money(c)}</td><td class="r">${p}%</td></tr>`).join("")}</tbody></table><p class="small" style="margin-top:6px">Average ${money(ev)}. Demo money, nothing is ever charged.</p></div>
+    ${ready ? `<button class="btn solid" id="claimDaily">claim</button>` : `<button class="btn" data-close>close</button>`}</div>`, true);
+}
+function renderChips() {
+  const d = $("dailyBtn"); if (d) { const ready = dailyReady(); d.className = "chip" + (ready ? " ready" : ""); d.innerHTML = ready ? `<i></i>daily drop` : `streak ${state.streak.n}`; d.title = ready ? "A free drop of demo money, once a day" : "Your daily streak"; }
+  const m = $("muteBtn"); if (m) { m.textContent = state.mute ? "sound off" : "sound on"; m.setAttribute("aria-pressed", state.mute ? "true" : "false"); }
+}
+
+/* ---- rank: earned by finding things and turning up, not by how much you spend or win ---- */
+const RANKS = [["Tourist", 0], ["Paper hands", 60], ["Degen", 150], ["Flipper", 300], ["Diamond hands", 520], ["Whale", 800], ["Legend", 1200]];
+const FX_ALL = CARDS.length * 13;
+function noteFound() { for (const c of state.vault) { state.found[c.no] = 1; state.foundFx[c.no + "|" + (c.fx || "")] = 1; } }
+const xpOf = () => { noteFound(); return state.s.packs * 4 + Object.keys(state.found).length * 40 + Object.keys(state.foundFx).length * 12 + state.streak.best * 10; };
+const rankIdx = xp => { let i = 0; RANKS.forEach(([, x], k) => { if (xp >= x) i = k; }); return i; };
+function rankHTML() {
+  const xp = xpOf(), i = rankIdx(xp), cur = RANKS[i], nx = RANKS[i + 1];
+  return `<div class="rank"><div><span class="label">rank</span><b>${cur[0]}</b></div><div class="mono-meter" aria-hidden="true">${meter(nx ? Math.round((xp - cur[1]) / (nx[1] - cur[1]) * 16) : 16, 16)}</div><div class="small">${xp} xp${nx ? ` · ${nx[1] - xp} to ${nx[0]}` : " · top rank"}. It comes from cards and styles you find, packs you open and your daily streak.</div></div>`;
+}
+
+/* ---- the collection has holes in it, and you can see them ---- */
+const missingCards = () => { const have = new Set(state.vault.map(c => c.no)); return CARDS.filter(c => !have.has(c.no)); };
+const chaseChance = () => { const m = missingCards(); return m.length ? 1 - m.reduce((a, c) => a * (1 - packP(c.id)), 1) : 0; };
+function progressHTML() {
+  noteFound(); const n = Object.keys(state.found).length, fx = Object.keys(state.foundFx).length, ch = chaseChance();
+  return `<div><span class="label">cards found</span><b>${n} of ${CARDS.length}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(n / CARDS.length * 18), 18)}</span></div><div><span class="label">styles found</span><b>${fx} of ${FX_ALL}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(fx / FX_ALL * 18), 18)}</span></div><div><span class="label">a new card in your next pack</span><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span class="small">chance, from the real odds</span></div>`;
+}
+function chaseHTML() {
+  if (!state.s.packs && !state.vault.length) return "";
+  const miss = missingCards(); if (!miss.length) return `<span class="label">collection</span><span>You have every card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
+  const rows = miss.slice().sort((a, b) => MK.price(b) - MK.price(a)).slice(0, 3), hot = miss.map(c => ({ c, p: MK.pct(c, 24) })).sort((a, b) => b.p - a.p)[0];
+  return `<span class="label">still out there · ${CARDS.length - miss.length} of ${CARDS.length} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${RAR[c.rar].name}</span>${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}<span class="dim">${chance(packP(c.id))}</span></button>`).join("")
+    + (hot && hot.p >= .3 ? `<span class="hotflip"><b>${esc(hot.c.name)}</b> is up ${pctShort(hot.p).slice(1)} in a day and you don't have one. It turns up in ${chance(packP(hot.c.id))}, and a pack costs ${money(packPrice())}.</span>` : "");
+}
+
+/* ---- price targets you set yourself ---- */
+function setTarget(no, dir, pct) {
+  const card = BY_NO[no], t = state.tg[no] = state.tg[no] || { up: null, dn: null };
+  if (dir === "clear") { delete state.tg[no]; } else { const p = MK.price(card); t[dir] = dir === "up" ? p * (1 + pct / 100) : p * (1 - pct / 100); }
+  persist();
+}
+function alertRow(card) {
+  const t = state.tg[card.no] || {}, has = t.up || t.dn;
+  return `<div class="alertrow"><span class="label">Tell me when it's…</span><div class="row">${[["up", 50, "up 50%"], ["up", 100, "up 100%"], ["up", 300, "up 300%"], ["dn", 30, "down 30%"]].map(([d, p, l]) => `<button class="btn small ghost" data-tgt="${card.no}|${d}|${p}">${l}</button>`).join("")}</div>${has ? `<div class="small">Your alerts: ${t.up ? "above " + moneyS(t.up) : ""}${t.up && t.dn ? " · " : ""}${t.dn ? "below " + moneyS(t.dn) : ""} <button class="linkbtn" data-tgt="${card.no}|clear">clear</button></div>` : `<div class="small">Counted from today's ${moneyS(MK.price(card))}. You get an alert here, and a note when you come back.</div>`}</div>`;
+}
+function checkTargets() {
+  for (const no of Object.keys(state.tg)) {
+    const card = BY_NO[no], t = state.tg[no], p = MK.price(card); let hit = null;
+    if (t.up && p >= t.up) { hit = { up: true, target: t.up }; t.up = null; } else if (t.dn && p <= t.dn) { hit = { up: false, target: t.dn }; t.dn = null; }
+    if (!t.up && !t.dn) delete state.tg[no];
+    if (hit) { persist(); showAlert(card, hit.up ? 1 : -1, { title: `${card.name} hit your ${hit.up ? "high" : "low"} target`, text: `It is ${moneyS(p)} now, ${hit.up ? "above" : "below"} the ${moneyS(hit.target)} you set.` }); return true; }
+  }
+  return false;
+}
+
+/* ---- while you were away: what really happened to your cards, from the market's own price path ---- */
+function recapData(since) {
+  const now = Date.now(), away = now - since, ticks = Math.min(Math.round(away / MK.TICK), 30000), hrs = clamp(Math.ceil(away / 36e5), 1, 168), groups = [];
+  for (const no of new Set(state.vault.map(c => c.no))) {
+    const cs = state.vault.filter(c => c.no === no), card = BY_NO[no], was = cs.reduce((a, c) => a + valueAgo(c, ticks), 0), nowV = cs.reduce((a, c) => a + valueOf(c), 0), ser = MK.series(card, hrs, 48), hi = Math.max(...ser), at = ser.indexOf(hi);
+    groups.push({ card, n: cs.length, was, now: nowV, d: nowV - was, p: nowV / Math.max(1, was) - 1, peakP: hi / ser[0] - 1, peakAgo: Math.round((47 - at) / 47 * hrs) });
+  }
+  const hits = []; for (const no of Object.keys(state.tg)) { const card = BY_NO[no], t = state.tg[no], p = MK.price(card); if (t.up && p >= t.up) { hits.push({ card, up: true, target: t.up, now: p }); t.up = null; } if (t.dn && p <= t.dn) { hits.push({ card, up: false, target: t.dn, now: p }); t.dn = null; } if (!t.up && !t.dn) delete state.tg[no]; }
+  const mine = new Set(state.vault.map(c => c.no)), hot = movers().rows.filter(r => !mine.has(r.c.no) && r.p24 >= .25).sort((a, b) => b.p24 - a.p24)[0];
+  return { away, groups, hits, hot, was: groups.reduce((a, g) => a + g.was, 0), now: groups.reduce((a, g) => a + g.now, 0) };
+}
+function maybeRecap(since) {
+  if (!since || !state.ageOK || SS || !$("modal").hidden || !$("cut").hidden || !$("share").hidden || !$("gate").hidden) return;
+  if (Date.now() - since < 15 * 60000 || (!state.vault.length && !Object.keys(state.tg).length)) return;
+  const r = recapData(since), d = r.now - r.was, up = d >= 0; persist();
+  const rows = r.groups.slice().sort((a, b) => Math.abs(b.d) - Math.abs(a.d)).slice(0, 3).map(g => `<button class="mover" data-card="${g.card.no}"><span class="nm">${esc(g.card.name)}${g.n > 1 ? ` <span class="faint">×${g.n}</span>` : ""}</span>${sparkSVG(MK.series(g.card, clamp(Math.ceil(r.away / 36e5), 1, 168), 24))}<span class="pc">${pctHTML(g.p)}</span><span class="dim">${g.peakP > Math.max(.25, g.p + .25) ? `it peaked ${pctShort(g.peakP)} ${whenText(g.peakAgo)} · ` : ""}${moneyS(g.was)} → ${moneyS(g.now)}</span></button>`).join("");
+  openModal(`<div class="minfo recap"><div><span class="label">while you were away · ${heldText(r.away)}</span><h2 class="${up ? "up" : "dn"}">${r.groups.length ? (up ? "+" : "−") + money(Math.abs(d)) : "Welcome back"}</h2>${r.groups.length ? `<p class="dim">${pctHTML(r.now / Math.max(1, r.was) - 1)} on your ${state.vault.length} card${state.vault.length === 1 ? "" : "s"}: ${money(r.was)} then, ${money(r.now)} now. Worked out from the market's price path, nothing made up.</p>` : ""}</div>
+    ${rows ? `<div class="rows">${rows}</div>` : ""}
+    ${r.hits.map(h => `<p class="small"><b>${esc(h.card.name)}</b> ${h.up ? "went above" : "fell below"} the ${moneyS(h.target)} you set and is ${moneyS(h.now)} now.</p>`).join("")}
+    ${r.hot ? `<p class="small">Meanwhile <b>${esc(r.hot.c.name)}</b> is up ${pctShort(r.hot.p24).slice(1)} today. You don't have one. It turns up in ${chance(packP(r.hot.c.id))}.</p>` : ""}
+    <div class="row"><button class="btn solid" data-recap="profile">see your profile</button><button class="btn ghost" data-close>close</button></div></div>`, true);
+  Snd.alert(up); buzz(up ? [20, 30, 20] : [40]);
+}
+
+/* ---- keeping it healthy: a reminder every half hour, a limit on packs per day, a break nobody can talk you out of ---- */
+const packsToday = () => { const m = new Date(); m.setHours(0, 0, 0, 0); return state.packLog.filter(t => t >= m.getTime()).length; };
+function packGate() {
+  const l = state.lim; if (l.breakUntil > Date.now()) return `You're on a break for another ${heldText(l.breakUntil - Date.now())}. You asked for it, and it can't be undone.`;
+  if (l.packs && packsToday() >= l.packs) return `You set a limit of ${l.packs} packs a day and you've opened ${packsToday()}. It resets at midnight.`; return "";
+}
+const REMIND = Math.max(.05, +new URLSearchParams(location.search).get("remind") || 30) * 60000;           // minutes between reminders: 30, or ?remind=<minutes> to see it sooner
+const ses0 = { packs: state.s.packs, spent: state.s.spent, sold: state.s.sold, net: netWorth() - state.s.added }; let activeMs = 0, remindedAt = 0;
+function sessionTick() {
+  if (document.hidden) return; activeMs += 1000;
+  if (activeMs - remindedAt >= REMIND && !SS && $("modal").hidden && $("cut").hidden && $("share").hidden && $("gate").hidden) { remindedAt = activeMs; breakModal(); }
+}
+function breakModal() {
+  const np = state.s.packs - ses0.packs, sp = state.s.spent - ses0.spent, back = state.s.sold - ses0.sold, d = (netWorth() - state.s.added) - ses0.net, rtp = Math.round(packStats().rtp * 100);
+  openModal(`<div class="minfo"><div><span class="label">a pause</span><h2>You've been here ${activeMs >= 90000 ? Math.round(activeMs / 60000) + " minutes" : Math.round(activeMs / 1000) + " seconds"}</h2></div>
+    <p class="dim">This session: ${np} pack${np === 1 ? "" : "s"} opened, ${money(sp)} spent on packs, ${money(back)} back from sales. Your net worth moved ${d >= 0 ? "+" : "−"}${money(Math.abs(d))}.</p>
+    <p class="small">A pack returns about ${rtp}% on average when you sell, so the more you open, the more likely you are to end up behind. Stopping now is always fine.</p>
+    <div class="row"><button class="btn" data-brk="1">take a 1 hour break</button><button class="btn ghost" data-close>keep going</button></div></div>`, true);
+}
+function limitsHTML() {
+  const l = state.lim, onBreak = l.breakUntil > Date.now(), rtp = Math.round(packStats().rtp * 100);
+  return `<h3 class="sec">Keep it fun</h3><p class="small" style="margin-bottom:12px">A pack returns about ${rtp}% on average when you sell, so over many packs most people end behind. These are yours to set, and you'll get a reminder every 30 minutes.</p>
+    <div class="row" style="margin-bottom:10px"><label class="small" for="limPacks">Packs per day</label><select id="limPacks">${[0, 1, 3, 5, 10, 20].map(n => `<option value="${n}"${l.packs === n ? " selected" : ""}>${n || "no limit"}</option>`).join("")}</select><span class="small">${packsToday()} opened today</span></div>
+    <div class="row"><span class="small">${onBreak ? `On a break for another ${heldText(l.breakUntil - Date.now())}.` : "Take a break"}</span>${onBreak ? "" : `<button class="btn small" data-brk="1">1 hour</button><button class="btn small" data-brk="24">24 hours</button>`}</div>`;
+}
+function startBreak(h) { state.lim.breakUntil = Math.max(state.lim.breakUntil, Date.now() + h * 36e5); persist(); closeModal(); toast(`Break started. Packs are off for ${h === 1 ? "an hour" : h + " hours"}.`); if (view === "profile") renderProfile(); }
+
+/* ---- one second at a time ---- */
+let rankSeen = null;
+function habitTick() {
+  sessionTick(); const i = rankIdx(xpOf()); if (rankSeen === null) { rankSeen = i; state.rank = i; }                  // the rank you arrive with is not news
+  if (i > rankSeen) { rankSeen = i; state.rank = i; persist(); toast(`Rank up: ${RANKS[i][0]}`); Snd.level(); buzz([20, 30, 20, 30, 40]); }
+  if (!document.hidden && Math.floor(Date.now() / 1000) % 30 === 0) { state.lastSeen = Date.now(); persist(); renderChips(); }
+}
+
+/* ============================================================================
    9. EVENTS
    ========================================================================== */
 document.addEventListener("click", e => {
@@ -1634,6 +1829,9 @@ document.addEventListener("click", e => {
   if (t.hasAttribute("data-close")) { closeModal(); return; }
   if (t.dataset.card) { if (t.closest("#alert")) hideAlert(); cardModal(t.dataset.card); return; }
   if (t.dataset.cut) { closeModal(); Cut.play(t.dataset.cut); return; }
+  if (t.dataset.tgt) { const [no, dir, pct] = t.dataset.tgt.split("|"); setTarget(no, dir, +pct); cardModal(no, true); toast(dir === "clear" ? "Alerts cleared" : "Alert set. You'll hear from us when it gets there."); Snd.click(); return; }
+  if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
+  if (t.dataset.recap) { closeModal(); location.hash = "#/" + t.dataset.recap; return; }
   if (t.dataset.share) { const c = state.vault.find(x => x.uid === t.dataset.share); if (c) Share.open(receiptOf(c, false)); return; }
   if (t.dataset.sell) {
     const c = state.vault.find(x => x.uid === t.dataset.sell), rec = c ? receiptOf(c, true) : null;
@@ -1651,6 +1849,9 @@ document.addEventListener("click", e => {
     case "shSummary": Share.summary(); break;
     case "shClose": Share.close(); break;
     case "alertX": hideAlert(); break;
+    case "dailyBtn": Snd.click(); dailyModal(); break;
+    case "claimDaily": { const r = claimDaily(); if (r) dailyModal(r); break; }
+    case "muteBtn": state.mute = !state.mute; persist(); renderChips(); if (!state.mute) Snd.click(); break;
     case "addFunds": state.coins += TOPUP; state.s.added += TOPUP; save(); renderBal(true); toast("Added $10 of demo money"); break;
     case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
     case "sumSell": { const g = sell(SS.items.map(c => c.uid)); closeStage(); toast("Sold for " + money(g)); break; }
@@ -1662,7 +1863,7 @@ document.addEventListener("click", e => {
     case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); break;
   }
 });
-document.addEventListener("change", e => { if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; });
+document.addEventListener("change", e => { if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
 document.addEventListener("submit", e => { if (e.target.id === "codeForm") { e.preventDefault(); addByCode($("codeIn").value); } });
 document.addEventListener("keydown", e => {
   const k = e.key;
@@ -1676,12 +1877,15 @@ window.addEventListener("hashchange", route);
 /* ============================================================================
    10. START
    ========================================================================== */
-MK.advance(); logWorth(); persist(); renderBal(); route(); renderTape();
+const lastSeen0 = state.lastSeen;                                       // when you were last here, read before this visit overwrites it
+MK.advance(); logWorth(); state.lastSeen = Date.now(); persist(); renderBal(); renderChips(); route(); renderTape();
 if (!state.ageOK) $("gate").hidden = false; else setTimeout(() => Cut.maybeIntro(), 400);
 // the market moves every 20 seconds; redraw whatever is on screen when it does
 let lastTick = MK.tick();
 // the market is live: every number on screen is redrawn once a second, in place, and the once-a-round jobs run when a new round of trading lands
-setInterval(() => { MK.advance(); if (MK.tick() !== lastTick) { lastTick = MK.tick(); logWorth(); persist(); renderTape(); checkAlerts(); } refreshLive(); }, 1000);
+setInterval(() => { MK.advance(); if (MK.tick() !== lastTick) { lastTick = MK.tick(); logWorth(); persist(); renderTape(); checkAlerts(); } refreshLive(); habitTick(); }, 1000);
+setTimeout(() => maybeRecap(lastSeen0), 1400);
+document.addEventListener("visibilitychange", () => { if (document.hidden) { state.lastSeen = Date.now(); persist(); } else { const since = state.lastSeen; maybeRecap(since); state.lastSeen = Date.now(); } });
 setTimeout(checkAlerts, 2500);
 tickLive(); setInterval(tickLive, 1000);
 setTimeout(() => CARDS.forEach(c => loadImg(imgOf(c))), 700);   // warm the pictures so a reveal never waits on one

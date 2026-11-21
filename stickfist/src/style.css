@@ -210,4 +210,19 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
   .fan { flex-wrap: wrap; } .fan > div { width: min(112px, 28vw); } .slot .row { grid-template-columns: 110px max-content 1fr; gap: 8px; } .slot .bar { font-size: 11px; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 22px 14px; }
 }
+/* ---------- habit layer: chips, recap, progress, rank, limits ---------- */
+.chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border: 1px solid var(--ln3); border-radius: 999px; background: transparent; color: var(--ink); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+.chip:hover { background: #131316; border-color: var(--dim); } .chip.soft { color: var(--dim); border-color: var(--ln2); }
+.chip.ready { border-color: var(--ok); color: var(--ok); } .chip.ready i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
+.mono-meter { font-family: var(--m); font-size: 13px; color: var(--ink); letter-spacing: .02em; white-space: nowrap; }
+.rank { display: flex; align-items: center; gap: 8px 20px; flex-wrap: wrap; border: 1px solid var(--ln2); border-radius: 12px; padding: 14px 18px; margin-bottom: 26px; } .rank b { font-size: 18px; margin-left: 10px; } .rank .small { flex-basis: 100%; }
+.prog { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; margin-bottom: 26px; } .prog > div { display: grid; gap: 4px; align-content: start; } .prog b { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.chase { display: flex; gap: 8px 16px; align-items: center; flex-wrap: wrap; justify-content: center; font-size: 13px; color: var(--dim); max-width: 760px; } .chase:empty { display: none; } .chase .mover.mini .faint { font-size: 12px; }
+.alertrow { display: grid; gap: 8px; } .alertrow .btn.small { border-color: var(--ln2); }
+.oddsT { border-collapse: collapse; font-size: 14px; } .oddsT td { padding: 3px 24px 3px 0; border-bottom: 1px solid var(--ln); } .oddsT td.r { text-align: right; padding-right: 0; font-variant-numeric: tabular-nums; }
+.recap h2.up { color: var(--ok); } .recap h2.dn { color: var(--bad); } .recap .rows { display: grid; }
+#pLimits select { background: #0a0a0c; color: var(--ink); }
+@media (max-width: 760px) { .prog { grid-template-columns: 1fr; gap: 14px; } .chip.soft { display: none; } header.top .wrap .wallet { gap: 7px; margin-left: auto; } .chip { padding: 4px 9px; font-size: 12px; } .wallet .btn.small { padding: 5px 9px; font-size: 12px; } .wallet .bal { font-size: 14px; } }
+
 @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }

@@ -39,16 +39,16 @@ const FALL = f => `    .---.
    ${["v  v  v", " v  v  v", "v   v  v", "  v v v "][f % 4]}`;
 let alertIv = 0, alertTo = 0;
 function hideAlert() { clearInterval(alertIv); clearTimeout(alertTo); $("alert").hidden = true; }
-function showAlert(card, p) {
+function showAlert(card, p, custom) {
   const up = p > 0, cs = copiesOf(card.no), worth = cs.reduce((a, c) => a + valueOf(c), 0), cost = cs.reduce((a, c) => a + costOf(c), 0), d = worth - cost, a = $("alert");
   a.className = "alert " + (up ? "up" : "dn"); a.hidden = false;
-  a.innerHTML = `<div class="art"><pre id="alertArt"></pre></div><div class="txt"><b>${esc(card.name)} ${up ? "is taking off" : "is dropping fast"}</b><span>${up ? "Up" : "Down"} ${pctShort(Math.abs(p)).slice(1)} in 6 hours. ${cs.length === 1 ? "Your copy is" : "Your " + cs.length + " copies are"} worth ${money(worth)} now, ${d >= 0 ? "+" : "\u2212"}${money(Math.abs(d))} against what they were worth when you got them.</span><div class="row"><button class="btn small" data-card="${card.no}">See it</button><button class="btn small ghost" id="alertX">Dismiss</button></div></div>`;
+  a.innerHTML = `<div class="art"><pre id="alertArt"></pre></div><div class="txt"><b>${custom ? esc(custom.title) : esc(card.name) + (up ? " is taking off" : " is dropping fast")}</b><span>${custom ? esc(custom.text) + (cs.length ? ` Your ${cs.length === 1 ? "copy is" : cs.length + " copies are"} worth ${money(worth)}.` : "") : `${up ? "Up" : "Down"} ${pctShort(Math.abs(p)).slice(1)} in 6 hours. ${cs.length === 1 ? "Your copy is" : "Your " + cs.length + " copies are"} worth ${money(worth)} now, ${d >= 0 ? "+" : "\u2212"}${money(Math.abs(d))} against what they were worth when you got them.`}</span><div class="row"><button class="btn small" data-card="${card.no}">See it</button><button class="btn small ghost" id="alertX">Dismiss</button></div></div>`;
   let f = 0; const art = $("alertArt"), step = () => { art.textContent = up ? ROCKET(f++) : FALL(f++); }; step(); clearInterval(alertIv); if (!reduced) alertIv = setInterval(step, 140);
-  clearTimeout(alertTo); alertTo = setTimeout(hideAlert, 14000);
+  clearTimeout(alertTo); alertTo = setTimeout(hideAlert, 14000); Snd.alert(up); buzz(up ? [20, 30, 20] : [50]);
 }
 function checkAlerts() {
   if (!state.ageOK || SS || !$("share").hidden || !$("alert").hidden) return;
-  const now = Date.now(); state.alertAt = state.alertAt || {};
+  if (checkTargets()) return; const now = Date.now(); state.alertAt = state.alertAt || {};
   for (const no of new Set(state.vault.map(c => c.no))) {
     const card = BY_NO[no], p = MK.pct(card, 6); if (now - (state.alertAt[no] || 0) < 6 * 36e5) continue;
     if (p >= 1 || p <= -.4) { state.alertAt[no] = now; persist(); showAlert(card, p); return; }

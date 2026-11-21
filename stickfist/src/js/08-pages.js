@@ -18,6 +18,7 @@ function renderHome() {
   $("honest").live = `Every card is a picture made of text: the rarer the card, the more characters it holds. About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
   const mv = movers(); $("hot").live = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
   const bf = MK.flips().best[0]; if (bf && bf.gain > 0) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip this week: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
+  $("chase").live = chaseHTML();
   const hp = $("homePack"); if (!hp.firstChild) { hp.innerHTML = packHTML(); const pk = hp.firstChild; tiltPack(pk); pk.style.cursor = "pointer"; pk.onclick = () => openPack(); liveWindow(pk); }
 }
 
@@ -49,6 +50,7 @@ function worthSeries(pts) {
   return { out, mins: Math.round((now - t0) / 60000) };
 }
 function renderProfile() {
+  $("pRank").live = rankHTML(); $("pLimits").live = limitsHTML();
   const net = netWorth(), hold = holdingsValue(), back = state.vault.reduce((a, c) => a + sellOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0), all = profitAll(), d24 = profitSince(864e5);
   $("pWorth").live = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}">${money(net)}</div><div class="wmeta"><span>${pnlHTML(d24, START + state.s.added)} <span class="dim">last 24h</span></span><span>${pnlHTML(all, START + state.s.added)} <span class="dim">since you started</span></span></div></div>
     <div class="wsplit"><div><span class="label">cash</span><b>${money(state.coins)}</b></div><div><span class="label">your cards, at market price</span><b>${moneyS(hold)}</b> ${state.vault.length ? pnlHTML(hold - basis, basis) : ""}</div><div><span class="label">they would sell for</span><b>${moneyS(back)}</b><span class="dim">after the 10% fee</span></div><div><span class="label">made or lost on sales</span><b>${pnlHTML(state.s.realized, 0)}</b></div></div>`;
@@ -63,12 +65,13 @@ function renderProfile() {
 // every copy beyond the best one of each card (copies you added by code are never sold in bulk)
 function extras() { const out = []; for (const c of CARDS) copiesOf(c.no).slice(1).forEach(x => { if (!x.phys) out.push(x); }); return out; }
 function renderCollection() {
+  $("cProg").live = progressHTML();
   const found = new Set(state.vault.map(c => c.no)), worth = state.vault.reduce((a, c) => a + valueOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0), ex = extras(), exSum = ex.reduce((a, c) => a + sellOf(c), 0);
   $("cSub").live = state.vault.length ? `${found.size} of ${CARDS.length} cards found · ${state.vault.length} cop${state.vault.length === 1 ? "y" : "ies"} worth ${money(worth)} ${pctHTML(worth / Math.max(1, basis) - 1)} <span class="faint">since you got them</span>` : "Open the pack to start your collection.";
   $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + `<button class="linkbtn" id="addCode">add a card by its code</button>`;
   $("cGrid").live = CARDS.map(c => { const cs = copiesOf(c.no), best = cs[0];
     return `<div class="tile"><button class="tilebtn" data-card="${c.no}" aria-label="${esc(c.name)}">${cardHTML(best || { no: c.no }, { sm: true, locked: !best })}</button>
-      <div class="meta">${best ? `<span><b>×${cs.length}</b></span><span>${moneyS(valueOf(best))} ${pctHTML(gainOf(best))}</span>` : `<span>not found yet</span><span class="dim">${money(MK.price(c))}</span>`}</div></div>`; }).join("");
+      <div class="meta">${best ? `<span><b>×${cs.length}</b></span><span>${moneyS(valueOf(best))} ${pctHTML(gainOf(best))}</span>` : `<span>not found yet</span><span class="dim">${money(MK.price(c))} · ${chance(packP(c.id))}</span>`}</div></div>`; }).join("");
 }
 function renderOdds() {
   const ps = packStats(), slotName = ["Card 1: a common", "Card 2: a common", "Card 3: a common, sometimes better", "Card 4: an uncommon or better", "Card 5: the best card in the pack"];
@@ -123,6 +126,7 @@ function cardModal(no, keep) {
     <div><span class="label" style="color:${R.col}">${R.name} · No. ${card.no}</span><h2>${esc(card.name)}</h2></div>
     <p class="dim">${fmt(card.chars)} characters · base worth ${money(card.val)} · turns up in ${chance(p)}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
     ${market}
+    ${alertRow(card)}
     ${cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div>${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${moneyS(costOf(c))}</small></div><div class="r"><span><b>${moneyS(valueOf(c))}</b><br>${pctHTML(gainOf(c))}</span><button class="btn small ghost" data-share="${c.uid}">share</button><button class="btn small" data-sell="${c.uid}" data-no="${no}">sell ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<p class="small">You haven't found this card yet.</p>`}
     ${Cut.has(card.id) ? `<div><button class="btn small" data-cut="${card.id}">▶ ${cs.length ? "Watch" : "Preview"} its cutscene</button></div>` : ""}
     ${styles}</div>`, false, keep);
@@ -137,4 +141,4 @@ function addByCode(raw) {
   if (state.vault.some(c => c.code === r.code)) { msg.style.color = "var(--bad)"; msg.textContent = "That copy is already in your collection."; return; }
   const c = mint(r.card, true, r.serial); state.vault.push(c); save(); closeModal(); if (view === "collection") renderCollection(); toast(`Added ${r.card.name} · ${r.code}`); cardModal(r.card.no);
 }
-function sell(uids) { let g = 0; for (const u of uids) { const c = state.vault.find(x => x.uid === u); if (c) { g += sellOf(c); state.s.realized += sellOf(c) - costOf(c); state.vault = state.vault.filter(x => x !== c); } } if (g) { state.coins += g; state.s.sold += g; save(); renderBal(true); } return g; }
+function sell(uids) { let g = 0; for (const u of uids) { const c = state.vault.find(x => x.uid === u); if (c) { g += sellOf(c); state.s.realized += sellOf(c) - costOf(c); state.vault = state.vault.filter(x => x !== c); } } if (g) { state.coins += g; state.s.sold += g; save(); renderBal(true); Snd.sell(); buzz([25, 35, 25]); } return g; }

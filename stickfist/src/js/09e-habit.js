@@ -1,0 +1,170 @@
+/* ============================================================================
+   8e. THE HABIT LAYER. What brings someone back, and what keeps coming back healthy.
+   The pulls here are the honest ones: a market that really moves while you are away, a collection with holes in it and the odds of filling them,
+   a free drop each day, a streak that forgives a missed day, a sound and a buzz for every win, price targets you set yourself. Nothing in this file
+   shows a made-up number, a fake timer or a fake crowd, hides a cost, or nudges you to spend to win something back. It also keeps the other side
+   in plain sight: a reminder every half hour, a limit on packs per day, a break button, and the pack's average return stated flatly.
+   ========================================================================== */
+
+/* ---- sound and touch: a small synthesiser, so a win can be heard and felt. Off with one tap, remembered. ---- */
+const Snd = (() => {
+  let ac = null, out = null;
+  const ready = () => {
+    if (state.mute || !tapped()) return false;
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); out = ac.createGain(); out.gain.value = .5; const cp = ac.createDynamicsCompressor(); out.connect(cp); cp.connect(ac.destination); } catch (e) { ac = null; return false; } }
+    if (ac.state === "suspended") ac.resume(); return true;
+  };
+  const env = (g, t, a, d, v) => { g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + a); g.gain.exponentialRampToValueAtTime(.0001, t + a + d); };
+  const tone = (f, dur, type, v, at, f2) => { const t = ac.currentTime + (at || 0), o = ac.createOscillator(), g = ac.createGain(); o.type = type || "sine"; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur); env(g, t, .006, dur, v || .2); o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + .05); };
+  const hiss = (dur, v, at, lo, hi) => { const t = ac.currentTime + (at || 0), n = Math.floor(ac.sampleRate * dur), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; const s = ac.createBufferSource(); s.buffer = b; const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = Math.sqrt(lo * hi); f.Q.value = .5; const g = ac.createGain(); env(g, t, .005, dur, v); s.connect(f); f.connect(g); g.connect(out); s.start(t); s.stop(t + dur + .05); };
+  const NOTE = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1318.5, 1568];
+  return {
+    unlock() { ready(); },
+    tear() { if (!ready()) return; hiss(.4, .35, 0, 1400, 9000); tone(140, .22, "sine", .3, 0, 50); },
+    reveal(tier) {                                              // the better the card, the longer and fuller the sound
+      if (!ready()) return; const n = [1, 2, 3, 4, 5, 6, 8][tier] || 1;
+      for (let i = 0; i < n; i++) tone(NOTE[Math.min(7, i + (tier > 3 ? 0 : 1))], .35 + tier * .08, "triangle", .13 + tier * .01, i * .07);
+      if (tier >= 2) tone(90, .35, "sine", .3, 0, 45); if (tier >= 4) { hiss(.8, .18, 0, 2000, 12000); tone(NOTE[0] / 2, 1.2, "sine", .16, .05); } if (tier >= 6) { [1, 1.25, 1.5, 2].forEach((m, i) => tone(NOTE[0] * m, 1.8, "sine", .12, .1 + i * .02)); }
+    },
+    sell() { if (!ready()) return; tone(1568, .25, "triangle", .14); tone(2093, .5, "triangle", .12, .06); for (let i = 0; i < 7; i++) tone([2093, 2637, 3136, 3520][i % 4], .12, "sine", .06, .14 + i * .045 + Math.random() * .02); },
+    alert(up) { if (!ready()) return; if (up) { tone(300, .5, "sawtooth", .08, 0, 1200); tone(880, .3, "triangle", .12, .35); tone(1318, .5, "triangle", .1, .45); } else { tone(420, .6, "sawtooth", .08, 0, 110); tone(110, .5, "sine", .2, .15); } },
+    claim(big) { if (!ready()) return; [0, 2, 4, big ? 6 : 5].forEach((k, i) => tone(NOTE[k], .4, "triangle", .13, i * .08)); },
+    level() { if (!ready()) return; [0, 2, 4, 6, 7].forEach((k, i) => tone(NOTE[k], .5, "triangle", .12, i * .09)); },
+    click() { if (!ready()) return; tone(900, .05, "sine", .07); },
+  };
+})();
+const tapped = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;       // browsers allow sound and vibration only after you have tapped something
+const buzz = p => { if (!state.mute && !reduced && navigator.vibrate && tapped()) { try { navigator.vibrate(p); } catch (e) {} } };
+document.addEventListener("pointerdown", () => Snd.unlock(), { once: true }); document.addEventListener("keydown", () => Snd.unlock(), { once: true });
+
+/* ---- the daily drop and the streak ---- */
+const dayKey = d => (d || new Date()).toLocaleDateString("en-CA");                       // 2026-11-21, in the player's own time
+const DAILY = [[50, 70], [100, 22], [200, 7], [500, 1]];                               // cents, and the chance in percent; the same table is shown in the window
+const STREAK_BONUS = { 3: 50, 7: 150, 14: 300, 30: 1000 };
+const dailyReady = () => state.streak.last !== dayKey();
+function claimDaily() {
+  const st = state.streak; if (!dailyReady()) return null;
+  const y = dayKey(new Date(Date.now() - 864e5)), y2 = dayKey(new Date(Date.now() - 2 * 864e5)); let used = false;
+  if (st.last === y) st.n++; else if (st.last === y2 && st.freezes > 0) { st.freezes--; st.n++; used = true; } else st.n = 1;      // one missed day is forgiven if you have a freeze
+  st.last = dayKey(); st.best = Math.max(st.best, st.n); if (st.n % 7 === 0) st.freezes = Math.min(2, st.freezes + 1);
+  const bonus = STREAK_BONUS[st.n] || 0; let r = rand() * 100, win = DAILY[0][0]; for (const [c, p] of DAILY) { if ((r -= p) < 0) { win = c; break; } }
+  const total = win + bonus; state.coins += total; state.s.added += total; save(); renderBal(true); renderChips(); Snd.claim(win >= 200 || bonus > 0); buzz([30, 40, 30]);
+  return { win, bonus, n: st.n, used, total };
+}
+function dailyModal(res) {
+  const st = state.streak, ready = dailyReady(), n = st.n, nextM = [3, 7, 14, 30].find(m => m > n), wk = n > 0 && n % 7 === 0 ? 7 : n % 7, ev = DAILY.reduce((a, [c, p]) => a + c * p / 100, 0);
+  openModal(`<div class="minfo"><div><span class="label">Daily drop</span><h2>${res ? "+" + money(res.total) : ready ? "Today's drop is ready" : "That's today's drop"}</h2></div>
+    ${res ? `<p class="dim">${res.bonus ? `You drew ${money(res.win)} and the day ${res.n} streak bonus added ${money(res.bonus)}.` : `You drew ${money(res.win)}.`}${res.used ? " A streak freeze covered the day you missed." : ""}</p>` : ready ? `<p class="dim">Free demo money, once a day. Nothing to buy.</p>` : `<p class="dim">Come back tomorrow for the next one.</p>`}
+    <div><div class="label">Streak · day ${n}</div><div class="mono-meter" aria-hidden="true">${meter(wk, 7)}</div><p class="small" style="margin-top:6px">${nextM ? `Day ${nextM} pays a ${money(STREAK_BONUS[nextM])} bonus. ` : ""}Miss a day and your streak survives if you have a freeze (you have ${st.freezes}). You earn one every 7 days, up to 2.</p></div>
+    <div><div class="label" style="margin-bottom:6px">The odds of the draw</div><table class="oddsT"><tbody>${DAILY.map(([c, p]) => `<tr><td>${money(c)}</td><td class="r">${p}%</td></tr>`).join("")}</tbody></table><p class="small" style="margin-top:6px">Average ${money(ev)}. Demo money, nothing is ever charged.</p></div>
+    ${ready ? `<button class="btn solid" id="claimDaily">claim</button>` : `<button class="btn" data-close>close</button>`}</div>`, true);
+}
+function renderChips() {
+  const d = $("dailyBtn"); if (d) { const ready = dailyReady(); d.className = "chip" + (ready ? " ready" : ""); d.innerHTML = ready ? `<i></i>daily drop` : `streak ${state.streak.n}`; d.title = ready ? "A free drop of demo money, once a day" : "Your daily streak"; }
+  const m = $("muteBtn"); if (m) { m.textContent = state.mute ? "sound off" : "sound on"; m.setAttribute("aria-pressed", state.mute ? "true" : "false"); }
+}
+
+/* ---- rank: earned by finding things and turning up, not by how much you spend or win ---- */
+const RANKS = [["Tourist", 0], ["Paper hands", 60], ["Degen", 150], ["Flipper", 300], ["Diamond hands", 520], ["Whale", 800], ["Legend", 1200]];
+const FX_ALL = CARDS.length * 13;
+function noteFound() { for (const c of state.vault) { state.found[c.no] = 1; state.foundFx[c.no + "|" + (c.fx || "")] = 1; } }
+const xpOf = () => { noteFound(); return state.s.packs * 4 + Object.keys(state.found).length * 40 + Object.keys(state.foundFx).length * 12 + state.streak.best * 10; };
+const rankIdx = xp => { let i = 0; RANKS.forEach(([, x], k) => { if (xp >= x) i = k; }); return i; };
+function rankHTML() {
+  const xp = xpOf(), i = rankIdx(xp), cur = RANKS[i], nx = RANKS[i + 1];
+  return `<div class="rank"><div><span class="label">rank</span><b>${cur[0]}</b></div><div class="mono-meter" aria-hidden="true">${meter(nx ? Math.round((xp - cur[1]) / (nx[1] - cur[1]) * 16) : 16, 16)}</div><div class="small">${xp} xp${nx ? ` · ${nx[1] - xp} to ${nx[0]}` : " · top rank"}. It comes from cards and styles you find, packs you open and your daily streak.</div></div>`;
+}
+
+/* ---- the collection has holes in it, and you can see them ---- */
+const missingCards = () => { const have = new Set(state.vault.map(c => c.no)); return CARDS.filter(c => !have.has(c.no)); };
+const chaseChance = () => { const m = missingCards(); return m.length ? 1 - m.reduce((a, c) => a * (1 - packP(c.id)), 1) : 0; };
+function progressHTML() {
+  noteFound(); const n = Object.keys(state.found).length, fx = Object.keys(state.foundFx).length, ch = chaseChance();
+  return `<div><span class="label">cards found</span><b>${n} of ${CARDS.length}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(n / CARDS.length * 18), 18)}</span></div><div><span class="label">styles found</span><b>${fx} of ${FX_ALL}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(fx / FX_ALL * 18), 18)}</span></div><div><span class="label">a new card in your next pack</span><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span class="small">chance, from the real odds</span></div>`;
+}
+function chaseHTML() {
+  if (!state.s.packs && !state.vault.length) return "";
+  const miss = missingCards(); if (!miss.length) return `<span class="label">collection</span><span>You have every card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
+  const rows = miss.slice().sort((a, b) => MK.price(b) - MK.price(a)).slice(0, 3), hot = miss.map(c => ({ c, p: MK.pct(c, 24) })).sort((a, b) => b.p - a.p)[0];
+  return `<span class="label">still out there · ${CARDS.length - miss.length} of ${CARDS.length} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${RAR[c.rar].name}</span>${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}<span class="dim">${chance(packP(c.id))}</span></button>`).join("")
+    + (hot && hot.p >= .3 ? `<span class="hotflip"><b>${esc(hot.c.name)}</b> is up ${pctShort(hot.p).slice(1)} in a day and you don't have one. It turns up in ${chance(packP(hot.c.id))}, and a pack costs ${money(packPrice())}.</span>` : "");
+}
+
+/* ---- price targets you set yourself ---- */
+function setTarget(no, dir, pct) {
+  const card = BY_NO[no], t = state.tg[no] = state.tg[no] || { up: null, dn: null };
+  if (dir === "clear") { delete state.tg[no]; } else { const p = MK.price(card); t[dir] = dir === "up" ? p * (1 + pct / 100) : p * (1 - pct / 100); }
+  persist();
+}
+function alertRow(card) {
+  const t = state.tg[card.no] || {}, has = t.up || t.dn;
+  return `<div class="alertrow"><span class="label">Tell me when it's…</span><div class="row">${[["up", 50, "up 50%"], ["up", 100, "up 100%"], ["up", 300, "up 300%"], ["dn", 30, "down 30%"]].map(([d, p, l]) => `<button class="btn small ghost" data-tgt="${card.no}|${d}|${p}">${l}</button>`).join("")}</div>${has ? `<div class="small">Your alerts: ${t.up ? "above " + moneyS(t.up) : ""}${t.up && t.dn ? " · " : ""}${t.dn ? "below " + moneyS(t.dn) : ""} <button class="linkbtn" data-tgt="${card.no}|clear">clear</button></div>` : `<div class="small">Counted from today's ${moneyS(MK.price(card))}. You get an alert here, and a note when you come back.</div>`}</div>`;
+}
+function checkTargets() {
+  for (const no of Object.keys(state.tg)) {
+    const card = BY_NO[no], t = state.tg[no], p = MK.price(card); let hit = null;
+    if (t.up && p >= t.up) { hit = { up: true, target: t.up }; t.up = null; } else if (t.dn && p <= t.dn) { hit = { up: false, target: t.dn }; t.dn = null; }
+    if (!t.up && !t.dn) delete state.tg[no];
+    if (hit) { persist(); showAlert(card, hit.up ? 1 : -1, { title: `${card.name} hit your ${hit.up ? "high" : "low"} target`, text: `It is ${moneyS(p)} now, ${hit.up ? "above" : "below"} the ${moneyS(hit.target)} you set.` }); return true; }
+  }
+  return false;
+}
+
+/* ---- while you were away: what really happened to your cards, from the market's own price path ---- */
+function recapData(since) {
+  const now = Date.now(), away = now - since, ticks = Math.min(Math.round(away / MK.TICK), 30000), hrs = clamp(Math.ceil(away / 36e5), 1, 168), groups = [];
+  for (const no of new Set(state.vault.map(c => c.no))) {
+    const cs = state.vault.filter(c => c.no === no), card = BY_NO[no], was = cs.reduce((a, c) => a + valueAgo(c, ticks), 0), nowV = cs.reduce((a, c) => a + valueOf(c), 0), ser = MK.series(card, hrs, 48), hi = Math.max(...ser), at = ser.indexOf(hi);
+    groups.push({ card, n: cs.length, was, now: nowV, d: nowV - was, p: nowV / Math.max(1, was) - 1, peakP: hi / ser[0] - 1, peakAgo: Math.round((47 - at) / 47 * hrs) });
+  }
+  const hits = []; for (const no of Object.keys(state.tg)) { const card = BY_NO[no], t = state.tg[no], p = MK.price(card); if (t.up && p >= t.up) { hits.push({ card, up: true, target: t.up, now: p }); t.up = null; } if (t.dn && p <= t.dn) { hits.push({ card, up: false, target: t.dn, now: p }); t.dn = null; } if (!t.up && !t.dn) delete state.tg[no]; }
+  const mine = new Set(state.vault.map(c => c.no)), hot = movers().rows.filter(r => !mine.has(r.c.no) && r.p24 >= .25).sort((a, b) => b.p24 - a.p24)[0];
+  return { away, groups, hits, hot, was: groups.reduce((a, g) => a + g.was, 0), now: groups.reduce((a, g) => a + g.now, 0) };
+}
+function maybeRecap(since) {
+  if (!since || !state.ageOK || SS || !$("modal").hidden || !$("cut").hidden || !$("share").hidden || !$("gate").hidden) return;
+  if (Date.now() - since < 15 * 60000 || (!state.vault.length && !Object.keys(state.tg).length)) return;
+  const r = recapData(since), d = r.now - r.was, up = d >= 0; persist();
+  const rows = r.groups.slice().sort((a, b) => Math.abs(b.d) - Math.abs(a.d)).slice(0, 3).map(g => `<button class="mover" data-card="${g.card.no}"><span class="nm">${esc(g.card.name)}${g.n > 1 ? ` <span class="faint">×${g.n}</span>` : ""}</span>${sparkSVG(MK.series(g.card, clamp(Math.ceil(r.away / 36e5), 1, 168), 24))}<span class="pc">${pctHTML(g.p)}</span><span class="dim">${g.peakP > Math.max(.25, g.p + .25) ? `it peaked ${pctShort(g.peakP)} ${whenText(g.peakAgo)} · ` : ""}${moneyS(g.was)} → ${moneyS(g.now)}</span></button>`).join("");
+  openModal(`<div class="minfo recap"><div><span class="label">while you were away · ${heldText(r.away)}</span><h2 class="${up ? "up" : "dn"}">${r.groups.length ? (up ? "+" : "−") + money(Math.abs(d)) : "Welcome back"}</h2>${r.groups.length ? `<p class="dim">${pctHTML(r.now / Math.max(1, r.was) - 1)} on your ${state.vault.length} card${state.vault.length === 1 ? "" : "s"}: ${money(r.was)} then, ${money(r.now)} now. Worked out from the market's price path, nothing made up.</p>` : ""}</div>
+    ${rows ? `<div class="rows">${rows}</div>` : ""}
+    ${r.hits.map(h => `<p class="small"><b>${esc(h.card.name)}</b> ${h.up ? "went above" : "fell below"} the ${moneyS(h.target)} you set and is ${moneyS(h.now)} now.</p>`).join("")}
+    ${r.hot ? `<p class="small">Meanwhile <b>${esc(r.hot.c.name)}</b> is up ${pctShort(r.hot.p24).slice(1)} today. You don't have one. It turns up in ${chance(packP(r.hot.c.id))}.</p>` : ""}
+    <div class="row"><button class="btn solid" data-recap="profile">see your profile</button><button class="btn ghost" data-close>close</button></div></div>`, true);
+  Snd.alert(up); buzz(up ? [20, 30, 20] : [40]);
+}
+
+/* ---- keeping it healthy: a reminder every half hour, a limit on packs per day, a break nobody can talk you out of ---- */
+const packsToday = () => { const m = new Date(); m.setHours(0, 0, 0, 0); return state.packLog.filter(t => t >= m.getTime()).length; };
+function packGate() {
+  const l = state.lim; if (l.breakUntil > Date.now()) return `You're on a break for another ${heldText(l.breakUntil - Date.now())}. You asked for it, and it can't be undone.`;
+  if (l.packs && packsToday() >= l.packs) return `You set a limit of ${l.packs} packs a day and you've opened ${packsToday()}. It resets at midnight.`; return "";
+}
+const REMIND = Math.max(.05, +new URLSearchParams(location.search).get("remind") || 30) * 60000;           // minutes between reminders: 30, or ?remind=<minutes> to see it sooner
+const ses0 = { packs: state.s.packs, spent: state.s.spent, sold: state.s.sold, net: netWorth() - state.s.added }; let activeMs = 0, remindedAt = 0;
+function sessionTick() {
+  if (document.hidden) return; activeMs += 1000;
+  if (activeMs - remindedAt >= REMIND && !SS && $("modal").hidden && $("cut").hidden && $("share").hidden && $("gate").hidden) { remindedAt = activeMs; breakModal(); }
+}
+function breakModal() {
+  const np = state.s.packs - ses0.packs, sp = state.s.spent - ses0.spent, back = state.s.sold - ses0.sold, d = (netWorth() - state.s.added) - ses0.net, rtp = Math.round(packStats().rtp * 100);
+  openModal(`<div class="minfo"><div><span class="label">a pause</span><h2>You've been here ${activeMs >= 90000 ? Math.round(activeMs / 60000) + " minutes" : Math.round(activeMs / 1000) + " seconds"}</h2></div>
+    <p class="dim">This session: ${np} pack${np === 1 ? "" : "s"} opened, ${money(sp)} spent on packs, ${money(back)} back from sales. Your net worth moved ${d >= 0 ? "+" : "−"}${money(Math.abs(d))}.</p>
+    <p class="small">A pack returns about ${rtp}% on average when you sell, so the more you open, the more likely you are to end up behind. Stopping now is always fine.</p>
+    <div class="row"><button class="btn" data-brk="1">take a 1 hour break</button><button class="btn ghost" data-close>keep going</button></div></div>`, true);
+}
+function limitsHTML() {
+  const l = state.lim, onBreak = l.breakUntil > Date.now(), rtp = Math.round(packStats().rtp * 100);
+  return `<h3 class="sec">Keep it fun</h3><p class="small" style="margin-bottom:12px">A pack returns about ${rtp}% on average when you sell, so over many packs most people end behind. These are yours to set, and you'll get a reminder every 30 minutes.</p>
+    <div class="row" style="margin-bottom:10px"><label class="small" for="limPacks">Packs per day</label><select id="limPacks">${[0, 1, 3, 5, 10, 20].map(n => `<option value="${n}"${l.packs === n ? " selected" : ""}>${n || "no limit"}</option>`).join("")}</select><span class="small">${packsToday()} opened today</span></div>
+    <div class="row"><span class="small">${onBreak ? `On a break for another ${heldText(l.breakUntil - Date.now())}.` : "Take a break"}</span>${onBreak ? "" : `<button class="btn small" data-brk="1">1 hour</button><button class="btn small" data-brk="24">24 hours</button>`}</div>`;
+}
+function startBreak(h) { state.lim.breakUntil = Math.max(state.lim.breakUntil, Date.now() + h * 36e5); persist(); closeModal(); toast(`Break started. Packs are off for ${h === 1 ? "an hour" : h + " hours"}.`); if (view === "profile") renderProfile(); }
+
+/* ---- one second at a time ---- */
+let rankSeen = null;
+function habitTick() {
+  sessionTick(); const i = rankIdx(xpOf()); if (rankSeen === null) { rankSeen = i; state.rank = i; }                  // the rank you arrive with is not news
+  if (i > rankSeen) { rankSeen = i; state.rank = i; persist(); toast(`Rank up: ${RANKS[i][0]}`); Snd.level(); buzz([20, 30, 20, 30, 40]); }
+  if (!document.hidden && Math.floor(Date.now() / 1000) % 30 === 0) { state.lastSeen = Date.now(); persist(); renderChips(); }
+}

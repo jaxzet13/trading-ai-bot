@@ -3,8 +3,8 @@
    ========================================================================== */
 let SS = null, SS_PRICE = 0; const stage = $("stage"), hint = t => { $("stHint").textContent = t; };
 function openPack() {
-  if (SS) return; const price = packPrice(); if (state.coins < price) { toast(`You need ${money(price - state.coins)} more. Tap “add $10”.`); return; }
-  state.coins -= price; state.s.packs++; state.s.spent += price; SS_PRICE = price; const items = pullPack(); state.vault.push(...items); save(); renderBal(true);
+  if (SS) return; const gate = packGate(); if (gate) { toast(gate); return; } const price = packPrice(); if (state.coins < price) { toast(`You need ${money(price - state.coins)} more. Tap “add $10”.`); return; }
+  state.coins -= price; state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; const items = pullPack(); state.vault.push(...items); save(); renderBal(true);
   SS = { items, idx: 0, phase: "pack", busy: false };
   $("stName").textContent = PACK.name; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
   $("stBox").innerHTML = `<div class="st-pack enter" id="stPack">${packHTML()}</div><div class="cstack" id="stStack"></div>`;
@@ -12,7 +12,7 @@ function openPack() {
   const pk = $("stPack").firstChild; SS.ps = liveWindow(pk); tiltPack(pk); $("stPack").addEventListener("click", tear);
 }
 async function tear() {
-  if (!SS || SS.phase !== "pack") return; SS.phase = "tearing"; hint(""); const wrap = $("stPack"), pk = wrap.querySelector(".pk");
+  if (!SS || SS.phase !== "pack") return; SS.phase = "tearing"; hint(""); Snd.tear(); buzz(35); const wrap = $("stPack"), pk = wrap.querySelector(".pk");
   let snap = ""; try { snap = pk.querySelector("canvas.scr").toDataURL("image/png"); } catch (e) {} if (SS.ps) SS.ps.stop();
   const dir = rand() < .5 ? 1 : -1, A = 13 + rand() * 6, B = 13 + rand() * 6, top = pk.cloneNode(true), bot = pk.cloneNode(true); freezeScreen(top, snap); freezeScreen(bot, snap);
   top.classList.add("cutp", "top"); bot.classList.add("cutp"); top.style.setProperty("--dx", dir);
@@ -43,6 +43,7 @@ async function reveal(el, c, card, R, v) {
   const ms = reduced ? 10 : [650, 850, 1300, 1900, 2700, 3500, 5200][R.tier], rect = el.getBoundingClientRect(), mid = [rect.left + rect.width / 2, rect.top + rect.height / 2]; hint(""); $("stTitle").innerHTML = ""; stage.style.setProperty("--rc", R.col);
   if (Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); await Cut.play(card.id); }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest
   await v.play(ms, () => { if (R.tier >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + R.tier * 40); FX.burst(mid[0], mid[1], 6 + R.tier * 4, [R.col, "#fff"], 260 + R.tier * 60); } });
+  Snd.reveal(R.tier); if (R.tier >= 2) buzz(R.tier >= 5 ? [40, 30, 60, 30, 90] : R.tier >= 3 ? [30, 25, 50] : [25]);
   FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][R.tier], R.tier >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + R.tier * 130);
   if (R.tier >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + R.tier * 14, [R.col, "#fff"]);
   if (R.tier >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
