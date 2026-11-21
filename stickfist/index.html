@@ -121,17 +121,22 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; color: var(--
 
 /* ---------- market ---------- */
 .up { color: var(--ok); } .dn { color: var(--bad); } .fl { color: var(--dim); }
-.mstats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; } .mstats > div { display: grid; gap: 4px; border-top: 1px solid var(--ln3); padding-top: 12px; align-content: start; } .mstats b { font-size: 22px; margin-right: 8px; font-weight: 700; }
+.mstats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; } .mstats > div { display: grid; gap: 4px; border-top: 1px solid var(--ln3); padding-top: 12px; align-content: start; } .mstats b { font-size: 22px; margin-right: 8px; font-weight: 700; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; } .two > * { min-width: 0; }
 .mover { display: grid; grid-template-columns: 1fr auto auto; gap: 2px 14px; align-items: baseline; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--ln); padding: 11px 2px; font-size: 13px; } .mover:hover { background: #0a0a0c; }
 .mover .nm { font-weight: 700; letter-spacing: .12em; text-transform: uppercase; } .mover .spark { font-size: 14px; letter-spacing: -1px; } .mover .dim { grid-column: 1 / -1; font-size: 11px; }
 .hot { display: flex; gap: 8px 16px; align-items: center; flex-wrap: wrap; justify-content: center; font-size: 12px; color: var(--dim); }
 .mover.mini { display: inline-flex; gap: 10px; width: auto; border: 0; padding: 2px 4px; align-items: baseline; font-size: 12px; } .mover.mini .nm { font-size: 12px; } .mover.mini:hover { background: none; text-decoration: underline; text-underline-offset: 3px; }
+.worth { display: grid; gap: 14px; margin-bottom: 28px; } .worth .bx { --px: 9px; } .wmeta { display: flex; flex-wrap: wrap; gap: 6px 28px; font-size: 14px; }
+.wsplit { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 34px; } .wsplit > div { display: grid; gap: 4px; border-top: 1px solid var(--ln3); padding-top: 12px; align-content: start; } .wsplit b { font-size: 18px; font-weight: 700; }
+.flip { display: grid; grid-template-columns: 1fr auto; gap: 2px 14px; align-items: baseline; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--ln); padding: 11px 2px; font-size: 13px; } .flip:hover { background: #0a0a0c; }
+.flip .nm { font-weight: 700; letter-spacing: .04em; } .flip .dim { grid-column: 1 / -1; font-size: 11px; } .hotflip { flex-basis: 100%; text-align: center; font-size: 12px; color: var(--dim); } .hotflip b { color: var(--ink); font-weight: 400; }
+.mtable tfoot td { border-top: 1px solid var(--ln3); border-bottom: 0; color: var(--dim); }
 .mtable td, .mtable th { white-space: nowrap; } .spk { font-size: 14px; letter-spacing: -1px; } .buzz { color: var(--dim); letter-spacing: 1px; font-size: 11px; }
 .linkbtn.plain { color: var(--ink); text-decoration: none; font-weight: 700; font-size: 13px; } .linkbtn.plain:hover { text-decoration: underline; }
 .trades { display: grid; } .trade { display: grid; grid-template-columns: 110px 1fr auto 100px 90px; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--ln); font-size: 12px; align-items: baseline; } .trade .who { color: var(--dim); }
 .mk { display: grid; gap: 10px; border-top: 1px solid var(--ln); border-bottom: 1px solid var(--ln); padding: 14px 0; } .mkrow b { font-size: 22px; margin-right: 6px; }
-.chartbox { display: flex; gap: 10px; align-items: stretch; } .chart { font-size: 11px; line-height: 1; letter-spacing: 0; white-space: pre; color: var(--ok); overflow: hidden; flex: 1; min-width: 0; } .chartbox.dn .chart { color: var(--bad); }
+.chartbox { display: flex; gap: 10px; align-items: stretch; container-type: inline-size; } .chart { font-size: 11px; font-size: min(15px, calc((100cqw - 66px) / (var(--cols, 56) * .6))); line-height: 1; letter-spacing: 0; white-space: pre; color: var(--ok); overflow: hidden; flex: 1; min-width: 0; } .chartbox.dn .chart { color: var(--bad); }
 .axis { display: flex; flex-direction: column; justify-content: space-between; color: var(--faint); font-size: 10px; }
 .mk .row { justify-content: space-between; }
 
@@ -175,10 +180,10 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; color: var(--
 @keyframes fanin { from { transform: translateY(40px) scale(.9); opacity: 0; } }
 
 @media (max-width: 760px) {
-  .mstats { grid-template-columns: 1fr 1fr; gap: 16px; } .two { grid-template-columns: 1fr; gap: 6px; } .chart { font-size: 8px; } .trade { grid-template-columns: 1fr auto; row-gap: 3px; } .trade > :nth-child(1) { grid-area: 1 / 1; } .trade > :nth-child(4) { grid-area: 1 / 2; text-align: right; } .trade > :nth-child(2) { grid-area: 2 / 1; } .trade > :nth-child(3) { grid-area: 2 / 2; text-align: right; } .trade > :nth-child(5) { display: none; }
-  .mtable th:nth-child(3), .mtable td:nth-child(3), .mtable th:nth-child(5), .mtable td:nth-child(5), .mtable th:nth-child(6), .mtable td:nth-child(6), .mtable th:nth-child(7), .mtable td:nth-child(7) { display: none; } .mtable td:first-child { white-space: normal; } .mtable td:first-child .faint { display: block; font-size: 10px; } .mtable th, .mtable td { padding-left: 6px; padding-right: 6px; } .mtable .btn.small { padding: 4px 6px; font-size: 11px; }
-  .ttl { --px: 5px; } .st-title .nm { --px: 5px; } .sum .big .bx { --px: 5px; } .facts .bx { --px: 5px; }
-  header.top .wrap { flex-wrap: wrap; height: auto; padding-top: 10px; padding-bottom: 8px; gap: 8px 14px; } nav.tabs { order: 3; width: 100%; flex: none; margin-left: -12px; }
+  .mstats { grid-template-columns: 1fr 1fr; gap: 16px; } .two { grid-template-columns: 1fr; gap: 6px; } .trade { grid-template-columns: 1fr auto; row-gap: 3px; } .trade > :nth-child(1) { grid-area: 1 / 1; } .trade > :nth-child(4) { grid-area: 1 / 2; text-align: right; } .trade > :nth-child(2) { grid-area: 2 / 1; } .trade > :nth-child(3) { grid-area: 2 / 2; text-align: right; } .trade > :nth-child(5) { display: none; }
+  #mTable th:nth-child(4), #mTable td:nth-child(4), #mTable th:nth-child(5), #mTable td:nth-child(5), #pTable th:nth-child(2), #pTable td:nth-child(2), #pTable th:nth-child(5), #pTable td:nth-child(5) { display: none; } .mtable td:first-child { white-space: normal; } .mtable td:first-child .faint { display: block; font-size: 10px; } .mtable th, .mtable td { padding-left: 6px; padding-right: 6px; } .mtable .btn.small { padding: 4px 6px; font-size: 11px; }
+  .wsplit { grid-template-columns: 1fr 1fr; gap: 16px; } .worth .bx { --px: 5px; } .mstats { grid-template-columns: 1fr 1fr; } .ttl { --px: 5px; } .st-title .nm { --px: 5px; } .sum .big .bx { --px: 5px; } .facts .bx { --px: 5px; }
+  header.top .wrap { flex-wrap: wrap; height: auto; padding-top: 10px; padding-bottom: 8px; gap: 8px 14px; } nav.tabs { order: 3; width: 100%; flex: none; margin-left: -8px; gap: 0; } nav.tabs a { padding: 6px 7px; font-size: 13px; }
   .facts { grid-template-columns: 1fr; gap: 14px; } .mbox { grid-template-columns: 1fr; padding: 20px; gap: 22px; } .mbox .mcard { width: min(260px, 70%); margin: 0 auto; }
   .fan { flex-wrap: wrap; } .fan > div { width: min(112px, 28vw); } .slot .row { grid-template-columns: 110px max-content 1fr; gap: 8px; } .slot .bar { font-size: 11px; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 22px 14px; }
@@ -191,7 +196,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; color: var(--
   <div class="wrap">
     <a class="logo" href="#/">STIXX</a>
     <nav class="tabs" id="tabs" aria-label="Sections">
-      <a href="#/" data-v="home">pack</a><a href="#/market" data-v="market">market</a><a href="#/collection" data-v="collection">collection</a><a href="#/odds" data-v="odds">odds</a>
+      <a href="#/" data-v="home">pack</a><a href="#/market" data-v="market">market</a><a href="#/profile" data-v="profile">profile</a><a href="#/collection" data-v="collection">collection</a><a href="#/odds" data-v="odds">odds</a>
     </nav>
     <div class="wallet"><span class="bal" id="bal">$0.00</span><button class="btn small" id="addFunds" title="Demo money. Nothing is ever charged.">+ add $10</button></div>
   </div>
@@ -212,14 +217,26 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; color: var(--
 
   <!-- MARKET -->
   <section class="view" id="v-market">
-    <div class="page-head"><div class="ttl" data-block="MARKET" role="img" aria-label="Market"></div><p>Live demo market. Prices move every 20 seconds and are the same for everyone. The other traders are simulated.</p></div>
+    <div class="page-head"><div class="ttl" data-block="MARKET" role="img" aria-label="Market"></div><p>Prices move every 20 seconds and are the same for everyone. You get cards from packs, and sell them any time. The other traders are simulated.</p></div>
     <div class="mstats" id="mStats"></div>
     <div class="two" id="mMovers"></div>
+    <div class="two" id="mFlips" style="margin-top:40px"></div>
+    <p class="small" id="mFlipNote" style="margin-top:6px"></p>
+    <h3 class="sec" style="margin-top:44px">Live feed <span class="faint">· simulated traders · after the 10% selling fee</span></h3>
+    <div class="trades" id="mTrades"></div>
     <h3 class="sec" style="margin-top:44px">All cards</h3>
     <div class="tablewrap"><table class="mtable" id="mTable"></table></div>
-    <p class="small" style="margin-bottom:44px">Buying costs the price plus 10%. Selling pays the price minus 10%. Listings change every hour. <a class="linkbtn" href="#/odds">How the market works</a></p>
-    <h3 class="sec">Recent trades <span class="faint">· simulated traders · after the 10% spread</span></h3>
-    <div class="trades" id="mTrades"></div>
+    <p class="small" style="margin-bottom:44px">Selling pays the price minus 10%. <a class="linkbtn" href="#/odds">How the market works</a></p>
+  </section>
+
+  <!-- PROFILE -->
+  <section class="view" id="v-profile">
+    <div class="page-head"><div class="ttl" data-block="PROFILE" role="img" aria-label="Profile"></div><p>Your demo wallet. It moves with the market, so keep it open and watch.</p></div>
+    <div id="pWorth"></div>
+    <div id="pChart" style="margin-bottom:40px"></div>
+    <h3 class="sec">Your cards</h3>
+    <div class="tablewrap"><table class="mtable" id="pTable"></table></div>
+    <p class="small" id="pNote" style="margin-bottom:44px"></p>
   </section>
 
   <!-- COLLECTION -->
@@ -279,20 +296,20 @@ const RAR = {
 };
 // val is in cents. chars is the exact number printed on the card.
 const CARDS = [
-  { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "common",    chars: 2772,   val: 14,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
-  { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "common",    chars: 2816,   val: 14,    tint: "#a8ffbe", cap: "it is a colander. it works." },
-  { no: "004", id: "rook",    name: "Rook",    sub: "pool noodle", rar: "common",   chars: 2816,   val: 14,    tint: "#a8ffbe", cap: "reach: floppy." },
-  { no: "012", id: "orbit",   name: "Grimm",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 20,    tint: "#a9c9ff", cap: "already read the ending." },
-  { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "uncommon",  chars: 15750,  val: 70,    tint: "#ece7dc", cap: "gone before the cape lands." },
-  { no: "018", id: "null",    name: "Null",    sub: "star",       rar: "rare",      chars: 29260,  val: 220,   tint: "#a9c9ff", cap: "not on any record." },
-  { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "rare",      chars: 31970,  val: 580,   tint: "#ffd27a", cap: "rents you the air." },
-  { no: "006", id: "ronin",   name: "Ronin",   sub: "cliff",      rar: "epic",      chars: 71680,  val: 810,   tint: "#ff8ac9", cap: "" },
-  { no: "011", id: "grimm",   name: "Grimm",   sub: "cathedral",  rar: "legendary", chars: 219520, val: 2500,  tint: "#a8ffb0", cap: "" },
-  { no: "015", id: "reaper",  name: "Reaper",  sub: "ember",      rar: "mythic",    chars: 701000, val: 19000, tint: "#ffc87a", cap: "" },
-  { no: "020", id: "umbra",   name: "Umbra",   sub: "eclipse",    rar: "secret",    chars: 1578000, val: 31000, tint: "#ffb54a", cap: "the sun blinked first." }
+  { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "common",    chars: 2772,   val: 11,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
+  { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "common",    chars: 2816,   val: 11,    tint: "#a8ffbe", cap: "it is a colander. it works.", styles: true },
+  { no: "004", id: "rook",    name: "Rook",    sub: "pool noodle", rar: "common",   chars: 2816,   val: 11,    tint: "#a8ffbe", cap: "reach: floppy.", styles: true },
+  { no: "012", id: "orbit",   name: "Grimm",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 16,    tint: "#a9c9ff", cap: "already read the ending.", styles: true },
+  { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "uncommon",  chars: 15750,  val: 70,    tint: "#ece7dc", cap: "gone before the cape lands.", styles: true },
+  { no: "018", id: "null",    name: "Null",    sub: "star",       rar: "rare",      chars: 29260,  val: 445,   tint: "#a9c9ff", cap: "not on any record.", styles: true },
+  { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "rare",      chars: 31970,  val: 660,   tint: "#ffd27a", cap: "rents you the air.", styles: true },
+  { no: "006", id: "ronin",   name: "Ronin",   sub: "cliff",      rar: "epic",      chars: 71680,  val: 800,   tint: "#ff8ac9", cap: "", styles: true },
+  { no: "011", id: "grimm",   name: "Grimm",   sub: "cathedral",  rar: "legendary", chars: 219520, val: 2200,  tint: "#a8ffb0", cap: "", styles: true },
+  { no: "015", id: "reaper",  name: "Reaper",  sub: "ember",      rar: "mythic",    chars: 701000, val: 19000, tint: "#ffc87a", cap: "", styles: true },
+  { no: "020", id: "umbra",   name: "Umbra",   sub: "eclipse",    rar: "secret",    chars: 1578000, val: 33500, tint: "#ffb54a", cap: "the sun blinked first.", styles: true }
 ];
 const BY_NO = Object.fromEntries(CARDS.map(c => [c.no, c])), BY_ID = Object.fromEntries(CARDS.map(c => [c.id, c]));
-// The twelve styles a Stitch can come out in (odds per Stitch, value multiplier). The default is Bone.
+// The twelve ASCII styles any card can come out in (odds per card, value multiplier). The default is the plain look. A copy's own code decides its style.
 const STYLES = {
   steel:   { name: "Phosphor",     p: .006,  x: 3   }, dots:  { name: "Amber",    p: .005,  x: 3   },
   vhs:     { name: "Glitch",       p: .004,  x: 3.5 }, scratch: { name: "Typeset", p: .004, x: 3.5 },
@@ -303,13 +320,13 @@ const STYLES = {
 };
 const STYLE_TINT = { "": "#ece7dc", steel: "#aaffbd", dots: "#ffd27a", vhs: "#c9a5ff", scratch: "#ece7dc", ice: "#a9c9ff", chain: "#ece7dc", wire: "#b6ff9c", print: "#ff9a94", glass: "#ff8ac9", blood: "#a8ffb0", leaf: "#d6c9ff", kin: "#a9c9ff" };
 const PACK = {
-  name: "First Print", price: 499, min: 349, max: 799, n: 5,
+  name: "First Print", price: 499, min: 349, max: 1299, n: 5,
   slots: [   // each slot: [card id, weight]. Tuned so the pack sells back for at least its cost about 45% of the time across market states (worked out live below).
     [["stitch", 1], ["brick", 1], ["rook", 1]],
     [["stitch", 1], ["brick", 1], ["rook", 1]],
-    [["stitch", 29.5], ["brick", 29.5], ["rook", 29.5], ["orbit", 8.1], ["phantom", 3.4]],
-    [["orbit", 28.5], ["phantom", 57.7], ["null", 5.8], ["shogun", 8]],
-    [["orbit", 35.2], ["phantom", 13.5], ["null", 9.3], ["shogun", 33.2], ["ronin", 7.5], ["grimm", 1.2], ["reaper", .05], ["umbra", .04]]
+    [["stitch", 30.2], ["brick", 30.2], ["rook", 30.2], ["orbit", 8.1], ["phantom", 1.3]],
+    [["orbit", 5.7], ["phantom", 90], ["null", 1.6], ["shogun", 2.7]],
+    [["orbit", 44.8], ["phantom", 10.5], ["null", 5], ["shogun", 36.6], ["ronin", 2.8], ["grimm", .34], ["reaper", .04], ["umbra", .02]]
   ]
 };;
 const SELLBACK = .9, START = 1000, TOPUP = 1000;
@@ -346,24 +363,39 @@ function rollStyle(u) { let acc = 0; for (const k in STYLES) { acc += STYLES[k].
 const styleOfCode = code => rollStyle(fnv("fx:" + code) / 4294967296);
 const cuts = rar => "/".repeat(RAR[rar].cuts);
 const idHTML = (code, rar) => `<span class="cid"><b>${esc(code)}</b>${cuts(rar) ? `<i>${cuts(rar)}</i>` : ""}</span>`;
-const styleName = fx => fx ? STYLES[fx].name : "Bone";
-const imgOf = (card, fx) => `cards/${card.styles ? "stitch-" + (fx || "bone") : card.id}.jpg`;
+const styleName = fx => fx ? STYLES[fx].name : "Plain";
+const imgOf = (card, fx) => `cards/${card.id}${fx ? "-" + fx : card.id === "stitch" ? "-bone" : ""}.jpg`;   // the plain look is cards/<id>.jpg; a styled copy is cards/<id>-<style>.jpg
 
 /* ============================================================================
    4. STATE AND ECONOMY. Everything lives in this browser.
    ========================================================================== */
 const KEY = "stixx-first-print-v1";
-const fresh = () => ({ coins: START, vault: [], serials: {}, bought: {}, ageOK: false, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, bought: 0 } });
+const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], ageOK: false, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0 } });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); } catch (e) {}
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+const save = () => { logWorth(true); persist(); };
 
 // what a copy is worth right now: the card's live market price, times its style multiple
 const valueOf = c => Math.max(1, Math.round(MK.price(BY_NO[c.no]) * (c.fx ? STYLES[c.fx].x : 1)));
 const sellOf = c => Math.floor(valueOf(c) * SELLBACK);                    // selling pays the price minus 10%
-const BUY_SPREAD = 1.1, buyPrice = card => Math.round(MK.price(card) * BUY_SPREAD);   // buying costs the price plus 10%
 const costOf = c => c.cost != null ? c.cost : valueOf(c);                 // what a copy cost you, or was worth the moment you pulled it
 const gainOf = c => valueOf(c) / Math.max(1, costOf(c)) - 1;
+
+/* ---- your net worth over time ----
+   A point is kept each time the market moves while the app is open, and after every change you make: [time, net worth, money you have added].
+   While the app is closed nothing in your wallet can change, so the gap is filled in from the market's own price path. Nothing on the profile is made up. */
+const holdingsValue = () => state.vault.reduce((a, c) => a + valueOf(c), 0);
+const netWorth = () => state.coins + holdingsValue();
+const valueAgo = (c, ticks) => Math.max(1, Math.round(MK.price(BY_NO[c.no], ticks) * (c.fx ? STYLES[c.fx].x : 1)));
+function logWorth(force) {
+  const h = state.hist, t = Date.now(), last = h[h.length - 1]; if (last && !force && t - last[0] < 15000) return;
+  if (last && t - last[0] > 12 * 60000 && state.vault.length) for (let ts = Math.max(last[0] + 6e5, t - 7 * 864e5); ts < t - 3e5; ts += 6e5) { const ago = Math.round((t - ts) / MK.TICK); h.push([ts, state.coins + state.vault.reduce((a, c) => a + valueAgo(c, ago), 0), state.s.added]); }
+  const net = netWorth(); if (!last || last[1] !== net || last[2] !== state.s.added || t - last[0] > 15000) h.push([t, net, state.s.added]);
+  if (h.length > 1500) h.splice(0, 750, ...h.slice(0, 750).filter((_, i) => i % 2 === 0));    // keep recent points dense, thin out the old ones
+}
+const profitAll = () => netWorth() - START - state.s.added;                                    // everything you have made or lost, deposits left out
+function profitSince(ms) { const h = state.hist, t = Date.now() - ms; let p = h[0]; for (const x of h) { if (x[0] <= t) p = x; else break; } return p ? (netWorth() - state.s.added) - (p[1] - p[2]) : 0; }
 function mint(card, phys, serial, paid) {
   const n = serial != null ? serial : (state.serials[card.no] = (state.serials[card.no] || 0) + 1);
   if (serial != null) state.serials[card.no] = Math.max(state.serials[card.no] || 0, serial);
@@ -377,7 +409,7 @@ function pullPack() { return PACK.slots.map(slot => mint(BY_ID[pick(slot)])); }
 function slotP(slot, id) { let t = 0, w = 0; for (const [i, x] of slot) { t += x; if (i === id) w = x; } return w / t; }
 const packP = id => 1 - PACK.slots.reduce((a, s) => a * (1 - slotP(s, id)), 1);
 
-// The exact distribution of what a whole pack sells back for: every slot's outcomes (including a Stitch's style roll) convolved together.
+// The exact distribution of what a whole pack sells back for: every slot's outcomes (including each card's style roll) convolved together.
 // `val` says what a card is worth: the live market price, or its base worth.
 const sellFor = (card, mult, val) => Math.floor(Math.max(1, Math.round(val(card) * mult)) * SELLBACK);
 function cardSells(card, val) {
@@ -385,26 +417,27 @@ function cardSells(card, val) {
   if (!card.styles) { add(sellFor(card, 1, val), 1); return m; }
   let rest = 1; for (const k in STYLES) { add(sellFor(card, STYLES[k].x, val), STYLES[k].p); rest -= STYLES[k].p; } add(sellFor(card, 1, val), rest); return m;
 }
-function packDist(val) {
-  let dist = new Map([[0, 1]]);
+// The pack's average return is worked out exactly (it is linear), and so is the chance of selling back at least what you paid; every total at or above `cap`
+// is merged into one bin, because past that point nothing about the number matters, which keeps this fast enough to redo every time the market moves.
+function slotSells(slot, val) { const t = slot.reduce((a, [, w]) => a + w, 0), sd = new Map(); for (const [id, w] of slot) for (const [v, p] of cardSells(BY_ID[id], val)) sd.set(v, (sd.get(v) || 0) + w / t * p); return sd; }
+const evOf = val => PACK.slots.reduce((a, slot) => { let e = 0; for (const [v, p] of slotSells(slot, val)) e += v * p; return a + e; }, 0);
+function packDist(val, cap) {
+  let dist = new Float64Array(cap + 1); dist[0] = 1;
   for (const slot of PACK.slots) {
-    const t = slot.reduce((a, [, w]) => a + w, 0), sd = new Map();
-    for (const [id, w] of slot) for (const [v, p] of cardSells(BY_ID[id], val)) sd.set(v, (sd.get(v) || 0) + w / t * p);
-    const next = new Map(); for (const [a, pa] of dist) for (const [b, pb] of sd) next.set(a + b, (next.get(a + b) || 0) + pa * pb); dist = next;
+    const next = new Float64Array(cap + 1); let all = 0; for (let i = 0; i <= cap; i++) all += dist[i];
+    for (const [v, p] of slotSells(slot, val)) { if (v >= cap) { next[cap] += p * all; continue; } let over = 0; for (let i = 0; i <= cap; i++) { const q = dist[i]; if (!q) continue; if (i + v >= cap) over += q; else next[i + v] += p * q; } next[cap] += p * over; }
+    dist = next;
   }
   return dist;
 }
-const evOf = dist => { let ev = 0; for (const [k, p] of dist) ev += k * p; return ev; };
-let _base = 0; const baseEV = () => _base || (_base = evOf(packDist(c => c.val)));
+let _base = 0; const baseEV = () => _base || (_base = evOf(c => c.val));
 // The pack's price follows the market: it moves with what the cards inside are worth now, so the pack always returns about the same share
-// (88%) whatever the market does. Recomputed whenever the market moves.
+// (about 89%) whatever the market does. Recomputed whenever the market moves.
 let _ps = null;
 function packStats() {
   const t = MK.tick(); if (_ps && _ps.t === t) return _ps;
-  const dist = packDist(card => MK.price(card)), ev = evOf(dist), price = clamp(Math.round(PACK.price * ev / baseEV()), PACK.min, PACK.max);
-  let hit = 0, acc = 0, median = 0; const keys = [...dist.keys()].sort((a, b) => a - b);
-  for (const k of keys) if (k >= price) hit += dist.get(k);
-  for (const k of keys) { acc += dist.get(k); if (acc >= .5) { median = k; break; } }
+  const val = card => MK.price(card), ev = evOf(val), price = clamp(Math.round(PACK.price * ev / baseEV()), PACK.min, PACK.max), cap = price * 3, dist = packDist(val, cap);
+  let hit = 0, acc = 0, median = cap; for (let i = price; i <= cap; i++) hit += dist[i]; for (let i = 0; i <= cap; i++) { acc += dist[i]; if (acc >= .5) { median = i; break; } }
   return (_ps = { t, ev, hit, median, rtp: ev / price, price });
 }
 const packPrice = () => packStats().price;
@@ -416,21 +449,22 @@ const packPrice = () => packStats().price;
      - random noise, bigger for cheap cards than for expensive ones
      - demand shocks (a card catches on, or falls out of favour), equally likely either way, the same size either way,
        fading over a few hours
-   Nothing is tilted against holders: up moves and down moves are mirror images in log terms, and buying costs the same spread as selling.
+   Nothing is tilted against holders: up moves and down moves are mirror images in log terms, and selling costs everybody the same 10%.
+   History is continuous: the noise is keyed by the absolute clock tick, and the path is built from a few days before the window anyone can see.
    ========================================================================== */
 const MK = (() => {
-  const TICK = 20000, EPOCH = 14 * 864e5, N = Math.round(EPOCH / TICK), DT = TICK / 864e5;   // one tick = 20 seconds; the path restarts every 14 days
+  const TICK = 20000, EPOCH = 14 * 864e5, PRE = 14 * 864e5, LEN = Math.ceil((EPOCH + PRE) / TICK) + 2, DT = TICK / 864e5;   // one tick = 20 seconds; the path is rebuilt every 14 days, starting 14 days earlier so nothing visible ever has a gap
   const KAPPA = 1.2, TAU = .25;                                                             // pull back toward the card's taste level (per day); shocks fade over ~6 hours
   const VOL = { common: .62, uncommon: .52, rare: .36, epic: .28, legendary: .2, mythic: .15, secret: .12 };      // daily volatility of the log price
   const RATE = { common: 1.3, uncommon: 1.1, rare: .75, epic: .55, legendary: .35, mythic: .25, secret: .15 };    // demand shocks per day
   const CAP = { common: 8, uncommon: 6, rare: 4, epic: 3, legendary: 2.5, mythic: 2, secret: 2 }, FLOOR = .25;      // the price stays between FLOOR x and CAP x of the card's base value
   const TASTE = { stitch: .04, brick: .14, rook: -.07, orbit: .08, phantom: -.03, null: .15, shogun: 0, ronin: .08, grimm: .05, reaper: -.04, umbra: .1 };   // log units
-  const LIST = { epic: .55, legendary: .2, mythic: .1, secret: .04 }, DEPTH = { common: 40, uncommon: 12, rare: 4, epic: 2, legendary: 1, mythic: 1, secret: 1 };
-  const h3 = (a, b, c) => { let h = (a * 374761393 + b * 668265263 + c * 2147483647) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
+  const mix = h => { h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); return h ^ (h >>> 16); };   // a well-mixed 32-bit hash, so different questions asked about the same tick are independent
+  const h3 = (a, b, c) => (mix(Math.imul(a, 0x9e3779b1) + mix(Math.imul(b, 0x85ebca77) + mix(c + 0x27d4eb2f))) >>> 0) / 4294967296;
   const norm = (a, b, c) => Math.sqrt(-2 * Math.log(Math.max(h3(a, b, c), 1e-9))) * Math.cos(6.2832 * h3(a, b, c + 1));
   const idx = {}; CARDS.forEach((c, i) => { idx[c.no] = i; });
-  let epoch = 0, cards = null;
-  const nowTick = () => { if (!cards) advance(); return Math.floor((Date.now() - epoch) / TICK); };
+  let epoch = 0, t0 = 0, base = 0, cards = null;                                                // t0: where the built path starts; base: that moment as an absolute tick
+  const nowTick = () => { if (!cards) advance(); return Math.floor((Date.now() - t0) / TICK); };
   function stepOne(S, c, i, t) {
     const vol = VOL[c.rar], hi = Math.log(CAP[c.rar]), lo = Math.log(FLOOR), sd = Math.sqrt(DT);
     S.a += -.2 * (S.a - (TASTE[c.id] || 0)) * DT + .06 * sd * norm(i, t, 11);                     // taste wanders slowly
@@ -444,15 +478,15 @@ const MK = (() => {
     return x;
   }
   function build() {
-    epoch = Math.floor(Date.now() / EPOCH) * EPOCH; const t1 = Math.floor((Date.now() - epoch) / TICK); cards = CARDS.map((c, i) => {
-      const a = TASTE[c.id] || 0, vol = VOL[c.rar], S = { a, u: a + norm(i, -1, 1) * vol / Math.sqrt(2 * KAPPA), h: 0 }, X = new Float32Array(N + 2);
-      X[0] = S.u; for (let t = 1; t <= t1; t++) X[t] = stepOne(S, c, i, t); return { c, S, X, n: t1 };
+    epoch = Math.floor(Date.now() / EPOCH) * EPOCH; t0 = Math.floor((epoch - PRE) / TICK) * TICK; base = t0 / TICK; const t1 = Math.floor((Date.now() - t0) / TICK); cards = CARDS.map((c, i) => {
+      const a = TASTE[c.id] || 0, vol = VOL[c.rar], S = { a, u: a + norm(i, -1, 1) * vol / Math.sqrt(2 * KAPPA), h: 0 }, X = new Float32Array(LEN);
+      X[0] = S.u; for (let t = 1; t <= t1; t++) X[t] = stepOne(S, c, i, base + t); return { c, S, X, n: t1 };
     });
   }
   function advance() {
     if (!cards || Math.floor(Date.now() / EPOCH) * EPOCH !== epoch) { build(); return true; }
-    const t1 = Math.floor((Date.now() - epoch) / TICK); let moved = false;
-    for (const m of cards) while (m.n < t1) { m.n++; m.X[m.n] = stepOne(m.S, m.c, idx[m.c.no], m.n); moved = true; }
+    const t1 = Math.floor((Date.now() - t0) / TICK); let moved = false;
+    for (const m of cards) while (m.n < t1) { m.n++; m.X[m.n] = stepOne(m.S, m.c, idx[m.c.no], base + m.n); moved = true; }
     return moved;
   }
   const M = card => { if (!cards) advance(); return cards[idx[card.no]]; };
@@ -461,19 +495,21 @@ const MK = (() => {
   const pct = (card, hours) => Math.exp(logAt(card, 0) - logAt(card, Math.round(hours * 180))) - 1;
   const series = (card, hours, pts) => { const m = M(card), span = Math.round(hours * 180), out = []; for (let k = 0; k < pts; k++) out.push(price(card, Math.round(span * (1 - k / (pts - 1))))); return out; };
   const buzz = card => { const m = M(card); return clamp(Math.round(2.5 + m.S.h * 3 + (m.X[m.n] - m.S.a) * 2.2), 0, 5); };   // 0 to 5: how much talk there is about the card right now
-  const stock = card => { const w = Math.floor(nowTick() / 180), i = idx[card.no];
-    if (LIST[card.rar] == null) return DEPTH[card.rar] ? Math.max(1, Math.floor(DEPTH[card.rar] * (.3 + .7 * h3(i, w, 21)))) : 0;
-    return h3(i, w, 22) < LIST[card.rar] ? 1 + Math.floor(h3(i, w, 23) * DEPTH[card.rar]) : 0; };
-  const hourId = () => Math.floor(nowTick() / 180);
-  // what simulated traders did lately, worked out from the real price path and net of the same 10% spread everyone pays
-  function trades(n) {
-    const t = nowTick(), out = [];
-    for (let k = 0; k < n; k++) { const b = t - k * 9, i = Math.floor(h3(b, 31, 1) * CARDS.length), hours = 1 + Math.floor(h3(b, 32, 2) * 23), c = CARDS[i], m = cards[i];
-      if (b - hours * 180 < 0) continue; const buy = Math.max(1, Math.round(c.val * Math.exp(m.X[b - hours * 180]))), sell = Math.max(1, Math.round(c.val * Math.exp(m.X[b])));
-      out.push({ name: "anon_" + (1000 + Math.floor(h3(b, 33, 3) * 9000)), card: c, hours, buy: Math.round(buy * 1.1), sell: Math.floor(sell * .9), min: k * 3 }); }
-    return out;
+  /* Simulated traders. Each one pulled a card some hours ago and sold it at tick b; what they got and what they sold for come straight from the real
+     price path, and the sale is net of the same 10% selling fee. Cards are chosen in proportion to how often packs actually hold them. */
+  let cum = null; const pickCard = u => { if (!cum) { const w = CARDS.map(c => packP(c.id)), t = w.reduce((x, y) => x + y, 0); let acc = 0; cum = w.map(x => (acc += x / t)); } const i = cum.findIndex(x => u < x); return i < 0 ? CARDS.length - 1 : i; };
+  function event(b) {
+    const a = base + b, i = pickCard(h3(a, 31, 1)), hours = 1 + Math.floor(h3(a, 32, 2) * 23), c = CARDS[i], m = cards[i], from = b - hours * 180; if (from < 0) return null;
+    const got = Math.max(1, Math.round(c.val * Math.exp(m.X[from]))), sold = Math.floor(Math.max(1, Math.round(c.val * Math.exp(m.X[b]))) * SELLBACK);
+    return { name: "anon_" + (1000 + Math.floor(h3(a, 33, 3) * 9000)), card: c, hours, got, sold, gain: sold - got, pct: sold / got - 1, ago: Math.round((nowTick() - b) / 3) };   // ago: minutes
   }
-  return { advance, price, pct, series, buzz, stock, hourId, trades, tick: nowTick, TICK, FLOOR, CAP, VOL, RATE };
+  const feed = n => { const t = nowTick(), out = []; for (let k = 0; out.length < n && k < n * 3; k++) { const e = event(t - k * 9); if (e) out.push(e); } return out; };
+  let fl = null;   // the last 24 hours of simulated trades, one every three minutes: the best and the worst of them by dollars
+  function flips() {
+    const t = nowTick(); if (fl && fl.t === t) return fl; const all = []; for (let k = 0; k < 480; k++) { const e = event(t - k * 9); if (e) all.push(e); }
+    const byGain = all.slice().sort((x, y) => y.gain - x.gain); return (fl = { t, n: all.length, best: byGain.slice(0, 3), worst: byGain.slice(-3).reverse(), won: all.filter(e => e.gain > 0).length });
+  }
+  return { advance, price, pct, series, buzz, feed, flips, tick: nowTick, TICK, FLOOR, CAP, VOL, RATE };
 })();
 
 /* ============================================================================
@@ -546,11 +582,14 @@ function blockReveal(el, str, ms) {
 const SPARKS = "▁▂▃▄▅▆▇█";
 const spark = v => { const mn = Math.min(...v), sp = Math.max(...v) - mn || 1; return v.map(x => SPARKS[clamp(Math.round((x - mn) / sp * 7), 0, 7)]).join(""); };
 // a small chart: `h` rows of block characters, one column per value
-function asciiChart(vals, h) {
-  const mn = Math.min(...vals), sp = Math.max(...vals) - mn || 1, B = " ▁▂▃▄▅▆▇█", rows = [];
+function asciiChart(vals, h, lo, hi) {
+  const mn = lo != null ? lo : Math.min(...vals), sp = (hi != null ? hi : Math.max(...vals)) - mn || 1, B = " ▁▂▃▄▅▆▇█", rows = [];
   for (let r = h - 1; r >= 0; r--) { let line = ""; for (const v of vals) line += B[clamp(Math.round((v - mn) / sp * h * 8 - r * 8), 0, 8)]; rows.push(line); }
   return rows.join("\n");
 }
+// a chart with a little headroom, so a quiet line sits in the middle instead of on the floor; `log` plots ratios, so +100% and −50% look the same size
+function chartRows(vals, h, log) { const v = log ? vals.map(Math.log) : vals, mn = Math.min(...v), mx = Math.max(...v), mid = (mn + mx) / 2, sp = Math.max(mx - mn, log ? .06 : Math.abs(mid) * .01) * 1.16; return asciiChart(v, h, mid - sp / 2, mid + sp / 2); }
+const pnlHTML = (d, base) => `<span class="${d > 0 ? "up" : d < 0 ? "dn" : "fl"}">${d > 0 ? "▲ +" : d < 0 ? "▼ −" : "– "}${money(Math.abs(d))}${base > 0 ? ` <span class="dim">${Math.abs(d / base * 100).toFixed(Math.abs(d / base) >= 1 ? 0 : 1)}%</span>` : ""}</span>`;
 const pctHTML = p => `<span class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲ +" : p < -.0005 ? "▼ −" : "– "}${Math.abs(p * 100).toFixed(Math.abs(p) >= 1 ? 0 : 1)}%</span>`;
 // a progress bar made of characters: [███░░] 
 const meter = (i, n) => "[" + fill("█", i) + fill("░", n - i) + "]";
@@ -676,7 +715,7 @@ const FX = (() => {
    6. CARDS AND THE PACK
    ========================================================================== */
 function cardHTML(copy, o) {
-  o = o || {}; const card = BY_NO[copy.no], fx = copy.fx || "", tint = card.styles ? STYLE_TINT[fx] : card.tint, code = copy.code || "";
+  o = o || {}; const card = BY_NO[copy.no], fx = copy.fx || "", tint = fx ? STYLE_TINT[fx] : card.tint, code = copy.code || "";
   return `<div class="card t${RAR[card.rar].tier}${o.sm ? " sm" : ""}${o.locked ? " locked" : ""}" style="--tint:${tint}" data-no="${card.no}">
     <div class="pic"><img src="${imgOf(card, fx)}" alt="${esc(card.name)}" draggable="false"></div>
     <div class="strip"><div class="l1"><span class="nm">${esc(card.name)}</span><i class="hr"></i><span class="ct"><b>${fmt(card.chars)}</b><u>chars</u></span></div>
@@ -697,7 +736,7 @@ function tiltPack(pk) {
 /* ============================================================================
    7. PAGES: pack, market, collection, odds
    ========================================================================== */
-const VIEWS = ["home", "market", "collection", "odds"]; let view = "home", modalNo = null;
+const VIEWS = ["home", "market", "profile", "collection", "odds"]; let view = "home", modalNo = null;
 const copiesOf = no => state.vault.filter(c => c.no === no).sort((a, b) => valueOf(b) - valueOf(a));
 function renderBal(anim) { const el = $("bal"), from = +(el.dataset.v || state.coins); el.dataset.v = state.coins; if (anim) countTo(el, from, state.coins, money); else el.textContent = money(state.coins); }
 
@@ -706,7 +745,6 @@ function movers() {
   const rows = CARDS.map(c => { const s = MK.series(c, 24, 24); return { c, s, now: s[23], was: s[0], p24: MK.pct(c, 24) }; });
   return { rows, gain: rows.filter(r => r.p24 > .005).sort((a, b) => b.p24 - a.p24).slice(0, 3), drop: rows.filter(r => r.p24 < -.005).sort((a, b) => a.p24 - b.p24).slice(0, 3) };
 }
-const forSale = c => MK.stock(c) - (state.bought[c.no + ":" + MK.hourId()] || 0);
 const moverRow = m => `<button class="mover" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span><span class="spark ${m.p24 >= 0 ? "up" : "dn"}">${spark(m.s)}</span><span class="pc">${pctHTML(m.p24)}</span><span class="dim">${money(m.was)} → ${money(m.now)}</span></button>`;
 
 function renderHome() {
@@ -714,22 +752,42 @@ function renderHome() {
   $("packLine").textContent = `${PACK.n} cards · ${money(ps.price)}`; $("openBtn").textContent = `open pack · ${money(ps.price)}`;
   $("honest").innerHTML = `Every card is a picture made of text: the rarer the card, the more characters it holds. About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
   const mv = movers(); $("hot").innerHTML = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span><span class="spark ${m.p24 >= 0 ? "up" : "dn"}">${spark(m.s)}</span>${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
+  const bf = MK.flips().best[0]; if (bf && bf.gain > 0) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip in 24h: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
   const hp = $("homePack"); if (!hp.firstChild) { hp.innerHTML = packHTML(); const pk = hp.firstChild; tiltPack(pk); pk.style.cursor = "pointer"; pk.onclick = () => openPack(); liveWindow(pk); }
 }
 
+const flipRow = e => `<button class="flip" data-card="${e.card.no}"><span class="nm">${esc(e.name)} <span class="faint">sold ${esc(e.card.name)}</span></span><span class="pc">${pctHTML(e.pct)}</span><span class="dim">held ${e.hours}h · ${money(e.got)} → ${money(e.sold)} · ${e.gain >= 0 ? "+" : "−"}${money(Math.abs(e.gain))}</span></button>`;
+const agoText = m => m === 0 ? "just now" : m < 60 ? m + " min ago" : Math.floor(m / 60) + "h ago";
 function renderMarket() {
-  const mv = movers(), rows = mv.rows, ps = packStats(), n = rows.length;
+  const mv = movers(), rows = mv.rows, ps = packStats(), n = rows.length, fl = MK.flips();
   const idxNow = rows.reduce((a, r) => a + r.now / r.c.val, 0) / n * 100, idxWas = rows.reduce((a, r) => a + r.was / r.c.val, 0) / n * 100, up = rows.filter(r => r.p24 > 0).length;
-  const held = state.vault.reduce((a, c) => a + valueOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0);
-  $("mStats").innerHTML = `<div><span class="label">market index</span><b>${idxNow.toFixed(1)}</b> ${pctHTML(idxNow / idxWas - 1)}</div><div><span class="label">cards up in 24h</span><b>${up} of ${n}</b></div>
-    <div><span class="label">your collection</span><b>${money(held)}</b> ${state.vault.length ? pctHTML(held / Math.max(1, basis) - 1) : ""}</div><div><span class="label">pack price right now</span><b>${money(ps.price)}</b></div>`;
-  $("mMovers").innerHTML = `<div><h3 class="sec">Biggest gains · 24h</h3>${mv.gain.map(moverRow).join("") || `<p class="small">Nothing is up right now.</p>`}</div><div><h3 class="sec">Biggest drops · 24h</h3>${mv.drop.map(moverRow).join("") || `<p class="small">Nothing is down right now.</p>`}</div>`;
-  $("mTable").innerHTML = `<thead><tr><th>Card</th><th class="r">Price</th><th class="r">1h</th><th class="r">24h</th><th>24h chart</th><th>Buzz</th><th class="r">Own</th><th></th></tr></thead><tbody>` + rows.map(r => {
-    const c = r.c, own = copiesOf(c.no).length, left = forSale(c), bp = buyPrice(c), bz = MK.buzz(c);
-    return `<tr><td><button class="linkbtn plain" data-card="${c.no}">${esc(c.name)}</button> <span class="faint">${RAR[c.rar].name}</span></td><td class="r num"><b>${money(r.now)}</b></td><td class="r">${pctHTML(MK.pct(c, 1))}</td><td class="r">${pctHTML(r.p24)}</td>
-      <td class="spk ${r.p24 >= 0 ? "up" : "dn"}">${spark(r.s)}</td><td class="buzz">${fill("■", bz)}${fill("□", 5 - bz)}</td><td class="r">${own || "–"}</td>
-      <td class="r">${left > 0 ? `<button class="btn small" data-buy="${c.no}" ${state.coins < bp ? "disabled" : ""}>buy · ${money(bp)}</button>` : `<span class="faint">none for sale</span>`}</td></tr>`; }).join("") + `</tbody>`;
-  $("mTrades").innerHTML = MK.trades(10).map(t => `<div class="trade"><span class="who">${t.name}</span><span>sold ${esc(t.card.name)} after ${t.hours}h</span><span class="dim">${money(t.buy)} → ${money(t.sell)}</span><span>${pctHTML(t.sell / t.buy - 1)}</span><span class="faint">${t.min === 0 ? "just now" : t.min + " min ago"}</span></div>`).join("");
+  $("mStats").innerHTML = `<div><span class="label">market index</span><b>${idxNow.toFixed(1)}</b> ${pctHTML(idxNow / idxWas - 1)}</div><div><span class="label">cards up in 24h</span><b>${up} of ${n}</b></div><div><span class="label">pack price right now</span><b>${money(ps.price)}</b></div>`;
+  $("mMovers").innerHTML = `<div><h3 class="sec">Skyrocketing · 24h</h3>${mv.gain.map(moverRow).join("") || `<p class="small">Nothing is up right now.</p>`}</div><div><h3 class="sec">Crashing · 24h</h3>${mv.drop.map(moverRow).join("") || `<p class="small">Nothing is down right now.</p>`}</div>`;
+  $("mFlips").innerHTML = `<div><h3 class="sec">Best flips · 24h</h3>${fl.best.map(flipRow).join("")}</div><div><h3 class="sec">Worst flips · 24h</h3>${fl.worst.map(flipRow).join("")}</div>`;
+  $("mFlipNote").textContent = `Simulated traders, worked out from the real price path and after the 10% selling fee. ${fl.won} of the last ${fl.n} sold for more than they got.`;
+  $("mTable").innerHTML = `<thead><tr><th>Card</th><th class="r">Price</th><th class="r">24h</th><th>24h chart</th><th>Buzz</th><th class="r">You hold</th></tr></thead><tbody>` + rows.map(r => {
+    const c = r.c, own = copiesOf(c.no).length, bz = MK.buzz(c);
+    return `<tr><td><button class="linkbtn plain" data-card="${c.no}">${esc(c.name)}</button> <span class="faint">${RAR[c.rar].name}</span></td><td class="r num"><b>${money(r.now)}</b></td><td class="r">${pctHTML(r.p24)}</td>
+      <td class="spk ${r.p24 >= 0 ? "up" : "dn"}">${spark(r.s)}</td><td class="buzz">${fill("■", bz)}${fill("□", 5 - bz)}</td><td class="r">${own ? "×" + own : "–"}</td></tr>`; }).join("") + `</tbody>`;
+  $("mTrades").innerHTML = MK.feed(10).map(t => `<div class="trade"><span class="who">${t.name}</span><span>sold ${esc(t.card.name)} after ${t.hours}h</span><span class="dim">${money(t.got)} → ${money(t.sold)}</span><span>${pctHTML(t.pct)}</span><span class="faint">${agoText(t.ago)}</span></div>`).join("");
+}
+
+// the profile: your money, live, and every card you hold with its price and profit or loss
+function worthSeries(pts) {
+  const h = state.hist, now = Date.now(), t0 = Math.max(h.length ? h[0][0] : now, now - 864e5); if (now - t0 < 90000) return null;
+  const out = []; let j = 0; for (let i = 0; i < pts; i++) { const ts = t0 + (now - t0) * i / (pts - 1); while (j + 1 < h.length && h[j + 1][0] <= ts) j++; out.push(h[j][1]); } out[pts - 1] = netWorth();
+  return { out, mins: Math.round((now - t0) / 60000) };
+}
+function renderProfile() {
+  const net = netWorth(), hold = holdingsValue(), back = state.vault.reduce((a, c) => a + sellOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0), all = profitAll(), d24 = profitSince(864e5);
+  $("pWorth").innerHTML = `<div class="worth"><div class="bx" role="img" aria-label="${money(net)}">${blockSVG(money(net))}</div><div class="wmeta"><span>${pnlHTML(d24, START + state.s.added)} <span class="dim">last 24h</span></span><span>${pnlHTML(all, START + state.s.added)} <span class="dim">since you started</span></span></div></div>
+    <div class="wsplit"><div><span class="label">cash</span><b>${money(state.coins)}</b></div><div><span class="label">your cards, at market price</span><b>${money(hold)}</b> ${state.vault.length ? pnlHTML(hold - basis, basis) : ""}</div><div><span class="label">they would sell for</span><b>${money(back)}</b><span class="dim">after the 10% fee</span></div><div><span class="label">made or lost on sales</span><b>${pnlHTML(state.s.realized, 0)}</b></div></div>`;
+  const ws = worthSeries(innerWidth > 760 ? 96 : 56);
+  $("pChart").innerHTML = ws ? `<div class="mk"><div class="label">Net worth · ${ws.mins >= 1380 ? "last 24 hours" : ws.mins < 90 ? "last " + ws.mins + " minutes" : "last " + Math.round(ws.mins / 60) + " hours"}</div><div class="chartbox ${ws.out[ws.out.length - 1] >= ws.out[0] ? "up" : "dn"}"><pre class="chart" style="--cols:${ws.out.length}">${chartRows(ws.out, 6, false)}</pre><div class="axis"><span>${money(Math.max(...ws.out))}</span><span>${money(Math.min(...ws.out))}</span></div></div></div>`
+    : `<div class="mk"><div class="label">Net worth</div><p class="small">Your line starts now and fills in as the market moves. Keep this page open and watch it.</p></div>`;
+  const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), s: MK.series(c, 24, 24), p24: MK.pct(c, 24) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
+  $("pTable").innerHTML = groups.length ? `<thead><tr><th>Card</th><th class="r">Cost</th><th class="r">Worth now</th><th class="r">Profit / loss</th><th>24h chart</th></tr></thead><tbody>` + groups.map(g => `<tr><td><button class="linkbtn plain" data-card="${g.c.no}">${esc(g.c.name)}</button> <span class="faint">${g.n > 1 ? "×" + g.n + " · " : ""}${RAR[g.c.rar].name}</span></td><td class="r num">${money(g.cost)}</td><td class="r num"><b>${money(g.val)}</b></td><td class="r">${pnlHTML(g.val - g.cost, g.cost)}</td><td class="spk ${g.p24 >= 0 ? "up" : "dn"}">${spark(g.s)}</td></tr>`).join("") + `</tbody><tfoot><tr><td>All cards</td><td class="r num">${money(basis)}</td><td class="r num"><b>${money(hold)}</b></td><td class="r">${pnlHTML(hold - basis, basis)}</td><td></td></tr></tfoot>` : "";
+  $("pNote").innerHTML = groups.length ? `Tap a card to see its chart and sell it. “Cost” is what the card was worth when you got it. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${money(state.s.spent)} spent on packs · ${money(state.s.sold)} back from sales</span>` : `You don't hold any cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they will show up here with a live price.`;
 }
 
 // every copy beyond the best one of each card (copies you added by code are never sold in bulk)
@@ -752,15 +810,15 @@ function renderOdds() {
     <div class="tablewrap"><table><thead><tr><th>Card</th><th>Rarity</th><th class="r">Characters</th><th class="r">Price now · 24h</th><th class="r">Chance per pack</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="small" style="margin-bottom:44px">Selling a card back pays 90% of its price. A typical pack sells back for ${money(ps.median)} right now.</p>
     <details><summary>How the market works</summary><ul class="plain">
-      <li>Every card has a live price (see the market page). It moves every 20 seconds by a fixed formula that is the same for everybody. Nothing in the formula looks at who owns what, and your cards never change a price.</li>
+      <li>Cards come from packs. After you have one, its price keeps moving every 20 seconds by a fixed formula that is the same for everybody. Nothing in the formula looks at who owns what, and your cards never change a price.</li>
       <li>A price is a slow base level (how good the card looks next to the other cards of its rarity), random noise, and demand shocks: a card catches on, or falls out of favour. Up shocks and down shocks are equally likely and the same size, and they fade over a few hours.</li>
       <li>Cheap cards swing hardest. A common moves around ${vol("common")}% a day and sometimes doubles or halves; a Mythic around ${vol("mythic")}%; the Secret card barely moves. A price stays between ${MK.FLOOR}× and ${cap("common")}× (commons) down to ${cap("secret")}× (Secret) of the card's base worth.</li>
-      <li>Buying a card costs its price plus 10%. Selling pays its price minus 10%. That spread is how the app earns on the market, and it means a card has to move more than about 22% in your favour before buying and selling it again pays.</li>
-      <li>The pack's price follows the market: it moves with what the cards inside are worth, so a pack returns about 88% on average whatever the market is doing. When cards run hot, packs get dearer.</li>
-      <li>The traders on the market page are simulated for this demo, and each result is worked out after the same 10% spread.</li></ul></details>
+      <li>Selling a card pays its price minus 10%, whenever you like, so a card has to rise about 11% before selling it beats what it was worth when you got it. Your profile shows every card you hold with its live price and its profit or loss.</li>
+      <li>The pack's price follows the market: it moves with what the cards inside are worth, so a pack returns about 89% on average whatever the market is doing. When cards run hot, packs get dearer.</li>
+      <li>The traders on the market page are simulated for this demo. Each one pulled a card and sold it, worked out from the real price path after the same 10% fee, and the best and the worst of the day are shown side by side.</li></ul></details>
     <details><summary>How each card in the pack is picked</summary><div>${PACK.slots.map((s, i) => { const t = s.reduce((a, [, w]) => a + w, 0); return `<div class="slot"><div class="label">${slotName[i]}</div>${s.map(([id, w]) => `<div class="row"><span>${esc(BY_ID[id].name)} <span class="faint">${esc(BY_ID[id].sub)}</span></span><span class="bar">${bar(w / t, 24)}</span><span class="pct">${(w / t * 100).toFixed(1)}%</span></div>`).join("")}</div>`; }).join("")}</div></details>
-    <details><summary>Stitch styles</summary><div><p class="small" style="margin-bottom:14px">A Stitch can come out in one of twelve ASCII styles, decided by its own code. ${(tot * 100).toFixed(1)}% of Stitches are not the plain default. A styled Stitch is worth its multiple of the card.</p>
-      <div class="tablewrap"><table><thead><tr><th>Style</th><th class="r">Chance per Stitch</th><th class="r">Worth</th></tr></thead><tbody><tr><td>Bone <span class="faint">default</span></td><td class="r num">${((1 - tot) * 100).toFixed(1)}%</td><td class="r">×1</td></tr>${Object.keys(STYLES).map(k => `<tr><td>${STYLES[k].name}</td><td class="r num">1 in ${fmt(1 / STYLES[k].p)}</td><td class="r">×${STYLES[k].x}</td></tr>`).join("")}</tbody></table></div></div></details>
+    <details><summary>Styles</summary><div><p class="small" style="margin-bottom:14px">Every card can come out in one of twelve ASCII styles, decided by that copy's own code. ${(tot * 100).toFixed(1)}% of cards are not the plain default. A styled copy is worth its multiple of the card, so a styled Reaper is worth a lot more than a plain one.</p>
+      <div class="tablewrap"><table><thead><tr><th>Style</th><th class="r">Chance per card</th><th class="r">Worth</th></tr></thead><tbody><tr><td>Plain <span class="faint">default</span></td><td class="r num">${((1 - tot) * 100).toFixed(1)}%</td><td class="r">×1</td></tr>${Object.keys(STYLES).map(k => `<tr><td>${STYLES[k].name}</td><td class="r num">1 in ${fmt(1 / STYLES[k].p)}</td><td class="r">×${STYLES[k].x}</td></tr>`).join("")}</tbody></table></div></div></details>
     <details><summary>Copy ids and the red slashes</summary><ul class="plain"><li>Every copy has its own id, like <b>IS015-000003-A2JM</b>: the set, the card number, the copy's serial and four check characters.</li><li>The red slashes after an id show rarity: none for commons and uncommons, one for rares and epics, two for legendary, three for mythic, four for the one Secret card.</li><li>Type an id into “add a card by its code” on the collection page and, if the check characters match, that exact copy is added.</li></ul></details>
     <details><summary>Fair play</summary><ul class="plain"><li>A pack is worth less than it costs on average, and the numbers above are worked out exactly from the odds and today's prices.</li><li>Cards are drawn with your browser's random number generator, and the odds never change with what you have spent or pulled.</li><li>The money is simulated. Nothing is ever charged.</li></ul></details>
     <p style="margin-top:30px"><button class="linkbtn" id="resetBtn">reset the demo</button></p>`;
@@ -768,12 +826,12 @@ function renderOdds() {
 function show(v) {
   view = VIEWS.includes(v) ? v : "home";
   VIEWS.forEach(x => $("v-" + x).classList.toggle("on", x === view)); document.querySelectorAll("#tabs a").forEach(a => a.classList.toggle("on", a.dataset.v === view));
-  ({ home: renderHome, market: renderMarket, collection: renderCollection, odds: renderOdds })[view](); scrollTo(0, 0);
+  ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds })[view](); scrollTo(0, 0);
 }
 function route() { const h = location.hash.replace(/^#\/?/, ""); show(h === "vault" || h === "index" ? "collection" : h || "home"); }
 // the market moved: redraw whatever is on screen without jumping the page
 function refreshLive() {
-  if (SS) return; ({ home: renderHome, market: renderMarket, collection: renderCollection, odds: renderOdds })[view]();
+  if (SS) return; ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds })[view]();
   if (modalNo && !$("modal").hidden) { const sc = $("mbox").scrollTop; cardModal(modalNo); $("mbox").scrollTop = sc; }
 }
 
@@ -783,15 +841,15 @@ const closeModal = () => { $("modal").hidden = true; $("mbox").innerHTML = ""; m
 function cardModal(no) {
   modalNo = no; const card = BY_NO[no], R = RAR[card.rar], cs = copiesOf(no), best = cs[0], p = packP(card.id), have = new Set(cs.map(c => c.fx)), keys = [""].concat(Object.keys(STYLES));
   const styles = card.styles ? `<div><div class="label" style="margin-bottom:8px">Styles found: ${keys.filter(k => have.has(k)).length} of ${keys.length}</div><div class="stylerow">${keys.map(k => `<figure class="${have.has(k) ? "" : "off"}" title="${styleName(k)}${k ? " · 1 in " + fmt(1 / STYLES[k].p) + " · ×" + STYLES[k].x : ""}"><img src="${imgOf(card, k)}" alt=""><figcaption>${styleName(k)}</figcaption></figure>`).join("")}</div></div>` : "";
-  const ser = MK.series(card, 168, 56), now = MK.price(card), left = forSale(card), bz = MK.buzz(card);
+  const ser = MK.series(card, 168, 56), now = MK.price(card), bz = MK.buzz(card);
   const market = `<div class="mk"><div class="label">Market · last 7 days</div><div class="mkrow"><b>${money(now)}</b> ${pctHTML(MK.pct(card, 24))} <span class="dim">24h</span> ${pctHTML(MK.pct(card, 168))} <span class="dim">7d</span></div>
-    <div class="chartbox ${ser[55] >= ser[0] ? "up" : "dn"}"><pre class="chart">${asciiChart(ser, 5)}</pre><div class="axis"><span>${money(Math.max(...ser))}</span><span>${money(Math.min(...ser))}</span></div></div>
-    <div class="row small"><span>buzz ${fill("■", bz)}${fill("□", 5 - bz)}</span><span>${left > 0 ? left + " for sale" : "none for sale right now"}</span>${left > 0 ? `<button class="btn small" data-buy="${no}" ${state.coins < buyPrice(card) ? "disabled" : ""}>buy · ${money(buyPrice(card))}</button>` : ""}</div></div>`;
+    <div class="chartbox ${ser[55] >= ser[0] ? "up" : "dn"}"><pre class="chart" style="--cols:56">${chartRows(ser, 5, true)}</pre><div class="axis"><span>${money(Math.max(...ser))}</span><span>${money(Math.min(...ser))}</span></div></div>
+    <div class="row small"><span>buzz ${fill("■", bz)}${fill("□", 5 - bz)}</span><span class="dim">selling pays the price minus 10%</span></div></div>`;
   openModal(`<div class="mcard">${cardHTML(best || { no }, { locked: !best })}</div><div class="minfo">
     <div><span class="label" style="color:${R.col}">${R.name} · No. ${card.no}</span><h2>${esc(card.name)}</h2></div>
     <p class="dim">${fmt(card.chars)} characters · base worth ${money(card.val)} · turns up in ${chance(p)}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
     ${market}
-    ${cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div>${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : c.src === "market" ? "bought" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${money(costOf(c))}</small></div><div class="r"><span><b>${money(valueOf(c))}</b><br>${pctHTML(gainOf(c))}</span><button class="btn small" data-sell="${c.uid}" data-no="${no}">sell ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<p class="small">You haven't found this card yet.</p>`}
+    ${cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div>${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${money(costOf(c))}</small></div><div class="r"><span><b>${money(valueOf(c))}</b><br>${pctHTML(gainOf(c))}</span><button class="btn small" data-sell="${c.uid}" data-no="${no}">sell ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<p class="small">You haven't found this card yet.</p>`}
     ${styles}</div>`);
 }
 function codeModal() {
@@ -805,15 +863,6 @@ function addByCode(raw) {
   const c = mint(r.card, true, r.serial); state.vault.push(c); save(); closeModal(); if (view === "collection") renderCollection(); toast(`Added ${r.card.name} · ${r.code}`); cardModal(r.card.no);
 }
 function sell(uids) { let g = 0; for (const u of uids) { const c = state.vault.find(x => x.uid === u); if (c) { g += sellOf(c); state.s.realized += sellOf(c) - costOf(c); state.vault = state.vault.filter(x => x !== c); } } if (g) { state.coins += g; state.s.sold += g; save(); renderBal(true); } return g; }
-// buy one copy from the market: the price plus the 10% spread, if one is for sale this hour
-function buyCard(no) {
-  const card = BY_NO[no], price = buyPrice(card), key = no + ":" + MK.hourId();
-  if (forSale(card) <= 0) { toast("None for sale right now. Listings change every hour."); return; }
-  if (state.coins < price) { toast(`You need ${money(price - state.coins)} more. Tap “add $10”.`); return; }
-  for (const k of Object.keys(state.bought)) if (!k.endsWith(":" + MK.hourId())) delete state.bought[k];
-  state.coins -= price; state.bought[key] = (state.bought[key] || 0) + 1; state.s.bought++; const c = mint(card, false, null, price); c.src = "market"; state.vault.push(c); save(); renderBal(true);
-  toast(`Bought ${card.name} for ${money(price)}`); refreshLive();
-}
 
 /* ============================================================================
    8. OPENING A PACK: tear it, reveal the cards one at a time, then keep or sell
@@ -892,14 +941,13 @@ document.addEventListener("click", e => {
   if (t.hasAttribute("data-open")) { openPack(); return; }
   if (t.hasAttribute("data-close")) { closeModal(); return; }
   if (t.dataset.card) { cardModal(t.dataset.card); return; }
-  if (t.dataset.buy) { buyCard(t.dataset.buy); return; }
   if (t.dataset.sell) {
     const g = sell([t.dataset.sell]); if (!g) return; toast("Sold for " + money(g));
     if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view); return;
   }
   if (/^sum/.test(t.id) && SS && performance.now() - SS.sumAt < 500) return;
   switch (t.id) {
-    case "addFunds": state.coins += TOPUP; save(); renderBal(true); toast("Added $10 of demo money"); break;
+    case "addFunds": state.coins += TOPUP; state.s.added += TOPUP; save(); renderBal(true); toast("Added $10 of demo money"); break;
     case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
     case "sumSell": { const g = sell(SS.items.map(c => c.uid)); closeStage(); toast("Sold for " + money(g)); break; }
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
@@ -924,10 +972,10 @@ window.addEventListener("hashchange", route);
    10. START
    ========================================================================== */
 document.querySelectorAll("[data-block]").forEach(e => { e.innerHTML = blockSVG(e.dataset.block); });
-MK.advance(); renderBal(); route();
+MK.advance(); logWorth(); persist(); renderBal(); route();
 if (!state.ageOK) $("gate").hidden = false;
 // the market moves every 20 seconds; redraw whatever is on screen when it does
-setInterval(() => { if (MK.advance()) refreshLive(); }, 2000);
+setInterval(() => { if (MK.advance()) { logWorth(); persist(); refreshLive(); } }, 2000);
 setTimeout(() => CARDS.forEach(c => loadImg(imgOf(c))), 700);   // warm the pictures so a reveal never waits on one
 
 })();

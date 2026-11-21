@@ -15,5 +15,5 @@ function rollStyle(u) { let acc = 0; for (const k in STYLES) { acc += STYLES[k].
 const styleOfCode = code => rollStyle(fnv("fx:" + code) / 4294967296);
 const cuts = rar => "/".repeat(RAR[rar].cuts);
 const idHTML = (code, rar) => `<span class="cid"><b>${esc(code)}</b>${cuts(rar) ? `<i>${cuts(rar)}</i>` : ""}</span>`;
-const styleName = fx => fx ? STYLES[fx].name : "Bone";
-const imgOf = (card, fx) => `cards/${card.styles ? "stitch-" + (fx || "bone") : card.id}.jpg`;
+const styleName = fx => fx ? STYLES[fx].name : "Plain";
+const imgOf = (card, fx) => `cards/${card.id}${fx ? "-" + fx : card.id === "stitch" ? "-bone" : ""}.jpg`;   // the plain look is cards/<id>.jpg; a styled copy is cards/<id>-<style>.jpg

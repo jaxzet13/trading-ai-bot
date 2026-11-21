@@ -2,7 +2,7 @@
   <div class="wrap">
     <a class="logo" href="#/">STIXX</a>
     <nav class="tabs" id="tabs" aria-label="Sections">
-      <a href="#/" data-v="home">pack</a><a href="#/market" data-v="market">market</a><a href="#/collection" data-v="collection">collection</a><a href="#/odds" data-v="odds">odds</a>
+      <a href="#/" data-v="home">pack</a><a href="#/market" data-v="market">market</a><a href="#/profile" data-v="profile">profile</a><a href="#/collection" data-v="collection">collection</a><a href="#/odds" data-v="odds">odds</a>
     </nav>
     <div class="wallet"><span class="bal" id="bal">$0.00</span><button class="btn small" id="addFunds" title="Demo money. Nothing is ever charged.">+ add $10</button></div>
   </div>
@@ -23,14 +23,26 @@
 
   <!-- MARKET -->
   <section class="view" id="v-market">
-    <div class="page-head"><div class="ttl" data-block="MARKET" role="img" aria-label="Market"></div><p>Live demo market. Prices move every 20 seconds and are the same for everyone. The other traders are simulated.</p></div>
+    <div class="page-head"><div class="ttl" data-block="MARKET" role="img" aria-label="Market"></div><p>Prices move every 20 seconds and are the same for everyone. You get cards from packs, and sell them any time. The other traders are simulated.</p></div>
     <div class="mstats" id="mStats"></div>
     <div class="two" id="mMovers"></div>
+    <div class="two" id="mFlips" style="margin-top:40px"></div>
+    <p class="small" id="mFlipNote" style="margin-top:6px"></p>
+    <h3 class="sec" style="margin-top:44px">Live feed <span class="faint">· simulated traders · after the 10% selling fee</span></h3>
+    <div class="trades" id="mTrades"></div>
     <h3 class="sec" style="margin-top:44px">All cards</h3>
     <div class="tablewrap"><table class="mtable" id="mTable"></table></div>
-    <p class="small" style="margin-bottom:44px">Buying costs the price plus 10%. Selling pays the price minus 10%. Listings change every hour. <a class="linkbtn" href="#/odds">How the market works</a></p>
-    <h3 class="sec">Recent trades <span class="faint">· simulated traders · after the 10% spread</span></h3>
-    <div class="trades" id="mTrades"></div>
+    <p class="small" style="margin-bottom:44px">Selling pays the price minus 10%. <a class="linkbtn" href="#/odds">How the market works</a></p>
+  </section>
+
+  <!-- PROFILE -->
+  <section class="view" id="v-profile">
+    <div class="page-head"><div class="ttl" data-block="PROFILE" role="img" aria-label="Profile"></div><p>Your demo wallet. It moves with the market, so keep it open and watch.</p></div>
+    <div id="pWorth"></div>
+    <div id="pChart" style="margin-bottom:40px"></div>
+    <h3 class="sec">Your cards</h3>
+    <div class="tablewrap"><table class="mtable" id="pTable"></table></div>
+    <p class="small" id="pNote" style="margin-bottom:44px"></p>
   </section>
 
   <!-- COLLECTION -->

@@ -6,14 +6,13 @@ document.addEventListener("click", e => {
   if (t.hasAttribute("data-open")) { openPack(); return; }
   if (t.hasAttribute("data-close")) { closeModal(); return; }
   if (t.dataset.card) { cardModal(t.dataset.card); return; }
-  if (t.dataset.buy) { buyCard(t.dataset.buy); return; }
   if (t.dataset.sell) {
     const g = sell([t.dataset.sell]); if (!g) return; toast("Sold for " + money(g));
     if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view); return;
   }
   if (/^sum/.test(t.id) && SS && performance.now() - SS.sumAt < 500) return;
   switch (t.id) {
-    case "addFunds": state.coins += TOPUP; save(); renderBal(true); toast("Added $10 of demo money"); break;
+    case "addFunds": state.coins += TOPUP; state.s.added += TOPUP; save(); renderBal(true); toast("Added $10 of demo money"); break;
     case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
     case "sumSell": { const g = sell(SS.items.map(c => c.uid)); closeStage(); toast("Sold for " + money(g)); break; }
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;

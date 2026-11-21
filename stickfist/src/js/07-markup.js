@@ -2,7 +2,7 @@
    6. CARDS AND THE PACK
    ========================================================================== */
 function cardHTML(copy, o) {
-  o = o || {}; const card = BY_NO[copy.no], fx = copy.fx || "", tint = card.styles ? STYLE_TINT[fx] : card.tint, code = copy.code || "";
+  o = o || {}; const card = BY_NO[copy.no], fx = copy.fx || "", tint = fx ? STYLE_TINT[fx] : card.tint, code = copy.code || "";
   return `<div class="card t${RAR[card.rar].tier}${o.sm ? " sm" : ""}${o.locked ? " locked" : ""}" style="--tint:${tint}" data-no="${card.no}">
     <div class="pic"><img src="${imgOf(card, fx)}" alt="${esc(card.name)}" draggable="false"></div>
     <div class="strip"><div class="l1"><span class="nm">${esc(card.name)}</span><i class="hr"></i><span class="ct"><b>${fmt(card.chars)}</b><u>chars</u></span></div>

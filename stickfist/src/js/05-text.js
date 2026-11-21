@@ -68,11 +68,14 @@ function blockReveal(el, str, ms) {
 const SPARKS = "▁▂▃▄▅▆▇█";
 const spark = v => { const mn = Math.min(...v), sp = Math.max(...v) - mn || 1; return v.map(x => SPARKS[clamp(Math.round((x - mn) / sp * 7), 0, 7)]).join(""); };
 // a small chart: `h` rows of block characters, one column per value
-function asciiChart(vals, h) {
-  const mn = Math.min(...vals), sp = Math.max(...vals) - mn || 1, B = " ▁▂▃▄▅▆▇█", rows = [];
+function asciiChart(vals, h, lo, hi) {
+  const mn = lo != null ? lo : Math.min(...vals), sp = (hi != null ? hi : Math.max(...vals)) - mn || 1, B = " ▁▂▃▄▅▆▇█", rows = [];
   for (let r = h - 1; r >= 0; r--) { let line = ""; for (const v of vals) line += B[clamp(Math.round((v - mn) / sp * h * 8 - r * 8), 0, 8)]; rows.push(line); }
   return rows.join("\n");
 }
+// a chart with a little headroom, so a quiet line sits in the middle instead of on the floor; `log` plots ratios, so +100% and −50% look the same size
+function chartRows(vals, h, log) { const v = log ? vals.map(Math.log) : vals, mn = Math.min(...v), mx = Math.max(...v), mid = (mn + mx) / 2, sp = Math.max(mx - mn, log ? .06 : Math.abs(mid) * .01) * 1.16; return asciiChart(v, h, mid - sp / 2, mid + sp / 2); }
+const pnlHTML = (d, base) => `<span class="${d > 0 ? "up" : d < 0 ? "dn" : "fl"}">${d > 0 ? "▲ +" : d < 0 ? "▼ −" : "– "}${money(Math.abs(d))}${base > 0 ? ` <span class="dim">${Math.abs(d / base * 100).toFixed(Math.abs(d / base) >= 1 ? 0 : 1)}%</span>` : ""}</span>`;
 const pctHTML = p => `<span class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲ +" : p < -.0005 ? "▼ −" : "– "}${Math.abs(p * 100).toFixed(Math.abs(p) >= 1 ? 0 : 1)}%</span>`;
 // a progress bar made of characters: [███░░] 
 const meter = (i, n) => "[" + fill("█", i) + fill("░", n - i) + "]";
