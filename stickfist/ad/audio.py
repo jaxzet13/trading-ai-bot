@@ -48,16 +48,16 @@ lfo = np.sin(2 * np.pi * .11 * t)
 drone = (np.sin(2 * np.pi * (41.2 + .25 * lfo) * t) * .55 + np.sin(2 * np.pi * (55 + .3 * np.sin(2 * np.pi * .07 * t)) * t) * .35 + np.sin(2 * np.pi * 82.4 * t + 1.7 * np.sin(2 * np.pi * .21 * t)) * .22)
 drone += np.sin(2 * np.pi * 164.8 * t + .8 * lfo) * .16 + np.sin(2 * np.pi * 110 * t) * .2 + np.sin(2 * np.pi * 247 * t + 1.1 * np.sin(2 * np.pi * .13 * t)) * .07
 drone = drone + .5 * np.tanh(3 * drone)
-drone *= kf([[0, .12], [3, .2], [3.3, .1], [22.7, .1], [23.5, .4], [25, .55], [28.3, .6]], t) * .8
-bed = lp(noise(N), 160) * 3 * kf([[0, .1], [3, .12], [22.8, .1], [25, .45], [28.3, .5]], t)
-tension = (np.sin(2 * np.pi * (233 * np.exp(.12 * sm(22.8, 28.3, t)) + 1.2 * lfo) * t) * .08 + np.sin(2 * np.pi * (246.9 * np.exp(.12 * sm(22.8, 28.3, t))) * t) * .08)
-tension *= sm(22.8, 24.4, t) * (1 - sm(T["rip"][0] - .18, T["rip"][0] - .02, t)) + sm(T["reveal"][0], T["reveal"][0] + 1.8, t) * .6
+drone *= kf([[0, .12], [T["cold"][1] - 1.2, .2], [T["cold"][1] + .1, .1], [T["build"][0] - .1, .1], [T["build"][0] + .7, .4], [T["rip"][0], .55], [T["reveal"][1], .6]], t) * .8
+bed = lp(noise(N), 160) * 3 * kf([[0, .1], [T["cold"][1] - 1, .12], [T["build"][0], .1], [T["rip"][0], .45], [T["reveal"][1], .5]], t)
+tension = (np.sin(2 * np.pi * (233 * np.exp(.12 * sm(T["build"][0], T["reveal"][1], t)) + 1.2 * lfo) * t) * .08 + np.sin(2 * np.pi * (246.9 * np.exp(.12 * sm(T["build"][0], T["reveal"][1], t))) * t) * .08)
+tension *= sm(T["build"][0], T["build"][0] + 1.6, t) * (1 - sm(T["rip"][0] - .18, T["rip"][0] - .02, t)) + sm(T["reveal"][0], T["reveal"][0] + 1.8, t) * .6
 mono(drone + bed); mono(tension, gain=.8)
 
 # ---- heartbeat (the cold open, and again from the build to the cut)
 for h in tl["HEART"]:
     if h["t"] >= K["cutBlack"]: continue
-    add(h["t"], thump(.75 * h["a"] * (.7 + .5 * sm(22, 28, h["t"])), f0=95 - 8 * (h["a"] < 1), f1=44))
+    add(h["t"], thump(.75 * h["a"] * (.7 + .5 * sm(T["build"][0] - .8, T["reveal"][1], h["t"])), f0=95 - 8 * (h["a"] < 1), f1=44))
 
 # ---- a pulse under the six steps: a soft kick, a hat on the off-beat, a bass note each bar, a minor pentatonic shimmer
 s0, s1, beat = T["buy"][0], T["collect"][1], .5
@@ -68,7 +68,7 @@ for i, at in enumerate(np.arange(s0, s1 - .01, beat)):
     if i % 8 == 6: add(at, bell([523.25, 587.33, 659.25, 783.99][(i // 2) % 4], .8, .2, .05), rng.uniform(-.5, .5))
 
 # ---- static under everything: loud at the start, thin through the steps, a storm for the last act, nothing at all in the black
-hs = hp(noise(N), 1200) * kf([[0, .36], [.5, .18], [1.3, .012], [3.0, .012], [3.1, .06], [3.3, .012], [22.8, .012], [23.8, .18], [25.0, .2], [25.7, .16], [28.2, .3], [28.3, 0], [29.1, 0], [29.3, .012], [33.1, .015], [33.3, .2]], t)
+hs = hp(noise(N), 1200) * kf([[0, .36], [.5, .18], [1.3, .012], [T["cold"][1] - .15, .012], [T["cold"][1] - .05, .06], [T["cold"][1] + .2, .012], [T["build"][0], .012], [T["build"][0] + 1.0, .18], [T["rip"][0], .2], [T["rip"][1], .16], [T["reveal"][1] - .1, .3], [T["reveal"][1], 0], [T["end"][0], 0], [T["end"][0] + .2, .012], [DUR - .2, .015], [DUR, .2]], t)
 hs[(t >= T["black"][0]) & (t < T["black"][1])] = 0
 mono(hs * .9)
 
@@ -107,6 +107,29 @@ for i, at in enumerate(EV["cardPops"]):
     if i >= 2: add(at, bell(notes[i] / 2, 1.2, .3, .12)); 
     if i >= 3:
         for k in range(5 + 3 * i): add(at + .08 + k * .05, bell(notes[-1] * 2 ** rng.choice([0, 3 / 12, 7 / 12, 1]), .5, .1, .05), rng.uniform(-.8, .8))
+
+
+# ---- the zoom: a tone that falls up with the camera, letters typing themselves faster as they get bigger, a chord when you arrive, and the pull back
+Z = EV["zoom"]; za, zb, zc, ze = Z["in0"] - T["zoom"][0], Z["in1"] - T["zoom"][0], Z["out0"] - T["zoom"][0], T["zoom"][1] - T["zoom"][0]
+zn = int(ze * SR); zt = np.arange(zn) / SR
+e2 = lambda x: np.where(x < .5, 2 * x * x, 1 - (-2 * x + 2) ** 2 / 2); e3 = lambda x: 1 - (1 - np.clip(x, 0, 1)) ** 3
+zp = np.where(zt < za, 0, np.where(zt < zb, e2(np.clip((zt - za) / (zb - za), 0, 1)), np.where(zt < zc, 1, 1 - e3((zt - zc) / (ze - zc)))))
+zv = np.abs(np.gradient(zp)) * SR; zv = lp(zv, 12, 1); zv = zv / max(zv.max(), 1e-6)
+fz = 90 * 16 ** zp; zph = 2 * np.pi * np.cumsum(fz) / SR
+zsig = (np.sin(zph) * .6 + np.sin(zph * 2.01) * .25) * (.03 + .08 * zv) * sm(0, .3, zt) + hp(noise(zn), 700) * zv ** .8 * .1
+add(T["zoom"][0], zsig, 0)
+rate = 4 + 46 * zp; acc = 0.0; step = 0
+for i in range(0, zn, 220):
+    acc += rate[i] * 220 / SR
+    if acc >= 1: acc -= 1; add(T["zoom"][0] + i / SR, tick(), rng.uniform(-.8, .8), .22 * (.3 + zp[i]))
+for c in (1.5, 2.25, 3.4, 5.1, 7.6, 11.4, 17.1):                       # each time the picture grows by half again
+    j = np.argmax(np.exp(np.log(20) * zp) >= c)
+    if zp[j] > 0 and j > 0: add(T["zoom"][0] + j / SR, click(.3, 1000 + 120 * c), 0)
+chord = sum(bell(f, 2.4, .8, .1) for f in (440, 554.4, 659.3, 880, 1318.5)); add(Z["in1"], chord, 0); add(Z["in1"], reverb(chord, 2.0, 2.6)[:int(3.5 * SR)], 0, .4); add(Z["in1"], thump(.7, 80, 40, .12))
+for k in range(12): add(Z["in1"] + .1 + k * .07, bell(rng.choice([880, 1108.7, 1318.5, 1760]) , .5, .1, .06), rng.uniform(-.8, .8))
+hold = int((Z["out0"] - Z["in1"]) * SR); hd = np.arange(hold) / SR
+add(Z["in1"], (np.sin(2 * np.pi * 220 * hd) + .7 * np.sin(2 * np.pi * 277.2 * hd) + .6 * np.sin(2 * np.pi * 329.6 * hd)) * sm(0, .5, hd) * (1 - sm(hold / SR - .3, hold / SR, hd)) * .05, 0)
+add(Z["out1"] - .05, thump(.5, 70, 38, .1), 0); add(Z["out1"] - .05, bell(330, 1.0, .25, .12), 0)
 
 # ---- 3. the value goes up: a tone that follows the price, a sparkle at each big milestone
 pr = np.array(tl["price"]["v"]); tt = np.arange(0, len(pr) / 30, 1 / SR); price = np.interp(tt, np.arange(len(pr)) / 30, pr); price = lp(price, 14, 1)

@@ -4,13 +4,16 @@ Vertical teasers in the app's ASCII style. Nothing in them is a screen recording
 `ad.html`, pushed through a pixel pass (tear, RGB split, grain, scanlines, bloom, shake) and handed to ffmpeg. The soundtrack is
 synthesised by `audio.py` from the same timeline, so every hit lands on its picture.
 
-## Take two (current): `stixx-teaser-2.mp4`, `cover-2.jpg`, 33.3 s
-Six steps, then a cliffhanger. The cards are the app's own pictures, drawn the way the app draws them (rounded, glowing, name and
-character count on the card); ASCII is the language around them: captions, charts, the way a card decodes out of text.
-1. buy a pack  2. get cards (five, each decoding into its art)  3. watch the value go up (like stocks, like memecoins)
-4. sell at the peak  5. watch your profit fly  6. collect your favorites (hoping they skyrocket)
-Then the pack alone in the dark with a heartbeat, the rip, the Umbra card decoding out of text, and a hard cut to silence
-before it finishes. End card: STIXX, "beta drops soon.", "follow this account."
+## Take three (current): `stixx-teaser-3.mp4`, `cover-3.jpg`, 48.9 s
+Slower, so every caption stays up for at least a second and a half after it is typed, and with a new shot: the camera dives into one
+card (Ronin, 71,680 characters) until every individual letter it is made of fills the screen, with a focus frame, a zoom readout and
+the letter under the frame, then pulls back out. All pacing comes from one table at the top of `ad.html` (`D`), so any act can be
+lengthened or shortened and the captions, hits, effects and audio follow.
+1. buy a pack  2. get cards  (the zoom: "every card is made of text")  3. watch the value go up  4. sell at the peak
+5. watch your profit fly  6. collect your favorites, then the cliffhanger and the end card as before.
+
+## Take two: `stixx-teaser-2.mp4`, 33 s
+The same six steps, faster, without the zoom.
 
 ## Take one: `stixx-teaser.mp4` (`ad_v1.html`)
 The abstract version: you've seen cards, you've seen charts, you've never seen both. Everything drawn in ASCII, with the AI bots.
@@ -18,7 +21,7 @@ The abstract version: you've seen cards, you've seen charts, you've never seen b
 ## Files
 - `ad.html`: the film. `?handle=@name` puts an account name on the end card
 - `render.js`: `shots <t,t,...> <dir>` for stills, `video <dir> [@handle]` for every frame. `AD_FILE=ad_v1.html` renders take one
-- `audio.py`: pulse, clicks, chimes, coins, heartbeat, riser, rip, the cut to silence (take two). Needs numpy and scipy
+- `audio.py`: pulse, clicks, chimes, coins, the zoom, heartbeat, riser, rip, the cut to silence. Needs numpy and scipy
 - `make_ad.sh <outdir> [@handle]`: renders it all again (needs node + playwright, ffmpeg, JetBrains Mono)
 
 ## Honesty
