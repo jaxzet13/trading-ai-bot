@@ -7,6 +7,8 @@
     <div class="wallet"><span class="bal" id="bal">$0.00</span><button class="btn small" id="addFunds" title="Demo money. Nothing is ever charged.">+ add $10</button></div>
   </div>
 </header>
+<div class="tape" aria-hidden="true"><div class="tape-in" id="tapeIn"></div></div>
+<div class="alert" id="alert" hidden></div>
 
 <main class="wrap">
   <!-- PACK -->
@@ -23,7 +25,8 @@
 
   <!-- MARKET -->
   <section class="view" id="v-market">
-    <div class="page-head"><h1 class="ttl">Market</h1><p>Prices move every 20 seconds and are the same for everyone. You get cards from packs, and sell them any time. The other traders are simulated.</p></div>
+    <div class="page-head"><h1 class="ttl">Market</h1><p>Prices move every 20 seconds and are the same for everyone. You get cards from packs, and sell them any time. The other traders are simulated.</p><p class="live"></p></div>
+    <div id="mHero"></div>
     <div class="mstats" id="mStats"></div>
     <div class="two" id="mMovers"></div>
     <div class="two" id="mFlips" style="margin-top:40px"></div>
@@ -37,7 +40,7 @@
 
   <!-- PROFILE -->
   <section class="view" id="v-profile">
-    <div class="page-head"><h1 class="ttl">Profile</h1><p>Your demo wallet. It moves with the market, so keep it open and watch.</p></div>
+    <div class="page-head"><h1 class="ttl">Profile</h1><p>Your demo wallet. It moves with the market, so keep it open and watch.</p><p class="live"></p></div>
     <div id="pWorth"></div>
     <div id="pChart" style="margin-bottom:40px"></div>
     <h3 class="sec">Your cards</h3>
@@ -70,6 +73,12 @@
   <div class="summary" id="stSummary" hidden></div>
 </div>
 
+<div class="share" id="share" hidden>
+  <div class="sh-box">
+    <canvas id="shCv" width="1080" height="1350" aria-label="Your result, as a picture"></canvas>
+    <div class="sh-actions"><button class="btn solid" id="shSave">Save image</button><button class="btn" id="shShare">Share</button><button class="btn" id="shVideo" hidden>Save video</button><button class="btn ghost" id="shReplay">Replay</button><button class="btn ghost" id="shClose">Close</button></div>
+  </div>
+</div>
 <div class="modal" id="modal" hidden><div class="mbox" id="mbox"></div></div>
 <div class="gate" id="gate" hidden>
   <div class="gatebox">

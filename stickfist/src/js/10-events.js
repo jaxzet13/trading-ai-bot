@@ -5,13 +5,21 @@ document.addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) { if (e.target === $("modal")) closeModal(); return; }
   if (t.hasAttribute("data-open")) { openPack(); return; }
   if (t.hasAttribute("data-close")) { closeModal(); return; }
-  if (t.dataset.card) { cardModal(t.dataset.card); return; }
+  if (t.dataset.card) { if (t.closest("#alert")) hideAlert(); cardModal(t.dataset.card); return; }
+  if (t.dataset.share) { const c = state.vault.find(x => x.uid === t.dataset.share); if (c) Share.open(receiptOf(c, false)); return; }
   if (t.dataset.sell) {
+    const c = state.vault.find(x => x.uid === t.dataset.sell), rec = c ? receiptOf(c, true) : null;
     const g = sell([t.dataset.sell]); if (!g) return; toast("Sold for " + money(g));
-    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view); return;
+    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view); if (rec) Share.open(rec); return;
   }
   if (/^sum/.test(t.id) && SS && performance.now() - SS.sumAt < 500) return;
   switch (t.id) {
+    case "shSave": Share.save(); break;
+    case "shShare": Share.share(); break;
+    case "shVideo": Share.video(); break;
+    case "shReplay": Share.play(); break;
+    case "shClose": Share.close(); break;
+    case "alertX": hideAlert(); break;
     case "addFunds": state.coins += TOPUP; state.s.added += TOPUP; save(); renderBal(true); toast("Added $10 of demo money"); break;
     case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
     case "sumSell": { const g = sell(SS.items.map(c => c.uid)); closeStage(); toast("Sold for " + money(g)); break; }
@@ -28,7 +36,8 @@ document.addEventListener("submit", e => { if (e.target.id === "codeForm") { e.p
 document.addEventListener("keydown", e => {
   const k = e.key;
   if (!stage.hidden && SS) { if ((k === " " || k === "Enter") && SS.phase !== "summary") { e.preventDefault(); if (!e.repeat) advance(); } if (k === "Escape") { if (SS.phase === "summary") closeStage(); else skipAll(); } return; }
+  if (k === "Escape" && !$("share").hidden) { Share.close(); return; }
   if (k === "Escape" && !$("modal").hidden) { closeModal(); return; }
-  if ((k === " " || k === "Enter") && view === "home" && $("modal").hidden && $("gate").hidden && !e.repeat && !/^(BUTTON|INPUT|SELECT|A|SUMMARY)$/.test(e.target.tagName)) { e.preventDefault(); openPack(); }
+  if ((k === " " || k === "Enter") && view === "home" && $("modal").hidden && $("share").hidden && $("gate").hidden && !e.repeat && !/^(BUTTON|INPUT|SELECT|A|SUMMARY)$/.test(e.target.tagName)) { e.preventDefault(); openPack(); }
 });
 window.addEventListener("hashchange", route);

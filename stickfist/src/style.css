@@ -135,6 +135,25 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 .sp { width: 84px; height: 26px; display: block; overflow: visible; } .sp .ln { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .mk .row { justify-content: space-between; }
 
+/* ---------- the tape, alerts, the result card ---------- */
+.tape { overflow: hidden; white-space: nowrap; border-bottom: 1px solid var(--ln); background: #070709; font-family: var(--m); font-size: 12px; height: 32px; line-height: 32px; }
+.tape-in { display: inline-block; animation: tape 90s linear infinite; will-change: transform; } .tape-in .run { display: inline-block; } @keyframes tape { to { transform: translateX(-50%); } }
+.tape .tk { margin: 0 4px; } .tape .tk b { font-weight: 700; color: var(--ink); } .tape i { font-style: normal; color: var(--ln3); margin: 0 10px; letter-spacing: -1px; }
+.alert { position: fixed; top: 84px; right: 18px; z-index: 35; width: min(500px, calc(100vw - 24px)); display: flex; gap: 16px; align-items: center; background: #0a0a0c; border: 1px solid var(--ln3); border-radius: 14px; padding: 14px 18px; box-shadow: 0 12px 44px rgba(0,0,0,.7); animation: vin .3s both; }
+.alert .art { flex: none; overflow: hidden; } .alert pre { font-family: var(--m); font-size: 10.5px; line-height: 1.1; margin: 0; } .alert.up pre { color: var(--ok); } .alert.dn pre { color: var(--bad); }
+.alert.up .art { animation: lift 1.2s ease-in-out infinite alternate; } @keyframes lift { from { transform: translateY(5px); } to { transform: translateY(-5px); } }
+.alert .txt { display: grid; gap: 6px; min-width: 0; } .alert b { font-size: 17px; } .alert .txt > span { font-size: 13px; color: var(--dim); line-height: 1.45; }
+.share { position: fixed; inset: 0; z-index: 70; background: rgba(3,3,4,.96); display: grid; place-items: center; padding: 14px; overflow-y: auto; }
+.sh-box { display: grid; gap: 14px; justify-items: center; } .sh-box canvas { width: min(92vw, calc((100vh - 110px) * 4 / 5)); height: auto; aspect-ratio: 4 / 5; border-radius: 14px; background: #050506; box-shadow: 0 0 0 1px var(--ln2), 0 24px 80px rgba(0,0,0,.8); }
+.sh-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+
+.live { font-family: var(--m); font-size: 12px; color: var(--dim); display: flex; align-items: center; gap: 8px; } .live i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: blink 1.4s steps(1) infinite; } .live span { color: var(--ok); letter-spacing: -1px; }
+.hero { display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: center; width: 100%; text-align: left; border: 1px solid var(--ln2); border-radius: 16px; padding: 22px 28px; margin-bottom: 38px; background: radial-gradient(120% 140% at 0 0, color-mix(in srgb, var(--c) 9%, #0a0a0c), #060607 70%); } .hero:hover { border-color: var(--ln3); }
+.hero.up { --c: var(--ok); } .hero.dn { --c: var(--bad); }
+.hero .sprite { font-family: var(--m); font-size: 13px; line-height: 1.1; color: var(--c); margin: 0; min-width: 11ch; }
+.hero h2 { font-size: 20px; font-weight: 600; margin-bottom: 4px; } .hero .big { font-size: 52px; font-weight: 700; letter-spacing: -.03em; line-height: 1.05; color: var(--c); font-variant-numeric: tabular-nums; }
+.hero .plot { font-family: var(--m); font-size: 11px; line-height: 1.12; color: var(--c); margin: 10px 0 0; white-space: pre; overflow: hidden; } .hero .plot.wipe { animation: wipe 1.8s steps(40) both; } @keyframes wipe { from { clip-path: inset(0 100% 0 0); } }
+
 /* ---------- modal ---------- */
 .modal { position: fixed; inset: 0; z-index: 40; background: rgba(5,5,6,.92); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
 .mbox { position: relative; width: min(860px, 100%); background: var(--bg); border: 1px solid var(--ln2); border-radius: 16px; padding: 28px; display: grid; grid-template-columns: minmax(200px, 300px) 1fr; gap: 32px; max-height: 94vh; overflow-y: auto; }
@@ -179,6 +198,8 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
   #mTable th:nth-child(4), #mTable td:nth-child(4), #mTable th:nth-child(5), #mTable td:nth-child(5), #pTable th:nth-child(2), #pTable td:nth-child(2), #pTable th:nth-child(5), #pTable td:nth-child(5) { display: none; } .mtable td:first-child { white-space: normal; } .mtable td:first-child .faint { display: block; font-size: 10px; } .mtable th, .mtable td { padding-left: 6px; padding-right: 6px; } .mtable .btn.small { padding: 4px 6px; font-size: 11px; }
   .wsplit { grid-template-columns: 1fr 1fr; gap: 16px; } .bignum { font-size: 42px; } .bignum.sm { font-size: 30px; } .mstats { grid-template-columns: 1fr 1fr; } h1.ttl { font-size: 30px; } .st-title .nm { --px: 5px; } .sum .big .bx { --px: 5px; }
   header.top .wrap { flex-wrap: wrap; height: auto; padding-top: 10px; padding-bottom: 8px; gap: 8px 14px; } nav.tabs { order: 3; width: 100%; flex: none; margin-left: -8px; gap: 0; } nav.tabs a { padding: 6px 7px; font-size: 13px; }
+  .hero { grid-template-columns: 1fr; gap: 10px; padding: 18px; } .hero .sprite { font-size: 11px; } .hero .big { font-size: 40px; } .hero .plot { font-size: 8.5px; }
+  .alert { top: 112px; right: 12px; left: 12px; width: auto; } .alert pre { font-size: 9px; } .tape { font-size: 11px; }
   .facts { grid-template-columns: 1fr; gap: 14px; } .mbox { grid-template-columns: 1fr; padding: 20px; gap: 22px; } .mbox .mcard { width: min(260px, 70%); margin: 0 auto; }
   .fan { flex-wrap: wrap; } .fan > div { width: min(112px, 28vw); } .slot .row { grid-template-columns: 110px max-content 1fr; gap: 8px; } .slot .bar { font-size: 11px; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 22px 14px; }

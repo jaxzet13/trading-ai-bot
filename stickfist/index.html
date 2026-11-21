@@ -145,6 +145,25 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 .sp { width: 84px; height: 26px; display: block; overflow: visible; } .sp .ln { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .mk .row { justify-content: space-between; }
 
+/* ---------- the tape, alerts, the result card ---------- */
+.tape { overflow: hidden; white-space: nowrap; border-bottom: 1px solid var(--ln); background: #070709; font-family: var(--m); font-size: 12px; height: 32px; line-height: 32px; }
+.tape-in { display: inline-block; animation: tape 90s linear infinite; will-change: transform; } .tape-in .run { display: inline-block; } @keyframes tape { to { transform: translateX(-50%); } }
+.tape .tk { margin: 0 4px; } .tape .tk b { font-weight: 700; color: var(--ink); } .tape i { font-style: normal; color: var(--ln3); margin: 0 10px; letter-spacing: -1px; }
+.alert { position: fixed; top: 84px; right: 18px; z-index: 35; width: min(500px, calc(100vw - 24px)); display: flex; gap: 16px; align-items: center; background: #0a0a0c; border: 1px solid var(--ln3); border-radius: 14px; padding: 14px 18px; box-shadow: 0 12px 44px rgba(0,0,0,.7); animation: vin .3s both; }
+.alert .art { flex: none; overflow: hidden; } .alert pre { font-family: var(--m); font-size: 10.5px; line-height: 1.1; margin: 0; } .alert.up pre { color: var(--ok); } .alert.dn pre { color: var(--bad); }
+.alert.up .art { animation: lift 1.2s ease-in-out infinite alternate; } @keyframes lift { from { transform: translateY(5px); } to { transform: translateY(-5px); } }
+.alert .txt { display: grid; gap: 6px; min-width: 0; } .alert b { font-size: 17px; } .alert .txt > span { font-size: 13px; color: var(--dim); line-height: 1.45; }
+.share { position: fixed; inset: 0; z-index: 70; background: rgba(3,3,4,.96); display: grid; place-items: center; padding: 14px; overflow-y: auto; }
+.sh-box { display: grid; gap: 14px; justify-items: center; } .sh-box canvas { width: min(92vw, calc((100vh - 110px) * 4 / 5)); height: auto; aspect-ratio: 4 / 5; border-radius: 14px; background: #050506; box-shadow: 0 0 0 1px var(--ln2), 0 24px 80px rgba(0,0,0,.8); }
+.sh-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+
+.live { font-family: var(--m); font-size: 12px; color: var(--dim); display: flex; align-items: center; gap: 8px; } .live i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: blink 1.4s steps(1) infinite; } .live span { color: var(--ok); letter-spacing: -1px; }
+.hero { display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: center; width: 100%; text-align: left; border: 1px solid var(--ln2); border-radius: 16px; padding: 22px 28px; margin-bottom: 38px; background: radial-gradient(120% 140% at 0 0, color-mix(in srgb, var(--c) 9%, #0a0a0c), #060607 70%); } .hero:hover { border-color: var(--ln3); }
+.hero.up { --c: var(--ok); } .hero.dn { --c: var(--bad); }
+.hero .sprite { font-family: var(--m); font-size: 13px; line-height: 1.1; color: var(--c); margin: 0; min-width: 11ch; }
+.hero h2 { font-size: 20px; font-weight: 600; margin-bottom: 4px; } .hero .big { font-size: 52px; font-weight: 700; letter-spacing: -.03em; line-height: 1.05; color: var(--c); font-variant-numeric: tabular-nums; }
+.hero .plot { font-family: var(--m); font-size: 11px; line-height: 1.12; color: var(--c); margin: 10px 0 0; white-space: pre; overflow: hidden; } .hero .plot.wipe { animation: wipe 1.8s steps(40) both; } @keyframes wipe { from { clip-path: inset(0 100% 0 0); } }
+
 /* ---------- modal ---------- */
 .modal { position: fixed; inset: 0; z-index: 40; background: rgba(5,5,6,.92); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
 .mbox { position: relative; width: min(860px, 100%); background: var(--bg); border: 1px solid var(--ln2); border-radius: 16px; padding: 28px; display: grid; grid-template-columns: minmax(200px, 300px) 1fr; gap: 32px; max-height: 94vh; overflow-y: auto; }
@@ -189,6 +208,8 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
   #mTable th:nth-child(4), #mTable td:nth-child(4), #mTable th:nth-child(5), #mTable td:nth-child(5), #pTable th:nth-child(2), #pTable td:nth-child(2), #pTable th:nth-child(5), #pTable td:nth-child(5) { display: none; } .mtable td:first-child { white-space: normal; } .mtable td:first-child .faint { display: block; font-size: 10px; } .mtable th, .mtable td { padding-left: 6px; padding-right: 6px; } .mtable .btn.small { padding: 4px 6px; font-size: 11px; }
   .wsplit { grid-template-columns: 1fr 1fr; gap: 16px; } .bignum { font-size: 42px; } .bignum.sm { font-size: 30px; } .mstats { grid-template-columns: 1fr 1fr; } h1.ttl { font-size: 30px; } .st-title .nm { --px: 5px; } .sum .big .bx { --px: 5px; }
   header.top .wrap { flex-wrap: wrap; height: auto; padding-top: 10px; padding-bottom: 8px; gap: 8px 14px; } nav.tabs { order: 3; width: 100%; flex: none; margin-left: -8px; gap: 0; } nav.tabs a { padding: 6px 7px; font-size: 13px; }
+  .hero { grid-template-columns: 1fr; gap: 10px; padding: 18px; } .hero .sprite { font-size: 11px; } .hero .big { font-size: 40px; } .hero .plot { font-size: 8.5px; }
+  .alert { top: 112px; right: 12px; left: 12px; width: auto; } .alert pre { font-size: 9px; } .tape { font-size: 11px; }
   .facts { grid-template-columns: 1fr; gap: 14px; } .mbox { grid-template-columns: 1fr; padding: 20px; gap: 22px; } .mbox .mcard { width: min(260px, 70%); margin: 0 auto; }
   .fan { flex-wrap: wrap; } .fan > div { width: min(112px, 28vw); } .slot .row { grid-template-columns: 110px max-content 1fr; gap: 8px; } .slot .bar { font-size: 11px; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 22px 14px; }
@@ -206,6 +227,8 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
     <div class="wallet"><span class="bal" id="bal">$0.00</span><button class="btn small" id="addFunds" title="Demo money. Nothing is ever charged.">+ add $10</button></div>
   </div>
 </header>
+<div class="tape" aria-hidden="true"><div class="tape-in" id="tapeIn"></div></div>
+<div class="alert" id="alert" hidden></div>
 
 <main class="wrap">
   <!-- PACK -->
@@ -222,7 +245,8 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 
   <!-- MARKET -->
   <section class="view" id="v-market">
-    <div class="page-head"><h1 class="ttl">Market</h1><p>Prices move every 20 seconds and are the same for everyone. You get cards from packs, and sell them any time. The other traders are simulated.</p></div>
+    <div class="page-head"><h1 class="ttl">Market</h1><p>Prices move every 20 seconds and are the same for everyone. You get cards from packs, and sell them any time. The other traders are simulated.</p><p class="live"></p></div>
+    <div id="mHero"></div>
     <div class="mstats" id="mStats"></div>
     <div class="two" id="mMovers"></div>
     <div class="two" id="mFlips" style="margin-top:40px"></div>
@@ -236,7 +260,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 
   <!-- PROFILE -->
   <section class="view" id="v-profile">
-    <div class="page-head"><h1 class="ttl">Profile</h1><p>Your demo wallet. It moves with the market, so keep it open and watch.</p></div>
+    <div class="page-head"><h1 class="ttl">Profile</h1><p>Your demo wallet. It moves with the market, so keep it open and watch.</p><p class="live"></p></div>
     <div id="pWorth"></div>
     <div id="pChart" style="margin-bottom:40px"></div>
     <h3 class="sec">Your cards</h3>
@@ -269,6 +293,12 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
   <div class="summary" id="stSummary" hidden></div>
 </div>
 
+<div class="share" id="share" hidden>
+  <div class="sh-box">
+    <canvas id="shCv" width="1080" height="1350" aria-label="Your result, as a picture"></canvas>
+    <div class="sh-actions"><button class="btn solid" id="shSave">Save image</button><button class="btn" id="shShare">Share</button><button class="btn" id="shVideo" hidden>Save video</button><button class="btn ghost" id="shReplay">Replay</button><button class="btn ghost" id="shClose">Close</button></div>
+  </div>
+</div>
 <div class="modal" id="modal" hidden><div class="mbox" id="mbox"></div></div>
 <div class="gate" id="gate" hidden>
   <div class="gatebox">
@@ -375,7 +405,7 @@ const imgOf = (card, fx) => `cards/${card.id}${fx ? "-" + fx : card.id === "stit
    4. STATE AND ECONOMY. Everything lives in this browser.
    ========================================================================== */
 const KEY = "stixx-first-print-v1";
-const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], ageOK: false, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0 } });
+const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, ageOK: false, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0 } });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); } catch (e) {}
 const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
@@ -564,13 +594,16 @@ const GLYPH = {
   N: ["#   #", "##  #", "# # #", "#  ##", "#   #"], O: [" ### ", "#   #", "#   #", "#   #", " ### "], P: ["#### ", "#   #", "#### ", "#    ", "#    "],
   R: ["#### ", "#   #", "#### ", "#  # ", "#   #"], S: [" ####", "#    ", " ### ", "    #", "#### "], T: ["#####", "  #  ", "  #  ", "  #  ", "  #  "],
   U: ["#   #", "#   #", "#   #", "#   #", " ### "],
+  V: ["#   #", "#   #", "#   #", " # # ", "  #  "], W: ["#   #", "#   #", "# # #", "## ##", "#   #"], X: ["#   #", " # # ", "  #  ", " # # ", "#   #"], Y: ["#   #", " # # ", "  #  ", "  #  ", "  #  "], Z: ["#####", "   # ", "  #  ", " #   ", "#####"],
+  J: ["  ###", "   # ", "   # ", "#  # ", " ##  "], Q: [" ### ", "#   #", "# # #", "#  # ", " ## #"],
   0: [" ### ", "#  ##", "# # #", "##  #", " ### "], 1: ["  #  ", " ##  ", "  #  ", "  #  ", " ### "], 2: [" ### ", "#   #", "  ## ", " #   ", "#####"],
   3: ["#### ", "    #", " ### ", "    #", "#### "], 4: ["#  # ", "#  # ", "#####", "   # ", "   # "], 5: ["#####", "#    ", "#### ", "    #", "#### "],
   6: [" ### ", "#    ", "#### ", "#   #", " ### "], 7: ["#####", "   # ", "  #  ", " #   ", " #   "], 8: [" ### ", "#   #", " ### ", "#   #", " ### "],
   9: [" ### ", "#   #", " ####", "    #", " ### "],
   "$": [" ####", "# #  ", " ### ", "  # #", "#### "], "%": ["#   #", "   # ", "  #  ", " #   ", "#   #"], ".": [" ", " ", " ", " ", "#"], ",": [" ", " ", " ", "#", "#"],
-  "-": ["   ", "   ", "###", "   ", "   "], " ": ["   ", "   ", "   ", "   ", "   "], "?": [" ### ", "#   #", "  ## ", "     ", "  #  "]
+  "-": ["   ", "   ", "###", "   ", "   "], "+": ["     ", "  #  ", "#####", "  #  ", "     "], " ": ["   ", "   ", "   ", "   ", "   "], "?": [" ### ", "#   #", "  ## ", "     ", "  #  "]
 };
+GLYPH["−"] = GLYPH["-"];
 function blockText(str) {
   const rows = ["", "", "", "", ""]; let first = true;
   for (const ch of String(str).toUpperCase()) { const g = GLYPH[ch] || GLYPH["?"]; for (let r = 0; r < 5; r++) rows[r] += (first ? "" : " ") + g[r].replace(/#/g, "█"); first = false; }
@@ -601,6 +634,21 @@ function lineChart(vals, o) {
   return `<div class="lcbox ${vals[vals.length - 1] >= vals[0] ? "up" : "dn"}" style="--h:${o.h || 170}px"><div class="lcwrap"><svg class="lc" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="price chart"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--c);stop-opacity:.28"/><stop offset="1" style="stop-color:var(--c);stop-opacity:0"/></linearGradient></defs><path d="${d} L${W - P} ${H} L${P} ${H} Z" fill="url(#${id})"/><path class="ln" d="${d}"/></svg><i class="dot" style="top:${(Y(v[v.length - 1]) / H * 100).toFixed(1)}%"></i></div><div class="axis"><span>${fmt(Math.max(...vals))}</span><span>${fmt(Math.min(...vals))}</span></div></div>`;
 }
 const buzzDots = n => `<span class="dots" role="img" aria-label="buzz ${n} of 5">${[0, 1, 2, 3, 4].map(i => `<i class="${i < n ? "on" : ""}"></i>`).join("")}</span>`;
+// An ASCII line chart, drawn the way people draw them by hand with ╭ ╮ ╰ ╯ ─ │. Values are resampled to `w` columns and plotted on a log scale.
+// Returns the character grid (row 0 is the top), each column's height Y (0 = bottom row) and the resampled values.
+function plotGrid(vals, w, h) {
+  const n = vals.length, v = []; for (let x = 0; x < w; x++) { const f = x / (w - 1) * (n - 1), i = Math.floor(f), j = Math.min(n - 1, i + 1); v.push(vals[i] + (vals[j] - vals[i]) * (f - i)); }
+  const L = v.map(Math.log), mn = Math.min(...L), sp = Math.max(Math.max(...L) - mn, .1), Y = L.map(x => Math.round((x - mn) / sp * (h - 1))), grid = Array.from({ length: h }, () => Array(w).fill(" "));
+  for (let x = 0; x < w - 1; x++) {
+    const y0 = Y[x], y1 = Y[x + 1];
+    if (y0 === y1) grid[h - 1 - y0][x] = "─";
+    else { grid[h - 1 - y1][x] = y0 > y1 ? "╰" : "╭"; grid[h - 1 - y0][x] = y0 > y1 ? "╮" : "╯"; for (let y = Math.min(y0, y1) + 1; y < Math.max(y0, y1); y++) grid[h - 1 - y][x] = "│"; }
+  }
+  grid[h - 1 - Y[w - 1]][w - 1] = "─";
+  return { grid, Y, v };
+}
+const pctShort = p => (p >= 0 ? "+" : "−") + (Math.abs(p * 100) >= 100 ? Math.round(Math.abs(p * 100)).toLocaleString("en-US") : Math.abs(p * 100).toFixed(1)) + "%";
+const heldText = ms => { const m = Math.round(ms / 6e4); if (m < 1) return "under a minute"; if (m < 90) return m + " min"; const h = Math.floor(m / 60); return h < 48 ? h + "h " + (m % 60) + "m" : Math.round(h / 24) + " days"; };
 const pnlHTML = (d, base) => `<span class="${d > 0 ? "up" : d < 0 ? "dn" : "fl"}">${d > 0 ? "▲ +" : d < 0 ? "▼ −" : "– "}${money(Math.abs(d))}${base > 0 ? ` <span class="dim">${Math.abs(d / base * 100).toFixed(Math.abs(d / base) >= 1 ? 0 : 1)}%</span>` : ""}</span>`;
 const pctHTML = p => `<span class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲ +" : p < -.0005 ? "▼ −" : "– "}${Math.abs(p * 100) >= 100 ? Math.round(Math.abs(p * 100)).toLocaleString("en-US") : Math.abs(p * 100).toFixed(1)}%</span>`;
 // a progress bar made of characters: [███░░] 
@@ -773,7 +821,7 @@ const agoText = m => m === 0 ? "just now" : m < 60 ? m + " min ago" : Math.floor
 function renderMarket() {
   const mv = movers(), rows = mv.rows, ps = packStats(), n = rows.length, fl = MK.flips();
   const idxNow = rows.reduce((a, r) => a + r.now / r.c.val, 0) / n * 100, idxWas = rows.reduce((a, r) => a + r.was / r.c.val, 0) / n * 100, up = rows.filter(r => r.p24 > 0).length;
-  $("mStats").innerHTML = `<div><span class="label">market index</span><b>${idxNow.toFixed(1)}</b> ${pctHTML(idxNow / idxWas - 1)}</div><div><span class="label">cards up in 24h</span><b>${up} of ${n}</b></div><div><span class="label">pack price right now</span><b>${money(ps.price)}</b></div>`;
+  renderHero(rows); $("mStats").innerHTML = `<div><span class="label">market index</span><b>${idxNow.toFixed(1)}</b> ${pctHTML(idxNow / idxWas - 1)}</div><div><span class="label">cards up in 24h</span><b>${up} of ${n}</b></div><div><span class="label">pack price right now</span><b>${money(ps.price)}</b></div>`;
   $("mMovers").innerHTML = `<div><h3 class="sec">Skyrocketing · 24h</h3>${mv.gain.map(moverRow).join("") || `<p class="small">Nothing is up right now.</p>`}</div><div><h3 class="sec">Crashing · 24h</h3>${mv.drop.map(moverRow).join("") || `<p class="small">Nothing is down right now.</p>`}</div>`;
   $("mFlips").innerHTML = `<div><h3 class="sec">Best flips · 24h</h3>${fl.best.map(flipRow).join("")}</div><div><h3 class="sec">Worst flips · 24h</h3>${fl.worst.map(flipRow).join("")}</div>`;
   $("mFlipNote").textContent = `Simulated traders, worked out from the real price path and after the 10% selling fee. ${fl.won} of the last ${fl.n} sold for more than they got.`;
@@ -861,7 +909,7 @@ function cardModal(no) {
     <div><span class="label" style="color:${R.col}">${R.name} · No. ${card.no}</span><h2>${esc(card.name)}</h2></div>
     <p class="dim">${fmt(card.chars)} characters · base worth ${money(card.val)} · turns up in ${chance(p)}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
     ${market}
-    ${cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div>${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${money(costOf(c))}</small></div><div class="r"><span><b>${money(valueOf(c))}</b><br>${pctHTML(gainOf(c))}</span><button class="btn small" data-sell="${c.uid}" data-no="${no}">sell ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<p class="small">You haven't found this card yet.</p>`}
+    ${cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div>${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${money(costOf(c))}</small></div><div class="r"><span><b>${money(valueOf(c))}</b><br>${pctHTML(gainOf(c))}</span><button class="btn small ghost" data-share="${c.uid}">share</button><button class="btn small" data-sell="${c.uid}" data-no="${no}">sell ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<p class="small">You haven't found this card yet.</p>`}
     ${styles}</div>`);
 }
 function codeModal() {
@@ -946,19 +994,240 @@ function summary() {
 function closeStage() { stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view); }
 
 /* ============================================================================
+   8b. THE RESULT CARD. What a card did between the pack and the sale, drawn as an ASCII line chart that draws itself,
+   with a headline number that rises and falls with the line. The animation is a canvas, so what you watch is what you save.
+   ========================================================================== */
+// everything the picture needs, worked out from the card's own price path while it was yours
+function receiptOf(c, sold) {
+  const card = BY_NO[c.no], now = Date.now(), held = Math.max(0, now - (c.t || now)), span = Math.max(held, 3 * 36e5), n = 120;
+  const ago0 = Math.min(MK.tick(), Math.round(span / MK.TICK)), agoPull = Math.min(ago0, Math.round(held / MK.TICK)), vals = [];
+  for (let i = 0; i < n; i++) vals.push(valueAgo(c, Math.round(ago0 * (1 - i / (n - 1)))));
+  const cost = costOf(c), got = sellOf(c), pi = ago0 ? Math.round((1 - agoPull / ago0) * (n - 1)) : 0; let pk = pi;
+  for (let i = pi; i < n; i++) if (vals[i] > vals[pk]) pk = i;
+  return { card, fx: c.fx || "", code: c.code, sold, cost, got, held, vals, pi, pk, gain: got - cost, pct: got / Math.max(1, cost) - 1, peakPct: vals[pk] * SELLBACK / Math.max(1, cost) - 1, at: now };
+}
+
+const Share = (() => {
+  const W = 1080, H = 1350, FONT = "'JetBrains Mono', 'DejaVu Sans Mono', ui-monospace, Menlo, Consolas, monospace";
+  const GREEN = "#9fd8a6", RED = "#e8786d", INK = "#ece7dc", DIM = "#8d897f", FAINT = "#4a4a52", BG = "#050506";
+  const CH0 = .9, CH1 = 3.7, ROWS = 24, LH = 19, CF = 16, X0 = 60, Y0 = 668;               // when the chart starts and stops drawing, and where it sits
+  let cv, ctx, rec = null, img = null, plot = null, t0 = 0, raf = 0, last = 0, parts = [], burst = false, rain = null, recording = false;
+  const ease = x => 1 - Math.pow(1 - x, 3), lerp = (a, b, k) => a + (b - a) * k, clampK = x => x < 0 ? 0 : x > 1 ? 1 : x;
+  const scramble = (str, k) => { const n = Math.floor(str.length * k); let o = ""; for (let i = 0; i < str.length; i++) o += i < n || str[i] === " " ? str[i] : "#%&*+=<>/"[Math.floor(Math.random() * 9)]; return o; };
+  const dateStr = ms => { const d = new Date(ms), p = x => String(x).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+
+  function T(str, x, y, size, color, weight, align, alpha) {
+    ctx.font = `${weight || 500} ${size}px ${FONT}`; ctx.textAlign = align || "left"; ctx.fillStyle = color; ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.fillText(str, x, y); ctx.globalAlpha = 1; ctx.textAlign = "left";
+  }
+  function pix(str, x, y, px, color, alpha) {   // the pixel lettering, drawn as squares
+    const rows = blockText(str).split("\n"); ctx.fillStyle = color; ctx.globalAlpha = alpha == null ? 1 : alpha;
+    rows.forEach((row, r) => { for (let i = 0; i < row.length; i++) if (row[i] === "█") ctx.fillRect(x + i * px, y + r * px, px - 1, px - 1); }); ctx.globalAlpha = 1; return rows[0].length * px;
+  }
+  function rainLayer(t, col) {
+    if (!rain) rain = Array.from({ length: 44 }, (_, i) => ({ x: 20 + i * 24.2, y: Math.random() * H, v: 24 + Math.random() * 70, s: Math.random() }));
+    ctx.font = `500 16px ${FONT}`; ctx.fillStyle = col;
+    for (const r of rain) { const y0 = (r.y + t * r.v) % (H + 300) - 150; for (let k = 0; k < 7; k++) { ctx.globalAlpha = .075 * (1 - k / 7); ctx.fillText("01+-$.:%"[(Math.floor(t * 6 + r.s * 40) + k * 3) % 8], r.x, y0 - k * 18); } }
+    ctx.globalAlpha = 1;
+  }
+
+  function draw(t, live) {
+    const r = rec, up = r.pct >= 0, col = up ? GREEN : RED, c = ctx;
+    c.save(); c.globalAlpha = 1; c.fillStyle = BG; c.fillRect(0, 0, W, H); c.textBaseline = "top";
+    if (live) rainLayer(t, col);
+    c.strokeStyle = FAINT; c.lineWidth = 2; c.globalAlpha = .7; c.strokeRect(24, 24, W - 48, H - 48); c.globalAlpha = 1;
+
+    // top bar
+    T("[ STIXX ]", 60, 54, 30, INK, 700); T(dateStr(r.at), W - 60, 60, 20, DIM, 500, "right");
+
+    // the card picture, decoding from the top
+    const ik = ease(clampK(t / .9)), ix = 60, iy = 140, iw = 360, ih = 437;
+    c.fillStyle = "#040405"; c.fillRect(ix, iy, iw, ih);
+    if (img) { c.save(); c.beginPath(); c.rect(ix, iy, iw, ih * ik); c.clip(); c.drawImage(img, ix, iy, iw, ih); c.restore(); }
+    if (ik < 1 && live) { c.font = `500 14px ${FONT}`; c.fillStyle = col; const ey = iy + ih * ik; for (let i = 0; i < 26; i++) { c.globalAlpha = .5; c.fillText("01+-$.:%#"[Math.floor(Math.random() * 9)], ix + i * 14, ey - 6); } c.globalAlpha = 1; }
+    c.strokeStyle = FAINT; c.lineWidth = 2; c.strokeRect(ix - 1, iy - 1, iw + 2, ih + 2);
+
+    // the right column: status, name, the headline number
+    const nameFull = r.card.name.toUpperCase() + (r.fx ? " · " + STYLES[r.fx].name.toUpperCase() : "");
+    T(r.sold ? "[ SOLD ]" : "[ STILL HOLDING ]", 470, 142, 28, col, 700);
+    T(t < .6 ? scramble(nameFull, t / .6) : nameFull, 470, 192, nameFull.length > 18 ? 34 : 44, INK, 700);
+    T(`${RAR[r.card.rar].name} · ${fmt(r.card.chars)} characters`, 470, 250, 22, DIM, 500);
+
+    // chart geometry and the character grid
+    c.font = `500 ${CF}px ${FONT}`; const cw = c.measureText("M").width, cols = Math.floor(960 / cw);
+    if (!plot || plot.cols !== cols) plot = Object.assign({ cols }, plotGrid(r.vals, cols, ROWS));
+    const p = ease(clampK((t - CH0) / (CH1 - CH0))), hc = p * (cols - 1), hi = Math.floor(hc), pullCol = Math.round(r.pi / (r.vals.length - 1) * (cols - 1)), peakCol = Math.round(r.pk / (r.vals.length - 1) * (cols - 1));
+    const vAt = x => { const i = Math.floor(x), j = Math.min(cols - 1, i + 1); return plot.v[i] + (plot.v[j] - plot.v[i]) * (x - i); };
+    const vHead = vAt(hc), pctHead = p >= 1 ? r.pct : hc < pullCol ? 0 : vHead * SELLBACK / Math.max(1, r.cost) - 1;
+
+    // the headline: it moves with the line
+    const txt = pctShort(pctHead).replace("−", "-"), full = pctShort(r.pct).replace("−", "-"), colsN = blockText(full).split("\n")[0].length, px = Math.min(16, Math.floor(560 / colsN));
+    const hcol = pctHead >= 0 ? GREEN : RED; pix(txt, 470, 292, px, hcol, 1);
+    const by = 292 + 5 * px + 26;
+    T(`${money(r.cost)}  →  ${money(p >= 1 ? r.got : Math.round(vHead * SELLBACK))}`, 470, by, 38, INK, 700);
+    T(`${r.gain >= 0 ? "+" : "−"}${money(Math.abs(r.gain))} ${r.sold ? (r.gain >= 0 ? "made" : "lost") : "if you sold now"}`, 470, by + 56, 26, col, 600, "left", p >= 1 ? 1 : .35);
+    T(`held ${heldText(r.held)} · after the 10% fee`, 470, by + 96, 21, DIM, 500);
+
+    // the ASCII line chart
+    T(`HIGH ${money(Math.max(...r.vals))}   LOW ${money(Math.min(...r.vals))}`, X0, Y0 - 40, 19, DIM, 500);
+    T(r.pi > 0 ? "the dim part is before you got it" : "", W - 60, Y0 - 40, 19, FAINT, 500, "right");
+    c.font = `500 ${CF}px ${FONT}`;
+    for (let x = 0; x <= hi; x++) {
+      const before = x < pullCol, age = hc - x, ly = ROWS - 1 - plot.Y[x];
+      for (let y = 0; y < ROWS; y++) { const ch = plot.grid[y][x]; if (ch === " ") continue; c.globalAlpha = before ? .5 : 1; c.fillStyle = before ? FAINT : age < 2.5 ? "#ffffff" : age < 7 ? INK : col; c.fillText(ch, X0 + x * cw, Y0 + y * LH); }
+      for (let y = ly + 1; y < ROWS && y - ly < 9; y++) { c.globalAlpha = (before ? .1 : .3) * (1 - (y - ly) / 9.5); c.fillStyle = before ? FAINT : col; c.fillText(y - ly === 1 ? ":" : ".", X0 + x * cw, Y0 + y * LH); }
+    }
+    c.globalAlpha = 1;
+    // pulled and peak markers
+    if (hi >= pullCol && r.pi > 0) { c.fillStyle = DIM; c.font = `500 ${CF}px ${FONT}`; for (let y = ROWS - 1 - plot.Y[pullCol] + 1; y < ROWS; y++) { c.globalAlpha = .35; c.fillText("┆", X0 + pullCol * cw, Y0 + y * LH); } c.globalAlpha = 1; }
+    const baseY = Y0 + ROWS * LH + 14, pullX = Math.min(X0 + pullCol * cw, W - 60 - 230);
+    if (hi >= pullCol) T(`▲ pulled ${money(r.cost)}`, Math.max(X0, pullX), baseY, 22, DIM, 600);
+    if (hi >= peakCol && r.peakPct > r.pct + .08 && r.pk > r.pi) { const pyy = Y0 + (ROWS - 1 - plot.Y[peakCol]) * LH - 36, ptx = `PEAK ${pctShort(r.peakPct)}`; T(ptx, Math.min(Math.max(X0 + peakCol * cw - 40, X0), W - 60 - 220), Math.max(pyy, Y0 - 12), 22, INK, 700, "left", .95); }
+    // the head
+    if (p < 1 || live) {
+      const hx = X0 + hc * cw, hy = Y0 + (ROWS - 1 - plot.Y[Math.min(cols - 1, Math.round(hc))]) * LH;
+      c.fillStyle = col; c.globalAlpha = .16 + .06 * Math.sin(t * 9); c.beginPath(); c.arc(hx + cw / 2, hy + LH / 2, 13, 0, 6.3); c.fill(); c.globalAlpha = 1;
+      c.font = `700 22px ${FONT}`; c.fillStyle = "#ffffff"; c.fillText("●", hx - 1, hy - 2);
+      if (p < 1) { const lx = hx > X0 + 760 ? hx - 120 : hx + 24; T(money(Math.round(vHead)), lx, hy - 36, 24, "#ffffff", 700); }
+    }
+    if (p >= 1) T(`${r.sold ? "sold" : "now"} ${money(r.got)} ▶`, W - 60, baseY, 22, col, 700, "right");
+
+    // footer
+    c.strokeStyle = FAINT; c.lineWidth = 1; c.beginPath(); c.moveTo(60, 1168); c.lineTo(W - 60, 1168); c.stroke();
+    T("Demo money. Prices follow a fixed public formula and the other traders are simulated.", 60, 1190, 19, DIM, 500);
+    T("Nothing here is real and nothing was charged.", 60, 1218, 19, DIM, 500);
+    pix("STIXX", 60, 1262, 7, INK, .95); T(`first print · ${r.code}`, W - 60, 1284, 19, DIM, 500, "right");
+
+    // after the line has run: profit throws characters up, a loss glitches
+    if (live && p >= 1 && !burst) { burst = true; for (let i = 0; i < (up ? 90 : 60); i++) parts.push({ x: 470 + Math.random() * 520, y: 310, vx: (Math.random() - .5) * 420, vy: up ? -140 - Math.random() * 360 : 40 + Math.random() * 120, ch: up ? "$+*·"[i % 4] : "-x/\\"[i % 4], life: 1.4 + Math.random() * 1.2, age: 0 }); }
+    if (live && parts.length) { const dt = Math.min(.05, (performance.now() - last) / 1000 || .016); c.font = `700 24px ${FONT}`; c.fillStyle = col; for (const q of parts) { q.age += dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += (up ? 380 : 220) * dt; c.globalAlpha = Math.max(0, 1 - q.age / q.life); c.fillText(q.ch, q.x, q.y); } c.globalAlpha = 1; parts = parts.filter(q => q.age < q.life); }
+    if (live && !up && t > CH1 && t < CH1 + .7) { for (let i = 0; i < 7; i++) { const by2 = 140 + Math.random() * 1000, bh = 8 + Math.random() * 40, dx = (Math.random() - .5) * 46; c.drawImage(cv, 0, by2, W, bh, dx, by2, W, bh); } }
+    c.restore(); last = performance.now();
+  }
+
+  function loop(now) { draw((now - t0) / 1000, true); raf = requestAnimationFrame(loop); }
+  function play() { cancelAnimationFrame(raf); parts = []; burst = false; t0 = performance.now(); last = t0; if (reduced) draw(99, false); else raf = requestAnimationFrame(loop); }
+  const fontReady = () => Promise.race([document.fonts && document.fonts.load ? document.fonts.load("700 22px 'JetBrains Mono'").catch(() => 0) : 0, new Promise(r => setTimeout(r, 1200))]);
+
+  async function open(r) {
+    rec = r; plot = null; rain = null; $("share").hidden = false; document.body.style.overflow = "hidden"; cv = $("shCv"); ctx = cv.getContext("2d");
+    $("shVideo").hidden = !(window.MediaRecorder && cv.captureStream);
+    draw(0, false); await fontReady(); img = await loadImg(imgOf(r.card, r.fx)); if ($("share").hidden) return; play();
+  }
+  function close() { cancelAnimationFrame(raf); $("share").hidden = true; document.body.style.overflow = ""; rec = null; }
+
+  // a still picture of the finished chart
+  function still() { return new Promise(res => { cancelAnimationFrame(raf); draw(99, false); cv.toBlob(b => { res(b); if (!$("share").hidden && !reduced) { t0 = performance.now() - 20000; raf = requestAnimationFrame(loop); } }, "image/png"); }); }
+  async function saveBlob(blob, name) {
+    try { const dl = window.claude && claude.use ? await claude.use("downloads") : null; if (dl) { await dl.save({ filename: name, data: blob }); toast("Saved"); return; } } catch (e) { if (e && e.code === "declined") return; }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Saved");
+  }
+  const fileName = ext => `stixx-${rec.card.id}-${rec.pct >= 0 ? "up" : "down"}-${Math.abs(Math.round(rec.pct * 100))}pct.${ext}`;
+  const caption = () => `${rec.sold ? "Sold" : "Holding"} ${rec.card.name} on STIXX: ${pctShort(rec.pct)} (${money(rec.cost)} to ${money(rec.got)}). Demo money.`;
+  async function save() { const b = await still(); if (b) saveBlob(b, fileName("png")); }
+  async function share() {
+    const b = await still(); if (!b) return; const f = new File([b], fileName("png"), { type: "image/png" });
+    try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: "STIXX", text: caption() }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
+    saveBlob(b, fileName("png"));
+  }
+  // record the animation itself as a short video
+  async function video() {
+    if (recording) return; const mime = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"].find(m => MediaRecorder.isTypeSupported(m)); if (!mime) { toast("This browser can't record video. Save the image instead."); return; }
+    recording = true; const btn = $("shVideo"), label = btn.textContent; btn.textContent = "recording…"; const chunks = [], mr = new MediaRecorder(cv.captureStream(30), { mimeType: mime, videoBitsPerSecond: 5e6 });
+    mr.ondataavailable = e => { if (e.data.size) chunks.push(e.data); }; mr.onstop = () => { recording = false; btn.textContent = label; saveBlob(new Blob(chunks, { type: mime }), fileName(mime.startsWith("video/mp4") ? "mp4" : "webm")); };
+    play(); mr.start(); setTimeout(() => mr.stop(), (CH1 + 2.2) * 1000);
+  }
+  return { open, close, play, save, share, video };
+})();
+
+/* ============================================================================
+   8c. THE TAPE AND THE ALERTS. A ticker that never stops, and ASCII pictures that tell you when a card you hold moons or gets rugged.
+   ========================================================================== */
+// ---- the tape: every card and the latest simulated trades, scrolling across the top of every page
+let tapeAt = 0;
+function renderTape() {
+  const el = $("tapeIn"); if (!el || (el.firstChild && Date.now() - tapeAt < 60000)) return; tapeAt = Date.now();
+  const mv = movers().rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24)), fd = MK.feed(6), items = [];
+  const tk = (cls, a, b) => `<span class="tk ${cls}"><b>${a}</b> ${b}</span>`;
+  for (let i = 0; i < Math.max(mv.length, fd.length); i++) {
+    if (mv[i]) items.push(tk(mv[i].p24 >= 0 ? "up" : "dn", esc(mv[i].c.name.toUpperCase()), `${money(mv[i].now)} ${mv[i].p24 >= 0 ? "▲" : "▼"} ${pctShort(mv[i].p24)}`));
+    if (fd[i]) items.push(tk(fd[i].pct >= 0 ? "up" : "dn", esc(fd[i].name), `sold ${esc(fd[i].card.name)} ${fd[i].pct >= 0 ? "▲" : "▼"} ${pctShort(fd[i].pct)}`));
+  }
+  const one = items.join('<i>░▒▓</i>') + '<i>░▒▓</i>'; el.innerHTML = `<span class="run">${one}</span><span class="run" aria-hidden="true">${one}</span>`;
+  el.style.animationDuration = Math.max(60, items.length * 4.5) + "s"; el.style.animationDelay = "-" + ((Date.now() / 1000) % parseFloat(el.style.animationDuration)).toFixed(1) + "s";
+}
+
+// ---- alerts: a card you hold doubled, or lost most of its price, in the last six hours
+const ROCKET = f => `      /\\
+     /  \\
+    | ** |
+    | ** |
+   /|    |\\
+  /_|_/\\_|_\\
+    ${["\\||/", "(||)", "/||\\"][f % 3]}
+     ${["\\/ ", "() ", "'' "][f % 3]}
+   ${[" . ' .", "'  . '", ". '  ."][f % 3]}`;
+const SKULL = f => `   _.-"""""-._
+  /  _   _  \\
+ |  (o) (o)  |
+  \\    ^    /
+   | ||||| |
+    \\_____/
+   ${["x  x  x", " x  x  x", "x   x  x", "  x x x "][f % 4]}`;
+let alertIv = 0, alertTo = 0;
+function hideAlert() { clearInterval(alertIv); clearTimeout(alertTo); $("alert").hidden = true; }
+function showAlert(card, p) {
+  const up = p > 0, cs = copiesOf(card.no), worth = cs.reduce((a, c) => a + valueOf(c), 0), cost = cs.reduce((a, c) => a + costOf(c), 0), d = worth - cost, a = $("alert");
+  a.className = "alert " + (up ? "up" : "dn"); a.hidden = false;
+  a.innerHTML = `<div class="art"><pre id="alertArt"></pre></div><div class="txt"><b>${esc(card.name)} ${up ? "is mooning" : "just got rugged"}</b><span>${up ? "Up" : "Down"} ${pctShort(Math.abs(p)).slice(1)} in 6 hours. ${cs.length === 1 ? "Your copy is" : "Your " + cs.length + " copies are"} worth ${money(worth)} now, ${d >= 0 ? "+" : "\u2212"}${money(Math.abs(d))} against what they were worth when you got them.</span><div class="row"><button class="btn small" data-card="${card.no}">See it</button><button class="btn small ghost" id="alertX">Dismiss</button></div></div>`;
+  let f = 0; const art = $("alertArt"), step = () => { art.textContent = up ? ROCKET(f++) : SKULL(f++); }; step(); clearInterval(alertIv); if (!reduced) alertIv = setInterval(step, 140);
+  clearTimeout(alertTo); alertTo = setTimeout(hideAlert, 14000);
+}
+function checkAlerts() {
+  if (!state.ageOK || SS || !$("share").hidden || !$("alert").hidden) return;
+  const now = Date.now(); state.alertAt = state.alertAt || {};
+  for (const no of new Set(state.vault.map(c => c.no))) {
+    const card = BY_NO[no], p = MK.pct(card, 6); if (now - (state.alertAt[no] || 0) < 6 * 36e5) continue;
+    if (p >= 1 || p <= -.6) { state.alertAt[no] = now; persist(); showAlert(card, p); return; }
+  }
+}
+
+// ---- the hottest card in the market, as a picture: an ASCII rocket or skull, and its day drawn as an ASCII line chart
+let heroKey = "", heroFrame = 0;
+function renderHero(rows) {
+  const el = $("mHero"); if (!el) return; const top = rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24))[0]; if (!top || Math.abs(top.p24) < .15) { el.innerHTML = ""; heroKey = ""; return; }
+  const up = top.p24 > 0, key = top.c.no + (up ? "u" : "d") + MK.tick(); if (key === heroKey) return; const fresh = heroKey.slice(0, 4) !== key.slice(0, 4); heroKey = key;
+  const pg = plotGrid(MK.series(top.c, 24, 96), innerWidth > 760 ? 100 : 40, innerWidth > 760 ? 9 : 7).grid.map(r => r.join("")).join("\n");
+  el.innerHTML = `<button class="hero ${up ? "up" : "dn"}" data-card="${top.c.no}"><pre class="sprite" id="heroArt" aria-hidden="true">${up ? ROCKET(0) : SKULL(0)}</pre><div class="info"><h2>${esc(top.c.name)} ${up ? "is mooning" : "is getting rugged"}</h2><div class="big">${pctShort(top.p24)}</div><div class="dim">${money(top.was)} → ${money(top.now)} in 24 hours</div><pre class="plot${fresh ? " wipe" : ""}" aria-hidden="true">${pg}</pre></div></button>`;
+}
+// the countdown to the next price: a line that fills up over 20 seconds
+function tickLive() {
+  const s = 20 - Math.floor((Date.now() % 20000) / 1000), n = 12, k = Math.round((20 - s) / 20 * n);
+  document.querySelectorAll(".live").forEach(e => { e.innerHTML = `<i></i>live · next price in ${s}s <span>${"━".repeat(k)}${"─".repeat(n - k)}</span>`; });
+  const a = $("heroArt"); if (a && !reduced) { heroFrame++; a.textContent = a.closest(".hero").classList.contains("up") ? ROCKET(heroFrame) : SKULL(heroFrame); }
+}
+
+/* ============================================================================
    9. EVENTS
    ========================================================================== */
 document.addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) { if (e.target === $("modal")) closeModal(); return; }
   if (t.hasAttribute("data-open")) { openPack(); return; }
   if (t.hasAttribute("data-close")) { closeModal(); return; }
-  if (t.dataset.card) { cardModal(t.dataset.card); return; }
+  if (t.dataset.card) { if (t.closest("#alert")) hideAlert(); cardModal(t.dataset.card); return; }
+  if (t.dataset.share) { const c = state.vault.find(x => x.uid === t.dataset.share); if (c) Share.open(receiptOf(c, false)); return; }
   if (t.dataset.sell) {
+    const c = state.vault.find(x => x.uid === t.dataset.sell), rec = c ? receiptOf(c, true) : null;
     const g = sell([t.dataset.sell]); if (!g) return; toast("Sold for " + money(g));
-    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view); return;
+    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view); if (rec) Share.open(rec); return;
   }
   if (/^sum/.test(t.id) && SS && performance.now() - SS.sumAt < 500) return;
   switch (t.id) {
+    case "shSave": Share.save(); break;
+    case "shShare": Share.share(); break;
+    case "shVideo": Share.video(); break;
+    case "shReplay": Share.play(); break;
+    case "shClose": Share.close(); break;
+    case "alertX": hideAlert(); break;
     case "addFunds": state.coins += TOPUP; state.s.added += TOPUP; save(); renderBal(true); toast("Added $10 of demo money"); break;
     case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
     case "sumSell": { const g = sell(SS.items.map(c => c.uid)); closeStage(); toast("Sold for " + money(g)); break; }
@@ -975,18 +1244,21 @@ document.addEventListener("submit", e => { if (e.target.id === "codeForm") { e.p
 document.addEventListener("keydown", e => {
   const k = e.key;
   if (!stage.hidden && SS) { if ((k === " " || k === "Enter") && SS.phase !== "summary") { e.preventDefault(); if (!e.repeat) advance(); } if (k === "Escape") { if (SS.phase === "summary") closeStage(); else skipAll(); } return; }
+  if (k === "Escape" && !$("share").hidden) { Share.close(); return; }
   if (k === "Escape" && !$("modal").hidden) { closeModal(); return; }
-  if ((k === " " || k === "Enter") && view === "home" && $("modal").hidden && $("gate").hidden && !e.repeat && !/^(BUTTON|INPUT|SELECT|A|SUMMARY)$/.test(e.target.tagName)) { e.preventDefault(); openPack(); }
+  if ((k === " " || k === "Enter") && view === "home" && $("modal").hidden && $("share").hidden && $("gate").hidden && !e.repeat && !/^(BUTTON|INPUT|SELECT|A|SUMMARY)$/.test(e.target.tagName)) { e.preventDefault(); openPack(); }
 });
 window.addEventListener("hashchange", route);
 
 /* ============================================================================
    10. START
    ========================================================================== */
-MK.advance(); logWorth(); persist(); renderBal(); route();
+MK.advance(); logWorth(); persist(); renderBal(); route(); renderTape();
 if (!state.ageOK) $("gate").hidden = false;
 // the market moves every 20 seconds; redraw whatever is on screen when it does
-setInterval(() => { if (MK.advance()) { logWorth(); persist(); refreshLive(); } }, 2000);
+setInterval(() => { if (MK.advance()) { logWorth(); persist(); refreshLive(); renderTape(); checkAlerts(); } }, 2000);
+setTimeout(checkAlerts, 2500);
+tickLive(); setInterval(tickLive, 1000);
 setTimeout(() => CARDS.forEach(c => loadImg(imgOf(c))), 700);   // warm the pictures so a reveal never waits on one
 
 })();

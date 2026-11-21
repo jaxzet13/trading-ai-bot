@@ -40,13 +40,16 @@ const GLYPH = {
   N: ["#   #", "##  #", "# # #", "#  ##", "#   #"], O: [" ### ", "#   #", "#   #", "#   #", " ### "], P: ["#### ", "#   #", "#### ", "#    ", "#    "],
   R: ["#### ", "#   #", "#### ", "#  # ", "#   #"], S: [" ####", "#    ", " ### ", "    #", "#### "], T: ["#####", "  #  ", "  #  ", "  #  ", "  #  "],
   U: ["#   #", "#   #", "#   #", "#   #", " ### "],
+  V: ["#   #", "#   #", "#   #", " # # ", "  #  "], W: ["#   #", "#   #", "# # #", "## ##", "#   #"], X: ["#   #", " # # ", "  #  ", " # # ", "#   #"], Y: ["#   #", " # # ", "  #  ", "  #  ", "  #  "], Z: ["#####", "   # ", "  #  ", " #   ", "#####"],
+  J: ["  ###", "   # ", "   # ", "#  # ", " ##  "], Q: [" ### ", "#   #", "# # #", "#  # ", " ## #"],
   0: [" ### ", "#  ##", "# # #", "##  #", " ### "], 1: ["  #  ", " ##  ", "  #  ", "  #  ", " ### "], 2: [" ### ", "#   #", "  ## ", " #   ", "#####"],
   3: ["#### ", "    #", " ### ", "    #", "#### "], 4: ["#  # ", "#  # ", "#####", "   # ", "   # "], 5: ["#####", "#    ", "#### ", "    #", "#### "],
   6: [" ### ", "#    ", "#### ", "#   #", " ### "], 7: ["#####", "   # ", "  #  ", " #   ", " #   "], 8: [" ### ", "#   #", " ### ", "#   #", " ### "],
   9: [" ### ", "#   #", " ####", "    #", " ### "],
   "$": [" ####", "# #  ", " ### ", "  # #", "#### "], "%": ["#   #", "   # ", "  #  ", " #   ", "#   #"], ".": [" ", " ", " ", " ", "#"], ",": [" ", " ", " ", "#", "#"],
-  "-": ["   ", "   ", "###", "   ", "   "], " ": ["   ", "   ", "   ", "   ", "   "], "?": [" ### ", "#   #", "  ## ", "     ", "  #  "]
+  "-": ["   ", "   ", "###", "   ", "   "], "+": ["     ", "  #  ", "#####", "  #  ", "     "], " ": ["   ", "   ", "   ", "   ", "   "], "?": [" ### ", "#   #", "  ## ", "     ", "  #  "]
 };
+GLYPH["−"] = GLYPH["-"];
 function blockText(str) {
   const rows = ["", "", "", "", ""]; let first = true;
   for (const ch of String(str).toUpperCase()) { const g = GLYPH[ch] || GLYPH["?"]; for (let r = 0; r < 5; r++) rows[r] += (first ? "" : " ") + g[r].replace(/#/g, "█"); first = false; }
@@ -77,6 +80,21 @@ function lineChart(vals, o) {
   return `<div class="lcbox ${vals[vals.length - 1] >= vals[0] ? "up" : "dn"}" style="--h:${o.h || 170}px"><div class="lcwrap"><svg class="lc" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="price chart"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--c);stop-opacity:.28"/><stop offset="1" style="stop-color:var(--c);stop-opacity:0"/></linearGradient></defs><path d="${d} L${W - P} ${H} L${P} ${H} Z" fill="url(#${id})"/><path class="ln" d="${d}"/></svg><i class="dot" style="top:${(Y(v[v.length - 1]) / H * 100).toFixed(1)}%"></i></div><div class="axis"><span>${fmt(Math.max(...vals))}</span><span>${fmt(Math.min(...vals))}</span></div></div>`;
 }
 const buzzDots = n => `<span class="dots" role="img" aria-label="buzz ${n} of 5">${[0, 1, 2, 3, 4].map(i => `<i class="${i < n ? "on" : ""}"></i>`).join("")}</span>`;
+// An ASCII line chart, drawn the way people draw them by hand with ╭ ╮ ╰ ╯ ─ │. Values are resampled to `w` columns and plotted on a log scale.
+// Returns the character grid (row 0 is the top), each column's height Y (0 = bottom row) and the resampled values.
+function plotGrid(vals, w, h) {
+  const n = vals.length, v = []; for (let x = 0; x < w; x++) { const f = x / (w - 1) * (n - 1), i = Math.floor(f), j = Math.min(n - 1, i + 1); v.push(vals[i] + (vals[j] - vals[i]) * (f - i)); }
+  const L = v.map(Math.log), mn = Math.min(...L), sp = Math.max(Math.max(...L) - mn, .1), Y = L.map(x => Math.round((x - mn) / sp * (h - 1))), grid = Array.from({ length: h }, () => Array(w).fill(" "));
+  for (let x = 0; x < w - 1; x++) {
+    const y0 = Y[x], y1 = Y[x + 1];
+    if (y0 === y1) grid[h - 1 - y0][x] = "─";
+    else { grid[h - 1 - y1][x] = y0 > y1 ? "╰" : "╭"; grid[h - 1 - y0][x] = y0 > y1 ? "╮" : "╯"; for (let y = Math.min(y0, y1) + 1; y < Math.max(y0, y1); y++) grid[h - 1 - y][x] = "│"; }
+  }
+  grid[h - 1 - Y[w - 1]][w - 1] = "─";
+  return { grid, Y, v };
+}
+const pctShort = p => (p >= 0 ? "+" : "−") + (Math.abs(p * 100) >= 100 ? Math.round(Math.abs(p * 100)).toLocaleString("en-US") : Math.abs(p * 100).toFixed(1)) + "%";
+const heldText = ms => { const m = Math.round(ms / 6e4); if (m < 1) return "under a minute"; if (m < 90) return m + " min"; const h = Math.floor(m / 60); return h < 48 ? h + "h " + (m % 60) + "m" : Math.round(h / 24) + " days"; };
 const pnlHTML = (d, base) => `<span class="${d > 0 ? "up" : d < 0 ? "dn" : "fl"}">${d > 0 ? "▲ +" : d < 0 ? "▼ −" : "– "}${money(Math.abs(d))}${base > 0 ? ` <span class="dim">${Math.abs(d / base * 100).toFixed(Math.abs(d / base) >= 1 ? 0 : 1)}%</span>` : ""}</span>`;
 const pctHTML = p => `<span class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲ +" : p < -.0005 ? "▼ −" : "– "}${Math.abs(p * 100) >= 100 ? Math.round(Math.abs(p * 100)).toLocaleString("en-US") : Math.abs(p * 100).toFixed(1)}%</span>`;
 // a progress bar made of characters: [███░░] 
