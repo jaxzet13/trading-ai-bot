@@ -179,7 +179,10 @@ def _valid(fam, p):
     return set(p) == set(grid)
 
 
-def breed(par, seen, coins, n_mut=15, n_cross=150, n_move=4, seed=None):
+def breed(par, seen, coins, n_mut=15, n_cross=75, n_move=6, seed=None):
+    # Nov 21, first full forward day (Nov 20), each method vs original strategies on the same coins: moves to other
+    # coins +$0.078/bet (962 bets), parameter steps +$0.004 (14,140), crossovers -$0.058 (1,002). One day only,
+    # so the mix shifts (crossovers 150 -> 75, moves 4 -> 6 per parent) rather than dropping a method.
     from . import lab3
     rng = random.Random(seed)
     kids, out_keys = [], set(seen)
