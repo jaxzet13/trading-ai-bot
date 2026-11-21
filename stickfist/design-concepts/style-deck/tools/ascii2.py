@@ -31,7 +31,7 @@ PALETTES = {
     'glitch': {'violet': ((150, 70, 255), (246, 242, 255)), 'red': ((255, 40, 50), (255, 236, 230)), 'toxic': ((70, 255, 90), (232, 255, 226)),
                'cyan': ((20, 220, 255), (232, 252, 255)), 'hot': ((255, 40, 180), (255, 232, 246))},
     # irid: (hue start, hue span) on the colour wheel, 0..1
-    'irid': {'oil': (0.60, 1.25), 'fire': (0.97, 0.20), 'toxic': (0.20, 0.30), 'aurora': (0.38, 0.50), 'candy': (0.80, 0.45)},
+    'irid': {'oil': (0.60, 1.25), 'fire': (0.97, 0.20), 'toxic': (0.20, 0.30), 'aurora': (0.38, 0.50), 'candy': (0.80, 0.45), 'moon': (0.50, 0.17)},   # moon: cyan to blue, for the Moonshot legendary
 }
 DEFAULT_PAL = {'classic': 'bone', 'duo': 'blue', 'glitch': 'violet', 'irid': 'oil'}
 

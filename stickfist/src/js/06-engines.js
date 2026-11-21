@@ -18,11 +18,10 @@ async function packPic(card) {
 const PACKLOOK = {   // per-card tone tweaks for the pack screen: lo/hi = black and white points, base = overall level, local = edge boost, gamma = contrast
   stitch: { base: 1.1, local: .5, gamma: .8, lo: .02 }, ronin: { base: .7, local: 3.4, gamma: 1.5 }, grimm: { base: .7, local: 3.2, gamma: 1.4 }, reaper: { base: .55, local: 3.6, gamma: 1.9 }
 };
-const PACK_ORDER = ["stitch", "umbra", "orbit", "brick", "null", "phantom", "rook", "shogun", "ronin", "grimm", "reaper"];
 class PackScreen {
-  constructor(pk) {
+  constructor(pk, pack) {
     this.pk = pk; this.cv = pk.querySelector("canvas.scr"); this.ctx = this.cv.getContext("2d"); this.el = { stat: pk.querySelector(".r-stat"), name: pk.querySelector(".r-name"), sub: pk.querySelector(".r-sub"), meter: pk.querySelector(".r-meter") };
-    this.cards = PACK_ORDER.map(id => BY_ID[id]); this.i = -1; this.pic = null; this.on = false; this.last = 0; this.ph = -1; this.shift = null; this.shiftAt = 0; this.loading = false;
+    this.cards = (pack || PACKS[0]).order.map(id => BY_ID[id]); this.i = -1; this.pic = null; this.on = false; this.last = 0; this.ph = -1; this.shift = null; this.shiftAt = 0; this.loading = false;
     this.IN = 1.0; this.HOLD = 2.6; this.OUT = .8;
   }
   fit() { const dpr = Math.min(devicePixelRatio || 1, 2), w = this.cv.clientWidth, h = this.cv.clientHeight; if (w && this.cv.width !== Math.round(w * dpr)) { this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr); } this.w = w; this.h = h; this.dpr = dpr; }

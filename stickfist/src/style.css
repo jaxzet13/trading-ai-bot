@@ -210,6 +210,13 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
   .fan { flex-wrap: wrap; } .fan > div { width: min(112px, 28vw); } .slot .row { grid-template-columns: 110px max-content 1fr; gap: 8px; } .slot .bar { font-size: 11px; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 22px 14px; }
 }
+/* ---------- packs: the picker, and each pack's own look ---------- */
+.packtabs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; } .ptab { display: grid; gap: 1px; padding: 8px 18px; border: 1px solid var(--ln2); border-radius: 12px; background: transparent; color: var(--dim); text-align: center; min-width: 132px; }
+.ptab b { font-weight: 600; font-size: 14px; color: var(--ink); } .ptab span { font-size: 12.5px; font-variant-numeric: tabular-nums; } .ptab:hover { border-color: var(--ln3); } .ptab.on { border-color: var(--ink); background: #101012; } .ptab.on span { color: var(--ink); }
+.packtabs + .small { margin-top: 4px; } .packmeta .small { max-width: 44ch; margin: 2px auto 0; text-align: center; } .packmeta { justify-items: center; text-align: center; }
+.pk.pk-ms { border-color: #5a4636; } .pk.pk-ms .crimp { color: #7a5a3c; } .pk.pk-ms .win { border-color: #3c2e22; } .pk.pk-ms .r-name { color: #ffd9a8; } .pk.pk-ms::before { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 70% at 50% 100%, rgba(255,150,70,.14), transparent 60%); pointer-events: none; z-index: 2; }
+.sethead { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin: 34px 0 16px; } .sethead:first-child { margin-top: 0; } .sethead .faint { font-size: 13px; font-weight: 400; }
+
 /* ---------- habit layer: chips, recap, progress, rank, limits ---------- */
 .chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border: 1px solid var(--ln3); border-radius: 999px; background: transparent; color: var(--ink); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
 .chip:hover { background: #131316; border-color: var(--dim); } .chip.soft { color: var(--dim); border-color: var(--ln2); }

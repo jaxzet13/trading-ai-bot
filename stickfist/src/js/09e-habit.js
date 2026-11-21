@@ -76,18 +76,18 @@ function rankHTML() {
 }
 
 /* ---- the collection has holes in it, and you can see them ---- */
-const missingCards = () => { const have = new Set(state.vault.map(c => c.no)); return CARDS.filter(c => !have.has(c.no)); };
-const chaseChance = () => { const m = missingCards(); return m.length ? 1 - m.reduce((a, c) => a * (1 - packP(c.id)), 1) : 0; };
+const missingCards = set => { const have = new Set(state.vault.map(c => c.no)); return CARDS.filter(c => !have.has(c.no) && (!set || c.set === set)); };
+const chaseChance = pk => { pk = pk || curPack(); const m = missingCards(pk.set); return m.length ? 1 - m.reduce((a, c) => a * (1 - packP(c.id)), 1) : 0; };      // a pack only holds cards of its own set
 function progressHTML() {
-  noteFound(); const n = Object.keys(state.found).length, fx = Object.keys(state.foundFx).length, ch = chaseChance();
-  return `<div><span class="label">cards found</span><b>${n} of ${CARDS.length}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(n / CARDS.length * 18), 18)}</span></div><div><span class="label">styles found</span><b>${fx} of ${FX_ALL}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(fx / FX_ALL * 18), 18)}</span></div><div><span class="label">a new card in your next pack</span><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span class="small">chance, from the real odds</span></div>`;
+  noteFound(); const pk = curPack(), n = Object.keys(state.found).length, fx = Object.keys(state.foundFx).length, ch = chaseChance(pk);
+  return `<div><span class="label">cards found</span><b>${n} of ${CARDS.length}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(n / CARDS.length * 18), 18)}</span></div><div><span class="label">styles found</span><b>${fx} of ${FX_ALL}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(fx / FX_ALL * 18), 18)}</span></div><div><span class="label">a new card in your next ${esc(pk.name)} pack</span><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span class="small">chance, from the real odds</span></div>`;
 }
 function chaseHTML() {
   if (!state.s.packs && !state.vault.length) return "";
-  const miss = missingCards(); if (!miss.length) return `<span class="label">collection</span><span>You have every card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
+  const pk = curPack(), size = CARDS.filter(c => c.set === pk.set).length, miss = missingCards(pk.set); if (!miss.length) return `<span class="label">${esc(pk.name)}</span><span>You have every ${esc(pk.name)} card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
   const rows = miss.slice().sort((a, b) => MK.price(b) - MK.price(a)).slice(0, 3), hot = miss.map(c => ({ c, p: MK.pct(c, 24) })).sort((a, b) => b.p - a.p)[0];
-  return `<span class="label">still out there · ${CARDS.length - miss.length} of ${CARDS.length} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${RAR[c.rar].name}</span>${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}<span class="dim">${chance(packP(c.id))}</span></button>`).join("")
-    + (hot && hot.p >= .3 ? `<span class="hotflip"><b>${esc(hot.c.name)}</b> is up ${pctShort(hot.p).slice(1)} in a day and you don't have one. It turns up in ${chance(packP(hot.c.id))}, and a pack costs ${money(packPrice())}.</span>` : "");
+  return `<span class="label">still out there in ${esc(pk.name)} · ${size - miss.length} of ${size} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${RAR[c.rar].name}</span>${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}<span class="dim">${chance(packP(c.id))}</span></button>`).join("")
+    + (hot && hot.p >= .3 ? `<span class="hotflip"><b>${esc(hot.c.name)}</b> is up ${pctShort(hot.p).slice(1)} in a day and you don't have one. It turns up in ${chance(packP(hot.c.id), packOf(hot.c))}, and a pack costs ${money(packPrice(packOf(hot.c)))}.</span>` : "");
 }
 
 /* ---- price targets you set yourself ---- */
@@ -129,7 +129,7 @@ function maybeRecap(since) {
   openModal(`<div class="minfo recap"><div><span class="label">while you were away · ${heldText(r.away)}</span><h2 class="${up ? "up" : "dn"}">${r.groups.length ? (up ? "+" : "−") + money(Math.abs(d)) : "Welcome back"}</h2>${r.groups.length ? `<p class="dim">${pctHTML(r.now / Math.max(1, r.was) - 1)} on your ${state.vault.length} card${state.vault.length === 1 ? "" : "s"}: ${money(r.was)} then, ${money(r.now)} now. Worked out from the market's price path, nothing made up.</p>` : ""}</div>
     ${rows ? `<div class="rows">${rows}</div>` : ""}
     ${r.hits.map(h => `<p class="small"><b>${esc(h.card.name)}</b> ${h.up ? "went above" : "fell below"} the ${moneyS(h.target)} you set and is ${moneyS(h.now)} now.</p>`).join("")}
-    ${r.hot ? `<p class="small">Meanwhile <b>${esc(r.hot.c.name)}</b> is up ${pctShort(r.hot.p24).slice(1)} today. You don't have one. It turns up in ${chance(packP(r.hot.c.id))}.</p>` : ""}
+    ${r.hot ? `<p class="small">Meanwhile <b>${esc(r.hot.c.name)}</b> is up ${pctShort(r.hot.p24).slice(1)} today. You don't have one. It turns up in ${chance(packP(r.hot.c.id), packOf(r.hot.c))}.</p>` : ""}
     <div class="row"><button class="btn solid" data-recap="profile">see your profile</button><button class="btn ghost" data-close>close</button></div></div>`, true);
   Snd.alert(up); buzz(up ? [20, 30, 20] : [40]);
 }

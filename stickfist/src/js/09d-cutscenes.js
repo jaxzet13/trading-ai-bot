@@ -232,6 +232,67 @@ const Cut = (() => {
         g.flash(Math.max(sm(5.55, 5.6, t) * (1 - sm(5.6, 6.1, t)) * .5, sm(10.8, 11.8, t)));
       },
     },
+    /* LIFTOFF (rare, Moonshot): the pad lights up, the ground shakes, and the rocket climbs out of the frame on a column of fire. */
+    liftoff: {
+      dur: 7.8, pals: [mkpal([[0, 0, 0], [90, 16, 4], [220, 64, 14], [255, 170, 56], [255, 248, 210]])],
+      rise: t => { const s = Math.max(0, t - 2.3); return .5 * .5 * s * s; },                                    // how far it has climbed: slowly at first, and it never stops speeding up
+      cell(x, y, t) {
+        const gy = .3, ry = gy - SCENES.liftoff.rise(t), xs = x + (t > 2.3 ? .005 * Math.sin(t * 70) * (1 - sm(2.3, 6, t) * .6) : 0); let l = 0;
+        if (y < gy - .05 && hash(Math.floor(x * 110), Math.floor(y * 110), 9) > .994) l = .35 + .3 * Math.sin(t * 4 + x * 80);                                     // stars
+        if (Math.abs(x + .36) < .05 && y > -.55 && y < gy) l = Math.max(l, (Math.floor((y + .55) * 36) % 4 === 0 || Math.floor(x * 120) % 5 === 0) ? .5 : .12);       // the tower
+        const top = ry - .46;
+        if (y > top && y < ry) { const k = (y - top) / .46, hw = k < .2 ? .055 * Math.sqrt(k / .2) : .055; if (Math.abs(xs) < hw) l = Math.max(l, .72 + .25 * (1 - Math.abs(xs) / hw) + (Math.floor(y * 50) % 6 === 0 ? .1 : 0) + (xs < -hw * .5 ? .08 : 0)); }   // the rocket
+        for (const sd of [-1, 1]) if (y > ry - .22 && y < ry && Math.abs(xs - sd * .08) < .02) l = Math.max(l, .8);                                                  // two boosters
+        if (t > 2.0 && y > ry) { const d = y - ry, hw = .05 + d * .2 + .02 * Math.sin(t * 30), core = Math.exp(-Math.pow(xs / hw, 2)), len = .7 + .9 * sm(2.3, 4, t); l = Math.max(l, 1.3 * core * Math.exp(-d / len * 2) * (.65 + .5 * fbm(xs * 22, y * 12 - t * 16, 31))); }   // the plume
+        l = Math.max(l, Math.exp(-Math.abs(y - gy) * 14) * Math.exp(-Math.abs(x) * 1.8) * sm(2, 3.2, t) * .85);                                                       // the ground lit from above
+        if (y > gy) l = Math.max(l, .1 + .14 * fbm(x * 12, y * 12, 6) + .6 * Math.exp(-(y - gy) * 24) * sm(2, 3, t));
+        const sp = sm(2.2, 6, t); if (y < gy + .04) l = Math.max(l, fbm(x * 3.2 + t * .08, y * 9 - t * .15, 21) * Math.exp(-Math.abs(x) / (.25 + .8 * sp)) * sm(gy - .2 - .12 * sp, gy, y) * 1.05 * sm(2.2, 3, t));   // smoke rolling out
+        { const r = (t - 2.3) * .6; if (r > 0 && r < 1.3 && y > gy - .04 && y < gy + .06) l = Math.max(l, Math.exp(-Math.pow((Math.abs(x) - r) / .03, 2)) * (1 - r / 1.3)); }   // the shockwave
+        return l * sm(0, .6, t);
+      },
+      over(g, t) {
+        g.sprite(t < 2.3 ? FIG : ["\\ _o_ /", " \\_|_/ ", "   |   ", "  / \\  ", " /   \\ "], g.col(.3) - 3, g.row(.3) - 5, [255, 240, 215]);
+        g.text(typed("gravity lost the argument.", t, 4.6, 9), .88, [255, 160, 70]); g.flash(Math.max(sm(2.3, 2.34, t) * (1 - sm(2.34, 2.8, t)) * .6, sm(7.1, 7.8, t)));
+      },
+    },
+    /* APOGEE (epic, Moonshot): above the clouds, at the edge of space. Nothing moves but the light and one small figure. */
+    apogee: {
+      dur: 8.4, pals: [mkpal([[0, 0, 0], [8, 30, 74], [24, 116, 224], [120, 220, 255], [244, 253, 255]])],
+      cell(x, y, t) {
+        const R = 1.7, d = Math.hypot(x, y - 2.0), sd = Math.hypot(x - .38, y + .3), glare = sm(2.2, 5, t); let l = 0;
+        if (d >= R) { if (hash(Math.floor(x * 120), Math.floor(y * 120), 4) > .993) l = .35 + .3 * Math.sin(t * 3 + x * 70); if (d < R + .12) l = Math.max(l, Math.exp(-(d - R) * 16) * (.7 + .5 * glare)); }     // stars, and a thin line of air
+        else { const cloud = Math.pow(fbm(x * 4 + t * .03, (y - .3) * 14, 12), 1.5); l = .16 + .7 * cloud * (.45 + .55 * Math.exp(-sd * .8)); l = Math.max(l, Math.exp(-(R - d) * 30) * (.95 + .4 * glare)); }   // the Earth
+        l = Math.max(l, (Math.exp(-sd * 7) * 1.2 + Math.exp(-Math.abs(y + .3) * 60) * Math.exp(-Math.abs(x - .38) * 1.4) * .6) * glare);                                                              // the sun comes round
+        const k = y + .22; if (k > 0 && k < .95) { const hw = .2 * Math.pow(k / .95, .55) + .004, u = (x - .4) / hw; if (Math.abs(u) < 1) l = Math.max(l, .3 + .65 * Math.max(0, u) + (Math.floor(y * 50) % 7 === 0 ? .14 : 0)); }   // the nose of the rocket
+        return l * sm(0, .8, t);
+      },
+      over(g, t) {
+        const px = -.18 + .02 * Math.sin(t * .7), py = -.1 + .015 * Math.sin(t * 1.3);
+        g.sprite(Math.floor(t / 2.2) % 2 ? ["  \\_o_/ ", "   \\|/  ", "    |   ", "   / \\  ", "  /   \\ "] : ["   _o_  ", "  /_|_\\ ", "    |   ", "  _/ \\_ ", "        "], g.col(px) - 3, g.row(py) - 2, [244, 253, 255]);
+        g.text(typed("the top is quiet.", t, 4.8, 8), .88, [126, 232, 255]); g.flash(sm(7.6, 8.4, t));
+      },
+    },
+    /* LUNA (legendary, Moonshot): one small figure crosses the dust, plants a flag, and the Earth comes up behind it. */
+    luna: {
+      dur: 9.6, pals: [mkpal([[0, 0, 0], [26, 34, 66], [96, 124, 190], [196, 222, 255], [255, 255, 255]]), mkpal([[0, 0, 0], [10, 50, 90], [36, 136, 220], [120, 220, 255], [240, 252, 255]])],
+      cell(x, y, t, g) {
+        const hy = .2, ex = -.16, ey = hy + .24 - .42 * ease(t / 6.5), ed = Math.hypot(x - ex, y - ey); let l = 0; g.pi = 0;
+        if (y < hy && hash(Math.floor(x * 120), Math.floor(y * 120), 3) > .994) l = .35 + .3 * Math.sin(t * 3 + x * 60);
+        if (ed < .26) { l = (.35 + .65 * fbm((x - ex) * 7 + t * .05, (y - ey) * 7, 17)) * (.45 + .55 * sm(-.2, .2, x - ex + .05)); g.pi = 1; } else if (ed < .32 && y < hy) { l = Math.max(l, Math.exp(-(ed - .26) * 28) * .6); g.pi = 1; }   // the Earth rises
+        if (!g.pi) l = Math.max(l, Math.exp(-Math.hypot(x - .42, y + .36) * 7) * sm(0, 1.5, t));                                                                                                         // the sun
+        if (y > hy) { g.pi = 0; l = .24 + .34 * fbm(x * 14, y * 40, 5) + .5 * Math.exp(-(y - hy) * 50) + .1 * sm(hy, .5, y);
+          for (let k = 0; k < 6; k++) { const px = (hash(k, 1, 30) - .5) * 1.2, py = hy + .06 + hash(k, 2, 30) * .22, rr = .03 + hash(k, 3, 30) * .05; l = Math.max(l, Math.exp(-Math.pow((Math.hypot(x - px, (y - py) * 3) - rr) / .007, 2)) * .65); } }   // craters
+        return l * sm(0, .9, t);
+      },
+      over(g, t) {
+        const walk = sm(1.6, 4.6, t), px = mixv(-.62, .16, walk), base = .34, rw = g.row(base) - 5, moving = t > 1.6 && t < 4.6, still = t >= 4.6;
+        for (let i = 1; i < 30; i++) { const fx = px - .045 * i; if (fx < -.62 || fx > px - .03) continue; g.put(g.col(fx), g.row(base + .005), i % 2 ? ":" : ".", [180, 200, 235], .7); }           // footprints
+        for (let k = 0; k < 14; k++) g.put(g.col(px - .014 * k - .02), g.row(base + .004 + .004 * k), "-", [120, 140, 190], .55 - k * .03);                                                  // a long hard shadow
+        if (t > 1.2) g.sprite(!still ? (moving ? (Math.floor(t * 3.4) % 2 ? ["  _o_  ", " / | \\ ", "   |   ", "  /|   ", " /  \\  "] : ["  _o_  ", " / | \\ ", "   |   ", "   |\\  ", "  /  \\ "]) : FIG) : ["  _o_ |", " / |\\_|", "   | | ", "  / \\| ", " /   \\ "], g.col(px) - 3, rw, [244, 248, 255]);
+        if (still) { const pc = g.col(px) + 4, top = rw - 5, grow = Math.floor(sm(4.9, 5.8, t) * 9); for (let j = 0; j < 11; j++) g.put(pc, top + j, "|", [210, 220, 240], 1); for (let i = 0; i < grow; i++) for (let j = 0; j < 4; j++) g.put(pc + 1 + i, top + j, "█", j % 2 ? [235, 240, 255] : [255, 255, 255], 1); }
+        g.text(typed("to the moon was never a joke.", t, 6.2, 9), .88, [184, 212, 255]); g.flash(sm(8.8, 9.6, t));
+      },
+    },
   };
 
   const has = id => !!SCENES[id];

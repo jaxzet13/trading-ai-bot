@@ -2,7 +2,7 @@
    4. STATE AND ECONOMY. Everything lives in this browser.
    ========================================================================== */
 const KEY = "stixx-first-print-v1";
-const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0 } });
+const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, pack: "fp", streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0 } });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); } catch (e) {}
 const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
@@ -35,11 +35,12 @@ function mint(card, phys, serial, paid) {
   const copy = { uid: "c" + Date.now().toString(36) + Math.floor(rand() * 1e6).toString(36), no: card.no, serial: n, code, fx: card.styles ? styleOfCode(code) : "", t: Date.now(), phys: !!phys };
   copy.cost = paid != null ? paid : valueOf(copy); return copy;
 }
-function pullPack() { return PACK.slots.map(slot => mint(BY_ID[pick(slot)])); }
+const curPack = () => PACK_BY[state.pack] || PACKS[0];
+function pullPack(pk) { return (pk || curPack()).slots.map(slot => mint(BY_ID[pick(slot)])); }
 
 // the odds, worked out from the slot tables
 function slotP(slot, id) { let t = 0, w = 0; for (const [i, x] of slot) { t += x; if (i === id) w = x; } return w / t; }
-const packP = id => 1 - PACK.slots.reduce((a, s) => a * (1 - slotP(s, id)), 1);
+const packP = id => 1 - packOf(BY_ID[id]).slots.reduce((a, s) => a * (1 - slotP(s, id)), 1);        // the chance a pack of the card's own set holds it
 
 // The exact distribution of what a whole pack sells back for: every slot's outcomes (including each card's style roll) convolved together.
 // `val` says what a card is worth: the live market price, or its base worth.
@@ -52,24 +53,24 @@ function cardSells(card, val) {
 // The pack's average return is worked out exactly (it is linear), and so is the chance of selling back at least what you paid; every total at or above `cap`
 // is merged into one bin, because past that point nothing about the number matters, which keeps this fast enough to redo every time the market moves.
 function slotSells(slot, val) { const t = slot.reduce((a, [, w]) => a + w, 0), sd = new Map(); for (const [id, w] of slot) for (const [v, p] of cardSells(BY_ID[id], val)) sd.set(v, (sd.get(v) || 0) + w / t * p); return sd; }
-const evOf = val => PACK.slots.reduce((a, slot) => { let e = 0; for (const [v, p] of slotSells(slot, val)) e += v * p; return a + e; }, 0);
-function packDist(val, cap) {
+const evOf = (val, pk) => pk.slots.reduce((a, slot) => { let e = 0; for (const [v, p] of slotSells(slot, val)) e += v * p; return a + e; }, 0);
+function packDist(val, cap, pk) {
   let dist = new Float64Array(cap + 1); dist[0] = 1;
-  for (const slot of PACK.slots) {
+  for (const slot of pk.slots) {
     const next = new Float64Array(cap + 1); let all = 0; for (let i = 0; i <= cap; i++) all += dist[i];
     for (const [v, p] of slotSells(slot, val)) { if (v >= cap) { next[cap] += p * all; continue; } let over = 0; for (let i = 0; i <= cap; i++) { const q = dist[i]; if (!q) continue; if (i + v >= cap) over += q; else next[i + v] += p * q; } next[cap] += p * over; }
     dist = next;
   }
   return dist;
 }
-let _base = 0; const baseEV = () => _base || (_base = evOf(c => c.val));
+const _base = {}; const baseEV = pk => _base[pk.id] || (_base[pk.id] = evOf(c => c.val, pk));
 // The pack's price follows the market: it moves with what the cards inside are worth now, so the pack always returns about the same share
 // (about 89%) whatever the market does. Recomputed whenever the market moves.
-let _ps = null;
-function packStats() {
-  const t = MK.tick(); if (_ps && _ps.t === t) return _ps;
-  const val = card => MK.tickPrice(card), ev = evOf(val), price = clamp(Math.round(PACK.price * ev / baseEV()), PACK.min, PACK.max), cap = price * 3, dist = packDist(val, cap);
+const _ps = {};
+function packStats(pk) {
+  pk = pk || curPack(); const t = MK.tick(); if (_ps[pk.id] && _ps[pk.id].t === t) return _ps[pk.id];
+  const val = card => MK.tickPrice(card), ev = evOf(val, pk), price = clamp(Math.round(pk.price * ev / baseEV(pk)), pk.min, pk.max), cap = price * 3, dist = packDist(val, cap, pk);
   let hit = 0, acc = 0, median = cap; for (let i = price; i <= cap; i++) hit += dist[i]; for (let i = 0; i <= cap; i++) { acc += dist[i]; if (acc >= .5) { median = i; break; } }
-  return (_ps = { t, ev, hit, median, rtp: ev / price, price });
+  return (_ps[pk.id] = { t, ev, hit, median, rtp: ev / price, price, pk });
 }
-const packPrice = () => packStats().price;
+const packPrice = pk => packStats(pk).price;

@@ -80,8 +80,19 @@ CARDS = {
                     tone=dict(black=0.08, white=1.0, gamma=1.0), tone_except=('wire', 'scratch'),
                     over=dict(wire=dict(black=0.12, white=1.0, gamma=1.3), scratch=dict(black=0.25, white=1.0, gamma=1.0, thr=0.25), chain=dict(white=1.3))),
     'umbra':   dict(src='umbra/eclipse.png', count=1578000, cols=1500, aspect=1.73, crop=(0.07, 0.05, 0.93, 0.985), text='the sun blinked first.'),
+    # ---- Moonshot (the second pack): one launch, five altitudes. `default` is the card's own plain look: (engine, ascii2 / ascii3 arguments).
+    'fuse':     dict(src='moonshot/sources/fuse_bold.jpg', count=3600, cols=72, aspect=1.73, view=(0.37, 0.52, 0.42), text='light it and walk away.',
+                     default=('ramp', dict(style='classic', pal='amber', black=0.05, white=0.75, gamma=0.7, glow=0.45))),
+    'ignition': dict(src='moonshot/sources/ignition.jpg', count=10080, cols=120, aspect=1.73, view=(0.5, 0.62, 0.62), text='no turning back from here.',
+                     default=('ramp', dict(style='duo', pal='amber', black=0.10, white=0.80, gamma=0.85, glow=0.75))),
+    'liftoff':  dict(src='moonshot/sources/liftoff.jpg', count=40320, cols=240, aspect=1.73, view=(0.5, 0.47, 0.80), text='gravity lost the argument.',
+                     default=('ramp', dict(style='duo', pal='blood', black=0.05, white=0.85, gamma=0.8, glow=0.8))),
+    'apogee':   dict(src='moonshot/sources/apogee.jpg', count=123480, cols=420, aspect=1.73, view=(0.5, 0.46, 0.80), thick=2, text='the top is quiet.',
+                     default=('ramp', dict(style='glitch', pal='cyan', black=0.03, white=0.55, gamma=0.6, glow=0.7))),
+    'luna':     dict(src='moonshot/sources/luna.jpg', count=448800, cols=800, aspect=1.73, view=(0.5, 0.44, 0.80), text='to the moon was never a joke.',
+                     default=('ramp', dict(style='irid', pal='moon', black=0.05, white=0.90, gamma=0.8, glow=0.8))),
 }
-HEAVY_FIRST = ['umbra', 'reaper', 'grimm', 'ronin', 'shogun', 'null', 'phantom', 'orbit', 'rook', 'brick']
+HEAVY_FIRST = ['umbra', 'reaper', 'luna', 'grimm', 'apogee', 'ronin', 'shogun', 'liftoff', 'null', 'phantom', 'orbit', 'ignition', 'rook', 'brick', 'fuse']
 
 
 def grid(cfg):
@@ -92,6 +103,7 @@ def grid(cfg):
 
 def style_args(cfg, key):
     """the style's render arguments for this card (style_deck's, with the card's tone / per-style tweaks on top)"""
+    if key == 'default': return dict(cfg['default'][1])                 # a new card's own plain look
     kw = dict(dict((k, kw) for k, _, _, kw in STYLES)[key])
     if key not in cfg.get('tone_except', ()): kw.update(cfg.get('tone', {}))
     kw.update(cfg.get('over', {}).get(key, {}))
@@ -135,7 +147,7 @@ def place_source(cfg, png):
 def render_full(card_id, key, out_png):
     """render one style of one card as the full 1500 x 2100 card; returns the printed character count"""
     cfg = CARDS[card_id]; kw = style_args(cfg, key)
-    kind = dict((k, e) for k, _, e, _ in STYLES)[key]
+    kind = cfg['default'][0] if key == 'default' else dict((k, e) for k, _, e, _ in STYLES)[key]
     cols, rows = grid(cfg)
     A.ASPECT = cfg['aspect']
     if cfg['aspect'] > 1.8: A.ImageFont = _CapFont(A.ImageFont if not isinstance(A.ImageFont, _CapFont) else A.ImageFont.real, int(W / cols / 0.6))
@@ -168,7 +180,7 @@ def to_picture(png, out_jpg, quality=80, max_kb=170, floor=56):
 
 def job(args):
     card_id, key, out_dir, tmp, quality, max_kb = args
-    t0 = time.time(); png = os.path.join(tmp, f'{card_id}-{key}.png'); jpg = os.path.join(out_dir, f'{card_id}-{key}.jpg')
+    t0 = time.time(); png = os.path.join(tmp, f'{card_id}-{key}.png'); jpg = os.path.join(out_dir, f'{card_id}.jpg' if key == 'default' else f'{card_id}-{key}.jpg')
     n = render_full(card_id, key, png)
     q, kb = to_picture(png, jpg, quality, max_kb)
     for f in (png, png[:-4] + '-src.png'):
@@ -181,7 +193,7 @@ def main():
     ap.add_argument('--cards', default=','.join(CARDS)); ap.add_argument('--styles', default=','.join(STYLE_KEYS))
     ap.add_argument('--out', default=os.path.normpath(os.path.join(DC, '..', 'cards'))); ap.add_argument('--tmp', default='/tmp/style-all')
     ap.add_argument('--jobs', type=int, default=max(1, (os.cpu_count() or 2) - 0)); ap.add_argument('--quality', type=int, default=80)
-    ap.add_argument('--max-kb', type=float, default=170); ap.add_argument('--list', action='store_true')
+    ap.add_argument('--max-kb', type=float, default=170); ap.add_argument('--list', action='store_true'); ap.add_argument('--default', action='store_true', help="also render each card's own plain look (cards that define `default`)"); ap.add_argument('--only-default', action='store_true')
     a = ap.parse_args()
     cards = [c for c in HEAVY_FIRST if c in a.cards.split(',')]; styles = [s for s in STYLE_KEYS if s in a.styles.split(',')]
     if a.list:
@@ -190,7 +202,9 @@ def main():
             print(f'{c:8s} {cols:5d} x {rows:<5d} = {cols * rows:>9,}  aspect {cfg["aspect"]}  {cfg["src"]}')
         return
     os.makedirs(a.out, exist_ok=True); os.makedirs(a.tmp, exist_ok=True)
+    if a.only_default: styles = []
     tasks = [(c, s, a.out, a.tmp, a.quality, a.max_kb) for c in cards for s in styles]
+    if a.default or a.only_default: tasks += [(c, 'default', a.out, a.tmp, a.quality, a.max_kb) for c in cards if 'default' in CARDS[c]]
     print(f'{len(tasks)} images -> {a.out}', flush=True)
     from concurrent.futures import ProcessPoolExecutor, as_completed
     log = []

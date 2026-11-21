@@ -220,6 +220,13 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
   .fan { flex-wrap: wrap; } .fan > div { width: min(112px, 28vw); } .slot .row { grid-template-columns: 110px max-content 1fr; gap: 8px; } .slot .bar { font-size: 11px; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 22px 14px; }
 }
+/* ---------- packs: the picker, and each pack's own look ---------- */
+.packtabs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; } .ptab { display: grid; gap: 1px; padding: 8px 18px; border: 1px solid var(--ln2); border-radius: 12px; background: transparent; color: var(--dim); text-align: center; min-width: 132px; }
+.ptab b { font-weight: 600; font-size: 14px; color: var(--ink); } .ptab span { font-size: 12.5px; font-variant-numeric: tabular-nums; } .ptab:hover { border-color: var(--ln3); } .ptab.on { border-color: var(--ink); background: #101012; } .ptab.on span { color: var(--ink); }
+.packtabs + .small { margin-top: 4px; } .packmeta .small { max-width: 44ch; margin: 2px auto 0; text-align: center; } .packmeta { justify-items: center; text-align: center; }
+.pk.pk-ms { border-color: #5a4636; } .pk.pk-ms .crimp { color: #7a5a3c; } .pk.pk-ms .win { border-color: #3c2e22; } .pk.pk-ms .r-name { color: #ffd9a8; } .pk.pk-ms::before { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 70% at 50% 100%, rgba(255,150,70,.14), transparent 60%); pointer-events: none; z-index: 2; }
+.sethead { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin: 34px 0 16px; } .sethead:first-child { margin-top: 0; } .sethead .faint { font-size: 13px; font-weight: 400; }
+
 /* ---------- habit layer: chips, recap, progress, rank, limits ---------- */
 .chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border: 1px solid var(--ln3); border-radius: 999px; background: transparent; color: var(--ink); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
 .chip:hover { background: #131316; border-color: var(--dim); } .chip.soft { color: var(--dim); border-color: var(--ln2); }
@@ -256,8 +263,9 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
   <section class="view" id="v-home">
     <div class="home">
       <pre class="banner" id="banner" aria-label="STIXX"></pre>
+      <div class="packtabs" id="packTabs" role="tablist" aria-label="Choose a pack"></div>
       <div class="packcol" id="homePack"></div>
-      <div class="packmeta"><h1>First Print</h1><p class="dim" id="packLine"></p></div>
+      <div class="packmeta"><h1 id="packName">First Print</h1><p class="dim" id="packLine"></p><p class="small" id="packBlurb"></p></div>
       <button class="btn solid big" id="openBtn" data-open>open pack</button>
       <p class="honest" id="honest"></p>
       <div class="hot" id="hot"></div>
@@ -298,7 +306,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
     <div class="page-head"><h1 class="ttl">Collection</h1><p id="cSub"></p></div>
     <div class="prog" id="cProg"></div>
     <div class="actions" id="cActions"></div>
-    <div class="grid" id="cGrid"></div>
+    <div id="cGrid"></div>
   </section>
 
   <!-- ODDS -->
@@ -345,7 +353,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 "use strict";
 
 /* ============================================================================
-   1. DATA. One pack, eleven cards. Every card is a finished ASCII card; the picture is a file,
+   1. DATA. Two packs, sixteen cards. Every card is a finished ASCII card; the picture is a file,
       the type under it (name, count, copy id, caption) is drawn live so every copy can carry its own id.
    ========================================================================== */
 const RAR = {
@@ -369,8 +377,17 @@ const CARDS = [
   { no: "006", id: "ronin",   name: "Ronin",   sub: "cliff",      rar: "epic",      chars: 71680,  val: 890,   tint: "#ff8ac9", cap: "", styles: true },
   { no: "011", id: "grimm",   name: "Grimm",   sub: "cathedral",  rar: "legendary", chars: 219520, val: 2340,  tint: "#a8ffb0", cap: "", styles: true },
   { no: "015", id: "reaper",  name: "Reaper",  sub: "ember",      rar: "mythic",    chars: 701000, val: 14500, tint: "#ffc87a", cap: "", styles: true },
-  { no: "020", id: "umbra",   name: "Umbra",   sub: "eclipse",    rar: "secret",    chars: 1578000, val: 31250, tint: "#ffb54a", cap: "the sun blinked first.", styles: true }
+  { no: "020", id: "umbra",   name: "Umbra",   sub: "eclipse",    rar: "secret",    chars: 1578000, val: 31250, tint: "#ffb54a", cap: "the sun blinked first.", styles: true },
+  // ---- Moonshot: one launch, five altitudes. The higher the card, the rarer it is.
+  { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "common",    chars: 3600,   val: 12,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
+  { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "uncommon",  chars: 10080,  val: 30,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
+  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "rare",      chars: 40320,  val: 780,  tint: "#ff7a6a", cap: "gravity lost the argument.",    styles: true },
+  { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "epic",      chars: 123480, val: 1250, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
+  { no: "025", set: "ms", id: "luna",     name: "Luna",     sub: "first flag",    rar: "legendary", chars: 448800, val: 3200, tint: "#b8d4ff", cap: "to the moon was never a joke.", styles: true }
 ];
+// the sets: the two letters a copy id starts with, and what the set is called
+const SETS = { fp: { code: "IS", name: "First Print" }, ms: { code: "MS", name: "Moonshot" } };
+CARDS.forEach(c => { c.set = c.set || "fp"; });
 const BY_NO = Object.fromEntries(CARDS.map(c => [c.no, c])), BY_ID = Object.fromEntries(CARDS.map(c => [c.id, c]));
 // The twelve ASCII styles any card can come out in (odds per card, value multiplier). The default is the plain look. A copy's own code decides its style.
 const STYLES = {
@@ -382,16 +399,31 @@ const STYLES = {
   leaf:    { name: "Iridescent",   p: .0006, x: 15  }, kin:   { name: "Dissolve", p: .0003, x: 25  }
 };
 const STYLE_TINT = { "": "#ece7dc", steel: "#aaffbd", dots: "#ffd27a", vhs: "#c9a5ff", scratch: "#ece7dc", ice: "#a9c9ff", chain: "#ece7dc", wire: "#b6ff9c", print: "#ff9a94", glass: "#ff8ac9", blood: "#a8ffb0", leaf: "#d6c9ff", kin: "#a9c9ff" };
-const PACK = {
-  name: "First Print", price: 499, min: 249, max: 4999, n: 5,
-  slots: [   // each slot: [card id, weight]. Tuned so the pack sells back for at least its cost about 40 to 45% of the time on average (it moves with the market, worked out live below).
-    [["stitch", 1], ["brick", 1], ["rook", 1]],
-    [["stitch", 1], ["brick", 1], ["rook", 1]],
-    [["stitch", 32.4], ["brick", 32.4], ["rook", 32.4], ["orbit", 1.7], ["phantom", 1.2]],
-    [["orbit", 2.1], ["phantom", 88.5], ["null", 2.1], ["shogun", 7.3]],
-    [["orbit", 44.8], ["phantom", 10.5], ["null", 5], ["shogun", 36.6], ["ronin", 2.8], ["grimm", .34], ["reaper", .04], ["umbra", .02]]
-  ]
-};;
+/* Each pack holds the cards of one set. A slot is a list of [card id, weight]. The packs are tuned so that each one sells back for at least its cost about 40 to 45% of the time
+   and returns about 89% on average (both move with the market, and are worked out live in 04-state.js). */
+const PACKS = [
+  { id: "fp", set: "fp", name: "First Print", blurb: "Stick figures made of text, from a frog in a hat to a total eclipse.", price: 499, min: 249, max: 4999, n: 5,
+    order: ["stitch", "umbra", "orbit", "brick", "null", "phantom", "rook", "shogun", "ronin", "grimm", "reaper"],
+    slotNames: ["Card 1: a common", "Card 2: a common", "Card 3: a common, sometimes better", "Card 4: an uncommon or better", "Card 5: the best card in the pack"],
+    slots: [
+      [["stitch", 1], ["brick", 1], ["rook", 1]],
+      [["stitch", 1], ["brick", 1], ["rook", 1]],
+      [["stitch", 32.4], ["brick", 32.4], ["rook", 32.4], ["orbit", 1.7], ["phantom", 1.2]],
+      [["orbit", 2.1], ["phantom", 88.5], ["null", 2.1], ["shogun", 7.3]],
+      [["orbit", 44.8], ["phantom", 10.5], ["null", 5], ["shogun", 36.6], ["ronin", 2.8], ["grimm", .34], ["reaper", .04], ["umbra", .02]]
+    ] },
+  { id: "ms", set: "ms", name: "Moonshot", blurb: "One launch, five altitudes: a lit fuse on the ground up to a flag on the Moon. The higher the card, the rarer it is.", price: 579, min: 289, max: 5799, n: 5,
+    order: ["luna", "fuse", "liftoff", "ignition", "apogee"],
+    slotNames: ["Card 1: a Fuse, now and then an Ignition", "Card 2: a Fuse, now and then an Ignition", "Card 3: low altitude, sometimes a Liftoff", "Card 4: an Ignition or higher", "Card 5: the best card in the pack"],
+    slots: [
+      [["fuse", 92], ["ignition", 8]],
+      [["fuse", 88], ["ignition", 12]],
+      [["fuse", 54], ["ignition", 43.5], ["liftoff", 2.5]],
+      [["fuse", 20], ["ignition", 61.7], ["liftoff", 16.3], ["apogee", 2]],
+      [["fuse", 3.7], ["ignition", 67.8], ["liftoff", 22.2], ["apogee", 5.8], ["luna", .5]]
+    ] }
+];
+const PACK_BY = Object.fromEntries(PACKS.map(p => [p.id, p])), packOf = card => PACK_BY[card.set];
 const SELLBACK = .9, START = 1000, TOPUP = 1000;
 
 /* ============================================================================
@@ -434,11 +466,11 @@ let toastT; function toast(msg) { const old = document.querySelector(".toast"); 
 const B32 = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", SALT = "stixx-s2-ink";
 const fnv = str => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h >>> 0; };
 const codeCheck = pl => { let h = fnv(SALT + pl), out = ""; for (let i = 0; i < 4; i++) { out += B32[h % 32]; h = Math.floor(h / 32); } return out; };
-const cardCode = (card, serial) => { const pl = `IS${card.no}-${String(serial).padStart(6, "0")}`; return `${pl}-${codeCheck(pl)}`; };
+const cardCode = (card, serial) => { const pl = `${SETS[card.set].code}${card.no}-${String(serial).padStart(6, "0")}`; return `${pl}-${codeCheck(pl)}`; };
 function parseCode(raw) {
-  const m = /^IS(\d{3})-(\d{6})-([A-Z0-9]{4})$/.exec(String(raw).trim().toUpperCase()); if (!m) return null;
-  const card = BY_NO[m[1]]; if (!card || codeCheck(`IS${m[1]}-${m[2]}`) !== m[3]) return null;
-  return { card, serial: +m[2], code: `IS${m[1]}-${m[2]}-${m[3]}` };
+  const m = /^([A-Z]{2})(\d{3})-(\d{6})-([A-Z0-9]{4})$/.exec(String(raw).trim().toUpperCase()); if (!m) return null;
+  const card = BY_NO[m[2]]; if (!card || SETS[card.set].code !== m[1] || codeCheck(`${m[1]}${m[2]}-${m[3]}`) !== m[4]) return null;
+  return { card, serial: +m[3], code: `${m[1]}${m[2]}-${m[3]}-${m[4]}` };
 }
 function rollStyle(u) { let acc = 0; for (const k in STYLES) { acc += STYLES[k].p; if (u < acc) return k; } return ""; }
 const styleOfCode = code => rollStyle(fnv("fx:" + code) / 4294967296);
@@ -451,7 +483,7 @@ const imgOf = (card, fx) => `cards/${card.id}${fx ? "-" + fx : card.id === "stit
    4. STATE AND ECONOMY. Everything lives in this browser.
    ========================================================================== */
 const KEY = "stixx-first-print-v1";
-const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0 } });
+const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, pack: "fp", streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0 } });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); } catch (e) {}
 const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
@@ -484,11 +516,12 @@ function mint(card, phys, serial, paid) {
   const copy = { uid: "c" + Date.now().toString(36) + Math.floor(rand() * 1e6).toString(36), no: card.no, serial: n, code, fx: card.styles ? styleOfCode(code) : "", t: Date.now(), phys: !!phys };
   copy.cost = paid != null ? paid : valueOf(copy); return copy;
 }
-function pullPack() { return PACK.slots.map(slot => mint(BY_ID[pick(slot)])); }
+const curPack = () => PACK_BY[state.pack] || PACKS[0];
+function pullPack(pk) { return (pk || curPack()).slots.map(slot => mint(BY_ID[pick(slot)])); }
 
 // the odds, worked out from the slot tables
 function slotP(slot, id) { let t = 0, w = 0; for (const [i, x] of slot) { t += x; if (i === id) w = x; } return w / t; }
-const packP = id => 1 - PACK.slots.reduce((a, s) => a * (1 - slotP(s, id)), 1);
+const packP = id => 1 - packOf(BY_ID[id]).slots.reduce((a, s) => a * (1 - slotP(s, id)), 1);        // the chance a pack of the card's own set holds it
 
 // The exact distribution of what a whole pack sells back for: every slot's outcomes (including each card's style roll) convolved together.
 // `val` says what a card is worth: the live market price, or its base worth.
@@ -501,27 +534,27 @@ function cardSells(card, val) {
 // The pack's average return is worked out exactly (it is linear), and so is the chance of selling back at least what you paid; every total at or above `cap`
 // is merged into one bin, because past that point nothing about the number matters, which keeps this fast enough to redo every time the market moves.
 function slotSells(slot, val) { const t = slot.reduce((a, [, w]) => a + w, 0), sd = new Map(); for (const [id, w] of slot) for (const [v, p] of cardSells(BY_ID[id], val)) sd.set(v, (sd.get(v) || 0) + w / t * p); return sd; }
-const evOf = val => PACK.slots.reduce((a, slot) => { let e = 0; for (const [v, p] of slotSells(slot, val)) e += v * p; return a + e; }, 0);
-function packDist(val, cap) {
+const evOf = (val, pk) => pk.slots.reduce((a, slot) => { let e = 0; for (const [v, p] of slotSells(slot, val)) e += v * p; return a + e; }, 0);
+function packDist(val, cap, pk) {
   let dist = new Float64Array(cap + 1); dist[0] = 1;
-  for (const slot of PACK.slots) {
+  for (const slot of pk.slots) {
     const next = new Float64Array(cap + 1); let all = 0; for (let i = 0; i <= cap; i++) all += dist[i];
     for (const [v, p] of slotSells(slot, val)) { if (v >= cap) { next[cap] += p * all; continue; } let over = 0; for (let i = 0; i <= cap; i++) { const q = dist[i]; if (!q) continue; if (i + v >= cap) over += q; else next[i + v] += p * q; } next[cap] += p * over; }
     dist = next;
   }
   return dist;
 }
-let _base = 0; const baseEV = () => _base || (_base = evOf(c => c.val));
+const _base = {}; const baseEV = pk => _base[pk.id] || (_base[pk.id] = evOf(c => c.val, pk));
 // The pack's price follows the market: it moves with what the cards inside are worth now, so the pack always returns about the same share
 // (about 89%) whatever the market does. Recomputed whenever the market moves.
-let _ps = null;
-function packStats() {
-  const t = MK.tick(); if (_ps && _ps.t === t) return _ps;
-  const val = card => MK.tickPrice(card), ev = evOf(val), price = clamp(Math.round(PACK.price * ev / baseEV()), PACK.min, PACK.max), cap = price * 3, dist = packDist(val, cap);
+const _ps = {};
+function packStats(pk) {
+  pk = pk || curPack(); const t = MK.tick(); if (_ps[pk.id] && _ps[pk.id].t === t) return _ps[pk.id];
+  const val = card => MK.tickPrice(card), ev = evOf(val, pk), price = clamp(Math.round(pk.price * ev / baseEV(pk)), pk.min, pk.max), cap = price * 3, dist = packDist(val, cap, pk);
   let hit = 0, acc = 0, median = cap; for (let i = price; i <= cap; i++) hit += dist[i]; for (let i = 0; i <= cap; i++) { acc += dist[i]; if (acc >= .5) { median = i; break; } }
-  return (_ps = { t, ev, hit, median, rtp: ev / price, price });
+  return (_ps[pk.id] = { t, ev, hit, median, rtp: ev / price, price, pk });
 }
-const packPrice = () => packStats().price;
+const packPrice = pk => packStats(pk).price;
 
 /* ============================================================================
    4b. THE MARKET. Every card trades all day, and the traders are AI bots.
@@ -552,11 +585,11 @@ const MK = (() => {
     mythic:    { vol: .13, kdn: 1.2, kup: 3, gf: .95,  ss: .03, thr: .04, lw: .12, ws: .20, hg: 3 },
     secret:    { vol: .10, kdn: 1.2, kup: 3, gf: .85,  ss: .02, thr: .03, lw: .08, ws: .14, hg: 3 },
   };
-  const CAP = { stitch: 40, brick: 40, rook: 40, orbit: 35, phantom: 25, null: 16, shogun: 12, ronin: 16, grimm: 10, reaper: 5, umbra: 3.5 };   // the most a card can multiply its base worth by
-  const TASTE = { stitch: .04, brick: .14, rook: -.07, orbit: .08, phantom: -.03, null: .15, shogun: 0, ronin: .08, grimm: .05, reaper: -.04, umbra: .1 };   // how good each card looks next to its rarity, in log units
+  const CAP = { stitch: 40, brick: 40, rook: 40, orbit: 35, phantom: 25, null: 16, shogun: 12, ronin: 16, grimm: 10, reaper: 5, umbra: 3.5, fuse: 40, ignition: 30, liftoff: 14, apogee: 15, luna: 8 };   // the most a card can multiply its base worth by
+  const TASTE = { stitch: .04, brick: .14, rook: -.07, orbit: .08, phantom: -.03, null: .15, shogun: 0, ronin: .08, grimm: .05, reaper: -.04, umbra: .1, fuse: .05, ignition: .02, liftoff: .1, apogee: .04, luna: .06 };   // how good each card looks next to its rarity, in log units
   const SHIFT = { common: .52, uncommon: .45, rare: .37, epic: .3, legendary: .28, mythic: .15, secret: .25 };   // keeps a typical price near the card's base worth
   // simulated size of each card's market: market cap at base worth in dollars, and how many times a day the whole cap changes hands
-  const MCAP = { stitch: 420e3, brick: 420e3, rook: 420e3, orbit: 650e3, phantom: 2.2e6, null: 9e6, shogun: 15e6, ronin: 26e6, grimm: 70e6, reaper: 180e6, umbra: 420e6 };
+  const MCAP = { stitch: 420e3, brick: 420e3, rook: 420e3, orbit: 650e3, phantom: 2.2e6, null: 9e6, shogun: 15e6, ronin: 26e6, grimm: 70e6, reaper: 180e6, umbra: 420e6, fuse: 450e3, ignition: 1.4e6, liftoff: 11e6, apogee: 38e6, luna: 95e6 };
   const TURN = { common: 3, uncommon: 2, rare: 1.2, epic: .8, legendary: .5, mythic: .3, secret: .2 };
   const KIND = ["DegenBot", "MakerBot", "FomoBot", "SniperBot", "WhaleBot"];
   const mix = h => { h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); return h ^ (h >>> 16); };   // a well-mixed 32-bit hash, so different questions asked about the same tick are independent
@@ -613,7 +646,7 @@ const MK = (() => {
   const series = (card, hours, pts) => { const m = M(card), span = Math.round(hours * 180), out = []; for (let k = 0; k < pts; k++) out.push(price(card, Math.round(span * (1 - k / (pts - 1))))); return out; };
   const buzz = card => { const m = M(card), S = m.S; return clamp(Math.round(Math.abs(S.f - S.s) * 3 + Math.max(0, S.x - S.a) * .5 + .4), 0, 5); };   // 0 to 5: how much attention the bots are giving the card right now: it is running, or it is far above where the market makers think it belongs
   // ---- the numbers a trading screen shows, all simulated: market cap, liquidity, volume, buys against sells
-  const VOLDAY = {"stitch":59.36,"brick":57.88,"rook":52.63,"orbit":55.27,"phantom":60.5,"null":47.92,"shogun":44.04,"ronin":46.24,"grimm":35.78,"reaper":15.38,"umbra":8.76};   // measured: the average amount of trading a card sees in a day, in the units the bots trade in
+  const VOLDAY = {"stitch":59.36,"brick":57.88,"rook":52.63,"orbit":55.27,"phantom":60.5,"null":47.92,"shogun":44.04,"ronin":46.24,"grimm":35.78,"reaper":15.38,"umbra":8.76,"fuse":47.97,"ignition":58.33,"liftoff":39.57,"apogee":33.12,"luna":32.24};   // measured: the average amount of trading a card sees in a day, in the units the bots trade in
   const KV = {}; CARDS.forEach(c => { KV[c.id] = TURN[c.rar] / (VOLDAY[c.id] || 25); });          // volume units to the fraction of the market cap that changes hands (calibrated so a typical day turns over TURN times the cap)
   const mcapAt = (c, m, t) => MCAP[c.id] * Math.exp(m.X[Math.max(0, t)]);                           // market cap in dollars at tick t (index into the path)
   function stats(card) {
@@ -673,7 +706,7 @@ const BANNER = [
 const fill = (ch, n) => ch.repeat(n);
 const NOISE = "01#%&@$*+=-:.";
 const bar = (p, w) => { const n = Math.round(clamp(p, 0, 1) * w); return fill("█", n) + fill("░", w - n); };
-const chance = p => p >= .5 ? Math.round(p * 100) + "% of packs" : "1 in " + fmt(1 / p) + " packs";
+const chance = (p, pk) => p >= .5 ? Math.round(p * 100) + "% of " + (pk ? pk.name + " " : "") + "packs" : "1 in " + fmt(1 / p) + (pk ? " " + pk.name : "") + " packs";      // pass the pack to name it
 
 // a name that settles: letters scramble, then lock in left to right
 const GL = "!<>-_\\/[]{}=+*^?#abcdefghijklmnopqrstuvwxyz0123456789";
@@ -780,11 +813,10 @@ async function packPic(card) {
 const PACKLOOK = {   // per-card tone tweaks for the pack screen: lo/hi = black and white points, base = overall level, local = edge boost, gamma = contrast
   stitch: { base: 1.1, local: .5, gamma: .8, lo: .02 }, ronin: { base: .7, local: 3.4, gamma: 1.5 }, grimm: { base: .7, local: 3.2, gamma: 1.4 }, reaper: { base: .55, local: 3.6, gamma: 1.9 }
 };
-const PACK_ORDER = ["stitch", "umbra", "orbit", "brick", "null", "phantom", "rook", "shogun", "ronin", "grimm", "reaper"];
 class PackScreen {
-  constructor(pk) {
+  constructor(pk, pack) {
     this.pk = pk; this.cv = pk.querySelector("canvas.scr"); this.ctx = this.cv.getContext("2d"); this.el = { stat: pk.querySelector(".r-stat"), name: pk.querySelector(".r-name"), sub: pk.querySelector(".r-sub"), meter: pk.querySelector(".r-meter") };
-    this.cards = PACK_ORDER.map(id => BY_ID[id]); this.i = -1; this.pic = null; this.on = false; this.last = 0; this.ph = -1; this.shift = null; this.shiftAt = 0; this.loading = false;
+    this.cards = (pack || PACKS[0]).order.map(id => BY_ID[id]); this.i = -1; this.pic = null; this.on = false; this.last = 0; this.ph = -1; this.shift = null; this.shiftAt = 0; this.loading = false;
     this.IN = 1.0; this.HOLD = 2.6; this.OUT = .8;
   }
   fit() { const dpr = Math.min(devicePixelRatio || 1, 2), w = this.cv.clientWidth, h = this.cv.clientHeight; if (w && this.cv.width !== Math.round(w * dpr)) { this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr); } this.w = w; this.h = h; this.dpr = dpr; }
@@ -887,11 +919,11 @@ function cardHTML(copy, o) {
     <div class="strip"><div class="l1"><span class="nm">${esc(card.name)}</span><i class="hr"></i><span class="ct"><b>${fmt(card.chars)}</b><u>chars</u></span></div>
     <div class="l2">${code ? idHTML(code, card.rar) : `<span>No. ${card.no}</span>`}${card.cap ? `<span class="cap">${esc(card.cap)}</span>` : ""}</div></div></div>`;
 }
-const CRIMP = fill("╱╲", 120);
-const packHTML = () => `<div class="pk"><div class="crimp t">${CRIMP}</div><div class="win"><canvas class="scr"></canvas></div>
-  <div class="readout"><div class="r-stat"></div><div class="r-name"></div><div class="r-sub"></div><div class="r-meter"></div></div><div class="crimp b">${CRIMP}</div></div>`;
+const CRIMPS = { fp: fill("╱╲", 120), ms: fill("△▲", 120) };
+const packHTML = pack => `<div class="pk pk-${pack.id}"><div class="crimp t">${CRIMPS[pack.id]}</div><div class="win"><canvas class="scr"></canvas></div>
+  <div class="readout"><div class="r-stat"></div><div class="r-name"></div><div class="r-sub"></div><div class="r-meter"></div></div><div class="crimp b">${CRIMPS[pack.id]}</div></div>`;
 // the animated picture in the pack
-function liveWindow(pk) { const ps = new PackScreen(pk); ps.fit(); ps.start(); return ps; }
+function liveWindow(pk, pack) { const ps = new PackScreen(pk, pack); ps.fit(); ps.start(); return ps; }
 // a snapshot of the animation so a torn half still shows the picture it had
 function freezeScreen(el, src) { const cv = el.querySelector("canvas.scr"); if (!cv) return; const img = new Image(); img.className = "scr"; img.src = src; cv.replaceWith(img); }
 function tiltPack(pk) {
@@ -902,7 +934,7 @@ function tiltPack(pk) {
 /* ============================================================================
    7. PAGES: pack, market, collection, odds
    ========================================================================== */
-const VIEWS = ["home", "market", "profile", "collection", "odds"]; let view = "home", modalNo = null;
+const VIEWS = ["home", "market", "profile", "collection", "odds"]; let view = "home", modalNo = null, oddsPack = "";
 const copiesOf = no => state.vault.filter(c => c.no === no).sort((a, b) => valueOf(b) - valueOf(a));
 function renderBal(anim) { const el = $("bal"), from = +(el.dataset.v || state.coins); el.dataset.v = state.coins; if (anim) countTo(el, from, state.coins, money); else el.textContent = money(state.coins); }
 
@@ -914,13 +946,15 @@ function movers() {
 const moverRow = m => `<button class="mover" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}<span class="pc">${pctHTML(m.p24)}</span><span class="dim">${moneyS(m.was)} → ${moneyS(m.now)}</span></button>`;
 
 function renderHome() {
-  const ps = packStats(); $("banner").textContent = BANNER.join("\n");
-  $("packLine").textContent = `${PACK.n} cards · ${money(ps.price)}`; $("openBtn").textContent = `open pack · ${money(ps.price)}`;
+  const pk = curPack(), ps = packStats(pk); $("banner").textContent = BANNER.join("\n");
+  $("packTabs").live = PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-pack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("");
+  $("packName").textContent = pk.name; $("packBlurb").textContent = pk.blurb;
+  $("packLine").textContent = `${pk.n} cards · ${money(ps.price)}`; $("openBtn").textContent = `open pack · ${money(ps.price)}`;
   $("honest").live = `Every card is a picture made of text: the rarer the card, the more characters it holds. About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
   const mv = movers(); $("hot").live = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
   const bf = MK.flips().best[0]; if (bf && bf.gain > 0) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip this week: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
   $("chase").live = chaseHTML();
-  const hp = $("homePack"); if (!hp.firstChild) { hp.innerHTML = packHTML(); const pk = hp.firstChild; tiltPack(pk); pk.style.cursor = "pointer"; pk.onclick = () => openPack(); liveWindow(pk); }
+  const hp = $("homePack"); if (hp.dataset.pack !== pk.id) { if (hp._ps) hp._ps.stop(); hp.innerHTML = packHTML(pk); hp.dataset.pack = pk.id; const el = hp.firstChild; tiltPack(el); el.style.cursor = "pointer"; el.onclick = () => openPack(); hp._ps = liveWindow(el, pk); }
 }
 
 const flipRow = e => `<button class="flip" data-card="${e.card.no}"><span class="nm">${esc(e.name)} <span class="faint">sold ${esc(e.card.name)}</span></span><span class="pc">${pctHTML(e.pct)}</span><span class="dim">held ${e.hours}h · ${money(e.got)} → ${money(e.sold)} · ${e.gain >= 0 ? "+" : "−"}${money(Math.abs(e.gain))}</span></button>`;
@@ -933,13 +967,13 @@ function renderMarket() {
   const rn = MK.runs(); renderHero(rows, rn);
   const runRow = (x, up) => `<button class="mover" data-card="${x.c.no}"><span class="nm">${esc(x.c.name)}</span>${sparkSVG(MK.series(x.c, 168, 28))}<span class="pc">${pctHTML(up ? x.up : x.dn)}</span><span class="dim">${up ? "peaked" : "dropped"} ${whenText(up ? x.upAgo : x.dnAgo)} · now ${moneyS(x.now)}${up ? ` (${pctShort(x.now / x.upPrice - 1)} from the peak)` : ""}</span></button>`;
   $("mRuns").live = `<div><h3 class="sec">Skyrocketed this week</h3>${rn.up.slice(0, 3).map(x => runRow(x, true)).join("") || `<p class="small">Nothing has doubled in a day this week.</p>`}</div><div><h3 class="sec">Biggest drops this week</h3>${rn.dn.slice(0, 3).map(x => runRow(x, false)).join("") || `<p class="small">Nothing has dropped by a third in a day this week.</p>`}</div>`;
-  $("mStats").live = `<div><span class="label">market index</span><b>${idxNow.toFixed(1)}</b> ${pctHTML(idxNow / idxWas - 1)}</div><div><span class="label">cards up in 24h</span><b>${up} of ${n}</b></div><div><span class="label">trading volume · 24h</span><b>${usd(MK.total24())}</b></div><div><span class="label">pack price right now</span><b>${money(ps.price)}</b></div>`;
+  $("mStats").live = `<div><span class="label">market index</span><b>${idxNow.toFixed(1)}</b> ${pctHTML(idxNow / idxWas - 1)}</div><div><span class="label">cards up in 24h</span><b>${up} of ${n}</b></div><div><span class="label">trading volume · 24h</span><b>${usd(MK.total24())}</b></div><div><span class="label">pack price right now</span><b>${PACKS.map(p => money(packPrice(p))).join(" · ")}</b></div>`;
   $("mMovers").live = `<div><h3 class="sec">Skyrocketing · 24h</h3>${mv.gain.map(moverRow).join("") || `<p class="small">Nothing is up right now.</p>`}</div><div><h3 class="sec">Crashing · 24h</h3>${mv.drop.map(moverRow).join("") || `<p class="small">Nothing is down right now.</p>`}</div>`;
   $("mFlips").live = `<div><h3 class="sec">Best flips · this week</h3>${fl.best.map(flipRow).join("")}</div><div><h3 class="sec">Worst flips · this week</h3>${fl.worst.map(flipRow).join("")}</div>`;
   $("mFlipNote").textContent = `Simulated traders, worked out from the real price path and after the 10% selling fee. ${fl.won} of the last ${fl.n} sold for more than they got.`;
   $("mTable").live = `<thead><tr><th>Card</th><th class="r">Price</th><th class="r">24h</th><th>24h chart</th><th class="r">Volume · 24h</th><th>Buzz</th><th class="r">You hold</th></tr></thead><tbody>` + rows.map(r => {
     const c = r.c, own = copiesOf(c.no).length, bz = MK.buzz(c), sv = MK.stats(c);
-    return `<tr><td><button class="linkbtn plain" data-card="${c.no}">${esc(c.name)}</button> <span class="faint">${RAR[c.rar].name}</span></td><td class="r num"><b>${moneyS(r.now)}</b></td><td class="r">${pctHTML(r.p24)}</td>
+    return `<tr><td><button class="linkbtn plain" data-card="${c.no}">${esc(c.name)}</button> <span class="faint">${RAR[c.rar].name} · ${esc(SETS[c.set].name)}</span></td><td class="r num"><b>${moneyS(r.now)}</b></td><td class="r">${pctHTML(r.p24)}</td>
       <td class="spk">${sparkSVG(r.s)}</td><td class="r num">${usd(sv.vol)}</td><td>${buzzDots(bz)}</td><td class="r">${own ? "×" + own : "–"}</td></tr>`; }).join("") + `</tbody>`;
   $("mTrades").live = MK.botFeed(10).map(t => `<div class="trade"><span class="who">${t.name}</span><span>${t.buy ? "bought" : "sold"} ${usd(t.usd)} of ${esc(t.card.name)}</span><span class="dim">at ${money(t.price)}</span><span class="${t.buy ? "up" : "dn"}">${t.buy ? "▲ buy" : "▼ sell"}</span><span class="faint">${agoText(t.ago)}</span></div>`).join("");
 }
@@ -970,18 +1004,21 @@ function renderCollection() {
   const found = new Set(state.vault.map(c => c.no)), worth = state.vault.reduce((a, c) => a + valueOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0), ex = extras(), exSum = ex.reduce((a, c) => a + sellOf(c), 0);
   $("cSub").live = state.vault.length ? `${found.size} of ${CARDS.length} cards found · ${state.vault.length} cop${state.vault.length === 1 ? "y" : "ies"} worth ${money(worth)} ${pctHTML(worth / Math.max(1, basis) - 1)} <span class="faint">since you got them</span>` : "Open the pack to start your collection.";
   $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + `<button class="linkbtn" id="addCode">add a card by its code</button>`;
-  $("cGrid").live = CARDS.map(c => { const cs = copiesOf(c.no), best = cs[0];
+  const tile = c => { const cs = copiesOf(c.no), best = cs[0];
     return `<div class="tile"><button class="tilebtn" data-card="${c.no}" aria-label="${esc(c.name)}">${cardHTML(best || { no: c.no }, { sm: true, locked: !best })}</button>
-      <div class="meta">${best ? `<span><b>×${cs.length}</b></span><span>${moneyS(valueOf(best))} ${pctHTML(gainOf(best))}</span>` : `<span>not found yet</span><span class="dim">${money(MK.price(c))} · ${chance(packP(c.id))}</span>`}</div></div>`; }).join("");
+      <div class="meta">${best ? `<span><b>×${cs.length}</b></span><span>${moneyS(valueOf(best))} ${pctHTML(gainOf(best))}</span>` : `<span>not found yet</span><span class="dim">${money(MK.price(c))} · ${chance(packP(c.id))}</span>`}</div></div>`; };
+  $("cGrid").live = Object.keys(SETS).map(k => { const list = CARDS.filter(c => c.set === k), got = list.filter(c => found.has(c.no)).length; return `<h3 class="sec sethead"><span>${esc(SETS[k].name)}</span><span class="faint">${got} of ${list.length} found</span></h3><div class="grid">${list.map(tile).join("")}</div>`; }).join("");
 }
 function renderOdds() {
-  const ps = packStats(), slotName = ["Card 1: a common", "Card 2: a common", "Card 3: a common, sometimes better", "Card 4: an uncommon or better", "Card 5: the best card in the pack"];
-  const rows = CARDS.slice().sort((a, b) => a.chars - b.chars).map(c => { const p = packP(c.id); return `<tr><td>${esc(c.name)} <span class="faint">${esc(c.sub)}</span></td><td>${RAR[c.rar].name}</td><td class="r num">${fmt(c.chars)}</td><td class="r num">${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}</td><td class="r num">${p >= .5 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p)}</td></tr>`; }).join("");
+  if (!PACK_BY[oddsPack]) oddsPack = state.pack; const pk = PACK_BY[oddsPack], ps = packStats(pk), slotName = pk.slotNames;
+  const rows = CARDS.filter(c => c.set === pk.set).sort((a, b) => a.chars - b.chars).map(c => { const p = packP(c.id); return `<tr><td>${esc(c.name)} <span class="faint">${esc(c.sub)}</span></td><td>${RAR[c.rar].name}</td><td class="r num">${fmt(c.chars)}</td><td class="r num">${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}</td><td class="r num">${p >= .5 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p)}</td></tr>`; }).join("");
   const tot = Object.values(STYLES).reduce((a, s) => a + s.p, 0), cap = id => MK.CAP[id];
   $("oBody").innerHTML = `
-    <div class="facts"><div><div class="bignum sm" role="img" aria-label="${money(ps.price)}">${money(ps.price)}</div><span>per pack right now · ${PACK.n} cards</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.hit * 100).toFixed(0)}%">${(ps.hit * 100).toFixed(0) + "%"}</div><span>of packs are worth at least what you paid</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.rtp * 100).toFixed(0)}%">${(ps.rtp * 100).toFixed(0) + "%"}</div><span>comes back on average when you sell</span></div></div>
+    <div class="packtabs" role="tablist" aria-label="Which pack">${PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-opack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("")}</div>
+    <p class="small" style="margin:-4px 0 22px;text-align:center">${esc(pk.blurb)}</p>
+    <div class="facts"><div><div class="bignum sm" role="img" aria-label="${money(ps.price)}">${money(ps.price)}</div><span>per ${esc(pk.name)} pack right now · ${pk.n} cards</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.hit * 100).toFixed(0)}%">${(ps.hit * 100).toFixed(0) + "%"}</div><span>of packs are worth at least what you paid</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.rtp * 100).toFixed(0)}%">${(ps.rtp * 100).toFixed(0) + "%"}</div><span>comes back on average when you sell</span></div></div>
     <p class="small" style="margin-bottom:18px"><button class="linkbtn" data-cut="intro">Watch the intro</button></p>
-    <h3 class="sec">What can be in a pack</h3>
+    <h3 class="sec">What can be in a ${esc(pk.name)} pack</h3>
     <div class="tablewrap"><table><thead><tr><th>Card</th><th>Rarity</th><th class="r">Characters</th><th class="r">Price now · 24h</th><th class="r">Chance per pack</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="small" style="margin-bottom:44px">Selling a card back pays 90% of its price. A typical pack sells back for ${money(ps.median)} right now.</p>
     <details><summary>How the market works</summary><ul class="plain">
@@ -993,7 +1030,7 @@ function renderOdds() {
       <li>Selling a card pays its price minus 10%, whenever you like, so a card has to rise about 11% before selling it beats what it was worth when you got it. Your profile shows every card you hold with its live price and its profit or loss.</li>
       <li>The pack's price follows the market: it moves with what the cards inside are worth, so a pack returns about 89% on average whatever the market is doing. When cards run hot, packs get dearer.</li>
       <li>The traders in the best and worst flips are simulated players. Each one pulled a card and sold it, worked out from the real price path after the same 10% fee.</li></ul></details>
-    <details><summary>How each card in the pack is picked</summary><div>${PACK.slots.map((s, i) => { const t = s.reduce((a, [, w]) => a + w, 0); return `<div class="slot"><div class="label">${slotName[i]}</div>${s.map(([id, w]) => `<div class="row"><span>${esc(BY_ID[id].name)} <span class="faint">${esc(BY_ID[id].sub)}</span></span><span class="bar">${bar(w / t, 24)}</span><span class="pct">${(w / t * 100).toFixed(1)}%</span></div>`).join("")}</div>`; }).join("")}</div></details>
+    <details><summary>How each card in the pack is picked</summary><div>${pk.slots.map((s, i) => { const t = s.reduce((a, [, w]) => a + w, 0); return `<div class="slot"><div class="label">${slotName[i]}</div>${s.map(([id, w]) => `<div class="row"><span>${esc(BY_ID[id].name)} <span class="faint">${esc(BY_ID[id].sub)}</span></span><span class="bar">${bar(w / t, 24)}</span><span class="pct">${(w / t * 100).toFixed(1)}%</span></div>`).join("")}</div>`; }).join("")}</div></details>
     <details><summary>Styles</summary><div><p class="small" style="margin-bottom:14px">Every card can come out in one of twelve ASCII styles, decided by that copy's own code. ${(tot * 100).toFixed(1)}% of cards are not the plain default. A styled copy is worth its multiple of the card, so a styled Reaper is worth a lot more than a plain one.</p>
       <div class="tablewrap"><table><thead><tr><th>Style</th><th class="r">Chance per card</th><th class="r">Worth</th></tr></thead><tbody><tr><td>Plain <span class="faint">default</span></td><td class="r num">${((1 - tot) * 100).toFixed(1)}%</td><td class="r">×1</td></tr>${Object.keys(STYLES).map(k => `<tr><td>${STYLES[k].name}</td><td class="r num">1 in ${fmt(1 / STYLES[k].p)}</td><td class="r">×${STYLES[k].x}</td></tr>`).join("")}</tbody></table></div></div></details>
     <details><summary>Copy ids and the red slashes</summary><ul class="plain"><li>Every copy has its own id, like <b>IS015-000003-A2JM</b>: the set, the card number, the copy's serial and four check characters.</li><li>The red slashes after an id show rarity: none for commons and uncommons, one for rares and epics, two for legendary, three for mythic, four for the one Secret card.</li><li>Type an id into “add a card by its code” on the collection page and, if the check characters match, that exact copy is added.</li></ul></details>
@@ -1025,7 +1062,7 @@ function cardModal(no, keep) {
     <div class="row small"><span>buzz ${buzzDots(bz)}</span><span class="dim">simulated · selling pays the price minus 10%</span></div></div>`;
   openModal(`<div class="mcard">${cardHTML(best || { no }, { locked: !best })}</div><div class="minfo">
     <div><span class="label" style="color:${R.col}">${R.name} · No. ${card.no}</span><h2>${esc(card.name)}</h2></div>
-    <p class="dim">${fmt(card.chars)} characters · base worth ${money(card.val)} · turns up in ${chance(p)}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
+    <p class="dim">${fmt(card.chars)} characters · base worth ${money(card.val)} · turns up in ${chance(p, packOf(card))}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
     ${market}
     ${alertRow(card)}
     ${cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div>${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${moneyS(costOf(c))}</small></div><div class="r"><span><b>${moneyS(valueOf(c))}</b><br>${pctHTML(gainOf(c))}</span><button class="btn small ghost" data-share="${c.uid}">share</button><button class="btn small" data-sell="${c.uid}" data-no="${no}">sell ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<p class="small">You haven't found this card yet.</p>`}
@@ -1048,14 +1085,14 @@ function sell(uids) { let g = 0; for (const u of uids) { const c = state.vault.f
    8. OPENING A PACK: tear it, reveal the cards one at a time, then keep or sell
    ========================================================================== */
 let SS = null, SS_PRICE = 0; const stage = $("stage"), hint = t => { $("stHint").textContent = t; };
-function openPack() {
-  if (SS) return; const gate = packGate(); if (gate) { toast(gate); return; } const price = packPrice(); if (state.coins < price) { toast(`You need ${money(price - state.coins)} more. Tap “add $10”.`); return; }
-  state.coins -= price; state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; const items = pullPack(); state.vault.push(...items); save(); renderBal(true);
-  SS = { items, idx: 0, phase: "pack", busy: false };
-  $("stName").textContent = PACK.name; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
-  $("stBox").innerHTML = `<div class="st-pack enter" id="stPack">${packHTML()}</div><div class="cstack" id="stStack"></div>`;
+function openPack(pack) {
+  if (SS) return; const pk = pack || curPack(), gate = packGate(); if (gate) { toast(gate); return; } const price = packPrice(pk); if (state.coins < price) { toast(`You need ${money(price - state.coins)} more. Tap “add $10”.`); return; }
+  state.coins -= price; state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; const items = pullPack(pk); state.vault.push(...items); save(); renderBal(true);
+  SS = { items, idx: 0, phase: "pack", busy: false, pack: pk };
+  $("stName").textContent = pk.name; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
+  $("stBox").innerHTML = `<div class="st-pack enter" id="stPack">${packHTML(pk)}</div><div class="cstack" id="stStack"></div>`;
   hint("Tap the pack to tear it open"); stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
-  const pk = $("stPack").firstChild; SS.ps = liveWindow(pk); tiltPack(pk); $("stPack").addEventListener("click", tear);
+  const pkEl = $("stPack").firstChild; SS.ps = liveWindow(pkEl, pk); tiltPack(pkEl); $("stPack").addEventListener("click", tear);
 }
 async function tear() {
   if (!SS || SS.phase !== "pack") return; SS.phase = "tearing"; hint(""); Snd.tear(); buzz(35); const wrap = $("stPack"), pk = wrap.querySelector(".pk");
@@ -1107,7 +1144,7 @@ function summary() {
   SS.phase = "summary"; const items = SS.items, worth = items.reduce((a, c) => a + valueOf(c), 0), back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE;
   const best = items.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no];
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
-  $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${esc(PACK.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(worth)}">${blockSVG(money(worth))}</div><span class="dim" style="font-size:13px">of cards</span></div>
+  $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(worth)}">${blockSVG(money(worth))}</div><span class="dim" style="font-size:13px">of cards</span></div>
     <div class="net ${net >= 0 ? "up" : "dn"}">Sell them all for ${money(back)}: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))} against the ${money(SS_PRICE)} pack.</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
     <div class="fan">${items.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>
     <div class="row" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn ghost" id="sumAgain">${state.coins >= packPrice() ? "open another · " + money(packPrice()) : "add $10 first"}</button></div></div>`;
@@ -1599,6 +1636,67 @@ const Cut = (() => {
         g.flash(Math.max(sm(5.55, 5.6, t) * (1 - sm(5.6, 6.1, t)) * .5, sm(10.8, 11.8, t)));
       },
     },
+    /* LIFTOFF (rare, Moonshot): the pad lights up, the ground shakes, and the rocket climbs out of the frame on a column of fire. */
+    liftoff: {
+      dur: 7.8, pals: [mkpal([[0, 0, 0], [90, 16, 4], [220, 64, 14], [255, 170, 56], [255, 248, 210]])],
+      rise: t => { const s = Math.max(0, t - 2.3); return .5 * .5 * s * s; },                                    // how far it has climbed: slowly at first, and it never stops speeding up
+      cell(x, y, t) {
+        const gy = .3, ry = gy - SCENES.liftoff.rise(t), xs = x + (t > 2.3 ? .005 * Math.sin(t * 70) * (1 - sm(2.3, 6, t) * .6) : 0); let l = 0;
+        if (y < gy - .05 && hash(Math.floor(x * 110), Math.floor(y * 110), 9) > .994) l = .35 + .3 * Math.sin(t * 4 + x * 80);                                     // stars
+        if (Math.abs(x + .36) < .05 && y > -.55 && y < gy) l = Math.max(l, (Math.floor((y + .55) * 36) % 4 === 0 || Math.floor(x * 120) % 5 === 0) ? .5 : .12);       // the tower
+        const top = ry - .46;
+        if (y > top && y < ry) { const k = (y - top) / .46, hw = k < .2 ? .055 * Math.sqrt(k / .2) : .055; if (Math.abs(xs) < hw) l = Math.max(l, .72 + .25 * (1 - Math.abs(xs) / hw) + (Math.floor(y * 50) % 6 === 0 ? .1 : 0) + (xs < -hw * .5 ? .08 : 0)); }   // the rocket
+        for (const sd of [-1, 1]) if (y > ry - .22 && y < ry && Math.abs(xs - sd * .08) < .02) l = Math.max(l, .8);                                                  // two boosters
+        if (t > 2.0 && y > ry) { const d = y - ry, hw = .05 + d * .2 + .02 * Math.sin(t * 30), core = Math.exp(-Math.pow(xs / hw, 2)), len = .7 + .9 * sm(2.3, 4, t); l = Math.max(l, 1.3 * core * Math.exp(-d / len * 2) * (.65 + .5 * fbm(xs * 22, y * 12 - t * 16, 31))); }   // the plume
+        l = Math.max(l, Math.exp(-Math.abs(y - gy) * 14) * Math.exp(-Math.abs(x) * 1.8) * sm(2, 3.2, t) * .85);                                                       // the ground lit from above
+        if (y > gy) l = Math.max(l, .1 + .14 * fbm(x * 12, y * 12, 6) + .6 * Math.exp(-(y - gy) * 24) * sm(2, 3, t));
+        const sp = sm(2.2, 6, t); if (y < gy + .04) l = Math.max(l, fbm(x * 3.2 + t * .08, y * 9 - t * .15, 21) * Math.exp(-Math.abs(x) / (.25 + .8 * sp)) * sm(gy - .2 - .12 * sp, gy, y) * 1.05 * sm(2.2, 3, t));   // smoke rolling out
+        { const r = (t - 2.3) * .6; if (r > 0 && r < 1.3 && y > gy - .04 && y < gy + .06) l = Math.max(l, Math.exp(-Math.pow((Math.abs(x) - r) / .03, 2)) * (1 - r / 1.3)); }   // the shockwave
+        return l * sm(0, .6, t);
+      },
+      over(g, t) {
+        g.sprite(t < 2.3 ? FIG : ["\\ _o_ /", " \\_|_/ ", "   |   ", "  / \\  ", " /   \\ "], g.col(.3) - 3, g.row(.3) - 5, [255, 240, 215]);
+        g.text(typed("gravity lost the argument.", t, 4.6, 9), .88, [255, 160, 70]); g.flash(Math.max(sm(2.3, 2.34, t) * (1 - sm(2.34, 2.8, t)) * .6, sm(7.1, 7.8, t)));
+      },
+    },
+    /* APOGEE (epic, Moonshot): above the clouds, at the edge of space. Nothing moves but the light and one small figure. */
+    apogee: {
+      dur: 8.4, pals: [mkpal([[0, 0, 0], [8, 30, 74], [24, 116, 224], [120, 220, 255], [244, 253, 255]])],
+      cell(x, y, t) {
+        const R = 1.7, d = Math.hypot(x, y - 2.0), sd = Math.hypot(x - .38, y + .3), glare = sm(2.2, 5, t); let l = 0;
+        if (d >= R) { if (hash(Math.floor(x * 120), Math.floor(y * 120), 4) > .993) l = .35 + .3 * Math.sin(t * 3 + x * 70); if (d < R + .12) l = Math.max(l, Math.exp(-(d - R) * 16) * (.7 + .5 * glare)); }     // stars, and a thin line of air
+        else { const cloud = Math.pow(fbm(x * 4 + t * .03, (y - .3) * 14, 12), 1.5); l = .16 + .7 * cloud * (.45 + .55 * Math.exp(-sd * .8)); l = Math.max(l, Math.exp(-(R - d) * 30) * (.95 + .4 * glare)); }   // the Earth
+        l = Math.max(l, (Math.exp(-sd * 7) * 1.2 + Math.exp(-Math.abs(y + .3) * 60) * Math.exp(-Math.abs(x - .38) * 1.4) * .6) * glare);                                                              // the sun comes round
+        const k = y + .22; if (k > 0 && k < .95) { const hw = .2 * Math.pow(k / .95, .55) + .004, u = (x - .4) / hw; if (Math.abs(u) < 1) l = Math.max(l, .3 + .65 * Math.max(0, u) + (Math.floor(y * 50) % 7 === 0 ? .14 : 0)); }   // the nose of the rocket
+        return l * sm(0, .8, t);
+      },
+      over(g, t) {
+        const px = -.18 + .02 * Math.sin(t * .7), py = -.1 + .015 * Math.sin(t * 1.3);
+        g.sprite(Math.floor(t / 2.2) % 2 ? ["  \\_o_/ ", "   \\|/  ", "    |   ", "   / \\  ", "  /   \\ "] : ["   _o_  ", "  /_|_\\ ", "    |   ", "  _/ \\_ ", "        "], g.col(px) - 3, g.row(py) - 2, [244, 253, 255]);
+        g.text(typed("the top is quiet.", t, 4.8, 8), .88, [126, 232, 255]); g.flash(sm(7.6, 8.4, t));
+      },
+    },
+    /* LUNA (legendary, Moonshot): one small figure crosses the dust, plants a flag, and the Earth comes up behind it. */
+    luna: {
+      dur: 9.6, pals: [mkpal([[0, 0, 0], [26, 34, 66], [96, 124, 190], [196, 222, 255], [255, 255, 255]]), mkpal([[0, 0, 0], [10, 50, 90], [36, 136, 220], [120, 220, 255], [240, 252, 255]])],
+      cell(x, y, t, g) {
+        const hy = .2, ex = -.16, ey = hy + .24 - .42 * ease(t / 6.5), ed = Math.hypot(x - ex, y - ey); let l = 0; g.pi = 0;
+        if (y < hy && hash(Math.floor(x * 120), Math.floor(y * 120), 3) > .994) l = .35 + .3 * Math.sin(t * 3 + x * 60);
+        if (ed < .26) { l = (.35 + .65 * fbm((x - ex) * 7 + t * .05, (y - ey) * 7, 17)) * (.45 + .55 * sm(-.2, .2, x - ex + .05)); g.pi = 1; } else if (ed < .32 && y < hy) { l = Math.max(l, Math.exp(-(ed - .26) * 28) * .6); g.pi = 1; }   // the Earth rises
+        if (!g.pi) l = Math.max(l, Math.exp(-Math.hypot(x - .42, y + .36) * 7) * sm(0, 1.5, t));                                                                                                         // the sun
+        if (y > hy) { g.pi = 0; l = .24 + .34 * fbm(x * 14, y * 40, 5) + .5 * Math.exp(-(y - hy) * 50) + .1 * sm(hy, .5, y);
+          for (let k = 0; k < 6; k++) { const px = (hash(k, 1, 30) - .5) * 1.2, py = hy + .06 + hash(k, 2, 30) * .22, rr = .03 + hash(k, 3, 30) * .05; l = Math.max(l, Math.exp(-Math.pow((Math.hypot(x - px, (y - py) * 3) - rr) / .007, 2)) * .65); } }   // craters
+        return l * sm(0, .9, t);
+      },
+      over(g, t) {
+        const walk = sm(1.6, 4.6, t), px = mixv(-.62, .16, walk), base = .34, rw = g.row(base) - 5, moving = t > 1.6 && t < 4.6, still = t >= 4.6;
+        for (let i = 1; i < 30; i++) { const fx = px - .045 * i; if (fx < -.62 || fx > px - .03) continue; g.put(g.col(fx), g.row(base + .005), i % 2 ? ":" : ".", [180, 200, 235], .7); }           // footprints
+        for (let k = 0; k < 14; k++) g.put(g.col(px - .014 * k - .02), g.row(base + .004 + .004 * k), "-", [120, 140, 190], .55 - k * .03);                                                  // a long hard shadow
+        if (t > 1.2) g.sprite(!still ? (moving ? (Math.floor(t * 3.4) % 2 ? ["  _o_  ", " / | \\ ", "   |   ", "  /|   ", " /  \\  "] : ["  _o_  ", " / | \\ ", "   |   ", "   |\\  ", "  /  \\ "]) : FIG) : ["  _o_ |", " / |\\_|", "   | | ", "  / \\| ", " /   \\ "], g.col(px) - 3, rw, [244, 248, 255]);
+        if (still) { const pc = g.col(px) + 4, top = rw - 5, grow = Math.floor(sm(4.9, 5.8, t) * 9); for (let j = 0; j < 11; j++) g.put(pc, top + j, "|", [210, 220, 240], 1); for (let i = 0; i < grow; i++) for (let j = 0; j < 4; j++) g.put(pc + 1 + i, top + j, "█", j % 2 ? [235, 240, 255] : [255, 255, 255], 1); }
+        g.text(typed("to the moon was never a joke.", t, 6.2, 9), .88, [184, 212, 255]); g.flash(sm(8.8, 9.6, t));
+      },
+    },
   };
 
   const has = id => !!SCENES[id];
@@ -1727,18 +1825,18 @@ function rankHTML() {
 }
 
 /* ---- the collection has holes in it, and you can see them ---- */
-const missingCards = () => { const have = new Set(state.vault.map(c => c.no)); return CARDS.filter(c => !have.has(c.no)); };
-const chaseChance = () => { const m = missingCards(); return m.length ? 1 - m.reduce((a, c) => a * (1 - packP(c.id)), 1) : 0; };
+const missingCards = set => { const have = new Set(state.vault.map(c => c.no)); return CARDS.filter(c => !have.has(c.no) && (!set || c.set === set)); };
+const chaseChance = pk => { pk = pk || curPack(); const m = missingCards(pk.set); return m.length ? 1 - m.reduce((a, c) => a * (1 - packP(c.id)), 1) : 0; };      // a pack only holds cards of its own set
 function progressHTML() {
-  noteFound(); const n = Object.keys(state.found).length, fx = Object.keys(state.foundFx).length, ch = chaseChance();
-  return `<div><span class="label">cards found</span><b>${n} of ${CARDS.length}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(n / CARDS.length * 18), 18)}</span></div><div><span class="label">styles found</span><b>${fx} of ${FX_ALL}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(fx / FX_ALL * 18), 18)}</span></div><div><span class="label">a new card in your next pack</span><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span class="small">chance, from the real odds</span></div>`;
+  noteFound(); const pk = curPack(), n = Object.keys(state.found).length, fx = Object.keys(state.foundFx).length, ch = chaseChance(pk);
+  return `<div><span class="label">cards found</span><b>${n} of ${CARDS.length}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(n / CARDS.length * 18), 18)}</span></div><div><span class="label">styles found</span><b>${fx} of ${FX_ALL}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(fx / FX_ALL * 18), 18)}</span></div><div><span class="label">a new card in your next ${esc(pk.name)} pack</span><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span class="small">chance, from the real odds</span></div>`;
 }
 function chaseHTML() {
   if (!state.s.packs && !state.vault.length) return "";
-  const miss = missingCards(); if (!miss.length) return `<span class="label">collection</span><span>You have every card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
+  const pk = curPack(), size = CARDS.filter(c => c.set === pk.set).length, miss = missingCards(pk.set); if (!miss.length) return `<span class="label">${esc(pk.name)}</span><span>You have every ${esc(pk.name)} card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
   const rows = miss.slice().sort((a, b) => MK.price(b) - MK.price(a)).slice(0, 3), hot = miss.map(c => ({ c, p: MK.pct(c, 24) })).sort((a, b) => b.p - a.p)[0];
-  return `<span class="label">still out there · ${CARDS.length - miss.length} of ${CARDS.length} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${RAR[c.rar].name}</span>${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}<span class="dim">${chance(packP(c.id))}</span></button>`).join("")
-    + (hot && hot.p >= .3 ? `<span class="hotflip"><b>${esc(hot.c.name)}</b> is up ${pctShort(hot.p).slice(1)} in a day and you don't have one. It turns up in ${chance(packP(hot.c.id))}, and a pack costs ${money(packPrice())}.</span>` : "");
+  return `<span class="label">still out there in ${esc(pk.name)} · ${size - miss.length} of ${size} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${RAR[c.rar].name}</span>${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}<span class="dim">${chance(packP(c.id))}</span></button>`).join("")
+    + (hot && hot.p >= .3 ? `<span class="hotflip"><b>${esc(hot.c.name)}</b> is up ${pctShort(hot.p).slice(1)} in a day and you don't have one. It turns up in ${chance(packP(hot.c.id), packOf(hot.c))}, and a pack costs ${money(packPrice(packOf(hot.c)))}.</span>` : "");
 }
 
 /* ---- price targets you set yourself ---- */
@@ -1780,7 +1878,7 @@ function maybeRecap(since) {
   openModal(`<div class="minfo recap"><div><span class="label">while you were away · ${heldText(r.away)}</span><h2 class="${up ? "up" : "dn"}">${r.groups.length ? (up ? "+" : "−") + money(Math.abs(d)) : "Welcome back"}</h2>${r.groups.length ? `<p class="dim">${pctHTML(r.now / Math.max(1, r.was) - 1)} on your ${state.vault.length} card${state.vault.length === 1 ? "" : "s"}: ${money(r.was)} then, ${money(r.now)} now. Worked out from the market's price path, nothing made up.</p>` : ""}</div>
     ${rows ? `<div class="rows">${rows}</div>` : ""}
     ${r.hits.map(h => `<p class="small"><b>${esc(h.card.name)}</b> ${h.up ? "went above" : "fell below"} the ${moneyS(h.target)} you set and is ${moneyS(h.now)} now.</p>`).join("")}
-    ${r.hot ? `<p class="small">Meanwhile <b>${esc(r.hot.c.name)}</b> is up ${pctShort(r.hot.p24).slice(1)} today. You don't have one. It turns up in ${chance(packP(r.hot.c.id))}.</p>` : ""}
+    ${r.hot ? `<p class="small">Meanwhile <b>${esc(r.hot.c.name)}</b> is up ${pctShort(r.hot.p24).slice(1)} today. You don't have one. It turns up in ${chance(packP(r.hot.c.id), packOf(r.hot.c))}.</p>` : ""}
     <div class="row"><button class="btn solid" data-recap="profile">see your profile</button><button class="btn ghost" data-close>close</button></div></div>`, true);
   Snd.alert(up); buzz(up ? [20, 30, 20] : [40]);
 }
@@ -1830,6 +1928,8 @@ document.addEventListener("click", e => {
   if (t.dataset.card) { if (t.closest("#alert")) hideAlert(); cardModal(t.dataset.card); return; }
   if (t.dataset.cut) { closeModal(); Cut.play(t.dataset.cut); return; }
   if (t.dataset.tgt) { const [no, dir, pct] = t.dataset.tgt.split("|"); setTarget(no, dir, +pct); cardModal(no, true); toast(dir === "clear" ? "Alerts cleared" : "Alert set. You'll hear from us when it gets there."); Snd.click(); return; }
+  if (t.dataset.pack) { if (PACK_BY[t.dataset.pack] && state.pack !== t.dataset.pack) { state.pack = t.dataset.pack; persist(); Snd.click(); renderHome(); } return; }
+  if (t.dataset.opack) { oddsPack = t.dataset.opack; renderOdds(); return; }
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.recap) { closeModal(); location.hash = "#/" + t.dataset.recap; return; }
   if (t.dataset.share) { const c = state.vault.find(x => x.uid === t.dataset.share); if (c) Share.open(receiptOf(c, false)); return; }
@@ -1856,7 +1956,7 @@ document.addEventListener("click", e => {
     case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
     case "sumSell": { const g = sell(SS.items.map(c => c.uid)); closeStage(); toast("Sold for " + money(g)); break; }
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
-    case "sumAgain": closeStage(); setTimeout(() => (state.coins >= packPrice() ? openPack() : toast("Tap “add $10” for more demo money")), 200); break;
+    case "sumAgain": { const pk = SS.pack; closeStage(); setTimeout(() => (state.coins >= packPrice(pk) ? openPack(pk) : toast("Tap “add $10” for more demo money")), 200); break; }
     case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { toast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`); renderCollection(); } break; }
     case "addCode": codeModal(); break;
     case "resetBtn": if (t.dataset.armed) { const ok = state.ageOK; state = fresh(); state.ageOK = ok; save(); renderBal(); show("home"); toast("Demo reset"); } else { t.dataset.armed = 1; t.textContent = "tap again to wipe everything"; setTimeout(() => { delete t.dataset.armed; t.textContent = "reset the demo"; }, 3000); } break;
