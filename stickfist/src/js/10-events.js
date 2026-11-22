@@ -48,6 +48,7 @@ document.addEventListener("click", e => {
     case "shareLink": Ref.share(); break;
     case "fairRotate": rotateSeed(); break;
     case "fairBtn": case "fairBtn2": fairModal(); break;
+    case "cashBtn": case "cashBtn2": cashModal(); break;
     case "aboutBtn": aboutModal(); break;
     case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); Ref.sync(); break;
   }

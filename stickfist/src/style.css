@@ -254,3 +254,5 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 @keyframes freeGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(159,216,166,0); } 50% { box-shadow: 0 0 0 10px rgba(159,216,166,.14); } }
 .btn.solid.free { animation: freeGlow 2.4s ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { .btn.solid.free { animation: none; } }
 @media (max-height: 720px) { .banner { display: none; } .packcol { width: min(78vw, clamp(150px, calc((100vh - 400px) * .667), 330px)); } .home { gap: 14px; } }
+.chip.cash { border-color: var(--ln3); }
+@media (max-width: 420px) { .chip .xs { display: none; } header.top .wrap { gap: 6px 10px; } .logo { letter-spacing: .12em; } .wallet { gap: 6px; } .bal { font-size: 14px; } }
