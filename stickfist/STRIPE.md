@@ -48,7 +48,7 @@ This writes `data/requiem-run.json` (the shuffled list of sealed packs; **keep i
 | Variable | Value |
 |---|---|
 | `REQUIEM_OPEN` | `1` (the switch; remove it to close the sale instantly) |
-| `STRIPE_SECRET_KEY` | `sk_test_…` first, then `sk_live_…` |
+| `STRIPE_SECRET_KEY` | `sk_test_…` first, then `sk_live_…`. A **restricted key** (`rk_test_…` / `rk_live_…`) also works and is safer: in the Dashboard (Developers → API keys → Create restricted key) give it write access to **Checkout Sessions** only. |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` from step 6 |
 | `PUBLIC_URL` | `https://YOUR-SITE` (https is required with a live key) |
 | `REQUIEM_TERMS_URL` | the address of your terms page |

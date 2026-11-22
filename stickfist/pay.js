@@ -5,7 +5,7 @@
 
    Settings (environment variables):
      REQUIEM_OPEN=1               the sale switch
-     STRIPE_SECRET_KEY=sk_test_…  your Stripe secret key (use a sk_test_ key until you have tried everything)
+     STRIPE_SECRET_KEY=sk_test_…  your Stripe secret key, or a restricted rk_ key allowed to write Checkout Sessions only (use a test key until you have tried everything)
      STRIPE_WEBHOOK_SECRET=whsec_…  the signing secret of the webhook endpoint  https://YOUR-SITE/api/stripe/webhook
      PUBLIC_URL=https://…         where the page lives (https for a live key); Stripe sends buyers back here
      REQUIEM_TERMS_URL=https://…  your terms, shipping and returns page. The sale will not open without one.
@@ -80,9 +80,9 @@ module.exports = function payments(ctx) {
   function status() {
     const c = settings(), why = [], rc = loadRun(c.runFile), s = S(); prune();
     if (!c.openFlag) why.push("REQUIEM_OPEN is not 1");
-    if (!/^sk_(test|live)_\S+$/.test(c.key)) why.push("STRIPE_SECRET_KEY is missing or is not a secret key");
+    if (!/^(sk|rk)_(test|live)_\S+$/.test(c.key)) why.push("STRIPE_SECRET_KEY is missing or is not a secret key");
     if (!/^whsec_\S+$/.test(c.whsec)) why.push("STRIPE_WEBHOOK_SECRET is missing");
-    if (!/^https?:\/\/\S+$/.test(c.site)) why.push("PUBLIC_URL is missing"); else if (/^sk_live_/.test(c.key) && !/^https:/.test(c.site)) why.push("PUBLIC_URL must be https with a live key");
+    if (!/^https?:\/\/\S+$/.test(c.site)) why.push("PUBLIC_URL is missing"); else if (/^(sk|rk)_live_/.test(c.key) && !/^https:/.test(c.site)) why.push("PUBLIC_URL must be https with a live key");
     if (!/^https?:\/\/\S+$/.test(c.terms)) why.push("REQUIEM_TERMS_URL is missing: publish your terms, shipping and returns first");
     if (!rc) why.push("the run file is missing or invalid (run requiem_run.py)");
     else if (s.commit && s.commit !== rc.commit) why.push("the run file changed after sales began, which must never happen");
@@ -104,9 +104,9 @@ module.exports = function payments(ctx) {
   function shopStatus() {
     const c = settings(), sc = shopSettings(), why = [];
     if (!sc.open) why.push("SHOP_OPEN is not 1");
-    if (!/^sk_(test|live)_\S+$/.test(c.key)) why.push("STRIPE_SECRET_KEY is missing or is not a secret key");
+    if (!/^(sk|rk)_(test|live)_\S+$/.test(c.key)) why.push("STRIPE_SECRET_KEY is missing or is not a secret key");
     if (!/^whsec_\S+$/.test(c.whsec)) why.push("STRIPE_WEBHOOK_SECRET is missing");
-    if (!/^https?:\/\/\S+$/.test(c.site)) why.push("PUBLIC_URL is missing"); else if (/^sk_live_/.test(c.key) && !/^https:/.test(c.site)) why.push("PUBLIC_URL must be https with a live key");
+    if (!/^https?:\/\/\S+$/.test(c.site)) why.push("PUBLIC_URL is missing"); else if (/^(sk|rk)_live_/.test(c.key) && !/^https:/.test(c.site)) why.push("PUBLIC_URL must be https with a live key");
     if (!/^https?:\/\/\S+$/.test(c.terms)) why.push("REQUIEM_TERMS_URL is missing: publish your terms and refund policy first");
     const econ = {}; for (const [id, price] of Object.entries(sc.prices)) { const fee = feeOf(price, c), net = price - fee, netPct = +(net / price * 100).toFixed(1); econ[id] = { price, fee, net, netPct, offered: netPct >= sc.minNet }; if (netPct < sc.minNet) delete sc.prices[id]; }
     if (!Object.keys(sc.prices).length) why.push("no pack is offered: SHOP_PRICES is empty, or each price leaves less than " + sc.minNet + "% after Stripe's fee");
