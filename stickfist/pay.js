@@ -1,0 +1,153 @@
+/* STIXX Requiem checkout. No dependencies: Node 18 or newer. Loaded by server.js.
+
+   It sells the physical Requiem pack through Stripe Checkout (hosted by Stripe: Apple Pay, Google Pay and cards appear on their own, and a card number never touches this server).
+   Nothing here is on until every setting below is present; with any of them missing the page shows the preview and /api/requiem/checkout refuses.
+
+   Settings (environment variables):
+     REQUIEM_OPEN=1               the sale switch
+     STRIPE_SECRET_KEY=sk_test_…  your Stripe secret key (use a sk_test_ key until you have tried everything)
+     STRIPE_WEBHOOK_SECRET=whsec_…  the signing secret of the webhook endpoint  https://YOUR-SITE/api/stripe/webhook
+     PUBLIC_URL=https://…         where the page lives (https for a live key); Stripe sends buyers back here
+     REQUIEM_TERMS_URL=https://…  your terms, shipping and returns page. The sale will not open without one.
+     REQUIEM_RUN_FILE=…           the assembled run (design-concepts/requiem/requiem_run.py); default data/requiem-run.json
+     REQUIEM_PRICE_CENTS=6500     the price of one pack, shipping included (US only)
+     REQUIEM_MAX_PER_ORDER=3      packs per order
+     REQUIEM_CLOSES=2027-02-14    orders close at the end of that day (UTC-5). Optional.
+     STRIPE_TAX=1                 let Stripe Tax work out sales tax (set Stripe Tax up in the dashboard first). Optional.
+     STRIPE_API_BASE=…            for tests only
+
+   What is kept: for each paid order, the Stripe session id, how many packs, which packs of the run (by number) and the amount. Names, emails, phone numbers and
+   addresses stay at Stripe: read them there to ship an order. A pack is assigned when Stripe says the payment is complete, in the order payments arrive, from a
+   list that was shuffled and fingerprinted (SHA-256) before the sale. That is what makes the published counts the real counts: the packs are finite, and every pack
+   is spoken for exactly once. While someone is paying, their packs are held so two buyers can't be sold the same last pack.
+*/
+"use strict";
+const http = require("http"), https = require("https"), crypto = require("crypto"), fs = require("fs"), path = require("path");
+
+module.exports = function payments(ctx) {
+  const { db, touch, saveNow, limited, adminToken, dataDir } = ctx;
+  const sha = b => crypto.createHash("sha256").update(b).digest("hex");
+
+  const settings = () => {
+    const E = process.env;
+    return {
+      openFlag: E.REQUIEM_OPEN === "1", key: E.STRIPE_SECRET_KEY || "", whsec: E.STRIPE_WEBHOOK_SECRET || "", apiBase: (E.STRIPE_API_BASE || "https://api.stripe.com").replace(/\/$/, ""),
+      site: (E.PUBLIC_URL || "").replace(/\/$/, ""), terms: E.REQUIEM_TERMS_URL || "", price: Math.round(+E.REQUIEM_PRICE_CENTS) || 6500, maxQty: Math.max(1, Math.min(10, Math.round(+E.REQUIEM_MAX_PER_ORDER) || 3)),
+      closes: /^\d{4}-\d{2}-\d{2}$/.test(E.REQUIEM_CLOSES || "") ? E.REQUIEM_CLOSES : "", tax: E.STRIPE_TAX === "1", runFile: path.resolve(E.REQUIEM_RUN_FILE || path.join(dataDir, "requiem-run.json"))
+    };
+  };
+
+  /* ---- the run: a list of sealed packs, shuffled before the sale. Read from disk, never served. ---- */
+  let cache = { file: "", mtime: 0, run: null, commit: "" };
+  function loadRun(file) {
+    try {
+      const st = fs.statSync(file); if (cache.file === file && cache.mtime === st.mtimeMs && cache.run) return cache;
+      const raw = fs.readFileSync(file), run = JSON.parse(raw.toString("utf8"));
+      if (!run || !Array.isArray(run.packs) || !run.packs.length || !run.packs.every(p => Array.isArray(p) && p.length === 3 && p.every(c => typeof c === "string"))) return null;
+      return (cache = { file, mtime: st.mtimeMs, run, commit: sha(raw) });
+    } catch (e) { return null; }
+  }
+  const counts = run => { const o = {}; for (const p of run.packs) for (const c of p) o[c] = (o[c] || 0) + 1; return o; };
+
+  /* ---- what has been sold and what is being paid for right now ---- */
+  const S = () => { const d = db(); return d.rq = d.rq || { sold: 0, orders: {}, hold: {}, commit: "" }; };
+  const prune = () => { const s = S(), t = Date.now(); for (const [k, h] of Object.entries(s.hold)) if (h.exp < t) delete s.hold[k]; };
+  const held = () => Object.values(S().hold).reduce((a, h) => a + h.qty, 0);
+  const closesAt = c => c.closes ? Date.parse(c.closes + "T23:59:59-05:00") : 0;
+
+  function status() {
+    const c = settings(), why = [], rc = loadRun(c.runFile), s = S(); prune();
+    if (!c.openFlag) why.push("REQUIEM_OPEN is not 1");
+    if (!/^sk_(test|live)_\S+$/.test(c.key)) why.push("STRIPE_SECRET_KEY is missing or is not a secret key");
+    if (!/^whsec_\S+$/.test(c.whsec)) why.push("STRIPE_WEBHOOK_SECRET is missing");
+    if (!/^https?:\/\/\S+$/.test(c.site)) why.push("PUBLIC_URL is missing"); else if (/^sk_live_/.test(c.key) && !/^https:/.test(c.site)) why.push("PUBLIC_URL must be https with a live key");
+    if (!/^https?:\/\/\S+$/.test(c.terms)) why.push("REQUIEM_TERMS_URL is missing: publish your terms, shipping and returns first");
+    if (!rc) why.push("the run file is missing or invalid (run requiem_run.py)");
+    else if (s.commit && s.commit !== rc.commit) why.push("the run file changed after sales began, which must never happen");
+    if (c.closes && Date.now() > closesAt(c)) why.push("orders are closed");
+    const left = rc ? rc.run.packs.length - s.sold - held() : 0;
+    return { c, rc, why, left, soldOut: !!rc && rc.run.packs.length - s.sold <= 0, open: !why.length && left > 0 };
+  }
+
+  /* ---- Stripe ---- */
+  const enc = (o, prefix, out) => { out = out || []; for (const [k, v] of Object.entries(o)) { const key = prefix ? `${prefix}[${k}]` : k; if (v && typeof v === "object") enc(v, key, out); else out.push(encodeURIComponent(key) + "=" + encodeURIComponent(String(v))); } return out; };
+  function stripe(method, pathname, params) {
+    const c = settings(), u = new URL(c.apiBase + pathname), lib = u.protocol === "http:" ? http : https, body = method === "POST" ? enc(params || {}).join("&") : "";
+    return new Promise((resolve, reject) => {
+      const req = lib.request({ method, hostname: u.hostname, port: u.port || (u.protocol === "http:" ? 80 : 443), path: u.pathname + u.search,
+        headers: { authorization: "Bearer " + c.key, "content-type": "application/x-www-form-urlencoded", "content-length": Buffer.byteLength(body), "idempotency-key": crypto.randomBytes(16).toString("hex") } }, res => {
+        let d = ""; res.on("data", x => d += x); res.on("end", () => { try { const j = JSON.parse(d); if (res.statusCode >= 200 && res.statusCode < 300) resolve(j); else reject(Object.assign(new Error((j.error && j.error.message) || "stripe error"), { status: res.statusCode })); } catch (e) { reject(e); } });
+      });
+      req.setTimeout(10000, () => req.destroy(new Error("stripe timed out"))); req.on("error", reject); req.end(body);
+    });
+  }
+
+  function verify(raw, header, secret) {                                   // https://docs.stripe.com/webhooks/signature : HMAC-SHA256 of "t.rawbody", compared in constant time, within 5 minutes
+    if (!secret || !header) return false;
+    let t = "", v1 = []; for (const kv of String(header).split(",")) { const i = kv.indexOf("="); if (i < 0) continue; const k = kv.slice(0, i).trim(), v = kv.slice(i + 1).trim(); if (k === "t") t = v; else if (k === "v1") v1.push(v); }
+    if (!/^\d+$/.test(t) || !v1.length || Math.abs(Date.now() / 1000 - +t) > 300) return false;
+    const mac = crypto.createHmac("sha256", secret).update(t + ".").update(raw).digest("hex");
+    return v1.some(s => s.length === mac.length && crypto.timingSafeEqual(Buffer.from(s), Buffer.from(mac)));
+  }
+
+  function record(o) {                                                      // a payment is complete: give the buyer the next packs of the run
+    const s = S(), rc = loadRun(settings().runFile); if (!rc || s.orders[o.id]) return;       // already recorded: Stripe may deliver an event more than once
+    const qty = Math.max(1, Math.min(10, Math.round(+(o.metadata || {}).qty) || 1)), idx = [];
+    delete s.hold[o.id]; s.commit = s.commit || rc.commit;
+    for (let i = 0; i < qty && s.sold < rc.run.packs.length; i++) idx.push(s.sold++);
+    s.orders[o.id] = { qty, packs: idx, short: qty - idx.length, amount: o.amount_total || 0, at: Date.now() };    // short > 0 means the run ran out: refund it in Stripe
+    saveNow();
+  }
+  function handle(ev) {
+    const o = (ev && ev.data && ev.data.object) || {};
+    if (ev.type === "checkout.session.completed" || ev.type === "checkout.session.async_payment_succeeded") { if (o.metadata && o.metadata.kind === "requiem" && o.payment_status === "paid") record(o); return; }
+    if (ev.type === "checkout.session.expired" || ev.type === "checkout.session.async_payment_failed") { if (S().hold[o.id]) { delete S().hold[o.id]; touch(); } }
+  }
+  function webhook(req, res, send) {
+    const chunks = []; let size = 0;
+    req.on("data", d => { size += d.length; if (size > 1e6) req.destroy(); else chunks.push(d); });
+    req.on("end", () => {
+      const raw = Buffer.concat(chunks); if (!verify(raw, req.headers["stripe-signature"], settings().whsec)) return send(res, 400, "bad signature", "text/plain");
+      let ev; try { ev = JSON.parse(raw.toString("utf8")); } catch (e) { return send(res, 400, "bad json", "text/plain"); }
+      try { handle(ev); } catch (e) { console.error("webhook:", e.message); return send(res, 500, "error", "text/plain"); }
+      send(res, 200, "ok", "text/plain");
+    });
+  }
+
+  /* ---- the API ---- */
+  const routes = {
+    // what the page needs to know: is it on sale, for how much, how big is the run. Nothing secret, and no count of how many are left.
+    "GET /api/requiem/config": () => {
+      const st = status(), c = st.c; return { open: st.open, soldOut: c.openFlag && st.soldOut, price: c.price, maxQty: c.maxQty, closes: c.closes, terms: c.terms, run: st.rc ? st.rc.run.packs.length : null, commit: st.rc ? st.rc.commit : "", counts: st.rc ? counts(st.rc.run) : null };
+    },
+    "POST /api/requiem/checkout": async (b, ip) => {
+      const st = status(), c = st.c; if (!st.open) return { error: st.soldOut ? "Requiem is sold out." : "Requiem isn't on sale right now." };
+      if (b.age !== true) return { error: "Please confirm you are 18 or older." };
+      const qty = b.qty === undefined ? 1 : Number(b.qty); if (!Number.isInteger(qty) || qty < 1 || qty > c.maxQty) return { error: `You can buy 1 to ${c.maxQty} packs at a time.` };
+      if (st.left < qty) return { error: st.left > 0 ? `Only ${st.left} pack${st.left > 1 ? "s are" : " is"} available right now.` : "Requiem is sold out right now." };
+      if (limited("rqco:" + ip, 8, 600000)) return [429, { error: "slow down" }];                       // only real attempts (the ones that reach Stripe) count
+      const expires = Math.floor(Date.now() / 1000) + 31 * 60, p = {
+        mode: "payment", "line_items": { 0: { quantity: qty, price_data: { currency: "usd", unit_amount: c.price, product_data: { name: "STIXX Requiem: sealed pack of 3 cards", description: "A limited physical pack of 3 cards. Contents are fixed before the sale; the odds are published and never change." } } } },
+        shipping_address_collection: { allowed_countries: { 0: "US" } }, phone_number_collection: { enabled: "true" },
+        success_url: `${c.site}/?rq=paid&sid={CHECKOUT_SESSION_ID}#/limited`, cancel_url: `${c.site}/?rq=cancel#/limited`, expires_at: expires,
+        metadata: { kind: "requiem", qty, age: "18+" }, custom_text: { submit: { message: "Random cards, 18+ only. The odds are published on the Requiem page and never change." } }
+      };
+      if (c.tax) p.automatic_tax = { enabled: "true" };
+      let s; try { s = await stripe("POST", "/v1/checkout/sessions", p); } catch (e) { console.error("checkout:", e.message); return { error: "Payment isn't available right now. You have not been charged." }; }
+      if (!s || !s.id || !s.url) return { error: "Payment isn't available right now. You have not been charged." };
+      const state = S(); state.commit = state.commit || st.rc.commit; state.hold[s.id] = { qty, exp: Date.now() + 32 * 60000 }; touch();
+      return { url: s.url };
+    },
+    // after paying, the page asks which packs are the buyer's (the session id in the link is the key). Pack numbers only: the contents stay sealed.
+    "GET /api/requiem/order": (_b, _ip, q) => {
+      const o = S().orders[String(q.get("sid") || "")]; if (!o) return { pending: true }; const rc = loadRun(settings().runFile);
+      return { ok: true, qty: o.qty, packs: o.packs.map(i => i + 1), run: rc ? rc.run.packs.length : null, short: !!o.short };
+    },
+    // for you: every paid order and what is inside the packs to send. Needs ADMIN_TOKEN. Addresses are in the Stripe dashboard, not here.
+    "GET /api/requiem/orders": (_b, _ip, q) => {
+      if (!adminToken || q.get("token") !== adminToken) return [403, { error: "no" }]; const st = status(), s = S(), rc = st.rc;
+      return { open: st.open, why: st.why, run: rc ? rc.run.packs.length : 0, sold: s.sold, held: held(), commit: rc ? rc.commit : "", orders: Object.entries(s.orders).map(([sid, o]) => ({ sid, at: new Date(o.at).toISOString(), amount: o.amount, short: o.short, packs: o.packs.map(i => ({ no: i + 1, cards: rc ? rc.run.packs[i] : null })) })) };
+    }
+  };
+  return { routes, webhook, status };
+};

@@ -95,13 +95,13 @@ async function rotateSeed() { const b = $("fairRotate"); if (b) b.disabled = tru
 function cashModal() {
   openModal(`<div class="minfo"><div><span class="label">cash out</span><h2>Coming at public release</h2></div>
     <p class="dim">Cashing out will be available on public release. At public release, cards are bought with real money through Stripe.</p>
-    <p class="small">Until then everything in the beta is play money. This balance and these cards can't be paid out, and nothing is charged.</p>
+    <p class="small">Until then everything in the beta is play money. This balance and these cards can't be paid out, and nothing in the game is charged.${Sale.note()}</p>
     <div class="row"><button class="btn solid" data-close>ok</button></div></div>`, true);
 }
 
 /* ---- the fine print ---- */
 function aboutModal() {
   openModal(`<div class="minfo"><div><span class="label">the fine print</span><h2>STIXX beta</h2></div>
-    <ul class="plain"><li><b>Play money only.</b> Nothing in the beta costs real money and nothing can be cashed out. Cards have no cash value. Cashing out, and buying cards with real money through Stripe, are planned for the public release and are not part of this beta.</li><li><b>18+.</b> The cards contain explicit language and violence, and packs are a game of chance, so STIXX is for adults.</li><li><b>The market is simulated.</b> Prices come from AI trading bots, not real people. Every number is labelled as simulated where it is one.</li><li><b>What is stored.</b> Your cards and settings stay in this browser. If you use invites or fair-play seeds online, our server holds a random id, your invite code, the days you visited and a few counts. No name, email or payment details, ever.</li><li><b>It's a beta.</b> Things will change, and progress can be lost if you clear your browser data or we reset the beta.</li><li><b>Take it easy.</b> You can set a pack limit or take a break on the Me page at any time.</li></ul>
+    <ul class="plain"><li><b>Play money only.</b> Nothing in the beta costs real money and nothing can be cashed out. Cards have no cash value. Cashing out, and buying cards with real money through Stripe, are planned for the public release and are not part of this beta.${Sale.note()}</li><li><b>18+.</b> The cards contain explicit language and violence, and packs are a game of chance, so STIXX is for adults.</li><li><b>The market is simulated.</b> Prices come from AI trading bots, not real people. Every number is labelled as simulated where it is one.</li><li><b>What is stored.</b> Your cards and settings stay in this browser. If you use invites or fair-play seeds online, our server holds a random id, your invite code, the days you visited and a few counts. No name, email or payment details, ever.</li><li><b>It's a beta.</b> Things will change, and progress can be lost if you clear your browser data or we reset the beta.</li><li><b>Take it easy.</b> You can set a pack limit or take a break on the Me page at any time.</li></ul>
     <div class="row"><button class="btn solid" data-close>ok</button></div></div>`, true);
 }

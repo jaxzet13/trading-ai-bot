@@ -1,6 +1,6 @@
 /* ============================================================================
    1b. REQUIEM. The limited, physical pack: six cards, three to a pack, $65.
-   In the beta this is a preview only. Nothing here can be bought or opened, no payment is taken, and the cards are not in anyone's collection or in the market.
+   In the beta this is a preview only. Nothing here can be opened, and the cards are not in anyone's collection or in the market. A real-money purchase of the physical pack exists in pay.js but stays off unless the server is set up for it (STRIPE.md): the page shows the buy box only when the server says the sale is open.
    Values are what each card is planned to be worth at launch (cents): a guide, not a promise. The odds are exact, and are worked out from the slot tables below
    (the same maths as the other packs, checked by design-concepts/requiem/requiem_pack.py).
    A real limit is published here BEFORE anything is sold: run = how many packs are printed, closes = the date orders close (ISO, e.g. "2027-02-14").

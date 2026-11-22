@@ -37,7 +37,31 @@ function rqVs(c) {
   const x = (a, b) => { const r = a / b; return "×" + (r >= 10 ? Math.round(r) : r.toFixed(1)); };
   return { big, rich, cx: x(c.chars, big.chars), vx: x(c.val, rich.val) };
 }
-const rqBarHTML = () => `<a class="rqbar" href="#/limited"><span class="rqimg"><img src="cards/rq/s/seraph.jpg" alt="" loading="lazy" draggable="false"></span><span class="rqtx"><span class="label">limited drop · preview</span><b>Requiem</b><span class="small">six premium cards · ${money(RQ.price)} physical pack</span></span><span class="go"><span>see the cards </span>›</span></a>`;
+const rqBarHTML = () => `<a class="rqbar" href="#/limited"><span class="rqimg"><img src="cards/rq/s/seraph.jpg" alt="" loading="lazy" draggable="false"></span><span class="rqtx"><span class="label">limited drop · ${Sale.open() ? "on sale" : "preview"}</span><b>Requiem</b><span class="small">six premium cards · ${money(RQ.price)} physical pack</span></span><span class="go"><span>see the cards </span>›</span></a>`;
+
+// the top of the page: the buy box while the sale is open, otherwise the preview note; plus what Stripe sent the buyer back with
+function rqSaleHTML() {
+  const c = Sale.cfg(), top = Sale.banner(), price = c.price || RQ.price;
+  if (c.open) {
+    const hash = c.commit ? `<code>${esc(c.commit.slice(0, 8))}…${esc(c.commit.slice(-6))}</code>` : "";
+    return top + `<div class="rqbuy"><div class="rqbuyh"><div><b>Buy Requiem</b><span class="small">${money(price)} per pack · 3 real cards · ships to the United States</span></div>
+      <label class="rqqty"><span class="small">Packs</span><select id="rqQty" aria-label="How many packs">${Array.from({ length: c.maxQty || 1 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}</select></label></div>
+      <label class="rqage"><input type="checkbox" id="rqAge"><span>I'm 18 or older. I've read the odds on this page, and I understand the cards inside are random.</span></label>
+      <button class="btn solid big" id="rqPay" disabled>Pay ${Sale.total()}</button>
+      <p class="small">Apple Pay, Google Pay or card, on Stripe's secure page. STIXX never sees your card. You are only charged after you confirm there. <a href="${esc(c.terms)}" target="_blank" rel="noopener">Terms, shipping and returns</a>.</p>
+      <p class="small">${esc(rqLimitText())} The packs were sealed in a fixed order before the first sale (fingerprint ${hash}), so nobody can change what is in a pack after you pay.</p></div>`;
+  }
+  if (c.soldOut) return top + `<div class="rqnote"><b>Sold out.</b> Every pack in the run has been sold. ${esc(rqLimitText())}</div>`;
+  return top + `<div class="rqnote"><b>Preview only.</b> You can't buy Requiem in the beta: no payment is taken here, and these cards can't be opened, held or traded in the app. The real pack comes on public release, paid for through Stripe, and how it goes on sale will be published here first.<br><span class="small">${esc(rqLimitText())}</span></div>`;
+}
+// the real counts of the run, once there is one: a run is whole cards, so these replace the target odds where they differ
+function rqRunHTML() {
+  const c = Sale.cfg(); if (!c.counts || !c.run) return "";
+  return `<div class="sechead"><h3>This run, as packed</h3></div>
+    <p class="small rqlead">${fmt(c.run)} packs, ${fmt(3 * c.run)} cards. A run is whole cards, so these are the real counts and they replace the target odds above wherever they differ.</p>
+    <div class="rqrun">${RQ.cards.slice().reverse().map(x => `<div><i class="rd" style="--rc:${RAR[x.rar].col}"></i><span>${esc(x.name)}</span><b>×${fmt(c.counts[x.id] || 0)}</b></div>`).join("")}</div>
+    ${c.commit ? `<p class="small">Fingerprint of the packing list (SHA-256): <code>${esc(c.commit)}</code>. It is fixed before the first sale. When the run sells out the list is published, so you can check it against this and see what was in your pack number.</p>` : ""}`;
+}
 
 function renderLimited() {
   const s = RQS, top = rqCard("seraph"), fan = ["orrery", "seraph", "witness"].map(rqCard), most = RQ.cards.reduce((a, c) => c.chars > a.chars ? c : a, RQ.cards[0]);
@@ -46,11 +70,11 @@ function renderLimited() {
     <div class="rqhero">
       <div class="rqfan" aria-hidden="false">${fan.map((c, i) => `<button class="rqf f${i}" data-rq="${c.id}" aria-label="${esc(c.name)}, ${RAR[c.rar].name}">${rqCardHTML(c)}</button>`).join("")}</div>
       <div class="rqtitle"><span class="label rqeye">Limited drop · preview</span><h2>Requiem</h2>
-        <p>Six cards painted in the dark and built from millions of characters. Three come in every pack. Every card has its own rarity, and the rarest turns up in about 1 pack in ${fmt(1 / s.chance.seraph)}.</p>
+        <p>Six cards painted in the dark and built from millions of characters. Three come in every pack. Every card has its own rarity, and the rarest turns up in about 1 pack in ${fmt(((c0) => c0.counts && c0.run && c0.counts.seraph ? c0.run / c0.counts.seraph : 1 / s.chance.seraph)(Sale.cfg()))}.</p>
         <div class="rqfacts"><div><b>${money(RQ.price)}</b><span>per pack · ${RQ.n} real cards</span></div><div><b>${(most.chars / 1e6).toFixed(2)}M</b><span>characters on ${esc(most.name)}</span></div><div><b>${Math.round(s.hit * 100)}%</b><span>of packs are worth at least ${money(RQ.price)}</span></div></div>
       </div>
     </div>
-    <div class="rqnote"><b>Preview only.</b> You can't buy Requiem in the beta: no payment is taken here, and these cards can't be opened, held or traded in the app. The real pack comes on public release, paid for through Stripe, and how it goes on sale will be published here first.<br><span class="small">${esc(rqLimitText())}</span></div>
+    ${rqSaleHTML()}
 
     <div class="sechead"><h3>The six cards</h3><span class="small">tap one to look closer</span></div>
     <div class="rqgrid">${RQ.cards.map(c => `<button class="rqtile" data-rq="${c.id}">${rqCardHTML(c, { lazy: true })}<span class="rqmeta"><span class="rqrar"><i class="rd" style="--rc:${RAR[c.rar].col}"></i>${RAR[c.rar].name}</span><b>${esc(c.name)}</b><span class="small">${esc(c.look)}</span><span class="rqw">worth <b>${moneyS(c.val)}</b></span></span></button>`).join("")}</div>
@@ -66,6 +90,7 @@ function renderLimited() {
     <div class="facts"><div><div class="bignum sm">${money(Math.round(s.avg))}</div><span>average value of the 3 cards in a pack</span></div><div><div class="bignum sm">${(s.hit * 100).toFixed(0)}%</div><span>of packs sell back for at least ${money(RQ.price)}</span></div><div><div class="bignum sm">${(s.rtp * 100).toFixed(0)}%</div><span>comes back on average when you sell</span></div></div>
     <div class="clist rqodds">${RQ.cards.slice().reverse().map(c => { const p = s.chance[c.id]; return `<button class="crow nospark" data-rq="${c.id}"><span class="thumb" style="--rc:${RAR[c.rar].col}"><img src="cards/rq/s/${c.id}.jpg" alt="" loading="lazy" draggable="false"></span><span class="cmain"><b class="nm">${esc(c.name)}</b><span class="sub"><i class="rd" style="--rc:${RAR[c.rar].col}"></i>${RAR[c.rar].name} · worth ${moneyS(c.val)}</span></span><span class="cval"><b>${p >= .5 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p)}</b><span class="small">of packs</span></span></button>`; }).join("")}</div>
     <p class="small">A typical pack sells back for ${money(s.median)}, and the worst possible pack sells back for ${money(s.floor)}. Selling back pays 90% of a card's worth. Worth is what each card is planned to be worth at launch: a guide, not a promise. Once real people trade the cards, the market sets the price.</p>
+    ${rqRunHTML()}
     <details class="more big"><summary>How each card in the pack is picked</summary><div>${RQ.slots.map((sl, i) => { const t = sl.reduce((a, [, w]) => a + w, 0); return `<div class="slot"><div class="label">${RQ.slotNames[i]}</div>${sl.map(([id, w]) => `<div class="row"><span>${esc(rqCard(id).name)} <span class="faint">${esc(RAR[rqCard(id).rar].name)}</span></span><span class="bar">${bar(w / t, 24)}</span><span class="pct">${(w / t * 100).toFixed(w / t < .01 ? 2 : 1)}%</span></div>`).join("")}</div>`; }).join("")}</div></details>
 
     <div class="sechead"><h3>What the real pack would be</h3></div>
@@ -75,8 +100,10 @@ function renderLimited() {
       <li>Each card is printed from the same picture you see here, built from the same characters. The picture files are 1800 × 2184 pixels here and are remade at print size.</li>
       <li>Every card carries its own serial number, and the rarest are numbered out of the print run.</li>
     </ul>
-    <p class="small rqfine">Requiem is a pack of random cards sold for real money, so the odds above are the odds, and they never change. Buying will be for people 18 and over only. STIXX cards contain explicit language and violence. Nothing on this page charges you.</p>
+    <p class="small rqfine">Requiem is a pack of random cards sold for real money, so the odds above are the odds, and they never change. ${Sale.open() ? "Buying is for people 18 and over only." : "Buying will be for people 18 and over only."} STIXX cards contain explicit language and violence. ${Sale.open() ? "You are only charged on Stripe's page, after you confirm there." : "Nothing on this page charges you."}</p>
     <div class="actions"><button class="btn solid" id="rqShare">share this drop</button><a class="btn ghost" href="#/odds">odds for the other packs</a></div>`;
+  $("lSub").textContent = Sale.open() ? "A pack of six premium cards, made of far more characters than anything else here. Real, physical cards, on sale now. This is the one thing in STIXX that costs real money." : "A pack of six premium cards, made of far more characters than anything else here. A preview: it is not on sale in the beta.";
+  Sale.poll();
 }
 
 function rqModal(id) {

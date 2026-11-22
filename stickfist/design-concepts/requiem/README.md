@@ -68,9 +68,9 @@ Before selling anything, check the terms of the services used for commercial pri
 
 None of this is in the beta, and none of it is code you can finish in an afternoon:
 
-- **Payments and orders.** Stripe Checkout, order and refund handling, sales tax or VAT, and an order record that ties a pack to a buyer. Nothing in this app takes money.
+- **Payments and orders.** The checkout is built but off: Stripe Checkout (Apple Pay, Google Pay and cards on Stripe's own page), a signed webhook, and an order record of session id, pack numbers and amount (`stickfist/STRIPE.md`, `pay.js`, `node test-pay.js`). Still yours: a Stripe account, a test-mode run with your own keys, sales tax, and refund handling.
 - **Fulfilment.** Printing (see `PRINT_SPEC.md`: art needs upscaling to print size, foil and holo finishes, serial numbering), sealed packs, packing, shipping and returns.
-- **Randomness you can prove.** Pack contents should be drawn with the same committed-seed method as the app's other packs (`04c-fair.js`) and fixed at the time of the order, so the odds shown here are the odds that were used.
+- **Randomness you can prove.** Built: `requiem_run.py` assembles the whole run in whole cards, shuffles it and gives a SHA-256 fingerprint to publish before the sale; each paid order gets the next packs of that list, and the server shuts the sale if the file changes. Publish the list when the run sells out so buyers can check it.
 - **A real limit.** "Limited" has to be true. Set `RQ.run` (packs printed) and `RQ.closes` (a date) in `src/js/01b-limited.js` before anything is sold; the page then shows them. Print exactly that many, and never reprint. Until they are set the page says there is no limit to count down to, and it shows no countdown and no "N left".
 - **Rules for paid random packs.** Selling sealed random cards for real money is regulated differently in different places, and some places treat paid random packs as gambling or require odds disclosure, age checks and refund rights. Get legal advice for each place you ship to. The page already states the odds and an 18+ rule, but that is not legal sign-off.
 - **Age.** The beta's 18+ box is a tick box. A real-money sale needs a proper age check.
@@ -91,6 +91,7 @@ Before a real run, order one set that holds every card so you can check how each
 
 - `requiem_render.py` the renderer
 - `requiem_pack.py` the odds and the return
+- `requiem_run.py` assemble and fingerprint a run of sealed packs for the checkout
 - `requiem_faces.py` print-size faces with bleed, and the proof set
 - `requiem_sheet.py` a Letter-size sheet of the proof cards at true size, to print today
 - `sources/` the paintings (`PROMPTS.md` has the prompts)

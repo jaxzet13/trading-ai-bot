@@ -410,3 +410,12 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
 .mbox.rq .card { --k: 1.1; } .rqmtxt { margin: 0; line-height: 1.6; }
 @media (max-width: 760px) { .mbox.rq:not(.slim) { grid-template-columns: minmax(0, 1fr); gap: 18px; } .mbox.rq:not(.slim) .minfo { display: grid; gap: 18px; } .mbox.rq:not(.slim) .minfo > *, .mbox.rq:not(.slim) .mhead { grid-column: auto; grid-row: auto; padding-right: 0; } .mbox.rq:not(.slim) .mcard { grid-column: auto; grid-row: auto; width: min(250px, 66%); margin: 0 auto; } }
 @media (prefers-reduced-motion: reduce) { .rqf, .card.rq { transition: none; } }
+/* ---- REQUIEM: the buy box, shown only while the server says the sale is open ---- */
+.rqnote.ok { border-color: #2f5d3d; background: #09100b; } .rqnote.ok b { color: #b9f0c6; }
+.rqbuy { border: 1px solid #5a4fa0; background: linear-gradient(180deg, #0f0d1c, #0a0a10); border-radius: 16px; padding: 18px 18px 16px; margin-bottom: 8px; display: grid; gap: 14px; }
+.rqbuyh { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; } .rqbuyh b { display: block; font-size: 20px; letter-spacing: .04em; } .rqbuyh .small { display: block; margin-top: 2px; }
+.rqqty { display: grid; gap: 4px; justify-items: end; } .rqqty select { background: #0b0b0e; color: var(--ink); border: 1px solid var(--ln3); border-radius: 10px; padding: 8px 12px; font: inherit; min-width: 64px; }
+.rqage { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; color: #d8d3ee; line-height: 1.5; cursor: pointer; } .rqage input { width: 22px; height: 22px; margin-top: 1px; flex: none; accent-color: #b9aee6; }
+.rqbuy .btn.big { width: 100%; justify-content: center; padding: 16px 20px; font-size: 17px; } .rqbuy p { margin: 0; } .rqbuy code, .rqrun + p code { font-size: 12px; color: #cfc4f5; word-break: break-all; }
+.rqrun { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; margin: 4px 0 14px; } .rqrun > div { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border: 1px solid var(--ln2); border-radius: 10px; background: #09090b; } .rqrun span { flex: 1; } .rqrun b { font-variant-numeric: tabular-nums; }
+@media (min-width: 700px) { .rqrun { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

@@ -431,6 +431,15 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
 .mbox.rq .card { --k: 1.1; } .rqmtxt { margin: 0; line-height: 1.6; }
 @media (max-width: 760px) { .mbox.rq:not(.slim) { grid-template-columns: minmax(0, 1fr); gap: 18px; } .mbox.rq:not(.slim) .minfo { display: grid; gap: 18px; } .mbox.rq:not(.slim) .minfo > *, .mbox.rq:not(.slim) .mhead { grid-column: auto; grid-row: auto; padding-right: 0; } .mbox.rq:not(.slim) .mcard { grid-column: auto; grid-row: auto; width: min(250px, 66%); margin: 0 auto; } }
 @media (prefers-reduced-motion: reduce) { .rqf, .card.rq { transition: none; } }
+/* ---- REQUIEM: the buy box, shown only while the server says the sale is open ---- */
+.rqnote.ok { border-color: #2f5d3d; background: #09100b; } .rqnote.ok b { color: #b9f0c6; }
+.rqbuy { border: 1px solid #5a4fa0; background: linear-gradient(180deg, #0f0d1c, #0a0a10); border-radius: 16px; padding: 18px 18px 16px; margin-bottom: 8px; display: grid; gap: 14px; }
+.rqbuyh { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; } .rqbuyh b { display: block; font-size: 20px; letter-spacing: .04em; } .rqbuyh .small { display: block; margin-top: 2px; }
+.rqqty { display: grid; gap: 4px; justify-items: end; } .rqqty select { background: #0b0b0e; color: var(--ink); border: 1px solid var(--ln3); border-radius: 10px; padding: 8px 12px; font: inherit; min-width: 64px; }
+.rqage { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; color: #d8d3ee; line-height: 1.5; cursor: pointer; } .rqage input { width: 22px; height: 22px; margin-top: 1px; flex: none; accent-color: #b9aee6; }
+.rqbuy .btn.big { width: 100%; justify-content: center; padding: 16px 20px; font-size: 17px; } .rqbuy p { margin: 0; } .rqbuy code, .rqrun + p code { font-size: 12px; color: #cfc4f5; word-break: break-all; }
+.rqrun { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; margin: 4px 0 14px; } .rqrun > div { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border: 1px solid var(--ln2); border-radius: 10px; background: #09090b; } .rqrun span { flex: 1; } .rqrun b { font-variant-numeric: tabular-nums; }
+@media (min-width: 700px) { .rqrun { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 </style>
 </head>
 <body>
@@ -513,7 +522,7 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
 
   <!-- REQUIEM: the limited drop, a preview -->
   <section class="view" id="v-limited">
-    <div class="page-head"><h1 class="ttl">Limited drop</h1><p>A pack of six premium cards, made of far more characters than anything else here. A preview: it is not on sale in the beta.</p></div>
+    <div class="page-head"><h1 class="ttl">Limited drop</h1><p id="lSub">A pack of six premium cards, made of far more characters than anything else here. A preview: it is not on sale in the beta.</p></div>
     <div id="lBody"></div>
   </section>
 
@@ -531,7 +540,7 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
   <a href="#/invite" data-v="invite"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="9" width="16" height="11" rx="1.500"/><path d="M12 9v11M3 9h18M12 9c-2.500 0-4-1-4-2.500S10 4 12 9M12 9c2.500 0 4-1 4-2.500S14 4 12 9"/></svg><span>invite</span></a>
   <a href="#/profile" data-v="profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.500 21c.7-4 3.800-6 7.500-6s6.800 2 7.500 6"/></svg><span>me</span></a>
 </nav>
-<footer><div class="wrap">STIXX beta · play money only, nothing is ever charged or paid out · 18+ · <a href="#/odds">odds</a> · <button class="linkbtn" id="fairBtn">fair play</button> · <button class="linkbtn" id="aboutBtn">fine print</button></div></footer>
+<footer><div class="wrap">STIXX beta · <span id="footMoney">play money only, nothing is ever charged or paid out</span> · 18+ · <a href="#/odds">odds</a> · <button class="linkbtn" id="fairBtn">fair play</button> · <button class="linkbtn" id="aboutBtn">fine print</button></div></footer>
 
 <!-- opening -->
 <div class="stage" id="stage" hidden tabindex="-1">
@@ -564,7 +573,7 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
  ( o o )   18+ only.
   \ ~ /
  --'-'--</pre>
-    <p class="dim">STIXX cards contain explicit language and violence. Everything here is play money: nothing is ever charged, and nothing can be cashed out.</p>
+    <p class="dim">STIXX cards contain explicit language and violence. <span id="gateMoney">Everything here is play money: nothing is ever charged, and nothing can be cashed out.</span></p>
     <label for="ageOK"><input type="checkbox" id="ageOK"> I'm 18 or older and I understand it's play money.</label>
     <button class="btn solid big" id="gateGo" disabled>enter</button>
   </div>
@@ -650,7 +659,7 @@ const SELLBACK = .9, START = 1000;
 
 /* ============================================================================
    1b. REQUIEM. The limited, physical pack: six cards, three to a pack, $65.
-   In the beta this is a preview only. Nothing here can be bought or opened, no payment is taken, and the cards are not in anyone's collection or in the market.
+   In the beta this is a preview only. Nothing here can be opened, and the cards are not in anyone's collection or in the market. A real-money purchase of the physical pack exists in pay.js but stays off unless the server is set up for it (STRIPE.md): the page shows the buy box only when the server says the sale is open.
    Values are what each card is planned to be worth at launch (cents): a guide, not a promise. The odds are exact, and are worked out from the slot tables below
    (the same maths as the other packs, checked by design-concepts/requiem/requiem_pack.py).
    A real limit is published here BEFORE anything is sold: run = how many packs are printed, closes = the date orders close (ISO, e.g. "2027-02-14").
@@ -1481,7 +1490,31 @@ function rqVs(c) {
   const x = (a, b) => { const r = a / b; return "×" + (r >= 10 ? Math.round(r) : r.toFixed(1)); };
   return { big, rich, cx: x(c.chars, big.chars), vx: x(c.val, rich.val) };
 }
-const rqBarHTML = () => `<a class="rqbar" href="#/limited"><span class="rqimg"><img src="cards/rq/s/seraph.jpg" alt="" loading="lazy" draggable="false"></span><span class="rqtx"><span class="label">limited drop · preview</span><b>Requiem</b><span class="small">six premium cards · ${money(RQ.price)} physical pack</span></span><span class="go"><span>see the cards </span>›</span></a>`;
+const rqBarHTML = () => `<a class="rqbar" href="#/limited"><span class="rqimg"><img src="cards/rq/s/seraph.jpg" alt="" loading="lazy" draggable="false"></span><span class="rqtx"><span class="label">limited drop · ${Sale.open() ? "on sale" : "preview"}</span><b>Requiem</b><span class="small">six premium cards · ${money(RQ.price)} physical pack</span></span><span class="go"><span>see the cards </span>›</span></a>`;
+
+// the top of the page: the buy box while the sale is open, otherwise the preview note; plus what Stripe sent the buyer back with
+function rqSaleHTML() {
+  const c = Sale.cfg(), top = Sale.banner(), price = c.price || RQ.price;
+  if (c.open) {
+    const hash = c.commit ? `<code>${esc(c.commit.slice(0, 8))}…${esc(c.commit.slice(-6))}</code>` : "";
+    return top + `<div class="rqbuy"><div class="rqbuyh"><div><b>Buy Requiem</b><span class="small">${money(price)} per pack · 3 real cards · ships to the United States</span></div>
+      <label class="rqqty"><span class="small">Packs</span><select id="rqQty" aria-label="How many packs">${Array.from({ length: c.maxQty || 1 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}</select></label></div>
+      <label class="rqage"><input type="checkbox" id="rqAge"><span>I'm 18 or older. I've read the odds on this page, and I understand the cards inside are random.</span></label>
+      <button class="btn solid big" id="rqPay" disabled>Pay ${Sale.total()}</button>
+      <p class="small">Apple Pay, Google Pay or card, on Stripe's secure page. STIXX never sees your card. You are only charged after you confirm there. <a href="${esc(c.terms)}" target="_blank" rel="noopener">Terms, shipping and returns</a>.</p>
+      <p class="small">${esc(rqLimitText())} The packs were sealed in a fixed order before the first sale (fingerprint ${hash}), so nobody can change what is in a pack after you pay.</p></div>`;
+  }
+  if (c.soldOut) return top + `<div class="rqnote"><b>Sold out.</b> Every pack in the run has been sold. ${esc(rqLimitText())}</div>`;
+  return top + `<div class="rqnote"><b>Preview only.</b> You can't buy Requiem in the beta: no payment is taken here, and these cards can't be opened, held or traded in the app. The real pack comes on public release, paid for through Stripe, and how it goes on sale will be published here first.<br><span class="small">${esc(rqLimitText())}</span></div>`;
+}
+// the real counts of the run, once there is one: a run is whole cards, so these replace the target odds where they differ
+function rqRunHTML() {
+  const c = Sale.cfg(); if (!c.counts || !c.run) return "";
+  return `<div class="sechead"><h3>This run, as packed</h3></div>
+    <p class="small rqlead">${fmt(c.run)} packs, ${fmt(3 * c.run)} cards. A run is whole cards, so these are the real counts and they replace the target odds above wherever they differ.</p>
+    <div class="rqrun">${RQ.cards.slice().reverse().map(x => `<div><i class="rd" style="--rc:${RAR[x.rar].col}"></i><span>${esc(x.name)}</span><b>×${fmt(c.counts[x.id] || 0)}</b></div>`).join("")}</div>
+    ${c.commit ? `<p class="small">Fingerprint of the packing list (SHA-256): <code>${esc(c.commit)}</code>. It is fixed before the first sale. When the run sells out the list is published, so you can check it against this and see what was in your pack number.</p>` : ""}`;
+}
 
 function renderLimited() {
   const s = RQS, top = rqCard("seraph"), fan = ["orrery", "seraph", "witness"].map(rqCard), most = RQ.cards.reduce((a, c) => c.chars > a.chars ? c : a, RQ.cards[0]);
@@ -1490,11 +1523,11 @@ function renderLimited() {
     <div class="rqhero">
       <div class="rqfan" aria-hidden="false">${fan.map((c, i) => `<button class="rqf f${i}" data-rq="${c.id}" aria-label="${esc(c.name)}, ${RAR[c.rar].name}">${rqCardHTML(c)}</button>`).join("")}</div>
       <div class="rqtitle"><span class="label rqeye">Limited drop · preview</span><h2>Requiem</h2>
-        <p>Six cards painted in the dark and built from millions of characters. Three come in every pack. Every card has its own rarity, and the rarest turns up in about 1 pack in ${fmt(1 / s.chance.seraph)}.</p>
+        <p>Six cards painted in the dark and built from millions of characters. Three come in every pack. Every card has its own rarity, and the rarest turns up in about 1 pack in ${fmt(((c0) => c0.counts && c0.run && c0.counts.seraph ? c0.run / c0.counts.seraph : 1 / s.chance.seraph)(Sale.cfg()))}.</p>
         <div class="rqfacts"><div><b>${money(RQ.price)}</b><span>per pack · ${RQ.n} real cards</span></div><div><b>${(most.chars / 1e6).toFixed(2)}M</b><span>characters on ${esc(most.name)}</span></div><div><b>${Math.round(s.hit * 100)}%</b><span>of packs are worth at least ${money(RQ.price)}</span></div></div>
       </div>
     </div>
-    <div class="rqnote"><b>Preview only.</b> You can't buy Requiem in the beta: no payment is taken here, and these cards can't be opened, held or traded in the app. The real pack comes on public release, paid for through Stripe, and how it goes on sale will be published here first.<br><span class="small">${esc(rqLimitText())}</span></div>
+    ${rqSaleHTML()}
 
     <div class="sechead"><h3>The six cards</h3><span class="small">tap one to look closer</span></div>
     <div class="rqgrid">${RQ.cards.map(c => `<button class="rqtile" data-rq="${c.id}">${rqCardHTML(c, { lazy: true })}<span class="rqmeta"><span class="rqrar"><i class="rd" style="--rc:${RAR[c.rar].col}"></i>${RAR[c.rar].name}</span><b>${esc(c.name)}</b><span class="small">${esc(c.look)}</span><span class="rqw">worth <b>${moneyS(c.val)}</b></span></span></button>`).join("")}</div>
@@ -1510,6 +1543,7 @@ function renderLimited() {
     <div class="facts"><div><div class="bignum sm">${money(Math.round(s.avg))}</div><span>average value of the 3 cards in a pack</span></div><div><div class="bignum sm">${(s.hit * 100).toFixed(0)}%</div><span>of packs sell back for at least ${money(RQ.price)}</span></div><div><div class="bignum sm">${(s.rtp * 100).toFixed(0)}%</div><span>comes back on average when you sell</span></div></div>
     <div class="clist rqodds">${RQ.cards.slice().reverse().map(c => { const p = s.chance[c.id]; return `<button class="crow nospark" data-rq="${c.id}"><span class="thumb" style="--rc:${RAR[c.rar].col}"><img src="cards/rq/s/${c.id}.jpg" alt="" loading="lazy" draggable="false"></span><span class="cmain"><b class="nm">${esc(c.name)}</b><span class="sub"><i class="rd" style="--rc:${RAR[c.rar].col}"></i>${RAR[c.rar].name} · worth ${moneyS(c.val)}</span></span><span class="cval"><b>${p >= .5 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p)}</b><span class="small">of packs</span></span></button>`; }).join("")}</div>
     <p class="small">A typical pack sells back for ${money(s.median)}, and the worst possible pack sells back for ${money(s.floor)}. Selling back pays 90% of a card's worth. Worth is what each card is planned to be worth at launch: a guide, not a promise. Once real people trade the cards, the market sets the price.</p>
+    ${rqRunHTML()}
     <details class="more big"><summary>How each card in the pack is picked</summary><div>${RQ.slots.map((sl, i) => { const t = sl.reduce((a, [, w]) => a + w, 0); return `<div class="slot"><div class="label">${RQ.slotNames[i]}</div>${sl.map(([id, w]) => `<div class="row"><span>${esc(rqCard(id).name)} <span class="faint">${esc(RAR[rqCard(id).rar].name)}</span></span><span class="bar">${bar(w / t, 24)}</span><span class="pct">${(w / t * 100).toFixed(w / t < .01 ? 2 : 1)}%</span></div>`).join("")}</div>`; }).join("")}</div></details>
 
     <div class="sechead"><h3>What the real pack would be</h3></div>
@@ -1519,8 +1553,10 @@ function renderLimited() {
       <li>Each card is printed from the same picture you see here, built from the same characters. The picture files are 1800 × 2184 pixels here and are remade at print size.</li>
       <li>Every card carries its own serial number, and the rarest are numbered out of the print run.</li>
     </ul>
-    <p class="small rqfine">Requiem is a pack of random cards sold for real money, so the odds above are the odds, and they never change. Buying will be for people 18 and over only. STIXX cards contain explicit language and violence. Nothing on this page charges you.</p>
+    <p class="small rqfine">Requiem is a pack of random cards sold for real money, so the odds above are the odds, and they never change. ${Sale.open() ? "Buying is for people 18 and over only." : "Buying will be for people 18 and over only."} STIXX cards contain explicit language and violence. ${Sale.open() ? "You are only charged on Stripe's page, after you confirm there." : "Nothing on this page charges you."}</p>
     <div class="actions"><button class="btn solid" id="rqShare">share this drop</button><a class="btn ghost" href="#/odds">odds for the other packs</a></div>`;
+  $("lSub").textContent = Sale.open() ? "A pack of six premium cards, made of far more characters than anything else here. Real, physical cards, on sale now. This is the one thing in STIXX that costs real money." : "A pack of six premium cards, made of far more characters than anything else here. A preview: it is not on sale in the beta.";
+  Sale.poll();
 }
 
 function rqModal(id) {
@@ -2482,14 +2518,14 @@ async function rotateSeed() { const b = $("fairRotate"); if (b) b.disabled = tru
 function cashModal() {
   openModal(`<div class="minfo"><div><span class="label">cash out</span><h2>Coming at public release</h2></div>
     <p class="dim">Cashing out will be available on public release. At public release, cards are bought with real money through Stripe.</p>
-    <p class="small">Until then everything in the beta is play money. This balance and these cards can't be paid out, and nothing is charged.</p>
+    <p class="small">Until then everything in the beta is play money. This balance and these cards can't be paid out, and nothing in the game is charged.${Sale.note()}</p>
     <div class="row"><button class="btn solid" data-close>ok</button></div></div>`, true);
 }
 
 /* ---- the fine print ---- */
 function aboutModal() {
   openModal(`<div class="minfo"><div><span class="label">the fine print</span><h2>STIXX beta</h2></div>
-    <ul class="plain"><li><b>Play money only.</b> Nothing in the beta costs real money and nothing can be cashed out. Cards have no cash value. Cashing out, and buying cards with real money through Stripe, are planned for the public release and are not part of this beta.</li><li><b>18+.</b> The cards contain explicit language and violence, and packs are a game of chance, so STIXX is for adults.</li><li><b>The market is simulated.</b> Prices come from AI trading bots, not real people. Every number is labelled as simulated where it is one.</li><li><b>What is stored.</b> Your cards and settings stay in this browser. If you use invites or fair-play seeds online, our server holds a random id, your invite code, the days you visited and a few counts. No name, email or payment details, ever.</li><li><b>It's a beta.</b> Things will change, and progress can be lost if you clear your browser data or we reset the beta.</li><li><b>Take it easy.</b> You can set a pack limit or take a break on the Me page at any time.</li></ul>
+    <ul class="plain"><li><b>Play money only.</b> Nothing in the beta costs real money and nothing can be cashed out. Cards have no cash value. Cashing out, and buying cards with real money through Stripe, are planned for the public release and are not part of this beta.${Sale.note()}</li><li><b>18+.</b> The cards contain explicit language and violence, and packs are a game of chance, so STIXX is for adults.</li><li><b>The market is simulated.</b> Prices come from AI trading bots, not real people. Every number is labelled as simulated where it is one.</li><li><b>What is stored.</b> Your cards and settings stay in this browser. If you use invites or fair-play seeds online, our server holds a random id, your invite code, the days you visited and a few counts. No name, email or payment details, ever.</li><li><b>It's a beta.</b> Things will change, and progress can be lost if you clear your browser data or we reset the beta.</li><li><b>Take it easy.</b> You can set a pack limit or take a break on the Me page at any time.</li></ul>
     <div class="row"><button class="btn solid" data-close>ok</button></div></div>`, true);
 }
 
@@ -2668,6 +2704,62 @@ const Clip = (() => {
 })();
 
 /* ============================================================================
+   8h. THE SALE. The only thing in STIXX that costs real money is the physical Requiem pack, and only while the server (pay.js) says the sale is open.
+   Everything else is play money. The page never handles a card: "Pay" sends the buyer to Stripe's own page (Apple Pay, Google Pay and cards are offered there),
+   and Stripe sends them back here. Without a server (a file, a preview) there is no sale: this stays closed and the page shows the preview.
+   ========================================================================== */
+const Sale = (() => {
+  let cfg = { open: false, soldOut: false, loaded: false }, polls = 0, timer = 0;
+  const ret = (() => {                                                     // ?rq=paid&sid=… or ?rq=cancel, on the way back from Stripe; read once, then the address bar is tidied
+    try {
+      const p = new URLSearchParams(location.search), k = p.get("rq"); if (!k) return null;
+      const sid = (p.get("sid") || "").replace(/[^\w]/g, "").slice(0, 120); p.delete("rq"); p.delete("sid");
+      history.replaceState(null, "", location.pathname + (p.toString() ? "?" + p : "") + location.hash); return { kind: k === "paid" ? "paid" : "cancel", sid, order: null };
+    } catch (e) { return null; }
+  })();
+  const open = () => !!cfg.open;
+  // the one sentence that keeps every "play money" line honest while a sale is on
+  const note = () => open() ? " The one exception is the physical Requiem pack, a separate real-money purchase on its own page." : "";
+  function words() {
+    const f = $("footMoney"), g = $("gateMoney");
+    if (f) f.textContent = open() ? "the game is play money, nothing in it is charged or paid out · the physical Requiem pack is the only real-money purchase" : "play money only, nothing is ever charged or paid out";
+    if (g) g.textContent = open() ? "The game is play money: nothing in it is ever charged, and nothing can be cashed out. The one exception is the physical Requiem pack, a separate real-money purchase on its own page." : "Everything here is play money: nothing is ever charged, and nothing can be cashed out.";
+  }
+  async function load() {
+    if (!API.on) return cfg; const r = await API.get("requiem/config"); if (!r || typeof r.open !== "boolean") return cfg;
+    cfg = Object.assign({ loaded: true }, r); if (r.run) RQ.run = r.run; if (r.closes) RQ.closes = r.closes;
+    words(); if (view === "limited") renderLimited(); else if (view === "home") renderHome(); return cfg;
+  }
+  const total = () => { const q = $("rqQty"); return money((cfg.price || RQ.price) * (q ? +q.value || 1 : 1)); };
+  function qty() { const b = $("rqPay"); if (b && !b.dataset.busy) b.textContent = "Pay " + total(); }
+  async function pay() {
+    const age = $("rqAge") && $("rqAge").checked, b = $("rqPay"); if (!age || !b || b.dataset.busy) return;
+    b.dataset.busy = 1; b.disabled = true; b.textContent = "Opening Stripe…";
+    const r = await API.post("requiem/checkout", { qty: +($("rqQty") ? $("rqQty").value : 1) || 1, age: true });
+    if (r && typeof r.url === "string" && /^https:\/\//.test(r.url)) { location.href = r.url; return; }
+    delete b.dataset.busy; b.disabled = !($("rqAge") && $("rqAge").checked); qty(); toast((r && r.error) || "Couldn't reach the server. You have not been charged.");
+  }
+  // after paying: ask the server which packs are the buyer's, until the payment has been confirmed
+  function poll() {
+    if (!ret || ret.kind !== "paid" || !ret.sid || ret.order || timer) return;
+    const tick = async () => {
+      timer = 0; const r = await API.get("requiem/order?sid=" + encodeURIComponent(ret.sid)); polls++;
+      if (r && r.ok) { ret.order = r; if (view === "limited") renderLimited(); return; }
+      if (polls < 20) timer = setTimeout(tick, 2000); else if ($("rqPaidTxt")) $("rqPaidTxt").textContent = "Your payment is still being confirmed. Keep this page's link and check back in a few minutes.";
+    };
+    tick();
+  }
+  function banner() {
+    if (!ret) return "";
+    if (ret.kind === "cancel") return `<div class="rqnote" role="status"><b>No payment was taken.</b> You can try again whenever you like.</div>`;
+    const o = ret.order, ps = o && o.packs ? o.packs.map(fmt) : [], nos = ps.length < 2 ? ps.join("") : ps.slice(0, -1).join(", ") + " and " + ps[ps.length - 1];
+    const text = !o ? "Checking your order…" : o.short ? "Your payment went through, but the run sold out first. You will be refunded." : `Your payment went through. Your pack${o.packs.length > 1 ? "s are" : " is"} number ${nos} of ${fmt(o.run || 0)}. We ship to the address you gave Stripe.`;
+    return `<div class="rqnote ok" role="status"><b>Thank you.</b> <span id="rqPaidTxt">${esc(text)}</span></div>`;
+  }
+  return { load, open, note, words, pay, qty, poll, banner, cfg: () => cfg, ret: () => ret, total };
+})();
+
+/* ============================================================================
    9. EVENTS
    ========================================================================== */
 document.addEventListener("click", e => {
@@ -2705,6 +2797,7 @@ document.addEventListener("click", e => {
     case "clClose": Clip.close(); break;
     case "sumClip": if (SS) Clip.open(SS.items, SS.pack, SS.free, SS_PRICE); break;
     case "rqShare": rqShare(); break;
+    case "rqPay": Sale.pay(); break;
     case "alertX": hideAlert(); break;
     case "dailyBtn": Snd.click(); dailyModal(); break;
     case "claimDaily": { const r = claimDaily(); if (r) dailyModal(r); break; }
@@ -2725,7 +2818,7 @@ document.addEventListener("click", e => {
     case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); Ref.sync(); break;
   }
 });
-document.addEventListener("change", e => { if (e.target.id === "mSort") { MKF.sort = e.target.value; renderMarket(); } if (e.target.id === "cSort") { CF.sort = e.target.value; renderCollection(); } if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
+document.addEventListener("change", e => { if (e.target.id === "rqAge") { const b = $("rqPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "rqQty") Sale.qty(); if (e.target.id === "mSort") { MKF.sort = e.target.value; renderMarket(); } if (e.target.id === "cSort") { CF.sort = e.target.value; renderCollection(); } if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
 document.addEventListener("submit", e => { if (e.target.id === "vanityForm") { e.preventDefault(); Ref.vanity($("vanityIn").value); } if (e.target.id === "csForm") { e.preventDefault(); Fair.setClientSeed($("csIn").value); fairModal(true); toast("Client seed set"); } if (e.target.id === "vfForm") { e.preventDefault(); verifyHand(); } });
 document.addEventListener("keydown", e => {
   const k = e.key;
@@ -2741,7 +2834,7 @@ window.addEventListener("hashchange", route);
    10. START
    ========================================================================== */
 const lastSeen0 = state.lastSeen;                                       // when you were last here, read before this visit overwrites it
-MK.advance(); logWorth(); state.lastSeen = Date.now(); persist(); renderBal(); renderChips(); route(); renderTape();
+MK.advance(); logWorth(); state.lastSeen = Date.now(); persist(); renderBal(); renderChips(); if (Sale.ret() && location.hash !== "#/limited") location.hash = "#/limited"; route(); renderTape(); Sale.load();
 if (!state.ageOK) $("gate").hidden = false; else setTimeout(() => Cut.maybeIntro(), 400);
 // the market moves every 20 seconds; redraw whatever is on screen when it does
 let lastTick = MK.tick();

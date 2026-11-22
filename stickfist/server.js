@@ -8,7 +8,8 @@
      2. provably fair packs: it holds a secret seed per player, shows its SHA-256 hash first, and answers each pack with HMAC-SHA256(seed, "clientSeed:nonce")
 
    What it stores about a player: a random id, an invite code, who invited them, counters, the days they visited, a hash of their network address (never the address), and the seed.
-   No names, emails or payment details exist anywhere in this program.
+   No names, emails, addresses or card details are kept by this program. The one real-money feature, the Requiem checkout in pay.js (off unless you set it up), sends
+   buyers to Stripe to pay and keeps only a Stripe session id, a pack number and an amount per order.
 
    Settings, all optional (environment variables):
      PORT=8080          DATA_FILE=./data/stixx.json     STATIC_DIR=.   (where index.html and cards/ are)
@@ -37,6 +38,8 @@ function flush() {
   fs.writeFile(tmp, JSON.stringify(db), err => { if (!err) fs.rename(tmp, DATA_FILE, () => { writing = false; if (dirty) setTimeout(flush, 50); }); else { writing = false; dirty = true; console.error("could not save:", err.message); } });
 }
 const touch = () => { dirty = true; setTimeout(flush, 250); };
+// for things that must not be lost (a paid order): write now, not a moment from now
+function saveNow() { try { fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true }); const tmp = DATA_FILE + "." + process.pid + ".sync.tmp"; fs.writeFileSync(tmp, JSON.stringify(db)); fs.renameSync(tmp, DATA_FILE); dirty = false; } catch (e) { console.error("could not save:", e.message); dirty = true; } }
 process.on("SIGTERM", () => { dirty = true; try { fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true }); fs.writeFileSync(DATA_FILE, JSON.stringify(db)); } catch (e) {} process.exit(0); });
 process.on("SIGINT", () => process.emit("SIGTERM"));
 
@@ -134,6 +137,10 @@ const routes = {
   },
 };
 
+/* ---- the Requiem checkout (Stripe), off unless configured: see pay.js ---- */
+const pay = require("./pay.js")({ db: () => db, touch, saveNow, limited, adminToken: ADMIN_TOKEN, dataDir: path.dirname(DATA_FILE) });
+Object.assign(routes, pay.routes);
+
 /* ---- web server ---- */
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".mp4": "video/mp4", ".webp": "image/webp", ".webmanifest": "application/manifest+json", ".txt": "text/plain; charset=utf-8" };
 const gz = new Map();
@@ -141,7 +148,7 @@ function send(res, code, body, type, extra) { const h = Object.assign({ "content
 function json(res, code, obj) { send(res, code, JSON.stringify(obj), "application/json", { "cache-control": "no-store", "access-control-allow-origin": CORS }); }
 function serveStatic(req, res, url) {
   let p = decodeURIComponent(url.pathname); if (p === "/" || p === "") p = "/index.html"; const file = path.join(STATIC, path.normalize(p));
-  if (!file.startsWith(STATIC + path.sep) || /(^|[\\/])(server\.js|data|\.git|src|node_modules)([\\/]|$)/.test(path.relative(STATIC, file)) || /\.(py|md|sh|json)$/.test(file) && !/manifest\.json$/.test(file)) return send(res, 404, "Not found", "text/plain");
+  if (!file.startsWith(STATIC + path.sep) || /(^|[\\/])(server\.js|pay\.js|data|\.git|src|node_modules)([\\/]|$)/.test(path.relative(STATIC, file)) || /\.(py|md|sh|json)$/.test(file) && !/manifest\.json$/.test(file)) return send(res, 404, "Not found", "text/plain");
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) return send(res, 404, "Not found", "text/plain");
     const ext = path.extname(file).toLowerCase(), type = MIME[ext] || "application/octet-stream", cache = ext === ".html" ? "no-cache" : "public, max-age=86400";
@@ -152,6 +159,7 @@ function serveStatic(req, res, url) {
 }
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, "http://x"), key = req.method + " " + url.pathname;
+  if (key === "POST /api/stripe/webhook") return pay.webhook(req, res, send);            // Stripe's calls: the raw body is needed to check the signature
   if (!url.pathname.startsWith("/api/")) { if (req.method !== "GET" && req.method !== "HEAD") return send(res, 405, "No", "text/plain"); return serveStatic(req, res, url); }
   if (req.method === "OPTIONS") { res.writeHead(204, { "access-control-allow-origin": CORS, "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type", "access-control-max-age": "86400" }); return res.end(); }
   const fn = routes[key]; if (!fn) return json(res, 404, { error: "not found" });
@@ -159,7 +167,7 @@ const server = http.createServer((req, res) => {
   let raw = ""; req.on("data", c => { raw += c; if (raw.length > 4096) { req.destroy(); } });
   req.on("end", () => {
     let body = {}; if (req.method === "POST") { try { body = JSON.parse(raw || "{}"); } catch (e) { return json(res, 400, { error: "bad json" }); } if (!body || typeof body !== "object") return json(res, 400, { error: "bad json" }); }
-    try { const out = fn(body, ip, url.searchParams); if (Array.isArray(out)) json(res, out[0], out[1]); else { json(res, 200, out); if (/hello/.test(key)) touch(); } } catch (e) { console.error(e); json(res, 500, { error: "server error" }); }
+    Promise.resolve().then(() => fn(body, ip, url.searchParams)).then(out => { if (Array.isArray(out)) json(res, out[0], out[1]); else { json(res, 200, out); if (/hello/.test(key)) touch(); } }).catch(e => { console.error(e); json(res, 500, { error: "server error" }); });
   });
 });
 if (require.main === module) server.listen(PORT, () => console.log(`STIXX beta on http://localhost:${PORT}  (data: ${DATA_FILE}, files: ${STATIC})`));
