@@ -59,6 +59,7 @@ function dailyModal(res) {
 }
 function renderChips() {
   const d = $("dailyBtn"); if (d) { const ready = dailyReady(); d.className = "chip" + (ready ? " ready" : ""); d.innerHTML = ready ? `<i></i>free <span class="xs">daily </span>pack` : `streak ${state.streak.n}`; d.title = ready ? "A free pack, once a day" : "Your daily streak"; }
+  const bt = document.querySelector('#btabs [data-v="home"]'); if (bt) bt.classList.toggle("dot", state.freePacks > 0 || dailyReady());
   const m = $("muteBtn"); if (m) { m.textContent = state.mute ? "sound off" : "sound on"; m.setAttribute("aria-pressed", state.mute ? "true" : "false"); }
 }
 
@@ -76,10 +77,6 @@ function rankHTML() {
 /* ---- the collection has holes in it, and you can see them ---- */
 const missingCards = set => { const have = new Set(state.vault.map(c => c.no)); return CARDS.filter(c => !have.has(c.no) && (!set || c.set === set)); };
 const chaseChance = pk => { pk = pk || curPack(); const m = missingCards(pk.set); return m.length ? 1 - m.reduce((a, c) => a * (1 - packP(c.id)), 1) : 0; };      // a pack only holds cards of its own set
-function progressHTML() {
-  noteFound(); const pk = curPack(), n = Object.keys(state.found).length, fx = Object.keys(state.foundFx).length, ch = chaseChance(pk);
-  return `<div><span class="label">cards found</span><b>${n} of ${CARDS.length}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(n / CARDS.length * 18), 18)}</span></div><div><span class="label">styles found</span><b>${fx} of ${FX_ALL}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(fx / FX_ALL * 18), 18)}</span></div><div><span class="label">a new card in your next ${esc(pk.name)} pack</span><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span class="small">chance, from the real odds</span></div>`;
-}
 function chaseHTML() {
   if (!state.s.packs && !state.vault.length) return "";
   const pk = curPack(), size = CARDS.filter(c => c.set === pk.set).length, miss = missingCards(pk.set); if (!miss.length) return `<span class="label">${esc(pk.name)}</span><span>You have every ${esc(pk.name)} card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;

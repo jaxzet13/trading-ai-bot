@@ -135,7 +135,7 @@ const routes = {
 };
 
 /* ---- web server ---- */
-const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".mp4": "video/mp4", ".webp": "image/webp", ".txt": "text/plain; charset=utf-8" };
+const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".mp4": "video/mp4", ".webp": "image/webp", ".webmanifest": "application/manifest+json", ".txt": "text/plain; charset=utf-8" };
 const gz = new Map();
 function send(res, code, body, type, extra) { const h = Object.assign({ "content-type": type, "x-content-type-options": "nosniff" }, extra || {}); res.writeHead(code, h); res.end(body); }
 function json(res, code, obj) { send(res, code, JSON.stringify(obj), "application/json", { "cache-control": "no-store", "access-control-allow-origin": CORS }); }

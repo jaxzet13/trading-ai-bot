@@ -13,7 +13,7 @@ cd dist
 PORT=8080 DATA_FILE=/data/stixx.json TRUST_PROXY=1 ADMIN_TOKEN=pick-a-long-random-string node server.js
 ```
 
-* `dist/` holds the game, the card pictures (`cards/`, about 29 MB) and `server.js`. There is nothing to install: no packages.
+* `dist/` holds the game, the card pictures (`cards/`, about 34 MB, including small copies in `cards/s/` that the lists and grids use), the home-screen icons and manifest (players on a phone can "add to home screen" and get it full-screen like an app, over HTTPS) and `server.js`. There is nothing to install: no packages. If you change a card picture, run `python3 make_thumbs.py` to refresh its small copy.
 * `TRUST_PROXY=1` when you sit behind a proxy or CDN (Render, Fly, Railway, Cloudflare, nginx...), so the server reads the visitor's address from `X-Forwarded-For`. Leave it off when the server faces the internet directly.
 * `DATA_FILE` must be on a persistent volume. Back it up by copying the file.
 * Hosting the page somewhere else (a static host) and the server elsewhere? Build with `--api https://api.your-domain.example`. The server answers cross-origin calls (`CORS_ORIGIN` narrows who may).

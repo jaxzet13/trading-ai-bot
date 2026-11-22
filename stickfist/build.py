@@ -11,7 +11,8 @@ src/style.css        all styles
 src/body.html        the page structure
 src/js/NN-name.js    the script, in order: data, utilities, copy codes, state and economy, text effects,
                      the animation engines, card/pack markup, pages, the opening, events, start
-cards/*.jpg          the card pictures (the ASCII cards), referenced by relative path
+cards/*.jpg          the card pictures (the ASCII cards), referenced by relative path; cards/s/ holds small copies for lists and
+                     grids (python3 make_thumbs.py makes them); icons/ holds the home-screen icons (node icons/make_icons.js)
 """
 import glob, os, re, subprocess, sys, tempfile
 
@@ -29,6 +30,13 @@ DESC = 'Open free packs of ASCII trading cards, watch their prices move like mem
 ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23050506'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' text-anchor='middle' fill='%23ece7dc'%3ES%3C/text%3E%3C/svg%3E"
 OG_IMG = (URL + '/' if URL else '') + 'og.png'
 
+PWA = '''<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="STIXX">''' if RELEASE else ''
+
 HEAD = f'''<!doctype html>
 <html lang="en">
 <head>
@@ -45,6 +53,7 @@ HEAD = f'''<!doctype html>
 <meta property="og:image" content="{OG_IMG}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="{ICON}">
+{PWA}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap">
@@ -59,6 +68,8 @@ if RELEASE:
     dist = os.path.join(ROOT, 'dist'); shutil.rmtree(dist, ignore_errors=True); os.makedirs(dist)
     open(os.path.join(dist, 'index.html'), 'w', encoding='utf-8').write(out)
     shutil.copytree(os.path.join(ROOT, 'cards'), os.path.join(dist, 'cards'))
+    shutil.copytree(os.path.join(ROOT, 'icons'), os.path.join(dist, 'icons'), ignore=shutil.ignore_patterns('*.js'))
+    open(os.path.join(dist, 'manifest.webmanifest'), 'w').write('{"name":"STIXX","short_name":"STIXX","description":"ASCII trading cards. Play money only. 18+.","start_url":"/","scope":"/","display":"standalone","orientation":"portrait","background_color":"#050506","theme_color":"#050506","icons":[{"src":"icons/icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icons/icon-512.png","sizes":"512x512","type":"image/png"},{"src":"icons/icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}\n')
     for f in ('server.js', 'og.png', 'BETA.md'):
         if os.path.exists(os.path.join(ROOT, f)): shutil.copy(os.path.join(ROOT, f), dist)
     open(os.path.join(dist, 'package.json'), 'w').write('{"name":"stixx-beta","private":true,"version":"0.1.0","scripts":{"start":"node server.js"},"engines":{"node":">=18"}}\n')

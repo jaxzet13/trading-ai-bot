@@ -14,6 +14,7 @@
 <meta property="og:image" content="og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23050506'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' text-anchor='middle' fill='%23ece7dc'%3ES%3C/text%3E%3C/svg%3E">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap">
@@ -276,6 +277,119 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 @media (max-height: 720px) { .banner { display: none; } .packcol { width: min(78vw, clamp(150px, calc((100vh - 400px) * .667), 330px)); } .home { gap: 14px; } }
 .chip.cash { border-color: var(--ln3); }
 @media (max-width: 420px) { .chip .xs { display: none; } header.top .wrap { gap: 6px 10px; } .logo { letter-spacing: .12em; } .wallet { gap: 6px; } .bal { font-size: 14px; } }
+
+/* ======================================================================================================================================
+   v2: lists, pills, summary tiles, the phone's bottom bar and bottom sheet
+   ==================================================================================================================================== */
+.pill { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill.up { color: var(--ok); background: rgba(159,216,166,.12); } .pill.dn { color: var(--bad); background: rgba(232,120,109,.12); } .pill.fl { color: var(--dim); background: rgba(255,255,255,.06); }
+.rd { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--rc, var(--dim)); margin-right: 6px; vertical-align: 1px; flex: none; }
+.thumb { flex: none; width: 44px; height: 54px; border-radius: 8px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--rc, #444) 55%, #1a1a1e); background: #08080a; display: block; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; display: block; }
+.sechead { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 30px 0 12px; } .sechead h3 { font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
+.seg { display: inline-flex; max-width: 100%; overflow-x: auto; scrollbar-width: none; background: #0d0d10; border: 1px solid var(--ln2); border-radius: 999px; padding: 3px; gap: 2px; } .seg::-webkit-scrollbar { display: none; }
+.seg button { border: 0; background: none; color: var(--dim); font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 999px; min-height: 34px; white-space: nowrap; flex: none; } .seg button.on { background: var(--ink); color: #050506; font-weight: 600; }
+.filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 0 0 14px; }
+.sortsel { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--dim); } .sortsel select { background: #0d0d10; color: var(--ink); border: 1px solid var(--ln2); border-radius: 10px; padding: 8px 10px; font-size: 13px; min-height: 36px; }
+
+/* a card on one line */
+.clist { display: grid; border-top: 1px solid var(--ln); }
+.crow { display: grid; grid-template-columns: 44px minmax(0, 1fr) 64px auto; gap: 12px; align-items: center; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--ln); padding: 11px 2px; color: inherit; min-height: 68px; -webkit-tap-highlight-color: transparent; }
+.crow:hover { background: #0b0b0e; } .crow:active { background: #111115; }
+.cmain { display: grid; gap: 3px; min-width: 0; } .cmain .nm { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cmain .sub { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cmain .own { color: var(--ink); }
+.spark { display: block; } .spark .sp { width: 64px; height: 28px; }
+.cval { display: grid; justify-items: end; gap: 4px; text-align: right; } .cval b { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ctot { display: flex; justify-content: space-between; align-items: center; padding: 14px 2px; color: var(--dim); font-size: 14px; }
+@media (min-width: 900px) { #mList { grid-template-columns: 1fr 1fr; column-gap: 44px; } }
+
+/* what is moving */
+.hscroll { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -22px; padding: 2px 22px 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; } .hscroll::-webkit-scrollbar { display: none; }
+.mvc { flex: none; width: 152px; scroll-snap-align: start; display: grid; gap: 6px; text-align: left; background: #0b0b0e; border: 1px solid var(--ln2); border-radius: 14px; padding: 8px; color: inherit; align-content: start; }
+.mvimg { position: relative; display: block; height: 96px; border-radius: 9px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--rc, #444) 50%, #1a1a1e); } .mvimg img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; display: block; }
+.mvimg .pill { position: absolute; left: 6px; bottom: 6px; background: rgba(5,5,6,.84); backdrop-filter: blur(4px); }
+.mvc .nm { font-size: 15px; font-weight: 600; padding: 0 2px; } .mvp { font-size: 13px; color: var(--dim); font-variant-numeric: tabular-nums; padding: 0 2px; } .mvc .sp { width: 100%; height: 26px; }
+@media (min-width: 900px) { .hscroll { display: grid; grid-template-columns: repeat(6, 1fr); margin: 0; padding: 0; overflow: visible; } .mvc { width: auto; } }
+
+/* the pulse of the market */
+.pulse { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 20px 26px; align-items: center; border: 1px solid var(--ln2); border-radius: 16px; padding: 20px 22px; background: #08080b; margin-bottom: 10px; }
+.pbig { display: flex; align-items: baseline; gap: 10px; margin: 4px 0 6px; flex-wrap: wrap; } .pbig b { font-size: 38px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.pb .sp.big { width: 100%; height: 54px; }
+.heat { display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; margin-top: 8px; } .heat i { height: 22px; border-radius: 3px; opacity: var(--a, 1); } .heat i.up { background: var(--ok); } .heat i.dn { background: var(--bad); } .heat i.fl { background: var(--dim); }
+.yours { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; border: 1px solid var(--ln2); border-radius: 14px; padding: 14px 16px; color: var(--dim); font-size: 14px; text-decoration: none; margin-bottom: 6px; } .yours b { color: var(--ink); font-size: 18px; } .yours .go { margin-left: auto; color: var(--ink); } .yours:hover { border-color: var(--ln3); }
+details.more.big { border: 1px solid var(--ln2); border-radius: 14px; padding: 0 16px; margin: 28px 0 8px; } details.more.big:last-of-type { border-bottom: 1px solid var(--ln2); } details.more.big > summary { padding: 15px 0; font-weight: 600; } details.more.big > :not(summary) { margin: 0 0 18px; }
+.trade { grid-template-columns: 110px 1fr auto 90px 90px; }
+
+/* the collection */
+.csum { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+.stat { display: grid; gap: 7px; align-content: start; border: 1px solid var(--ln2); border-radius: 14px; padding: 14px 16px; background: #08080b; min-width: 0; }
+.sbig { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; } .sbig b { font-size: 28px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.1; } .sbig span { color: var(--dim); font-size: 13px; } .srow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.bar { height: 6px; border-radius: 999px; background: var(--ln2); overflow: hidden; } .bar i { display: block; height: 100%; background: var(--ink); border-radius: 999px; transition: width .5s; } .bar.slim { height: 4px; grid-column: 1 / -1; }
+.stat.go .btn { justify-self: start; }
+.actions { margin: 0 0 16px; } 
+.sethead { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: baseline; margin: 26px 0 14px; } .sethead h3 { font-size: 20px; font-weight: 700; }
+.cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 22px 16px; }
+.ctile { display: grid; gap: 7px; align-content: start; text-align: left; background: none; border: 0; padding: 0; color: inherit; min-width: 0; -webkit-tap-highlight-color: transparent; } .ctile:hover .card { transform: translateY(-3px); }
+.cimg { position: relative; display: block; } .cimg .card { width: 100%; }
+.cb { position: absolute; top: 8px; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(5,5,6,.84); backdrop-filter: blur(4px); border: 1px solid var(--ln3); z-index: 5; } .cb.n { left: 8px; } .cb.fx { right: 8px; }
+.cmeta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } .cmeta b { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; } .csub { font-size: 12px; color: var(--dim); }
+
+/* the card window */
+.minfo > * { min-width: 0; } .mk, .lcbox { min-width: 0; } .axis { flex: none; font-size: 12px; }
+.mhead { display: grid; gap: 6px; } .pricebox { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; } .pricebox b { font-size: 30px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; margin-right: 4px; }
+.copy .ci { min-width: 0; } .copy .cv { display: grid; justify-items: end; gap: 3px; } .copy .cv b { font-size: 16px; } .btn.small.sellb { background: var(--ink); color: #050506; border-color: var(--ink); font-weight: 600; min-height: 38px; }
+.notyet { display: grid; gap: 8px; justify-items: start; border: 1px dashed var(--ln3); border-radius: 12px; padding: 14px 16px; }
+.facts { font-size: 13px; line-height: 1.6; }
+details.more:not(.big) > summary { font-size: 14px; }
+
+/* the phone */
+.btabs { display: none; }
+@media (max-width: 760px) {
+  html { -webkit-text-size-adjust: 100%; } body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
+  .wrap { padding: 0 16px; }
+  header.top { padding-top: env(safe-area-inset-top); } header.top .wrap { flex-wrap: nowrap; height: 54px; padding-top: 0; padding-bottom: 0; gap: 8px; } nav.tabs { display: none; }
+  .wallet { margin-left: auto; }
+  .btabs { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: rgba(8,8,10,.95); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--ln2); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); }
+  .btabs a { display: grid; justify-items: center; align-content: center; gap: 3px; padding: 5px 0 3px; color: var(--dim); font-size: 11px; font-weight: 500; text-decoration: none; position: relative; min-height: 48px; }
+  .btabs svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .btabs a.on { color: var(--ink); } .btabs a.on svg { stroke-width: 2.1; } .btabs a.on::before { content: ""; position: absolute; top: -7px; width: 28px; height: 3px; border-radius: 0 0 3px 3px; background: var(--ink); }
+  .btabs a.dot::after { content: ""; position: absolute; top: 4px; left: calc(50% + 8px); width: 9px; height: 9px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 2px #08080a; }
+  main.wrap { padding-top: 20px; padding-bottom: calc(96px + env(safe-area-inset-bottom)); } footer { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+  h1.ttl { font-size: 30px; } .page-head { margin-bottom: 20px; gap: 8px; } .page-head p { font-size: 14px; }
+  .toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .alert { top: auto; bottom: calc(78px + env(safe-area-inset-bottom)); left: 10px; right: 10px; width: auto; padding: 12px 14px; } .alert .art { display: none; } .alert b { font-size: 15px; }
+  .tape { height: 28px; line-height: 28px; }
+  .btn { min-height: 42px; } .btn.small { min-height: 36px; } .chip { min-height: 32px; } .seg button { min-height: 38px; }
+  .hscroll { margin: 0 -16px; padding: 2px 16px 8px; }
+  .pulse { grid-template-columns: 1fr 1fr; padding: 16px; gap: 14px 18px; } .pa { grid-column: 1 / -1; } .pbig b { font-size: 34px; }
+  .csum { grid-template-columns: 1fr 1fr; gap: 10px; } .stat { padding: 12px 14px; } .sbig b { font-size: 24px; }
+  .sortsel { margin-left: 0; } .filters { gap: 8px; }
+  .cgrid { grid-template-columns: 1fr 1fr; gap: 18px 12px; }
+  .crow { grid-template-columns: 44px minmax(0, 1fr) 56px auto; gap: 10px; } .spark .sp { width: 56px; }
+  .hero { grid-template-columns: auto 1fr; gap: 14px; padding: 14px 16px; margin-bottom: 14px; } .hero .plot { display: none; } .hero .sprite { font-size: 9px; min-width: 9ch; } .hero h2 { font-size: 16px; } .hero .big { font-size: 34px; } .hero .dim { font-size: 12px; }
+  .trade { grid-template-columns: 1fr auto; }
+  /* the card window becomes a sheet that slides up from the bottom */
+  .modal { place-items: end center; padding: 0; }
+  .mbox { width: 100%; max-height: 92dvh; border-radius: 22px 22px 0 0; border-width: 1px 0 0; border-color: var(--ln3); padding: 26px 18px calc(30px + env(safe-area-inset-bottom)); animation: sheet .26s cubic-bezier(.2, .8, .2, 1) both; }
+  .mbox::before { content: ""; position: absolute; top: 8px; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 4px; background: var(--ln3); }
+  .x { width: 38px; height: 38px; right: 12px; top: 14px; font-size: 18px; }
+  .mbox:not(.slim) { grid-template-columns: 112px minmax(0, 1fr); gap: 20px 16px; } .mbox:not(.slim) .minfo { display: contents; } .mbox:not(.slim) .mcard { grid-column: 1; grid-row: 1; width: 112px; margin: 0; } .mbox:not(.slim) .mhead { grid-column: 2; grid-row: 1; align-self: center; padding-right: 36px; } .mbox:not(.slim) .minfo > :not(.mhead) { grid-column: 1 / -1; }
+  .mhead h2 { font-size: 24px; } .pricebox b { font-size: 26px; }
+  .copy { flex-wrap: wrap; } .copy .r { width: 100%; justify-content: space-between; }
+}
+@keyframes sheet { from { transform: translateY(46px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .mbox { animation: none !important; } }
+@media (max-width: 760px) { .setn { display: none; } }
+@media (max-width: 760px) {
+  .sortsel span { display: none; } .sortsel { margin-left: auto; }
+  .alert { display: grid; grid-template-columns: 1fr; gap: 0; padding: 12px 14px; border-radius: 16px; } .alert .txt { gap: 4px; } .alert .txt > span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 12.5px; } .alert .row { gap: 8px; margin-top: 6px; } .alert .btn { min-height: 34px; padding: 6px 14px; }
+}
+.crow.nospark { grid-template-columns: 44px minmax(0, 1fr) auto; }
+button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
+@media (max-width: 760px) {
+  input, select, textarea { font-size: 16px; }
+  .sortsel select { font-size: 14px; }
+  .alert { top: calc(58px + env(safe-area-inset-top)); bottom: auto; }
+}
 </style>
 </head>
 <body>
@@ -311,18 +425,20 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 
   <!-- MARKET -->
   <section class="view" id="v-market">
-    <div class="page-head"><h1 class="ttl">Market</h1><p>The market is run by AI trading bots, simulated and not real people. Prices move every 20 seconds and are the same for everyone. You get cards from packs, and sell them any time.</p><p class="live"></p></div>
+    <div class="page-head"><h1 class="ttl">Market</h1><p>Every card has a price that moves every 20 seconds. The prices come from simulated AI traders, not real people, and everyone sees the same ones. Sell any card whenever you like.</p><p class="live"></p></div>
     <div id="mHero"></div>
-    <div class="two" id="mRuns" style="margin-bottom:40px"></div>
-    <div class="mstats" id="mStats"></div>
-    <div class="two" id="mMovers"></div>
-    <div class="two" id="mFlips" style="margin-top:40px"></div>
-    <p class="small" id="mFlipNote" style="margin-top:6px"></p>
-    <h3 class="sec" style="margin-top:44px">AI traders, live <span class="faint">· the biggest orders from the bots in the last few hours</span></h3>
-    <div class="trades" id="mTrades"></div>
-    <h3 class="sec" style="margin-top:44px">All cards</h3>
-    <div class="tablewrap"><table class="mtable" id="mTable"></table></div>
-    <p class="small" style="margin-bottom:44px">Selling pays the price minus 10%. <a class="linkbtn" href="#/odds">How the market works</a></p>
+    <div id="mPulse"></div>
+    <div class="sechead"><h3>What's moving</h3><div id="mSeg"></div></div>
+    <div class="hscroll" id="mMovers"></div>
+    <div class="sechead"><h3>All cards</h3></div>
+    <div class="filters" id="mFilters"></div>
+    <div class="clist" id="mList"></div>
+    <details class="more big"><summary>What the AI traders are doing (simulated)</summary>
+      <div class="trades" id="mTrades"></div>
+      <div class="two" id="mFlips" style="margin-top:26px"></div>
+      <p class="small" id="mFlipNote" style="margin-top:6px"></p>
+    </details>
+    <p class="small" style="margin:18px 0 44px">Selling pays the price minus 10%. <a class="linkbtn" href="#/odds">How the market works</a></p>
   </section>
 
   <!-- PROFILE -->
@@ -332,7 +448,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
     <div id="pWorth"></div>
     <div id="pChart" style="margin-bottom:40px"></div>
     <h3 class="sec">Your cards</h3>
-    <div class="tablewrap"><table class="mtable" id="pTable"></table></div>
+    <div class="clist" id="pTable"></div>
     <p class="small" id="pNote" style="margin-bottom:30px"></p>
     <div id="pLimits" style="margin-bottom:44px"></div>
     <div id="pSettings" style="margin-bottom:44px"></div>
@@ -346,9 +462,10 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 
   <!-- COLLECTION -->
   <section class="view" id="v-collection">
-    <div class="page-head"><h1 class="ttl">Collection</h1><p id="cSub"></p></div>
-    <div class="prog" id="cProg"></div>
+    <div class="page-head"><h1 class="ttl">Cards</h1><p id="cSub"></p></div>
+    <div class="csum" id="cSum"></div>
     <div class="actions" id="cActions"></div>
+    <div class="filters" id="cFilters"></div>
     <div id="cGrid"></div>
   </section>
 
@@ -359,6 +476,13 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
   </section>
 </main>
 
+<nav class="btabs" id="btabs" aria-label="Sections">
+  <a href="#/" data-v="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18H7z"/><path d="M7 7l1.7-1.6L10.3 7l1.7-1.6L13.700 7l1.700-1.600L17 7"/><path d="M10 12h4M10 15h3"/></svg><span>pack</span></a>
+  <a href="#/collection" data-v="collection"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="11" height="15" rx="2"/><path d="M5 7v12a2 2 0 002 2h9"/></svg><span>cards</span></a>
+  <a href="#/market" data-v="market"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18l5-6 4 3 8-10"/><path d="M15 5h5v5"/></svg><span>market</span></a>
+  <a href="#/invite" data-v="invite"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="9" width="16" height="11" rx="1.500"/><path d="M12 9v11M3 9h18M12 9c-2.500 0-4-1-4-2.500S10 4 12 9M12 9c2.500 0 4-1 4-2.500S14 4 12 9"/></svg><span>invite</span></a>
+  <a href="#/profile" data-v="profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.500 21c.7-4 3.800-6 7.500-6s6.800 2 7.500 6"/></svg><span>me</span></a>
+</nav>
 <footer><div class="wrap">STIXX beta · play money only, nothing is ever charged or paid out · 18+ · <a href="#/odds">odds</a> · <button class="linkbtn" id="fairBtn">fair play</button> · <button class="linkbtn" id="aboutBtn">fine print</button></div></footer>
 
 <!-- opening -->
@@ -524,7 +648,7 @@ const styleOfCode = code => rollStyle(fnv("fx:" + code) / 4294967296);
 const cuts = rar => "/".repeat(RAR[rar].cuts);
 const idHTML = (code, rar) => `<span class="cid"><b>${esc(code)}</b>${cuts(rar) ? `<i>${cuts(rar)}</i>` : ""}</span>`;
 const styleName = fx => fx ? STYLES[fx].name : "Plain";
-const imgOf = (card, fx) => `cards/${card.id}${fx ? "-" + fx : card.id === "stitch" ? "-bone" : ""}.jpg`;   // the plain look is cards/<id>.jpg; a styled copy is cards/<id>-<style>.jpg
+const imgOf = (card, fx, small) => `cards/${small ? "s/" : ""}${card.id}${fx ? "-" + fx : card.id === "stitch" ? "-bone" : ""}.jpg`;   // the plain look is cards/<id>.jpg; a styled copy is cards/<id>-<style>.jpg
 
 /* ============================================================================
    4. STATE AND ECONOMY. Everything lives in this browser.
@@ -896,9 +1020,9 @@ function blockReveal(el, str, ms) {
 // Charts are plain lines. A sparkline is a thin line; a chart is a line over a soft fill with a dot on the latest value and the high and low beside it.
 // `log` plots ratios, so +100% and −50% look the same size.
 let _lg = 0;
-function sparkSVG(v) {
-  const W = 84, H = 26, mn = Math.min(...v), sp = Math.max(...v) - mn || 1, pts = v.map((x, i) => (i / (v.length - 1) * W).toFixed(1) + " " + (H - 3 - (x - mn) / sp * (H - 6)).toFixed(1));
-  return `<svg class="sp ${v[v.length - 1] >= v[0] ? "up" : "dn"}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><path class="ln" d="M${pts.join(" L")}"/></svg>`;
+function sparkSVG(v, big) {
+  const W = big ? 200 : 84, H = big ? 54 : 26, mn = Math.min(...v), sp = Math.max(...v) - mn || 1, pts = v.map((x, i) => (i / (v.length - 1) * W).toFixed(1) + " " + (H - 3 - (x - mn) / sp * (H - 6)).toFixed(1));
+  return `<svg class="sp ${v[v.length - 1] >= v[0] ? "up" : "dn"}${big ? " big" : ""}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><path class="ln" d="M${pts.join(" L")}"/></svg>`;
 }
 function lineChart(vals, o) {
   o = o || {}; const W = 600, H = 200, P = 8, v = o.log ? vals.map(Math.log) : vals, mn = Math.min(...v), mx = Math.max(...v), mid = (mn + mx) / 2, sp = Math.max(mx - mn, o.log ? .06 : Math.abs(mid) * .01) * 1.2, lo = mid - sp / 2;
@@ -1048,7 +1172,7 @@ const FX = (() => {
 function cardHTML(copy, o) {
   o = o || {}; const card = BY_NO[copy.no], fx = copy.fx || "", tint = fx ? STYLE_TINT[fx] : card.tint, code = copy.code || "";
   return `<div class="card t${RAR[card.rar].tier}${o.sm ? " sm" : ""}${o.locked ? " locked" : ""}" style="--tint:${tint}" data-no="${card.no}">
-    <div class="pic"><img src="${imgOf(card, fx)}" alt="${esc(card.name)}" draggable="false"></div>
+    <div class="pic"><img src="${imgOf(card, fx, o.thumb)}" alt="${esc(card.name)}" draggable="false"${o.thumb ? ' loading="lazy"' : ""}></div>
     <div class="strip"><div class="l1"><span class="nm">${esc(card.name)}</span><i class="hr"></i><span class="ct"><b>${fmt(card.chars)}</b><u>chars</u></span></div>
     <div class="l2">${code ? idHTML(code, card.rar) : `<span>No. ${card.no}</span>`}${card.cap ? `<span class="cap">${esc(card.cap)}</span>` : ""}</div></div></div>`;
 }
@@ -1076,7 +1200,6 @@ function movers() {
   const rows = CARDS.map(c => { const s = MK.series(c, 24, 24); return { c, s, now: s[23], was: s[0], p24: MK.pct(c, 24) }; });
   return { rows, gain: rows.filter(r => r.p24 > .005).sort((a, b) => b.p24 - a.p24).slice(0, 3), drop: rows.filter(r => r.p24 < -.005).sort((a, b) => a.p24 - b.p24).slice(0, 3) };
 }
-const moverRow = m => `<button class="mover" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}<span class="pc">${pctHTML(m.p24)}</span><span class="dim">${moneyS(m.was)} → ${moneyS(m.now)}</span></button>`;
 
 function renderHome() {
   const pk = curPack(), ps = packStats(pk); $("banner").textContent = BANNER.join("\n");
@@ -1095,23 +1218,6 @@ const flipRow = e => `<button class="flip" data-card="${e.card.no}"><span class=
 const usd = n => n >= 1e9 ? "$" + (n / 1e9).toFixed(2) + "B" : n >= 1e6 ? "$" + (n / 1e6).toFixed(n >= 1e8 ? 0 : 1) + "M" : n >= 1e3 ? "$" + (n / 1e3).toFixed(n >= 1e5 ? 0 : 1) + "K" : "$" + Math.round(n);
 const agoText = m => m === 0 ? "just now" : m < 60 ? m + " min ago" : m < 2880 ? Math.floor(m / 60) + "h ago" : Math.floor(m / 1440) + " days ago";
 const whenText = h => h < 2 ? "just now" : h < 48 ? h + " hours ago" : Math.round(h / 24) + " days ago";
-function renderMarket() {
-  const mv = movers(), rows = mv.rows, ps = packStats(), n = rows.length, fl = MK.flips();
-  const idxNow = rows.reduce((a, r) => a + r.now / r.c.val, 0) / n * 100, idxWas = rows.reduce((a, r) => a + r.was / r.c.val, 0) / n * 100, up = rows.filter(r => r.p24 > 0).length;
-  const rn = MK.runs(); renderHero(rows, rn);
-  const runRow = (x, up) => `<button class="mover" data-card="${x.c.no}"><span class="nm">${esc(x.c.name)}</span>${sparkSVG(MK.series(x.c, 168, 28))}<span class="pc">${pctHTML(up ? x.up : x.dn)}</span><span class="dim">${up ? "peaked" : "dropped"} ${whenText(up ? x.upAgo : x.dnAgo)} · now ${moneyS(x.now)}${up ? ` (${pctShort(x.now / x.upPrice - 1)} from the peak)` : ""}</span></button>`;
-  $("mRuns").live = `<div><h3 class="sec">Skyrocketed this week</h3>${rn.up.slice(0, 3).map(x => runRow(x, true)).join("") || `<p class="small">Nothing has doubled in a day this week.</p>`}</div><div><h3 class="sec">Biggest drops this week</h3>${rn.dn.slice(0, 3).map(x => runRow(x, false)).join("") || `<p class="small">Nothing has dropped by a third in a day this week.</p>`}</div>`;
-  $("mStats").live = `<div><span class="label">market index</span><b>${idxNow.toFixed(1)}</b> ${pctHTML(idxNow / idxWas - 1)}</div><div><span class="label">cards up in 24h</span><b>${up} of ${n}</b></div><div><span class="label">trading volume · 24h</span><b>${usd(MK.total24())}</b></div><div><span class="label">pack price right now</span><b>${PACKS.map(p => money(packPrice(p))).join(" · ")}</b></div>`;
-  $("mMovers").live = `<div><h3 class="sec">Skyrocketing · 24h</h3>${mv.gain.map(moverRow).join("") || `<p class="small">Nothing is up right now.</p>`}</div><div><h3 class="sec">Crashing · 24h</h3>${mv.drop.map(moverRow).join("") || `<p class="small">Nothing is down right now.</p>`}</div>`;
-  $("mFlips").live = `<div><h3 class="sec">Best flips · this week</h3>${fl.best.map(flipRow).join("")}</div><div><h3 class="sec">Worst flips · this week</h3>${fl.worst.map(flipRow).join("")}</div>`;
-  $("mFlipNote").textContent = `Simulated traders, worked out from the real price path and after the 10% selling fee. ${fl.won} of the last ${fl.n} sold for more than they got.`;
-  $("mTable").live = `<thead><tr><th>Card</th><th class="r">Price</th><th class="r">24h</th><th>24h chart</th><th class="r">Volume · 24h</th><th>Buzz</th><th class="r">You hold</th></tr></thead><tbody>` + rows.map(r => {
-    const c = r.c, own = copiesOf(c.no).length, bz = MK.buzz(c), sv = MK.stats(c);
-    return `<tr><td><button class="linkbtn plain" data-card="${c.no}">${esc(c.name)}</button> <span class="faint">${RAR[c.rar].name} · ${esc(SETS[c.set].name)}</span></td><td class="r num"><b>${moneyS(r.now)}</b></td><td class="r">${pctHTML(r.p24)}</td>
-      <td class="spk">${sparkSVG(r.s)}</td><td class="r num">${usd(sv.vol)}</td><td>${buzzDots(bz)}</td><td class="r">${own ? "×" + own : "–"}</td></tr>`; }).join("") + `</tbody>`;
-  $("mTrades").live = MK.botFeed(10).map(t => `<div class="trade"><span class="who">${t.name}</span><span>${t.buy ? "bought" : "sold"} ${usd(t.usd)} of ${esc(t.card.name)}</span><span class="dim">at ${money(t.price)}</span><span class="${t.buy ? "up" : "dn"}">${t.buy ? "▲ buy" : "▼ sell"}</span><span class="faint">${agoText(t.ago)}</span></div>`).join("");
-}
-
 // the profile: your money, live, and every card you hold with its price and profit or loss
 function worthSeries(pts) {
   const h = state.hist, now = Date.now(), t0 = Math.max(h.length ? h[0][0] : now, now - 864e5); if (now - t0 < 90000) return null;
@@ -1127,32 +1233,21 @@ function renderProfile() {
   $("pChart").live = ws ? `<div class="mk"><div class="label">Net worth · ${ws.mins >= 1380 ? "last 24 hours" : ws.mins < 90 ? "last " + ws.mins + " minutes" : "last " + Math.round(ws.mins / 60) + " hours"}</div>${lineChart(ws.out, { fmt: money, h: 190 })}</div>`
     : `<div class="mk"><div class="label">Net worth</div><p class="small">Your line starts now and fills in as the market moves. Keep this page open and watch it.</p></div>`;
   const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), s: MK.series(c, 24, 24), p24: MK.pct(c, 24) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
-  $("pTable").live = groups.length ? `<thead><tr><th>Card</th><th class="r">Cost</th><th class="r">Worth now</th><th class="r">Profit / loss</th><th>24h chart</th></tr></thead><tbody>` + groups.map(g => `<tr><td><button class="linkbtn plain" data-card="${g.c.no}">${esc(g.c.name)}</button> <span class="faint">${g.n > 1 ? "×" + g.n + " · " : ""}${RAR[g.c.rar].name}</span></td><td class="r num">${moneyS(g.cost)}</td><td class="r num"><b>${moneyS(g.val)}</b></td><td class="r">${pnlHTML(g.val - g.cost, g.cost)}</td><td class="spk">${sparkSVG(g.s)}</td></tr>`).join("") + `</tbody><tfoot><tr><td>All cards</td><td class="r num">${moneyS(basis)}</td><td class="r num"><b>${moneyS(hold)}</b></td><td class="r">${pnlHTML(hold - basis, basis)}</td><td></td></tr></tfoot>` : "";
+  $("pTable").live = groups.length ? groups.map(g => cardRow(g.c, { s: g.s, price: moneyS(g.val), pill: pill(g.val / Math.max(1, g.cost) - 1), sub: `${g.n > 1 ? `×${g.n} · ` : ""}${RAR[g.c.rar].name} · cost ${moneyS(g.cost)}` })).join("") + `<div class="ctot"><span>All cards</span><span class="cval"><b>${moneyS(hold)}</b>${pill(hold / Math.max(1, basis) - 1)}</span></div>` : "";
   $("pNote").innerHTML = groups.length ? `Tap a card to see its chart and sell it. “Cost” is what the card was worth when you got it. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${money(state.s.spent)} spent on packs · ${money(state.s.sold)} back from sales</span>` : `You don't hold any cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they will show up here with a live price.`;
 }
 
-// every copy beyond the best one of each card (copies you added by code are never sold in bulk)
-function extras() { const out = []; for (const c of CARDS) copiesOf(c.no).slice(1).forEach(x => { if (!x.phys) out.push(x); }); return out; }
-function renderCollection() {
-  $("cProg").live = progressHTML();
-  const found = new Set(state.vault.map(c => c.no)), worth = state.vault.reduce((a, c) => a + valueOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0), ex = extras(), exSum = ex.reduce((a, c) => a + sellOf(c), 0);
-  $("cSub").live = state.vault.length ? `${found.size} of ${CARDS.length} cards found · ${state.vault.length} cop${state.vault.length === 1 ? "y" : "ies"} worth ${money(worth)} ${pctHTML(worth / Math.max(1, basis) - 1)} <span class="faint">since you got them</span>` : "Open the pack to start your collection.";
-  $("cActions").live = ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "";
-  const tile = c => { const cs = copiesOf(c.no), best = cs[0];
-    return `<div class="tile"><button class="tilebtn" data-card="${c.no}" aria-label="${esc(c.name)}">${cardHTML(best || { no: c.no }, { sm: true, locked: !best })}</button>
-      <div class="meta">${best ? `<span><b>×${cs.length}</b></span><span>${moneyS(valueOf(best))} ${pctHTML(gainOf(best))}</span>` : `<span>not found yet</span><span class="dim">${money(MK.price(c))} · ${chance(packP(c.id))}</span>`}</div></div>`; };
-  $("cGrid").live = Object.keys(SETS).map(k => { const list = CARDS.filter(c => c.set === k), got = list.filter(c => found.has(c.no)).length; return `<h3 class="sec sethead"><span>${esc(SETS[k].name)}</span><span class="faint">${got} of ${list.length} found</span></h3><div class="grid">${list.map(tile).join("")}</div>`; }).join("");
-}
-function renderOdds() {
-  if (!PACK_BY[oddsPack]) oddsPack = state.pack; const pk = PACK_BY[oddsPack], ps = packStats(pk), slotName = pk.slotNames;
-  const rows = CARDS.filter(c => c.set === pk.set).sort((a, b) => a.chars - b.chars).map(c => { const p = packP(c.id); return `<tr><td>${esc(c.name)} <span class="faint">${esc(c.sub)}</span></td><td>${RAR[c.rar].name}</td><td class="r num">${fmt(c.chars)}</td><td class="r num">${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}</td><td class="r num">${p >= .5 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p)}</td></tr>`; }).join("");
+let oddsKey = "";
+function renderOdds(force) {
+  if (!PACK_BY[oddsPack]) oddsPack = state.pack; const key = oddsPack + "|" + MK.tick(); if (!force && key === oddsKey && $("oBody").firstChild) return; oddsKey = key; const opened = [...document.querySelectorAll("#oBody details")].map(d => d.open); const pk = PACK_BY[oddsPack], ps = packStats(pk), slotName = pk.slotNames;
+  const rows = CARDS.filter(c => c.set === pk.set).sort((a, b) => a.chars - b.chars).map(c => { const p = packP(c.id); return cardRow(c, { nospark: true, price: p >= .5 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p), pill: `<span class="small">of packs</span>`, sub: `${RAR[c.rar].name} · ${fmt(c.chars)} characters · now ${moneyS(MK.price(c))}` }); }).join("");
   const tot = Object.values(STYLES).reduce((a, s) => a + s.p, 0), cap = id => MK.CAP[id];
   $("oBody").innerHTML = `
     <div class="packtabs" role="tablist" aria-label="Which pack">${PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-opack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("")}</div>
     <p class="small" style="margin:-4px 0 22px;text-align:center">${esc(pk.blurb)}</p>
     <div class="facts"><div><div class="bignum sm" role="img" aria-label="${money(ps.price)}">${money(ps.price)}</div><span>per ${esc(pk.name)} pack right now · ${pk.n} cards</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.hit * 100).toFixed(0)}%">${(ps.hit * 100).toFixed(0) + "%"}</div><span>of packs are worth at least what you paid</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.rtp * 100).toFixed(0)}%">${(ps.rtp * 100).toFixed(0) + "%"}</div><span>comes back on average when you sell</span></div></div>
     <h3 class="sec">What can be in a ${esc(pk.name)} pack</h3>
-    <div class="tablewrap"><table><thead><tr><th>Card</th><th>Rarity</th><th class="r">Characters</th><th class="r">Price now · 24h</th><th class="r">Chance per pack</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="clist">${rows}</div>
     <p class="small" style="margin-bottom:44px">Selling a card back pays 90% of its price. A typical pack sells back for ${money(ps.median)} right now.</p>
     <details><summary>How the market works</summary><ul class="plain">
       <li>The market is run by AI trading bots. Five kinds of them trade every card every 20 seconds, each following a few simple rules about what it sees on screen, and a price is what their orders add up to. <b>Degen bots</b> make a crowd of small trades both ways. <b>Market makers</b> lean against whatever the price is doing. <b>FOMO bots</b> chase what has been going up. <b>Sniper bots</b> pile into a sudden jump. <b>Whale bots</b> place a big order now and then, mostly buying cards that look cheap and selling cards that look rich.</li>
@@ -1168,10 +1263,11 @@ function renderOdds() {
       <div class="tablewrap"><table><thead><tr><th>Style</th><th class="r">Chance per card</th><th class="r">Worth</th></tr></thead><tbody><tr><td>Plain <span class="faint">default</span></td><td class="r num">${((1 - tot) * 100).toFixed(1)}%</td><td class="r">×1</td></tr>${Object.keys(STYLES).map(k => `<tr><td>${STYLES[k].name}</td><td class="r num">1 in ${fmt(1 / STYLES[k].p)}</td><td class="r">×${STYLES[k].x}</td></tr>`).join("")}</tbody></table></div></div></details>
     <details><summary>Copy ids and the red slashes</summary><ul class="plain"><li>Every copy has its own id, like <b>IS015-000003-A2JM</b>: the set, the card number, the copy's serial and four check characters.</li><li>The red slashes after an id show rarity: none for commons and uncommons, one for rares and epics, two for legendary, three for mythic, four for the one Secret card.</li><li>The style a copy comes out in is fixed by its id, so a printed card and its digital twin always match.</li></ul></details>
     <details><summary>Fair play</summary><ul class="plain"><li>A pack is worth less than it costs on average, and the numbers above are worked out exactly from the odds and today's prices.</li><li>Every pack is drawn from a seed that was committed to before you opened it, so you can check afterwards that the cards followed the odds above. <button class="linkbtn" id="fairBtn2">Check your packs</button></li><li>The odds never change with what you have spent, pulled or been given.</li><li>The money is play money. Nothing is ever charged and nothing can be cashed out.</li></ul></details>`;
+  document.querySelectorAll("#oBody details").forEach((d, i) => { if (opened[i]) d.open = true; });
 }
 function show(v) {
   view = VIEWS.includes(v) ? v : "home";
-  VIEWS.forEach(x => $("v-" + x).classList.toggle("on", x === view)); document.querySelectorAll("#tabs a").forEach(a => a.classList.toggle("on", a.dataset.v === view));
+  if (view === "odds") oddsKey = ""; VIEWS.forEach(x => $("v-" + x).classList.toggle("on", x === view)); document.querySelectorAll("#tabs a, #btabs a").forEach(a => a.classList.toggle("on", a.dataset.v === view));
   ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds, invite: renderInvite })[view](); scrollTo(0, 0);
 }
 function route() { const h = location.hash.replace(/^#\/?/, ""); show(h === "vault" || h === "index" ? "collection" : h || "home"); }
@@ -1186,22 +1282,88 @@ function openModal(html, slim, keep) { $("mbox").className = "mbox" + (slim ? " 
 const closeModal = () => { $("modal").hidden = true; $("mbox").innerHTML = ""; modalNo = null; };
 function cardModal(no, keep) {
   modalNo = no; const card = BY_NO[no], R = RAR[card.rar], cs = copiesOf(no), best = cs[0], p = packP(card.id), have = new Set(cs.map(c => c.fx)), keys = [""].concat(Object.keys(STYLES));
-  const styles = card.styles ? `<div><div class="label" style="margin-bottom:8px">Styles found: ${keys.filter(k => have.has(k)).length} of ${keys.length}</div><div class="stylerow">${keys.map(k => `<figure class="${have.has(k) ? "" : "off"}" title="${styleName(k)}${k ? " · 1 in " + fmt(1 / STYLES[k].p) + " · ×" + STYLES[k].x : ""}"><img src="${imgOf(card, k)}" alt=""><figcaption>${styleName(k)}</figcaption></figure>`).join("")}</div></div>` : "";
-  const ser = MK.series(card, 168, 56), now = MK.price(card), bz = MK.buzz(card);
-  const sv = MK.stats(card), market = `<div class="mk"><div class="label">Market · last 7 days</div><div class="mkrow"><b>${moneyS(now)}</b> ${pctHTML(MK.pct(card, 24))} <span class="dim">24h</span> ${pctHTML(MK.pct(card, 168))} <span class="dim">7d</span></div>
-    ${lineChart(ser, { log: true, fmt: moneyS, h: 160 })}
-    <div class="mstat"><div><span class="label">market cap</span><b>${usd(sv.mcap)}</b></div><div><span class="label">volume · 24h</span><b>${usd(sv.vol)}</b></div><div><span class="label">liquidity</span><b>${usd(sv.liq)}</b></div><div><span class="label">buys · sells</span><b>${Math.round(sv.buyShare * 100)}% · ${Math.round((1 - sv.buyShare) * 100)}%</b></div></div>
-    <div class="row small"><span>buzz ${buzzDots(bz)}</span><span class="dim">simulated · selling pays the price minus 10%</span></div></div>`;
+  const styles = card.styles ? `<div><div class="label" style="margin-bottom:8px">Styles found: ${keys.filter(k => have.has(k)).length} of ${keys.length}</div><div class="stylerow">${keys.map(k => `<figure class="${have.has(k) ? "" : "off"}" title="${styleName(k)}${k ? " · 1 in " + fmt(1 / STYLES[k].p) + " · ×" + STYLES[k].x : ""}"><img src="${imgOf(card, k, true)}" alt="" loading="lazy"><figcaption>${styleName(k)}</figcaption></figure>`).join("")}</div></div>` : "";
+  const ser = MK.series(card, 168, 56), now = MK.price(card), bz = MK.buzz(card), sv = MK.stats(card);
+  const copies = cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div class="ci">${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${moneyS(costOf(c))}</small></div><div class="r"><span class="cv"><b>${moneyS(valueOf(c))}</b>${pill(gainOf(c))}</span><button class="btn small ghost" data-share="${c.uid}">share</button><button class="btn small sellb" data-sell="${c.uid}" data-no="${no}">sell ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<div class="notyet"><b>You haven't found this card yet.</b><span class="small">It turns up in ${chance(p, packOf(card))}.</span><button class="btn small solid" data-open data-close>open a pack</button></div>`;
   openModal(`<div class="mcard">${cardHTML(best || { no }, { locked: !best })}</div><div class="minfo">
-    <div><span class="label" style="color:${R.col}">${R.name} · No. ${card.no}</span><h2>${esc(card.name)}</h2></div>
-    <p class="dim">${fmt(card.chars)} characters · base worth ${money(card.val)} · turns up in ${chance(p, packOf(card))}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
-    ${market}
+    <div class="mhead"><span class="label" style="color:${R.col}">${R.name} · No. ${card.no}</span><h2>${esc(card.name)}</h2>
+      <div class="pricebox"><b>${moneyS(now)}</b>${pill(MK.pct(card, 24))}<span class="dim">today</span>${pill(MK.pct(card, 168))}<span class="dim">this week</span></div></div>
+    ${copies}
+    <div class="mk"><div class="label">Price · last 7 days</div>${lineChart(ser, { log: true, fmt: moneyS, h: 150 })}<div class="small">Simulated market · selling pays the price minus 10%.</div></div>
     ${alertRow(card)}
-    ${cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div>${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${moneyS(costOf(c))}</small></div><div class="r"><span><b>${moneyS(valueOf(c))}</b><br>${pctHTML(gainOf(c))}</span><button class="btn small ghost" data-share="${c.uid}">share</button><button class="btn small" data-sell="${c.uid}" data-no="${no}">sell ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<p class="small">You haven't found this card yet.</p>`}
+    <p class="dim facts">${fmt(card.chars)} characters · base worth ${money(card.val)} · turns up in ${chance(p, packOf(card))}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
+    <details class="more"><summary>Market details</summary><div class="mstat"><div><span class="label">market cap</span><b>${usd(sv.mcap)}</b></div><div><span class="label">volume · 24h</span><b>${usd(sv.vol)}</b></div><div><span class="label">liquidity</span><b>${usd(sv.liq)}</b></div><div><span class="label">buys · sells</span><b>${Math.round(sv.buyShare * 100)}% · ${Math.round((1 - sv.buyShare) * 100)}%</b></div></div><div class="row small" style="margin-top:10px"><span>buzz ${buzzDots(bz)}</span><span class="dim">simulated</span></div></details>
     ${Cut.has(card.id) ? `<div><button class="btn small" data-cut="${card.id}">▶ ${cs.length ? "Watch" : "Preview"} its cutscene</button></div>` : ""}
     ${styles}</div>`, false, keep);
 }
 function sell(uids) { let g = 0; for (const u of uids) { const c = state.vault.find(x => x.uid === u); if (c) { g += sellOf(c); state.s.realized += sellOf(c) - costOf(c); state.vault = state.vault.filter(x => x !== c); } } if (g) { state.coins += g; state.s.sold += g; save(); renderBal(true); Snd.sell(); buzz([25, 35, 25]); } return g; }
+
+/* ============================================================================
+   7a. THE LISTS: the market and the collection. Both are built from the same few parts: a thumbnail, a price, a coloured change pill and a little line.
+   The market answers three questions in order: is it going up or down, what is moving, and what is each card worth. The collection answers: what do I have,
+   what is missing, and how likely am I to find it.
+   ========================================================================== */
+const pill = p => { const up = p > .0005, dn = p < -.0005, a = Math.abs(p * 100); return `<span class="pill ${up ? "up" : dn ? "dn" : "fl"}">${up ? "▲" : dn ? "▼" : "–"} ${a >= 100 ? fmt(a) : a.toFixed(1)}%</span>`; };
+const rdot = card => `<i class="rd" style="--rc:${RAR[card.rar].col}"></i>`;
+const thumb = (card, fx) => `<span class="thumb" style="--rc:${RAR[card.rar].col}"><img src="${imgOf(card, fx, true)}" alt="" loading="lazy" draggable="false"></span>`;
+const chanceS = p => p >= .5 ? Math.round(p * 100) + "% of packs" : "1 in " + fmt(1 / p) + " packs";
+const seg = (scope, key, opts, cur) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button data-f="${scope}:${key}:${v}" class="${v === cur ? "on" : ""}" aria-pressed="${v === cur}">${l}</button>`).join("")}</div>`;
+const selectHTML = (id, opts, cur, label) => `<label class="sortsel"><span>${label}</span><select id="${id}" aria-label="${label}">${opts.map(([v, l]) => `<option value="${v}"${v === cur ? " selected" : ""}>${l}</option>`).join("")}</select></label>`;
+// one card on one line: picture, name, a line of its last day, price, change
+const cardRow = (c, o) => `<button class="crow${o.nospark ? " nospark" : ""}" data-card="${c.no}">${thumb(c, o.fx)}<span class="cmain"><b class="nm">${esc(c.name)}</b><span class="sub">${rdot(c)}${o.sub}</span></span>${o.nospark ? "" : `<span class="spark">${o.s ? sparkSVG(o.s) : ""}</span>`}<span class="cval"><b>${o.price}</b>${o.pill}</span></button>`;
+
+/* ---- the market ---- */
+const MKF = { show: "all", set: "all", sort: "move", dir: "up" };
+function renderMarket() {
+  const mv = movers(), rows = mv.rows, n = rows.length, rn = MK.runs(), held = new Set(state.vault.map(c => c.no)); renderHero(rows, rn);
+  const idx = k => rows.reduce((a, r) => a + r.s[k] / r.c.val, 0) / n * 100, iNow = idx(23), iWas = idx(0), upN = rows.filter(r => r.p24 > .0005).length;
+  const heat = rows.slice().sort((a, b) => b.p24 - a.p24).map(r => `<i class="${r.p24 > .0005 ? "up" : r.p24 < -.0005 ? "dn" : "fl"}" style="--a:${(.35 + Math.min(1, Math.abs(r.p24) / .6) * .65).toFixed(2)}" title="${esc(r.c.name)} ${pctShort(r.p24)}"></i>`).join("");
+  const hold = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0);
+  $("mPulse").live = `<div class="pulse"><div class="pa"><span class="label">Market index</span><div class="pbig"><b class="num">${iNow.toFixed(1)}</b>${pill(iNow / iWas - 1)}</div><span class="small">The average price of all ${n} cards today. 100 means every card is at its starting price.</span></div>
+    <div class="pb">${sparkSVG(Array.from({ length: 24 }, (_, k) => idx(k)), true)}</div>
+    <div class="pc"><span class="label">Going up today</span><div class="pbig"><b>${upN}</b><span class="small">of ${n} cards</span></div><div class="heat" role="img" aria-label="${upN} of ${n} cards are up today">${heat}</div></div></div>
+    ${state.vault.length ? `<a class="yours" href="#/profile"><span>Your cards are worth</span><b>${moneyS(hold)}</b>${pill(hold / Math.max(1, basis) - 1)}<span class="go">see them ›</span></a>` : `<a class="yours" href="#/"><span>You don't hold any cards yet</span><b>Open a pack</b><span class="go">›</span></a>`}`;
+  // what is moving
+  const dirUp = MKF.dir === "up", mover = rows.filter(r => dirUp ? r.p24 > .005 : r.p24 < -.005).sort((a, b) => dirUp ? b.p24 - a.p24 : a.p24 - b.p24).slice(0, 6);
+  $("mSeg").live = seg("m", "dir", [["up", "Rising"], ["dn", "Falling"]], MKF.dir);
+  $("mMovers").live = mover.map(r => `<button class="mvc" data-card="${r.c.no}"><span class="mvimg" style="--rc:${RAR[r.c.rar].col}"><img src="${imgOf(r.c, "", true)}" alt="" loading="lazy" draggable="false">${pill(r.p24)}</span><b class="nm">${esc(r.c.name)}</b><span class="mvp">${moneyS(r.now)}</span>${sparkSVG(r.s)}</button>`).join("") || `<p class="small" style="padding:6px 2px">Nothing is ${dirUp ? "up" : "down"} right now.</p>`;
+  // every card
+  $("mFilters").live = seg("m", "show", [["all", "All"], ["up", "Going up"], ["down", "Going down"], ["mine", "Mine"]], MKF.show) + seg("m", "set", [["all", "All packs"], ...Object.keys(SETS).map(k => [k, SETS[k].name])], MKF.set) + selectHTML("mSort", [["move", "Biggest move"], ["price", "Highest price"], ["rare", "Rarest"]], MKF.sort, "Sort");
+  let list = rows.filter(r => (MKF.set === "all" || r.c.set === MKF.set) && (MKF.show === "all" || (MKF.show === "up" && r.p24 > .0005) || (MKF.show === "down" && r.p24 < -.0005) || (MKF.show === "mine" && held.has(r.c.no))));
+  list.sort(MKF.sort === "price" ? (a, b) => b.now - a.now : MKF.sort === "rare" ? (a, b) => RAR[b.c.rar].tier - RAR[a.c.rar].tier || b.now - a.now : (a, b) => Math.abs(b.p24) - Math.abs(a.p24));
+  $("mList").live = list.map(r => { const own = copiesOf(r.c.no).length; return cardRow(r.c, { s: r.s, price: moneyS(r.now), pill: pill(r.p24), sub: `${RAR[r.c.rar].name}${own ? ` · <span class="own">you have ×${own}</span>` : `<span class="setn"> · ${esc(SETS[r.c.set].name)}</span>`}` }); }).join("") || `<p class="small" style="padding:14px 2px">No cards match. Try another filter.</p>`;
+  // for the curious
+  const fl = MK.flips();
+  $("mFlips").live = `<div><h3 class="sec">Best trades · this week</h3>${fl.best.map(flipRow).join("")}</div><div><h3 class="sec">Worst trades · this week</h3>${fl.worst.map(flipRow).join("")}</div>`;
+  $("mFlipNote").textContent = `Simulated traders, worked out from the real price path and after the 10% selling fee. ${fl.won} of the last ${fl.n} sold for more than they got.`;
+  $("mTrades").live = MK.botFeed(8).map(t => `<div class="trade"><span class="who">${t.name}</span><span>${t.buy ? "bought" : "sold"} ${usd(t.usd)} of ${esc(t.card.name)}</span><span class="dim">at ${money(t.price)}</span><span class="${t.buy ? "up" : "dn"}">${t.buy ? "▲ buy" : "▼ sell"}</span><span class="faint">${agoText(t.ago)}</span></div>`).join("");
+}
+
+/* ---- the collection ---- */
+const CF = { show: "all", set: "all", sort: "num" };
+// every copy beyond the best one of each card (copies you added by code are never sold in bulk)
+function extras() { const out = []; for (const c of CARDS) copiesOf(c.no).slice(1).forEach(x => { if (!x.phys) out.push(x); }); return out; }
+function renderCollection() {
+  noteFound(); const found = new Set(state.vault.map(c => c.no)), worth = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0), ex = extras(), exSum = ex.reduce((a, c) => a + sellOf(c), 0), fx = Object.keys(state.foundFx).length, pk = curPack(), ch = chaseChance(pk);
+  $("cSub").textContent = "Tap a card to see its price and to sell it.";
+  $("cSum").live = `<div class="stat"><span class="label">Cards found</span><div class="sbig"><b>${found.size}</b><span>of ${CARDS.length}</span></div><div class="bar"><i style="width:${found.size / CARDS.length * 100}%"></i></div></div>
+    <div class="stat"><span class="label">Worth now</span><div class="sbig"><b>${money(worth)}</b></div>${state.vault.length ? `<div class="srow">${pill(worth / Math.max(1, basis) - 1)} <span class="small">since you got them</span></div>` : `<span class="small">Open a pack to start.</span>`}</div>
+    <div class="stat"><span class="label">Styles found</span><div class="sbig"><b>${fx}</b><span>of ${FX_ALL}</span></div><div class="bar"><i style="width:${fx / FX_ALL * 100}%"></i></div></div>
+    <div class="stat go"><span class="label">Next ${esc(pk.name)} pack</span><div class="sbig"><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span>a new card</span></div><button class="btn small solid" data-open>${state.freePacks ? "open free pack" : "open pack"}</button></div>`;
+  $("cActions").live = ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button><span class="small">Keeps your best copy of every card.</span>` : "";
+  $("cFilters").live = seg("c", "show", [["all", "All"], ["found", "Found"], ["missing", "Missing"]], CF.show) + selectHTML("cSort", [["num", "Number"], ["rare", "Rarest first"], ["value", "Most valuable"], ["new", "Newest"]], CF.sort, "Sort") + seg("c", "set", [["all", "All packs"], ...Object.keys(SETS).map(k => [k, SETS[k].name])], CF.set);
+  const val = c => { const b = copiesOf(c.no)[0]; return b ? valueOf(b) : MK.price(c); }, cmp = { num: (a, b) => +a.no - +b.no, rare: (a, b) => RAR[b.rar].tier - RAR[a.rar].tier || +a.no - +b.no, value: (a, b) => val(b) - val(a), new: (a, b) => ((copiesOf(b.no)[0] || { t: 0 }).t) - ((copiesOf(a.no)[0] || { t: 0 }).t) || +a.no - +b.no }[CF.sort];
+  const tile = c => {
+    const cs = copiesOf(c.no), best = cs[0], pk2 = packOf(c);
+    return `<button class="ctile${best ? "" : " miss"}" data-card="${c.no}" aria-label="${esc(c.name)}"><span class="cimg">${cardHTML(best || { no: c.no }, { sm: true, locked: !best, thumb: true })}${best ? `<span class="cb n">×${cs.length}</span>` : ""}${best && best.fx ? `<span class="cb fx">${STYLES[best.fx].name}</span>` : ""}</span>
+      <span class="cmeta">${best ? `<b>${moneyS(valueOf(best))}</b>${pill(gainOf(best))}` : `<b class="faint">Not found yet</b>`}</span>
+      <span class="csub">${best ? `${rdot(c)}${RAR[c.rar].name}${cs.length > 1 ? ` · ${cs.length} copies` : ""}` : `${rdot(c)}${RAR[c.rar].name} · ${chanceS(packP(c.id))}`}</span></button>`;
+  };
+  $("cGrid").live = Object.keys(SETS).filter(k => CF.set === "all" || CF.set === k).map(k => {
+    const all = CARDS.filter(c => c.set === k), got = all.filter(c => found.has(c.no)).length, list = all.filter(c => CF.show === "all" || (CF.show === "found" ? found.has(c.no) : !found.has(c.no))).sort(cmp);
+    return `<div class="sethead"><h3>${esc(SETS[k].name)}</h3><span class="small">${got} of ${all.length} found</span><div class="bar slim"><i style="width:${got / all.length * 100}%"></i></div></div>` + (list.length ? `<div class="cgrid">${list.map(tile).join("")}</div>` : `<p class="small" style="padding:6px 2px 22px">${CF.show === "found" ? "You haven't found any of these yet." : "You have every card here."}</p>`);
+  }).join("");
+}
 
 /* ============================================================================
    8. OPENING A PACK: tear it, reveal the cards one at a time, then keep or sell
@@ -1937,6 +2099,7 @@ function dailyModal(res) {
 }
 function renderChips() {
   const d = $("dailyBtn"); if (d) { const ready = dailyReady(); d.className = "chip" + (ready ? " ready" : ""); d.innerHTML = ready ? `<i></i>free <span class="xs">daily </span>pack` : `streak ${state.streak.n}`; d.title = ready ? "A free pack, once a day" : "Your daily streak"; }
+  const bt = document.querySelector('#btabs [data-v="home"]'); if (bt) bt.classList.toggle("dot", state.freePacks > 0 || dailyReady());
   const m = $("muteBtn"); if (m) { m.textContent = state.mute ? "sound off" : "sound on"; m.setAttribute("aria-pressed", state.mute ? "true" : "false"); }
 }
 
@@ -1954,10 +2117,6 @@ function rankHTML() {
 /* ---- the collection has holes in it, and you can see them ---- */
 const missingCards = set => { const have = new Set(state.vault.map(c => c.no)); return CARDS.filter(c => !have.has(c.no) && (!set || c.set === set)); };
 const chaseChance = pk => { pk = pk || curPack(); const m = missingCards(pk.set); return m.length ? 1 - m.reduce((a, c) => a * (1 - packP(c.id)), 1) : 0; };      // a pack only holds cards of its own set
-function progressHTML() {
-  noteFound(); const pk = curPack(), n = Object.keys(state.found).length, fx = Object.keys(state.foundFx).length, ch = chaseChance(pk);
-  return `<div><span class="label">cards found</span><b>${n} of ${CARDS.length}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(n / CARDS.length * 18), 18)}</span></div><div><span class="label">styles found</span><b>${fx} of ${FX_ALL}</b><span class="mono-meter" aria-hidden="true">${meter(Math.round(fx / FX_ALL * 18), 18)}</span></div><div><span class="label">a new card in your next ${esc(pk.name)} pack</span><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span class="small">chance, from the real odds</span></div>`;
-}
 function chaseHTML() {
   if (!state.s.packs && !state.vault.length) return "";
   const pk = curPack(), size = CARDS.filter(c => c.set === pk.set).length, miss = missingCards(pk.set); if (!miss.length) return `<span class="label">${esc(pk.name)}</span><span>You have every ${esc(pk.name)} card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
@@ -2337,8 +2496,9 @@ document.addEventListener("click", e => {
   if (t.dataset.card) { if (t.closest("#alert")) hideAlert(); cardModal(t.dataset.card); return; }
   if (t.dataset.cut) { closeModal(); Cut.play(t.dataset.cut); return; }
   if (t.dataset.tgt) { const [no, dir, pct] = t.dataset.tgt.split("|"); setTarget(no, dir, +pct); cardModal(no, true); toast(dir === "clear" ? "Alerts cleared" : "Alert set. You'll hear from us when it gets there."); Snd.click(); return; }
+  if (t.dataset.f) { const [sc, k, v] = t.dataset.f.split(":"); if (sc === "m") { MKF[k] = v; renderMarket(); } else { CF[k] = v; renderCollection(); } Snd.click(); return; }
   if (t.dataset.pack) { if (PACK_BY[t.dataset.pack] && state.pack !== t.dataset.pack) { state.pack = t.dataset.pack; persist(); Snd.click(); renderHome(); } return; }
-  if (t.dataset.opack) { oddsPack = t.dataset.opack; renderOdds(); return; }
+  if (t.dataset.opack) { oddsPack = t.dataset.opack; renderOdds(true); return; }
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.recap) { closeModal(); location.hash = "#/" + t.dataset.recap; return; }
   if (t.dataset.share) { const c = state.vault.find(x => x.uid === t.dataset.share); if (c) Share.open(receiptOf(c, false)); return; }
@@ -2382,7 +2542,7 @@ document.addEventListener("click", e => {
     case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); Ref.sync(); break;
   }
 });
-document.addEventListener("change", e => { if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
+document.addEventListener("change", e => { if (e.target.id === "mSort") { MKF.sort = e.target.value; renderMarket(); } if (e.target.id === "cSort") { CF.sort = e.target.value; renderCollection(); } if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
 document.addEventListener("submit", e => { if (e.target.id === "vanityForm") { e.preventDefault(); Ref.vanity($("vanityIn").value); } if (e.target.id === "csForm") { e.preventDefault(); Fair.setClientSeed($("csIn").value); fairModal(true); toast("Client seed set"); } if (e.target.id === "vfForm") { e.preventDefault(); verifyHand(); } });
 document.addEventListener("keydown", e => {
   const k = e.key;

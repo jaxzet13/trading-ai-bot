@@ -70,9 +70,9 @@ function blockReveal(el, str, ms) {
 // Charts are plain lines. A sparkline is a thin line; a chart is a line over a soft fill with a dot on the latest value and the high and low beside it.
 // `log` plots ratios, so +100% and −50% look the same size.
 let _lg = 0;
-function sparkSVG(v) {
-  const W = 84, H = 26, mn = Math.min(...v), sp = Math.max(...v) - mn || 1, pts = v.map((x, i) => (i / (v.length - 1) * W).toFixed(1) + " " + (H - 3 - (x - mn) / sp * (H - 6)).toFixed(1));
-  return `<svg class="sp ${v[v.length - 1] >= v[0] ? "up" : "dn"}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><path class="ln" d="M${pts.join(" L")}"/></svg>`;
+function sparkSVG(v, big) {
+  const W = big ? 200 : 84, H = big ? 54 : 26, mn = Math.min(...v), sp = Math.max(...v) - mn || 1, pts = v.map((x, i) => (i / (v.length - 1) * W).toFixed(1) + " " + (H - 3 - (x - mn) / sp * (H - 6)).toFixed(1));
+  return `<svg class="sp ${v[v.length - 1] >= v[0] ? "up" : "dn"}${big ? " big" : ""}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><path class="ln" d="M${pts.join(" L")}"/></svg>`;
 }
 function lineChart(vals, o) {
   o = o || {}; const W = 600, H = 200, P = 8, v = o.log ? vals.map(Math.log) : vals, mn = Math.min(...v), mx = Math.max(...v), mid = (mn + mx) / 2, sp = Math.max(mx - mn, o.log ? .06 : Math.abs(mid) * .01) * 1.2, lo = mid - sp / 2;
