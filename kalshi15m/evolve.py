@@ -39,7 +39,10 @@ LOG = LABDIR / "evo_log.jsonl"
 FIRST_GEN = 3
 N_PARENTS, PER_IDEA, TOP_N = 40, 3, 300
 MIN_PARENT_FILLS = 10
-MIN_SEARCH_N, MIN_HOLD_N = 100, 20
+# Nov 22: of 6,785 bred children with forward bets, those with < 400 history trades lost 2-15x more per forward bet
+# than the rest on each of the 4 forward days (Nov 19 -0.28 vs -0.17, Nov 20 -0.13 vs -0.01, Nov 21 -0.14 vs -0.05,
+# Nov 22 -0.04 vs -0.02 $/bet): with few trades, picking the best of many near-copies mostly picks luck.
+MIN_SEARCH_N, MIN_HOLD_N = 400, 20
 ROUND_GAP_S = int(os.environ.get("EVO_GAP_S", str(2 * 3600)))
 SCORE_MAX_AGE_DAYS = 28          # batches older than this stop being re-scored (their record stays)
 # plain thresholds that can step a little past the family's grid: (low, high, step)
