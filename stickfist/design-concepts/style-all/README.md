@@ -34,7 +34,7 @@ reaper (701,000 characters) and umbra (1,578,000) take 1.5 to 3 minutes per ramp
 | grimm | stick-figures-four/sources/3-epic-grimm-219520.png | 560 x 392 = 219,520 | 1.73 | view | the walls remember. |
 | reaper | stick-figures-four/sources/4-legendary-reaper-701000.png | 1000 x 701 = 701,000 | 1.73 | view | still warm. |
 | umbra | umbra/eclipse.png | 1500 x 1052 = 1,578,000 | 1.73 | crop (umbra_final.py) | the sun blinked first. |
-| fuse | moonshot/sources/fuse_bold.jpg | 72 x 50 = 3,600 | 1.73 | view | light it and walk away. |
+| fuse | moonshot/sources/fuse.jpg | 72 x 50 = 3,600 | 1.73 | view | light it and walk away. |
 | ignition | moonshot/sources/ignition.jpg | 120 x 84 = 10,080 | 1.73 | view | no turning back from here. |
 | liftoff | moonshot/sources/liftoff.jpg | 240 x 168 = 40,320 | 1.73 | view | gravity lost the argument. |
 | apogee | moonshot/sources/apogee.jpg | 420 x 294 = 123,480 | 1.73 | view | the top is quiet. |

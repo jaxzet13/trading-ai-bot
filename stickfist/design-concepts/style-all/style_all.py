@@ -81,14 +81,14 @@ CARDS = {
                     over=dict(wire=dict(black=0.12, white=1.0, gamma=1.3), scratch=dict(black=0.25, white=1.0, gamma=1.0, thr=0.25), chain=dict(white=1.3))),
     'umbra':   dict(src='umbra/eclipse.png', count=1578000, cols=1500, aspect=1.73, crop=(0.07, 0.05, 0.93, 0.985), text='the sun blinked first.'),
     # ---- Moonshot (the second pack): one launch, five altitudes. `default` is the card's own plain look: (engine, ascii2 / ascii3 arguments).
-    'fuse':     dict(src='moonshot/sources/fuse_bold.jpg', count=3600, cols=72, aspect=1.73, view=(0.37, 0.52, 0.42), text='light it and walk away.',
-                     default=('ramp', dict(style='classic', pal='amber', black=0.05, white=0.75, gamma=0.7, glow=0.45))),
-    'ignition': dict(src='moonshot/sources/ignition.jpg', count=10080, cols=120, aspect=1.73, view=(0.5, 0.62, 0.62), text='no turning back from here.',
-                     default=('ramp', dict(style='duo', pal='amber', black=0.10, white=0.80, gamma=0.85, glow=0.75))),
-    'liftoff':  dict(src='moonshot/sources/liftoff.jpg', count=40320, cols=240, aspect=1.73, view=(0.5, 0.47, 0.80), text='gravity lost the argument.',
-                     default=('ramp', dict(style='duo', pal='blood', black=0.05, white=0.85, gamma=0.8, glow=0.8))),
-    'apogee':   dict(src='moonshot/sources/apogee.jpg', count=123480, cols=420, aspect=1.73, view=(0.5, 0.46, 0.80), thick=2, text='the top is quiet.',
-                     default=('ramp', dict(style='glitch', pal='cyan', black=0.03, white=0.55, gamma=0.6, glow=0.7))),
+    'fuse':     dict(src='moonshot/sources/fuse.jpg', count=3600, cols=72, aspect=1.73, view=(0.5, 0.42, 0.85), text='light it and walk away.',
+                     default=('ramp', dict(style='classic', pal='amber', black=0.05, white=0.85, gamma=0.8, glow=0.45))),
+    'ignition': dict(src='moonshot/sources/ignition.jpg', count=10080, cols=120, aspect=1.73, view=(0.5, 0.46, 0.9), reflect=0.16, text='no turning back from here.',
+                     default=('ramp', dict(style='duo', pal='amber', black=0.06, white=0.90, gamma=0.9, glow=0.7))),
+    'liftoff':  dict(src='moonshot/sources/liftoff.jpg', count=40320, cols=240, aspect=1.73, view=(0.5, 0.46, 0.9), reflect=0.16, text='gravity lost the argument.',
+                     default=('ramp', dict(style='duo', pal='blood', black=0.06, white=0.90, gamma=0.9, glow=0.7))),
+    'apogee':   dict(src='moonshot/sources/apogee.jpg', count=123480, cols=420, aspect=1.73, view=(0.5, 0.46, 0.9), text='the top is quiet.',
+                     default=('ramp', dict(style='duo', pal='blue', black=0.05, white=0.90, gamma=0.85, glow=0.7))),
     'luna':     dict(src='moonshot/sources/luna.jpg', count=448800, cols=800, aspect=1.73, view=(0.5, 0.44, 0.80), text='to the moon was never a joke.',
                      default=('ramp', dict(style='irid', pal='moon', black=0.05, white=0.90, gamma=0.8, glow=0.8))),
 }
@@ -133,7 +133,9 @@ E.prep = _prep_thick
 
 def place_source(cfg, png):
     """cfg['view'] -> a 1500 x 1820 PNG of exactly what the card's picture area shows (black outside the source)"""
-    img = cv2.imread(os.path.join(DC, cfg['src'])); H0, W0 = img.shape[:2]
+    img = cv2.imread(os.path.join(DC, cfg['src']))
+    if cfg.get('reflect'): k = int(img.shape[1] * cfg['reflect']); img = cv2.copyMakeBorder(img, 0, 0, k, k, cv2.BORDER_REFLECT_101)   # a source narrower than the card: carry its edge (smoke, sky) on sideways instead of stopping at a line
+    H0, W0 = img.shape[:2]
     cx, cy, vh = cfg['view']; scale = ART_H / (vh * H0)
     s = cv2.resize(img, (int(round(W0 * scale)), int(round(H0 * scale))), interpolation=cv2.INTER_AREA)
     ox = int(round(W / 2 - cx * s.shape[1])); oy = int(round(ART_H / 2 - cy * s.shape[0]))
