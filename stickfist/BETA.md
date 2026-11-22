@@ -65,6 +65,15 @@ Slot `i` of the pack uses hex characters `8i..8i+7` of the digest as a number in
 
 Those thresholds are rules of thumb, not promises. Change one thing at a time and watch two weeks.
 
+## Requiem, the limited drop (a preview in the beta)
+
+`#/limited` shows **Requiem**: six premium cards, three to a pack, $65 for a physical pack, each card with its own rarity and far more characters than any other card here. It is a preview. It cannot be bought or opened, takes no payment, and its cards are not in anyone's collection or in the market. A banner on the pack page links to it.
+
+- The cards, odds and page text come from `src/js/01b-limited.js` and `08b-limited.js`; the pictures are in `cards/rq/`. `design-concepts/requiem/README.md` explains how the cards are made and checked, and what selling the pack for real would take (payments, printing and shipping, provable draws, a real limit, rules for paid random packs, a real age check).
+- **A limit must be real.** Until you set `RQ.run` (how many packs you will print) and `RQ.closes` (the date orders close) the page says it has no limit to count down to, and shows no countdown and no "N left". Do not add either unless the number is true. Print exactly `run` packs.
+- The odds on the page are exact and are worked out live from the slot tables. About 28% of packs sell back for at least $65, the average sell-back is about 89%, and the rarest card (Seraph) is about 1 pack in 2,500. If you change a card's worth or a slot, the page changes with it.
+- Check the image-model terms and take legal advice before selling: see "Where the paintings came from" and "What it takes to sell it for real" in the Requiem README.
+
 ## Before you announce it
 
 1. Keep the 18+ gate. The cards contain explicit language and violence, and packs are a game of chance, so STIXX is for adults. Do not advertise it to children or in places that mostly reach them.

@@ -52,6 +52,23 @@ Fonts go in as outlines. The small collector line is solid 100% K black or white
 | Bloodmoon (limited) | ◐ / ◐◐ / ● | Black | Blood-red ink, red foil on Ultra and up | Red duotone art on base cards; serial-numbered super rare |
 | Gold Scroll (limited) | ◇ / ✦✦ / ✦✦✦ | Indigo brocade | Gold foil | Gold-leaf texture on Ultra and up |
 
+## Requiem (limited, 3 cards per pack, $65)
+
+Six cards with their own finishes. These are a plan: confirm each with a printed proof before a run.
+
+| Card | Rarity | Finish (planned) |
+|---|---|---|
+| R1 Pallbearer | Uncommon | Matte black-core stock, spot gloss on the name |
+| R2 Vigil | Rare | Silver foil on the name and the lantern; cool blue duotone kept as printed ink, not foil |
+| R3 Halation | Epic | Rainbow holo laminate over the glitch bands only; the rest of the art stays matte |
+| R4 The Witness | Legendary | Etched silver foil on the eye and the falling stars |
+| R5 Orrery | Mythic | Blue star-pattern holo over the planets and the galaxy |
+| R6 Seraph | Secret | Full-card holo laminate; every copy serial-numbered out of the print run on a dedicated pass |
+
+- The picture files are 1800 × 2184 px (`cards/rq/<id>.jpg`) and the sources are 1024 px (Orrery 1792 px). For print, upscale the sources 3 to 4 times, check each at 100% for warped hands, faces and edges, and re-render with `python requiem_render.py --scale 2` (3600 × 4368 masters, or larger if the sources are larger).
+- The characters are what make the cards worth the price, and they only read in print if the printer can hold fine detail. Order a proof of Seraph and Pallbearer first: they are the densest and the smoothest.
+- The printed run must equal the run published on the page (`RQ.run` in `src/js/01b-limited.js`). Never reprint.
+
 ## Stock
 
 - A black-core (or blue-core) card stock around 310 gsm, so the cards can't be seen through or easily faked, and so they shuffle like a real TCG.

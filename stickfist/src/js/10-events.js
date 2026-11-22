@@ -5,6 +5,7 @@ document.addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) { if (e.target === $("modal")) closeModal(); return; }
   if (t.hasAttribute("data-open")) { openPack(); return; }
   if (t.hasAttribute("data-close")) { closeModal(); return; }
+  if (t.dataset.rq) { rqModal(t.dataset.rq); Snd.click(); return; }
   if (t.dataset.card) { if (t.closest("#alert")) hideAlert(); cardModal(t.dataset.card); return; }
   if (t.dataset.cut) { closeModal(); Cut.play(t.dataset.cut); return; }
   if (t.dataset.tgt) { const [no, dir, pct] = t.dataset.tgt.split("|"); setTarget(no, dir, +pct); cardModal(no, true); toast(dir === "clear" ? "Alerts cleared" : "Alert set. You'll hear from us when it gets there."); Snd.click(); return; }
@@ -34,6 +35,7 @@ document.addEventListener("click", e => {
     case "clAgain": Clip.replay(); break;
     case "clClose": Clip.close(); break;
     case "sumClip": if (SS) Clip.open(SS.items, SS.pack, SS.free, SS_PRICE); break;
+    case "rqShare": rqShare(); break;
     case "alertX": hideAlert(); break;
     case "dailyBtn": Snd.click(); dailyModal(); break;
     case "claimDaily": { const r = claimDaily(); if (r) dailyModal(r); break; }
