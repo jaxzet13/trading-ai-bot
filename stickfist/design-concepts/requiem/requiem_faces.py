@@ -10,7 +10,7 @@ The app draws the name strip in HTML; a printer needs one flat picture per card.
     python requiem_faces.py --out print                    # six faces at 600 dpi, 3 mm bleed (1630 x 2220 px), plus the back
     python requiem_faces.py --proof --out proof            # the proof set: the same faces with "PROOF, NOT FOR SALE" on the strip
     python requiem_faces.py --guides --out guides          # trim (red) and safe zone (blue, dashed) drawn on, to check by eye
-    python requiem_faces.py --dpi 300 --bleed 3.175        # other sizes: use the printer's own template numbers
+    python requiem_faces.py --dpi 300 --bleed 3.175 --px 819x1113   # a printer's exact template size (this is The Game Crafter's Euro Poker by their own 1/8" rule: check it)
 
 Check the pixel size against the printer's own template before you upload anything: bleed and size rules differ a little between printers.
 Needs numpy, opencv-python and Pillow; the font is JetBrains Mono.
@@ -44,10 +44,16 @@ def spaced(d, x, y, text, font, fill, track):
     return x - track
 
 
-def face(card, dpi=600, bleed_mm=3.0, proof=False, guides=False):
+def sizes(dpi, bleed_mm, px=None):
+    """(canvas W, canvas H, trim w, trim h, bleed) in pixels. With px the canvas is exactly that size (a printer's template) and the trim is what is left inside the bleed."""
     mm = dpi / 25.4
-    tw, th, b = round(TRIM_W * mm), round(TRIM_H * mm), round(bleed_mm * mm)
-    W, H = tw + 2 * b, th + 2 * b
+    if px: b = int(bleed_mm * mm); return px[0], px[1], px[0] - 2 * b, px[1] - 2 * b, b
+    tw, th, b = round(TRIM_W * mm), round(TRIM_H * mm), round(bleed_mm * mm); return tw + 2 * b, th + 2 * b, tw, th, b
+
+
+def face(card, dpi=600, bleed_mm=3.0, proof=False, guides=False, px=None):
+    mm = dpi / 25.4
+    W, H, tw, th, b = sizes(dpi, bleed_mm, px)
     cqw = tw / 100.0                                                      # 1% of the trim width, the unit the app's card uses
     art_h = round(th * 1820 / 2100)                                       # the picture area is 1500 : 1820 of a 1500 : 2100 card
     im = cv2.cvtColor(cv2.imread(os.path.join(ROOT, 'cards', 'rq', card['id'] + '.jpg')), cv2.COLOR_BGR2RGB)
@@ -85,9 +91,9 @@ def draw_guides(d, W, H, b, mm):
     for y in range(y0, y1, dash * 2): d.line([(x0, y), (x0, min(y + dash, y1))], fill=(70, 150, 255, 255), width=max(2, round(mm * 0.12))); d.line([(x1, y), (x1, min(y + dash, y1))], fill=(70, 150, 255, 255), width=max(2, round(mm * 0.12)))
 
 
-def back(dpi=600, bleed_mm=3.0):
+def back(dpi=600, bleed_mm=3.0, px=None):
     """the existing STIXX back (exports/card-back), fitted to the same canvas. Design a Requiem back before a real run: the back can never change."""
-    mm = dpi / 25.4; W, H = round(TRIM_W * mm) + 2 * round(bleed_mm * mm), round(TRIM_H * mm) + 2 * round(bleed_mm * mm)
+    W, H = sizes(dpi, bleed_mm, px)[:2]
     im = cv2.cvtColor(cv2.imread(os.path.join(ROOT, 'exports', 'card-back', 'STIXX_back_MPC_63.5x88.9_bleed.png')), cv2.COLOR_BGR2RGB)
     return cv2.resize(im, (W, H), interpolation=cv2.INTER_AREA if im.shape[1] > W else cv2.INTER_LANCZOS4)
 
@@ -101,15 +107,17 @@ def save(arr, path, fmt, dpi):
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--out', default=os.path.join(HERE, 'print')); ap.add_argument('--cards', default='')
     ap.add_argument('--dpi', type=int, default=600); ap.add_argument('--bleed', type=float, default=3.0, help='bleed in mm on every side')
+    ap.add_argument('--px', default='', help='exact canvas size, e.g. 819x1113 (The Game Crafter Euro Poker at 300 dpi: use with --dpi 300 --bleed 3.175)')
     ap.add_argument('--proof', action='store_true'); ap.add_argument('--guides', action='store_true'); ap.add_argument('--format', default='png', choices=['png', 'jpg'])
     a = ap.parse_args()
+    px = tuple(int(v) for v in a.px.lower().split('x')) if a.px else None
     cards = read_cards(); want = set(a.cards.split(',')) - {''}
     sheet = []
     for c in cards:
         if want and c['id'] not in want and c['no'] not in want: continue
-        arr = face(c, a.dpi, a.bleed, a.proof, a.guides); bz = round(a.bleed * a.dpi / 25.4); sheet.append(arr[bz:-bz, bz:-bz])
+        arr = face(c, a.dpi, a.bleed, a.proof, a.guides, px); bz = sizes(a.dpi, a.bleed, px)[4]; sheet.append(arr[bz:-bz, bz:-bz])
         save(arr, os.path.join(a.out, f"{c['no']}-{c['id']}.{a.format}"), a.format, a.dpi); print(f"{c['no']} {c['name']}: {arr.shape[1]} x {arr.shape[0]} px")
-    bk = back(a.dpi, a.bleed); save(bk, os.path.join(a.out, f'back.{a.format}'), a.format, a.dpi); sheet.append(bk[bz:-bz, bz:-bz])  # the contact sheet shows the cut cards, without the bleed
+    bk = back(a.dpi, a.bleed, px); save(bk, os.path.join(a.out, f'back.{a.format}'), a.format, a.dpi); sheet.append(bk[bz:-bz, bz:-bz])  # the contact sheet shows the cut cards, without the bleed
     h = 900; row = [cv2.resize(x, (round(x.shape[1] * h / x.shape[0]), h), interpolation=cv2.INTER_AREA) for x in sheet]
     save(np.hstack([np.pad(x, ((0, 0), (0, 12), (0, 0)), constant_values=12) for x in row[:4]]) if len(row) <= 4 else
          np.vstack([np.hstack([np.pad(x, ((0, 12), (0, 12), (0, 0)), constant_values=12) for x in row[:4]]), np.hstack([np.pad(x, ((0, 12), (0, 12), (0, 0)), constant_values=12) for x in (row[4:] + [np.zeros_like(row[0])] * 4)[:4]])]),
