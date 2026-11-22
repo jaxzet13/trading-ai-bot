@@ -439,12 +439,48 @@ def compare(log=print):
     return out
 
 
+def compare_parents(log=print):
+    """Does breeding help? Per full forward day: P&L per bet of single-parent children on the parent's own coin vs
+    their parents on the same day. (Nov 20-21: children about 4.5 cents/bet worse, however many settings changed.)"""
+    cands = {}
+    for g in gens():
+        for c in json.loads(cands_path(g).read_text())["candidates"]:
+            cands[f"{c['id']}@g{g}"] = c
+    daily = {}
+    for g in gens():
+        if daily_path(g).exists():
+            for cid, v in json.loads(daily_path(g).read_text())["days"].items():
+                daily[f"{cid}@g{g}"] = v
+    evo = [g for g in gens() if g >= FIRST_GEN]
+    if not evo:
+        return []
+    first = min(json.loads(cands_path(g).read_text())["fwd_start"] for g in evo) // 86400 + 1
+    days = sorted({int(d) for v in daily.values() for d in v if int(d) >= first})
+    out = []
+    for d in days:
+        a = [0.0, 0.0, 0.0, 0.0]
+        for key, c in cands.items():
+            ps = c.get("parents") or []
+            if len(ps) != 1 or ps[0] not in cands or cands[ps[0]]["scope"] != c["scope"]:
+                continue
+            ch, p = daily.get(key, {}).get(str(d)), daily.get(ps[0], {}).get(str(d))
+            if ch and p:
+                a[0] += ch[0]; a[1] += ch[1]; a[2] += p[0]; a[3] += p[1]
+        if a[1] and a[3]:
+            out.append({"day": d, "child_per_bet": round(a[0] / a[1], 4), "parent_per_bet": round(a[2] / a[3], 4)})
+            log(f"  {time.strftime('%b %d', time.gmtime(d * 86400))}: children {a[0] / a[1]:+.3f}/bet ({int(a[1])} bets) vs "
+                f"their parents {a[2] / a[3]:+.3f}/bet on the same day")
+    return out
+
+
 def show_board(n=25, log=print):
     rows = [r for r in board() if r["filled"] >= 10]
     rows.sort(key=lambda r: -strength(r))
     log(f"{len(gens())} batches, {sum(1 for _ in board())} strategies; top {n} by forward strength (t shrunk by fills):")
     log("evolved vs original strategies, same days:")
     compare(log)
+    log("bred children vs their own parents, same days:")
+    compare_parents(log)
     for r in rows[:n]:
         log(f"  {r['id'] + '@g' + str(r['gen']):40s} {r['filled']:>4} fills  ${r['pnl']:>7.2f}  t {r['t']:>5.2f}  "
             f"{r['days_up']}/{r['days_traded']} days up  ({r['fwd_days']:.1f} forward days)")
