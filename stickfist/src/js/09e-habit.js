@@ -58,6 +58,7 @@ function dailyModal(res) {
     <div class="row">${ready ? `<button class="btn solid" id="claimDaily">claim your pack</button>` : have ? `<button class="btn solid" id="claimOpen">open a free pack</button>` : ""}<button class="btn ghost" data-close>${ready ? "not now" : "close"}</button></div></div>`, true);
 }
 function renderChips() {
+  if (typeof renderBroke === "function") renderBroke();
   const d = $("dailyBtn"); if (d) { const ready = dailyReady(); d.className = "chip" + (ready ? " ready" : ""); d.innerHTML = ready ? `<i></i>free <span class="xs">daily </span>pack` : `streak ${state.streak.n}`; d.title = ready ? "A free pack, once a day" : "Your daily streak"; }
   const m = $("muteBtn"); if (m) { m.textContent = state.mute ? "sound off" : "sound on"; m.setAttribute("aria-pressed", state.mute ? "true" : "false"); }
 }

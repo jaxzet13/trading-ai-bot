@@ -52,6 +52,9 @@ const Sale = (() => {
    stays simulated, and nothing can be cashed out. The server (pay.js) decides whether this is on, takes the payment through Stripe, and keeps a running total of
    the packs each player has bought; the page adds the difference to the player's packs, so a purchase can never be added twice.
    ========================================================================== */
+// Nothing to open and nothing to open it with: no free pack, no bought pack, and not enough play money for the cheapest pack. Only while buying is on.
+const isBroke = () => Shop.open() && !state.freePacks && PACKS.every(p => !boughtOf(p.id) && state.coins < packPrice(p));
+function renderBroke() { document.body.classList.toggle("broke", isBroke()); }
 const Shop = (() => {
   let cfg = { open: false, prices: {} };
   const ret = (() => {                                                     // ?pk=paid&sid=… or ?pk=cancel, on the way back from Stripe
@@ -64,13 +67,13 @@ const Shop = (() => {
   const open = () => !!cfg.open && PACKS.some(p => cfg.prices && cfg.prices[p.id]), has = id => !!cfg.open && !!(cfg.prices && cfg.prices[id]), price = id => (cfg.prices && cfg.prices[id]) || 0;
   async function load() {
     if (!API.on) return; const r = await API.get("shop/config?uid=" + encodeURIComponent(state.uid)); if (!r || typeof r.open !== "boolean") return;
-    cfg = r; Money.words(); const tb = $("topBuy"); if (tb) tb.hidden = !open(); if (view === "home") renderHome();
+    cfg = r; Money.words(); const tb = $("topBuy"); if (tb) tb.hidden = !open(); renderBroke(); if (view === "home") renderHome();
   }
   const chosen = () => { const s = $("shopPack"); return s ? s.value : curPack().id; }, count = () => { const q = $("shopQty"); return q ? +q.value || 1 : 1; };
   const total = () => rmoney(price(chosen()) * count());
   function qty() { const b = $("shopPay"); if (b && !b.dataset.busy) b.textContent = "Pay " + total(); const e = $("shopEach"); if (e) e.textContent = rmoney(price(chosen())) + " per pack"; }
-  function modal() {
-    const ids = PACKS.filter(p => has(p.id)).map(p => p.id); if (!ids.length) return; const cur = ids.includes(curPack().id) ? curPack().id : ids[0];
+  function modal(want) {
+    const ids = PACKS.filter(p => has(p.id)).map(p => p.id); if (!ids.length) return; const pref = want || curPack().id, cur = ids.includes(pref) ? pref : ids[0];
     openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Buy packs</h2></div>
       <p class="dim">Real money buys packs, and nothing else. Each pack holds random digital cards: you can't choose them, and the odds are on the <a href="#/odds" data-close>odds page</a>. The cards are game items with <b>no cash value</b>. Nothing in STIXX can be cashed out, and the prices you see in the game are simulated.</p>
       <div class="rqbuyh"><label class="rqqty" style="justify-items:start"><span class="small">Pack</span><select id="shopPack" aria-label="Which pack">${ids.map(id => `<option value="${id}"${id === cur ? " selected" : ""}>${esc(PACK_BY[id].name)} · ${rmoney(price(id))}</option>`).join("")}</select></label>
