@@ -13,6 +13,11 @@ function receiptOf(c, sold) {
   return { card, fx: c.fx || "", code: c.code, sold, cost, got, held, vals, pi, pk, startMs: now - ago0 * MK.TICK, endMs: now, gain: got - cost, pct: got / Math.max(1, cost) - 1, peakPct: vals[pk] * SELLBACK / Math.max(1, cost) - 1, at: now };
 }
 
+async function saveBlob(blob, name) {
+  try { const dl = window.claude && claude.use ? await claude.use("downloads") : null; if (dl) { await dl.save({ filename: name, data: blob }); toast("Saved"); return; } } catch (e) { if (e && e.code === "declined") return; }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Saved");
+}
+
 const Share = (() => {
   const W = 1080, H = 1350, FONT = "'JetBrains Mono', 'DejaVu Sans Mono', ui-monospace, Menlo, Consolas, monospace";
   const GREEN = "#9fd8a6", RED = "#e8786d", INK = "#ece7dc", DIM = "#8d897f", FAINT = "#4a4a52", BG = "#050507", PANEL = "#0b0b10";
@@ -77,7 +82,7 @@ const Share = (() => {
 
     // the footer band
     c.save(); rr(30, 1090, W - 60, H - 1090 - 30, 34); c.clip(); c.fillStyle = "#0e0e18"; c.fillRect(30, 1090, W - 60, 240); c.restore();
-    pix("STIXX", 66, 1140, 10, INK, .95); T("demo money · simulated", W - 66, 1142, 24, INK, 600, "right"); T("nothing here is real or charged", W - 66, 1180, 20, DIM, 500, "right");
+    pix("STIXX", 66, 1140, 10, INK, .95); T("play money · simulated", W - 66, 1142, 24, INK, 600, "right"); T("nothing here is real or charged", W - 66, 1180, 20, DIM, 500, "right");
     T(`${RAR[r.card.rar].name} · ${fmt(r.card.chars)} characters`, 66, 1240, 19, DIM, 500); T(r.code, 66, 1270, 19, DIM, 500); T(r.sold ? "after the 10% selling fee" : "if you sold now, after the 10% fee", W - 66, 1270, 19, DIM, 500, "right");
 
     // when the replay ends: profit throws characters up, a loss glitches
@@ -149,12 +154,8 @@ const Share = (() => {
 
   // a still picture of the position card
   function still() { return new Promise(res => { cancelAnimationFrame(raf); const m = mode, i = intro; mode = "position"; intro = 9; draw(false); cv.toBlob(b => { res(b); mode = m; intro = i; if (!$("share").hidden && !reduced) { last = performance.now(); raf = requestAnimationFrame(loop); } }, "image/png"); }); }
-  async function saveBlob(blob, name) {
-    try { const dl = window.claude && claude.use ? await claude.use("downloads") : null; if (dl) { await dl.save({ filename: name, data: blob }); toast("Saved"); return; } } catch (e) { if (e && e.code === "declined") return; }
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Saved");
-  }
   const fileName = ext => `stixx-${rec.card.id}-${rec.pct >= 0 ? "up" : "down"}-${Math.abs(Math.round(rec.pct * 100))}pct.${ext}`;
-  const caption = () => `${rec.sold ? "Sold" : "Holding"} ${rec.card.name} on STIXX: ${pctShort(rec.pct)} (${money(rec.cost)} to ${money(rec.got)}). Demo money.`;
+  const caption = () => `${rec.sold ? "Sold" : "Holding"} ${rec.card.name} on STIXX: ${pctShort(rec.pct)} (${money(rec.cost)} to ${money(rec.got)}). Play money.`;
   async function save() { const b = await still(); if (b) saveBlob(b, fileName("png")); }
   async function share() {
     const b = await still(); if (!b) return; const f = new File([b], fileName("png"), { type: "image/png" });

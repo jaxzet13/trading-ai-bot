@@ -3,7 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>STIXX First Print</title>
+<title>STIXX: ASCII card packs</title>
+<meta name="description" content="Open free packs of ASCII trading cards, watch their prices move like memecoins, and sell when you think they are at the top. Play money only. 18+.">
+<meta name="theme-color" content="#050506">
+<meta name="stixx-api" content="">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="STIXX">
+<meta property="og:title" content="STIXX: ASCII card packs">
+<meta property="og:description" content="Open free packs of ASCII trading cards, watch their prices move like memecoins, and sell when you think they are at the top. Play money only. 18+.">
+<meta property="og:image" content="og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23050506'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' text-anchor='middle' fill='%23ece7dc'%3ES%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap">
@@ -63,10 +73,10 @@ main.wrap { padding-top: 44px; padding-bottom: 90px; }
 footer { border-top: 1px solid var(--ln); padding: 18px 0 28px; color: var(--faint); font-size: 12px; }
 
 /* ---------- home ---------- */
-.home { display: grid; justify-items: center; gap: 26px; text-align: center; }
+.home { display: grid; justify-items: center; gap: 20px; text-align: center; } .home .blurb { max-width: 44ch; margin: -6px auto 0; }
 .banner { color: transparent; font-size: clamp(7px, 1.9vw, 11px); line-height: 1.02; background: linear-gradient(100deg, #5b5953 0 38%, #fff 50%, #5b5953 62% 100%) 0 0 / 260% 100%; -webkit-background-clip: text; background-clip: text; animation: sweep 6s linear infinite; white-space: pre; user-select: none; }
 @keyframes sweep { from { background-position: 130% 0; } to { background-position: -130% 0; } }
-.packcol { width: min(330px, 78vw); }
+.packcol { width: min(78vw, clamp(172px, calc((100vh - 480px) * .667), 330px)); }      /* the pack shrinks on a short screen so the button under it is always in view */
 .packmeta { display: grid; gap: 6px; } .packmeta h1 { font-size: 24px; font-weight: 700; letter-spacing: -.01em; }
 .honest { max-width: 52ch; color: var(--dim); font-size: 14px; } .honest b { color: var(--ink); font-weight: 400; }
 
@@ -243,6 +253,27 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 @media (max-width: 760px) { .prog { grid-template-columns: 1fr; gap: 14px; } .chip.soft { display: none; } header.top .wrap .wallet { gap: 7px; margin-left: auto; } .chip { padding: 4px 9px; font-size: 12px; } .wallet .btn.small { padding: 5px 9px; font-size: 12px; } .wallet .bal { font-size: 14px; } }
 
 @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* ---- beta: free packs, invites, fair play ---- */
+.btn.solid.free { background: var(--ok); border-color: var(--ok); color: #06140a; } .btn.solid.free:hover:not(:disabled) { background: #b6e6bc; border-color: #b6e6bc; }
+.steps { display: flex; gap: 8px 22px; flex-wrap: wrap; justify-content: center; list-style: none; padding: 0; margin: 0; font-size: 14px; color: var(--dim); } .steps li { display: flex; align-items: center; gap: 8px; } .steps b { display: inline-grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--ln3); border-radius: 50%; font-size: 12px; color: var(--ink); font-weight: 600; }
+.invitebar { font-size: 14px; color: var(--dim); min-height: 0; } .invitebar:empty { display: none; } .invitelink { color: var(--dim); text-decoration: none; border-bottom: 1px solid var(--ln3); padding-bottom: 2px; } .invitelink b { color: var(--ink); font-weight: 600; } .invitelink:hover { border-color: var(--dim); }
+.small.bad, .bad { color: var(--bad); }
+.inv { display: grid; gap: 28px; max-width: 640px; } ol.plain { padding-left: 20px; display: grid; gap: 8px; color: var(--dim); }
+.invhero { display: grid; gap: 12px; border: 1px solid var(--ln2); border-radius: 14px; padding: 20px; }
+.linkbox { width: 100%; padding: 12px 14px; background: #0c0c0e; border: 1px solid var(--ln3); border-radius: 10px; color: var(--ink); font: 14px var(--m, ui-monospace, monospace); min-width: 0; }
+.invstats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; } .invstats > div { display: grid; gap: 4px; border: 1px solid var(--ln); border-radius: 12px; padding: 12px 14px; } .invstats b { font-size: 26px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+#vanityForm { display: grid; gap: 8px; } #vanityForm input, #csIn, .vf input, .vf select { padding: 10px 12px; background: #0c0c0e; border: 1px solid var(--ln3); border-radius: 10px; color: var(--ink); font: 14px var(--m, ui-monospace, monospace); }
+.fair .kv { display: grid; grid-template-columns: 1fr auto; gap: 8px 20px; align-items: end; } .fair code, #vfOut code { font: 13px var(--m, ui-monospace, monospace); color: var(--ink); word-break: break-all; } .fair .kv > div { display: grid; gap: 3px; }
+.fairT { width: 100%; font-size: 12.5px; } .fairT td, .fairT th { padding: 5px 10px 5px 0; text-align: left; vertical-align: top; } .fairT td.r, .fairT th.r { text-align: right; padding-right: 0; white-space: nowrap; }
+.fbadge { font-size: 12px; color: var(--dim); } .fbadge.ok { color: var(--ok); } .fbadge.bad { color: var(--bad); }
+.vf { display: grid; gap: 8px; margin-top: 10px; } .vf input { width: 100%; }
+@media (max-width: 760px) { .invstats { grid-template-columns: 1fr 1fr; } nav.tabs a { padding-left: 11px; padding-right: 11px; } }
+.clipov .sh-box canvas { width: min(92vw, calc((100vh - 170px) * 9 / 16)); aspect-ratio: 9 / 16; }
+#clState { min-height: 1.4em; text-align: center; } .clipov { background: #030304; } .mbox.slim .fair .kv { grid-template-columns: 1fr auto; }
+@keyframes freeGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(159,216,166,0); } 50% { box-shadow: 0 0 0 10px rgba(159,216,166,.14); } }
+.btn.solid.free { animation: freeGlow 2.4s ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { .btn.solid.free { animation: none; } }
+@media (max-height: 720px) { .banner { display: none; } .packcol { width: min(78vw, clamp(150px, calc((100vh - 400px) * .667), 330px)); } .home { gap: 14px; } }
 </style>
 </head>
 <body>
@@ -250,9 +281,9 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
   <div class="wrap">
     <a class="logo" href="#/">STIXX</a>
     <nav class="tabs" id="tabs" aria-label="Sections">
-      <a href="#/" data-v="home">pack</a><a href="#/market" data-v="market">market</a><a href="#/profile" data-v="profile">profile</a><a href="#/collection" data-v="collection">collection</a><a href="#/odds" data-v="odds">odds</a>
+      <a href="#/" data-v="home">pack</a><a href="#/collection" data-v="collection">cards</a><a href="#/market" data-v="market">market</a><a href="#/invite" data-v="invite">invite</a><a href="#/profile" data-v="profile">me</a>
     </nav>
-    <div class="wallet"><button class="chip" id="dailyBtn"></button><button class="chip soft" id="muteBtn" aria-pressed="false"></button><span class="bal" id="bal">$0.00</span><button class="btn small" id="addFunds" title="Demo money. Nothing is ever charged.">+ add $10</button></div>
+    <div class="wallet"><button class="chip" id="dailyBtn"></button><button class="chip soft" id="muteBtn" aria-pressed="false"></button><span class="bal" id="bal" title="Play money. Nothing is ever charged.">$0.00</span></div>
   </div>
 </header>
 <div class="tape" aria-hidden="true"><div class="tape-in" id="tapeIn"></div></div>
@@ -265,9 +296,12 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
       <pre class="banner" id="banner" aria-label="STIXX"></pre>
       <div class="packtabs" id="packTabs" role="tablist" aria-label="Choose a pack"></div>
       <div class="packcol" id="homePack"></div>
-      <div class="packmeta"><h1 id="packName">First Print</h1><p class="dim" id="packLine"></p><p class="small" id="packBlurb"></p></div>
+      <div class="packmeta"><h1 id="packName">First Print</h1><p class="dim" id="packLine"></p></div>
       <button class="btn solid big" id="openBtn" data-open>open pack</button>
+      <p class="small blurb" id="packBlurb"></p>
+      <ol class="steps" id="how" hidden><li><b>1</b> Open a pack</li><li><b>2</b> Watch your cards' prices move</li><li><b>3</b> Sell when it's high</li></ol>
       <p class="honest" id="honest"></p>
+      <div class="invitebar" id="inviteBar"></div>
       <div class="hot" id="hot"></div>
       <div class="chase" id="chase"></div>
     </div>
@@ -291,7 +325,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 
   <!-- PROFILE -->
   <section class="view" id="v-profile">
-    <div class="page-head"><h1 class="ttl">Profile</h1><p>Your demo wallet. It moves with the market, so keep it open and watch.</p><p class="live"></p></div>
+    <div class="page-head"><h1 class="ttl">Me</h1><p>Your play-money wallet. It moves with the market, so keep it open and watch.</p><p class="live"></p></div>
     <div id="pRank"></div>
     <div id="pWorth"></div>
     <div id="pChart" style="margin-bottom:40px"></div>
@@ -299,6 +333,13 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
     <div class="tablewrap"><table class="mtable" id="pTable"></table></div>
     <p class="small" id="pNote" style="margin-bottom:30px"></p>
     <div id="pLimits" style="margin-bottom:44px"></div>
+    <div id="pSettings" style="margin-bottom:44px"></div>
+  </section>
+
+  <!-- INVITE -->
+  <section class="view" id="v-invite">
+    <div class="page-head"><h1 class="ttl">Invite</h1><p id="iSub"></p></div>
+    <div id="iBody"></div>
   </section>
 
   <!-- COLLECTION -->
@@ -316,7 +357,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
   </section>
 </main>
 
-<footer><div class="wrap">STIXX · demo build · the money is simulated and nothing is ever charged</div></footer>
+<footer><div class="wrap">STIXX beta · play money only, nothing is ever charged or paid out · 18+ · <a href="#/odds">odds</a> · <button class="linkbtn" id="fairBtn">fair play</button> · <button class="linkbtn" id="aboutBtn">fine print</button></div></footer>
 
 <!-- opening -->
 <div class="stage" id="stage" hidden tabindex="-1">
@@ -335,6 +376,13 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
     <div class="sh-actions"><button class="btn solid" id="shVideo" hidden>Save video</button><button class="btn" id="shSave">Save image</button><button class="btn" id="shShare">Share</button><button class="btn ghost" id="shSummary">Summary</button><button class="btn ghost" id="shClose">Close</button></div>
   </div>
 </div>
+<div class="share clipov" id="clip" hidden>
+  <div class="sh-box">
+    <canvas id="clCv" width="1080" height="1920" aria-label="Your pull as a short video"></canvas>
+    <p class="small" id="clState" aria-live="polite"></p>
+    <div class="sh-actions"><button class="btn solid" id="clSave" disabled>save video</button><button class="btn" id="clShare" disabled>share</button><button class="btn ghost" id="clAgain">replay</button><button class="btn ghost" id="clClose">close</button></div>
+  </div>
+</div>
 <div class="modal" id="modal" hidden><div class="mbox" id="mbox"></div></div>
 <div class="gate" id="gate" hidden>
   <div class="gatebox">
@@ -342,8 +390,8 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
  ( o o )   18+ only.
   \ ~ /
  --'-'--</pre>
-    <p class="dim">STIXX cards contain explicit language and violence. This is a demo: every dollar is simulated and nothing is ever charged.</p>
-    <label for="ageOK"><input type="checkbox" id="ageOK"> I'm 18 or older and I understand the money is simulated.</label>
+    <p class="dim">STIXX cards contain explicit language and violence. Everything here is play money: nothing is ever charged, and nothing can be cashed out.</p>
+    <label for="ageOK"><input type="checkbox" id="ageOK"> I'm 18 or older and I understand it's play money.</label>
     <button class="btn solid big" id="gateGo" disabled>enter</button>
   </div>
 </div>
@@ -424,7 +472,7 @@ const PACKS = [
     ] }
 ];
 const PACK_BY = Object.fromEntries(PACKS.map(p => [p.id, p])), packOf = card => PACK_BY[card.set];
-const SELLBACK = .9, START = 1000, TOPUP = 1000;
+const SELLBACK = .9, START = 1000;
 
 /* ============================================================================
    2. UTILITIES
@@ -455,6 +503,8 @@ const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 function rand() { try { return crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296; } catch (e) { return Math.random(); } }
+const rid = n => { try { return Array.from(crypto.getRandomValues(new Uint8Array(n)), b => b.toString(16).padStart(2, "0")).join(""); } catch (e) { let s = ""; for (let i = 0; i < n; i++) s += Math.floor(Math.random() * 256).toString(16).padStart(2, "0"); return s; } };
+const pickU = (list, u) => { let t = 0; for (const [, w] of list) t += w; let r = u * t; for (const [id, w] of list) { if ((r -= w) < 0) return id; } return list[list.length - 1][0]; };   // the same weighted pick, from a number in [0,1) instead of a fresh random one
 const pick = list => { let t = 0; for (const [, w] of list) t += w; let r = rand() * t; for (const [id, w] of list) { if ((r -= w) < 0) return id; } return list[0][0]; };
 const loadImg = src => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
 let toastT; function toast(msg) { const old = document.querySelector(".toast"); if (old) old.remove(); const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2400); }
@@ -467,11 +517,6 @@ const B32 = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", SALT = "stixx-s2-ink";
 const fnv = str => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h >>> 0; };
 const codeCheck = pl => { let h = fnv(SALT + pl), out = ""; for (let i = 0; i < 4; i++) { out += B32[h % 32]; h = Math.floor(h / 32); } return out; };
 const cardCode = (card, serial) => { const pl = `${SETS[card.set].code}${card.no}-${String(serial).padStart(6, "0")}`; return `${pl}-${codeCheck(pl)}`; };
-function parseCode(raw) {
-  const m = /^([A-Z]{2})(\d{3})-(\d{6})-([A-Z0-9]{4})$/.exec(String(raw).trim().toUpperCase()); if (!m) return null;
-  const card = BY_NO[m[2]]; if (!card || SETS[card.set].code !== m[1] || codeCheck(`${m[1]}${m[2]}-${m[3]}`) !== m[4]) return null;
-  return { card, serial: +m[3], code: `${m[1]}${m[2]}-${m[3]}-${m[4]}` };
-}
 function rollStyle(u) { let acc = 0; for (const k in STYLES) { acc += STYLES[k].p; if (u < acc) return k; } return ""; }
 const styleOfCode = code => rollStyle(fnv("fx:" + code) / 4294967296);
 const cuts = rar => "/".repeat(RAR[rar].cuts);
@@ -483,11 +528,13 @@ const imgOf = (card, fx) => `cards/${card.id}${fx ? "-" + fx : card.id === "stit
    4. STATE AND ECONOMY. Everything lives in this browser.
    ========================================================================== */
 const KEY = "stixx-first-print-v1";
-const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, pack: "fp", streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0 } });
+const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, pack: "fp", freePacks: 1, uid: rid(16), ref: { code: "", by: "", n: 0, act: 0 }, fair: null, rescueAt: 0, streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0, free: 0 } });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); } catch (e) {}
 const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
 const save = () => { logWorth(true); persist(); };
+// a fresh start keeps who you are (age check, sound, your invite code) and nothing else
+function startOver() { const keep = { ageOK: state.ageOK, seenIntro: state.seenIntro, uid: state.uid, ref: state.ref, mute: state.mute, fair: state.fair }; state = Object.assign(fresh(), keep); save(); }
 
 // what a copy is worth right now: the card's live market price, times its style multiple
 const valueOf = c => Math.max(.5, MK.price(BY_NO[c.no]) * (c.fx ? STYLES[c.fx].x : 1));   // in cents, live, not rounded
@@ -517,7 +564,7 @@ function mint(card, phys, serial, paid) {
   copy.cost = paid != null ? paid : valueOf(copy); return copy;
 }
 const curPack = () => PACK_BY[state.pack] || PACKS[0];
-function pullPack(pk) { return (pk || curPack()).slots.map(slot => mint(BY_ID[pick(slot)])); }
+function pullPack(pk, us) { return (pk || curPack()).slots.map((slot, i) => mint(BY_ID[us ? pickU(slot, us[i]) : pick(slot)])); }        // `us` holds one number in [0,1) per slot when the draw is the provably fair one
 
 // the odds, worked out from the slot tables
 function slotP(slot, id) { let t = 0, w = 0; for (const [i, x] of slot) { t += x; if (i === id) w = x; } return w / t; }
@@ -689,6 +736,90 @@ const MK = (() => {
     return (rn = { t, up: all.filter(x => x.up >= 1).sort((a, b) => b.up - a.up), dn: all.filter(x => x.dn <= -.5).sort((a, b) => a.dn - b.dn), all });
   }
   return { advance, price, tickPrice, pct, series, buzz, feed, flips, runs, stats, total24, botFeed, tick: nowTick, TICK, CAP, BOT, KIND };
+})();
+
+/* ============================================================================
+   4c. PROVABLY FAIR PACKS, and the one door to the beta server.
+   A pack is drawn from a number you can check afterwards. Before the draw the server commits to a secret seed by showing its SHA-256 hash. You pick a
+   client seed of your own. Pack number n is then HMAC-SHA256(server seed, "client seed:n"), and the cards come from 32-bit slices of that, one per slot,
+   through the odds on the odds page. When you rotate the seed the server reveals the old one and the page re-does every draw it made with it: the hash must
+   match the commitment, the HMAC must match what you were given, and the cards must match what you got. The server cannot change a draw after seeing
+   your client seed, and you cannot steer one, because you never see a result before it is committed.
+   Without a server (a file, a preview) the page keeps the seed on this device instead. That still shows the odds are applied as published, but it cannot
+   show that nobody else could have chosen the seed, and the page says so. The style of a copy is fixed by its copy id (a public formula), not by the draw.
+   ========================================================================== */
+const API = (() => {
+  const m = document.querySelector('meta[name="stixx-api"]'), on = !!m && !!m.content, base = on ? m.content.replace(/\/$/, "") : "";
+  async function call(path, body) {
+    if (!on) return null; const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 7000);
+    try { const r = await fetch(base + "/api/" + path, body === undefined ? { signal: ctl.signal } : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: ctl.signal }); if (!r.ok) return null; return await r.json(); } catch (e) { return null; } finally { clearTimeout(t); }
+  }
+  return { on, post: (p, b) => call(p, b || {}), get: p => call(p) };
+})();
+
+const sha256 = (() => {
+  const primes = []; for (let n = 2; primes.length < 64; n++) if (primes.every(p => n % p)) primes.push(n);
+  const f32 = x => Math.floor((x - Math.floor(x)) * 4294967296), K = primes.map(p => f32(Math.cbrt(p))), H0 = primes.slice(0, 8).map(p => f32(Math.sqrt(p))), w = new Int32Array(64);
+  return function (msg) {                                                    // Uint8Array in, Uint8Array(32) out
+    const l = msg.length, buf = new Uint8Array(((l + 9 + 63) >> 6) << 6), dv = new DataView(buf.buffer), H = Int32Array.from(H0); buf.set(msg); buf[l] = 128;
+    dv.setUint32(buf.length - 8, Math.floor(l * 8 / 4294967296)); dv.setUint32(buf.length - 4, (l * 8) >>> 0);
+    for (let o = 0; o < buf.length; o += 64) {
+      for (let i = 0; i < 16; i++) w[i] = dv.getUint32(o + i * 4);
+      for (let i = 16; i < 64; i++) { const a = w[i - 15], b = w[i - 2]; w[i] = (w[i - 16] + (((a >>> 7) | (a << 25)) ^ ((a >>> 18) | (a << 14)) ^ (a >>> 3)) + w[i - 7] + (((b >>> 17) | (b << 15)) ^ ((b >>> 19) | (b << 13)) ^ (b >>> 10))) | 0; }
+      let a = H[0], b = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
+      for (let i = 0; i < 64; i++) {
+        const t1 = (h + (((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7))) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0, t2 = ((((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10))) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+        h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+      }
+      H[0] += a; H[1] += b; H[2] += c; H[3] += d; H[4] += e; H[5] += f; H[6] += g; H[7] += h;
+    }
+    const out = new Uint8Array(32), ov = new DataView(out.buffer); for (let i = 0; i < 8; i++) ov.setUint32(i * 4, H[i] >>> 0); return out;
+  };
+})();
+const utf8 = s => new TextEncoder().encode(s), toHex = b => Array.from(b, x => x.toString(16).padStart(2, "0")).join("");
+const sha256hex = s => toHex(sha256(utf8(s)));
+function hmacHex(key, msg) {                                                 // HMAC-SHA256, key and message as text (the key is the seed's hex text), digest as hex
+  let k = utf8(key); const m = utf8(msg); if (k.length > 64) k = sha256(k); const kp = new Uint8Array(64); kp.set(k);
+  const cat = (a, b) => { const o = new Uint8Array(a.length + b.length); o.set(a); o.set(b, a.length); return o; };
+  return toHex(sha256(cat(kp.map(x => x ^ 92), sha256(cat(kp.map(x => x ^ 54), m)))));
+}
+const digestU = (hex, n) => Array.from({ length: n }, (_, i) => parseInt(hex.slice(i * 8, i * 8 + 8), 16) / 4294967296);   // one number in [0,1) per slot
+
+const Fair = (() => {
+  const LOG = 60;
+  const mk = () => { const seed = rid(16); return { seed, commit: sha256hex(seed), nonce: 0, epoch: 1 }; };
+  const F = () => state.fair || (state.fair = { cs: rid(5).toUpperCase(), local: mk(), srv: null, log: [], past: [] });
+  const cardsOf = (pk, hex) => digestU(hex, pk.slots.length).map((u, i) => BY_ID[pickU(pk.slots[i], u)]);
+  // draw the cards for one pack
+  async function next(pk) {
+    const f = F(); let hex = "", nonce = 0, epoch = "", mode = "local", commit = "";
+    if (API.on) {
+      const r = await API.post("fair/draw", { uid: state.uid, cs: f.cs });
+      if (r && /^[0-9a-f]{64}$/.test(r.digest || "")) { const seen = f.srv && f.srv.epoch === r.epoch ? f.srv.commit : r.commit; hex = r.digest; nonce = r.nonce; epoch = "S" + r.epoch; mode = "server"; commit = seen; f.srv = { commit: seen, nonce: r.nonce + 1, epoch: r.epoch }; }     // the commitment you were shown before the draw is the one that gets checked
+    }
+    if (!hex) { const L = f.local; nonce = L.nonce++; epoch = "L" + L.epoch; commit = L.commit; hex = hmacHex(L.seed, `${f.cs}:${nonce}`); }
+    const items = pullPack(pk, digestU(hex, pk.slots.length));
+    f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: items.map(c => BY_NO[c.no].id), t: Date.now() }); if (f.log.length > LOG) f.log.shift();
+    return items;
+  }
+  // check one logged draw against a revealed seed
+  function check(entry, seed) {
+    if (!seed) return null; const pk = PACK_BY[entry.pack]; if (!pk) return false;
+    const hex = hmacHex(seed, `${entry.cs}:${entry.n}`), cs = cardsOf(pk, hex).map(c => c.id);
+    return sha256hex(seed) === entry.c && hex === entry.d && cs.length === entry.picks.length && cs.every((id, i) => id === entry.picks[i]);
+  }
+  const seedFor = (f, entry) => { if (entry.mode === "local") { const p = f.past.find(x => x.e === entry.e); return p ? p.seed : entry.e === "L" + f.local.epoch ? f.local.seed : ""; } const p = f.past.find(x => x.e === entry.e); return p ? p.seed : ""; };
+  const status = (f, entry) => check(entry, seedFor(f, entry));
+  // reveal the seed in use and start a new one
+  async function rotate() {
+    const f = F(); let done = false;
+    if (API.on && f.srv) { const r = await API.post("fair/rotate", { uid: state.uid }); if (r && r.seed) { f.past.push({ e: "S" + r.epoch, seed: r.seed, commit: sha256hex(r.seed) }); f.srv = { commit: r.commit, nonce: 0, epoch: r.next }; done = true; } }
+    if (f.log.some(x => x.mode === "local" && x.e === "L" + f.local.epoch) || !done) { f.past.push({ e: "L" + f.local.epoch, seed: f.local.seed, commit: f.local.commit }); const n = mk(); n.epoch = f.local.epoch + 1; f.local = n; }
+    while (f.past.length > 20) f.past.shift(); persist(); return true;
+  }
+  const adopt = fi => { const f = F(); if (fi && /^[0-9a-f]{64}$/.test(fi.commit || "") && (!f.srv || f.srv.epoch !== fi.epoch)) f.srv = { commit: fi.commit, nonce: fi.nonce, epoch: fi.epoch }; persist(); };      // the server's commitment, shown before any pack is drawn from it
+  const setClientSeed = v => { const s = String(v).replace(/[^\w.-]/g, "").slice(0, 24); if (s) { F().cs = s; persist(); } return F().cs; };
+  return { F, next, check, status, rotate, setClientSeed, cardsOf, seedFor, adopt };
 })();
 
 /* ============================================================================
@@ -934,7 +1065,7 @@ function tiltPack(pk) {
 /* ============================================================================
    7. PAGES: pack, market, collection, odds
    ========================================================================== */
-const VIEWS = ["home", "market", "profile", "collection", "odds"]; let view = "home", modalNo = null, oddsPack = "";
+const VIEWS = ["home", "market", "profile", "collection", "odds", "invite"]; let view = "home", modalNo = null, oddsPack = "";
 const copiesOf = no => state.vault.filter(c => c.no === no).sort((a, b) => valueOf(b) - valueOf(a));
 function renderBal(anim) { const el = $("bal"), from = +(el.dataset.v || state.coins); el.dataset.v = state.coins; if (anim) countTo(el, from, state.coins, money); else el.textContent = money(state.coins); }
 
@@ -949,7 +1080,8 @@ function renderHome() {
   const pk = curPack(), ps = packStats(pk); $("banner").textContent = BANNER.join("\n");
   $("packTabs").live = PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-pack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("");
   $("packName").textContent = pk.name; $("packBlurb").textContent = pk.blurb;
-  $("packLine").textContent = `${pk.n} cards · ${money(ps.price)}`; $("openBtn").textContent = `open pack · ${money(ps.price)}`;
+  const fp = state.freePacks; $("packLine").textContent = `${pk.n} cards · ${money(ps.price)}`; $("openBtn").textContent = fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : `open pack · ${money(ps.price)}`; $("openBtn").classList.toggle("free", fp > 0);
+  $("how").hidden = state.s.packs > 0; $("inviteBar").live = state.s.packs > 0 ? inviteBarHTML() : "";
   $("honest").live = `Every card is a picture made of text: the rarer the card, the more characters it holds. About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
   const mv = movers(); $("hot").live = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
   const bf = MK.flips().best[0]; if (bf && bf.gain > 0) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip this week: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
@@ -985,7 +1117,7 @@ function worthSeries(pts) {
   return { out, mins: Math.round((now - t0) / 60000) };
 }
 function renderProfile() {
-  $("pRank").live = rankHTML(); $("pLimits").live = limitsHTML();
+  $("pRank").live = rankHTML(); $("pLimits").live = limitsHTML(); $("pSettings").live = settingsHTML();
   const net = netWorth(), hold = holdingsValue(), back = state.vault.reduce((a, c) => a + sellOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0), all = profitAll(), d24 = profitSince(864e5);
   $("pWorth").live = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}">${money(net)}</div><div class="wmeta"><span>${pnlHTML(d24, START + state.s.added)} <span class="dim">last 24h</span></span><span>${pnlHTML(all, START + state.s.added)} <span class="dim">since you started</span></span></div></div>
     <div class="wsplit"><div><span class="label">cash</span><b>${money(state.coins)}</b></div><div><span class="label">your cards, at market price</span><b>${moneyS(hold)}</b> ${state.vault.length ? pnlHTML(hold - basis, basis) : ""}</div><div><span class="label">they would sell for</span><b>${moneyS(back)}</b><span class="dim">after the 10% fee</span></div><div><span class="label">made or lost on sales</span><b>${pnlHTML(state.s.realized, 0)}</b></div></div>`;
@@ -1003,7 +1135,7 @@ function renderCollection() {
   $("cProg").live = progressHTML();
   const found = new Set(state.vault.map(c => c.no)), worth = state.vault.reduce((a, c) => a + valueOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0), ex = extras(), exSum = ex.reduce((a, c) => a + sellOf(c), 0);
   $("cSub").live = state.vault.length ? `${found.size} of ${CARDS.length} cards found · ${state.vault.length} cop${state.vault.length === 1 ? "y" : "ies"} worth ${money(worth)} ${pctHTML(worth / Math.max(1, basis) - 1)} <span class="faint">since you got them</span>` : "Open the pack to start your collection.";
-  $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + `<button class="linkbtn" id="addCode">add a card by its code</button>`;
+  $("cActions").live = ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "";
   const tile = c => { const cs = copiesOf(c.no), best = cs[0];
     return `<div class="tile"><button class="tilebtn" data-card="${c.no}" aria-label="${esc(c.name)}">${cardHTML(best || { no: c.no }, { sm: true, locked: !best })}</button>
       <div class="meta">${best ? `<span><b>×${cs.length}</b></span><span>${moneyS(valueOf(best))} ${pctHTML(gainOf(best))}</span>` : `<span>not found yet</span><span class="dim">${money(MK.price(c))} · ${chance(packP(c.id))}</span>`}</div></div>`; };
@@ -1017,7 +1149,6 @@ function renderOdds() {
     <div class="packtabs" role="tablist" aria-label="Which pack">${PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-opack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("")}</div>
     <p class="small" style="margin:-4px 0 22px;text-align:center">${esc(pk.blurb)}</p>
     <div class="facts"><div><div class="bignum sm" role="img" aria-label="${money(ps.price)}">${money(ps.price)}</div><span>per ${esc(pk.name)} pack right now · ${pk.n} cards</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.hit * 100).toFixed(0)}%">${(ps.hit * 100).toFixed(0) + "%"}</div><span>of packs are worth at least what you paid</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.rtp * 100).toFixed(0)}%">${(ps.rtp * 100).toFixed(0) + "%"}</div><span>comes back on average when you sell</span></div></div>
-    <p class="small" style="margin-bottom:18px"><button class="linkbtn" data-cut="intro">Watch the intro</button></p>
     <h3 class="sec">What can be in a ${esc(pk.name)} pack</h3>
     <div class="tablewrap"><table><thead><tr><th>Card</th><th>Rarity</th><th class="r">Characters</th><th class="r">Price now · 24h</th><th class="r">Chance per pack</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="small" style="margin-bottom:44px">Selling a card back pays 90% of its price. A typical pack sells back for ${money(ps.median)} right now.</p>
@@ -1033,19 +1164,18 @@ function renderOdds() {
     <details><summary>How each card in the pack is picked</summary><div>${pk.slots.map((s, i) => { const t = s.reduce((a, [, w]) => a + w, 0); return `<div class="slot"><div class="label">${slotName[i]}</div>${s.map(([id, w]) => `<div class="row"><span>${esc(BY_ID[id].name)} <span class="faint">${esc(BY_ID[id].sub)}</span></span><span class="bar">${bar(w / t, 24)}</span><span class="pct">${(w / t * 100).toFixed(1)}%</span></div>`).join("")}</div>`; }).join("")}</div></details>
     <details><summary>Styles</summary><div><p class="small" style="margin-bottom:14px">Every card can come out in one of twelve ASCII styles, decided by that copy's own code. ${(tot * 100).toFixed(1)}% of cards are not the plain default. A styled copy is worth its multiple of the card, so a styled Reaper is worth a lot more than a plain one.</p>
       <div class="tablewrap"><table><thead><tr><th>Style</th><th class="r">Chance per card</th><th class="r">Worth</th></tr></thead><tbody><tr><td>Plain <span class="faint">default</span></td><td class="r num">${((1 - tot) * 100).toFixed(1)}%</td><td class="r">×1</td></tr>${Object.keys(STYLES).map(k => `<tr><td>${STYLES[k].name}</td><td class="r num">1 in ${fmt(1 / STYLES[k].p)}</td><td class="r">×${STYLES[k].x}</td></tr>`).join("")}</tbody></table></div></div></details>
-    <details><summary>Copy ids and the red slashes</summary><ul class="plain"><li>Every copy has its own id, like <b>IS015-000003-A2JM</b>: the set, the card number, the copy's serial and four check characters.</li><li>The red slashes after an id show rarity: none for commons and uncommons, one for rares and epics, two for legendary, three for mythic, four for the one Secret card.</li><li>Type an id into “add a card by its code” on the collection page and, if the check characters match, that exact copy is added.</li></ul></details>
-    <details><summary>Fair play</summary><ul class="plain"><li>A pack is worth less than it costs on average, and the numbers above are worked out exactly from the odds and today's prices.</li><li>Cards are drawn with your browser's random number generator, and the odds never change with what you have spent or pulled.</li><li>The money is simulated. Nothing is ever charged.</li></ul></details>
-    <p style="margin-top:30px"><button class="linkbtn" id="resetBtn">reset the demo</button></p>`;
+    <details><summary>Copy ids and the red slashes</summary><ul class="plain"><li>Every copy has its own id, like <b>IS015-000003-A2JM</b>: the set, the card number, the copy's serial and four check characters.</li><li>The red slashes after an id show rarity: none for commons and uncommons, one for rares and epics, two for legendary, three for mythic, four for the one Secret card.</li><li>The style a copy comes out in is fixed by its id, so a printed card and its digital twin always match.</li></ul></details>
+    <details><summary>Fair play</summary><ul class="plain"><li>A pack is worth less than it costs on average, and the numbers above are worked out exactly from the odds and today's prices.</li><li>Every pack is drawn from a seed that was committed to before you opened it, so you can check afterwards that the cards followed the odds above. <button class="linkbtn" id="fairBtn2">Check your packs</button></li><li>The odds never change with what you have spent, pulled or been given.</li><li>The money is play money. Nothing is ever charged and nothing can be cashed out.</li></ul></details>`;
 }
 function show(v) {
   view = VIEWS.includes(v) ? v : "home";
   VIEWS.forEach(x => $("v-" + x).classList.toggle("on", x === view)); document.querySelectorAll("#tabs a").forEach(a => a.classList.toggle("on", a.dataset.v === view));
-  ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds })[view](); scrollTo(0, 0);
+  ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds, invite: renderInvite })[view](); scrollTo(0, 0);
 }
-function route() { const h = location.hash.replace(/^#\/?/, ""), sc = /^scene\/(\w+)(?:@([\d.]+))?$/.exec(h); if (sc && Cut.has(sc[1])) { Cut.close(); show("home"); setTimeout(() => Cut.play(sc[1], sc[2] != null ? { freeze: +sc[2] } : undefined), 250); return; } show(h === "vault" || h === "index" ? "collection" : h || "home"); }
+function route() { const h = location.hash.replace(/^#\/?/, ""); show(h === "vault" || h === "index" ? "collection" : h || "home"); }
 // the market moved: redraw whatever is on screen without jumping the page
 function refreshLive() {
-  if (SS || !$("share").hidden || !$("cut").hidden) return; ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds })[view]();
+  if (SS || !$("share").hidden || !$("cut").hidden || view === "invite") return; ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds })[view]();
   if (modalNo && !$("modal").hidden) cardModal(modalNo, true);   // updated in place: the buttons you are pressing stay where they are
 }
 
@@ -1069,26 +1199,22 @@ function cardModal(no, keep) {
     ${Cut.has(card.id) ? `<div><button class="btn small" data-cut="${card.id}">▶ ${cs.length ? "Watch" : "Preview"} its cutscene</button></div>` : ""}
     ${styles}</div>`, false, keep);
 }
-function codeModal() {
-  openModal(`<div class="minfo"><h2 style="font-size:18px">Add a card by its code</h2><p class="dim">Every printed card has an id under its picture, like <b>IS015-000003-A2JM</b>. Type it in and that exact copy is added to your collection.</p>
-    <form id="codeForm" autocomplete="off" class="row"><input id="codeIn" placeholder="IS015-000003-A2JM" spellcheck="false" style="flex:1;min-width:0;text-transform:uppercase"><button class="btn solid" type="submit">add</button></form><div class="small" id="codeMsg"></div></div>`, true);
-  setTimeout(() => $("codeIn").focus(), 30);
-}
-function addByCode(raw) {
-  const r = parseCode(raw), msg = $("codeMsg"); if (!r) { msg.style.color = "var(--bad)"; msg.textContent = "That code doesn't check out. Look for the id under the picture."; return; }
-  if (state.vault.some(c => c.code === r.code)) { msg.style.color = "var(--bad)"; msg.textContent = "That copy is already in your collection."; return; }
-  const c = mint(r.card, true, r.serial); state.vault.push(c); save(); closeModal(); if (view === "collection") renderCollection(); toast(`Added ${r.card.name} · ${r.code}`); cardModal(r.card.no);
-}
 function sell(uids) { let g = 0; for (const u of uids) { const c = state.vault.find(x => x.uid === u); if (c) { g += sellOf(c); state.s.realized += sellOf(c) - costOf(c); state.vault = state.vault.filter(x => x !== c); } } if (g) { state.coins += g; state.s.sold += g; save(); renderBal(true); Snd.sell(); buzz([25, 35, 25]); } return g; }
 
 /* ============================================================================
    8. OPENING A PACK: tear it, reveal the cards one at a time, then keep or sell
    ========================================================================== */
-let SS = null, SS_PRICE = 0; const stage = $("stage"), hint = t => { $("stHint").textContent = t; };
-function openPack(pack) {
-  if (SS) return; const pk = pack || curPack(), gate = packGate(); if (gate) { toast(gate); return; } const price = packPrice(pk); if (state.coins < price) { toast(`You need ${money(price - state.coins)} more. Tap “add $10”.`); return; }
-  state.coins -= price; state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; const items = pullPack(pk); state.vault.push(...items); save(); renderBal(true);
-  SS = { items, idx: 0, phase: "pack", busy: false, pack: pk };
+let SS = null, SS_PRICE = 0, opening = false; const stage = $("stage"), hint = t => { $("stHint").textContent = t; };
+async function openPack(pack) {
+  if (SS || opening) return; const pk = pack || curPack(), gate = packGate(); if (gate) { toast(gate); return; }
+  // out of play money with nothing left to sell: one free pack a day so nobody is ever stuck
+  if (!state.freePacks && state.coins < packPrice(pk) && !state.vault.length && Date.now() - state.rescueAt > 864e5) { state.freePacks++; state.rescueAt = Date.now(); persist(); toast("You're out of play money, so here's a free pack."); }
+  const free = state.freePacks > 0, price = free ? 0 : packPrice(pk);
+  if (state.coins < price) { toast(state.vault.length ? `You need ${money(price - state.coins)} more. Sell a card to open another pack.` : "You're out of play money. Your free daily pack is back tomorrow, or invite a friend for one now."); return; }
+  opening = true; let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS) return;
+  if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
+  state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
+  SS = { items, idx: 0, phase: "pack", busy: false, pack: pk, free };
   $("stName").textContent = pk.name; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
   $("stBox").innerHTML = `<div class="st-pack enter" id="stPack">${packHTML(pk)}</div><div class="cstack" id="stStack"></div>`;
   hint("Tap the pack to tear it open"); stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
@@ -1140,14 +1266,15 @@ async function dismiss(el, c) {
   SS.idx++; await sleep(260); if (SS.idx >= SS.items.length) summary(); else focusTop();
 }
 function skipAll() { if (!SS || SS.phase === "summary") return; SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
+const againLabel = pk => state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : "invite a friend, get a free pack";
 function summary() {
   SS.phase = "summary"; const items = SS.items, worth = items.reduce((a, c) => a + valueOf(c), 0), back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE;
   const best = items.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no];
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(worth)}">${blockSVG(money(worth))}</div><span class="dim" style="font-size:13px">of cards</span></div>
-    <div class="net ${net >= 0 ? "up" : "dn"}">Sell them all for ${money(back)}: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))} against the ${money(SS_PRICE)} pack.</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
+    <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Sell them all for ${money(back)}.` : `Sell them all for ${money(back)}: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))} against the ${money(SS_PRICE)} pack.`}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
     <div class="fan">${items.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>
-    <div class="row" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn ghost" id="sumAgain">${state.coins >= packPrice() ? "open another · " + money(packPrice()) : "add $10 first"}</button></div></div>`;
+    <div class="row" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, net >= 0 ? 90 : 30, net >= 0 ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
 function closeStage() { stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view); }
@@ -1165,6 +1292,11 @@ function receiptOf(c, sold) {
   const cost = costOf(c), got = sellOf(c), pi = ago0 ? Math.round((1 - agoPull / ago0) * (n - 1)) : 0; let pk = pi;
   for (let i = pi; i < n; i++) if (vals[i] > vals[pk]) pk = i;
   return { card, fx: c.fx || "", code: c.code, sold, cost, got, held, vals, pi, pk, startMs: now - ago0 * MK.TICK, endMs: now, gain: got - cost, pct: got / Math.max(1, cost) - 1, peakPct: vals[pk] * SELLBACK / Math.max(1, cost) - 1, at: now };
+}
+
+async function saveBlob(blob, name) {
+  try { const dl = window.claude && claude.use ? await claude.use("downloads") : null; if (dl) { await dl.save({ filename: name, data: blob }); toast("Saved"); return; } } catch (e) { if (e && e.code === "declined") return; }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Saved");
 }
 
 const Share = (() => {
@@ -1231,7 +1363,7 @@ const Share = (() => {
 
     // the footer band
     c.save(); rr(30, 1090, W - 60, H - 1090 - 30, 34); c.clip(); c.fillStyle = "#0e0e18"; c.fillRect(30, 1090, W - 60, 240); c.restore();
-    pix("STIXX", 66, 1140, 10, INK, .95); T("demo money · simulated", W - 66, 1142, 24, INK, 600, "right"); T("nothing here is real or charged", W - 66, 1180, 20, DIM, 500, "right");
+    pix("STIXX", 66, 1140, 10, INK, .95); T("play money · simulated", W - 66, 1142, 24, INK, 600, "right"); T("nothing here is real or charged", W - 66, 1180, 20, DIM, 500, "right");
     T(`${RAR[r.card.rar].name} · ${fmt(r.card.chars)} characters`, 66, 1240, 19, DIM, 500); T(r.code, 66, 1270, 19, DIM, 500); T(r.sold ? "after the 10% selling fee" : "if you sold now, after the 10% fee", W - 66, 1270, 19, DIM, 500, "right");
 
     // when the replay ends: profit throws characters up, a loss glitches
@@ -1303,12 +1435,8 @@ const Share = (() => {
 
   // a still picture of the position card
   function still() { return new Promise(res => { cancelAnimationFrame(raf); const m = mode, i = intro; mode = "position"; intro = 9; draw(false); cv.toBlob(b => { res(b); mode = m; intro = i; if (!$("share").hidden && !reduced) { last = performance.now(); raf = requestAnimationFrame(loop); } }, "image/png"); }); }
-  async function saveBlob(blob, name) {
-    try { const dl = window.claude && claude.use ? await claude.use("downloads") : null; if (dl) { await dl.save({ filename: name, data: blob }); toast("Saved"); return; } } catch (e) { if (e && e.code === "declined") return; }
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Saved");
-  }
   const fileName = ext => `stixx-${rec.card.id}-${rec.pct >= 0 ? "up" : "down"}-${Math.abs(Math.round(rec.pct * 100))}pct.${ext}`;
-  const caption = () => `${rec.sold ? "Sold" : "Holding"} ${rec.card.name} on STIXX: ${pctShort(rec.pct)} (${money(rec.cost)} to ${money(rec.got)}). Demo money.`;
+  const caption = () => `${rec.sold ? "Sold" : "Holding"} ${rec.card.name} on STIXX: ${pctShort(rec.pct)} (${money(rec.cost)} to ${money(rec.got)}). Play money.`;
   async function save() { const b = await still(); if (b) saveBlob(b, fileName("png")); }
   async function share() {
     const b = await still(); if (!b) return; const f = new File([b], fileName("png"), { type: "image/png" });
@@ -1503,7 +1631,7 @@ const Cut = (() => {
           } else g.text("a card is worth what the market says.", .74, DIM);
         }
         // ---------- 5. the name again (20.6 - 21.4+)
-        const a5 = sm(20.9, 21.4, t); if (a5 > 0) { logo(cx - 18, cy - 5, a5, 1, t > 21.4 ? (t - 21.4) * 40 : null); g.text("ASCII trading cards", .58, DIM); g.text("$10 of demo money to start", .65, GRN); if (Math.floor(t * 2) % 2) g.text("tap to begin", .9, [110, 108, 100]); }
+        const a5 = sm(20.9, 21.4, t); if (a5 > 0) { logo(cx - 18, cy - 5, a5, 1, t > 21.4 ? (t - 21.4) * 40 : null); g.text("ASCII trading cards", .58, DIM); g.text("your first pack is free", .65, GRN); if (Math.floor(t * 2) % 2) g.text("tap to begin", .9, [110, 108, 100]); }
       },
     },
     /* ORBIT (uncommon): a galaxy turns and comes closer. */
@@ -1737,7 +1865,6 @@ const Cut = (() => {
       };
       const frame = now => { const t = (now - t0) / 1000; try { render(t); } catch (e) { console.error(e); finish(); return; } if (t >= sc.dur) { finish(); return; } raf = requestAnimationFrame(frame); };   // a film that breaks must never leave the screen stuck
       const ready = sc.prep ? Promise.race([sc.prep(), new Promise(r => setTimeout(r, 2500))]) : Promise.resolve();
-      if (o && o.freeze != null) { ready.then(() => { render(o.freeze); res(); }); return; }
       ready.then(() => { if (ended) return; t0 = performance.now(); raf = requestAnimationFrame(frame); });
     });
   }
@@ -1757,10 +1884,10 @@ const Cut = (() => {
 
 /* ---- sound and touch: a small synthesiser, so a win can be heard and felt. Off with one tap, remembered. ---- */
 const Snd = (() => {
-  let ac = null, out = null;
+  let ac = null, out = null, comp = null, dst = null;
   const ready = () => {
     if (state.mute || !tapped()) return false;
-    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); out = ac.createGain(); out.gain.value = .5; const cp = ac.createDynamicsCompressor(); out.connect(cp); cp.connect(ac.destination); } catch (e) { ac = null; return false; } }
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); out = ac.createGain(); out.gain.value = .5; comp = ac.createDynamicsCompressor(); out.connect(comp); comp.connect(ac.destination); } catch (e) { ac = null; return false; } }
     if (ac.state === "suspended") ac.resume(); return true;
   };
   const env = (g, t, a, d, v) => { g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + a); g.gain.exponentialRampToValueAtTime(.0001, t + a + d); };
@@ -1780,6 +1907,7 @@ const Snd = (() => {
     claim(big) { if (!ready()) return; [0, 2, 4, big ? 6 : 5].forEach((k, i) => tone(NOTE[k], .4, "triangle", .13, i * .08)); },
     level() { if (!ready()) return; [0, 2, 4, 6, 7].forEach((k, i) => tone(NOTE[k], .5, "triangle", .12, i * .09)); },
     click() { if (!ready()) return; tone(900, .05, "sine", .07); },
+    tap() { if (!ready()) return null; if (!dst) { dst = ac.createMediaStreamDestination(); comp.connect(dst); } return dst.stream; },       // what you hear, as a stream, so a recorded clip can carry the sound
   };
 })();
 const tapped = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;       // browsers allow sound and vibration only after you have tapped something
@@ -1788,28 +1916,25 @@ document.addEventListener("pointerdown", () => Snd.unlock(), { once: true }); do
 
 /* ---- the daily drop and the streak ---- */
 const dayKey = d => (d || new Date()).toLocaleDateString("en-CA");                       // 2026-11-21, in the player's own time
-const DAILY = [[50, 70], [100, 22], [200, 7], [500, 1]];                               // cents, and the chance in percent; the same table is shown in the window
-const STREAK_BONUS = { 3: 50, 7: 150, 14: 300, 30: 1000 };
+const STREAK_BONUS = { 3: 1, 7: 1, 14: 2, 30: 3 };                                     // extra free packs on these streak days
 const dailyReady = () => state.streak.last !== dayKey();
 function claimDaily() {
   const st = state.streak; if (!dailyReady()) return null;
   const y = dayKey(new Date(Date.now() - 864e5)), y2 = dayKey(new Date(Date.now() - 2 * 864e5)); let used = false;
   if (st.last === y) st.n++; else if (st.last === y2 && st.freezes > 0) { st.freezes--; st.n++; used = true; } else st.n = 1;      // one missed day is forgiven if you have a freeze
   st.last = dayKey(); st.best = Math.max(st.best, st.n); if (st.n % 7 === 0) st.freezes = Math.min(2, st.freezes + 1);
-  const bonus = STREAK_BONUS[st.n] || 0; let r = rand() * 100, win = DAILY[0][0]; for (const [c, p] of DAILY) { if ((r -= p) < 0) { win = c; break; } }
-  const total = win + bonus; state.coins += total; state.s.added += total; save(); renderBal(true); renderChips(); Snd.claim(win >= 200 || bonus > 0); buzz([30, 40, 30]);
-  return { win, bonus, n: st.n, used, total };
+  const bonus = STREAK_BONUS[st.n] || 0, packs = 1 + bonus; state.freePacks += packs; save(); renderChips(); Snd.claim(bonus > 0); buzz([30, 40, 30]);
+  return { packs, bonus, n: st.n, used };
 }
 function dailyModal(res) {
-  const st = state.streak, ready = dailyReady(), n = st.n, nextM = [3, 7, 14, 30].find(m => m > n), wk = n > 0 && n % 7 === 0 ? 7 : n % 7, ev = DAILY.reduce((a, [c, p]) => a + c * p / 100, 0);
-  openModal(`<div class="minfo"><div><span class="label">Daily drop</span><h2>${res ? "+" + money(res.total) : ready ? "Today's drop is ready" : "That's today's drop"}</h2></div>
-    ${res ? `<p class="dim">${res.bonus ? `You drew ${money(res.win)} and the day ${res.n} streak bonus added ${money(res.bonus)}.` : `You drew ${money(res.win)}.`}${res.used ? " A streak freeze covered the day you missed." : ""}</p>` : ready ? `<p class="dim">Free demo money, once a day. Nothing to buy.</p>` : `<p class="dim">Come back tomorrow for the next one.</p>`}
-    <div><div class="label">Streak · day ${n}</div><div class="mono-meter" aria-hidden="true">${meter(wk, 7)}</div><p class="small" style="margin-top:6px">${nextM ? `Day ${nextM} pays a ${money(STREAK_BONUS[nextM])} bonus. ` : ""}Miss a day and your streak survives if you have a freeze (you have ${st.freezes}). You earn one every 7 days, up to 2.</p></div>
-    <div><div class="label" style="margin-bottom:6px">The odds of the draw</div><table class="oddsT"><tbody>${DAILY.map(([c, p]) => `<tr><td>${money(c)}</td><td class="r">${p}%</td></tr>`).join("")}</tbody></table><p class="small" style="margin-top:6px">Average ${money(ev)}. Demo money, nothing is ever charged.</p></div>
-    ${ready ? `<button class="btn solid" id="claimDaily">claim</button>` : `<button class="btn" data-close>close</button>`}</div>`, true);
+  const st = state.streak, ready = dailyReady(), n = st.n, nextM = [3, 7, 14, 30].find(m => m > n), wk = n > 0 && n % 7 === 0 ? 7 : n % 7, have = state.freePacks;
+  openModal(`<div class="minfo"><div><span class="label">Free daily pack</span><h2>${res ? "+" + res.packs + " free pack" + (res.packs > 1 ? "s" : "") : ready ? "Your free pack is ready" : "You've got today's pack"}</h2></div>
+    ${res ? `<p class="dim">Day ${res.n} in a row.${res.bonus ? ` That is a streak bonus: ${res.bonus} extra.` : ""}${res.used ? " A streak freeze covered the day you missed." : ""} You have ${have} free pack${have === 1 ? "" : "s"} to open.</p>` : ready ? `<p class="dim">One free pack every day. Nothing to buy.</p>` : `<p class="dim">Come back tomorrow for the next one.${have ? ` You have ${have} free pack${have === 1 ? "" : "s"} to open now.` : ""}</p>`}
+    <div><div class="label">Streak · day ${n}</div><div class="mono-meter" aria-hidden="true">${meter(wk, 7)}</div><p class="small" style="margin-top:6px">${nextM ? `Day ${nextM} adds ${STREAK_BONUS[nextM]} extra free pack${STREAK_BONUS[nextM] > 1 ? "s" : ""}. ` : ""}Miss a day and your streak survives if you have a freeze (you have ${st.freezes}). You earn one every 7 days, up to 2.</p></div>
+    <div class="row">${ready ? `<button class="btn solid" id="claimDaily">claim your pack</button>` : have ? `<button class="btn solid" id="claimOpen">open a free pack</button>` : ""}<button class="btn ghost" data-close>${ready ? "not now" : "close"}</button></div></div>`, true);
 }
 function renderChips() {
-  const d = $("dailyBtn"); if (d) { const ready = dailyReady(); d.className = "chip" + (ready ? " ready" : ""); d.innerHTML = ready ? `<i></i>daily drop` : `streak ${state.streak.n}`; d.title = ready ? "A free drop of demo money, once a day" : "Your daily streak"; }
+  const d = $("dailyBtn"); if (d) { const ready = dailyReady(); d.className = "chip" + (ready ? " ready" : ""); d.innerHTML = ready ? `<i></i>free daily pack` : `streak ${state.streak.n}`; d.title = ready ? "A free pack, once a day" : "Your daily streak"; }
   const m = $("muteBtn"); if (m) { m.textContent = state.mute ? "sound off" : "sound on"; m.setAttribute("aria-pressed", state.mute ? "true" : "false"); }
 }
 
@@ -1889,7 +2014,7 @@ function packGate() {
   const l = state.lim; if (l.breakUntil > Date.now()) return `You're on a break for another ${heldText(l.breakUntil - Date.now())}. You asked for it, and it can't be undone.`;
   if (l.packs && packsToday() >= l.packs) return `You set a limit of ${l.packs} packs a day and you've opened ${packsToday()}. It resets at midnight.`; return "";
 }
-const REMIND = Math.max(.05, +new URLSearchParams(location.search).get("remind") || 30) * 60000;           // minutes between reminders: 30, or ?remind=<minutes> to see it sooner
+const REMIND = 30 * 60000;                                                                             // a reminder every half hour
 const ses0 = { packs: state.s.packs, spent: state.s.spent, sold: state.s.sold, net: netWorth() - state.s.added }; let activeMs = 0, remindedAt = 0;
 function sessionTick() {
   if (document.hidden) return; activeMs += 1000;
@@ -1917,6 +2042,280 @@ function habitTick() {
   if (i > rankSeen) { rankSeen = i; state.rank = i; persist(); toast(`Rank up: ${RANKS[i][0]}`); Snd.level(); buzz([20, 30, 20, 30, 40]); }
   if (!document.hidden && Math.floor(Date.now() / 1000) % 30 === 0) { state.lastSeen = Date.now(); persist(); renderChips(); }
 }
+
+/* ============================================================================
+   8f. INVITES, FAIR PLAY AND THE SMALL PRINT.
+   A friend who follows your link gets a free pack the moment they join, and you get one when they open it. Those rewards are counted by the beta server
+   (the page cannot be trusted to count its own rewards), so without a server this page says so and gives nothing out. Everything the server learns about
+   you is a random id, your invite code, the days you visited and a few counts. Nothing here asks for a name, an email or a payment.
+   ========================================================================== */
+const Ref = (() => {
+  let info = null, busy = false, last = 0;
+  const incoming = (() => {                                                // ?ref=CODE on the link a friend sent; picked up once, then the address bar is tidied
+    try { const p = new URLSearchParams(location.search); if (!p.has("ref")) return ""; const r = (p.get("ref") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 16); p.delete("ref"); history.replaceState(null, "", location.pathname + (p.toString() ? "?" + p : "") + location.hash); return r; } catch (e) { return ""; }
+  })();
+  if (incoming && !state.ref.by && !state.s.packs) { state.ref.by = incoming; persist(); }
+  const link = code => location.origin + location.pathname.replace(/index\.html$/, "") + "?ref=" + code;
+  const text = "Free ASCII card packs. Open one on STIXX, play money only:";
+  async function sync() {
+    if (!API.on || busy || !state.ageOK) return; busy = true;
+    try {
+      const r = await API.post("hello", { uid: state.uid, ref: state.ref.by }); if (!r || !r.code) return; info = r; last = Date.now(); state.ref.code = r.code; state.ref.n = r.invited; Fair.adopt(r.fair);
+      if (r.credits > 0) { const c = await API.post("claim", { uid: state.uid }); if (c && c.packs > 0) { state.freePacks += c.packs; persist(); renderChips(); const w = c.welcome, f = c.friends; toast(w && f ? `Free packs: ${c.packs}. A welcome gift, and ${f} friend${f > 1 ? "s" : ""} opened a pack.` : w ? "A friend invited you. Here's a free pack." : `${f} friend${f > 1 ? "s" : ""} opened a pack. You got ${c.packs} free pack${c.packs > 1 ? "s" : ""}.`); Snd.claim(true); buzz([30, 40, 30]); const r2 = await API.post("hello", { uid: state.uid, ref: state.ref.by }); if (r2 && r2.code) info = r2; if (view === "home") renderHome(); } }
+      if (state.s.packs > 0 && !r.activated) activated();
+    } finally { busy = false; if (view === "invite" && $("modal").hidden) renderInvite(); }
+  }
+  const activated = () => { if (!API.on || state.ref.act) return; API.post("active", { uid: state.uid }).then(r => { if (r && r.ok) { state.ref.act = 1; persist(); setTimeout(sync, 400); } }); };
+  async function vanity(raw) {
+    const code = String(raw).toUpperCase().replace(/[^A-Z0-9]/g, ""), msg = $("vanityMsg"); msg.className = "small bad";
+    if (code.length < 3 || code.length > 16) { msg.textContent = "Use 3 to 16 letters or numbers."; return; }
+    msg.className = "small"; msg.textContent = "Checking…"; const r = await API.post("vanity", { uid: state.uid, code });
+    if (r && r.ok) { info = Object.assign(info || {}, r.info || {}, { code: r.code }); state.ref.code = r.code; persist(); renderInvite(); toast("Your link now ends in " + r.code); return; }
+    msg.className = "small bad"; msg.textContent = (r && r.error) || "Couldn't reach the server. Try again in a moment.";
+  }
+  async function copy() {
+    if (!info) return; const u = link(info.code);
+    API.post("event", { uid: state.uid, name: "inviteCopy" }); try { await navigator.clipboard.writeText(u); toast("Link copied"); } catch (e) { const el = $("invLink"); if (el) { el.select(); try { document.execCommand("copy"); toast("Link copied"); } catch (e2) { toast("Press and hold the link to copy it"); } } }
+  }
+  async function share() {
+    if (!info) return; const u = link(info.code);
+    API.post("event", { uid: state.uid, name: "inviteShare" }); if (navigator.share) { try { await navigator.share({ title: "STIXX", text, url: u }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
+    copy();
+  }
+  return { sync, activated, vanity, copy, share, link, info: () => info, text, last: () => last, incoming };
+})();
+
+const BONUS_AT = [[5, 2], [10, 3], [25, 5]], MAX_FRIENDS = 30;
+function inviteBarHTML() {
+  const i = Ref.info(); return `<a class="invitelink" href="#/invite"><b>Invite a friend, get a free pack.</b> They get one too.</a>${i && i.invited ? ` <span class="faint">${i.invited} friend${i.invited > 1 ? "s" : ""} so far</span>` : ""}`;
+}
+function renderInvite() {
+  $("iSub").textContent = "Give a free pack. Get a free pack.";
+  const i = Ref.info();
+  if (!API.on) { $("iBody").innerHTML = `<div class="inv"><p class="dim">Invites switch on when the beta goes live. Here is how they will work:</p><ol class="plain"><li>You get a link that ends in your own code.</li><li>A friend who opens it gets a free pack as soon as they join.</li><li>When they open it, you get a free pack too. Every 5 friends adds bonus packs.</li></ol><p class="small">This copy of STIXX isn't connected to the beta server, so it can't count invites or hand out rewards, and it won't pretend to.</p></div>`; return; }
+  if (!i) { $("iBody").innerHTML = `<p class="small">Getting your link…</p>`; Ref.sync(); return; }
+  const next = BONUS_AT.find(([n]) => n > i.invited), u = Ref.link(i.code), typed = document.activeElement && document.activeElement.id === "vanityIn" ? document.activeElement.value : "";
+  $("iBody").innerHTML = `<div class="inv">
+    <div class="invhero"><span class="label">your link</span><input id="invLink" class="linkbox" readonly value="${esc(u)}" aria-label="Your invite link" onfocus="this.select()">
+      <div class="row"><button class="btn solid" id="copyLink">copy link</button><button class="btn" id="shareLink">share…</button></div>
+      <p class="small">A friend gets a free pack the moment they join. You get one when they open it.</p></div>
+    <div class="invstats"><div><span class="label">friends joined</span><b>${i.joined}</b></div><div><span class="label">opened a pack</span><b>${i.invited}</b></div><div><span class="label">free packs you've earned</span><b>${i.earned}</b></div><div><span class="label">waiting for you</span><b>${i.credits}</b></div></div>
+    <div><span class="label">bonus packs</span>${next ? `<div class="mono-meter" aria-hidden="true">${meter(i.invited, next[0])}</div><p class="small" style="margin-top:6px">${i.invited} of ${next[0]} friends. At ${next[0]} you get ${next[1]} bonus packs on top.</p>` : `<p class="small">You've earned every bonus. Thank you.</p>`}</div>
+    <form id="vanityForm" autocomplete="off"><span class="label">make the link yours</span>
+      <div class="row"><input id="vanityIn" placeholder="${i.activated ? "YOURNAME" : "open a pack first"}" maxlength="16" spellcheck="false" value="${esc(typed)}" ${i.activated ? "" : "disabled"} style="text-transform:uppercase;min-width:0;flex:1"><button class="btn" type="submit" ${i.activated ? "" : "disabled"}>claim</button></div>
+      <div class="small" id="vanityMsg">${i.activated ? "3 to 16 letters or numbers. One change a day. Creators: put your name here and share the link." : "You can pick your own code once you've opened your first pack."}</div></form>
+    <p class="small">Rewards are free packs of play-money cards and have no cash value. One reward per friend, up to ${MAX_FRIENDS} friends, and we check for abuse, so invites from the same person or device don't count.</p></div>`;
+}
+
+/* ---- settings on the Me page ---- */
+function settingsHTML() {
+  return `<h3 class="sec">More</h3><div class="row" style="margin-bottom:14px"><button class="btn small" data-cut="intro">watch the intro</button><button class="btn small" id="fairBtn2">check your packs</button><button class="btn small" id="aboutBtn">fine print</button></div>
+    <p class="small" style="margin-bottom:10px">Everything is saved in this browser. Clearing your browser data clears your cards.</p><p><button class="linkbtn" id="resetBtn">start over</button></p>`;
+}
+
+/* ---- fair play: the window where a pull can be checked ---- */
+const short = h => h ? h.slice(0, 10) + "…" + h.slice(-6) : "";
+function fairModal(keep) {
+  const f = Fair.F(), srv = API.on && f.srv, cur = srv ? f.srv : f.local, mode = srv ? "server" : "device";
+  const rows = f.log.slice().reverse().slice(0, 10).map(x => { const st = Fair.status(f, x), pk = PACK_BY[x.pack];
+    return `<tr><td class="num">#${x.n}</td><td>${esc(pk ? pk.name : x.pack)}</td><td>${x.picks.map(id => esc(BY_ID[id].name)).join(", ")}</td><td class="r"><span class="fbadge ${st === true ? "ok" : st === false ? "bad" : ""}">${st === true ? "✓ checked" : st === false ? "✗ doesn't match" : x.mode === "local" ? "reveal to check" : "sealed"}</span></td></tr>`; }).join("");
+  openModal(`<div class="minfo fair"><div><span class="label">fair play</span><h2>Check your packs</h2></div>
+    <p class="dim">Every pack is drawn from numbers you can check. Before you open a pack, a secret seed is locked in by showing its hash. The cards come from that seed and a client seed you choose. When you reveal the seed, this page redoes every draw and checks it matches.</p>
+    <p class="small">${srv ? "<b>Server mode.</b> The seed is held by the STIXX server and stays hidden until you reveal it, so it can't be changed after seeing your client seed." : "<b>Device mode.</b> The seed is kept on this device. That proves the cards followed the published odds, but not that nobody else could have chosen the seed. Server mode turns on with the live beta."}</p>
+    <div class="kv"><div><span class="label">locked-in seed (SHA-256)</span><code>${short(cur.commit)}</code></div><div><span class="label">packs drawn with it</span><b>${cur.nonce}</b></div></div>
+    <form id="csForm" class="row" autocomplete="off"><label class="small" for="csIn">Your client seed</label><input id="csIn" value="${esc(f.cs)}" maxlength="24" spellcheck="false" style="min-width:0;flex:1;max-width:220px"><button class="btn small" type="submit">set</button></form>
+    <div class="row"><button class="btn" id="fairRotate">reveal the seed and start a new one</button></div>
+    ${rows ? `<div class="tablewrap"><table class="oddsT fairT"><thead><tr><th>#</th><th>Pack</th><th>Cards</th><th class="r"></th></tr></thead><tbody>${rows}</tbody></table></div>` : `<p class="small">Open a pack and it shows up here.</p>`}
+    <details><summary>Check a draw by hand</summary><form id="vfForm" autocomplete="off" class="vf"><input id="vfSeed" placeholder="revealed server seed (hex)" spellcheck="false"><div class="row"><input id="vfCs" placeholder="client seed" spellcheck="false" value="${esc(f.cs)}" style="flex:1;min-width:0"><input id="vfN" placeholder="pack #" inputmode="numeric" style="width:84px"></div><div class="row"><select id="vfPk">${PACKS.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select><button class="btn small" type="submit">work it out</button></div><div class="small" id="vfOut"></div></form></details>
+    <details><summary>How it works</summary><ul class="plain"><li>The digest for pack <b>n</b> is <b>HMAC-SHA256(server seed, "client seed:n")</b>, with the seed's hex text as the key.</li><li>Slot 1 uses the first 8 hex characters of the digest as a number from 0 to 1 and walks down the slot's odds on the odds page; slot 2 uses the next 8, and so on.</li><li>The locked-in value is <b>SHA-256(server seed)</b>. After you reveal a seed, its hash has to equal what you were shown before.</li><li>The style of a copy comes from its copy id, which is a public formula, not from the draw.</li></ul></details></div>`, true, keep);
+}
+function verifyHand() {
+  const seed = $("vfSeed").value.trim().toLowerCase(), cs = $("vfCs").value.trim(), n = +$("vfN").value, pk = PACK_BY[$("vfPk").value], out = $("vfOut");
+  if (!/^[0-9a-f]{16,128}$/.test(seed) || !cs || !(n >= 0) || $("vfN").value === "") { out.className = "small bad"; out.textContent = "Fill in the seed (hex), your client seed and the pack number."; return; }
+  const hex = hmacHex(seed, `${cs}:${n}`); out.className = "small"; out.innerHTML = `Locked-in hash of this seed: <code>${short(sha256hex(seed))}</code><br>Digest: <code>${short(hex)}</code><br>Cards: <b>${Fair.cardsOf(pk, hex).map(c => esc(c.name)).join(", ")}</b>`;
+}
+async function rotateSeed() { const b = $("fairRotate"); if (b) b.disabled = true; await Fair.rotate(); fairModal(true); toast("Seed revealed. A new one is locked in."); }
+
+/* ---- the fine print ---- */
+function aboutModal() {
+  openModal(`<div class="minfo"><div><span class="label">the fine print</span><h2>STIXX beta</h2></div>
+    <ul class="plain"><li><b>Play money only.</b> Nothing here costs real money and nothing can be cashed out. Cards have no cash value.</li><li><b>18+.</b> The cards contain explicit language and violence, and packs are a game of chance, so STIXX is for adults.</li><li><b>The market is simulated.</b> Prices come from AI trading bots, not real people. Every number is labelled as simulated where it is one.</li><li><b>What is stored.</b> Your cards and settings stay in this browser. If you use invites or fair-play seeds online, our server holds a random id, your invite code, the days you visited and a few counts. No name, email or payment details, ever.</li><li><b>It's a beta.</b> Things will change, and progress can be lost if you clear your browser data or we reset the beta.</li><li><b>Take it easy.</b> You can set a pack limit or take a break on the Me page at any time.</li></ul>
+    <div class="row"><button class="btn solid" data-close>ok</button></div></div>`, true);
+}
+
+/* ============================================================================
+   8g. THE PULL CLIP. One tap turns a pack opening into a 9:16 video: the tear, the cards in rising order, then the best card read into its letters with a
+   camera that dives until every character is on screen, and an end card with the total and your invite link. It is drawn on a canvas and recorded while it
+   plays, so the file is ready the moment it ends. Every number in it is the real one from your pack. The letters in the zoom are the card's picture read
+   into characters, the same way the card was made.
+   ========================================================================== */
+const Clip = (() => {
+  const W = 1080, H = 1920, FONT = "'JetBrains Mono', 'DejaVu Sans Mono', ui-monospace, Menlo, Consolas, monospace";
+  const INK = "#ece7dc", DIM = "#8d897f", BG = "#050507", GREEN = "#9fd8a6", ADV = .6;
+  const RAMP = " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
+  const cl = x => x < 0 ? 0 : x > 1 ? 1 : x, sm = (a, b, t) => { const k = cl((t - a) / (b - a)); return k * k * (3 - 2 * k); }, ease = x => 1 - Math.pow(1 - cl(x), 3), ease2 = x => { x = cl(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+  const hash = (i, j, s) => { let h = Math.imul(i * 374761393 + j * 668265263 + s * 982451653, 1274126177); h ^= h >>> 13; return (Math.imul(h, 1103515245) >>> 0) / 4294967296; };
+  const DWELL = [.8, .9, 1.05, 1.5, 2, 2.6, 3], ZOOM = 5.4, PRE = 1.3, POST = 1.5, INTRO = 1.5, TEAR = .8, END = 3.4, ZMAX = 18, ZW0 = 760, ZH0 = ZW0 * 1092 / 900, ZCY = 930;
+  let cv, ctx, st = null, raf = 0, t0 = 0, recorder = null, chunks = [], blob = null, mime = "", fired = 0, parts = [], lastNow = 0, recording = false;
+
+  function T(str, x, y, size, color, weight, align, alpha) { ctx.font = `${weight || 600} ${size}px ${FONT}`; ctx.textAlign = align || "left"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = color; ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.fillText(str, x, y); ctx.globalAlpha = 1; }
+  function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  const glow = (x, y, rad, col, a) => { const g = ctx.createRadialGradient(x, y, 0, x, y, rad); g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)"); ctx.globalAlpha = a; ctx.fillStyle = g; ctx.fillRect(x - rad, y - rad, rad * 2, rad * 2); ctx.globalAlpha = 1; };
+
+  /* ---- the picture read into letters, like the card itself was made ---- */
+  function readGrid(img, chars) {
+    const cols = Math.max(80, Math.round(Math.sqrt(chars * 1.537))), rows = Math.max(60, Math.round(chars / cols)), c = document.createElement("canvas"); c.width = cols; c.height = rows; const x = c.getContext("2d"); x.drawImage(img, 0, 0, cols, rows);
+    const d = x.getImageData(0, 0, cols, rows).data, n = cols * rows, lum = new Float32Array(n), col = new Uint8Array(n * 3), chi = new Uint8Array(n);
+    for (let i = 0; i < n; i++) { const r = d[i * 4], g = d[i * 4 + 1], b = d[i * 4 + 2], l = (r * .299 + g * .587 + b * .114) / 255; lum[i] = l; col[i * 3] = r; col[i * 3 + 1] = g; col[i * 3 + 2] = b; chi[i] = Math.min(RAMP.length - 1, Math.floor(Math.pow(l, .85) * RAMP.length)); }
+    // aim the dive at the busiest patch in the upper middle of the card, where the picture is
+    const ww = Math.round(cols * .1), wh = Math.round(rows * .08); let bx = .5, by = .3, bs = -1;
+    for (let j = Math.round(rows * .12); j < rows * .55; j += 3) for (let i = Math.round(cols * .2); i < cols * .8 - ww; i += 3) {
+      let s = 0, s2 = 0, m = 0; for (let jj = 0; jj < wh; jj += 2) for (let ii = 0; ii < ww; ii += 2) { const l = lum[(j + jj) * cols + i + ii]; s += l; s2 += l * l; m++; }
+      const mean = s / m, v = s2 / m - mean * mean, score = v * 4 + mean * .3; if (score > bs) { bs = score; bx = (i + ww / 2) / cols; by = (j + wh / 2) / rows; }
+    }
+    return { cols, rows, lum, col, chi, tx: bx, ty: by };
+  }
+
+  /* ---- the plan: when everything happens ---- */
+  async function plan(items, pack, free, price) {
+    const rows = items.map(c => ({ c, card: BY_NO[c.no], R: RAR[BY_NO[c.no].rar], val: valueOf(c) })).sort((a, b) => a.val - b.val), best = rows[rows.length - 1], others = rows.slice(0, -1);
+    try { await Promise.race([document.fonts.load(`700 40px "JetBrains Mono"`), sleep(1500)]); } catch (e) {}
+    for (const r of rows) r.img = await loadImg(imgOf(r.card, r.c.fx));
+    let t = INTRO + TEAR; for (const r of others) { r.t0 = t; r.dur = DWELL[Math.min(6, r.R.tier)]; t += r.dur; }
+    best.t0 = t; best.zoomAt = t + PRE; t += PRE + ZOOM + POST; best.dur = PRE + ZOOM + POST;
+    best.grid = best.img ? readGrid(best.img, best.card.chars) : null;
+    const total = rows.reduce((a, r) => a + r.val, 0);
+    return { rows, best, others, total, end: t, dur: t + END, pack, free, price, link: Ref.info() ? Ref.link(Ref.info().code) : "", seq: [...others, best] };
+  }
+
+  /* ---- drawing ---- */
+  function field(t) {                                                       // a quiet drift of characters behind everything
+    ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H); ctx.font = `500 26px ${FONT}`; ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillStyle = "#ffffff";
+    for (let i = 0; i < 90; i++) { const x = hash(i, 1, 5) * W, y = ((hash(i, 2, 5) * H + t * (14 + hash(i, 3, 5) * 30)) % (H + 40)) - 20; ctx.globalAlpha = .05 + hash(i, 4, 5) * .06; ctx.fillText(".:+*#"[Math.floor(hash(i, 5, 5) * 5)], x, y); } ctx.globalAlpha = 1;
+  }
+  function card(r, cx, cy, w, a, rot, glowA) {
+    if (!r.img || a <= 0) return; const h = w * 1092 / 900; ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot || 0); ctx.globalAlpha = a;
+    if (glowA) { glow(0, 0, w * 1.05, r.R.col, glowA * a); ctx.globalAlpha = a; }
+    rr(-w / 2, -h / 2, w, h, w * .045); ctx.save(); ctx.clip(); ctx.imageSmoothingQuality = "high"; ctx.drawImage(r.img, -w / 2, -h / 2, w, h); ctx.restore();
+    rr(-w / 2, -h / 2, w, h, w * .045); ctx.strokeStyle = r.R.col; ctx.lineWidth = 3; ctx.globalAlpha = a * .8; ctx.stroke(); ctx.restore(); ctx.globalAlpha = 1;
+  }
+  function burst(x, y, n, col, sp) { for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, v = sp * (.3 + Math.random() * .8); parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - sp * .15, life: .7 + Math.random() * .6, age: 0, col, ch: ".:+*#"[Math.floor(Math.random() * 5)] }); } }
+  function drawParts(dt) {
+    ctx.font = `700 30px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    for (const p of parts) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 520 * dt; ctx.globalAlpha = cl(1 - p.age / p.life); ctx.fillStyle = p.col; ctx.fillText(p.ch, p.x, p.y); } ctx.globalAlpha = 1; parts = parts.filter(p => p.age < p.life);
+  }
+  const cue = (t, fn) => { if (t > fired.t && t <= fired.now) fn(); };
+
+  function frame(now, dt) {
+    const s = st, t = now; fired = { t: Math.max(-1, lastNow), now: t }; lastNow = t; field(t);
+    // header: what this is, and a running total of what has been revealed so far
+    T("STIXX", 66, 112, 52, INK, 700); T(s.free ? "free pack" : s.pack.name, W - 66, 108, 28, DIM, 600, "right");
+    const revealed = s.seq.filter(r => t >= r.t0 + .25).reduce((a, r) => a + r.val, 0); if (t > INTRO + TEAR) { T("pulled so far", 66, 168, 24, DIM, 500); T(money(revealed), 66, 226, 56, INK, 700); }
+    if (t < INTRO + TEAR) return intro(t, s);
+    // the cards
+    for (const r of s.seq) {
+      const u = t - r.t0; if (u < 0 || u > r.dur) continue; const isBest = r === s.best, tier = r.R.tier, cx = W / 2;
+      if (isBest) { best(r, u, t); continue; }
+      const inK = ease(u / .28), outK = ease((u - (r.dur - .22)) / .22), y = 1010 + (1 - inK) * 380 - outK * 80, a = inK * (1 - outK), w = 700;
+      cue(r.t0 + .02, () => { Snd.reveal(tier); buzz(tier >= 3 ? [30, 25, 50] : [18]); }); cue(r.t0 + .26, () => { if (tier >= 1) burst(cx, 1010, 8 + tier * 10, tier >= 2 ? r.R.col : "#c9c5bb", 420 + tier * 80); });
+      card(r, cx, y, w, a, (1 - inK) * .12 * (r.c.uid.charCodeAt(2) % 2 ? 1 : -1), tier >= 2 ? .5 + tier * .06 : .25);
+      T(`${r.R.name}${r.c.fx ? " · " + STYLES[r.c.fx].name : ""}`.toUpperCase(), cx, 1480, 30, r.R.col, 700, "center", a); T(r.card.name, cx, 1556, 62, INK, 700, "center", a); T(money(r.val), cx, 1630, 54, GREEN, 700, "center", a);
+    }
+    drawParts(dt);
+    if (t > s.end) endCard(t - s.end, s);
+  }
+  function intro(t, s) {
+    const a = ease(t / .5), tt = t - INTRO, pk = s.pack.name.toUpperCase();
+    if (t < INTRO) { T(s.free ? "OPENING A FREE PACK" : "OPENING A PACK", W / 2, 700, 44, DIM, 600, "center", a); T(pk, W / 2, 860, 124, INK, 700, "center", a); T("tap. rip. see what's inside.", W / 2, 960, 34, DIM, 500, "center", a * sm(.5, 1, t)); cue(.9, () => Snd.tear()); return; }
+    // the tear: a bright line sweeps across and the pack splits
+    const k = ease(tt / TEAR); cue(INTRO + .02, () => { buzz(35); });
+    ctx.save(); ctx.translate((Math.random() - .5) * 8 * (1 - k), (Math.random() - .5) * 8 * (1 - k)); T(pk, W / 2 - k * 700, 860, 124, INK, 700, "center", 1 - k); ctx.restore();
+    ctx.globalAlpha = 1 - k; ctx.fillStyle = "#fff"; ctx.fillRect(0, 900 - 2, W * Math.min(1, k * 3), 4); ctx.globalAlpha = 1; if (tt < .06 && !parts.length) burst(W / 2, 900, 40, "#fff", 700);
+    drawParts(1 / 60);
+  }
+  /* the best card: it comes in, the camera dives into its letters, then pulls back out to the whole card */
+  function best(r, u, t) {
+    const R = r.R, cx = W / 2, zu = u - PRE;
+    cue(r.t0 + .02, () => { Snd.reveal(Math.min(6, R.tier + 1)); buzz([40, 30, 60, 30, 90]); }); cue(r.t0 + .3, () => burst(cx, ZCY, 60 + R.tier * 20, [R.col, "#fff"][0], 700));
+    if (zu < 0 || zu > ZOOM + .05) {
+      const inK = ease(u / .35), back = zu > ZOOM ? ease((zu - ZOOM) / .7) : 0, w = ZW0 * (zu > ZOOM ? 1 : .92 + .08 * inK);
+      glow(cx, ZCY, 900, R.col, .3 * inK); card(r, cx, ZCY, w, inK, 0, .5);
+      if (zu > ZOOM) { const q = ease((zu - ZOOM) / .5); T(`${R.name}${r.c.fx ? " · " + STYLES[r.c.fx].name : ""}`.toUpperCase(), cx, 1500, 32, R.col, 700, "center", q); T(r.card.name, cx, 1585, 74, INK, 700, "center", q); T(money(r.val), cx, 1670, 62, GREEN, 700, "center", q); }
+      else T("your best pull", cx, 1500, 34, DIM, 600, "center", inK);
+      return;
+    }
+    cue(r.t0 + PRE + .1, () => Snd.tear()); drawZoom(r, zu, t);
+  }
+  function zoomAt(u) {
+    const a = .5, b = 3, c = 3.9, p = u < a ? 0 : u < b ? ease2((u - a) / (b - a)) : u < c ? 1 : 1 - ease((u - c) / (ZOOM - c)), z = Math.exp(Math.log(ZMAX) * p), g = st.best.grid, tx = g ? g.tx : .5, ty = g ? g.ty : .3;
+    const w = (1 - 1 / z) / (1 - 1 / ZMAX), hold = u > b ? Math.min(u, c) - b : 0; return { z, px: .5 + (tx - .5) * w + hold * .0035, py: .5 + (ty - .5) * w + hold * .001 };
+  }
+  function drawZoom(r, u, t) {
+    const { z, px, py } = zoomAt(u), g = r.grid, w0 = ZW0 * z, h0 = ZH0 * z, X = x => W / 2 + (x - px) * w0, Y = y => ZCY + (y - py) * h0, ccx = () => rr(X(0), Y(0), w0, h0, ZW0 * .045 * z);
+    glow(W / 2, ZCY, 900, r.R.col, .28 * (1 - sm(1.2, 3, z)));
+    const imgA = 1 - sm(2.2, 6.5, z); if (imgA > .01 && r.img) { ctx.save(); ccx(); ctx.clip(); ctx.globalAlpha = imgA; ctx.imageSmoothingQuality = "high"; ctx.drawImage(r.img, X(0), Y(0), w0, h0); ctx.restore(); }
+    const bgA = sm(1.8, 6, z); if (bgA > .01) { ctx.save(); ccx(); ctx.clip(); ctx.globalAlpha = bgA * .92; ctx.fillStyle = BG; ctx.fillRect(X(0), Y(0), w0, h0); ctx.restore(); }
+    const tA = sm(1.6, 4.5, z), cwp = g ? w0 / g.cols : 0;
+    if (g && tA > .01 && cwp > 3.2) {
+      const i0 = Math.max(0, Math.floor(((0 - W / 2) / w0 + px) * g.cols)), i1 = Math.min(g.cols - 1, Math.ceil(((W - W / 2) / w0 + px) * g.cols)), j0 = Math.max(0, Math.floor(((0 - ZCY) / h0 + py) * g.rows)), j1 = Math.min(g.rows - 1, Math.ceil(((H - ZCY) / h0 + py) * g.rows));
+      ctx.font = `700 ${cwp / ADV}px ${FONT}`; ctx.textBaseline = "top"; ctx.textAlign = "left";
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const k = j * g.cols + i; if (g.lum[k] < .05) continue; const aa = cl(tA * 1.7 - hash(i, j, 77) * .7); if (aa <= 0) continue; const m = 1.3 * (.92 + .08 * Math.sin(t * 5 + hash(i, j, 78) * 9));
+        ctx.globalAlpha = aa; ctx.fillStyle = `rgb(${Math.min(255, g.col[k * 3] * m) | 0},${Math.min(255, g.col[k * 3 + 1] * m) | 0},${Math.min(255, g.col[k * 3 + 2] * m) | 0})`; ctx.fillText(RAMP[g.chi[k]], X(i / g.cols), Y(j / g.rows));
+      }
+      ctx.globalAlpha = 1; ctx.textBaseline = "alphabetic";
+    }
+    const chars = fmt(r.card.chars);
+    T(z < 5 ? "every card is made of letters" : `${chars} characters`, W / 2, 1640, z < 5 ? 38 : 56, INK, 700, "center", sm(1.15, 1.9, z) * (z < 5 ? 1 : sm(5, 9, z) * .9 + .1));
+    T("your best pull", W / 2, 1500, 34, DIM, 600, "center", 1 - sm(1.1, 1.7, z));
+  }
+  function endCard(u, s) {
+    const a = ease(u / .5); ctx.globalAlpha = a * .9; ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
+    cue(s.end + .1, () => { Snd.level(); buzz([20, 30, 20]); });
+    T(s.free ? "from a free pack" : `from a ${money(s.price)} pack`, W / 2, 560, 38, DIM, 600, "center", a);
+    T(money(s.total), W / 2, 760, 188, INK, 700, "center", a); T("worth of cards", W / 2, 830, 40, DIM, 600, "center", a);
+    T(`best: ${s.best.card.name} · ${s.best.R.name}`, W / 2, 960, 40, s.best.R.col, 700, "center", a * sm(.3, .8, u));
+    const k = sm(.6, 1.2, u); ctx.globalAlpha = k; rr(140, 1130, W - 280, 150, 24); ctx.fillStyle = INK; ctx.fill(); ctx.globalAlpha = 1; T("open yours free", W / 2, 1230, 62, "#050507", 700, "center", k);
+    T(s.link ? s.link.replace(/^https?:\/\//, "") : location.host || "stixx", W / 2, 1360, s.link && s.link.length > 40 ? 30 : 38, INK, 600, "center", k);
+    T("play money · nothing is charged · 18+", W / 2, 1810, 26, DIM, 500, "center", k);
+  }
+
+  /* ---- playing and recording ---- */
+  function loop(ts) {
+    if (!st) return; const now = (ts - t0) / 1000, dt = Math.min(.05, (ts - (loop.last || ts)) / 1000); loop.last = ts;
+    if (now >= st.dur + .3) { finish(); return; } frame(Math.max(0, now), dt); raf = requestAnimationFrame(loop);
+  }
+  function start() { cancelAnimationFrame(raf); parts = []; lastNow = -1; loop.last = 0; t0 = performance.now(); raf = requestAnimationFrame(loop); }
+  function finish() {
+    cancelAnimationFrame(raf); frame(st.dur - .2, .016); if (recorder && recorder.state !== "inactive") recorder.stop(); else ready();
+  }
+  function ready() { const b = $("clSave"); b.disabled = false; $("clShare").disabled = false; $("clState").textContent = blob ? "Your clip is ready." : "Your clip played. This browser can't record video, so you can save the end card as a picture."; if (!blob) b.textContent = "save picture"; }
+  async function record() {
+    blob = null; recorder = null; chunks = []; if (!window.MediaRecorder || !cv.captureStream) return;
+    mime = ["video/mp4;codecs=avc1,mp4a.40.2", "video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp9", "video/webm"].find(m => MediaRecorder.isTypeSupported(m)); if (!mime) return;
+    const stream = cv.captureStream(30); try { const at = Snd.tap(); if (at && /mp4a|opus/.test(mime)) at.getAudioTracks().forEach(tk => stream.addTrack(tk)); } catch (e) {}
+    try { recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 7e6 }); } catch (e) { recorder = null; return; }
+    recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); }; recorder.onstop = () => { blob = chunks.length ? new Blob(chunks, { type: mime }) : null; ready(); }; recorder.start(250);
+  }
+  async function open(items, pack, free, price) {
+    cv = $("clCv"); ctx = cv.getContext("2d"); $("clip").hidden = false; $("clSave").disabled = true; $("clShare").disabled = true; $("clSave").textContent = "save video"; $("clState").textContent = "Making your clip…";
+    ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H); st = await plan(items, pack, free, price); if ($("clip").hidden) { st = null; return; }
+    API.post("event", { uid: state.uid, name: "clip" }); await record(); start();
+  }
+  function close() { cancelAnimationFrame(raf); if (recorder && recorder.state !== "inactive") { recorder.onstop = null; try { recorder.stop(); } catch (e) {} } st = null; recorder = null; $("clip").hidden = true; }
+  const fname = ext => `stixx-pull-${Date.now().toString(36)}.${ext}`;
+  const caption = () => `${st ? money(st.total) : ""} of cards from a ${st && st.free ? "free " : ""}STIXX pack. ${Ref.text} ${st && st.link ? st.link : ""}`.trim();
+  async function stillBlob() { frame(st.dur - .2, .016); return new Promise(res => cv.toBlob(res, "image/png")); }
+  async function save() {
+    if (!st) return; API.post("event", { uid: state.uid, name: "clipSave" }); if (blob) return saveBlob(blob, fname(mime.startsWith("video/mp4") ? "mp4" : "webm")); const b = await stillBlob(); if (b) saveBlob(b, fname("png"));
+  }
+  async function share() {
+    if (!st) return; API.post("event", { uid: state.uid, name: "clipShare" }); const b = blob || await stillBlob(); if (!b) return; const ext = blob ? (mime.startsWith("video/mp4") ? "mp4" : "webm") : "png", f = new File([b], fname(ext), { type: blob ? mime.split(";")[0] : "image/png" });
+    try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: "STIXX", text: caption() }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
+    saveBlob(b, fname(ext));
+  }
+  return { open, close, save, share, replay: () => { if (st) { blob = null; $("clState").textContent = "Replaying…"; start(); } }, get blob() { return blob; } };
+})();
 
 /* ============================================================================
    9. EVENTS
@@ -1948,25 +2347,35 @@ document.addEventListener("click", e => {
     case "shSpeed": Share.cycle(); break;
     case "shSummary": Share.summary(); break;
     case "shClose": Share.close(); break;
+    case "clSave": Clip.save(); break;
+    case "clShare": Clip.share(); break;
+    case "clAgain": Clip.replay(); break;
+    case "clClose": Clip.close(); break;
+    case "sumClip": if (SS) Clip.open(SS.items, SS.pack, SS.free, SS_PRICE); break;
     case "alertX": hideAlert(); break;
     case "dailyBtn": Snd.click(); dailyModal(); break;
     case "claimDaily": { const r = claimDaily(); if (r) dailyModal(r); break; }
+    case "claimOpen": closeModal(); openPack(); break;
     case "muteBtn": state.mute = !state.mute; persist(); renderChips(); if (!state.mute) Snd.click(); break;
-    case "addFunds": state.coins += TOPUP; state.s.added += TOPUP; save(); renderBal(true); toast("Added $10 of demo money"); break;
     case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
     case "sumSell": { const g = sell(SS.items.map(c => c.uid)); closeStage(); toast("Sold for " + money(g)); break; }
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
-    case "sumAgain": { const pk = SS.pack; closeStage(); setTimeout(() => (state.coins >= packPrice(pk) ? openPack(pk) : toast("Tap “add $10” for more demo money")), 200); break; }
+    case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else location.hash = "#/invite"; break; }
     case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { toast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`); renderCollection(); } break; }
-    case "addCode": codeModal(); break;
-    case "resetBtn": if (t.dataset.armed) { const ok = state.ageOK; state = fresh(); state.ageOK = ok; save(); renderBal(); show("home"); toast("Demo reset"); } else { t.dataset.armed = 1; t.textContent = "tap again to wipe everything"; setTimeout(() => { delete t.dataset.armed; t.textContent = "reset the demo"; }, 3000); } break;
-    case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); break;
+    case "resetBtn": if (t.dataset.armed) { startOver(); renderBal(); renderChips(); location.hash = "#/"; show("home"); toast("Fresh start. Your first pack is free."); } else { t.dataset.armed = 1; t.textContent = "tap again to wipe your cards and start over"; setTimeout(() => { delete t.dataset.armed; t.textContent = "start over"; }, 3500); } break;
+    case "copyLink": Ref.copy(); break;
+    case "shareLink": Ref.share(); break;
+    case "fairRotate": rotateSeed(); break;
+    case "fairBtn": case "fairBtn2": fairModal(); break;
+    case "aboutBtn": aboutModal(); break;
+    case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); Ref.sync(); break;
   }
 });
 document.addEventListener("change", e => { if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
-document.addEventListener("submit", e => { if (e.target.id === "codeForm") { e.preventDefault(); addByCode($("codeIn").value); } });
+document.addEventListener("submit", e => { if (e.target.id === "vanityForm") { e.preventDefault(); Ref.vanity($("vanityIn").value); } if (e.target.id === "csForm") { e.preventDefault(); Fair.setClientSeed($("csIn").value); fairModal(true); toast("Client seed set"); } if (e.target.id === "vfForm") { e.preventDefault(); verifyHand(); } });
 document.addEventListener("keydown", e => {
   const k = e.key;
+  if (k === "Escape" && !$("clip").hidden) { Clip.close(); return; }
   if (!stage.hidden && SS) { if ((k === " " || k === "Enter") && SS.phase !== "summary") { e.preventDefault(); if (!e.repeat) advance(); } if (k === "Escape") { if (SS.phase === "summary") closeStage(); else skipAll(); } return; }
   if (k === "Escape" && !$("share").hidden) { Share.close(); return; }
   if (k === "Escape" && !$("modal").hidden) { closeModal(); return; }
@@ -1987,6 +2396,7 @@ setInterval(() => { MK.advance(); if (MK.tick() !== lastTick) { lastTick = MK.ti
 setTimeout(() => maybeRecap(lastSeen0), 1400);
 document.addEventListener("visibilitychange", () => { if (document.hidden) { state.lastSeen = Date.now(); persist(); } else { const since = state.lastSeen; maybeRecap(since); state.lastSeen = Date.now(); } });
 setTimeout(checkAlerts, 2500);
+Ref.sync(); setInterval(Ref.sync, 60000); document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - Ref.last() > 20000) Ref.sync(); });
 tickLive(); setInterval(tickLive, 1000);
 setTimeout(() => CARDS.forEach(c => loadImg(imgOf(c))), 700);   // warm the pictures so a reveal never waits on one
 

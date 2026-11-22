@@ -2,6 +2,10 @@
 
     python3 build.py            write index.html
     python3 build.py --check    also syntax-check the script with node
+    python3 build.py --release [--url https://your.site/]
+                                write dist/: the game, the card pictures and server.js, ready to host.
+                                The page is wired to the beta server on the same address (invites, free-pack
+                                rewards and provably fair seeds); --api http://other.host sets another address.
 
 src/style.css        all styles
 src/body.html        the page structure
@@ -14,12 +18,33 @@ import glob, os, re, subprocess, sys, tempfile
 ROOT = os.path.dirname(os.path.abspath(__file__))
 read = lambda p: open(os.path.join(ROOT, p), encoding='utf-8').read()
 
-HEAD = '''<!doctype html>
+def arg(name, default=''):
+    return sys.argv[sys.argv.index(name) + 1] if name in sys.argv and sys.argv.index(name) + 1 < len(sys.argv) else default
+
+RELEASE = '--release' in sys.argv
+API = arg('--api', '/' if RELEASE else '')          # '' = no server: the page runs alone and says invites are off
+URL = arg('--url', '').rstrip('/')
+TITLE = 'STIXX: ASCII card packs'
+DESC = 'Open free packs of ASCII trading cards, watch their prices move like memecoins, and sell when you think they are at the top. Play money only. 18+.'
+ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23050506'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' text-anchor='middle' fill='%23ece7dc'%3ES%3C/text%3E%3C/svg%3E"
+OG_IMG = (URL + '/' if URL else '') + 'og.png'
+
+HEAD = f'''<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>STIXX First Print</title>
+<title>{TITLE}</title>
+<meta name="description" content="{DESC}">
+<meta name="theme-color" content="#050506">
+<meta name="stixx-api" content="{API}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="STIXX">
+<meta property="og:title" content="{TITLE}">
+<meta property="og:description" content="{DESC}">
+<meta property="og:image" content="{OG_IMG}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="{ICON}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap">
@@ -29,8 +54,18 @@ HEAD = '''<!doctype html>
 parts = sorted(glob.glob(os.path.join(ROOT, 'src', 'js', '*.js')))
 script = '(() => {\n"use strict";\n\n' + '\n'.join(open(p, encoding='utf-8').read() for p in parts) + '\n})();\n'
 out = HEAD + read('src/style.css') + '</style>\n</head>\n<body>\n' + read('src/body.html').rstrip('\n') + '\n\n<script>\n' + script + '</script>\n</body>\n</html>\n'
-open(os.path.join(ROOT, 'index.html'), 'w', encoding='utf-8').write(out)
-print(f'index.html: {len(out):,} bytes from {len(parts)} script parts')
+if RELEASE:
+    import shutil
+    dist = os.path.join(ROOT, 'dist'); shutil.rmtree(dist, ignore_errors=True); os.makedirs(dist)
+    open(os.path.join(dist, 'index.html'), 'w', encoding='utf-8').write(out)
+    shutil.copytree(os.path.join(ROOT, 'cards'), os.path.join(dist, 'cards'))
+    for f in ('server.js', 'og.png', 'BETA.md'):
+        if os.path.exists(os.path.join(ROOT, f)): shutil.copy(os.path.join(ROOT, f), dist)
+    open(os.path.join(dist, 'package.json'), 'w').write('{"name":"stixx-beta","private":true,"version":"0.1.0","scripts":{"start":"node server.js"},"engines":{"node":">=18"}}\n')
+    print(f'dist/: index.html {len(out):,} bytes, cards, server.js (api = {API!r})')
+else:
+    open(os.path.join(ROOT, 'index.html'), 'w', encoding='utf-8').write(out)
+    print(f'index.html: {len(out):,} bytes from {len(parts)} script parts')
 
 if '--check' in sys.argv:
     with tempfile.NamedTemporaryFile('w', suffix='.js', delete=False) as f:

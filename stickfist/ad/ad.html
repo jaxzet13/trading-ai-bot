@@ -9,10 +9,10 @@
    fly, collect your favourites) and then a cliffhanger. The cards are the app's own pictures, drawn the way the app draws them; ASCII is the
    language of everything around them: the captions, the charts, the way a card decodes out of text, the static. Every frame is worked out from the
    clock, pushed through a pixel pass (tear, RGB split, grain, scanlines, bloom) and handed to ffmpeg by render.js.
-   ?handle=@name puts an account name on the end card. Without it the end card says "follow this account".
+   ?handle=@name or ?url=stixx.example puts an account name or the game's address under "tap the link." on the end card.
    ========================================================================================================================================== */
 const W = 1080, H = 1920, FPS = 30;
-const HANDLE = (new URLSearchParams(location.search).get("handle") || "").trim();
+const HANDLE = (new URLSearchParams(location.search).get("handle") || "").trim(), SITE = (new URLSearchParams(location.search).get("url") || "").trim(), SHOW = SITE || HANDLE;
 const FONT = "'JetBrains Mono','DejaVu Sans Mono',ui-monospace,monospace";
 const RAMP = " .'`,:;-~=+*xX#%@";
 const ADV = .6, LHR = 1.12;                       // a character is .6 em wide and 1.12 em tall
@@ -61,9 +61,9 @@ line("build", .15, "that's how it works.", 20, { fy: .145, c: DIM, size: 52 });
 line("build", .9, "now see what's inside.", 22, { fy: .205, c: WHT, size: 58 });
 line("reveal", .15, "S E C R E T", 12, { fy: .105, c: [255, 232, 180], size: 34, rot: T.reveal[0] + 2.3 });
 line("reveal", .3, "U M B R A", 9, { fy: .165, c: AMB, size: 76, rot: T.reveal[0] + 2.1 });
-line("end", 1.2, "beta drops soon.", 11, { fy: .44, c: WHT, size: 84, t1: 99 });
-line("end", 2.5, "follow this account.", 14, { fy: .54, c: GRN, size: 58, t1: 99 });
-if (HANDLE) line("end", 3.6, HANDLE, 14, { fy: .60, c: WHT, size: 62, t1: 99 });
+line("end", 1.2, "first pack free.", 11, { fy: .44, c: WHT, size: 84, t1: 99 });
+line("end", 2.5, "tap the link.", 14, { fy: .54, c: GRN, size: 58, t1: 99 });
+if (SHOW) line("end", 3.6, SHOW, 14, { fy: .60, c: WHT, size: 62, t1: 99 });
 LINES.forEach(l => { const hold = Math.min(l.t1, DUR) - .3 - (l.t0 + l.s.length / l.cps); if (l.t1 < 99 && !l.rot && hold < 1.15) console.error("caption stays up too briefly:", l.s, hold.toFixed(2)); });
 const KEYS = { rip: T.rip[0], reveal: T.reveal[0], cutBlack: T.reveal[1], logo: T.end[0] + .3, end: DUR };
 // glitch hits: a cut, a slam, a tear. Each is a flash of tear + RGB split + snow that dies away in about a fifth of a second.
@@ -473,8 +473,8 @@ const ACTS = {
       for (let i = 0; i < 36; i++) pch(x0 + i * size * ADV, y0 + 6.6 * size * LHR, size, "═", FAINT, a * sm(.9, 1.4, lu));
       bigText(typed("ASCII trading cards", lu, 1.0, 16), W / 2, y0 + 8.3 * size * LHR, 28, DIM, 1, 0);
     }
-    if (t > T.end[0] + 3.0) { const bl = Math.floor(t * 2) % 2; bigText(bl ? "▼" : "▽", W / 2, H * (HANDLE ? .68 : .62), 54, GRN, .9, 14); }
-    if (t > T.end[0] + 3.9) bigText("so you're first in line.", W / 2, H * (HANDLE ? .735 : .69), 32, DIM, sm(T.end[0] + 3.9, T.end[0] + 4.2, t), 0);
+    if (t > T.end[0] + 3.0) { const bl = Math.floor(t * 2) % 2; bigText(bl ? "▼" : "▽", W / 2, H * (SHOW ? .68 : .62), 54, GRN, .9, 14); }
+    if (t > T.end[0] + 3.9) bigText("nothing to pay. it's play money.", W / 2, H * (SHOW ? .735 : .69), 32, DIM, sm(T.end[0] + 3.9, T.end[0] + 4.2, t), 0);
   },
 };
 
@@ -482,13 +482,13 @@ const ACTS = {
 function hud(t, q) {
   if (t >= T.reveal[1] && t < T.end[0] + .35) return;
   const fin = t >= T.end[0];
-  if (fin) { art(["demo money · simulated market · beta coming soon"], W / 2 - 46 * 13.2 / 2, H * .845, 22, [110, 108, 100], sm(T.end[0] + .9, T.end[0] + 1.4, t)); return; }
+  if (fin) { art(["play money · simulated market · 18+"], W / 2 - 38 * 13.2 / 2, H * .845, 22, [110, 108, 100], sm(T.end[0] + .9, T.end[0] + 1.4, t)); return; }
   const al = (t < 1 ? sm(.1, .8, t) : 1) * (1 - .5 * q);
   const m = 46; for (const [cx, cy, sx2, sy2] of [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]]) { for (let i = 0; i < 4; i++) { pch(cx + sx2 * i * 14 - 6, cy - 12, 22, "─", FAINT, al); pch(cx - 6, cy + sy2 * i * 25 - 12, 22, "│", FAINT, al); } }
   pch(66, 70, 24, "●", [255, 80, 70], (Math.floor(t * 1.6) % 2 ? 1 : .15) * al); art(["REC"], 98, 66, 24, DIM, al);
   const ff = Math.floor(t * FPS), tc = `${pad(Math.floor(ff / 1800))}:${pad(Math.floor(ff / 30) % 60)}:${pad(ff % 30)}`; art([tc], 66, 100, 22, FAINT, al);
   const bars = "▁▃▅▇"; art([...Array(4)].map((_, i) => bars[Math.min(3, Math.floor(hash(i, Math.floor(t * 4), 33) * 4 * (.6 + .4 * Math.min(1, t / 3))))]).join(" "), W - 66 - 7 * 13, 70, 24, DIM, al);
-  if (t >= T.buy[0] && t < T.reveal[0]) art(["demo mode · simulated market"], W / 2 - 14 * 13.2, H * .845, 22, [110, 108, 100], al * 1.1);
+  if (t >= T.buy[0] && t < T.reveal[0]) art(["play money · simulated market"], W / 2 - 15 * 13.2, H * .845, 22, [110, 108, 100], al * 1.1);
 }
 
 /* ---------------------------------------------------------------- ascii snow: noise that is made of letters */

@@ -2,9 +2,9 @@
   <div class="wrap">
     <a class="logo" href="#/">STIXX</a>
     <nav class="tabs" id="tabs" aria-label="Sections">
-      <a href="#/" data-v="home">pack</a><a href="#/market" data-v="market">market</a><a href="#/profile" data-v="profile">profile</a><a href="#/collection" data-v="collection">collection</a><a href="#/odds" data-v="odds">odds</a>
+      <a href="#/" data-v="home">pack</a><a href="#/collection" data-v="collection">cards</a><a href="#/market" data-v="market">market</a><a href="#/invite" data-v="invite">invite</a><a href="#/profile" data-v="profile">me</a>
     </nav>
-    <div class="wallet"><button class="chip" id="dailyBtn"></button><button class="chip soft" id="muteBtn" aria-pressed="false"></button><span class="bal" id="bal">$0.00</span><button class="btn small" id="addFunds" title="Demo money. Nothing is ever charged.">+ add $10</button></div>
+    <div class="wallet"><button class="chip" id="dailyBtn"></button><button class="chip soft" id="muteBtn" aria-pressed="false"></button><span class="bal" id="bal" title="Play money. Nothing is ever charged.">$0.00</span></div>
   </div>
 </header>
 <div class="tape" aria-hidden="true"><div class="tape-in" id="tapeIn"></div></div>
@@ -17,9 +17,12 @@
       <pre class="banner" id="banner" aria-label="STIXX"></pre>
       <div class="packtabs" id="packTabs" role="tablist" aria-label="Choose a pack"></div>
       <div class="packcol" id="homePack"></div>
-      <div class="packmeta"><h1 id="packName">First Print</h1><p class="dim" id="packLine"></p><p class="small" id="packBlurb"></p></div>
+      <div class="packmeta"><h1 id="packName">First Print</h1><p class="dim" id="packLine"></p></div>
       <button class="btn solid big" id="openBtn" data-open>open pack</button>
+      <p class="small blurb" id="packBlurb"></p>
+      <ol class="steps" id="how" hidden><li><b>1</b> Open a pack</li><li><b>2</b> Watch your cards' prices move</li><li><b>3</b> Sell when it's high</li></ol>
       <p class="honest" id="honest"></p>
+      <div class="invitebar" id="inviteBar"></div>
       <div class="hot" id="hot"></div>
       <div class="chase" id="chase"></div>
     </div>
@@ -43,7 +46,7 @@
 
   <!-- PROFILE -->
   <section class="view" id="v-profile">
-    <div class="page-head"><h1 class="ttl">Profile</h1><p>Your demo wallet. It moves with the market, so keep it open and watch.</p><p class="live"></p></div>
+    <div class="page-head"><h1 class="ttl">Me</h1><p>Your play-money wallet. It moves with the market, so keep it open and watch.</p><p class="live"></p></div>
     <div id="pRank"></div>
     <div id="pWorth"></div>
     <div id="pChart" style="margin-bottom:40px"></div>
@@ -51,6 +54,13 @@
     <div class="tablewrap"><table class="mtable" id="pTable"></table></div>
     <p class="small" id="pNote" style="margin-bottom:30px"></p>
     <div id="pLimits" style="margin-bottom:44px"></div>
+    <div id="pSettings" style="margin-bottom:44px"></div>
+  </section>
+
+  <!-- INVITE -->
+  <section class="view" id="v-invite">
+    <div class="page-head"><h1 class="ttl">Invite</h1><p id="iSub"></p></div>
+    <div id="iBody"></div>
   </section>
 
   <!-- COLLECTION -->
@@ -68,7 +78,7 @@
   </section>
 </main>
 
-<footer><div class="wrap">STIXX · demo build · the money is simulated and nothing is ever charged</div></footer>
+<footer><div class="wrap">STIXX beta · play money only, nothing is ever charged or paid out · 18+ · <a href="#/odds">odds</a> · <button class="linkbtn" id="fairBtn">fair play</button> · <button class="linkbtn" id="aboutBtn">fine print</button></div></footer>
 
 <!-- opening -->
 <div class="stage" id="stage" hidden tabindex="-1">
@@ -87,6 +97,13 @@
     <div class="sh-actions"><button class="btn solid" id="shVideo" hidden>Save video</button><button class="btn" id="shSave">Save image</button><button class="btn" id="shShare">Share</button><button class="btn ghost" id="shSummary">Summary</button><button class="btn ghost" id="shClose">Close</button></div>
   </div>
 </div>
+<div class="share clipov" id="clip" hidden>
+  <div class="sh-box">
+    <canvas id="clCv" width="1080" height="1920" aria-label="Your pull as a short video"></canvas>
+    <p class="small" id="clState" aria-live="polite"></p>
+    <div class="sh-actions"><button class="btn solid" id="clSave" disabled>save video</button><button class="btn" id="clShare" disabled>share</button><button class="btn ghost" id="clAgain">replay</button><button class="btn ghost" id="clClose">close</button></div>
+  </div>
+</div>
 <div class="modal" id="modal" hidden><div class="mbox" id="mbox"></div></div>
 <div class="gate" id="gate" hidden>
   <div class="gatebox">
@@ -94,8 +111,8 @@
  ( o o )   18+ only.
   \ ~ /
  --'-'--</pre>
-    <p class="dim">STIXX cards contain explicit language and violence. This is a demo: every dollar is simulated and nothing is ever charged.</p>
-    <label for="ageOK"><input type="checkbox" id="ageOK"> I'm 18 or older and I understand the money is simulated.</label>
+    <p class="dim">STIXX cards contain explicit language and violence. Everything here is play money: nothing is ever charged, and nothing can be cashed out.</p>
+    <label for="ageOK"><input type="checkbox" id="ageOK"> I'm 18 or older and I understand it's play money.</label>
     <button class="btn solid big" id="gateGo" disabled>enter</button>
   </div>
 </div>

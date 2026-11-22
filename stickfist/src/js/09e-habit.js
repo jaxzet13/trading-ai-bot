@@ -8,10 +8,10 @@
 
 /* ---- sound and touch: a small synthesiser, so a win can be heard and felt. Off with one tap, remembered. ---- */
 const Snd = (() => {
-  let ac = null, out = null;
+  let ac = null, out = null, comp = null, dst = null;
   const ready = () => {
     if (state.mute || !tapped()) return false;
-    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); out = ac.createGain(); out.gain.value = .5; const cp = ac.createDynamicsCompressor(); out.connect(cp); cp.connect(ac.destination); } catch (e) { ac = null; return false; } }
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); out = ac.createGain(); out.gain.value = .5; comp = ac.createDynamicsCompressor(); out.connect(comp); comp.connect(ac.destination); } catch (e) { ac = null; return false; } }
     if (ac.state === "suspended") ac.resume(); return true;
   };
   const env = (g, t, a, d, v) => { g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + a); g.gain.exponentialRampToValueAtTime(.0001, t + a + d); };
@@ -31,6 +31,7 @@ const Snd = (() => {
     claim(big) { if (!ready()) return; [0, 2, 4, big ? 6 : 5].forEach((k, i) => tone(NOTE[k], .4, "triangle", .13, i * .08)); },
     level() { if (!ready()) return; [0, 2, 4, 6, 7].forEach((k, i) => tone(NOTE[k], .5, "triangle", .12, i * .09)); },
     click() { if (!ready()) return; tone(900, .05, "sine", .07); },
+    tap() { if (!ready()) return null; if (!dst) { dst = ac.createMediaStreamDestination(); comp.connect(dst); } return dst.stream; },       // what you hear, as a stream, so a recorded clip can carry the sound
   };
 })();
 const tapped = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;       // browsers allow sound and vibration only after you have tapped something
@@ -39,28 +40,25 @@ document.addEventListener("pointerdown", () => Snd.unlock(), { once: true }); do
 
 /* ---- the daily drop and the streak ---- */
 const dayKey = d => (d || new Date()).toLocaleDateString("en-CA");                       // 2026-11-21, in the player's own time
-const DAILY = [[50, 70], [100, 22], [200, 7], [500, 1]];                               // cents, and the chance in percent; the same table is shown in the window
-const STREAK_BONUS = { 3: 50, 7: 150, 14: 300, 30: 1000 };
+const STREAK_BONUS = { 3: 1, 7: 1, 14: 2, 30: 3 };                                     // extra free packs on these streak days
 const dailyReady = () => state.streak.last !== dayKey();
 function claimDaily() {
   const st = state.streak; if (!dailyReady()) return null;
   const y = dayKey(new Date(Date.now() - 864e5)), y2 = dayKey(new Date(Date.now() - 2 * 864e5)); let used = false;
   if (st.last === y) st.n++; else if (st.last === y2 && st.freezes > 0) { st.freezes--; st.n++; used = true; } else st.n = 1;      // one missed day is forgiven if you have a freeze
   st.last = dayKey(); st.best = Math.max(st.best, st.n); if (st.n % 7 === 0) st.freezes = Math.min(2, st.freezes + 1);
-  const bonus = STREAK_BONUS[st.n] || 0; let r = rand() * 100, win = DAILY[0][0]; for (const [c, p] of DAILY) { if ((r -= p) < 0) { win = c; break; } }
-  const total = win + bonus; state.coins += total; state.s.added += total; save(); renderBal(true); renderChips(); Snd.claim(win >= 200 || bonus > 0); buzz([30, 40, 30]);
-  return { win, bonus, n: st.n, used, total };
+  const bonus = STREAK_BONUS[st.n] || 0, packs = 1 + bonus; state.freePacks += packs; save(); renderChips(); Snd.claim(bonus > 0); buzz([30, 40, 30]);
+  return { packs, bonus, n: st.n, used };
 }
 function dailyModal(res) {
-  const st = state.streak, ready = dailyReady(), n = st.n, nextM = [3, 7, 14, 30].find(m => m > n), wk = n > 0 && n % 7 === 0 ? 7 : n % 7, ev = DAILY.reduce((a, [c, p]) => a + c * p / 100, 0);
-  openModal(`<div class="minfo"><div><span class="label">Daily drop</span><h2>${res ? "+" + money(res.total) : ready ? "Today's drop is ready" : "That's today's drop"}</h2></div>
-    ${res ? `<p class="dim">${res.bonus ? `You drew ${money(res.win)} and the day ${res.n} streak bonus added ${money(res.bonus)}.` : `You drew ${money(res.win)}.`}${res.used ? " A streak freeze covered the day you missed." : ""}</p>` : ready ? `<p class="dim">Free demo money, once a day. Nothing to buy.</p>` : `<p class="dim">Come back tomorrow for the next one.</p>`}
-    <div><div class="label">Streak · day ${n}</div><div class="mono-meter" aria-hidden="true">${meter(wk, 7)}</div><p class="small" style="margin-top:6px">${nextM ? `Day ${nextM} pays a ${money(STREAK_BONUS[nextM])} bonus. ` : ""}Miss a day and your streak survives if you have a freeze (you have ${st.freezes}). You earn one every 7 days, up to 2.</p></div>
-    <div><div class="label" style="margin-bottom:6px">The odds of the draw</div><table class="oddsT"><tbody>${DAILY.map(([c, p]) => `<tr><td>${money(c)}</td><td class="r">${p}%</td></tr>`).join("")}</tbody></table><p class="small" style="margin-top:6px">Average ${money(ev)}. Demo money, nothing is ever charged.</p></div>
-    ${ready ? `<button class="btn solid" id="claimDaily">claim</button>` : `<button class="btn" data-close>close</button>`}</div>`, true);
+  const st = state.streak, ready = dailyReady(), n = st.n, nextM = [3, 7, 14, 30].find(m => m > n), wk = n > 0 && n % 7 === 0 ? 7 : n % 7, have = state.freePacks;
+  openModal(`<div class="minfo"><div><span class="label">Free daily pack</span><h2>${res ? "+" + res.packs + " free pack" + (res.packs > 1 ? "s" : "") : ready ? "Your free pack is ready" : "You've got today's pack"}</h2></div>
+    ${res ? `<p class="dim">Day ${res.n} in a row.${res.bonus ? ` That is a streak bonus: ${res.bonus} extra.` : ""}${res.used ? " A streak freeze covered the day you missed." : ""} You have ${have} free pack${have === 1 ? "" : "s"} to open.</p>` : ready ? `<p class="dim">One free pack every day. Nothing to buy.</p>` : `<p class="dim">Come back tomorrow for the next one.${have ? ` You have ${have} free pack${have === 1 ? "" : "s"} to open now.` : ""}</p>`}
+    <div><div class="label">Streak · day ${n}</div><div class="mono-meter" aria-hidden="true">${meter(wk, 7)}</div><p class="small" style="margin-top:6px">${nextM ? `Day ${nextM} adds ${STREAK_BONUS[nextM]} extra free pack${STREAK_BONUS[nextM] > 1 ? "s" : ""}. ` : ""}Miss a day and your streak survives if you have a freeze (you have ${st.freezes}). You earn one every 7 days, up to 2.</p></div>
+    <div class="row">${ready ? `<button class="btn solid" id="claimDaily">claim your pack</button>` : have ? `<button class="btn solid" id="claimOpen">open a free pack</button>` : ""}<button class="btn ghost" data-close>${ready ? "not now" : "close"}</button></div></div>`, true);
 }
 function renderChips() {
-  const d = $("dailyBtn"); if (d) { const ready = dailyReady(); d.className = "chip" + (ready ? " ready" : ""); d.innerHTML = ready ? `<i></i>daily drop` : `streak ${state.streak.n}`; d.title = ready ? "A free drop of demo money, once a day" : "Your daily streak"; }
+  const d = $("dailyBtn"); if (d) { const ready = dailyReady(); d.className = "chip" + (ready ? " ready" : ""); d.innerHTML = ready ? `<i></i>free daily pack` : `streak ${state.streak.n}`; d.title = ready ? "A free pack, once a day" : "Your daily streak"; }
   const m = $("muteBtn"); if (m) { m.textContent = state.mute ? "sound off" : "sound on"; m.setAttribute("aria-pressed", state.mute ? "true" : "false"); }
 }
 
@@ -140,7 +138,7 @@ function packGate() {
   const l = state.lim; if (l.breakUntil > Date.now()) return `You're on a break for another ${heldText(l.breakUntil - Date.now())}. You asked for it, and it can't be undone.`;
   if (l.packs && packsToday() >= l.packs) return `You set a limit of ${l.packs} packs a day and you've opened ${packsToday()}. It resets at midnight.`; return "";
 }
-const REMIND = Math.max(.05, +new URLSearchParams(location.search).get("remind") || 30) * 60000;           // minutes between reminders: 30, or ?remind=<minutes> to see it sooner
+const REMIND = 30 * 60000;                                                                             // a reminder every half hour
 const ses0 = { packs: state.s.packs, spent: state.s.spent, sold: state.s.sold, net: netWorth() - state.s.added }; let activeMs = 0, remindedAt = 0;
 function sessionTick() {
   if (document.hidden) return; activeMs += 1000;

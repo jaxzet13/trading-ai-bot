@@ -11,5 +11,6 @@ setInterval(() => { MK.advance(); if (MK.tick() !== lastTick) { lastTick = MK.ti
 setTimeout(() => maybeRecap(lastSeen0), 1400);
 document.addEventListener("visibilitychange", () => { if (document.hidden) { state.lastSeen = Date.now(); persist(); } else { const since = state.lastSeen; maybeRecap(since); state.lastSeen = Date.now(); } });
 setTimeout(checkAlerts, 2500);
+Ref.sync(); setInterval(Ref.sync, 60000); document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - Ref.last() > 20000) Ref.sync(); });
 tickLive(); setInterval(tickLive, 1000);
 setTimeout(() => CARDS.forEach(c => loadImg(imgOf(c))), 700);   // warm the pictures so a reveal never waits on one

@@ -99,7 +99,7 @@ const Cut = (() => {
           } else g.text("a card is worth what the market says.", .74, DIM);
         }
         // ---------- 5. the name again (20.6 - 21.4+)
-        const a5 = sm(20.9, 21.4, t); if (a5 > 0) { logo(cx - 18, cy - 5, a5, 1, t > 21.4 ? (t - 21.4) * 40 : null); g.text("ASCII trading cards", .58, DIM); g.text("$10 of demo money to start", .65, GRN); if (Math.floor(t * 2) % 2) g.text("tap to begin", .9, [110, 108, 100]); }
+        const a5 = sm(20.9, 21.4, t); if (a5 > 0) { logo(cx - 18, cy - 5, a5, 1, t > 21.4 ? (t - 21.4) * 40 : null); g.text("ASCII trading cards", .58, DIM); g.text("your first pack is free", .65, GRN); if (Math.floor(t * 2) % 2) g.text("tap to begin", .9, [110, 108, 100]); }
       },
     },
     /* ORBIT (uncommon): a galaxy turns and comes closer. */
@@ -333,7 +333,6 @@ const Cut = (() => {
       };
       const frame = now => { const t = (now - t0) / 1000; try { render(t); } catch (e) { console.error(e); finish(); return; } if (t >= sc.dur) { finish(); return; } raf = requestAnimationFrame(frame); };   // a film that breaks must never leave the screen stuck
       const ready = sc.prep ? Promise.race([sc.prep(), new Promise(r => setTimeout(r, 2500))]) : Promise.resolve();
-      if (o && o.freeze != null) { ready.then(() => { render(o.freeze); res(); }); return; }
       ready.then(() => { if (ended) return; t0 = performance.now(); raf = requestAnimationFrame(frame); });
     });
   }

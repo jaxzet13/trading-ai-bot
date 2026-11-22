@@ -70,4 +70,4 @@ const PACKS = [
     ] }
 ];
 const PACK_BY = Object.fromEntries(PACKS.map(p => [p.id, p])), packOf = card => PACK_BY[card.set];
-const SELLBACK = .9, START = 1000, TOPUP = 1000;
+const SELLBACK = .9, START = 1000;

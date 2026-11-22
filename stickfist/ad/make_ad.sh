@@ -6,5 +6,5 @@ set -e
 OUT=${1:-out}; HANDLE=${2:--}; cd "$(dirname "$0")"
 node render.js video "$OUT" "$HANDLE" 4
 python3 audio.py "$OUT/timeline.json" "$OUT/audio.wav"
-ffmpeg -v error -y -framerate 30 -i "$OUT/frames/f%05d.jpg" -i "$OUT/audio.wav" -c:v libx264 -preset medium -crf 25 -maxrate 5.6M -bufsize 11M -pix_fmt yuv420p -r 30 -c:a aac -b:a 160k -movflags +faststart -shortest "$OUT/stixx-teaser-3.mp4"
-echo "wrote $OUT/stixx-teaser-3.mp4"
+ffmpeg -v error -y -framerate 30 -i "$OUT/frames/f%05d.jpg" -i "$OUT/audio.wav" -c:v libx264 -preset medium -crf 25 -maxrate 5.6M -bufsize 11M -pix_fmt yuv420p -r 30 -c:a aac -b:a 160k -movflags +faststart -shortest "$OUT/stixx-teaser-4.mp4"
+echo "wrote $OUT/stixx-teaser-4.mp4"
