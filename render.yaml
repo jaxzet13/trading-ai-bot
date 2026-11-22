@@ -1,0 +1,30 @@
+# One-click setup on Render (render.com): New > Blueprint > pick this repository. It builds stickfist/Dockerfile and keeps the data file on a disk.
+# Nothing can be bought until the Stripe settings below are filled in on Render's page and SHOP_OPEN is 1: see stickfist/STRIPE.md.
+# A persistent disk needs a paid plan. Secrets marked sync: false are typed into Render's dashboard, never stored in this file.
+services:
+  - type: web
+    name: stixx
+    runtime: docker
+    rootDir: stickfist
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /
+    disk:
+      name: stixx-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: PUBLIC_URL
+        sync: false          # https://your-domain, or the https://….onrender.com address Render gives you
+      - key: SHOP_OPEN
+        value: "0"           # change to 1 when the Stripe settings are in
+      - key: STRIPE_SECRET_KEY
+        sync: false          # sk_test_… first, sk_live_… when you go live
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false          # whsec_… from the Stripe webhook you add (see STRIPE.md)
+      - key: REQUIEM_TERMS_URL
+        sync: false          # https://your-domain/terms once you have filled in and checked that page
+      - key: SHOP_DAILY_CAP_CENTS
+        value: "2500"

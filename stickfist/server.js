@@ -147,7 +147,7 @@ const gz = new Map();
 function send(res, code, body, type, extra) { const h = Object.assign({ "content-type": type, "x-content-type-options": "nosniff" }, extra || {}); res.writeHead(code, h); res.end(body); }
 function json(res, code, obj) { send(res, code, JSON.stringify(obj), "application/json", { "cache-control": "no-store", "access-control-allow-origin": CORS }); }
 function serveStatic(req, res, url) {
-  let p = decodeURIComponent(url.pathname); if (p === "/" || p === "") p = "/index.html"; const file = path.join(STATIC, path.normalize(p));
+  let p = decodeURIComponent(url.pathname); if (p === "/" || p === "") p = "/index.html"; else if (p === "/terms" || p === "/terms/") p = "/terms.html"; const file = path.join(STATIC, path.normalize(p));
   if (!file.startsWith(STATIC + path.sep) || /(^|[\\/])(server\.js|pay\.js|data|\.git|src|node_modules)([\\/]|$)/.test(path.relative(STATIC, file)) || /\.(py|md|sh|json)$/.test(file) && !/manifest\.json$/.test(file)) return send(res, 404, "Not found", "text/plain");
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) return send(res, 404, "Not found", "text/plain");

@@ -70,7 +70,7 @@ if RELEASE:
     shutil.copytree(os.path.join(ROOT, 'cards'), os.path.join(dist, 'cards'))
     shutil.copytree(os.path.join(ROOT, 'icons'), os.path.join(dist, 'icons'), ignore=shutil.ignore_patterns('*.js'))
     open(os.path.join(dist, 'manifest.webmanifest'), 'w').write('{"name":"STIXX","short_name":"STIXX","description":"ASCII trading cards. Play money only. 18+.","start_url":"/","scope":"/","display":"standalone","orientation":"portrait","background_color":"#050506","theme_color":"#050506","icons":[{"src":"icons/icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icons/icon-512.png","sizes":"512x512","type":"image/png"},{"src":"icons/icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}\n')
-    for f in ('server.js', 'pay.js', 'og.png', 'BETA.md', 'STRIPE.md'):
+    for f in ('server.js', 'pay.js', 'terms.html', 'og.png', 'BETA.md', 'STRIPE.md'):
         if os.path.exists(os.path.join(ROOT, f)): shutil.copy(os.path.join(ROOT, f), dist)
     open(os.path.join(dist, 'package.json'), 'w').write('{"name":"stixx-beta","private":true,"version":"0.1.0","scripts":{"start":"node server.js"},"engines":{"node":">=18"}}\n')
     print(f'dist/: index.html {len(out):,} bytes, cards, server.js + pay.js (api = {API!r})')
