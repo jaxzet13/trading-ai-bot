@@ -64,6 +64,10 @@ Also build the page for your server: `python3 build.py --release --url https://Y
 
 **8. Try it.** With test keys: open the page, pay with the test card, check the webhook shows as delivered in Stripe, and that the page shows your pack number. Then open `https://YOUR-SITE/api/requiem/orders?token=YOUR_ADMIN_TOKEN` to see each order and **exactly which cards are in the packs to send**. Read the address in the Stripe Dashboard (Payments) to ship it. Try Apple Pay on a real iPhone once you are on a live key.
 
+## If the webhook doesn't arrive
+
+The packs are credited two ways, and either is enough: Stripe's signed webhook, and the server asking Stripe itself. When a buyer comes back from paying, the page's check asks Stripe whether that session was paid and credits it on the spot. The server also looks through the last week of sessions a few seconds after it starts, and every five minutes after that, so a payment is found even if the webhook was set up wrong or the server was down. (That needs the key to be able to read Checkout Sessions, which a key with write access to them can.) Nothing is credited twice.
+
 ## What it checks for you
 
 - Nothing is sold unless every setting is present, the run file is valid, and the terms address is set. `…/api/requiem/orders?token=…` lists what's missing.

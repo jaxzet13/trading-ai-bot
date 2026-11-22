@@ -10,11 +10,17 @@ const run = JSON.parse(fs.readFileSync(RUN, "utf8"));
 const WH = "whsec_testsecret", KEY = "sk_test_abc";
 
 /* ---- a stand-in for Stripe's API ---- */
-const seen = []; let n = 0, failNext = false;
+const seen = [], reads = [], sessions = {}; let n = 0, failNext = false;
 const stripe = http.createServer((req, res) => {
   let b = ""; req.on("data", c => b += c); req.on("end", () => {
+    if (req.method === "GET") {                                  // Stripe answering "what is the state of this session": retrieve one, or list the recent ones
+      reads.push(req.url); const u = new URL(req.url, "http://x"); res.writeHead(200, { "content-type": "application/json" });
+      if (u.pathname === "/v1/checkout/sessions") return res.end(JSON.stringify({ data: Object.values(sessions) }));
+      const s = sessions[u.pathname.split("/").pop()]; if (!s) { res.writeHead(404); return res.end(JSON.stringify({ error: { message: "no such session" } })); } return res.end(JSON.stringify(s));
+    }
     if (failNext) { failNext = false; res.writeHead(500, { "content-type": "application/json" }); return res.end(JSON.stringify({ error: { message: "boom" } })); }
-    const id = "cs_test_" + (++n); seen.push({ path: req.url, headers: req.headers, form: Object.fromEntries(new URLSearchParams(b)) });
+    const id = "cs_test_" + (++n), form = Object.fromEntries(new URLSearchParams(b)); seen.push({ path: req.url, headers: req.headers, form });
+    sessions[id] = { id, payment_status: "unpaid", amount_total: (+form["line_items[0][price_data][unit_amount]"] || 0) * (+form["line_items[0][quantity]"] || 1), metadata: { kind: form["metadata[kind]"], uid: form["metadata[uid]"], pack: form["metadata[pack]"], qty: form["metadata[qty]"] } };
     res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify({ id, url: "https://checkout.stripe.test/pay/" + id }));
   });
 });
@@ -124,7 +130,7 @@ function start(env, dataName) {
     h = await shopEcon({ SHOP_MIN_NET_PCT: "95" }, "h4.json"); ok(h.c.open === false && h.a.why.some(w => /no pack is offered/.test(w)), "and if no price clears the minimum the shop is closed");
     const src = fs.readFileSync(path.join(__dirname, "pay.js"), "utf8") + fs.readFileSync(path.join(__dirname, "server.js"), "utf8");
     const calls = [...src.matchAll(/stripe\("(GET|POST)", "([^"]+)"/g)].map(m => m[2]);
-    ok(calls.length >= 2 && calls.every(p => p === "/v1/checkout/sessions"), "the server's only call to Stripe is to start a Checkout session (" + calls.length + " places, all /v1/checkout/sessions)");
+    ok(calls.length >= 2 && calls.every(p => /^\/v1\/checkout\/sessions/.test(p)), "the server's only calls to Stripe are about Checkout sessions: start one, or ask whether one was paid (" + calls.length + " places, all /v1/checkout/sessions)");
     ok(!/\/v1\/(payouts|transfers|refunds|topups|treasury|issuing|payment_intents|charges|customers|subscriptions|balance)/.test(src), "nothing in the code can send money to anyone: no payouts, transfers, refunds or cash-out of any kind");
   }
 
@@ -167,6 +173,17 @@ function start(env, dataName) {
   r = await hook(Q, ev("cs_oddpack", uid, "zz!", 1, 100)); r = await call(Q, "GET", "/api/shop/order?sid=cs_oddpack"); const r2 = await call(Q, "POST", "/api/hello", { uid }); ok(r.json.short === true && r2.json.paid.fp === 3 && !r2.json.paid["zz!"], "a payment naming a pack that doesn't exist credits nothing and is marked short");
   r = await call(Q, "GET", "/api/shop/orders"); ok(r.status === 403, "the order list needs the admin token"); r = await call(Q, "GET", "/api/shop/orders?token=tok"); ok(r.json.packs === 11 && r.json.cents === 300 + 2400 + 200 + 100 && r.json.orders.length === 4 && r.json.orders.every(o => o.player.length === 8) && !/address|email|phone/i.test(JSON.stringify(r.json)), "the admin list has the orders and the packs credited (3 First Print + 8 Moonshot), with no personal details");
   r = await call(Q, "GET", "/api/requiem/config"); ok(r.json.open === false, "selling digital packs doesn't open the Requiem sale");
+  // a payment the webhook never reported: the server asks Stripe itself
+  const uid3 = crypto.randomBytes(8).toString("hex"); await call(Q, "POST", "/api/hello", { uid: uid3 });
+  r = await call(Q, "POST", "/api/shop/checkout", { uid: uid3, pack: "fp", qty: 2, age: true }); const sid4 = r.json.url.split("/").pop();
+  r = await call(Q, "GET", "/api/shop/order?sid=" + sid4); ok(r.json.pending === true, "a session Stripe says is not paid is not credited (still pending)");
+  sessions[sid4].payment_status = "paid"; reads.length = 0;
+  r = await call(Q, "GET", "/api/shop/order?sid=" + sid4); ok(r.json.ok && r.json.qty === 2 && reads.some(p => p === "/v1/checkout/sessions/" + sid4), "once Stripe says it is paid, the page's check credits it with no webhook at all (the server asked Stripe)");
+  r = await call(Q, "POST", "/api/hello", { uid: uid3 }); ok(r.json.paid.fp === 2, "and the packs are in the player's total (2)");
+  r = await call(Q, "GET", "/api/shop/order?sid=" + sid4); r = await call(Q, "POST", "/api/hello", { uid: uid3 }); ok(r.json.paid.fp === 2, "asking again never credits twice");
+  r = await call(Q, "POST", "/api/shop/checkout", { uid: uid3, pack: "ms", qty: 1, age: true }); const sid5 = r.json.url.split("/").pop(); sessions[sid5].payment_status = "paid";
+  await s.kill(); s = await start(SHOP, "shop.json"); await new Promise(r => setTimeout(r, 6000));
+  r = await call(s.port, "POST", "/api/hello", { uid: uid3 }); ok(r.json.paid.ms === 1 && r.json.paid.fp === 2, "a payment made while the webhook was broken or the server was down is found when the server starts (sweep of recent sessions)");
   await s.kill(); s = await start(SHOP, "shop.json"); r = await call(s.port, "POST", "/api/hello", { uid }); ok(r.json.paid.fp === 3, "credited packs survive a restart");
   await s.kill(); s = await start(Object.assign({}, SHOP, { SHOP_PRICES: '{"fp":150}' }), "shop2.json"); r = await call(s.port, "GET", "/api/shop/config"); ok(r.json.prices.fp === 150 && !r.json.prices.ms, "SHOP_PRICES sets the prices (here only First Print, $1.50)");
   await s.kill(); s = await start(Object.assign({}, SHOP, { SHOP_PRICES: '{"fp":10}' }), "shop3.json"); r = await call(s.port, "GET", "/api/shop/config"); ok(r.json.open === false, "a price below Stripe's 50 cent minimum is not accepted, so the shop stays closed"); await s.kill();

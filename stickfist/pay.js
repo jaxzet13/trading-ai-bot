@@ -157,6 +157,19 @@ module.exports = function payments(ctx) {
     }
     if (ev.type === "checkout.session.expired" || ev.type === "checkout.session.async_payment_failed") { let c = false; if (S().hold[o.id]) { delete S().hold[o.id]; c = true; } if (SH().hold[o.id]) { delete SH().hold[o.id]; c = true; } if (c) touch(); }
   }
+  /* ---- ask Stripe directly. The buyer can come back before the webhook does, and a webhook can fail or never be set up right, so a paid session is also found by
+     asking Stripe itself (the answer comes from Stripe over https, so nobody can fake it). credit() and record() ignore a session they have already recorded. ---- */
+  const consider = s => { try { if (!s || s.payment_status !== "paid" || !s.metadata) return; if (s.metadata.kind === "packs") credit(s); else if (s.metadata.kind === "requiem") record(s); } catch (e) { console.error("consider:", e.message); } };
+  async function pull(sid) { try { consider(await stripe("GET", "/v1/checkout/sessions/" + encodeURIComponent(sid))); } catch (e) { console.error("pull:", e.message); } }
+  let sweeping = false;
+  async function sweep(days) {
+    if (sweeping || !settings().key) return; sweeping = true;
+    try { const r = await stripe("GET", "/v1/checkout/sessions?limit=100&created[gte]=" + (Math.floor(Date.now() / 1000) - days * 86400)); for (const s of (r && r.data) || []) consider(s); }
+    catch (e) { console.error("sweep:", e.message); } finally { sweeping = false; }
+  }
+  setTimeout(() => sweep(7), 4000).unref(); setInterval(() => sweep(2), 300000).unref();      // once after starting (a payment made while the server was down or the webhook was broken), then every five minutes
+  const SID = /^cs_(test|live)_\w{1,120}$/;
+
   function webhook(req, res, send) {
     const chunks = []; let size = 0;
     req.on("data", d => { size += d.length; if (size > 1e6) req.destroy(); else chunks.push(d); });
@@ -193,8 +206,8 @@ module.exports = function payments(ctx) {
       return { url: s.url };
     },
     // after paying, the page asks which packs are the buyer's (the session id in the link is the key). Pack numbers only: the contents stay sealed.
-    "GET /api/requiem/order": (_b, _ip, q) => {
-      const o = S().orders[String(q.get("sid") || "")]; if (!o) return { pending: true }; const rc = loadRun(settings().runFile);
+    "GET /api/requiem/order": async (_b, ip, q) => {
+      const sid = String(q.get("sid") || ""); let o = S().orders[sid]; if (!o && SID.test(sid) && !limited("pull:" + ip, 60, 60000)) { await pull(sid); o = S().orders[sid]; } if (!o) return { pending: true }; const rc = loadRun(settings().runFile);
       return { ok: true, qty: o.qty, packs: o.packs.map(i => i + 1), run: rc ? rc.run.packs.length : null, short: !!o.short };
     },
 
@@ -222,7 +235,7 @@ module.exports = function payments(ctx) {
       SH().hold[s.id] = { uid: b.uid, cents, exp: Date.now() + 32 * 60000 }; touch(); return { url: s.url };
     },
     // after paying: has the payment been confirmed and credited yet?
-    "GET /api/shop/order": (_b, _ip, q) => { const o = SH().orders[String(q.get("sid") || "")]; return o ? { ok: true, pack: o.pack, qty: o.qty, short: !!o.short } : { pending: true }; },
+    "GET /api/shop/order": async (_b, ip, q) => { const sid = String(q.get("sid") || ""); let o = SH().orders[sid]; if (!o && SID.test(sid) && !limited("pull:" + ip, 60, 60000)) { await pull(sid); o = SH().orders[sid]; } return o ? { ok: true, pack: o.pack, qty: o.qty, short: !!o.short } : { pending: true }; },
     "GET /api/shop/orders": (_b, _ip, q) => {
       if (!adminToken || q.get("token") !== adminToken) return [403, { error: "no" }]; const st = shopStatus(), sh = SH(), os = Object.entries(sh.orders);
       return { open: st.open, why: st.why, economics: st.econ, orders: os.map(([sid, o]) => ({ sid, player: String(o.uid || "").slice(0, 8), pack: o.pack, qty: o.qty, cents: o.cents, at: new Date(o.at).toISOString(), short: o.short })), packs: os.reduce((a, [, o]) => a + (o.short ? 0 : o.qty), 0), cents: os.reduce((a, [, o]) => a + o.cents, 0) };
