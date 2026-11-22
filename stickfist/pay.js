@@ -18,10 +18,10 @@
 
    DIGITAL PACKS (what real money buys in the game: pack openings, nothing else; cards stay play-money game items with no cash value and nothing can be cashed out):
      SHOP_OPEN=1                  the switch for selling digital packs (needs the same STRIPE_*, PUBLIC_URL and REQUIEM_TERMS_URL settings: the terms page is your terms and refund policy)
-     SHOP_PACK_CENTS=199          the price of one pack: one flat price, no bundles or discounts
+     SHOP_PRICES={"fp":100,"ms":300}  the real price of each pack in cents: First Print $1.00, Moonshot $3.00. One flat price per pack: no bundles or discounts. Stripe's minimum is 50 cents.
      SHOP_MAX_PER_ORDER=10        packs per order
      SHOP_DAILY_CAP_CENTS=2500    the most one player can spend in a day (UTC), counting payments still open. A spending limit for the player's own protection.
-   A paid pack is credited to the player's id when Stripe confirms the payment (a running total, so the page can never add the same pack twice); the page then adds it to their packs.
+   A paid pack is credited to the player's id when Stripe confirms the payment (a running total for each pack, so the page can never add the same pack twice); the page then adds it to their packs.
 
    What is kept: for each paid order, the Stripe session id, how many packs, which packs of the run (by number) and the amount. Names, emails, phone numbers and
    addresses stay at Stripe: read them there to ship an order. A pack is assigned when Stripe says the payment is complete, in the order payments arrive, from a
@@ -78,7 +78,9 @@ module.exports = function payments(ctx) {
 
 
   /* ---- digital packs ---- */
-  const shopSettings = () => { const E = process.env; return { open: E.SHOP_OPEN === "1", cents: Math.round(+E.SHOP_PACK_CENTS) || 199, maxQty: Math.max(1, Math.min(50, Math.round(+E.SHOP_MAX_PER_ORDER) || 10)), cap: Math.round(+E.SHOP_DAILY_CAP_CENTS) || 2500 }; };
+  const PACK_NAMES = { fp: "First Print", ms: "Moonshot" };
+  const shopPrices = () => { let p = { fp: 100, ms: 300 }; try { const e = JSON.parse(process.env.SHOP_PRICES || "null"); if (e && typeof e === "object" && !Array.isArray(e)) p = e; } catch (x) {} const o = {}; for (const [k, v] of Object.entries(p)) if (/^[a-z]{1,12}$/.test(k) && Number.isInteger(v) && v >= 50 && v <= 100000) o[k] = v; return o; };
+  const shopSettings = () => { const E = process.env; return { open: E.SHOP_OPEN === "1", prices: shopPrices(), maxQty: Math.max(1, Math.min(50, Math.round(+E.SHOP_MAX_PER_ORDER) || 10)), cap: Math.round(+E.SHOP_DAILY_CAP_CENTS) || 2500 }; };
   const SH = () => { const d = db(); return d.shop = d.shop || { orders: {}, hold: {}, spent: {} }; };
   const today = () => new Date().toISOString().slice(0, 10), validUid = u => typeof u === "string" && /^[a-f0-9]{16,64}$/.test(u);
   const shopPrune = () => { const h = SH().hold, t = Date.now(); for (const k of Object.keys(h)) if (h[k].exp < t) delete h[k]; };
@@ -90,13 +92,14 @@ module.exports = function payments(ctx) {
     if (!/^whsec_\S+$/.test(c.whsec)) why.push("STRIPE_WEBHOOK_SECRET is missing");
     if (!/^https?:\/\/\S+$/.test(c.site)) why.push("PUBLIC_URL is missing"); else if (/^sk_live_/.test(c.key) && !/^https:/.test(c.site)) why.push("PUBLIC_URL must be https with a live key");
     if (!/^https?:\/\/\S+$/.test(c.terms)) why.push("REQUIEM_TERMS_URL is missing: publish your terms and refund policy first");
+    if (!Object.keys(sc.prices).length) why.push("SHOP_PRICES has no valid price");
     return { c, sc, why, open: !why.length };
   }
   function credit(o) {                                                     // a payment for digital packs is complete: add the packs to the player's running total
     const sh = SH(), md = o.metadata || {}; if (sh.orders[o.id]) return;   // already recorded: Stripe may deliver an event more than once
-    const qty = Math.max(1, Math.min(50, Math.round(+md.qty) || 1)), u = db().users[md.uid], cents = o.amount_total || 0; delete sh.hold[o.id];
-    if (u) { u.paidTotal = (u.paidTotal || 0) + qty; const k = md.uid + ":" + today(); sh.spent[k] = (sh.spent[k] || 0) + cents; }
-    sh.orders[o.id] = { uid: md.uid, qty, cents, at: Date.now(), short: u ? 0 : qty };       // short > 0: the player could not be found, so refund it in Stripe
+    const qty = Math.max(1, Math.min(50, Math.round(+md.qty) || 1)), pack = String(md.pack || ""), u = db().users[md.uid], cents = o.amount_total || 0, known = /^[a-z]{1,12}$/.test(pack); delete sh.hold[o.id];
+    if (u && known) { u.paidTotals = u.paidTotals || {}; u.paidTotals[pack] = (u.paidTotals[pack] || 0) + qty; const k = md.uid + ":" + today(); sh.spent[k] = (sh.spent[k] || 0) + cents; }
+    sh.orders[o.id] = { uid: md.uid, pack, qty, cents, at: Date.now(), short: u && known ? 0 : qty };       // short > 0: the player could not be found, so refund it in Stripe
     saveNow();
   }
 
@@ -180,20 +183,21 @@ module.exports = function payments(ctx) {
 
     /* ---- digital packs ---- */
     "GET /api/shop/config": (_b, _ip, q) => {
-      const st = shopStatus(), uid = q.get("uid"); return { open: st.open, cents: st.sc.cents, maxQty: st.sc.maxQty, cap: st.sc.cap, terms: st.c.terms, spentToday: validUid(uid) ? shopSpent(uid) : 0 };
+      const st = shopStatus(), uid = q.get("uid"); return { open: st.open, prices: st.sc.prices, maxQty: st.sc.maxQty, cap: st.sc.cap, terms: st.c.terms, spentToday: validUid(uid) ? shopSpent(uid) : 0 };
     },
     "POST /api/shop/checkout": async (b, ip) => {
       const st = shopStatus(), c = st.c, sc = st.sc; if (!st.open) return { error: "Buying packs isn't available right now." };
       if (!validUid(b.uid) || !db().users[b.uid]) return { error: "Open the game once and try again." };
       if (b.age !== true) return { error: "Please confirm you are 18 or older." };
+      const pack = String(b.pack || ""), unit = sc.prices[pack]; if (!unit) return { error: "Choose a pack to buy." };
       const qty = b.qty === undefined ? 1 : Number(b.qty); if (!Number.isInteger(qty) || qty < 1 || qty > sc.maxQty) return { error: `You can buy 1 to ${sc.maxQty} packs at a time.` };
-      const cents = qty * sc.cents, spent = shopSpent(b.uid), money = n => "$" + (n / 100).toFixed(2);
+      const cents = qty * unit, spent = shopSpent(b.uid), money = n => "$" + (n / 100).toFixed(2);
       if (spent + cents > sc.cap) return { error: spent >= sc.cap ? `You've reached today's limit of ${money(sc.cap)}. It resets tomorrow (UTC).` : `That would go over today's limit of ${money(sc.cap)}. You can spend up to ${money(sc.cap - spent)} more today.` };
       if (limited("shco:" + ip, 8, 600000)) return [429, { error: "slow down" }];
       const p = {
-        mode: "payment", line_items: { 0: { quantity: qty, price_data: { currency: "usd", unit_amount: sc.cents, product_data: { name: "STIXX digital pack", description: "A pack of random digital cards for the STIXX game. The cards have no cash value and can't be cashed out." } } } },
+        mode: "payment", line_items: { 0: { quantity: qty, price_data: { currency: "usd", unit_amount: unit, product_data: { name: "STIXX digital pack: " + (PACK_NAMES[pack] || pack), description: "A pack of random digital cards for the STIXX game. The cards have no cash value and can't be cashed out." } } } },
         success_url: `${c.site}/?pk=paid&sid={CHECKOUT_SESSION_ID}`, cancel_url: `${c.site}/?pk=cancel`, expires_at: Math.floor(Date.now() / 1000) + 31 * 60, client_reference_id: b.uid,
-        metadata: { kind: "packs", uid: b.uid, qty, age: "18+" }, custom_text: { submit: { message: "Random digital cards, 18+ only. The cards have no cash value and can't be cashed out." } }
+        metadata: { kind: "packs", uid: b.uid, pack, qty, age: "18+" }, custom_text: { submit: { message: "Random digital cards, 18+ only. The cards have no cash value and can't be cashed out." } }
       };
       if (c.tax) p.automatic_tax = { enabled: "true" };
       let s; try { s = await stripe("POST", "/v1/checkout/sessions", p); } catch (e) { console.error("shop checkout:", e.message); return { error: "Payment isn't available right now. You have not been charged." }; }
@@ -201,10 +205,10 @@ module.exports = function payments(ctx) {
       SH().hold[s.id] = { uid: b.uid, cents, exp: Date.now() + 32 * 60000 }; touch(); return { url: s.url };
     },
     // after paying: has the payment been confirmed and credited yet?
-    "GET /api/shop/order": (_b, _ip, q) => { const o = SH().orders[String(q.get("sid") || "")]; return o ? { ok: true, qty: o.qty, short: !!o.short } : { pending: true }; },
+    "GET /api/shop/order": (_b, _ip, q) => { const o = SH().orders[String(q.get("sid") || "")]; return o ? { ok: true, pack: o.pack, qty: o.qty, short: !!o.short } : { pending: true }; },
     "GET /api/shop/orders": (_b, _ip, q) => {
       if (!adminToken || q.get("token") !== adminToken) return [403, { error: "no" }]; const st = shopStatus(), sh = SH(), os = Object.entries(sh.orders);
-      return { open: st.open, why: st.why, orders: os.map(([sid, o]) => ({ sid, player: String(o.uid || "").slice(0, 8), qty: o.qty, cents: o.cents, at: new Date(o.at).toISOString(), short: o.short })), packs: os.reduce((a, [, o]) => a + (o.short ? 0 : o.qty), 0), cents: os.reduce((a, [, o]) => a + o.cents, 0) };
+      return { open: st.open, why: st.why, orders: os.map(([sid, o]) => ({ sid, player: String(o.uid || "").slice(0, 8), pack: o.pack, qty: o.qty, cents: o.cents, at: new Date(o.at).toISOString(), short: o.short })), packs: os.reduce((a, [, o]) => a + (o.short ? 0 : o.qty), 0), cents: os.reduce((a, [, o]) => a + o.cents, 0) };
     },
     // for you: every paid order and what is inside the packs to send. Needs ADMIN_TOKEN. Addresses are in the Stripe dashboard, not here.
     "GET /api/requiem/orders": (_b, _ip, q) => {

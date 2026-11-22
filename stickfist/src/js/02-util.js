@@ -2,9 +2,11 @@
    2. UTILITIES
    ========================================================================== */
 const $ = id => document.getElementById(id);
-const money = c => (c < 0 ? "-$" : "$") + (Math.abs(c) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = c => (c < 0 ? "-$" : "$") + (Math.abs(c) / UNIT).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// real money (the Requiem pack and buying packs) is in real cents, never in game units
+const rmoney = c => (c < 0 ? "-$" : "$") + (Math.abs(c) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 // money for things that move: a 10 cent card needs four decimals for you to see it breathe
-const moneyS = c => { const a = Math.abs(c) / 100, d = a >= 1 ? 2 : a >= .1 ? 3 : 4; return (c < 0 ? "-$" : "$") + a.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
+const moneyS = c => { const a = Math.abs(c) / UNIT, d = a >= 1 ? 2 : a >= .1 ? 3 : 4; return (c < 0 ? "-$" : "$") + a.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
 // update a container in place instead of rebuilding it, so buttons you are pressing, scroll positions and pictures are never disturbed
 function patchKids(a, b) {
   const an = a.childNodes, bn = b.childNodes;

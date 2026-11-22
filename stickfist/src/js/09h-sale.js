@@ -18,7 +18,7 @@ const Sale = (() => {
     cfg = Object.assign({ loaded: true }, r); if (r.run) RQ.run = r.run; if (r.closes) RQ.closes = r.closes;
     Money.words(); if (view === "limited") renderLimited(); else if (view === "home") renderHome(); return cfg;
   }
-  const total = () => { const q = $("rqQty"); return money((cfg.price || RQ.price) * (q ? +q.value || 1 : 1)); };
+  const total = () => { const q = $("rqQty"); return rmoney((cfg.price || RQ.price) * (q ? +q.value || 1 : 1)); };
   function qty() { const b = $("rqPay"); if (b && !b.dataset.busy) b.textContent = "Pay " + total(); }
   async function pay() {
     const age = $("rqAge") && $("rqAge").checked, b = $("rqPay"); if (!age || !b || b.dataset.busy) return;
@@ -53,7 +53,7 @@ const Sale = (() => {
    the packs each player has bought; the page adds the difference to the player's packs, so a purchase can never be added twice.
    ========================================================================== */
 const Shop = (() => {
-  let cfg = { open: false };
+  let cfg = { open: false, prices: {} };
   const ret = (() => {                                                     // ?pk=paid&sid=… or ?pk=cancel, on the way back from Stripe
     try {
       const p = new URLSearchParams(location.search), k = p.get("pk"); if (!k) return null;
@@ -61,28 +61,30 @@ const Shop = (() => {
       history.replaceState(null, "", location.pathname + (p.toString() ? "?" + p : "") + location.hash); return { kind: k === "paid" ? "paid" : "cancel", sid };
     } catch (e) { return null; }
   })();
-  const open = () => !!cfg.open, price = () => cfg.cents || 199;
+  const open = () => !!cfg.open && PACKS.some(p => cfg.prices && cfg.prices[p.id]), has = id => !!cfg.open && !!(cfg.prices && cfg.prices[id]), price = id => (cfg.prices && cfg.prices[id]) || 0;
   async function load() {
     if (!API.on) return; const r = await API.get("shop/config?uid=" + encodeURIComponent(state.uid)); if (!r || typeof r.open !== "boolean") return;
     cfg = r; Money.words(); if (view === "home") renderHome();
   }
-  const total = () => { const q = $("shopQty"); return money(price() * (q ? +q.value || 1 : 1)); };
-  function qty() { const b = $("shopPay"); if (b && !b.dataset.busy) b.textContent = "Pay " + total(); }
+  const chosen = () => { const s = $("shopPack"); return s ? s.value : curPack().id; }, count = () => { const q = $("shopQty"); return q ? +q.value || 1 : 1; };
+  const total = () => rmoney(price(chosen()) * count());
+  function qty() { const b = $("shopPay"); if (b && !b.dataset.busy) b.textContent = "Pay " + total(); const e = $("shopEach"); if (e) e.textContent = rmoney(price(chosen())) + " per pack"; }
   function modal() {
-    if (!open()) return;
+    const ids = PACKS.filter(p => has(p.id)).map(p => p.id); if (!ids.length) return; const cur = ids.includes(curPack().id) ? curPack().id : ids[0];
     openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Buy packs</h2></div>
       <p class="dim">Real money buys packs, and nothing else. Each pack holds random digital cards: you can't choose them, and the odds are on the <a href="#/odds" data-close>odds page</a>. The cards are game items with <b>no cash value</b>. Nothing in STIXX can be cashed out, and the prices you see in the game are simulated.</p>
-      <div class="rqbuyh"><div><b>${money(price())} per pack</b><span class="small">one flat price: no bundles, no discounts</span></div>
-        <label class="rqqty"><span class="small">Packs</span><select id="shopQty" aria-label="How many packs">${Array.from({ length: cfg.maxQty || 1 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}</select></label></div>
+      <div class="rqbuyh"><label class="rqqty" style="justify-items:start"><span class="small">Pack</span><select id="shopPack" aria-label="Which pack">${ids.map(id => `<option value="${id}"${id === cur ? " selected" : ""}>${esc(PACK_BY[id].name)} · ${rmoney(price(id))}</option>`).join("")}</select></label>
+        <label class="rqqty"><span class="small">How many</span><select id="shopQty" aria-label="How many packs">${Array.from({ length: cfg.maxQty || 1 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}</select></label></div>
+      <p class="small" style="margin:-6px 0 0"><b id="shopEach">${rmoney(price(cur))} per pack</b> · one flat price: no bundles, no discounts</p>
       <label class="rqage"><input type="checkbox" id="shopAge"><span>I'm 18 or older, I understand the packs are random, and I'm spending real money.</span></label>
-      <button class="btn solid big" id="shopPay" disabled>Pay ${total()}</button>
-      <p class="small">Apple Pay, Google Pay or card, on Stripe's secure page. STIXX never sees your card. You are only charged after you confirm there. There is a limit of ${money(cfg.cap || 0)} a day${cfg.spentToday > 0 ? ` (you have used ${money(cfg.spentToday)} today)` : ""}. <a href="${esc(cfg.terms || "#")}" target="_blank" rel="noopener">Terms and refunds</a>.</p>
+      <button class="btn solid big" id="shopPay" disabled>Pay ${rmoney(price(cur))}</button>
+      <p class="small">Apple Pay, Google Pay or card, on Stripe's secure page. STIXX never sees your card. You are only charged after you confirm there. There is a limit of ${rmoney(cfg.cap || 0)} a day${cfg.spentToday > 0 ? ` (you have used ${rmoney(cfg.spentToday)} today)` : ""}. <a href="${esc(cfg.terms || "#")}" target="_blank" rel="noopener">Terms and refunds</a>.</p>
       <div class="row"><button class="btn ghost" data-close>not now</button></div></div>`, true);
   }
   async function pay() {
     const age = $("shopAge") && $("shopAge").checked, b = $("shopPay"); if (!age || !b || b.dataset.busy) return;
     b.dataset.busy = 1; b.disabled = true; b.textContent = "Opening Stripe…";
-    const r = await API.post("shop/checkout", { uid: state.uid, qty: +($("shopQty") ? $("shopQty").value : 1) || 1, age: true });
+    const r = await API.post("shop/checkout", { uid: state.uid, pack: chosen(), qty: count(), age: true });
     if (r && typeof r.url === "string" && /^https:\/\//.test(r.url)) { location.href = r.url; return; }
     delete b.dataset.busy; b.disabled = !($("shopAge") && $("shopAge").checked); qty(); toast((r && r.error) || "Couldn't reach the server. You have not been charged.");
   }
@@ -95,13 +97,14 @@ const Shop = (() => {
       const r = await API.get("shop/order?sid=" + encodeURIComponent(ret.sid));
       if (r && r.ok) {
         if (r.short) { done("Thank you", "Your payment went through, but we couldn't add the packs to your game. You will be refunded.", false); return; }
-        await Ref.sync(); const n = r.qty || 1; done("Your packs are ready", `Your payment went through. ${n} pack${n > 1 ? "s are" : " is"} ready to open. You'll find ${n > 1 ? "them" : "it"} on the pack page.`, true); if (view === "home") renderHome(); return;
+        await Ref.sync(); const n = r.qty || 1, pn = PACK_BY[r.pack] ? PACK_BY[r.pack].name + " " : ""; if (PACK_BY[r.pack] && state.pack !== r.pack) { state.pack = r.pack; persist(); }
+        done("Your packs are ready", `Your payment went through. ${n} ${pn}pack${n > 1 ? "s are" : " is"} ready to open. You'll find ${n > 1 ? "them" : "it"} on the pack page.`, true); if (view === "home") renderHome(); return;
       }
       await sleep(2000);
     }
     if ($("shopDoneTxt")) $("shopDoneTxt").textContent = "Your payment is still being confirmed. Your packs will appear on the pack page within a few minutes.";
   }
-  return { load, open, price, modal, pay, qty, back, cfg: () => cfg };
+  return { load, open, has, price, modal, pay, qty, back, cfg: () => cfg };
 })();
 
 /* ---- the one place that says what is and isn't real money, so no line in the game is ever wrong about it ---- */

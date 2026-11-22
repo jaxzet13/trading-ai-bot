@@ -59,7 +59,7 @@ function dailyModal(res) {
 }
 function renderChips() {
   const d = $("dailyBtn"); if (d) { const ready = dailyReady(); d.className = "chip" + (ready ? " ready" : ""); d.innerHTML = ready ? `<i></i>free <span class="xs">daily </span>pack` : `streak ${state.streak.n}`; d.title = ready ? "A free pack, once a day" : "Your daily streak"; }
-  const bt = document.querySelector('#btabs [data-v="home"]'); if (bt) bt.classList.toggle("dot", state.freePacks > 0 || (state.paidPacks || 0) > 0 || dailyReady());
+  const bt = document.querySelector('#btabs [data-v="home"]'); if (bt) bt.classList.toggle("dot", state.freePacks > 0 || boughtAll() > 0 || dailyReady());
   const m = $("muteBtn"); if (m) { m.textContent = state.mute ? "sound off" : "sound on"; m.setAttribute("aria-pressed", state.mute ? "true" : "false"); }
 }
 

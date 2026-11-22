@@ -82,12 +82,12 @@ Also build the page for your server: `python3 build.py --release --url https://Y
 
 ## Digital packs
 
-**What real money buys:** pack openings, and nothing else. A pack costs one flat price (`SHOP_PACK_CENTS`, default $1.99; no bundles, no discounts). The player's balance, their cards and every price in the game stay play-money items with **no cash value**, and nothing can be cashed out. I built it this way on purpose: if real money bought play money at 1:1, or if cards could be sold for real money, the game would look and behave like gambling, and that is a different legal world.
+**What real money buys:** pack openings, and nothing else. Each pack has one flat real price (`SHOP_PRICES`: First Print **$1.00**, Moonshot **$3.00**; no bundles, no discounts). The player's balance, their cards and every price in the game stay play-money items with **no cash value**, and nothing can be cashed out. I built it this way on purpose: if real money bought play money at 1:1, or if cards could be sold for real money, the game would look and behave like gambling, and that is a different legal world.
 
 **How it works**
 1. On the pack page a **Buy packs** button appears only while the server says digital packs are on. It opens a window that says what real money buys, that the packs are random, that the cards have no cash value, the daily limit and a link to your terms and refunds page. The player ticks "I'm 18 or older, I understand the packs are random, and I'm spending real money", picks 1 to 10 packs and presses Pay.
 2. The server asks Stripe for a Checkout page (no shipping address: it is digital) and sends the player there. Apple Pay, Google Pay and cards appear on Stripe's page; STIXX never sees a card.
-3. When Stripe confirms the payment (the same signed webhook as the Requiem pack), the server adds the packs to that player's **running total** of bought packs. The page compares that total with how many it has already added, and adds the difference. Because it is a running total, a purchase can never be added twice, even if a message is lost or the player reloads. A pack you bought is shown as "a pack you bought", never "free", and opening it spends no play money.
+3. When Stripe confirms the payment (the same signed webhook as the Requiem pack), the server adds the packs to that player's **running total** of bought packs, kept separately for each pack (a bought Moonshot pack opens as Moonshot). The page compares that total with how many it has already added, and adds the difference. Because it is a running total, a purchase can never be added twice, even if a message is lost or the player reloads. A pack you bought is shown as "a pack you bought", never "free", and opening it spends no play money.
 4. Packs the player has paid for survive "start over".
 
 **Settings** (in addition to the Stripe ones above: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PUBLIC_URL`, `REQUIEM_TERMS_URL`, which is your terms and refund policy)
@@ -95,7 +95,7 @@ Also build the page for your server: `python3 build.py --release --url https://Y
 | Variable | Value |
 |---|---|
 | `SHOP_OPEN` | `1` to turn digital packs on (remove it to turn them off at once) |
-| `SHOP_PACK_CENTS` | the price of one pack; default `199`. This is your business decision: change it. |
+| `SHOP_PRICES` | the real price of each pack in cents, as JSON; default `{"fp":100,"ms":300}` ($1.00 and $3.00). Stripe's minimum charge is 50 cents. A pack left out of the list can't be bought. |
 | `SHOP_MAX_PER_ORDER` | default `10` |
 | `SHOP_DAILY_CAP_CENTS` | the most one player can spend in a day (UTC); default `2500`. A spending limit for the player's own protection, counting payments still open. Lower it if you like. |
 
@@ -114,3 +114,16 @@ Webhook events needed are the same four listed in step 6 above. Try it in test m
 ## Connecting your Stripe account to Claude (optional)
 
 This is separate from the server's key. Claude can't take payments or hold your key; a connector only lets Claude see and configure things in your Stripe account when you ask, for example to check that Apple Pay is on, to see account status, or to add the webhook endpoint once your server has an address. Connect it from the card Claude shows you (it asks you to log in to Stripe and choose the account). Use test mode while you build. Your server still needs `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` set as environment variables where it runs.
+
+## How the packs are priced (and why the break-even rate didn't change)
+
+First Print is $1.00 and Moonshot is $3.00. To get there without touching the odds, the game's play money was **redenominated**: one dollar is now 500 units (it was 100 cents), so a unit is a fifth of a cent, and Moonshot's card values were scaled by the same factor as its price. Every pack has the same cards at the same odds, worth the same share of the price, so the return and the chance of selling back at least what a pack cost are unchanged. Measured from the app's own maths at base prices:
+
+| Pack | Price before | Price now | Returns on average | Chance of selling back at least the price | Middle pack |
+|---|---|---|---|---|---|
+| First Print | $4.99 | $1.00 | 89.5% to 89.3% | 44.5% to 44.5% | 62.9% to 62.8% of the price |
+| Moonshot | $5.79 | $3.00 | 90.2% to 90.4% | 43.1% to 43.1% | 20.4% to 20.5% of the price |
+
+Two things to know:
+- **The in-game price still floats with the market**, as it always has (that is what keeps the return near 89% whatever the cards are doing), so you will see First Print at about $1 and Moonshot at about $3, not exactly. The **real** price is fixed at $1.00 and $3.00.
+- **The starting balance is $2.00** (it was $10.00): two First Print packs, as before. Everything else that was in cents is scaled the same way, and the Requiem pack and the real-money shop are always in real dollars.

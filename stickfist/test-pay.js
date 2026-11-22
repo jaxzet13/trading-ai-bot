@@ -108,41 +108,47 @@ function start(env, dataName) {
   await s.kill();
 
   // ---- digital packs (the sale of the physical Requiem pack is off in this server: the two are independent)
-  r = null; const SHOP = Object.assign({}, open, { REQUIEM_OPEN: "0", SHOP_OPEN: "1" });
+  const SHOP = Object.assign({}, open, { REQUIEM_OPEN: "0", SHOP_OPEN: "1" });
   s = await start(Object.assign({}, open, { }), "noshop.json"); r = await call(s.port, "GET", "/api/shop/config"); ok(r.json.open === false, "digital packs are closed unless SHOP_OPEN=1"); await s.kill();
   s = await start(SHOP, "shop.json"); const Q = s.port, uid = crypto.randomBytes(8).toString("hex"), uid2 = crypto.randomBytes(8).toString("hex"); seen.length = 0;
-  r = await call(Q, "GET", "/api/shop/config"); ok(r.json.open === true && r.json.cents === 199 && r.json.maxQty === 10 && r.json.cap === 2500 && r.json.terms === "https://example.test/terms", "with SHOP_OPEN=1 digital packs are on: $1.99 a pack, up to 10 at a time, a $25.00 daily limit");
-  r = await call(Q, "POST", "/api/shop/checkout", { uid, qty: 1, age: true }); ok(r.json.error && /Open the game/.test(r.json.error) && seen.length === 0, "a player the server has never met can't buy (open the game first)");
+  r = await call(Q, "GET", "/api/shop/config"); ok(r.json.open === true && r.json.prices.fp === 100 && r.json.prices.ms === 300 && r.json.maxQty === 10 && r.json.cap === 2500 && r.json.terms === "https://example.test/terms", "with SHOP_OPEN=1 digital packs are on: First Print $1.00, Moonshot $3.00, up to 10 at a time, a $25.00 daily limit");
+  r = await call(Q, "POST", "/api/shop/checkout", { uid, pack: "fp", qty: 1, age: true }); ok(r.json.error && /Open the game/.test(r.json.error) && seen.length === 0, "a player the server has never met can't buy (open the game first)");
   await call(Q, "POST", "/api/hello", { uid }); await call(Q, "POST", "/api/hello", { uid: uid2 });
-  r = await call(Q, "POST", "/api/shop/checkout", { uid, qty: 1 }); ok(r.json.error && /18/.test(r.json.error) && seen.length === 0, "the 18+ confirmation is required, and Stripe isn't called without it");
-  r = await call(Q, "POST", "/api/shop/checkout", { uid, qty: 0, age: true }); ok(r.json.error && seen.length === 0, "0 packs is refused"); r = await call(Q, "POST", "/api/shop/checkout", { uid, qty: 11, age: true }); ok(r.json.error && /1 to 10/.test(r.json.error) && seen.length === 0, "11 packs is refused");
-  r = await call(Q, "POST", "/api/shop/checkout", { uid: "nothex!", qty: 1, age: true }); ok(r.json.error && seen.length === 0, "a malformed player id is refused");
-  r = await call(Q, "POST", "/api/shop/checkout", { uid, qty: 3, age: true }); const sid1 = r.json.url && r.json.url.split("/").pop(); ok(/cs_test_/.test(sid1 || ""), "a valid purchase returns Stripe's page");
-  let g = seen[0].form; ok(g.mode === "payment" && g["line_items[0][quantity]"] === "3" && g["line_items[0][price_data][unit_amount]"] === "199" && g["line_items[0][price_data][currency]"] === "usd", "it asks Stripe for 3 x $1.99");
-  ok(g["metadata[kind]"] === "packs" && g["metadata[uid]"] === uid && g["metadata[qty]"] === "3" && g.client_reference_id === uid, "the session carries the player id and quantity for the webhook");
+  r = await call(Q, "POST", "/api/shop/checkout", { uid, pack: "fp", qty: 1 }); ok(r.json.error && /18/.test(r.json.error) && seen.length === 0, "the 18+ confirmation is required, and Stripe isn't called without it");
+  r = await call(Q, "POST", "/api/shop/checkout", { uid, qty: 1, age: true }); ok(r.json.error && /Choose a pack/.test(r.json.error) && seen.length === 0, "a pack must be chosen"); r = await call(Q, "POST", "/api/shop/checkout", { uid, pack: "zz", qty: 1, age: true }); ok(r.json.error && seen.length === 0, "an unknown pack is refused");
+  r = await call(Q, "POST", "/api/shop/checkout", { uid, pack: "fp", qty: 0, age: true }); ok(r.json.error && seen.length === 0, "0 packs is refused"); r = await call(Q, "POST", "/api/shop/checkout", { uid, pack: "fp", qty: 11, age: true }); ok(r.json.error && /1 to 10/.test(r.json.error) && seen.length === 0, "11 packs is refused");
+  r = await call(Q, "POST", "/api/shop/checkout", { uid: "nothex!", pack: "fp", qty: 1, age: true }); ok(r.json.error && seen.length === 0, "a malformed player id is refused");
+  r = await call(Q, "POST", "/api/shop/checkout", { uid, pack: "fp", qty: 3, age: true }); const sid1 = r.json.url && r.json.url.split("/").pop(); ok(/cs_test_/.test(sid1 || ""), "a valid purchase returns Stripe's page");
+  let g = seen[0].form; ok(g.mode === "payment" && g["line_items[0][quantity]"] === "3" && g["line_items[0][price_data][unit_amount]"] === "100" && g["line_items[0][price_data][currency]"] === "usd" && /First Print/.test(g["line_items[0][price_data][product_data][name]"]), "3 First Print packs: 3 x $1.00");
+  ok(g["metadata[kind]"] === "packs" && g["metadata[uid]"] === uid && g["metadata[pack]"] === "fp" && g["metadata[qty]"] === "3" && g.client_reference_id === uid, "the session carries the player, pack and quantity for the webhook");
   ok(!Object.keys(g).some(k => /shipping_address|phone_number|payment_method_types/.test(k)) && g.success_url === "https://example.test/?pk=paid&sid={CHECKOUT_SESSION_ID}" && g.cancel_url === "https://example.test/?pk=cancel", "digital: no address or phone is collected, no payment method is excluded, and buyers return to the game");
-  // the daily limit counts payments still open: 3 packs = $5.97 held
-  r = await call(Q, "GET", "/api/shop/config?uid=" + uid); ok(r.json.spentToday === 597, "money still being paid counts toward today's limit ($5.97)");
-  r = await call(Q, "POST", "/api/shop/checkout", { uid, qty: 10, age: true }); ok(r.json.error && /over today's limit of \$25\.00/.test(r.json.error) && /\$19\.03 more/.test(r.json.error), "a purchase over the daily limit is refused and says how much is left ($19.03)");
-  r = await call(Q, "POST", "/api/shop/checkout", { uid, qty: 9, age: true }); const sid2 = r.json.url && r.json.url.split("/").pop(); ok(/cs_test_/.test(sid2 || ""), "9 more is within the limit ($23.88 of $25.00)");
-  r = await call(Q, "POST", "/api/shop/checkout", { uid, qty: 2, age: true }); ok(r.json.error && /limit/.test(r.json.error), "and 2 more is not");
-  r = await call(Q, "POST", "/api/shop/checkout", { uid: uid2, qty: 10, age: true }); ok(r.json.url, "another player has their own limit");
-  r = await hook(Q, { id: "evt_x", type: "checkout.session.expired", data: { object: { id: sid2 } } }); r = await call(Q, "POST", "/api/shop/checkout", { uid, qty: 2, age: true }); ok(r.json.url, "an expired payment page gives its part of the limit back");
+  // the daily limit counts payments still open: 3 First Print = $3.00 held
+  r = await call(Q, "GET", "/api/shop/config?uid=" + uid); ok(r.json.spentToday === 300, "money still being paid counts toward today's limit ($3.00)");
+  r = await call(Q, "POST", "/api/shop/checkout", { uid, pack: "ms", qty: 10, age: true }); ok(r.json.error && /over today's limit of \$25\.00/.test(r.json.error) && /\$22\.00 more/.test(r.json.error), "10 Moonshot ($30.00) is over the limit, and it says how much is left ($22.00)");
+  r = await call(Q, "POST", "/api/shop/checkout", { uid, pack: "ms", qty: 7, age: true }); const sid2 = r.json.url && r.json.url.split("/").pop(); g = seen[1].form; ok(/cs_test_/.test(sid2 || "") && g["line_items[0][price_data][unit_amount]"] === "300" && /Moonshot/.test(g["line_items[0][price_data][product_data][name]"]) && g["metadata[pack]"] === "ms", "7 Moonshot at $3.00 ($21.00, $24.00 of $25.00 today) is allowed");
+  r = await call(Q, "POST", "/api/shop/checkout", { uid, pack: "fp", qty: 2, age: true }); ok(r.json.error && /limit/.test(r.json.error), "and 2 more First Print is not");
+  r = await call(Q, "POST", "/api/shop/checkout", { uid: uid2, pack: "ms", qty: 8, age: true }); const sid3 = r.json.url && r.json.url.split("/").pop(); ok(/cs_test_/.test(sid3 || ""), "another player has their own limit");
+  r = await hook(Q, { id: "evt_x", type: "checkout.session.expired", data: { object: { id: sid2 } } }); r = await call(Q, "POST", "/api/shop/checkout", { uid, pack: "fp", qty: 2, age: true }); ok(r.json.url, "an expired payment page gives its part of the limit back");
   // crediting
-  r = await call(Q, "POST", "/api/hello", { uid }); ok(r.json.paid === 0, "nothing is credited before a verified payment");
-  r = await hook(Q, done(sid1, 3, { amount_total: 597, metadata: { kind: "packs", uid, qty: "3" } }), { secret: "whsec_wrong" }); ok(r.status === 400, "a payment signed with the wrong secret credits nothing");
-  r = await hook(Q, done(sid1, 3, { amount_total: 597, metadata: { kind: "packs", uid, qty: "3" }, payment_status: "unpaid" })); r = await call(Q, "POST", "/api/hello", { uid }); ok(r.json.paid === 0, "an unpaid session credits nothing");
-  r = await hook(Q, done(sid1, 3, { amount_total: 597, metadata: { kind: "packs", uid, qty: "3" } })); ok(r.status === 200, "a verified payment is accepted");
-  r = await call(Q, "POST", "/api/hello", { uid }); ok(r.json.paid === 3, "the player's running total of bought packs is now 3");
-  r = await hook(Q, done(sid1, 3, { amount_total: 597, metadata: { kind: "packs", uid, qty: "3" } })); r = await call(Q, "POST", "/api/hello", { uid }); ok(r.json.paid === 3, "the same event again changes nothing");
-  r = await call(Q, "GET", "/api/shop/order?sid=" + sid1); ok(r.json.ok && r.json.qty === 3 && !r.json.short, "the page can ask whether the payment has been credited");
+  r = await call(Q, "POST", "/api/hello", { uid }); ok(JSON.stringify(r.json.paid) === "{}", "nothing is credited before a verified payment");
+  const ev = (sid, u, pack, qty, cents, extra) => done(sid, qty, Object.assign({ amount_total: cents, metadata: { kind: "packs", uid: u, pack, qty: String(qty) } }, extra || {}));
+  r = await hook(Q, ev(sid1, uid, "fp", 3, 300), { secret: "whsec_wrong" }); ok(r.status === 400, "a payment signed with the wrong secret credits nothing");
+  r = await hook(Q, ev(sid1, uid, "fp", 3, 300, { payment_status: "unpaid" })); r = await call(Q, "POST", "/api/hello", { uid }); ok(JSON.stringify(r.json.paid) === "{}", "an unpaid session credits nothing");
+  r = await hook(Q, ev(sid1, uid, "fp", 3, 300)); ok(r.status === 200, "a verified payment is accepted");
+  r = await call(Q, "POST", "/api/hello", { uid }); ok(r.json.paid.fp === 3 && !r.json.paid.ms, "the player's running total of bought First Print packs is now 3");
+  r = await hook(Q, ev(sid1, uid, "fp", 3, 300)); r = await call(Q, "POST", "/api/hello", { uid }); ok(r.json.paid.fp === 3, "the same event again changes nothing");
+  r = await call(Q, "GET", "/api/shop/order?sid=" + sid1); ok(r.json.ok && r.json.qty === 3 && r.json.pack === "fp" && !r.json.short, "the page can ask whether the payment has been credited");
   r = await call(Q, "GET", "/api/shop/order?sid=cs_nope"); ok(r.json.pending === true, "and gets 'pending' for one that hasn't");
-  r = await call(Q, "POST", "/api/hello", { uid: uid2 }); ok(r.json.paid === 0, "another player's total is untouched");
-  r = await call(Q, "GET", "/api/shop/config?uid=" + uid); ok(r.json.spentToday === 597 + 398, "paid money counts toward the limit too ($5.97 paid + $3.98 still open)");
-  const ghost = crypto.randomBytes(8).toString("hex"); r = await hook(Q, done("cs_ghost", 2, { amount_total: 398, metadata: { kind: "packs", uid: ghost, qty: "2" } })); r = await call(Q, "GET", "/api/shop/order?sid=cs_ghost"); ok(r.json.ok && r.json.short === true, "a payment for a player that can't be found is marked short, to refund in Stripe");
-  r = await call(Q, "GET", "/api/shop/orders"); ok(r.status === 403, "the order list needs the admin token"); r = await call(Q, "GET", "/api/shop/orders?token=tok"); ok(r.json.packs === 3 && r.json.cents === 597 + 398 && r.json.orders.length === 2 && r.json.orders.every(o => o.player.length === 8) && !/address|email|phone/i.test(JSON.stringify(r.json)), "the admin list has the orders, the packs credited and the total, with no personal details");
+  r = await call(Q, "POST", "/api/hello", { uid: uid2 }); ok(JSON.stringify(r.json.paid) === "{}", "another player's totals are untouched");
+  r = await hook(Q, ev(sid3, uid2, "ms", 8, 2400)); r = await call(Q, "POST", "/api/hello", { uid: uid2 }); ok(r.json.paid.ms === 8 && !r.json.paid.fp, "Moonshot packs are counted on their own (8)");
+  r = await call(Q, "GET", "/api/shop/config?uid=" + uid); ok(r.json.spentToday === 300 + 200, "paid money counts toward the limit too ($3.00 paid + $2.00 still open)");
+  const ghost = crypto.randomBytes(8).toString("hex"); r = await hook(Q, ev("cs_ghost", ghost, "fp", 2, 200)); r = await call(Q, "GET", "/api/shop/order?sid=cs_ghost"); ok(r.json.ok && r.json.short === true, "a payment for a player that can't be found is marked short, to refund in Stripe");
+  r = await hook(Q, ev("cs_oddpack", uid, "zz!", 1, 100)); r = await call(Q, "GET", "/api/shop/order?sid=cs_oddpack"); const r2 = await call(Q, "POST", "/api/hello", { uid }); ok(r.json.short === true && r2.json.paid.fp === 3 && !r2.json.paid["zz!"], "a payment naming a pack that doesn't exist credits nothing and is marked short");
+  r = await call(Q, "GET", "/api/shop/orders"); ok(r.status === 403, "the order list needs the admin token"); r = await call(Q, "GET", "/api/shop/orders?token=tok"); ok(r.json.packs === 11 && r.json.cents === 300 + 2400 + 200 + 100 && r.json.orders.length === 4 && r.json.orders.every(o => o.player.length === 8) && !/address|email|phone/i.test(JSON.stringify(r.json)), "the admin list has the orders and the packs credited (3 First Print + 8 Moonshot), with no personal details");
   r = await call(Q, "GET", "/api/requiem/config"); ok(r.json.open === false, "selling digital packs doesn't open the Requiem sale");
-  await s.kill(); s = await start(SHOP, "shop.json"); r = await call(s.port, "POST", "/api/hello", { uid }); ok(r.json.paid === 3, "credited packs survive a restart"); await s.kill();
+  await s.kill(); s = await start(SHOP, "shop.json"); r = await call(s.port, "POST", "/api/hello", { uid }); ok(r.json.paid.fp === 3, "credited packs survive a restart");
+  await s.kill(); s = await start(Object.assign({}, SHOP, { SHOP_PRICES: '{"fp":150}' }), "shop2.json"); r = await call(s.port, "GET", "/api/shop/config"); ok(r.json.prices.fp === 150 && !r.json.prices.ms, "SHOP_PRICES sets the prices (here only First Print, $1.50)");
+  await s.kill(); s = await start(Object.assign({}, SHOP, { SHOP_PRICES: '{"fp":10}' }), "shop3.json"); r = await call(s.port, "GET", "/api/shop/config"); ok(r.json.open === false, "a price below Stripe's 50 cent minimum is not accepted, so the shop stays closed"); await s.kill();
 
   // the run assembler: the counts it makes are the odds in the data file
   const big = path.join(tmp, "big"); execFileSync("python3", [path.join(__dirname, "design-concepts", "requiem", "requiem_run.py"), "--packs", "2500", "--out", big, "--seed", "t"], { stdio: "ignore" });
