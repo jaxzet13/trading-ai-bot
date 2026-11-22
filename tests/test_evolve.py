@@ -61,6 +61,21 @@ def test_rotation_walk_uses_only_earlier_days():
     assert r["filled"] == 35 and abs(r["pnl"] - 7.0) < 1e-9
 
 
+def test_fill_test_scores_only_the_add_on_rules():
+    """Empty slots are filled only from coins the live set does not trade, scored on their own, walk-forward."""
+    days = list(range(20000, 20020))
+    scope = lambda i: i.split(":")[1]
+    F = R.walk_fill(_ALL(days), ["fv_drift:KXNEAR15M:3"], {"fv_drift"}, scope)
+    assert F["strength"]["days"] == len(days) - 7
+    assert abs(F["strength"]["per_day"] - 1.0) < 1e-9          # only rule A (the live NEAR rule is not counted)
+    # live set already on ETH: the only other candidate (SOL) always loses, so it is never eligible -> no add-on days
+    F = R.walk_fill(_ALL(days), ["fv_drift:KXETH15M:1", "fv_drift:KXNEAR15M:3"], {"fv_drift"}, scope)
+    assert F["strength"]["days"] == 0 and F["strength"]["per_day"] is None
+    # no empty slot: nothing to test
+    full = [f"fv_drift:X{i}:1" for i in range(R.MAX_RULES)]
+    assert R.walk_fill(_ALL(days), full, {"fv_drift"}, scope)["strength"]["days"] == 0
+
+
 def test_parents_follow_the_best_families():
     rows = []
     for i, (sc, per_day) in enumerate([("A", 1.0), ("B", 0.1), ("C", 0.5)]):    # family A best, then C, then B

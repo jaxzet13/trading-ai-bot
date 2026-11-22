@@ -12,6 +12,10 @@ average strategy on the following days), so the rule that picks is itself tested
      summed forward-lab P&L of what it chose). The current live set is scored the same way.
   4. Apply only if the best policy beat the current live set over those days AND made money. Even then a live rule is
      replaced only by a clearly stronger one (hysteresis), so noise does not churn the account.
+  4b. Empty slots (fewer than MAX_RULES live rules, e.g. after losers were cut): each policy's picks on the coins the
+     live set does not trade are scored walk-forward ON THEIR OWN (walk_fill). They are added to the live set only if
+     that add-on made money over >= MIN_TEST_DAYS days, with at least half the days up. (Nov 22 check: every policy's
+     add-on LOST money, -0.17 to -0.96 $/day over 11 days, so the slots stay empty until that changes.)
   5. Applying = register the new rules (kalshi15m/evolved_rules.json), rewrite the live config's rule list, check it
      loads, and restart the runner by PID once no bet is open (the watchdog brings it back within a minute). Bet
      size, the $4 floor and every limit stay as they are. Every decision goes to data/lab/rotation_log.jsonl.
@@ -239,6 +243,25 @@ def walk(ALL, live_ids, fams, log=print):
     return out
 
 
+def walk_fill(ALL, live_ids, fams, scope_of):
+    """Walk-forward test of filling the empty slots: on each day, each policy picks from coins the live set does not
+    trade (using only earlier days), at most MAX_RULES - len(live) rules, scored on that day alone."""
+    free = MAX_RULES - len(live_ids)
+    taken = {scope_of(i) for i in live_ids}
+    days = sorted({d for _, _, _, daily in ALL for d in daily})
+    res = {k: [] for k in POLICIES}
+    if free <= 0:
+        return {k: {"per_day": None, "days": 0, "days_up": 0} for k in POLICIES}
+    for d in days:
+        rows = [r for r in eligible(ALL, d, fams) if r["c"]["scope"] not in taken]
+        if not rows:
+            continue
+        for k, fn in POLICIES.items():
+            res[k].append(sum(r["daily"].get(d, [0])[0] for r in fn(rows)[:free]))
+    return {k: {"per_day": round(sum(v) / len(v), 3) if v else None, "days": len(v), "days_up": sum(x > 0 for x in v)}
+            for k, v in res.items()}
+
+
 def _runner_pid():
     p = subprocess.run(["ps", "-eo", "pid,etimes,args"], capture_output=True, text=True).stdout.splitlines()
     for ln in p[1:]:
@@ -307,10 +330,34 @@ def run(apply=False, log=print):
                and (cur["per_day"] is None or W[best]["per_day"] > cur["per_day"]))
     picks = POLICIES[best](rows) if rows else []
     rec["picks"] = [r["rid"] for r in picks]
+    new = None
     if not trusted:
         rec["reason"] = f"no policy beat the current live set walk-forward (best: {best})"
         log(f"  rotate: keep the current rules ({rec['reason']})")
+        # empty slots: add rules on untraded coins only if that add-on made money walk-forward on its own
+        free = MAX_RULES - len(live)
+        if free > 0:
+            scope_of = lambda i: GL.RULES.get(i, {}).get("scope")
+            F = walk_fill(ALL, live, fams, scope_of)
+            rec["fill_walk"] = F
+            fr = sorted((k for k in F if F[k]["per_day"] is not None), key=lambda k: -F[k]["per_day"])
+            if fr:
+                log(f"  rotate fill test ({free} empty slots, add-on rules alone, $/day): "
+                    + ", ".join(f"{k} {F[k]['per_day']:+.2f} ({F[k]['days_up']}/{F[k]['days']} up)" for k in fr))
+                fb = fr[0]
+                if F[fb]["days"] >= MIN_TEST_DAYS and F[fb]["per_day"] > 0 and 2 * F[fb]["days_up"] >= F[fb]["days"]:
+                    taken = {scope_of(i) for i in live}
+                    fill = POLICIES[fb]([r for r in rows if r["c"]["scope"] not in taken])[:free]
+                    if fill:
+                        new = [("keep", i) for i in live] + [("pick", r) for r in fill]
+                        best = fb
+                        why = (f"fill test: the '{fb}' policy's add-on rules made {F[fb]['per_day']:+.2f} $/day "
+                               f"walk-forward ({F[fb]['days_up']}/{F[fb]['days']} days up)")
+                else:
+                    log("  rotate: empty slots stay empty (no add-on made money walk-forward)")
     else:
+        why = (f"policy '{best}' beat the current set walk-forward ({W[best]['per_day']:+.2f} vs "
+               f"{cur['per_day'] if cur['per_day'] is not None else 'n/a'} $/day)")
         # hysteresis: keep an incumbent unless its coin's challenger is clearly stronger
         info = {r["rid"]: r for r in eligible(ALL, today, fams | {GL.RULES[i]["family"] for i in live if i in GL.RULES})}
         # real money outranks the lab: a live rule that is profitable over CUT_MIN_BETS+ real bets is never swapped out
@@ -332,6 +379,7 @@ def run(apply=False, log=print):
             if sc not in coins and ir is not None and len(new) < MAX_RULES:
                 new.append(("keep", i)); coins.add(sc)
         new = new[:MAX_RULES]
+    if new is not None:
         new_ids = [x[1] if x[0] == "keep" else x[1]["rid"] for x in new]
         rec["live_after"] = new_ids
         last = [json.loads(ln) for ln in ROT_LOG.read_text().splitlines()] if ROT_LOG.exists() else []
@@ -368,8 +416,7 @@ def run(apply=False, log=print):
             new_cfg["series"] = sorted({e["scope"] for e in entries})
             new_cfg["_note"] = cfg["_note"].split(" Auto-rotation")[0] + (
                 f" Auto-rotation (account holder, Nov 19: keep the most profitable strategies in, the bad ones out): "
-                f"last change {time.strftime('%b %d %H:%M UTC', time.gmtime())} by the '{best}' policy, which beat the "
-                f"previous set walk-forward ({W[best]['per_day']:+.2f} vs {cur['per_day'] if cur['per_day'] is not None else 'n/a'} $/day). "
+                f"last change {time.strftime('%b %d %H:%M UTC', time.gmtime())}: {why}. "
                 f"Log: data/lab/rotation_log.jsonl.")
             CFG.write_text(json.dumps(new_cfg, indent=1) + "\n")
             chk = subprocess.run([sys.executable, "-c", "import sys; from kalshi15m import real; real.load_config(sys.argv[1])", str(CFG)],
@@ -380,7 +427,7 @@ def run(apply=False, log=print):
                 log(f"  rotate: {rec['reason']}")
             else:
                 rec["applied"] = True
-                rec["reason"] = f"policy '{best}' beat the current set walk-forward"
+                rec["reason"] = why
                 log(f"  rotate: CHANGED {live} -> {new_ids}")
     with open(ROT_LOG, "a") as f:
         f.write(json.dumps(rec, default=float) + "\n")
