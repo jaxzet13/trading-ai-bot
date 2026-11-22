@@ -11,7 +11,7 @@ async function openPack(pack) {
   opening = true; let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS) return;
   if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else if (bought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
   state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
-  SS = { items, idx: 0, phase: "pack", busy: false, pack: pk, free, bought };
+  SS = { items, idx: 0, phase: "pack", busy: false, pack: pk, free, bought, ref: packPrice(pk) };            // ref: what this pack costs at today's price, free or not, so a pull can be measured against it
   $("stName").textContent = pk.name; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
   $("stBox").innerHTML = `<div class="st-pack enter" id="stPack">${packHTML(pk)}</div><div class="cstack" id="stStack"></div>`;
   hint("Tap the pack to tear it open"); stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
@@ -46,15 +46,17 @@ async function advance() {
   else { await dismiss(el, c); SS.busy = false; }
 }
 async function reveal(el, c, card, R, v) {
-  const ms = reduced ? 10 : [650, 850, 1300, 1900, 2700, 3500, 5200][R.tier], rect = el.getBoundingClientRect(), mid = [rect.left + rect.width / 2, rect.top + rect.height / 2]; hint(""); $("stTitle").innerHTML = ""; stage.style.setProperty("--rc", R.col);
+  // How big the moment is follows the rarity, or what this copy really sells for next to what the pack costs, whichever is bigger. A styled copy of a plain card can be worth more than a rare one.
+  const x = sellOf(c) / Math.max(1, SS.ref), T = Math.max(R.tier, x >= 10 ? 5 : x >= 4 ? 4 : x >= 2 ? 3 : 0);
+  const ms = reduced ? 10 : [650, 850, 1300, 1900, 2700, 3500, 5200][T], rect = el.getBoundingClientRect(), mid = [rect.left + rect.width / 2, rect.top + rect.height / 2]; hint(""); $("stTitle").innerHTML = ""; stage.style.setProperty("--rc", R.col);
   if (Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); await Cut.play(card.id); }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest
-  await v.play(ms, () => { if (R.tier >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + R.tier * 40); FX.burst(mid[0], mid[1], 6 + R.tier * 4, [R.col, "#fff"], 260 + R.tier * 60); } });
-  Snd.reveal(R.tier); if (R.tier >= 2) buzz(R.tier >= 5 ? [40, 30, 60, 30, 90] : R.tier >= 3 ? [30, 25, 50] : [25]);
-  FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][R.tier], R.tier >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + R.tier * 130);
-  if (R.tier >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + R.tier * 14, [R.col, "#fff"]);
-  if (R.tier >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
+  await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
+  Snd.reveal(T); if (T >= 2) buzz(T >= 5 ? [40, 30, 60, 30, 90] : T >= 3 ? [30, 25, 50] : [25]);
+  FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][T], T >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + T * 130);
+  if (T >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + T * 14, [R.col, "#fff"]);
+  if (T >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
   const t = $("stTitle"); t.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col);
-  t.innerHTML = `<div class="rw">${R.name}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b></div>`;
+  t.innerHTML = `<div class="rw">${R.name}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
   blockReveal(t.querySelector(".nm"), card.name, 480); t.classList.remove("in"); void t.offsetWidth; t.classList.add("in");
 }
 async function dismiss(el, c) {
@@ -65,13 +67,13 @@ async function dismiss(el, c) {
 function skipAll() { if (!SS || SS.phase === "summary") return; SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
 const againLabel = pk => state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : "invite a friend, get a free pack";
 function summary() {
-  SS.phase = "summary"; const items = SS.items, worth = items.reduce((a, c) => a + valueOf(c), 0), back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE;
+  SS.phase = "summary"; const items = SS.items, back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
   const best = items.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no];
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
-  $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(worth)}">${blockSVG(money(worth))}</div><span class="dim" style="font-size:13px">of cards</span></div>
-    <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Sell them all for ${money(back)}.` : SS.bought ? `A pack you bought. Sell them all for ${money(back)} of play money.` : `Sell them all for ${money(back)}: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))} against the ${money(SS_PRICE)} pack.`}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
+  $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(back)}">${blockSVG(money(back))}</div><span class="dim" style="font-size:13px">of cards you can sell</span></div>
+    <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Its cards sell for ${money(back)}.` : SS.bought ? `A pack you bought. Its cards sell for ${money(back)} of play money.` : `You paid ${money(SS_PRICE)} and got ${money(back)} of cards: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))}.`}${x >= 2 ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
     <div class="fan">${items.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>
     <div class="row" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
-  $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, net >= 0 ? 90 : 30, net >= 0 ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
+  $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
 function closeStage() { stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view); }

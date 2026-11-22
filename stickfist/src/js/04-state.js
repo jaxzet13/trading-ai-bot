@@ -69,7 +69,7 @@ function packDist(val, cap, pk) {
 }
 const _base = {}; const baseEV = pk => _base[pk.id] || (_base[pk.id] = evOf(c => c.val, pk));
 // The pack's price follows the market: it moves with what the cards inside are worth now, so the pack always returns about the same share
-// (about 89%) whatever the market does. Recomputed whenever the market moves.
+// (about 90%) whatever the market does. Recomputed whenever the market moves.
 const RTP_CEIL = .95;                                                                                   // a pack is never allowed to return more than 95% on average, whatever the cards are doing
 const _ps = {};
 function packStats(pk) {

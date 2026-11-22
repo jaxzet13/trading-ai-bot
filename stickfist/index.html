@@ -211,7 +211,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 .sc.rise { transform: translateY(30%) scale(.92); opacity: 0; } .sc.top { cursor: pointer; } .sc.shake { animation: shake .09s linear infinite; } @keyframes shake { 25% { transform: translate(-3px, 1px); } 75% { transform: translate(3px, -1px); } }
 .sc.gone { transition: transform .45s cubic-bezier(.2,.65,.35,1), opacity .4s; }
 .st-title { position: relative; z-index: 8; text-align: center; min-height: 96px; display: grid; align-content: end; gap: 4px; pointer-events: none; }
-.st-title .rw { font-size: 14px; font-weight: 600; color: var(--rc, var(--ink)); } .st-title .nm { --px: 8px; margin: 0 auto; color: var(--ink); } .st-title .vl { color: var(--dim); } .st-title .vl b { color: var(--ink); }
+.st-title .rw { font-size: 14px; font-weight: 600; color: var(--rc, var(--ink)); } .st-title .nm { --px: 8px; margin: 0 auto; color: var(--ink); } .st-title .vl { color: var(--dim); } .st-title .vl b { color: var(--ink); } .st-title .xm { color: var(--rc, var(--ink)); font-size: 13px; margin-top: 3px; }
 .st-title.in { animation: slam .45s cubic-bezier(.2,1.4,.4,1) both; } @keyframes slam { from { transform: scale(1.16); opacity: 0; } }
 .st-foot { position: relative; z-index: 8; display: grid; gap: 10px; padding-bottom: 16px; justify-items: center; } .st-hint { font-size: 14px; color: var(--dim); min-height: 1.6em; }
 .tray { display: flex; gap: 8px; min-height: 84px; } .tray .mini { width: 56px; animation: vin .4s both; }
@@ -613,7 +613,7 @@ const CARDS = [
   { no: "012", id: "orbit",   name: "Orbit",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 14,    tint: "#a9c9ff", cap: "already read the ending.", styles: true },
   { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "uncommon",  chars: 15750,  val: 35,    tint: "#ece7dc", cap: "gone before the cape lands.", styles: true },
   { no: "018", id: "null",    name: "Null",    sub: "star",       rar: "rare",      chars: 29260,  val: 306,   tint: "#a9c9ff", cap: "not on any record.", styles: true },
-  { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "rare",      chars: 31970,  val: 700,   tint: "#ffd27a", cap: "rents you the air.", styles: true },
+  { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "rare",      chars: 31970,  val: 620,   tint: "#ffd27a", cap: "rents you the air.", styles: true },
   { no: "006", id: "ronin",   name: "Ronin",   sub: "cliff",      rar: "epic",      chars: 71680,  val: 890,   tint: "#ff8ac9", cap: "", styles: true },
   { no: "011", id: "grimm",   name: "Grimm",   sub: "cathedral",  rar: "legendary", chars: 219520, val: 2340,  tint: "#a8ffb0", cap: "", styles: true },
   { no: "015", id: "reaper",  name: "Reaper",  sub: "ember",      rar: "mythic",    chars: 701000, val: 14500, tint: "#ffc87a", cap: "", styles: true },
@@ -621,7 +621,7 @@ const CARDS = [
   // ---- Moonshot: one launch, five altitudes. The higher the card, the rarer it is.
   { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "common",    chars: 3600,   val: 31,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
   { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "uncommon",  chars: 10080,  val: 78,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
-  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "rare",      chars: 40320,  val: 2021,  tint: "#ff7a6a", cap: "gravity lost the argument.",    styles: true },
+  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "rare",      chars: 40320,  val: 1800,  tint: "#ff7a6a", cap: "gravity lost the argument.",    styles: true },
   { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "epic",      chars: 123480, val: 3238, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
   { no: "025", set: "ms", id: "luna",     name: "Luna",     sub: "first flag",    rar: "legendary", chars: 448800, val: 8290, tint: "#b8d4ff", cap: "to the moon was never a joke.", styles: true }
 ];
@@ -639,8 +639,8 @@ const STYLES = {
   leaf:    { name: "Iridescent",   p: .0006, x: 15  }, kin:   { name: "Dissolve", p: .0003, x: 25  }
 };
 const STYLE_TINT = { "": "#ece7dc", steel: "#aaffbd", dots: "#ffd27a", vhs: "#c9a5ff", scratch: "#ece7dc", ice: "#a9c9ff", chain: "#ece7dc", wire: "#b6ff9c", print: "#ff9a94", glass: "#ff8ac9", blood: "#a8ffb0", leaf: "#d6c9ff", kin: "#a9c9ff" };
-/* Each pack holds the cards of one set. A slot is a list of [card id, weight]. The packs are tuned so that each one sells back for at least its cost about 40 to 45% of the time
-   and returns about 89% on average (both move with the market, and are worked out live in 04-state.js). */
+/* Each pack holds the cards of one set. A slot is a list of [card id, weight]. The packs are tuned so that each one sells back for at least its cost about half the time
+   and returns about 90% on average (both move with the market, and are worked out live in 04-state.js). */
 const PACKS = [
   { id: "fp", set: "fp", name: "First Print", blurb: "Stick figures made of text, from a frog in a hat to a total eclipse.", price: 500, min: 250, max: 5000, n: 5,
     order: ["stitch", "umbra", "orbit", "brick", "null", "phantom", "rook", "shogun", "ronin", "grimm", "reaper"],
@@ -650,7 +650,7 @@ const PACKS = [
       [["stitch", 1], ["brick", 1], ["rook", 1]],
       [["stitch", 32.4], ["brick", 32.4], ["rook", 32.4], ["orbit", 1.7], ["phantom", 1.2]],
       [["orbit", 2.1], ["phantom", 88.5], ["null", 2.1], ["shogun", 7.3]],
-      [["orbit", 44.8], ["phantom", 10.5], ["null", 5], ["shogun", 36.6], ["ronin", 2.8], ["grimm", .34], ["reaper", .04], ["umbra", .02]]
+      [["orbit", 38.1], ["phantom", 10.5], ["null", 5], ["shogun", 44], ["ronin", 2.1], ["grimm", .255], ["reaper", .03], ["umbra", .015]]
     ] },
   { id: "ms", set: "ms", name: "Moonshot", blurb: "One launch, five altitudes: a lit fuse on the ground up to a flag on the Moon. The higher the card, the rarer it is.", price: 1500, min: 750, max: 15000, n: 5,
     order: ["luna", "fuse", "liftoff", "ignition", "apogee"],
@@ -659,13 +659,13 @@ const PACKS = [
       [["fuse", 92], ["ignition", 8]],
       [["fuse", 88], ["ignition", 12]],
       [["fuse", 54], ["ignition", 43.5], ["liftoff", 2.5]],
-      [["fuse", 20], ["ignition", 61.7], ["liftoff", 16.3], ["apogee", 2]],
-      [["fuse", 3.7], ["ignition", 67.8], ["liftoff", 22.2], ["apogee", 5.8], ["luna", .5]]
+      [["fuse", 20], ["ignition", 62.2], ["liftoff", 16.3], ["apogee", 1.5]],
+      [["fuse", 3.7], ["ignition", 59.575], ["liftoff", 32], ["apogee", 4.35], ["luna", .375]]
     ] }
 ];
 const PACK_BY = Object.fromEntries(PACKS.map(p => [p.id, p])), packOf = card => PACK_BY[card.set];
 // Play money is counted in units: 500 of them are one dollar, so a unit is a fifth of a cent. First Print costs $1.00 (500 units) and Moonshot $3.00 (1,500), and every card in a pack
-// is worth in proportion, so what a pack returns (about 89%) and the chance of selling back at least what it cost are the same as ever. You start with $2.00.
+// is worth in proportion, so what a pack returns (about 90%) is the same as ever. You start with $2.00.
 const SELLBACK = .9, START = 1000, UNIT = 500;
 
 /* ============================================================================
@@ -824,7 +824,7 @@ function packDist(val, cap, pk) {
 }
 const _base = {}; const baseEV = pk => _base[pk.id] || (_base[pk.id] = evOf(c => c.val, pk));
 // The pack's price follows the market: it moves with what the cards inside are worth now, so the pack always returns about the same share
-// (about 89%) whatever the market does. Recomputed whenever the market moves.
+// (about 90%) whatever the market does. Recomputed whenever the market moves.
 const RTP_CEIL = .95;                                                                                   // a pack is never allowed to return more than 95% on average, whatever the cards are doing
 const _ps = {};
 function packStats(pk) {
@@ -1363,7 +1363,7 @@ function renderOdds(force) {
       <li>Cards can go down in value but they cannot be rugged. The market makers always have bids under a card: it can never fall below 35% of its base worth, and never by more than half inside any 24 hours. A card that has run up will fade back over a day or two, not collapse in a minute.</li>
       <li>Market cap, volume and liquidity are simulated and scaled to what a small memecoin trades: a common changes hands about three times its cap in a day, and volume jumps while the bots are feeding.</li>
       <li>Selling a card pays its price minus 10%, whenever you like, so a card has to rise about 11% before selling it beats what it was worth when you got it. Your profile shows every card you hold with its live price and its profit or loss.</li>
-      <li>The pack's price follows the market: it moves with what the cards inside are worth, so a pack returns about 89% on average whatever the market is doing. When cards run hot, packs get dearer.</li>
+      <li>The pack's price follows the market: it moves with what the cards inside are worth, so a pack returns about 90% on average whatever the market is doing. When cards run hot, packs get dearer.</li>
       <li>The traders in the best and worst flips are simulated players. Each one pulled a card and sold it, worked out from the real price path after the same 10% fee.</li></ul></details>
     <details><summary>How each card in the pack is picked</summary><div>${pk.slots.map((s, i) => { const t = s.reduce((a, [, w]) => a + w, 0); return `<div class="slot"><div class="label">${slotName[i]}</div>${s.map(([id, w]) => `<div class="row"><span>${esc(BY_ID[id].name)} <span class="faint">${esc(BY_ID[id].sub)}</span></span><span class="bar">${bar(w / t, 24)}</span><span class="pct">${(w / t * 100).toFixed(1)}%</span></div>`).join("")}</div>`; }).join("")}</div></details>
     <details><summary>Styles</summary><div><p class="small" style="margin-bottom:14px">Every card can come out in one of twelve ASCII styles, decided by that copy's own code. ${(tot * 100).toFixed(1)}% of cards are not the plain default. A styled copy is worth its multiple of the card, so a styled Reaper is worth a lot more than a plain one.</p>
@@ -1644,7 +1644,7 @@ async function openPack(pack) {
   opening = true; let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS) return;
   if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else if (bought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
   state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
-  SS = { items, idx: 0, phase: "pack", busy: false, pack: pk, free, bought };
+  SS = { items, idx: 0, phase: "pack", busy: false, pack: pk, free, bought, ref: packPrice(pk) };            // ref: what this pack costs at today's price, free or not, so a pull can be measured against it
   $("stName").textContent = pk.name; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
   $("stBox").innerHTML = `<div class="st-pack enter" id="stPack">${packHTML(pk)}</div><div class="cstack" id="stStack"></div>`;
   hint("Tap the pack to tear it open"); stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
@@ -1679,15 +1679,17 @@ async function advance() {
   else { await dismiss(el, c); SS.busy = false; }
 }
 async function reveal(el, c, card, R, v) {
-  const ms = reduced ? 10 : [650, 850, 1300, 1900, 2700, 3500, 5200][R.tier], rect = el.getBoundingClientRect(), mid = [rect.left + rect.width / 2, rect.top + rect.height / 2]; hint(""); $("stTitle").innerHTML = ""; stage.style.setProperty("--rc", R.col);
+  // How big the moment is follows the rarity, or what this copy really sells for next to what the pack costs, whichever is bigger. A styled copy of a plain card can be worth more than a rare one.
+  const x = sellOf(c) / Math.max(1, SS.ref), T = Math.max(R.tier, x >= 10 ? 5 : x >= 4 ? 4 : x >= 2 ? 3 : 0);
+  const ms = reduced ? 10 : [650, 850, 1300, 1900, 2700, 3500, 5200][T], rect = el.getBoundingClientRect(), mid = [rect.left + rect.width / 2, rect.top + rect.height / 2]; hint(""); $("stTitle").innerHTML = ""; stage.style.setProperty("--rc", R.col);
   if (Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); await Cut.play(card.id); }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest
-  await v.play(ms, () => { if (R.tier >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + R.tier * 40); FX.burst(mid[0], mid[1], 6 + R.tier * 4, [R.col, "#fff"], 260 + R.tier * 60); } });
-  Snd.reveal(R.tier); if (R.tier >= 2) buzz(R.tier >= 5 ? [40, 30, 60, 30, 90] : R.tier >= 3 ? [30, 25, 50] : [25]);
-  FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][R.tier], R.tier >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + R.tier * 130);
-  if (R.tier >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + R.tier * 14, [R.col, "#fff"]);
-  if (R.tier >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
+  await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
+  Snd.reveal(T); if (T >= 2) buzz(T >= 5 ? [40, 30, 60, 30, 90] : T >= 3 ? [30, 25, 50] : [25]);
+  FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][T], T >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + T * 130);
+  if (T >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + T * 14, [R.col, "#fff"]);
+  if (T >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
   const t = $("stTitle"); t.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col);
-  t.innerHTML = `<div class="rw">${R.name}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b></div>`;
+  t.innerHTML = `<div class="rw">${R.name}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
   blockReveal(t.querySelector(".nm"), card.name, 480); t.classList.remove("in"); void t.offsetWidth; t.classList.add("in");
 }
 async function dismiss(el, c) {
@@ -1698,14 +1700,14 @@ async function dismiss(el, c) {
 function skipAll() { if (!SS || SS.phase === "summary") return; SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
 const againLabel = pk => state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : "invite a friend, get a free pack";
 function summary() {
-  SS.phase = "summary"; const items = SS.items, worth = items.reduce((a, c) => a + valueOf(c), 0), back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE;
+  SS.phase = "summary"; const items = SS.items, back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
   const best = items.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no];
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
-  $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(worth)}">${blockSVG(money(worth))}</div><span class="dim" style="font-size:13px">of cards</span></div>
-    <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Sell them all for ${money(back)}.` : SS.bought ? `A pack you bought. Sell them all for ${money(back)} of play money.` : `Sell them all for ${money(back)}: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))} against the ${money(SS_PRICE)} pack.`}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
+  $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(back)}">${blockSVG(money(back))}</div><span class="dim" style="font-size:13px">of cards you can sell</span></div>
+    <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Its cards sell for ${money(back)}.` : SS.bought ? `A pack you bought. Its cards sell for ${money(back)} of play money.` : `You paid ${money(SS_PRICE)} and got ${money(back)} of cards: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))}.`}${x >= 2 ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
     <div class="fan">${items.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>
     <div class="row" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
-  $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, net >= 0 ? 90 : 30, net >= 0 ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
+  $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
 function closeStage() { stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view); }
 

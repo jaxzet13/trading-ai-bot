@@ -26,7 +26,7 @@ Three slots (`src/js/01b-limited.js`, checked by `requiem_pack.py`):
 Worked out exactly, with selling back at 90% of a card's worth (the rule every pack uses):
 
 - the average value of the three cards in a pack is **$64.15**, 99% of the price
-- the average sell-back is **$57.73**, 88.8% of the price (the other packs are tuned to about 89%)
+- the average sell-back is **$57.73**, 88.8% of the price (the other packs are tuned to about 90%)
 - **28.5%** of packs sell back for at least $65; a typical pack sells back for $40.50; the worst possible pack sells back for $24.30
 
 Most packs are worth less than $65 and a few are worth far more. That is how a chase pack works, so the page says it in plain words. `python requiem_pack.py` prints all of it; the page and the test (`t18.js`) compute it from the same slot tables, so a changed table can't leave a stale number on screen.

@@ -19,7 +19,7 @@ const CARDS = [
   { no: "012", id: "orbit",   name: "Orbit",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 14,    tint: "#a9c9ff", cap: "already read the ending.", styles: true },
   { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "uncommon",  chars: 15750,  val: 35,    tint: "#ece7dc", cap: "gone before the cape lands.", styles: true },
   { no: "018", id: "null",    name: "Null",    sub: "star",       rar: "rare",      chars: 29260,  val: 306,   tint: "#a9c9ff", cap: "not on any record.", styles: true },
-  { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "rare",      chars: 31970,  val: 700,   tint: "#ffd27a", cap: "rents you the air.", styles: true },
+  { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "rare",      chars: 31970,  val: 620,   tint: "#ffd27a", cap: "rents you the air.", styles: true },
   { no: "006", id: "ronin",   name: "Ronin",   sub: "cliff",      rar: "epic",      chars: 71680,  val: 890,   tint: "#ff8ac9", cap: "", styles: true },
   { no: "011", id: "grimm",   name: "Grimm",   sub: "cathedral",  rar: "legendary", chars: 219520, val: 2340,  tint: "#a8ffb0", cap: "", styles: true },
   { no: "015", id: "reaper",  name: "Reaper",  sub: "ember",      rar: "mythic",    chars: 701000, val: 14500, tint: "#ffc87a", cap: "", styles: true },
@@ -27,7 +27,7 @@ const CARDS = [
   // ---- Moonshot: one launch, five altitudes. The higher the card, the rarer it is.
   { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "common",    chars: 3600,   val: 31,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
   { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "uncommon",  chars: 10080,  val: 78,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
-  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "rare",      chars: 40320,  val: 2021,  tint: "#ff7a6a", cap: "gravity lost the argument.",    styles: true },
+  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "rare",      chars: 40320,  val: 1800,  tint: "#ff7a6a", cap: "gravity lost the argument.",    styles: true },
   { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "epic",      chars: 123480, val: 3238, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
   { no: "025", set: "ms", id: "luna",     name: "Luna",     sub: "first flag",    rar: "legendary", chars: 448800, val: 8290, tint: "#b8d4ff", cap: "to the moon was never a joke.", styles: true }
 ];
@@ -45,8 +45,8 @@ const STYLES = {
   leaf:    { name: "Iridescent",   p: .0006, x: 15  }, kin:   { name: "Dissolve", p: .0003, x: 25  }
 };
 const STYLE_TINT = { "": "#ece7dc", steel: "#aaffbd", dots: "#ffd27a", vhs: "#c9a5ff", scratch: "#ece7dc", ice: "#a9c9ff", chain: "#ece7dc", wire: "#b6ff9c", print: "#ff9a94", glass: "#ff8ac9", blood: "#a8ffb0", leaf: "#d6c9ff", kin: "#a9c9ff" };
-/* Each pack holds the cards of one set. A slot is a list of [card id, weight]. The packs are tuned so that each one sells back for at least its cost about 40 to 45% of the time
-   and returns about 89% on average (both move with the market, and are worked out live in 04-state.js). */
+/* Each pack holds the cards of one set. A slot is a list of [card id, weight]. The packs are tuned so that each one sells back for at least its cost about half the time
+   and returns about 90% on average (both move with the market, and are worked out live in 04-state.js). */
 const PACKS = [
   { id: "fp", set: "fp", name: "First Print", blurb: "Stick figures made of text, from a frog in a hat to a total eclipse.", price: 500, min: 250, max: 5000, n: 5,
     order: ["stitch", "umbra", "orbit", "brick", "null", "phantom", "rook", "shogun", "ronin", "grimm", "reaper"],
@@ -56,7 +56,7 @@ const PACKS = [
       [["stitch", 1], ["brick", 1], ["rook", 1]],
       [["stitch", 32.4], ["brick", 32.4], ["rook", 32.4], ["orbit", 1.7], ["phantom", 1.2]],
       [["orbit", 2.1], ["phantom", 88.5], ["null", 2.1], ["shogun", 7.3]],
-      [["orbit", 44.8], ["phantom", 10.5], ["null", 5], ["shogun", 36.6], ["ronin", 2.8], ["grimm", .34], ["reaper", .04], ["umbra", .02]]
+      [["orbit", 38.1], ["phantom", 10.5], ["null", 5], ["shogun", 44], ["ronin", 2.1], ["grimm", .255], ["reaper", .03], ["umbra", .015]]
     ] },
   { id: "ms", set: "ms", name: "Moonshot", blurb: "One launch, five altitudes: a lit fuse on the ground up to a flag on the Moon. The higher the card, the rarer it is.", price: 1500, min: 750, max: 15000, n: 5,
     order: ["luna", "fuse", "liftoff", "ignition", "apogee"],
@@ -65,11 +65,11 @@ const PACKS = [
       [["fuse", 92], ["ignition", 8]],
       [["fuse", 88], ["ignition", 12]],
       [["fuse", 54], ["ignition", 43.5], ["liftoff", 2.5]],
-      [["fuse", 20], ["ignition", 61.7], ["liftoff", 16.3], ["apogee", 2]],
-      [["fuse", 3.7], ["ignition", 67.8], ["liftoff", 22.2], ["apogee", 5.8], ["luna", .5]]
+      [["fuse", 20], ["ignition", 62.2], ["liftoff", 16.3], ["apogee", 1.5]],
+      [["fuse", 3.7], ["ignition", 59.575], ["liftoff", 32], ["apogee", 4.35], ["luna", .375]]
     ] }
 ];
 const PACK_BY = Object.fromEntries(PACKS.map(p => [p.id, p])), packOf = card => PACK_BY[card.set];
 // Play money is counted in units: 500 of them are one dollar, so a unit is a fifth of a cent. First Print costs $1.00 (500 units) and Moonshot $3.00 (1,500), and every card in a pack
-// is worth in proportion, so what a pack returns (about 89%) and the chance of selling back at least what it cost are the same as ever. You start with $2.00.
+// is worth in proportion, so what a pack returns (about 90%) is the same as ever. You start with $2.00.
 const SELLBACK = .9, START = 1000, UNIT = 500;
