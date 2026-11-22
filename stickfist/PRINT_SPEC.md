@@ -67,6 +67,7 @@ Six cards with their own finishes. These are a plan: confirm each with a printed
 
 - The picture files are 1800 × 2184 px (`cards/rq/<id>.jpg`) and the sources are 1024 px (Orrery 1792 px). For print, upscale the sources 3 to 4 times, check each at 100% for warped hands, faces and edges, and re-render with `python requiem_render.py --scale 2` (3600 × 4368 masters, or larger if the sources are larger).
 - The characters are what make the cards worth the price, and they only read in print if the printer can hold fine detail. Order a proof of Seraph and Pallbearer first: they are the densest and the smoothest.
+- Order a **proof set** first (one of each card, plus a foil Witness to compare, marked "PROOF · NOT FOR SALE"): see `design-concepts/requiem/README.md`. `requiem_faces.py` makes the print-size faces.
 - The printed run must equal the run published on the page (`RQ.run` in `src/js/01b-limited.js`). Never reprint.
 
 ## Stock

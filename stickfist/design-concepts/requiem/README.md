@@ -75,10 +75,22 @@ None of this is in the beta, and none of it is code you can finish in an afterno
 - **Rules for paid random packs.** Selling sealed random cards for real money is regulated differently in different places, and some places treat paid random packs as gambling or require odds disclosure, age checks and refund rights. Get legal advice for each place you ship to. The page already states the odds and an 18+ rule, but that is not legal sign-off.
 - **Age.** The beta's 18+ box is a tick box. A real-money sale needs a proper age check.
 
+## The proof set: every card, once, before the run
+
+Before a real run, order one set that holds every card so you can check how each one prints. It is a proof, not a pack: it is not drawn from the odds and it is not for sale.
+
+- **Seven cards.** One of each of the six cards, plus a second **The Witness** on foil, because whether a black-and-white card looks better with a holo sheen is a judgement you can only make in the hand.
+- **Two orders, one cart.** The foil Euro poker deck (63 × 88 mm, 320 gsm black-core, holographic sheen on the face only) takes Halation, Orrery, Seraph and the second Witness. The matching plain black-core deck takes Pallbearer, Vigil and Witness. Check that the plain deck is offered at the same size.
+- **Files.** `python requiem_faces.py --proof --out proof` writes the seven faces and a back at 600 dpi with a 3 mm bleed (1630 × 2221 px; check the printer's own template first and use `--dpi` and `--bleed` to match). Each face carries "PROOF · NOT FOR SALE" on the strip so it can never be mistaken for a run card. `--guides` draws the trim and safe zone on, to check by eye. The back is the existing STIXX back; design a Requiem back before a real run.
+- **What to look at.** On foil: do the whites turn metallic or rainbow, and do the dark stipple cards keep their depth? On plain stock: does the fine character texture hold up, and does Pallbearer keep its blacks? Hold each next to the screen. Check the name strip is legible at the printed size.
+- **Counting.** The proof set sits outside the run. Keep the numbers on the page true: if a proof Seraph exists, then "one Seraph in the run" is still true but "only one Seraph exists" is not. If any proof copy is ever sold or given away, count it and say so.
+- The print faces leave off the flavour captions: they don't fit at 6.5 pt or more.
+
 ## Files
 
 - `requiem_render.py` the renderer
 - `requiem_pack.py` the odds and the return
+- `requiem_faces.py` print-size faces with bleed, and the proof set
 - `sources/` the paintings (`PROMPTS.md` has the prompts)
 - `../../cards/rq/` the cards the app loads: masters, `m/`, `s/`, `macro/`
 - `../../src/js/01b-limited.js` the pack and card data; `08b-limited.js` the page
