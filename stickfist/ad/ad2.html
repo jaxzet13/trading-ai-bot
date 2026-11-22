@@ -1,0 +1,359 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>STIXX cinematic</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<canvas id="o" width="1920" height="1080"></canvas>
+<script>
+/* ============================================================================================================================================
+   STIXX "Letters", a 34 second landscape film (1920x1080, 30 fps, letterboxed to 2.35:1). Built to be watched with the sound on and to be hard to scroll past.
+     0.0  the hook: a camera pulling back out of the letters of one card, 1,578,000 of them, until the picture appears
+     5.0  one pack, one breath of silence, one tear
+    10.4  five pulls, each louder than the last, the last one a Mythic
+    19.1  a card from that pack runs: a simulated market, the sell, the profit (after the 10% fee, like the app)
+    27.3  "first pack free", and the last second dives into the letters again so the film loops into its own first frame
+   Every picture is the app's own card. Every frame is worked out from the clock, then given a lens: bloom, anamorphic streaks, radial colour fringing,
+   a teal-and-amber grade, vignette and grain, and handed to ffmpeg by render.js. audio2.py scores it from the timeline in window.TL.
+   The market scene is an illustration of how a run can go in the app's simulated market (the card's real ceiling is 12x; this one tops out at 10.6x),
+   and the film says "play money · simulated market · 18+" the whole way through.
+   ========================================================================================================================================== */
+const BLUR0 = 9;                                       // how soft the first and last frames are: the same, so the film loops
+const W = 1920, H = 1080, FPS = 30, BAR = 132, FY0 = BAR, FY1 = H - BAR, FH = FY1 - FY0, CX = W / 2, CY = H / 2;
+const FONT = "'JetBrains Mono','DejaVu Sans Mono',ui-monospace,monospace";
+const hash = (a, b, c) => { let h = Math.imul(a | 0, 374761393) ^ Math.imul(b | 0, 668265263) ^ Math.imul((c || 0) | 0, 2147483647); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+const cl = (x, a, b) => { a = a == null ? 0 : a; b = b == null ? 1 : b; return x < a ? a : x > b ? b : x; };
+const sm = (a, b, x) => { x = cl((x - a) / (b - a)); return x * x * (3 - 2 * x); };
+const mixv = (a, b, k) => a + (b - a) * k;
+const eo = x => 1 - Math.pow(1 - cl(x), 3), ei = x => Math.pow(cl(x), 3), eio = x => { x = cl(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const back = x => { x = cl(x); const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };      // overshoot, for things that slam into place
+const vn = (x, s) => { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return mixv(hash(i, 0, s), hash(i + 1, 0, s), u); };
+const fbm = (x, s) => (vn(x, s) * .5 + vn(x * 2.1, s + 1) * .25 + vn(x * 4.3, s + 2) * .125 + vn(x * 8.7, s + 3) * .0625) / .9375;
+const rgb = c => `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`, rgba = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+const INK = [236, 231, 220], DIM = [141, 137, 127], GRN = [159, 216, 166], AMB = [255, 181, 74], WHT = [255, 255, 255], RED = [232, 120, 109];
+const money = c => "$" + (c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const mk = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+
+/* ---------------------------------------------------------------- the timeline */
+const D = { macro: 5.0, rip: 5.4, pulls: 8.7, market: 8.2, cta: 6.4 };
+const T = {}; let _a = 0; for (const k in D) { T[k] = [_a, _a + D[k]]; _a += D[k]; }
+const DUR = _a;
+const B = { land: 3.55, drop: T.rip[0] + 3.3, tear: T.rip[0] + 3.75, spill: T.rip[0] + 4.55, cut: T.rip[1] - .12,
+  card: [T.pulls[0], T.pulls[0] + 1.3, T.pulls[0] + 2.5, T.pulls[0] + 3.6, T.pulls[0] + 4.9, T.pulls[1]],
+  peak: T.market[0] + 5.9, click: T.market[0] + 6.5, sold: T.market[0] + 6.6, cta: T.cta[0] };
+const PULL = [
+  { k: "stitch-bone", name: "STITCH", rar: "COMMON", tier: 0, edge: [201, 197, 187], tint: [236, 231, 220], val: 11, chars: 2772 },
+  { k: "phantom", name: "PHANTOM", rar: "UNCOMMON", tier: 1, edge: [127, 155, 255], tint: [190, 205, 255], val: 35, chars: 15750 },
+  { k: "shogun", name: "SHOGUN", rar: "RARE", tier: 2, edge: [176, 122, 255], tint: [255, 210, 122], val: 700, chars: 31970 },
+  { k: "ronin", name: "RONIN", rar: "EPIC", tier: 3, edge: [255, 111, 208], tint: [255, 138, 201], val: 890, chars: 71680 },
+  { k: "reaper", name: "REAPER", rar: "MYTHIC", tier: 5, edge: [255, 74, 74], tint: [255, 160, 90], val: 14500, chars: 701000 },
+];
+// every hit the picture reacts to: flash, shake and colour fringing all hang off these
+const HITS = [{ t: B.land, a: 1.3 }, { t: T.rip[0], a: .8 }, { t: B.tear, a: 1.7 }, { t: B.spill, a: .7 }, { t: B.cut, a: .6 },
+  { t: B.card[0], a: .6 }, { t: B.card[1], a: .75 }, { t: B.card[2], a: .95 }, { t: B.card[3], a: 1.15 }, { t: B.card[4], a: 1.9 },
+  { t: B.sold, a: 1.5 }, { t: B.cta + .38, a: .9 }, { t: B.cta + 1.2, a: 1.9 }];
+const hitAt = t => { let a = 0; for (const h of HITS) { const d = t - h.t; if (d >= -.001 && d < .7) a += h.a * Math.exp(-Math.max(0, d) * 9); } return Math.min(2.2, a); };
+const HEART = [.06, .38, 27.5, 27.82];
+
+/* ---------------------------------------------------------------- canvases */
+const S = mk(W, H), sx = S.getContext("2d");
+const O = document.getElementById("o"), ox = O.getContext("2d", { willReadFrequently: true });
+const B1 = mk(480, 270), b1 = B1.getContext("2d"), B2 = mk(120, 68), b2 = B2.getContext("2d"), K1 = mk(24, H), k1 = K1.getContext("2d"), K2 = mk(96, H), k2 = K2.getContext("2d");
+const IMG = {}, KEYS = ["umbra", "stitch-bone", "phantom", "shogun", "ronin", "reaper"];
+const loadImg = src => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+
+/* ---------------------------------------------------------------- drawing kit */
+function txt(s, x, y, size, col, o) {
+  o = o || {}; sx.font = `${o.w || 700} ${size}px ${FONT}`; sx.textAlign = o.al || "left"; sx.textBaseline = o.bl || "alphabetic"; sx.letterSpacing = (o.ls || 0) + "px"; sx.globalAlpha = o.a == null ? 1 : o.a; sx.fillStyle = rgb(col);
+  if (o.glow) { sx.shadowColor = rgba(o.gc || col, o.glow); sx.shadowBlur = o.gb || 30; } sx.fillText(s, x, y); sx.shadowBlur = 0; sx.globalAlpha = 1; sx.letterSpacing = "0px";
+}
+function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+function glow(x, y, r, c, a) { const g = sx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rgba(c, a)); g.addColorStop(.35, rgba(c, a * .4)); g.addColorStop(1, rgba(c, 0)); sx.save(); sx.globalCompositeOperation = "lighter"; sx.fillStyle = g; sx.fillRect(x - r, y - r, r * 2, r * 2); sx.restore(); }
+function streak(x, y, w, h, c, a) { sx.save(); sx.globalCompositeOperation = "lighter"; sx.translate(x, y); sx.scale(1, h / w); const g = sx.createRadialGradient(0, 0, 0, 0, 0, w); g.addColorStop(0, rgba(c, a)); g.addColorStop(.25, rgba(c, a * .35)); g.addColorStop(1, rgba(c, 0)); sx.fillStyle = g; sx.fillRect(-w, -w, w * 2, w * 2); sx.restore(); }   // an anamorphic flare: a light stretched sideways
+function shafts(x, y, ang, n, len, c, a, t, spread) {
+  sx.save(); sx.globalCompositeOperation = "lighter"; sx.translate(x, y);
+  for (let i = 0; i < n; i++) { const k = i / Math.max(1, n - 1), th = ang + (k - .5) * (spread || 1.7) + Math.sin(t * .35 + i * 1.7) * .035, w = .028 + .05 * hash(i, 1, 9), g = sx.createLinearGradient(0, 0, Math.cos(th) * len, Math.sin(th) * len);
+    g.addColorStop(0, rgba(c, a * (.35 + .65 * hash(i, 2, 9)))); g.addColorStop(1, rgba(c, 0)); sx.fillStyle = g; sx.beginPath(); sx.moveTo(0, 0); sx.lineTo(Math.cos(th - w) * len, Math.sin(th - w) * len); sx.lineTo(Math.cos(th + w) * len, Math.sin(th + w) * len); sx.fill(); }
+  sx.restore();
+}
+function dust(t, n, seed, a, col) {                                   // a drift of floating motes at many depths, the near ones large and soft like bokeh
+  sx.save(); sx.globalCompositeOperation = "lighter";
+  for (let i = 0; i < n; i++) {
+    const d = hash(i, 1, seed), sp = 6 + d * 30, x = ((hash(i, 2, seed) * W * 1.3 + t * sp * (i % 3 ? 1 : -.6)) % (W * 1.3) + W * 1.3) % (W * 1.3) - W * .15, y = FY0 + (((hash(i, 3, seed) * FH - t * (4 + d * 16)) % FH) + FH) % FH;
+    const r = d > .88 ? 16 + d * 26 : .8 + d * 3.2, tw = .45 + .55 * Math.sin(t * (.8 + d * 2) + i), al = a * tw * (d > .88 ? .13 : .25 + .5 * d);
+    if (d > .88) { const g = sx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rgba(col, al)); g.addColorStop(.7, rgba(col, al * .6)); g.addColorStop(1, rgba(col, 0)); sx.fillStyle = g; sx.fillRect(x - r, y - r, r * 2, r * 2); }
+    else { sx.fillStyle = rgba(col, al); sx.beginPath(); sx.arc(x, y, r, 0, 6.283); sx.fill(); }
+  }
+  sx.restore();
+}
+const GL = ".:+*#@$%&";
+function gburst(cx, cy, u, n, seed, sp, life, cols, grav, size) {              // a fountain of characters
+  if (u < 0) return; sx.save(); sx.globalCompositeOperation = "lighter"; sx.textAlign = "center"; sx.textBaseline = "middle";
+  for (let i = 0; i < n; i++) {
+    const a = hash(i, 1, seed) * 6.283, v = sp * (.2 + .95 * hash(i, 2, seed)), l = life * (.45 + .75 * hash(i, 3, seed)); if (u > l) continue; const k = u / l;
+    sx.globalAlpha = (1 - k) * (1 - k) * .95; sx.font = `700 ${size * (.5 + hash(i, 4, seed) * 1.1)}px ${FONT}`; sx.fillStyle = rgb(cols[i % cols.length]);
+    sx.fillText(GL[(i * 7 + Math.floor(u * 9)) % GL.length], cx + Math.cos(a) * v * u, cy + Math.sin(a) * v * u + .5 * grav * u * u);
+  }
+  sx.restore();
+}
+function card(img, cx, cy, w, o) {                                     // a card as an object: flip, roll, light, shadow, edge
+  o = o || {}; if (!img) return; const h = w * 1092 / 900, ry = o.ry || 0, sc = Math.cos(ry); if (Math.abs(sc) < .015) return;
+  sx.save(); sx.translate(cx, cy); sx.rotate(o.rot || 0); sx.transform(sc, -Math.sin(ry) * .07, 0, 1, 0, 0); sx.globalAlpha = o.a == null ? 1 : o.a;
+  if (o.glow) glow(0, 0, w * 1.15, o.glow, o.ga || .4);
+  sx.shadowColor = "rgba(0,0,0,.75)"; sx.shadowBlur = 70; sx.shadowOffsetY = 36; rr(sx, -w / 2, -h / 2, w, h, w * .045); sx.fillStyle = "#050506"; sx.fill(); sx.shadowBlur = 0; sx.shadowOffsetY = 0;
+  sx.save(); rr(sx, -w / 2, -h / 2, w, h, w * .045); sx.clip(); sx.imageSmoothingQuality = "high"; sx.drawImage(img, -w / 2, -h / 2, w, h);
+  if (o.sheen != null) { const px = -w / 2 + o.sheen * w * 2.4 - w * .7, g = sx.createLinearGradient(px, -h / 2, px + w * .55, h / 2); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(.5, `rgba(255,255,255,${(o.sa == null ? .22 : o.sa)})`); g.addColorStop(1, "rgba(255,255,255,0)"); sx.globalCompositeOperation = "lighter"; sx.fillStyle = g; sx.fillRect(-w / 2, -h / 2, w, h); }
+  sx.restore(); rr(sx, -w / 2, -h / 2, w, h, w * .045); sx.strokeStyle = o.edge ? rgba(o.edge, .9) : "rgba(255,255,255,.2)"; sx.lineWidth = o.edge ? 3 : 2; sx.stroke(); sx.restore();
+}
+function trail(img, cx, cy, w, o, dx, n) { for (let i = n; i >= 1; i--) card(img, cx - dx * i * .06, cy, w, Object.assign({}, o, { a: (o.a == null ? 1 : o.a) * .13, glow: null })); }
+const typed = (s, t0, cps, t) => { const n = Math.floor((t - t0) * cps); return n <= 0 ? "" : s.slice(0, Math.min(s.length, n)); };
+
+/* ---------------------------------------------------------------- the letters: Umbra read into its 1,578,000 characters, the way the card was made */
+const RAMP = " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$", ADV = .6, NB = 16, ZMAX = 230, CW0 = 590;
+let GRID = null; const LUT = Array.from({ length: NB }, (_, b) => { const l = (b + 1) / NB, w = Math.pow(l, 4) * .6; return `rgb(${Math.min(255, 235 * Math.pow(l, .8) + 70 * w) | 0},${Math.min(255, 170 * Math.pow(l, .9) + 110 * w) | 0},${Math.min(255, 74 * Math.pow(l, 1.2) + 120 * w) | 0})`; });
+function readGrid(img, chars) {
+  const cols = Math.round(Math.sqrt(chars * 1.537)), rows = Math.round(chars / cols), c = mk(cols, rows), x = c.getContext("2d"); x.drawImage(img, 0, 0, cols, rows);
+  const d = x.getImageData(0, 0, cols, rows).data, n = cols * rows, lum = new Float32Array(n), chi = new Uint8Array(n), bk = new Uint8Array(n);
+  for (let i = 0; i < n; i++) { const l = Math.min(1, (d[i * 4] * .299 + d[i * 4 + 1] * .587 + d[i * 4 + 2] * .114) / 255 * 1.25); lum[i] = l; chi[i] = Math.min(RAMP.length - 1, Math.floor(Math.pow(l, .8) * RAMP.length)); bk[i] = l < .06 ? 0 : Math.min(NB - 1, Math.floor(l * NB)) + 1; }
+  const ww = Math.round(cols * .08), wh = Math.round(rows * .07); let bx = .56, by = .36, bs = -1;                  // aim at the busiest patch of the picture
+  for (let j = Math.round(rows * .18); j < rows * .6; j += 4) for (let i = Math.round(cols * .2); i < cols * .8 - ww; i += 4) { let s = 0, s2 = 0, m = 0; for (let jj = 0; jj < wh; jj += 3) for (let ii = 0; ii < ww; ii += 3) { const l = lum[(j + jj) * cols + i + ii]; s += l; s2 += l * l; m++; } const mean = s / m, v = s2 / m - mean * mean; let mid = 0; for (let jj = 0; jj < wh; jj += 3) for (let ii = 0; ii < ww; ii += 3) { const l = lum[(j + jj) * cols + i + ii]; if (l > .22 && l < .8) mid++; } const sc = mid / m * 1.2 + v * 1.5; if (sc > bs) { bs = sc; bx = (i + ww / 2) / cols; by = (j + wh / 2) / rows; } }
+  return { cols, rows, lum, chi, bk, tx: bx, ty: by };
+}
+function field(z, a) {                                                  // the card at zoom z: letters up close, the picture from afar, both at the seam
+  const g = GRID, ch0 = CW0 * 1092 / 900, w0 = CW0 * z, h0 = ch0 * z, cols = g.cols, rows = g.rows, k = (1 - 1 / z) / (1 - 1 / ZMAX), px = .5 + (g.tx - .5) * k, py = .5 + (g.ty - .5) * k, X = v => CX + (v - px) * w0, Y = v => CY + (v - py) * h0, cwp = w0 / cols;
+  const imgA = 1 - sm(2.4, 9, cwp), letA = sm(2.2, 6, cwp);
+  sx.save(); sx.globalAlpha = a;
+  if (imgA > .01 && IMG.umbra) {
+    sx.save(); sx.globalAlpha = a * imgA; sx.imageSmoothingQuality = "high";
+    if (z < 3) { rr(sx, X(0), Y(0), w0, h0, CW0 * .045 * z); sx.clip(); sx.drawImage(IMG.umbra, X(0), Y(0), w0, h0); }
+    else { const u0 = cl((0 - CX) / w0 + px), u1 = cl((W - CX) / w0 + px), v0 = cl((0 - CY) / h0 + py), v1 = cl((H - CY) / h0 + py), iw = IMG.umbra.width, ih = IMG.umbra.height; if (u1 > u0 && v1 > v0) sx.drawImage(IMG.umbra, u0 * iw, v0 * ih, (u1 - u0) * iw, (v1 - v0) * ih, X(u0), Y(v0), (u1 - u0) * w0, (v1 - v0) * h0); }
+    sx.restore();
+  }
+  if (letA > .01 && cwp > 2.2) {
+    const i0 = Math.max(0, Math.floor((-CX / w0 + px) * cols)), i1 = Math.min(cols - 1, Math.ceil(((W - CX) / w0 + px) * cols)), j0 = Math.max(0, Math.floor((-CY / h0 + py) * rows)), j1 = Math.min(rows - 1, Math.ceil(((H - CY) / h0 + py) * rows));
+    sx.save(); sx.globalAlpha = a * letA; sx.font = `700 ${cwp / ADV}px ${FONT}`; sx.textBaseline = "top"; sx.textAlign = "left";
+    for (let b = 1; b <= NB; b++) { sx.fillStyle = LUT[b - 1]; for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const q = j * cols + i; if (g.bk[q] !== b) continue; sx.fillText(RAMP[g.chi[q]], X(i / cols), Y(j / rows)); } }
+    sx.restore();
+  }
+  sx.restore();
+}
+
+/* ---------------------------------------------------------------- act 1: the hook */
+function macro(t, u) {
+  sx.fillStyle = "#030304"; sx.fillRect(0, 0, W, H);
+  const x = cl(u / B.land), p = .35 * x + .65 * eio(x), z = Math.exp(Math.log(ZMAX) * (1 - p));
+  glow(CX, CY, 1100, [255, 150, 50], .2 + .18 * sm(12, 1.2, z));
+  if (u < B.land) { field(z, 1); const ringK = sm(.6, 1, x); }
+  else {
+    const v = u - B.land, push = 1 + .05 * eo(v / 1.5), fl = 1 + .006 * Math.sin(v * 2.1);
+    glow(CX, CY, 900, [255, 170, 70], .32); shafts(CX, CY, -1.57, 9, 1200, [255, 190, 100], .09, t, 3.6); card(IMG.umbra, CX, CY + 4 * Math.sin(v * 1.3), CW0 * push * fl, { glow: [255, 160, 60], ga: .5, sheen: v < 1.6 ? sm(.1, 1.5, v) : null, sa: .3, edge: [255, 226, 168] });
+    const ring = v * 1500, ra = Math.max(0, 1 - v * 1.6); if (ra > 0) { sx.save(); sx.globalCompositeOperation = "lighter"; sx.strokeStyle = rgba([255, 200, 120], ra * .6); sx.lineWidth = 3 + 10 * ra; sx.beginPath(); sx.ellipse(CX, CY, ring, ring * .46, 0, 0, 6.283); sx.stroke(); sx.restore(); }
+    streak(CX, CY, 1500, 70, [255, 190, 110], .55 * Math.max(0, 1 - v * 1.1));
+    const a1 = sm(.25, .9, v), a2 = sm(.6, 1.2, v);
+    txt("ONE CARD.", 130, 430, 30, DIM, { ls: 12, a: a1 }); txt("1,578,000", 130, 556, 92, WHT, { a: a1, glow: .35, gb: 40, gc: AMB }); txt("LETTERS.", 134, 612, 40, AMB, { ls: 20, a: a2 });
+    txt("UMBRA", W - 130, 560, 108, WHT, { al: "right", a: a2, glow: .3, gc: AMB }); txt("THE SECRET CARD", W - 134, 616, 28, DIM, { al: "right", ls: 12, a: sm(.9, 1.4, v) });
+  }
+  dust(t, 70, 11, .5, [255, 200, 130]);
+}
+
+/* ---------------------------------------------------------------- act 2: the pack and the tear */
+function packBody(w, h, t, u) {
+  const x0 = -w / 2, y0 = -h / 2, x1 = w / 2, y1 = h / 2, tn = 22, th = 13;
+  sx.beginPath(); sx.moveTo(x0, y0 + th); for (let i = 0; i <= tn; i++) sx.lineTo(x0 + w * i / tn, y0 + (i % 2 ? 0 : th)); sx.lineTo(x1, y1 - th); for (let i = tn; i >= 0; i--) sx.lineTo(x0 + w * i / tn, y1 - (i % 2 ? 0 : th)); sx.closePath();
+  const g = sx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, "#202026"); g.addColorStop(.5, "#121216"); g.addColorStop(1, "#0a0a0d"); sx.fillStyle = g; sx.fill(); sx.save(); sx.clip();
+  sx.font = `500 15px ${FONT}`; sx.textAlign = "left"; sx.textBaseline = "top"; sx.fillStyle = "rgba(255,255,255,.045)"; for (let r = 0; r < 24; r++) for (let c = 0; c < 17; c++) sx.fillText("STIXX"[(r + c) % 5], x0 + 12 + c * 24 + (r % 2) * 12, y0 + 52 + r * 24);
+  for (const yy of [y0, y1 - 46]) { sx.fillStyle = "rgba(255,255,255,.06)"; sx.fillRect(x0, yy, w, 46); sx.fillStyle = "rgba(0,0,0,.55)"; for (let i = 0; i < 56; i++) sx.fillRect(x0 + i * w / 56, yy, 2, 46); }
+  const iw = w * .8, ih = iw * 1092 / 900, wy = y0 + 70; sx.fillStyle = "#040405"; sx.fillRect(-iw / 2 - 4, wy - 4, iw + 8, ih + 8); if (IMG.ronin) sx.drawImage(IMG.ronin, -iw / 2, wy, iw, ih);
+  sx.strokeStyle = "rgba(255,255,255,.22)"; sx.lineWidth = 2; sx.strokeRect(-iw / 2 - 4, wy - 4, iw + 8, ih + 8);
+  txt("FIRST PRINT", 0, wy + ih + 52, 34, INK, { al: "center", ls: 9 }); txt("5 CARDS  ·  ASCII", 0, wy + ih + 84, 16, DIM, { al: "center", ls: 7 });
+  const sw = ((u * .32) % 1.6) - .3, sp = x0 + sw * w * 2.2, gg = sx.createLinearGradient(sp - 120, y0, sp + 40, y1); gg.addColorStop(0, "rgba(255,255,255,0)"); gg.addColorStop(.5, "rgba(255,255,255,.2)"); gg.addColorStop(1, "rgba(255,255,255,0)"); sx.globalCompositeOperation = "lighter"; sx.fillStyle = gg; sx.fillRect(x0, y0, w, h);
+  sx.restore(); sx.save(); sx.beginPath(); sx.moveTo(x0, y0 + th); for (let i = 0; i <= tn; i++) sx.lineTo(x0 + w * i / tn, y0 + (i % 2 ? 0 : th)); sx.lineTo(x1, y1 - th); for (let i = tn; i >= 0; i--) sx.lineTo(x0 + w * i / tn, y1 - (i % 2 ? 0 : th)); sx.closePath(); sx.strokeStyle = "rgba(255,255,255,.28)"; sx.lineWidth = 2; sx.stroke(); sx.restore();
+}
+const TEARY = -190, TEAR = Array.from({ length: 19 }, (_, i) => [-290 + i * 580 / 18, TEARY + (i === 0 || i === 18 ? 0 : (hash(i, 1, 51) - .5) * 30)]);
+function clipPiece(top) { const big = 1400; sx.beginPath(); sx.moveTo(-big, top ? -big : big); sx.lineTo(big, top ? -big : big); sx.lineTo(big, TEAR[18][1]); for (let i = 18; i >= 0; i--) sx.lineTo(TEAR[i][0], TEAR[i][1]); sx.lineTo(-big, TEAR[0][1]); sx.closePath(); sx.clip(); }
+function rip(t, u) {
+  const g = sx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#07080c"); g.addColorStop(1, "#020203"); sx.fillStyle = g; sx.fillRect(0, 0, W, H);
+  const tear = u - 3.75, kk = tear < 0 ? 0 : tear < 1 ? tear * .35 : .35 + (tear - 1) * .9, e = eo(kk / 1.15), pw = 440, ph = pw * 1.5;
+  const amp = u > 3.3 && tear < 0 ? (u - 3.3) / .45 : 0, shx = (hash(Math.floor(t * 30), 1, 60) - .5) * 14 * amp, shy = (hash(Math.floor(t * 30), 2, 60) - .5) * 10 * amp;
+  const bob = Math.sin(u * 1.25) * 9 * (1 - amp), cx = CX + shx, cy = CY + 8 + bob + shy;
+  shafts(CX - 420, FY0 - 40, 1.05, 8, 1500, [150, 175, 255], .07 * (1 - e * .6), t, 1.1); shafts(CX + 560, FY0 - 40, 2.1, 6, 1400, [255, 200, 140], .05 * (1 - e * .6), t, .9);
+  glow(CX, CY + 120, 900, [90, 110, 190], .1 * (1 - e)); dust(t, 90, 21, .7, [200, 215, 255]);
+  const leak = sm(3.3, 3.74, u) * (1 - sm(3.75, 3.95, u));                  // light seeping out of the seam just before it gives way
+  if (tear < 0) {
+    sx.save(); sx.translate(cx, cy); sx.rotate(Math.sin(u * .8) * .012 + .02); sx.shadowColor = "rgba(0,0,0,.8)"; sx.shadowBlur = 90; sx.shadowOffsetY = 50; packBody(pw, ph, t, u); sx.restore();
+    if (leak > 0) { sx.save(); sx.translate(cx, cy); sx.rotate(.02); sx.globalCompositeOperation = "lighter"; for (let i = 0; i < 18; i++) { sx.strokeStyle = rgba([255, 235, 190], leak * .9); sx.lineWidth = 2 + leak * 3; sx.beginPath(); sx.moveTo(TEAR[i][0] * pw / 580, TEAR[i][1] * ph / 660); sx.lineTo(TEAR[i + 1][0] * pw / 580, TEAR[i + 1][1] * ph / 660); sx.stroke(); } sx.restore(); glow(cx, cy + TEARY * ph / 660, 380, [255, 220, 150], leak * .6); }
+  } else {
+    const pivX = -pw / 2, pivY = TEARY;
+    glow(cx, cy + TEARY, 260 + 1100 * e, [255, 225, 160], .7 * (1 - .5 * e)); streak(cx, cy + TEARY, 1700, 90 + 60 * e, [255, 235, 190], .55 * (1 - e * .5));
+    sx.save(); sx.translate(cx + 14 * e, cy + 40 * e); sx.rotate(.02 + .04 * e); sx.save(); clipPiece(false); packBody(pw, ph * 1, t, u); sx.restore(); sx.restore();
+    sx.save(); sx.translate(cx - 130 * e, cy - 250 * e); sx.rotate(.02 - .34 * e); sx.save(); clipPiece(true); packBody(pw, ph, t, u); sx.restore(); sx.restore();
+    shafts(cx, cy + TEARY, -1.57, 14, 1500, [255, 235, 190], .22 * (1 - e * .55), t, 2.6);
+    gburst(cx, cy + TEARY, tear, 260, 71, 900, 1.8, [[255, 232, 168], [255, 190, 100], [255, 255, 255], [255, 140, 60]], 520, 30);
+  }
+  // cards leaving the pack, toward the lens
+  const sp = u - (B.spill - T.rip[0]);
+  if (sp > 0) for (let i = 0; i < 5; i++) {
+    const k = eo(cl((sp - i * .05) / .55)), pe = PULL[i], ang = -1.57 + (i - 2) * .42, dist = 120 + 700 * k, sx0 = cx + Math.cos(ang) * dist * 1.25, sy0 = cy + TEARY + Math.sin(ang) * dist * .75, s = .3 + 1.6 * k * k, a = (1 - sm(.55, 1.1, sp));
+    sx.save(); sx.translate(sx0, sy0); sx.rotate((i - 2) * .22 * k); sx.scale(s, s); sx.globalAlpha = a; glow(0, 0, 360, pe.edge, .5); rr(sx, -130, -170, 260, 340, 14); sx.fillStyle = "#08080b"; sx.fill(); sx.strokeStyle = rgba(pe.edge, .95); sx.lineWidth = 5; sx.stroke(); sx.fillStyle = rgba(pe.edge, .12); sx.fillRect(-120, -160, 240, 320); sx.restore();
+  }
+}
+
+/* ---------------------------------------------------------------- act 3: five pulls, each louder than the last */
+function pulls(t, u) {
+  let i = 0; for (let k = 0; k < 5; k++) if (t >= B.card[k]) i = k; const pe = PULL[i], lite = pe.tier < 2 ? pe.tint.map(c => c * .5) : pe.tint, c0 = B.card[i], dur = B.card[i + 1] - c0, v = t - c0, last = i === 4, dir = i % 2 ? -1 : 1;
+  const vs = last ? (v < .5 ? v : .5 + (v - .5) * .6) : v;                  // the last one runs in slow motion
+  const g = sx.createRadialGradient(CX - 300, CY, 60, CX - 300, CY, 1000); g.addColorStop(0, rgba(lite, .1 + .03 * pe.tier)); g.addColorStop(1, "rgba(3,3,5,1)"); sx.fillStyle = g; sx.fillRect(0, 0, W, H);
+  if (pe.tier >= 2) shafts(CX - 300, CY - 100, -1.57, 5 + pe.tier * 2, 1500, pe.tint, .03 + .01 * pe.tier + (last ? .03 : 0), t * (last ? .5 : 1), 2.4 + (last ? 1 : 0));
+  dust(t, 90, 31 + i, .6, lite);
+  const ent = eo(vs / .32), ex = ei((v - (dur - .17)) / .17), cxp = CX - 300 + dir * 900 * (1 - ent) - 1250 * ex, ryv = (1 - eo(vs / .38)) * 1.5, s = .6 + .4 * ent, ww = (last ? 600 : 540) * s * (1 + .045 * eo(vs / dur)), cyp = CY + 6 * Math.sin(t * 1.7 + i);
+  const opts = { ry: ryv, rot: dir * (1 - ent) * .22, glow: lite, ga: .3 + .1 * pe.tier, edge: pe.edge, sheen: vs > .3 && vs < 1.5 ? sm(.3, 1.5, vs) : null, sa: .24 };
+  if (ent < 1 || ex > 0) trail(IMG[pe.k], cxp, cyp, ww, opts, (ent < 1 ? -dir * (1 - ent) * 1200 : 1250 * ex * 3), 6);
+  card(IMG[pe.k], cxp, cyp, ww, opts);
+  // the words
+  const a = sm(.12, .42, vs) * (1 - ex), X0 = CX + 80, tr = 1 - eo(vs / .5);
+  txt(pe.rar, X0 - tr * 60, CY - 232, 30, pe.edge, { ls: 16, a, glow: last ? .6 : .0, gb: 28 });
+  let bar = ""; for (let q = 0; q < 7; q++) bar += q <= pe.tier ? "█" : "░"; txt(bar, X0 - tr * 60, CY - 186, 26, pe.edge, { ls: 6, a: a * .9 });
+  txt(pe.name, X0 - tr * 90, CY - 6, last ? 170 : 140, WHT, { a, glow: .3 + .1 * pe.tier, gc: pe.tint, gb: 44, ls: -4 });
+  const cnt = Math.round(mixv(0, pe.val, eo((vs - .25) / .8))); txt("worth " + money(cnt), X0 - tr * 60, CY + 90, 56, GRN, { a: a * sm(.25, .6, vs), glow: .35, gc: GRN, gb: 26 });
+  txt(fmt(pe.chars) + " characters", X0 - tr * 60, CY + 150, 28, DIM, { ls: 4, a: a * sm(.4, .8, vs) });
+  if (last) {                                                               // the Mythic: embers, a red pulse and a glitch on the name
+    const pls = .5 + .5 * Math.sin(v * 5); glow(CX - 300, CY, 1000, [255, 60, 40], .05 + .05 * pls); gburst(CX - 300, CY + 300, v + 1.5, 120, 77, 40, 3.4, [[255, 160, 70], [255, 100, 50], [255, 220, 150]], -90, 22);
+    if (v > .55 && v < .95) { const gl = Math.floor(v * 30); for (let q = 0; q < 3; q++) { const yy = CY - 110 + hash(q, gl, 5) * 150, dx = (hash(q, gl, 6) - .5) * 40; sx.save(); sx.beginPath(); sx.rect(X0 - 40, yy, 900, 22); sx.clip(); txt(pe.name, X0 - 90 * tr + dx, CY - 6, 170, [255, 80, 80], { a: .6, ls: -4 }); sx.restore(); } }
+    streak(CX - 300, CY, 1400, 60, [255, 120, 80], .4 * sm(.3, .6, v) * (1 - sm(1.4, 3, v)));
+  }
+  // running total
+  let tot = 0; for (let k = 0; k <= i; k++) { const kv = t - B.card[k]; tot += PULL[k].val * (k < i ? 1 : eo((kv - .25) / .8)); }
+  const ha = 1 - sm(dur - .3, dur, v) * (last ? 1 : 0);
+  txt("PULLED SO FAR", 110, FY0 + 62, 20, DIM, { ls: 8, a: .9 }); txt(money(tot), 110, FY0 + 128, 62, INK, { a: .95, glow: .15 });
+  txt(`${i + 1} / 5`, W - 110, FY0 + 62, 20, DIM, { al: "right", ls: 8 });
+}
+
+/* ---------------------------------------------------------------- act 4: the run, the sell, the profit */
+const MKEYS = [[0, 0], [.1, .03], [.19, -.02], [.27, .06], [.34, -.13], [.43, .2], [.52, .46], [.6, .33], [.67, .6], [.78, .84], [.9, .98], [1, 1.0253]];
+const lg = x => { x = cl(x); let k = 1; while (k < MKEYS.length - 1 && x > MKEYS[k][0]) k++; const a = MKEYS[k - 1], b = MKEYS[k], f = (x - a[0]) / (b[0] - a[0]), q = f * f * (3 - 2 * f); return mixv(a[1], b[1], q * .8 + f * .2) + (fbm(x * 38, 8) - .5) * .06 * (.3 + x) * (x > .985 ? 0 : 1); };
+const CHART = { l: 900, r: 1780, t: FY0 + 150, b: FY1 - 120 }, BASE = 700;
+const cxp = x => mixv(CHART.l, CHART.r, x), cyp = L => mixv(CHART.b, CHART.t, cl((L + .18) / 1.3));
+function market(t, u) {
+  const g = sx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#06080a"); g.addColorStop(1, "#020304"); sx.fillStyle = g; sx.fillRect(0, 0, W, H);
+  const xh = cl((u - .3) / 5.6), xe = eio(xh * .85 + xh * xh * .15), L = lg(xe), mult = Math.pow(10, L), price = BASE * mult, pct = (mult - 1) * 100, hot = sm(.25, 1, xe), sold = t >= B.sold, ds = sold ? sm(0, .5, t - B.sold) : 0;
+  glow(CX + 400, CY, 1200, mult > 1 ? [40, 140, 80] : [140, 50, 50], .07 + .13 * hot);
+  const pr = PULL[2]; card(IMG.shogun, 440, CY + 8 * Math.sin(u * 1.6), 400, { glow: pr.tint, ga: .35 + .25 * hot, edge: pr.edge, rot: -.04 + .02 * Math.sin(u), sheen: (u * .4) % 1.8 > 1.2 ? null : ((u * .4) % 1.8) / 1.2, sa: .16 });
+  txt("SHOGUN", 440, CY + 350, 34, WHT, { al: "center", ls: 12, a: 1 - ds * .6 }); txt("THE RARE YOU PULLED", 440, CY + 388, 18, DIM, { al: "center", ls: 8, a: 1 - ds * .6 });
+  sx.save(); sx.globalAlpha = 1 - ds * .78;
+  for (const [m, s] of [[1, "$7"], [2, "$14"], [4, "$28"], [8, "$56"]]) { const y = cyp(Math.log10(m)); sx.strokeStyle = m === 1 ? "rgba(255,255,255,.16)" : "rgba(255,255,255,.07)"; sx.lineWidth = 1; sx.setLineDash(m === 1 ? [10, 8] : []); sx.beginPath(); sx.moveTo(CHART.l, y); sx.lineTo(CHART.r, y); sx.stroke(); sx.setLineDash([]); txt(s, CHART.r + 16, y + 6, 20, [110, 110, 116], { w: 500 }); }
+  const N = 260, pts = []; for (let i = 0; i <= N * xe; i++) { const x = i / N; pts.push([cxp(x), cyp(lg(x))]); } if (pts.length < 2) pts.push([cxp(0), cyp(0)], [cxp(.001), cyp(0)]); const hd = pts[pts.length - 1];
+  const fg = sx.createLinearGradient(0, CHART.t, 0, CHART.b); fg.addColorStop(0, "rgba(120,230,150,.22)"); fg.addColorStop(1, "rgba(120,230,150,0)"); sx.beginPath(); sx.moveTo(pts[0][0], CHART.b); for (const p of pts) sx.lineTo(p[0], p[1]); sx.lineTo(hd[0], CHART.b); sx.closePath(); sx.fillStyle = fg; sx.fill();
+  const seg = (a, b, c, lw) => { sx.strokeStyle = c; sx.lineWidth = lw; sx.lineJoin = "round"; sx.beginPath(); sx.moveTo(pts[a][0], pts[a][1]); for (let i = a + 1; i <= b; i++) sx.lineTo(pts[i][0], pts[i][1]); sx.stroke(); };
+  sx.save(); sx.globalCompositeOperation = "lighter"; for (const [lw, al] of [[22, .07], [10, .18]]) seg(0, pts.length - 1, `rgba(110,240,150,${al})`, lw); sx.restore(); seg(0, pts.length - 1, "rgb(150,255,185)", 4);
+  const dn = pts.length > 8 && pts[pts.length - 1][1] > pts[pts.length - 8][1]; sx.save(); sx.globalCompositeOperation = "lighter"; glow(hd[0], hd[1], 90 + 60 * hot, dn ? [255, 90, 80] : [140, 255, 180], .9); sx.restore();
+  sx.fillStyle = "#fff"; sx.beginPath(); sx.arc(hd[0], hd[1], 8, 0, 6.283); sx.fill(); sx.restore();
+  // price tag and the big percent
+  const tag = money(price), tx = Math.min(hd[0] + 22, CHART.r - 150), ty = hd[1];
+  sx.save(); sx.globalAlpha = 1 - ds; rr(sx, tx, ty - 30, 188, 52, 10); sx.fillStyle = dn ? "rgba(255,90,80,.2)" : "rgba(110,240,150,.2)"; sx.fill(); sx.strokeStyle = dn ? "rgba(255,120,110,.8)" : "rgba(130,255,170,.8)"; sx.lineWidth = 2; sx.stroke(); sx.restore();
+  txt(tag, tx + 94, ty + 8, 32, WHT, { al: "center", a: 1 - ds });
+  txt((pct >= -.5 ? "+" : "−") + fmt(Math.abs(pct)) + "%", CHART.r, CHART.t - 22, 100, pct >= 0 ? GRN : RED, { al: "right", a: (1 - ds) * sm(.2, .6, u), glow: .3 * hot, gc: GRN, gb: 50, ls: -4 });
+  txt("SIMULATED MARKET", CHART.l, CHART.t - 40, 20, DIM, { ls: 10, a: 1 - ds }); txt("an illustration of how a run can go", CHART.l, CHART.t - 12, 18, [90, 90, 96], { a: 1 - ds, w: 500 });
+  if (xe > .62) gburst(hd[0], hd[1], u * 1.3, 40, 91, 220, 1.4, [[150, 255, 185], [255, 255, 255], [110, 220, 150]], -120 + 400, 20);
+  // the sell button, the cursor, the click
+  const bx = CHART.r - 280, by = FY1 - 108, bw = 280, bh = 70, ba = sm(B.peak - T.market[0] - .05, B.peak - T.market[0] + .3, u), cu = u - (B.click - T.market[0]), press = cu > -.06 && cu < .14 ? 1 : 0;
+  if (ba > 0 && ds < .98) { sx.save(); sx.globalAlpha = ba * (1 - ds); rr(sx, bx + press * 3, by + press * 4, bw - press * 6, bh - press * 6, 16); sx.fillStyle = press ? "#c9c5bb" : "#ece7dc"; sx.fill(); txt("SELL · " + money(Math.floor(price * .9)), bx + bw / 2, by + 46, 28, [5, 5, 6], { al: "center", ls: 3 }); sx.restore(); }
+  if (ba > 0 && cu < .5) { const k = eio(cl((u - (B.peak - T.market[0])) / (B.click - B.peak - .02))), cx0 = mixv(CHART.r - 60, bx + bw * .62, k), cy0 = mixv(FY1 - 10, by + bh * .66, k); sx.save(); sx.globalAlpha = ba; sx.fillStyle = "#fff"; sx.strokeStyle = "#000"; sx.lineWidth = 2; sx.translate(cx0, cy0); sx.beginPath(); sx.moveTo(0, 0); sx.lineTo(0, 30); sx.lineTo(8, 23); sx.lineTo(14, 36); sx.lineTo(19, 34); sx.lineTo(13, 21); sx.lineTo(23, 21); sx.closePath(); sx.fill(); sx.stroke(); sx.restore(); }
+  if (cu > 0 && cu < .5) { sx.save(); sx.strokeStyle = rgba([255, 255, 255], 1 - cu * 2); sx.lineWidth = 3; sx.beginPath(); sx.arc(bx + bw * .62, by + bh * .66, 8 + cu * 160, 0, 6.283); sx.stroke(); sx.restore(); }
+  if (sold) {                                                                // the profit
+    const v = t - B.sold, a = sm(0, .22, v), pop = back(v / .5);
+    sx.save(); sx.globalAlpha = a * .86; sx.fillStyle = "#020304"; sx.fillRect(0, FY0, W, FH); sx.restore(); glow(CX, CY, 1000, [60, 220, 120], .22 * a);
+    sx.save(); sx.translate(CX, CY - 30); sx.scale(.6 + .4 * pop, .6 + .4 * pop); txt("+$59.78", 0, 70, 250, GRN, { al: "center", a, glow: .6, gc: GRN, gb: 70, ls: -8 }); sx.restore();
+    txt("PROFIT FROM A FREE PACK", CX, CY - 150, 28, DIM, { al: "center", ls: 12, a: a * sm(.1, .4, v) });
+    txt("bought " + money(700) + "   ·   sold " + money(6678) + "   ·   after the 10% fee", CX, CY + 130, 32, INK, { al: "center", a: sm(.35, .8, v), w: 500 });
+    txt("+854%", CX, CY + 204, 64, WHT, { al: "center", a: sm(.5, .9, v), glow: .25, gc: GRN });
+    gburst(CX, CY - 40, v, 150, 93, 760, 2.4, [[150, 255, 185], [255, 255, 255], [255, 226, 168]], 700, 34);
+  }
+  dust(t, 40, 41, .35, [170, 255, 200]);
+}
+
+/* ---------------------------------------------------------------- act 5: the offer, and a dive back into the letters so it loops */
+function cta(t, u) {
+  sx.fillStyle = "#030304"; sx.fillRect(0, 0, W, H); const hotK = sm(1.1, 1.3, u) * (1 - sm(3.6, 4.6, u)), ss = u < 1.2 ? 0 : u - 1.2;
+  glow(CX, CY + 40, 1300, [255, 150, 60], .04 + .07 * sm(.3, 1.4, u)); shafts(CX, FY0 - 60, 1.57, 11, 1400, [255, 200, 130], .03 * sm(1, 2, u), t, 2.6);
+  const dive = sm(4.75, 6.4, u), zoom = Math.exp(Math.log(34) * eio(dive)), ox0 = CX, oy0 = 700, fd = 1 - sm(5.45, 6.05, u);
+  sx.save(); sx.translate(ox0, oy0); sx.scale(zoom, zoom); sx.translate(-ox0, -oy0);
+  txt("STIXX", CX, 292, 40, DIM, { al: "center", ls: 28, a: sm(.05, .4, u) * fd });
+  const l1 = "FIRST PACK"; for (let i = 0; i < l1.length; i++) { const lu = u - (.35 + i * .045), k = back(lu / .24), a = cl(lu / .06); if (lu < 0) continue; const x = CX - 450 + i * 90 + 45; txt(l1[i], x, 470 + (1 - cl(k)) * 70 + (lu < .1 ? hash(i, Math.floor(t * 30), 3) * 14 : 0), 150 * (.7 + .3 * k), WHT, { al: "center", a: a * fd, glow: .3, gc: AMB, gb: 30 }); }
+  const lu2 = u - 1.1, k2 = back(lu2 / .3); if (lu2 > 0) { const l2 = "FREE."; sx.save(); sx.translate(CX, 700); const sc = .55 + .45 * Math.min(1.12, k2); sx.scale(sc, sc); txt(l2, 0, 120, 330, [255, 226, 168], { al: "center", a: cl(lu2 / .05) * fd, glow: .8 * hotK + .35, gc: AMB, gb: 90, ls: -8 }); sx.restore(); }
+  if (u > 1.1) streak(CX - 1000 + ss * 2400, 740, 900, 80, [255, 220, 150], .6 * (1 - sm(.1, 1.0, ss)) * fd);
+  txt("tap the link. rip your first pack.", CX, 906, 34, INK, { al: "center", a: sm(2.1, 2.7, u) * fd, w: 500, ls: 3 });
+  sx.restore();
+  const fa = sm(5.3, 6.35, u); if (fa > 0) { glow(CX, CY, 1100, [255, 150, 50], .2 * fa + .18 * fa); field(ZMAX, fa); }
+  dust(t, 60, 51, .5, [255, 200, 130]);
+}
+
+/* ---------------------------------------------------------------- lens, grade, bars */
+const VIG = new Float32Array(W * H), NOI = new Uint8Array(512 * 512); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const dx = (x - CX) / CX, dy = (y - CY) / (CY * 1.25), r = Math.sqrt(dx * dx * .7 + dy * dy); VIG[y * W + x] = 1 - .62 * Math.pow(Math.min(1, r * .78), 2.3); } for (let i = 0; i < NOI.length; i++) NOI[i] = Math.floor(hash(i, 7, 70) * 255);
+const CURVE = Uint8Array.from({ length: 256 }, (_, i) => { let x = i / 255; x = x < .7 ? x : .7 + (x - .7) * .62; const s = x * x * (3 - 2 * x); return Math.round(255 * (x * .66 + s * .34)); });       // a gentle contrast curve with the highlights rolled off, so a bright card keeps its colour
+function lens(t, hit, flash, blurPx) {
+  const id = ox.getImageData(0, FY0, W, FH), d = id.data, ca = 5 + hit * 11, gk = 11 + hit * 7, ngo = Math.floor(hash(Math.floor(t * 30), 1, 71) * 512), ngy = Math.floor(hash(Math.floor(t * 30), 2, 71) * 512), src = new Uint8ClampedArray(d);
+  for (let y = 0; y < FH; y++) {
+    const row = y * W, nrow = (((y >> 1) + ngy) & 511) * 512, gy = y + FY0;
+    for (let x = 0; x < W; x++) {
+      const i = (row + x) * 4, sh = ((x - CX) / CX) * ca, xr = Math.min(W - 1, Math.max(0, Math.round(x + sh))), xb = Math.min(W - 1, Math.max(0, Math.round(x - sh))), m = VIG[gy * W + x], n = (NOI[nrow + (((x >> 1) + ngo) & 511)] - 127.5) / 127.5 * gk;
+      let r = src[(row + xr) * 4], g = src[i + 1], b = src[(row + xb) * 4 + 2]; const l = (r * .3 + g * .59 + b * .11) / 255, sd = 1 - l, hl = l * l;
+      r = CURVE[Math.min(255, Math.max(0, (r + hl * 12 - sd * 4) * m + n) | 0)]; g = CURVE[Math.min(255, Math.max(0, (g + hl * 3 + sd * 2) * m + n) | 0)]; b = CURVE[Math.min(255, Math.max(0, (b - hl * 10 + sd * 9) * m + n) | 0)];
+      d[i] = r; d[i + 1] = g; d[i + 2] = b;
+    }
+  }
+  ox.putImageData(id, 0, FY0);
+}
+const CAPS = [[.9, 4.6, "EVERY CARD IS MADE OF LETTERS"], [5.9, 9.6, "YOUR FIRST PACK IS FREE"], [11.0, 19.0, "FIVE CARDS  ·  FIVE RARITIES"], [19.9, 21.3, "THEN THE MARKET MOVES"], [28.0, 33.0, "PLAY MONEY  ·  SIMULATED MARKET  ·  18+"]];
+const TICK = ["anon_3071 bought $2,140 SHOGUN", "anon_8842 bought $610 SHOGUN", "anon_1190 sold $320 SHOGUN", "anon_5517 bought $4,900 SHOGUN", "anon_2260 bought $1,370 SHOGUN", "anon_9034 bought $8,200 SHOGUN", "anon_4418 sold $250 SHOGUN", "anon_7761 bought $3,050 SHOGUN"];
+function bars(t) {
+  ox.fillStyle = "#000"; ox.fillRect(0, 0, W, BAR); ox.fillRect(0, FY1, W, BAR);
+  const topA = (1 - sm(T.cta[0] + 4.9, T.cta[0] + 5.7, t)) * sm(.1, .6, t);
+  ox.save(); ox.globalAlpha = topA; ox.textBaseline = "alphabetic"; ox.font = `700 28px ${FONT}`; ox.letterSpacing = "10px"; ox.fillStyle = rgb(INK); ox.textAlign = "left"; ox.fillText("STIXX", 110, 84);
+  ox.font = `500 17px ${FONT}`; ox.letterSpacing = "6px"; ox.fillStyle = rgb(DIM); ox.textAlign = "right"; ox.fillText("PLAY MONEY · SIMULATED MARKET · 18+", W - 110, 80); ox.restore();
+  ox.save(); ox.textAlign = "center"; ox.textBaseline = "alphabetic"; ox.letterSpacing = "14px";
+  for (const [a, b, s] of CAPS) { if (t < a || t > b) continue; const n = Math.floor((t - a) * 34), ts = s.slice(0, Math.min(s.length, n)), al = sm(a, a + .2, t) * (1 - sm(b - .3, b, t)); ox.globalAlpha = al; ox.font = `600 26px ${FONT}`; ox.fillStyle = rgb(INK); ox.fillText(ts + (n < s.length && Math.floor(t * 8) % 2 ? "▌" : ""), CX + 7, FY1 + 78); }
+  if (t > T.market[0] + 1.5 && t < B.peak + .5) { const sp = 640, off = (t - T.market[0]) * 300, n0 = Math.floor(off / sp); ox.letterSpacing = "2px"; ox.font = `500 20px ${FONT}`; ox.textAlign = "left"; ox.globalAlpha = .8 * sm(T.market[0] + 1.5, T.market[0] + 2, t) * (1 - sm(B.peak, B.peak + .5, t));
+    for (let i = 0; i < 5; i++) { const q = TICK[(n0 + i) % TICK.length], x = i * sp - (off % sp) + 60; ox.fillStyle = /sold/.test(q) ? rgb(RED) : rgb(GRN); ox.fillText(q, x, FY1 + 78); } }
+  ox.restore();
+}
+
+/* ---------------------------------------------------------------- one frame */
+const SCENES = { macro, rip, pulls, market, cta };
+function actAt(t) { for (const k of Object.keys(T)) if (t >= T[k][0] && t < T[k][1]) return k; return "cta"; }
+function render(t) {
+  t = Math.max(0, Math.min(DUR - 1 / FPS / 2, t)); const act = actAt(t), u = t - T[act][0], hit = hitAt(t);
+  sx.setTransform(1, 0, 0, 1, 0, 0); sx.globalAlpha = 1; sx.shadowBlur = 0; sx.globalCompositeOperation = "source-over"; sx.filter = "none"; sx.fillStyle = "#030304"; sx.fillRect(0, 0, W, H); SCENES[act](t, u);
+  // camera: a slow push through each act, a kick on every hit
+  let zm = 1, roll = 0, py = 0; if (act === "macro") zm = 1 + .012 * u; if (act === "rip") { zm = 1 + .1 * eo(u / 3.4); roll = .006 * Math.sin(u * .7); } if (act === "pulls") zm = 1 + .035 * (u % 1.3) / 1.3 + (t > B.card[4] ? .07 * eo((t - B.card[4]) / 3.8) : 0); if (act === "market") zm = 1 + .05 * eo(u / 5.9) + .02 * hit; if (act === "cta") zm = 1 + .01 * eo(u / 3);
+  zm += .022 * hit; const shk = hit * 9 + (act === "rip" && u > 3.3 && u < 3.75 ? (u - 3.3) * 14 : 0), sxo = (hash(Math.floor(t * 30), 1, 80) - .5) * 2 * shk, syo = (hash(Math.floor(t * 30), 2, 80) - .5) * 2 * shk;
+  const blur = act === "macro" ? BLUR0 * (1 - sm(0, 2.6, u)) : act === "cta" ? BLUR0 * sm(5.2, 6.4, u) : 0;
+  ox.setTransform(1, 0, 0, 1, 0, 0); ox.globalCompositeOperation = "source-over"; ox.globalAlpha = 1; ox.filter = "none"; ox.fillStyle = "#000"; ox.fillRect(0, 0, W, H);
+  ox.save(); ox.translate(CX + sxo, CY + syo); ox.rotate(roll); ox.scale(zm, zm); ox.translate(-CX, -CY); ox.imageSmoothingQuality = "high"; if (blur > .3) ox.filter = `blur(${blur.toFixed(1)}px)`; ox.drawImage(S, 0, 0); ox.restore(); ox.filter = "none";
+  // bloom and anamorphic streaks, added back on top
+  b1.clearRect(0, 0, 480, 270); b1.drawImage(O, 0, 0, 480, 270); b2.clearRect(0, 0, 120, 68); b2.drawImage(B1, 0, 0, 120, 68); k1.clearRect(0, 0, 24, H); k1.drawImage(O, 0, 0, 24, H); k2.clearRect(0, 0, 96, H); k2.drawImage(O, 0, 0, 96, H);
+  const md = b2.getImageData(0, 0, 120, 68).data; let ml = 0; for (let i = 0; i < md.length; i += 16) ml += (md[i] * .3 + md[i + 1] * .59 + md[i + 2] * .11) / 255; ml /= md.length / 16; const bk = cl(1.3 - 2.6 * ml, .18, 1);      // bloom backs off when the picture is already bright
+  ox.globalCompositeOperation = "lighter"; ox.globalAlpha = .5 * bk; ox.drawImage(B1, 0, 0, W, H); ox.globalAlpha = .55 * bk; ox.drawImage(B2, 0, 0, W, H); ox.globalAlpha = (.2 + .12 * hit) * bk; ox.drawImage(K1, 0, 0, W, H); ox.globalAlpha = .14 * bk; ox.drawImage(K2, 0, 0, W, H); ox.globalAlpha = 1; ox.globalCompositeOperation = "source-over";
+  let flash = hit * .16; if (act === "rip" && t > B.cut) flash += sm(B.cut, T.rip[1] - .01, t) * .8; if (act === "pulls" && t < T.pulls[0] + .14) flash += (1 - (t - T.pulls[0]) / .14) * .8; if (t > B.sold && t < B.sold + .25) flash += (1 - (t - B.sold) / .25) * .8;
+  if (flash > .004) { ox.fillStyle = `rgba(255,248,235,${Math.min(1, flash)})`; ox.fillRect(0, FY0, W, FH); }
+  lens(t, hit, flash, blur); bars(t);
+  if (t < .05) { /* the first frame is the loop's last frame */ }
+}
+const EV = [];                                                          // the score's cues: kind, time, amount, a parameter
+const ev = (k, t, a, p) => EV.push({ k, t, a: a == null ? 1 : a, p: p == null ? 0 : p });
+for (const h of HEART) ev("heart", h, 1);
+ev("riser", 0.0, 1, B.land); ev("boom", B.land, 1.25); ev("whoosh", T.rip[0], .9); ev("hit", T.rip[0], .8);
+ev("dust", T.rip[0] + .4, 1, B.drop - T.rip[0] - .4); ev("drop", B.drop, 1, B.tear - B.drop); ev("rip", B.tear, 1); ev("boom", B.tear, 1.5); ev("sparkle", B.tear + .1, 1, 1.9); ev("whoosh", B.spill, .8); ev("whoosh", B.cut, 1);
+const NOTE = [293.66, 349.23, 440, 523.25, 587.33];
+PULL.forEach((p, i) => { ev("flip", B.card[i], .55 + .12 * i); ev("note", B.card[i] + .1, .7 + .1 * i, NOTE[i]); ev("hit", B.card[i], .5 + .22 * i); });
+ev("riser", B.card[4] - 1.2, .8, 1.2); ev("boom", B.card[4], 1.9); ev("choir", B.card[4], 1, 3.6); ev("sparkle", B.card[4] + .3, .8, 3);
+ev("arp", T.market[0] + .3, 1, B.peak - T.market[0] - .3); ev("dropout", B.peak - .05, 1, B.click - B.peak + .05); ev("click", B.click, 1); ev("cash", B.sold, 1.2); ev("boom", B.sold, 1.2); ev("whoosh", B.sold + .02, .8);
+ev("heart", B.cta + .02, 1); ev("heart", B.cta + .32, 1);
+for (let i = 0; i < 10; i++) ev("slam", B.cta + .35 + i * .045, .45, i);
+ev("hit", B.cta + .38, .9); ev("boom", B.cta + 1.1, 1.6); ev("sweep", B.cta + 1.2, 1); ev("riser", B.cta + 4.1, 1, 2.25); ev("whoosh", B.cta + 4.75, .9);
+window.TL = { dur: DUR, fps: FPS, T, B, EV, HITS, PULL: PULL.map(p => ({ tier: p.tier })) };
+window.renderAt = t => { render(t); return true; };
+window.frameJpeg = (t, q) => { render(t); return O.toDataURL("image/jpeg", q || .94); };
+window.READY = (async () => {
+  await document.fonts.load(`700 40px "JetBrains Mono"`); await document.fonts.load(`500 20px "JetBrains Mono"`); await document.fonts.load(`600 20px "JetBrains Mono"`);
+  await Promise.all(KEYS.map(async k => { IMG[k] = await loadImg("../cards/" + k + ".jpg"); })); GRID = readGrid(IMG.umbra, 1578000); render(0); return true;
+})();
+</script>

@@ -4,7 +4,18 @@ Vertical teasers in the app's ASCII style. Nothing in them is a screen recording
 `ad.html`, pushed through a pixel pass (tear, RGB split, grain, scanlines, bloom, shake) and handed to ffmpeg. The soundtrack is
 synthesised by `audio.py` from the same timeline, so every hit lands on its picture.
 
-## Take four (current, for the public beta): `stixx-teaser-4.mp4`, 48.9 s
+## "Letters": `stixx-cinematic.mp4`, 1920x1080 landscape, 33.7 s, with a synthesised score (`ad2.html`, `audio2.py`, `make_ad2.sh`)
+A second film from a new engine, built to be watched with the sound on and hard to scroll past. Letterboxed to 2.35:1 with a lens (bloom,
+anamorphic streaks, colour fringing, a teal-and-amber grade, vignette, grain). The retention shape:
+1. 0-5 s, the hook: the camera pulls back out of the 1,578,000 letters of the Umbra card until the picture appears (a question the viewer wants answered)
+2. 5-10 s, one pack, a breath of near-silence, the tear in slow motion
+3. 10-19 s, five pulls, each louder than the last, rising notes, a Mythic last; a running total keeps counting
+4. 19-27 s, a card from that pack runs in the simulated market, the sell, the profit after the 10% fee (illustrative, and under the card's real 12x ceiling)
+5. 27-34 s, "first pack free", then a dive into the letters that lands on the first frame, so the film loops
+Captions sit in the letterbox for muted viewing, and "play money · simulated market · 18+" stays on screen throughout. `render.js` takes `AD_FILE`,
+`AD_W` and `AD_H` to render it. `make_ad2.sh <outdir>` makes the whole thing again (about two minutes).
+
+## Take four (current vertical film, for the public beta): `stixx-teaser-4.mp4`, 48.9 s
 Take three with the words changed for launch: "first pack free. tap the link." on the end card (and "nothing to pay. it's play money."),
 "play money · simulated market" under the action instead of "demo mode", and `?url=` (or `url:stixx.example` as the render argument) to put the
 game's address on the end card. Same pictures, same sound. `make_variants.py` cuts it into three hook variants for testing
