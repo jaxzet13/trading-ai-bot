@@ -31,7 +31,9 @@ def put(bus_l, bus_r, at, sig, pan=0.0, gain=1.0):
     bus_l[max(i, 0):j] += seg * (1 - max(0, pan)); bus_r[max(i, 0):j] += seg * (1 + min(0, pan))
 def fx(at, sig, pan=0.0, gain=1.0, send=0.0):
     put(SL, SR_, at, sig, pan, gain)
-    if send: i = int(at * SR); j = min(N, i + len(sig)); RV[i:j] += sig[:j - i] * gain * send
+    if send:
+        i = max(0, int(at * SR)); j = min(N, int(at * SR) + len(sig)); k0 = i - int(at * SR)
+        if j > i: RV[i:j] += sig[k0:k0 + j - i] * gain * send
 
 # ------------------------------------------------------------------ sounds
 def thump(amp, f0=95, f1=42, dec=.11):

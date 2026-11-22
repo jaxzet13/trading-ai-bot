@@ -1,0 +1,151 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>STIXX: the collection</title>
+<link rel="stylesheet" href="../src/style.css">
+<style>
+html, body { margin: 0; background: #000; overflow: hidden; }
+#stage { position: relative; width: 540px; height: 960px; overflow: hidden; background: var(--bg); }
+#cam { position: absolute; inset: 0; transform-origin: 50% 40%; }
+header.top { position: absolute; left: 0; right: 0; top: 0; }
+.btabs { position: absolute; }
+#screen { position: absolute; left: 0; right: 0; top: 54px; bottom: 0; padding: 0 16px; }
+.hud { display: grid; grid-template-columns: 1fr 150px; gap: 8px 10px; align-items: end; padding: 14px 0 6px; height: 158px; box-sizing: border-box; }
+.hbig { font-size: 52px; font-weight: 800; letter-spacing: -.035em; line-height: 1; color: var(--ok); font-variant-numeric: tabular-nums; margin: 6px 0 10px; white-space: nowrap; }
+.hsub { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; white-space: nowrap; } .hsub .small { font-size: 12.5px; }
+#hchart { width: 150px; height: 84px; overflow: visible; } #hchart .l { fill: none; stroke: var(--ok); stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; } #hchart .f { fill: url(#hg); stroke: none; }
+.listhead { display: flex; justify-content: space-between; align-items: baseline; height: 34px; border-bottom: 1px solid var(--ln); padding-top: 4px; box-sizing: border-box; } .listhead h3 { font-size: 15px; font-weight: 700; } .listhead .small { font-size: 12px; }
+#rows { position: relative; height: 600px; }
+.crow { position: absolute; left: 0; right: 0; height: 60px; min-height: 0; padding: 0 2px; will-change: transform; overflow: hidden; background: var(--bg); }
+.crow .glow { position: absolute; inset: 0; pointer-events: none; }
+.crow > :not(.glow) { position: relative; }
+.thumb { width: 42px; height: 52px; }
+.cmain .nm { font-size: 15.5px; } .cmain .sub { font-size: 11.5px; } .cval b { font-size: 15.5px; }
+#fx { position: absolute; inset: 0; pointer-events: none; }
+#vig { position: absolute; inset: 0; background: radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(0,0,0,.55)); }
+#grain { position: absolute; inset: 0; mix-blend-mode: overlay; opacity: .09; }
+#flash { position: absolute; inset: 0; background: #fff6e6; opacity: 0; }
+.pt { position: absolute; font-family: var(--m); font-weight: 700; color: var(--ok); text-shadow: 0 0 10px rgba(159,216,166,.6); opacity: 0; }
+#end { position: absolute; inset: 0; background: #040405; opacity: 0; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center; padding: 0 34px; }
+#end .e1 { font-family: var(--m); font-weight: 800; font-size: 56px; letter-spacing: -.04em; line-height: .98; color: var(--ink); }
+#end .e2 { font-family: var(--m); font-weight: 800; font-size: 96px; letter-spacing: -.05em; line-height: .9; color: #ffe2a8; text-shadow: 0 0 40px rgba(255,190,100,.45); }
+#end .e3 { font-size: 17px; color: var(--ink); font-weight: 500; } #end .e4 { font-size: 11.5px; color: var(--dim); max-width: 440px; line-height: 1.55; position: absolute; bottom: 46px; }
+</style>
+<div id="stage">
+  <div id="cam">
+    <header class="top"><div class="wrap"><a class="logo">STIXX</a><div class="wallet"><button class="chip ready" style="color:var(--ok)"><i></i>free pack</button><span class="bal">$18.50</span></div></div></header>
+    <div id="screen">
+      <div class="hud"><div><span class="label">Your profit</span><div id="hbig" class="hbig">+$7.04</div><div class="hsub"><span id="hpill" class="pill up">▲ 3.6%</span><span id="hcap" class="small">since you started</span></div></div>
+        <svg id="hchart" viewBox="0 0 150 84"><defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd8a6" stop-opacity=".35"/><stop offset="1" stop-color="#9fd8a6" stop-opacity="0"/></linearGradient></defs><path id="hfill" class="f"/><path id="hline" class="l"/><circle id="hdot" r="4" fill="#fff"/></svg></div>
+      <div class="listhead"><h3>Your cards</h3><span class="small" id="lcap">10 cards</span></div>
+      <div id="rows"></div>
+    </div>
+    <nav class="btabs"><a href="#"><svg viewBox="0 0 24 24"><path d="M7 3h10v18H7z"/><path d="M7 7l1.700-1.600L10.300 7l1.700-1.600L13.700 7l1.700-1.600L17 7"/><path d="M10 12h4M10 15h3"/></svg><span>pack</span></a><a href="#"><svg viewBox="0 0 24 24"><rect x="8" y="3" width="11" height="15" rx="2"/><path d="M5 7v12a2 2 0 002 2h9"/></svg><span>cards</span></a><a href="#"><svg viewBox="0 0 24 24"><path d="M3 18l5-6 4 3 8-10"/><path d="M15 5h5v5"/></svg><span>market</span></a><a href="#"><svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="1.500"/><path d="M12 9v11M3 9h18M12 9c-2.500 0-4-1-4-2.500S10 4 12 9M12 9c2.500 0 4-1 4-2.500S14 4 12 9"/></svg><span>invite</span></a><a href="#" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.500 21c.7-4 3.800-6 7.500-6s6.800 2 7.500 6"/></svg><span>me</span></a></nav>
+  </div>
+  <div id="fx"><div id="pts"></div><div id="vig"></div><svg id="grain" width="540" height="960"><filter id="gf"><feTurbulence id="gt" type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="1"/><feColorMatrix type="saturate" values="0"/></filter><rect width="540" height="960" filter="url(#gf)"/></svg><div id="flash"></div>
+    <div id="end"><div class="e1">your first pack</div><div class="e2">FREE.</div><div class="e3">tap the link and rip it open</div><div class="e4">An illustration of one lucky collection in the simulated market. Play money, 18+. On average a pack sells back for about 89% of its price, so most collections do not look like this.</div></div></div>
+</div>
+<script>
+/* ============================================================================================================================================
+   STIXX "Up", a 27 second phone-screen film: your collection, ten cards, and what a lucky run looks like in the simulated market. It is drawn from the
+   app's own stylesheet and pictures, but the prices are scripted here (the app's own market can't be told what to do): each card follows a path with
+   pullbacks and a little noise, and every card stays under the ceiling the app gives it (Reaper 5x, Grimm 10x, Ronin 16x, Shogun 12x, Liftoff 14x, Null 16x,
+   Stitch and Brick 40x). Two cards fall (Phantom, Ignition), as cards do. The profit starts at +$7.04 and ends at +$752.38. The film says on screen that
+   it is an illustration of a lucky collection, play money, and that a pack sells back for about 89% of its price on average.
+   ========================================================================================================================================== */
+const FPS = 30, DUR = 26.6, STEP = .4, LOCK = 19.2, END0 = 23.0, START_PROFIT = 704, END_PROFIT = 75238;
+const hash = (a, b, c) => { let h = Math.imul(a | 0, 374761393) ^ Math.imul(b | 0, 668265263) ^ Math.imul((c || 0) | 0, 2147483647); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+const cl = (x, a, b) => { a = a == null ? 0 : a; b = b == null ? 1 : b; return x < a ? a : x > b ? b : x; };
+const sm = (a, b, x) => { x = cl((x - a) / (b - a)); return x * x * (3 - 2 * x); };
+const mix = (a, b, k) => a + (b - a) * k, eo = x => 1 - Math.pow(1 - cl(x), 3);
+const $ = id => document.getElementById(id);
+// cents -> text, the way the app writes a price that moves (more decimals for a small number)
+const moneyS = c => { const a = Math.abs(c) / 100, d = a >= 1 ? 2 : a >= .1 ? 3 : 4; return (c < 0 ? "-$" : "$") + a.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
+const money = c => (c < 0 ? "-$" : "$") + (Math.abs(c) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pillHTML = p => { const up = p > .0005, dn = p < -.0005, a = Math.abs(p * 100); return [up ? "up" : dn ? "dn" : "fl", `${up ? "▲" : dn ? "▼" : "–"} ${a >= 100 ? Math.round(a).toLocaleString("en-US") : a.toFixed(1)}%`]; };
+
+// the ten cards: the app's real base worths (cents) and ceilings. keys are [seconds, log10 of the price multiple]; the last key is where each one ends
+const C = [
+  { id: "reaper", name: "Reaper", rar: "Mythic", col: "#ff4a4a", cost: 14500, vol: .022, s0: .012, keys: [[.8, 0], [4, .02], [7.5, .045], [10, .02], [12.5, .12], [14.5, .2], [16, .15], [17.6, .3], [LOCK, null]] },
+  { id: "grimm", name: "Grimm", rar: "Legendary", col: "#ffc94a", cost: 2340, vol: .04, s0: .014, keys: [[.8, 0], [5, .03], [8, .16], [10, .36], [11.6, .27], [13.2, .62], [15.2, .57], [17.2, .84], [LOCK, .958]] },
+  { id: "ronin", name: "Ronin", rar: "Epic", col: "#ff6fd0", cost: 890, vol: .05, s0: .02, keys: [[.8, 0], [6, .05], [9, .27], [11.2, .52], [12.8, .38], [15, .85], [17, 1.0], [LOCK, 1.112]] },
+  { id: "liftoff", name: "Liftoff", rar: "Rare", col: "#b07aff", cost: 780, vol: .05, s0: .01, keys: [[.8, 0], [5.5, .03], [8.5, .2], [10.6, .55], [12.2, .45], [14.5, .8], [17.4, .93], [LOCK, .991]] },
+  { id: "shogun", name: "Shogun", rar: "Rare", col: "#b07aff", cost: 700, vol: .05, s0: .02, keys: [[.8, 0], [5, .05], [8, .1], [10, .42], [13, .52], [14.6, .36], [17, .82], [LOCK, 1.009]] },
+  { id: "null", name: "Null", rar: "Rare", col: "#b07aff", cost: 306, vol: .05, s0: .02, keys: [[.8, 0], [4.6, .04], [8.6, .15], [10.4, .6], [12.4, .72], [14, .5], [16.4, .93], [LOCK, 1.04]] },
+  { id: "stitch", img: "stitch-bone", name: "Stitch", rar: "Common", col: "#6f6c65", cost: 11, vol: .06, s0: .01, keys: [[.8, 0], [6, .04], [9.5, .12], [12, .55], [14, .45], [16.6, 1.18], [LOCK, 1.447]] },
+  { id: "brick", name: "Brick", rar: "Common", col: "#6f6c65", cost: 11, vol: .06, s0: .01, keys: [[.8, 0], [5.4, .06], [10, .2], [12.8, .62], [14.8, .5], [17, 1.1], [LOCK, 1.342]] },
+  { id: "phantom", name: "Phantom", rar: "Uncommon", col: "#7f9bff", cost: 35, vol: .03, s0: .004, keys: [[.8, 0], [2.6, -.03], [5.6, -.08], [8.6, -.13], [12, -.1], [15, -.19], [LOCK, -.208]] },
+  { id: "ignition", name: "Ignition", rar: "Uncommon", col: "#7f9bff", cost: 30, vol: .03, s0: .004, keys: [[.8, 0], [3.4, -.02], [6.4, -.1], [9.4, -.2], [13, -.17], [16, -.25], [LOCK, -.26]] },
+];
+const BASIS = C.reduce((a, c) => a + c.cost, 0);
+const L = (c, t) => { const k = c.keys; if (t <= k[0][0]) return k[0][1]; let i = 1; while (i < k.length - 1 && t > k[i][0]) i++; const a = k[i - 1], b = k[i]; if (t >= LOCK) return b[1]; const f = cl((t - a[0]) / (b[0] - a[0])), q = f * f * (3 - 2 * f); return mix(a[1], b[1], q * .85 + f * .15); };
+const env = t => sm(.8, 2.6, t) * (1 - sm(LOCK - 1.2, LOCK, t));
+const stepTime = k => k * STEP, stepOf = t => Math.floor(t / STEP);
+const mult = (c, k) => { const t = stepTime(k), tt = Math.min(t, LOCK + 3), n = t < LOCK ? (hash(k, C.indexOf(c), 7) + hash(k + 1, C.indexOf(c), 8) - 1) * c.vol * env(t) : 0; return Math.pow(10, L(c, tt) + n); };
+// solve the two ends so the profit is exactly what the film says: it starts at +$7.04 and ends at +$752.38
+for (const c of C) c.start = 0;
+(function solve() {
+  let lo = 0, hi = 4; for (let it = 0; it < 60; it++) { const m = (lo + hi) / 2; let p = 0; for (const c of C) p += c.cost * (Math.pow(10, m * c.s0 / .02) - 1); (p < START_PROFIT ? lo = m : hi = m); }
+  for (const c of C) { c.start = (lo + hi) / 2 * c.s0 / .02; c.keys[0][1] = c.start; }
+  const R = C[0]; let a = 0, b = .7; for (let it = 0; it < 60; it++) { const m = (a + b) / 2; R.keys[R.keys.length - 1][1] = m; let p = 0; for (const c of C) p += c.cost * (Math.pow(10, L(c, LOCK + 1)) - 1); (p < END_PROFIT ? a = m : b = m); } R.keys[R.keys.length - 1][1] = (a + b) / 2;
+})();
+const CAP = { reaper: 5, grimm: 10, ronin: 16, liftoff: 14, shogun: 12, null: 16, stitch: 40, brick: 40, phantom: 2, ignition: 2 };
+for (const c of C) { let mx = 0; for (let k = 0; k < Math.ceil(DUR / STEP); k++) mx = Math.max(mx, mult(c, k)); c.maxMult = mx; c.within = mx <= CAP[c.id]; }
+// what is on screen at time t: each card's price, smoothed from one market step to the next so numbers roll rather than jump
+const val = (c, t) => { t = Math.max(0, t); const k = stepOf(t), f = eo((t - stepTime(k)) / .3), a = k > 0 ? mult(c, k - 1) : mult(c, 0), b = mult(c, k); return c.cost * mix(a, b, f); };
+const profitAt = t => C.reduce((a, c) => a + val(c, t) - c.cost, 0);
+const worthAt = t => C.reduce((a, c) => a + val(c, t), 0);
+const rankAt = t => { const idx = C.map((c, i) => i).sort((a, b) => val(C[b], t) - val(C[a], t) || a - b), r = []; idx.forEach((i, pos) => { r[i] = pos; }); return r; };
+const slotAt = (i, t) => { let s = 0, n = 0; for (let j = 0; j < 10; j++) { const w = Math.exp(-j * .28); s += rankAt(t - j * .045)[i] * w; n += w; } return s / n; };       // a rank that glides: an average over the last half second
+const seriesAt = (c, t, n) => { const out = []; for (let j = 0; j < n; j++) out.push(val(c, Math.max(0, t * (j / (n - 1))))); return out; };
+
+/* ---------------------------------------------------------------- the screen */
+const rowEls = C.map((c, i) => { const d = document.createElement("button"); d.className = "crow"; d.innerHTML = `<span class="glow"></span><span class="thumb" style="--rc:${c.col}"><img src="../cards/s/${c.img || c.id}.jpg" alt=""></span><span class="cmain"><b class="nm">${c.name}</b><span class="sub"><i class="rd" style="--rc:${c.col}"></i>${c.rar} · cost ${moneyS(c.cost)}</span></span><span class="spark"><svg class="sp up" viewBox="0 0 84 26"><path class="ln"/></svg></span><span class="cval"><b></b><span class="pill up"></span></span>`; $("rows").appendChild(d); return d; });
+const spark = (v, W, H) => { const mn = Math.min(...v), sp = Math.max(...v) - mn || 1; return "M" + v.map((x, i) => (i / (v.length - 1) * W).toFixed(1) + " " + (H - 3 - (x - mn) / sp * (H - 6)).toFixed(1)).join(" L"); };
+const CAPS = [[0, 2.4, "since you started"], [2.4, 6, "most of your cards are up"], [6, 9.4, "two are down. that happens"], [9.4, 14, "the rest start to fly"], [14, 19.1, "watch it go"], [19.1, 23, null]];
+const PTS = Array.from({ length: 70 }, (_, i) => { const d = document.createElement("span"); d.className = "pt"; $("pts").appendChild(d); return d; });
+const MILES = [[50, 4900], [100, 10000], [250, 25000], [500, 50000], [752, 75238]];
+// when each milestone is crossed, and the market steps that move the profit the most: the score and the particles both read these
+const EV = []; (function () {
+  let prevP = profitAt(0), mi = 0, prevR = rankAt(0).join(",");
+  for (let k = 1; stepTime(k) < DUR; k++) {
+    const t = stepTime(k), p = profitAt(t + .3), d = p - prevP; EV.push({ k: "tick", t: t + .02, a: Math.min(1, Math.abs(d) / 6000 + .12) * (d >= 0 ? 1 : -1), p: cl(p / END_PROFIT) });
+    while (mi < MILES.length && p >= MILES[mi][1]) { EV.push({ k: "mile", t: t + .1, a: 1, p: mi }); mi++; }
+    const r = rankAt(t + .3).join(","); if (r !== prevR && t > 2) EV.push({ k: "swap", t: t + .12, a: .6, p: 0 }); prevR = r; prevP = p;
+  }
+  EV.push({ k: "riser", t: 6.8, a: .7, p: 3.2 }, { k: "riser", t: 12.6, a: .9, p: 3.4 }, { k: "riser", t: 16.0, a: 1, p: 3.2 }, { k: "lock", t: LOCK, a: 1, p: 0 }, { k: "boom", t: LOCK, a: 1.2, p: 0 }, { k: "whoosh", t: .0, a: .8, p: 0 }, { k: "whoosh", t: END0 - .1, a: 1, p: 0 }, { k: "boom", t: END0 + .5, a: 1.1, p: 0 }, { k: "heart", t: .1, a: .6, p: 0 });
+})();
+window.TL = { dur: DUR, fps: FPS, EV, LOCK, END0, within: C.map(c => [c.id, +c.maxMult.toFixed(2), c.within]), start: START_PROFIT, end: END_PROFIT, basis: BASIS };
+
+function render(t) {
+  t = Math.max(0, Math.min(DUR - 1 / FPS / 2, t));
+  const p = profitAt(t), worth = worthAt(t), k = stepOf(t), since = t - stepTime(k), flashK = Math.max(0, 1 - since / .45);
+  // the profit
+  $("hbig").textContent = (p >= 0 ? "+" : "-") + money(Math.abs(p)); const [cls, txt] = pillHTML(p / BASIS); $("hpill").className = "pill " + cls; $("hpill").textContent = txt;
+  const rate = profitAt(t + .5) - profitAt(t - .1), hot = cl(rate / 12000), big = $("hbig"); big.style.textShadow = `0 0 ${10 + hot * 38}px rgba(159,216,166,${.15 + hot * .6})`; big.style.fontSize = (52 + 6 * sm(LOCK - 1.5, LOCK, t) - 4 * sm(LOCK + 1.2, LOCK + 2.2, t)) + "px";
+  const cap = CAPS.find(c => t >= c[0] && t < c[1]); $("hcap").textContent = cap && cap[2] ? cap[2] : t >= LOCK ? "up from +" + money(START_PROFIT) : ""; $("lcap").textContent = "10 cards · worth " + money(worth);
+  // the little chart of the profit so far
+  const n = 60, pts = []; let mx = 0; for (let j = 0; j <= n; j++) { const tt = t * j / n, v = profitAt(tt); pts.push(v); mx = Math.max(mx, v); } const top = Math.max(mx * 1.12, 2500), xy = pts.map((v, j) => [j / n * 150, 80 - v / top * 74]);
+  $("hline").setAttribute("d", "M" + xy.map(q => q[0].toFixed(1) + " " + q[1].toFixed(1)).join(" L")); $("hfill").setAttribute("d", "M0 82 L" + xy.map(q => q[0].toFixed(1) + " " + q[1].toFixed(1)).join(" L") + " L" + xy[n][0] + " 82Z"); $("hdot").setAttribute("cx", xy[n][0]); $("hdot").setAttribute("cy", xy[n][1]);
+  // the ten rows
+  C.forEach((c, i) => {
+    const v = val(c, t), pr = v / c.cost - 1, [pc, pt] = pillHTML(pr), el = rowEls[i], slot = slotAt(i, t), nowM = mult(c, k), prevM = k > 0 ? mult(c, k - 1) : nowM, mv = nowM - prevM, f = flashK * cl(Math.abs(mv / prevM) * 14);
+    el.style.transform = `translateY(${(slot * 60).toFixed(2)}px)`; el.style.zIndex = slot < slotAt(i, t - .12) - .02 ? 3 : slot > slotAt(i, t - .12) + .02 ? 1 : 2; el.querySelector(".cval b").textContent = moneyS(v); const pe = el.querySelector(".pill"); pe.className = "pill " + pc; pe.textContent = pt;
+    const sp = el.querySelector(".sp"); sp.setAttribute("class", "sp " + (pr >= 0 ? "up" : "dn")); sp.querySelector("path").setAttribute("d", spark(seriesAt(c, Math.max(t, .4), 24), 84, 26));
+    el.querySelector(".cval b").style.color = f > .02 ? (mv >= 0 ? `color-mix(in srgb, var(--ok) ${Math.round(f * 100)}%, var(--ink))` : `color-mix(in srgb, var(--bad) ${Math.round(f * 100)}%, var(--ink))`) : "";
+    el.querySelector(".glow").style.background = `linear-gradient(90deg, ${mv >= 0 ? "rgba(159,216,166," : "rgba(232,120,109,"}${(f * .22 + (pr > 2 ? .05 : 0)).toFixed(3)}), transparent 75%)`;
+  });
+  // particles: dollar signs and plus signs rising off the profit when it jumps
+  const jumpT = EV.filter(e => e.k === "tick" && e.a > .4 && e.t <= t && t - e.t < 1.2); PTS.forEach(e => { e.style.opacity = 0; });
+  let pi = 0; for (const e of jumpT) for (let j = 0; j < 3 && pi < PTS.length; j++, pi++) { const u = (t - e.t) / 1.2, h = hash(Math.round(e.t * 100), j, 5), el = PTS[pi]; el.textContent = h > .5 ? "$" : "+"; el.style.left = (40 + h * 220 + Math.sin(u * 5 + j) * 10) + "px"; el.style.top = (96 - u * 90 - h * 20) + "px"; el.style.fontSize = (14 + e.a * 8) + "px"; el.style.opacity = (1 - u) * .85; }
+  // the camera: a slow push, a kick on a milestone and a long glide on the last climb
+  let hit = 0; for (const e of EV) if ((e.k === "mile" || e.k === "lock") && t >= e.t && t - e.t < .6) hit += Math.exp(-(t - e.t) * 8) * (e.k === "lock" ? 1.6 : .7);
+  const zoom = 1 + .02 * sm(0, 19, t) + .018 * hit - .02 * sm(LOCK + 1, LOCK + 3, t), sx = Math.sin(t * 37) * hit * 2.2, sy = Math.cos(t * 41) * hit * 2.2;
+  $("cam").style.transform = `translate(${sx}px,${sy}px) scale(${zoom})`;
+  $("flash").style.opacity = Math.min(.3, hit * .08 + (t > LOCK && t < LOCK + .2 ? (1 - (t - LOCK) / .2) * .22 : 0));
+  // the opening fade and the end card
+  $("stage").style.opacity = sm(0, .45, t); $("end").style.opacity = sm(END0, END0 + .5, t);
+  $("grain").children[0] && $("gt").setAttribute("seed", String(Math.floor(t * 30) % 97));
+}
+window.renderAt = t => { render(t); return true; };
+window.READY = (async () => { await document.fonts.ready; await Promise.all([...document.images].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }))); render(0); return true; })();
+</script>

@@ -4,6 +4,15 @@ Vertical teasers in the app's ASCII style. Nothing in them is a screen recording
 `ad.html`, pushed through a pixel pass (tear, RGB split, grain, scanlines, bloom, shake) and handed to ffmpeg. The soundtrack is
 synthesised by `audio.py` from the same timeline, so every hit lands on its picture.
 
+## "Up": `stixx-collection.mp4`, 1080x1920 phone screen, 26.6 s, with sound (`ad3.html`, `render_dom.js`, `audio3.py`, `make_ad3.sh`)
+A screen recording of one collection going up. It is the app's own stylesheet and card pictures in a 540x960 page, with the prices scripted (the app's
+market can't be told what to do): ten cards, each on a path with pullbacks and noise, and every winner stays under the ceiling the app gives it (Reaper 5x,
+Grimm 10x, Ronin 16x, Shogun 12x, Liftoff 14x, Null 16x, Stitch and Brick 40x). Phantom and Ignition fall, as cards do. The profit starts at +$7.04 and
+ends at +$752.38, solved exactly in the page. Rows glide past each other as the order changes, every market step plays a note that climbs with the profit,
+milestones ($50, $100, $250, $500, the last) ring, and a breath of silence comes before the numbers lock. The film says it is an illustration of one lucky
+collection in the simulated market, play money, 18+, and that a pack sells back for about 89% of its price on average. `make_ad3.sh <outdir>` makes it again
+(about two minutes); `render_dom.js` renders any web-page film frame by frame.
+
 ## "Letters": `stixx-cinematic.mp4`, 1920x1080 landscape, 33.7 s, with a synthesised score (`ad2.html`, `audio2.py`, `make_ad2.sh`)
 A second film from a new engine, built to be watched with the sound on and hard to scroll past. Letterboxed to 2.35:1 with a lens (bloom,
 anamorphic streaks, colour fringing, a teal-and-amber grade, vignette, grain). The retention shape:
