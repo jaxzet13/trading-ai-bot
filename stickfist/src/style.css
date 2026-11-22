@@ -421,3 +421,10 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
 @media (min-width: 700px) { .rqrun { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 /* ---- digital packs: the buy row on the pack page ---- */
 .buyrow { margin: -8px 0 6px; text-align: center; } .buyrow[hidden] { display: none; }
+/* ---- selling: quick sell buttons, a big labelled Sell in the card window, and Undo ---- */
+.ctw { display: grid; gap: 8px; align-content: start; } .crw { display: flex; gap: 8px; align-items: stretch; } .crw .crow { flex: 1; min-width: 0; } .crw .sellq { flex: none; width: auto; min-width: 84px; }
+.sellq { min-height: 44px; padding: 8px 12px; border: 1px solid var(--ln3); border-radius: 10px; background: #0d0d10; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; font-variant-numeric: tabular-nums; } .sellq:hover { background: #17171c; border-color: var(--dim); } .sellq:active { transform: scale(.98); }
+.btn.small.sellb { min-height: 44px; padding: 8px 16px; font-size: 14px; }
+.toast { display: flex; align-items: center; gap: 14px; } .toast-act { background: #050506; color: var(--ink); border: 0; border-radius: 8px; min-height: 36px; padding: 6px 14px; font: inherit; font-weight: 700; cursor: pointer; }
+.sellq:focus-visible, .toast-act:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+@media (max-width: 520px) { .crw .crow { grid-template-columns: 44px minmax(0, 1fr) auto; } .crw .crow .spark { display: none; } .crw .sellq { min-width: 78px; font-size: 12.5px; padding: 8px 10px; } }

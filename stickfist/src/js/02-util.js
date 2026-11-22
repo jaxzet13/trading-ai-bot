@@ -33,4 +33,8 @@ const rid = n => { try { return Array.from(crypto.getRandomValues(new Uint8Array
 const pickU = (list, u) => { let t = 0; for (const [, w] of list) t += w; let r = u * t; for (const [id, w] of list) { if ((r -= w) < 0) return id; } return list[list.length - 1][0]; };   // the same weighted pick, from a number in [0,1) instead of a fresh random one
 const pick = list => { let t = 0; for (const [, w] of list) t += w; let r = rand() * t; for (const [id, w] of list) { if ((r -= w) < 0) return id; } return list[0][0]; };
 const loadImg = src => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
-let toastT; function toast(msg) { const old = document.querySelector(".toast"); if (old) old.remove(); const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2400); }
+let toastT; function toast(msg, act) {
+  const old = document.querySelector(".toast"); if (old) old.remove(); const el = document.createElement("div"); el.className = "toast"; el.setAttribute("role", "status"); el.setAttribute("aria-live", "polite"); el.append(document.createTextNode(msg));
+  if (act) { const b = document.createElement("button"); b.className = "toast-act"; b.dataset[act.key] = "1"; b.textContent = act.label; el.append(b); }       // an action stays on screen longer, so there is time to use it
+  document.body.appendChild(el); clearTimeout(toastT); toastT = setTimeout(() => el.remove(), act ? 8000 : 2400);
+}

@@ -10,7 +10,7 @@ function receiptOf(c, sold) {
   for (let i = 0; i < n; i++) vals.push(valueAgo(c, Math.round(ago0 * (1 - i / (n - 1)))));
   const cost = costOf(c), got = sellOf(c), pi = ago0 ? Math.round((1 - agoPull / ago0) * (n - 1)) : 0; let pk = pi;
   for (let i = pi; i < n; i++) if (vals[i] > vals[pk]) pk = i;
-  return { card, fx: c.fx || "", code: c.code, sold, cost, got, held, vals, pi, pk, startMs: now - ago0 * MK.TICK, endMs: now, gain: got - cost, pct: got / Math.max(1, cost) - 1, peakPct: vals[pk] * SELLBACK / Math.max(1, cost) - 1, at: now };
+  return { card, fx: c.fx || "", code: c.code, sold, cost, got, held, vals, pi, pk, startMs: now - ago0 * MK.TICK, endMs: now, gain: got - cost, pct: got / Math.max(1, cost) - 1, rise: valueOf(c) / Math.max(1, cost) - 1, peakPct: vals[pk] * SELLBACK / Math.max(1, cost) - 1, at: now };
 }
 
 async function saveBlob(blob, name) {

@@ -442,6 +442,13 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
 @media (min-width: 700px) { .rqrun { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 /* ---- digital packs: the buy row on the pack page ---- */
 .buyrow { margin: -8px 0 6px; text-align: center; } .buyrow[hidden] { display: none; }
+/* ---- selling: quick sell buttons, a big labelled Sell in the card window, and Undo ---- */
+.ctw { display: grid; gap: 8px; align-content: start; } .crw { display: flex; gap: 8px; align-items: stretch; } .crw .crow { flex: 1; min-width: 0; } .crw .sellq { flex: none; width: auto; min-width: 84px; }
+.sellq { min-height: 44px; padding: 8px 12px; border: 1px solid var(--ln3); border-radius: 10px; background: #0d0d10; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; font-variant-numeric: tabular-nums; } .sellq:hover { background: #17171c; border-color: var(--dim); } .sellq:active { transform: scale(.98); }
+.btn.small.sellb { min-height: 44px; padding: 8px 16px; font-size: 14px; }
+.toast { display: flex; align-items: center; gap: 14px; } .toast-act { background: #050506; color: var(--ink); border: 0; border-radius: 8px; min-height: 36px; padding: 6px 14px; font: inherit; font-weight: 700; cursor: pointer; }
+.sellq:focus-visible, .toast-act:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+@media (max-width: 520px) { .crw .crow { grid-template-columns: 44px minmax(0, 1fr) auto; } .crw .crow .spark { display: none; } .crw .sellq { min-width: 78px; font-size: 12.5px; padding: 8px 10px; } }
 </style>
 </head>
 <body>
@@ -726,7 +733,11 @@ const rid = n => { try { return Array.from(crypto.getRandomValues(new Uint8Array
 const pickU = (list, u) => { let t = 0; for (const [, w] of list) t += w; let r = u * t; for (const [id, w] of list) { if ((r -= w) < 0) return id; } return list[list.length - 1][0]; };   // the same weighted pick, from a number in [0,1) instead of a fresh random one
 const pick = list => { let t = 0; for (const [, w] of list) t += w; let r = rand() * t; for (const [id, w] of list) { if ((r -= w) < 0) return id; } return list[0][0]; };
 const loadImg = src => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
-let toastT; function toast(msg) { const old = document.querySelector(".toast"); if (old) old.remove(); const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2400); }
+let toastT; function toast(msg, act) {
+  const old = document.querySelector(".toast"); if (old) old.remove(); const el = document.createElement("div"); el.className = "toast"; el.setAttribute("role", "status"); el.setAttribute("aria-live", "polite"); el.append(document.createTextNode(msg));
+  if (act) { const b = document.createElement("button"); b.className = "toast-act"; b.dataset[act.key] = "1"; b.textContent = act.label; el.append(b); }       // an action stays on screen longer, so there is time to use it
+  document.body.appendChild(el); clearTimeout(toastT); toastT = setTimeout(() => el.remove(), act ? 8000 : 2400);
+}
 
 /* ============================================================================
    3. COPY CODES. Every copy has an id: IS015-000003-A2JM = set + card number, serial, check.
@@ -1329,7 +1340,7 @@ function renderProfile() {
   $("pChart").live = ws ? `<div class="mk"><div class="label">Net worth · ${ws.mins >= 1380 ? "last 24 hours" : ws.mins < 90 ? "last " + ws.mins + " minutes" : "last " + Math.round(ws.mins / 60) + " hours"}</div>${lineChart(ws.out, { fmt: money, h: 190 })}</div>`
     : `<div class="mk"><div class="label">Net worth</div><p class="small">Your line starts now and fills in as the market moves. Keep this page open and watch it.</p></div>`;
   const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), s: MK.series(c, 24, 24), p24: MK.pct(c, 24) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
-  $("pTable").live = groups.length ? groups.map(g => cardRow(g.c, { s: g.s, price: moneyS(g.val), pill: pill(g.val / Math.max(1, g.cost) - 1), sub: `${g.n > 1 ? `×${g.n} · ` : ""}${RAR[g.c.rar].name} · cost ${moneyS(g.cost)}` })).join("") + `<div class="ctot"><span>All cards</span><span class="cval"><b>${moneyS(hold)}</b>${pill(hold / Math.max(1, basis) - 1)}</span></div>` : "";
+  $("pTable").live = groups.length ? groups.map(g => `<div class="crw">${cardRow(g.c, { s: g.s, price: moneyS(g.val), pill: pill(g.val / Math.max(1, g.cost) - 1), sub: `${g.n > 1 ? `×${g.n} · ` : ""}${RAR[g.c.rar].name} · cost ${moneyS(g.cost)}` })}${sellBtn(g.c.no)}</div>`).join("") + `<div class="ctot"><span>All cards</span><span class="cval"><b>${moneyS(hold)}</b>${pill(hold / Math.max(1, basis) - 1)}</span></div>` : "";
   $("pNote").innerHTML = groups.length ? `Tap a card to see its chart and sell it. “Cost” is what the card was worth when you got it. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${money(state.s.spent)} spent on packs · ${money(state.s.sold)} back from sales</span>` : `You don't hold any cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they will show up here with a live price.`;
 }
 
@@ -1380,7 +1391,7 @@ function cardModal(no, keep) {
   modalNo = no; const card = BY_NO[no], R = RAR[card.rar], cs = copiesOf(no), best = cs[0], p = packP(card.id), have = new Set(cs.map(c => c.fx)), keys = [""].concat(Object.keys(STYLES));
   const styles = card.styles ? `<div><div class="label" style="margin-bottom:8px">Styles found: ${keys.filter(k => have.has(k)).length} of ${keys.length}</div><div class="stylerow">${keys.map(k => `<figure class="${have.has(k) ? "" : "off"}" title="${styleName(k)}${k ? " · 1 in " + fmt(1 / STYLES[k].p) + " · ×" + STYLES[k].x : ""}"><img src="${imgOf(card, k, true)}" alt="" loading="lazy"><figcaption>${styleName(k)}</figcaption></figure>`).join("")}</div></div>` : "";
   const ser = MK.series(card, 168, 56), now = MK.price(card), bz = MK.buzz(card), sv = MK.stats(card);
-  const copies = cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div class="ci">${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${moneyS(costOf(c))}</small></div><div class="r"><span class="cv"><b>${moneyS(valueOf(c))}</b>${pill(gainOf(c))}</span><button class="btn small ghost" data-share="${c.uid}">share</button><button class="btn small sellb" data-sell="${c.uid}" data-no="${no}">sell ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<div class="notyet"><b>You haven't found this card yet.</b><span class="small">It turns up in ${chance(p, packOf(card))}.</span><button class="btn small solid" data-open data-close>open a pack</button></div>`;
+  const copies = cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div class="ci">${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${moneyS(costOf(c))}</small></div><div class="r"><span class="cv"><b>${moneyS(valueOf(c))}</b>${pill(gainOf(c))}</span>${replayable(c) ? `<button class="btn small ghost" data-share="${c.uid}">replay &amp; share</button>` : ""}<button class="btn small sellb" data-sell="${c.uid}" data-no="${no}" aria-label="Sell ${esc(card.name)} for ${money(sellOf(c))}, after the 10% fee">Sell for ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<div class="notyet"><b>You haven't found this card yet.</b><span class="small">It turns up in ${chance(p, packOf(card))}.</span><button class="btn small solid" data-open data-close>open a pack</button></div>`;
   openModal(`<div class="mcard">${cardHTML(best || { no }, { locked: !best })}</div><div class="minfo">
     <div class="mhead"><span class="label" style="color:${R.col}">${R.name} · No. ${card.no}</span><h2>${esc(card.name)}</h2>
       <div class="pricebox"><b>${moneyS(now)}</b>${pill(MK.pct(card, 24))}<span class="dim">today</span>${pill(MK.pct(card, 168))}<span class="dim">this week</span></div></div>
@@ -1392,7 +1403,33 @@ function cardModal(no, keep) {
     ${Cut.has(card.id) ? `<div><button class="btn small" data-cut="${card.id}">▶ ${cs.length ? "Watch" : "Preview"} its cutscene</button></div>` : ""}
     ${styles}</div>`, false, keep);
 }
-function sell(uids) { let g = 0; for (const u of uids) { const c = state.vault.find(x => x.uid === u); if (c) { g += sellOf(c); state.s.realized += sellOf(c) - costOf(c); state.vault = state.vault.filter(x => x !== c); } } if (g) { state.coins += g; state.s.sold += g; save(); renderBal(true); Snd.sell(); buzz([25, 35, 25]); } return g; }
+/* ---- selling: one tap, and a few seconds to take it back ---- */
+let lastSale = null;
+function sell(uids) {
+  let g = 0, realized = 0; const copies = [];
+  for (const u of uids) { const c = state.vault.find(x => x.uid === u); if (c) { g += sellOf(c); realized += sellOf(c) - costOf(c); copies.push(c); state.vault = state.vault.filter(x => x !== c); } }
+  if (g) { state.coins += g; state.s.sold += g; state.s.realized += realized; lastSale = { copies, g, realized, at: Date.now() }; save(); renderBal(true); Snd.sell(); buzz([25, 35, 25]); }
+  return g;
+}
+const soldToast = (msg, g) => toast(msg || "Sold for " + money(g), { key: "undo", label: "Undo" });
+// the sale is reversed exactly: the cards come back as they were and the money goes back. Only the last sale, only for a few seconds, and only if the money is still there.
+function undoSale() {
+  const s = lastSale; if (!s || Date.now() - s.at > 9000) { toast("Too late to undo that."); return; }
+  if (state.coins < s.g) { toast("You've already spent that money, so it can't be undone."); return; }
+  lastSale = null; state.vault.push(...s.copies); state.coins -= s.g; state.s.sold -= s.g; state.s.realized -= s.realized; save(); renderBal(true); show(view); if (modalNo && !$("modal").hidden) cardModal(modalNo, true);
+  toast(s.copies.length > 1 ? `Put ${s.copies.length} cards back` : "Put it back in your cards"); Snd.click();
+}
+// the copy a quick sell gives up: your only copy, or the cheapest of several (so the best one stays)
+const quickCopy = no => { const cs = copiesOf(no); return cs.length ? cs[cs.length - 1] : null; };
+const quickLabel = no => { const c = quickCopy(no); return c ? `Sell${copiesOf(no).length > 1 ? " extra" : ""} · ${moneyS(sellOf(c))}` : ""; };
+const quickAria = no => { const c = quickCopy(no), n = copiesOf(no).length; return c ? `Sell ${n > 1 ? "one extra " : ""}${BY_NO[no].name} for ${money(sellOf(c))}, after the 10% fee` : ""; };
+const sellBtn = no => copiesOf(no).length ? `<button class="sellq" data-qsell="${no}" aria-label="${esc(quickAria(no))}">${esc(quickLabel(no))}</button>` : "";
+// a replay is only worth watching when the card went up by more than half
+const REPLAY_MIN = .5, replayable = c => gainOf(c) > REPLAY_MIN;
+function quickSell(no) {
+  const c = quickCopy(no); if (!c) return; const rec = receiptOf(c, true), g = sell([c.uid]); if (!g) return;
+  soldToast("Sold " + BY_NO[no].name + " for " + money(g), g); if (!$("modal").hidden) closeModal(); show(view); if (rec.rise > REPLAY_MIN) Share.open(rec);
+}
 
 /* ============================================================================
    7a. THE LISTS: the market and the collection. Both are built from the same few parts: a thumbnail, a price, a coloured change pill and a little line.
@@ -1438,6 +1475,8 @@ function renderMarket() {
 /* ---- the collection ---- */
 const CF = { show: "all", set: "all", sort: "num" };
 // every copy beyond the best one of each card (copies you added by code are never sold in bulk)
+// the copies that are worth more now than they were when you got them (physical cards you added are left alone)
+function upCopies() { return state.vault.filter(c => !c.phys && gainOf(c) > 0); }
 function extras() { const out = []; for (const c of CARDS) copiesOf(c.no).slice(1).forEach(x => { if (!x.phys) out.push(x); }); return out; }
 function renderCollection() {
   noteFound(); const found = new Set(state.vault.map(c => c.no)), worth = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0), ex = extras(), exSum = ex.reduce((a, c) => a + sellOf(c), 0), fx = Object.keys(state.foundFx).length, pk = curPack(), ch = chaseChance(pk);
@@ -1446,14 +1485,15 @@ function renderCollection() {
     <div class="stat"><span class="label">Worth now</span><div class="sbig"><b>${money(worth)}</b></div>${state.vault.length ? `<div class="srow">${pill(worth / Math.max(1, basis) - 1)} <span class="small">since you got them</span></div>` : `<span class="small">Open a pack to start.</span>`}</div>
     <div class="stat"><span class="label">Styles found</span><div class="sbig"><b>${fx}</b><span>of ${FX_ALL}</span></div><div class="bar"><i style="width:${fx / FX_ALL * 100}%"></i></div></div>
     <div class="stat go"><span class="label">Next ${esc(pk.name)} pack</span><div class="sbig"><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span>a new card</span></div><button class="btn small solid" data-open>${state.freePacks ? "open free pack" : "open pack"}</button></div>`;
-  $("cActions").live = ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button><span class="small">Keeps your best copy of every card.</span>` : "";
+  const up = upCopies(), upSum = up.reduce((a, c) => a + sellOf(c), 0);
+  $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + (up.length ? `<button class="btn" id="sellUp">sell the ${up.length} that ${up.length === 1 ? "is" : "are"} up · ${money(upSum)}</button>` : "") + (ex.length || up.length ? `<span class="small">${ex.length ? "Extras keep your best copy of every card. " : ""}You can undo a sale for a few seconds.</span>` : "");
   $("cFilters").live = seg("c", "show", [["all", "All"], ["found", "Found"], ["missing", "Missing"]], CF.show) + selectHTML("cSort", [["num", "Number"], ["rare", "Rarest first"], ["value", "Most valuable"], ["new", "Newest"]], CF.sort, "Sort") + seg("c", "set", [["all", "All packs"], ...Object.keys(SETS).map(k => [k, SETS[k].name])], CF.set);
   const val = c => { const b = copiesOf(c.no)[0]; return b ? valueOf(b) : MK.price(c); }, cmp = { num: (a, b) => +a.no - +b.no, rare: (a, b) => RAR[b.rar].tier - RAR[a.rar].tier || +a.no - +b.no, value: (a, b) => val(b) - val(a), new: (a, b) => ((copiesOf(b.no)[0] || { t: 0 }).t) - ((copiesOf(a.no)[0] || { t: 0 }).t) || +a.no - +b.no }[CF.sort];
   const tile = c => {
     const cs = copiesOf(c.no), best = cs[0], pk2 = packOf(c);
-    return `<button class="ctile${best ? "" : " miss"}" data-card="${c.no}" aria-label="${esc(c.name)}"><span class="cimg">${cardHTML(best || { no: c.no }, { sm: true, locked: !best, thumb: true })}${best ? `<span class="cb n">×${cs.length}</span>` : ""}${best && best.fx ? `<span class="cb fx">${STYLES[best.fx].name}</span>` : ""}</span>
+    return `<div class="ctw"><button class="ctile${best ? "" : " miss"}" data-card="${c.no}" aria-label="${esc(c.name)}"><span class="cimg">${cardHTML(best || { no: c.no }, { sm: true, locked: !best, thumb: true })}${best ? `<span class="cb n">×${cs.length}</span>` : ""}${best && best.fx ? `<span class="cb fx">${STYLES[best.fx].name}</span>` : ""}</span>
       <span class="cmeta">${best ? `<b>${moneyS(valueOf(best))}</b>${pill(gainOf(best))}` : `<b class="faint">Not found yet</b>`}</span>
-      <span class="csub">${best ? `${rdot(c)}${RAR[c.rar].name}${cs.length > 1 ? ` · ${cs.length} copies` : ""}` : `${rdot(c)}${RAR[c.rar].name} · ${chanceS(packP(c.id))}`}</span></button>`;
+      <span class="csub">${best ? `${rdot(c)}${RAR[c.rar].name}${cs.length > 1 ? ` · ${cs.length} copies` : ""}` : `${rdot(c)}${RAR[c.rar].name} · ${chanceS(packP(c.id))}`}</span></button>${sellBtn(c.no)}</div>`;
   };
   $("cGrid").live = Object.keys(SETS).filter(k => CF.set === "all" || CF.set === k).map(k => {
     const all = CARDS.filter(c => c.set === k), got = all.filter(c => found.has(c.no)).length, list = all.filter(c => CF.show === "all" || (CF.show === "found" ? found.has(c.no) : !found.has(c.no))).sort(cmp);
@@ -1682,7 +1722,7 @@ function receiptOf(c, sold) {
   for (let i = 0; i < n; i++) vals.push(valueAgo(c, Math.round(ago0 * (1 - i / (n - 1)))));
   const cost = costOf(c), got = sellOf(c), pi = ago0 ? Math.round((1 - agoPull / ago0) * (n - 1)) : 0; let pk = pi;
   for (let i = pi; i < n; i++) if (vals[i] > vals[pk]) pk = i;
-  return { card, fx: c.fx || "", code: c.code, sold, cost, got, held, vals, pi, pk, startMs: now - ago0 * MK.TICK, endMs: now, gain: got - cost, pct: got / Math.max(1, cost) - 1, peakPct: vals[pk] * SELLBACK / Math.max(1, cost) - 1, at: now };
+  return { card, fx: c.fx || "", code: c.code, sold, cost, got, held, vals, pi, pk, startMs: now - ago0 * MK.TICK, endMs: now, gain: got - cost, pct: got / Math.max(1, cost) - 1, rise: valueOf(c) / Math.max(1, cost) - 1, peakPct: vals[pk] * SELLBACK / Math.max(1, cost) - 1, at: now };
 }
 
 async function saveBlob(blob, name) {
@@ -2854,11 +2894,13 @@ document.addEventListener("click", e => {
   if (t.dataset.opack) { oddsPack = t.dataset.opack; renderOdds(true); return; }
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.recap) { closeModal(); location.hash = "#/" + t.dataset.recap; return; }
-  if (t.dataset.share) { const c = state.vault.find(x => x.uid === t.dataset.share); if (c) Share.open(receiptOf(c, false)); return; }
+  if (t.dataset.undo) { undoSale(); return; }
+  if (t.dataset.qsell) { quickSell(t.dataset.qsell); return; }
+  if (t.dataset.share) { const c = state.vault.find(x => x.uid === t.dataset.share); if (c && replayable(c)) Share.open(receiptOf(c, false)); else toast("A replay is only offered for a card that is up more than 50%."); return; }
   if (t.dataset.sell) {
     const c = state.vault.find(x => x.uid === t.dataset.sell), rec = c ? receiptOf(c, true) : null;
-    const g = sell([t.dataset.sell]); if (!g) return; toast("Sold for " + money(g));
-    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view); if (rec) Share.open(rec); return;
+    const g = sell([t.dataset.sell]); if (!g) return; soldToast(null, g);
+    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view); if (rec && rec.rise > REPLAY_MIN) Share.open(rec); return;
   }
   if (/^sum/.test(t.id) && SS && performance.now() - SS.sumAt < 500) return;
   switch (t.id) {
@@ -2886,10 +2928,11 @@ document.addEventListener("click", e => {
     case "claimOpen": closeModal(); openPack(); break;
     case "muteBtn": state.mute = !state.mute; persist(); renderChips(); if (!state.mute) Snd.click(); break;
     case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
-    case "sumSell": { const g = sell(SS.items.map(c => c.uid)); closeStage(); toast("Sold for " + money(g)); break; }
+    case "sumSell": { const g = sell(SS.items.map(c => c.uid)); closeStage(); soldToast(null, g); break; }
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
     case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else location.hash = "#/invite"; break; }
-    case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { toast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`); renderCollection(); } break; }
+    case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { soldToast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`, g); renderCollection(); } break; }
+    case "sellUp": { const up = upCopies(), g = sell(up.map(c => c.uid)); if (g) { soldToast(`Sold ${up.length} card${up.length === 1 ? "" : "s"} that ${up.length === 1 ? "was" : "were"} up, for ${money(g)}`, g); renderCollection(); } break; }
     case "resetBtn": if (t.dataset.armed) { startOver(); renderBal(); renderChips(); location.hash = "#/"; show("home"); toast("Fresh start. Your first pack is free."); } else { t.dataset.armed = 1; t.textContent = "tap again to wipe your cards and start over"; setTimeout(() => { delete t.dataset.armed; t.textContent = "start over"; }, 3500); } break;
     case "copyLink": Ref.copy(); break;
     case "shareLink": Ref.share(); break;
