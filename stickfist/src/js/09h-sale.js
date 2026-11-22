@@ -13,17 +13,10 @@ const Sale = (() => {
     } catch (e) { return null; }
   })();
   const open = () => !!cfg.open;
-  // the one sentence that keeps every "play money" line honest while a sale is on
-  const note = () => open() ? " The one exception is the physical Requiem pack, a separate real-money purchase on its own page." : "";
-  function words() {
-    const f = $("footMoney"), g = $("gateMoney");
-    if (f) f.textContent = open() ? "the game is play money, nothing in it is charged or paid out · the physical Requiem pack is the only real-money purchase" : "play money only, nothing is ever charged or paid out";
-    if (g) g.textContent = open() ? "The game is play money: nothing in it is ever charged, and nothing can be cashed out. The one exception is the physical Requiem pack, a separate real-money purchase on its own page." : "Everything here is play money: nothing is ever charged, and nothing can be cashed out.";
-  }
   async function load() {
     if (!API.on) return cfg; const r = await API.get("requiem/config"); if (!r || typeof r.open !== "boolean") return cfg;
     cfg = Object.assign({ loaded: true }, r); if (r.run) RQ.run = r.run; if (r.closes) RQ.closes = r.closes;
-    words(); if (view === "limited") renderLimited(); else if (view === "home") renderHome(); return cfg;
+    Money.words(); if (view === "limited") renderLimited(); else if (view === "home") renderHome(); return cfg;
   }
   const total = () => { const q = $("rqQty"); return money((cfg.price || RQ.price) * (q ? +q.value || 1 : 1)); };
   function qty() { const b = $("rqPay"); if (b && !b.dataset.busy) b.textContent = "Pay " + total(); }
@@ -51,5 +44,73 @@ const Sale = (() => {
     const text = !o ? "Checking your order…" : o.short ? "Your payment went through, but the run sold out first. You will be refunded." : `Your payment went through. Your pack${o.packs.length > 1 ? "s are" : " is"} number ${nos} of ${fmt(o.run || 0)}. We ship to the address you gave Stripe.`;
     return `<div class="rqnote ok" role="status"><b>Thank you.</b> <span id="rqPaidTxt">${esc(text)}</span></div>`;
   }
-  return { load, open, note, words, pay, qty, poll, banner, cfg: () => cfg, ret: () => ret, total };
+  return { load, open, pay, qty, poll, banner, cfg: () => cfg, ret: () => ret, total };
+})();
+
+/* ============================================================================
+   8i. DIGITAL PACKS. What real money buys in the game: pack openings, and nothing else. The cards stay game items with no cash value, every price in the game
+   stays simulated, and nothing can be cashed out. The server (pay.js) decides whether this is on, takes the payment through Stripe, and keeps a running total of
+   the packs each player has bought; the page adds the difference to the player's packs, so a purchase can never be added twice.
+   ========================================================================== */
+const Shop = (() => {
+  let cfg = { open: false };
+  const ret = (() => {                                                     // ?pk=paid&sid=… or ?pk=cancel, on the way back from Stripe
+    try {
+      const p = new URLSearchParams(location.search), k = p.get("pk"); if (!k) return null;
+      const sid = (p.get("sid") || "").replace(/[^\w]/g, "").slice(0, 120); p.delete("pk"); p.delete("sid");
+      history.replaceState(null, "", location.pathname + (p.toString() ? "?" + p : "") + location.hash); return { kind: k === "paid" ? "paid" : "cancel", sid };
+    } catch (e) { return null; }
+  })();
+  const open = () => !!cfg.open, price = () => cfg.cents || 199;
+  async function load() {
+    if (!API.on) return; const r = await API.get("shop/config?uid=" + encodeURIComponent(state.uid)); if (!r || typeof r.open !== "boolean") return;
+    cfg = r; Money.words(); if (view === "home") renderHome();
+  }
+  const total = () => { const q = $("shopQty"); return money(price() * (q ? +q.value || 1 : 1)); };
+  function qty() { const b = $("shopPay"); if (b && !b.dataset.busy) b.textContent = "Pay " + total(); }
+  function modal() {
+    if (!open()) return;
+    openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Buy packs</h2></div>
+      <p class="dim">Real money buys packs, and nothing else. Each pack holds random digital cards: you can't choose them, and the odds are on the <a href="#/odds" data-close>odds page</a>. The cards are game items with <b>no cash value</b>. Nothing in STIXX can be cashed out, and the prices you see in the game are simulated.</p>
+      <div class="rqbuyh"><div><b>${money(price())} per pack</b><span class="small">one flat price: no bundles, no discounts</span></div>
+        <label class="rqqty"><span class="small">Packs</span><select id="shopQty" aria-label="How many packs">${Array.from({ length: cfg.maxQty || 1 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}</select></label></div>
+      <label class="rqage"><input type="checkbox" id="shopAge"><span>I'm 18 or older, I understand the packs are random, and I'm spending real money.</span></label>
+      <button class="btn solid big" id="shopPay" disabled>Pay ${total()}</button>
+      <p class="small">Apple Pay, Google Pay or card, on Stripe's secure page. STIXX never sees your card. You are only charged after you confirm there. There is a limit of ${money(cfg.cap || 0)} a day${cfg.spentToday > 0 ? ` (you have used ${money(cfg.spentToday)} today)` : ""}. <a href="${esc(cfg.terms || "#")}" target="_blank" rel="noopener">Terms and refunds</a>.</p>
+      <div class="row"><button class="btn ghost" data-close>not now</button></div></div>`, true);
+  }
+  async function pay() {
+    const age = $("shopAge") && $("shopAge").checked, b = $("shopPay"); if (!age || !b || b.dataset.busy) return;
+    b.dataset.busy = 1; b.disabled = true; b.textContent = "Opening Stripe…";
+    const r = await API.post("shop/checkout", { uid: state.uid, qty: +($("shopQty") ? $("shopQty").value : 1) || 1, age: true });
+    if (r && typeof r.url === "string" && /^https:\/\//.test(r.url)) { location.href = r.url; return; }
+    delete b.dataset.busy; b.disabled = !($("shopAge") && $("shopAge").checked); qty(); toast((r && r.error) || "Couldn't reach the server. You have not been charged.");
+  }
+  const done = (title, text, button) => openModal(`<div class="minfo"><div><span class="label">real money</span><h2>${esc(title)}</h2></div><p class="dim" id="shopDoneTxt">${esc(text)}</p><div class="row">${button ? `<button class="btn solid" id="shopOpen">open a pack</button>` : ""}<button class="btn ${button ? "ghost" : "solid"}" data-close>${button ? "later" : "ok"}</button></div></div>`, true);
+  // back from Stripe: wait until the server has confirmed the payment, then collect the packs
+  async function back() {
+    if (!ret) return; if (ret.kind === "cancel") { toast("No payment was taken."); return; }
+    done("Thank you", "Checking your payment…", false);
+    for (let i = 0; i < 20 && ret.sid; i++) {
+      const r = await API.get("shop/order?sid=" + encodeURIComponent(ret.sid));
+      if (r && r.ok) {
+        if (r.short) { done("Thank you", "Your payment went through, but we couldn't add the packs to your game. You will be refunded.", false); return; }
+        await Ref.sync(); const n = r.qty || 1; done("Your packs are ready", `Your payment went through. ${n} pack${n > 1 ? "s are" : " is"} ready to open. You'll find ${n > 1 ? "them" : "it"} on the pack page.`, true); if (view === "home") renderHome(); return;
+      }
+      await sleep(2000);
+    }
+    if ($("shopDoneTxt")) $("shopDoneTxt").textContent = "Your payment is still being confirmed. Your packs will appear on the pack page within a few minutes.";
+  }
+  return { load, open, price, modal, pay, qty, back, cfg: () => cfg };
+})();
+
+/* ---- the one place that says what is and isn't real money, so no line in the game is ever wrong about it ---- */
+const Money = (() => {
+  const packs = () => Shop.open(), req = () => Sale.open();
+  const footer = () => packs() ? "the game's money is play money and can't be cashed out · real money only buys packs, whose cards have no cash value" + (req() ? " · the physical Requiem pack is a separate purchase" : "") : req() ? "the game is play money, nothing in it is charged or paid out · the physical Requiem pack is the only real-money purchase" : "play money only, nothing is ever charged or paid out";
+  const gate = () => packs() ? "The game's money is play money, and nothing can be cashed out. Real money can only be used to buy packs, whose cards have no cash value." + (req() ? " The physical Requiem pack is a separate real-money purchase, on its own page." : "") : req() ? "The game is play money: nothing in it is ever charged, and nothing can be cashed out. The one exception is the physical Requiem pack, a separate real-money purchase on its own page." : "Everything here is play money: nothing is ever charged, and nothing can be cashed out.";
+  const note = lead => (packs() ? (lead ? " " : " ") + "Real money only buys packs, and their cards have no cash value." : "") + (req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : "");
+  const about = () => packs() ? `<b>Real money buys packs, nothing else.</b> Cards, balances and every price in the game are play items with no cash value, and nothing can be cashed out.${req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : ""}` : `<b>Play money only.</b> Nothing in the beta costs real money and nothing can be cashed out. Cards have no cash value. Cashing out, and buying cards with real money through Stripe, are planned for the public release and are not part of this beta.${note()}`;
+  function words() { const f = $("footMoney"), g = $("gateMoney"); if (f) f.textContent = footer(); if (g) g.textContent = gate(); }
+  return { words, note, about, footer, gate };
 })();

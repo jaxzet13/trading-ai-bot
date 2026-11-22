@@ -2,13 +2,14 @@
    4. STATE AND ECONOMY. Everything lives in this browser.
    ========================================================================== */
 const KEY = "stixx-first-print-v1";
-const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, pack: "fp", freePacks: 1, uid: rid(16), ref: { code: "", by: "", n: 0, act: 0 }, fair: null, rescueAt: 0, streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0, free: 0 } });
+const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, pack: "fp", freePacks: 1, paidPacks: 0, paidSeen: 0, uid: rid(16), ref: { code: "", by: "", n: 0, act: 0 }, fair: null, rescueAt: 0, streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0, free: 0, bought: 0 } });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); } catch (e) {}
 const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
 const save = () => { logWorth(true); persist(); };
 // a fresh start keeps who you are (age check, sound, your invite code) and nothing else
-function startOver() { const keep = { ageOK: state.ageOK, seenIntro: state.seenIntro, uid: state.uid, ref: state.ref, mute: state.mute, fair: state.fair }; state = Object.assign(fresh(), keep); save(); }
+// packs you paid for survive a fresh start, along with who you are
+function startOver() { const keep = { ageOK: state.ageOK, seenIntro: state.seenIntro, uid: state.uid, ref: state.ref, mute: state.mute, fair: state.fair, paidPacks: state.paidPacks, paidSeen: state.paidSeen }; state = Object.assign(fresh(), keep); save(); }
 
 // what a copy is worth right now: the card's live market price, times its style multiple
 const valueOf = c => Math.max(.5, MK.price(BY_NO[c.no]) * (c.fx ? STYLES[c.fx].x : 1));   // in cents, live, not rounded

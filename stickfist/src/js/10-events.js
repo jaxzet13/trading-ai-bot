@@ -34,9 +34,12 @@ document.addEventListener("click", e => {
     case "clShare": Clip.share(); break;
     case "clAgain": Clip.replay(); break;
     case "clClose": Clip.close(); break;
-    case "sumClip": if (SS) Clip.open(SS.items, SS.pack, SS.free, SS_PRICE); break;
+    case "sumClip": if (SS) Clip.open(SS.items, SS.pack, SS.free, SS.bought ? -1 : SS_PRICE); break;
     case "rqShare": rqShare(); break;
     case "rqPay": Sale.pay(); break;
+    case "buyBtn": Shop.modal(); break;
+    case "shopPay": Shop.pay(); break;
+    case "shopOpen": closeModal(); openPack(); break;
     case "alertX": hideAlert(); break;
     case "dailyBtn": Snd.click(); dailyModal(); break;
     case "claimDaily": { const r = claimDaily(); if (r) dailyModal(r); break; }
@@ -45,7 +48,7 @@ document.addEventListener("click", e => {
     case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
     case "sumSell": { const g = sell(SS.items.map(c => c.uid)); closeStage(); toast("Sold for " + money(g)); break; }
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
-    case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else location.hash = "#/invite"; break; }
+    case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || (state.paidPacks || 0) > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else location.hash = "#/invite"; break; }
     case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { toast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`); renderCollection(); } break; }
     case "resetBtn": if (t.dataset.armed) { startOver(); renderBal(); renderChips(); location.hash = "#/"; show("home"); toast("Fresh start. Your first pack is free."); } else { t.dataset.armed = 1; t.textContent = "tap again to wipe your cards and start over"; setTimeout(() => { delete t.dataset.armed; t.textContent = "start over"; }, 3500); } break;
     case "copyLink": Ref.copy(); break;
@@ -57,7 +60,7 @@ document.addEventListener("click", e => {
     case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); Ref.sync(); break;
   }
 });
-document.addEventListener("change", e => { if (e.target.id === "rqAge") { const b = $("rqPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "rqQty") Sale.qty(); if (e.target.id === "mSort") { MKF.sort = e.target.value; renderMarket(); } if (e.target.id === "cSort") { CF.sort = e.target.value; renderCollection(); } if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
+document.addEventListener("change", e => { if (e.target.id === "rqAge") { const b = $("rqPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "rqQty") Sale.qty(); if (e.target.id === "shopAge") { const b = $("shopPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "shopQty") Shop.qty(); if (e.target.id === "mSort") { MKF.sort = e.target.value; renderMarket(); } if (e.target.id === "cSort") { CF.sort = e.target.value; renderCollection(); } if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
 document.addEventListener("submit", e => { if (e.target.id === "vanityForm") { e.preventDefault(); Ref.vanity($("vanityIn").value); } if (e.target.id === "csForm") { e.preventDefault(); Fair.setClientSeed($("csIn").value); fairModal(true); toast("Client seed set"); } if (e.target.id === "vfForm") { e.preventDefault(); verifyHand(); } });
 document.addEventListener("keydown", e => {
   const k = e.key;

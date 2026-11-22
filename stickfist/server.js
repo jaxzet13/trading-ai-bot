@@ -53,7 +53,7 @@ const dayKey = () => new Date().toISOString().slice(0, 10);
 const hits = new Map();                                                                    // address hash -> [timestamps] for simple rate limits
 function limited(key, max, ms) { const t = Date.now(), a = (hits.get(key) || []).filter(x => t - x < ms); a.push(t); hits.set(key, a); return a.length > max; }
 setInterval(() => { const t = Date.now(); for (const [k, a] of hits) { const f = a.filter(x => t - x < 3.6e6); f.length ? hits.set(k, f) : hits.delete(k); } }, 600000).unref();
-const publicInfo = u => ({ code: u.code, joined: u.joined || 0, invited: u.invited || 0, earned: u.earned || 0, credits: u.credits || 0, activated: !!u.active, by: u.by || "", cap: MAX_FRIENDS, fair: { commit: sha(u.seed), nonce: u.nonce, epoch: u.epoch } });
+const publicInfo = u => ({ paid: u.paidTotal || 0, code: u.code, joined: u.joined || 0, invited: u.invited || 0, earned: u.earned || 0, credits: u.credits || 0, activated: !!u.active, by: u.by || "", cap: MAX_FRIENDS, fair: { commit: sha(u.seed), nonce: u.nonce, epoch: u.epoch } });
 
 function getUser(uid, ip, create, ref) {
   let u = db.users[uid]; if (u || !create) return u;

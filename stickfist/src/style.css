@@ -419,3 +419,5 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
 .rqbuy .btn.big { width: 100%; justify-content: center; padding: 16px 20px; font-size: 17px; } .rqbuy p { margin: 0; } .rqbuy code, .rqrun + p code { font-size: 12px; color: #cfc4f5; word-break: break-all; }
 .rqrun { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; margin: 4px 0 14px; } .rqrun > div { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border: 1px solid var(--ln2); border-radius: 10px; background: #09090b; } .rqrun span { flex: 1; } .rqrun b { font-variant-numeric: tabular-nums; }
 @media (min-width: 700px) { .rqrun { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* ---- digital packs: the buy row on the pack page ---- */
+.buyrow { margin: -8px 0 6px; text-align: center; } .buyrow[hidden] { display: none; }

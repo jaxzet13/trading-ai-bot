@@ -440,6 +440,8 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
 .rqbuy .btn.big { width: 100%; justify-content: center; padding: 16px 20px; font-size: 17px; } .rqbuy p { margin: 0; } .rqbuy code, .rqrun + p code { font-size: 12px; color: #cfc4f5; word-break: break-all; }
 .rqrun { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; margin: 4px 0 14px; } .rqrun > div { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border: 1px solid var(--ln2); border-radius: 10px; background: #09090b; } .rqrun span { flex: 1; } .rqrun b { font-variant-numeric: tabular-nums; }
 @media (min-width: 700px) { .rqrun { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* ---- digital packs: the buy row on the pack page ---- */
+.buyrow { margin: -8px 0 6px; text-align: center; } .buyrow[hidden] { display: none; }
 </style>
 </head>
 <body>
@@ -464,6 +466,7 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
       <div class="packcol" id="homePack"></div>
       <div class="packmeta"><h1 id="packName">First Print</h1><p class="dim" id="packLine"></p></div>
       <button class="btn solid big" id="openBtn" data-open>open pack</button>
+      <p class="buyrow" id="buyRow" hidden><button class="btn small" id="buyBtn">Buy packs</button></p>
       <p class="small blurb" id="packBlurb"></p>
       <ol class="steps" id="how" hidden><li><b>1</b> Open a pack</li><li><b>2</b> Watch your cards' prices move</li><li><b>3</b> Sell when it's high</li></ol>
       <p class="honest" id="honest"></p>
@@ -740,13 +743,14 @@ const imgOf = (card, fx, small) => `cards/${small ? "s/" : ""}${card.id}${fx ? "
    4. STATE AND ECONOMY. Everything lives in this browser.
    ========================================================================== */
 const KEY = "stixx-first-print-v1";
-const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, pack: "fp", freePacks: 1, uid: rid(16), ref: { code: "", by: "", n: 0, act: 0 }, fair: null, rescueAt: 0, streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0, free: 0 } });
+const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, pack: "fp", freePacks: 1, paidPacks: 0, paidSeen: 0, uid: rid(16), ref: { code: "", by: "", n: 0, act: 0 }, fair: null, rescueAt: 0, streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0, free: 0, bought: 0 } });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); } catch (e) {}
 const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
 const save = () => { logWorth(true); persist(); };
 // a fresh start keeps who you are (age check, sound, your invite code) and nothing else
-function startOver() { const keep = { ageOK: state.ageOK, seenIntro: state.seenIntro, uid: state.uid, ref: state.ref, mute: state.mute, fair: state.fair }; state = Object.assign(fresh(), keep); save(); }
+// packs you paid for survive a fresh start, along with who you are
+function startOver() { const keep = { ageOK: state.ageOK, seenIntro: state.seenIntro, uid: state.uid, ref: state.ref, mute: state.mute, fair: state.fair, paidPacks: state.paidPacks, paidSeen: state.paidSeen }; state = Object.assign(fresh(), keep); save(); }
 
 // what a copy is worth right now: the card's live market price, times its style multiple
 const valueOf = c => Math.max(.5, MK.price(BY_NO[c.no]) * (c.fx ? STYLES[c.fx].x : 1));   // in cents, live, not rounded
@@ -1291,7 +1295,8 @@ function renderHome() {
   const pk = curPack(), ps = packStats(pk); $("banner").textContent = BANNER.join("\n");
   $("packTabs").live = PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-pack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("");
   $("packName").textContent = pk.name; $("packBlurb").textContent = pk.blurb;
-  const fp = state.freePacks; $("packLine").textContent = `${pk.n} cards · ${money(ps.price)}`; $("openBtn").textContent = fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : `open pack · ${money(ps.price)}`; $("openBtn").classList.toggle("free", fp > 0);
+  const fp = state.freePacks, pp = state.paidPacks || 0; $("packLine").textContent = `${pk.n} cards · ${money(ps.price)}`; $("openBtn").textContent = fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : pp ? `open a pack you bought${pp > 1 ? " · " + pp + " left" : ""}` : `open pack · ${money(ps.price)}`; $("openBtn").classList.toggle("free", fp > 0 || pp > 0);
+  $("buyRow").hidden = !Shop.open(); $("buyBtn").textContent = `Buy packs · ${money(Shop.price())} each, real money`;
   $("how").hidden = state.s.packs > 0; $("inviteBar").live = state.s.packs > 0 ? inviteBarHTML() : "";
   $("honest").live = `Every card is a picture made of text: the rarer the card, the more characters it holds. About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
   const mv = movers(); $("hot").live = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
@@ -1590,12 +1595,12 @@ async function openPack(pack) {
   if (SS || opening) return; const pk = pack || curPack(), gate = packGate(); if (gate) { toast(gate); return; }
   // out of play money with nothing left to sell: one free pack a day so nobody is ever stuck
   if (!state.freePacks && state.coins < packPrice(pk) && !state.vault.length && Date.now() - state.rescueAt > 864e5) { state.freePacks++; state.rescueAt = Date.now(); persist(); toast("You're out of play money, so here's a free pack."); }
-  const free = state.freePacks > 0, price = free ? 0 : packPrice(pk);
+  const free = state.freePacks > 0, bought = !free && (state.paidPacks || 0) > 0, price = free || bought ? 0 : packPrice(pk);      // a pack you bought costs no play money to open
   if (state.coins < price) { toast(state.vault.length ? `You need ${money(price - state.coins)} more. Sell a card to open another pack.` : "You're out of play money. Your free daily pack is back tomorrow, or invite a friend for one now."); return; }
   opening = true; let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS) return;
-  if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
+  if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else if (bought) { state.paidPacks--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
   state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
-  SS = { items, idx: 0, phase: "pack", busy: false, pack: pk, free };
+  SS = { items, idx: 0, phase: "pack", busy: false, pack: pk, free, bought };
   $("stName").textContent = pk.name; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
   $("stBox").innerHTML = `<div class="st-pack enter" id="stPack">${packHTML(pk)}</div><div class="cstack" id="stStack"></div>`;
   hint("Tap the pack to tear it open"); stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
@@ -1647,13 +1652,13 @@ async function dismiss(el, c) {
   SS.idx++; await sleep(260); if (SS.idx >= SS.items.length) summary(); else focusTop();
 }
 function skipAll() { if (!SS || SS.phase === "summary") return; SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
-const againLabel = pk => state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : "invite a friend, get a free pack";
+const againLabel = pk => state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : state.paidPacks ? `open a pack you bought${state.paidPacks > 1 ? " · " + state.paidPacks + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : "invite a friend, get a free pack";
 function summary() {
   SS.phase = "summary"; const items = SS.items, worth = items.reduce((a, c) => a + valueOf(c), 0), back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE;
   const best = items.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no];
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(worth)}">${blockSVG(money(worth))}</div><span class="dim" style="font-size:13px">of cards</span></div>
-    <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Sell them all for ${money(back)}.` : `Sell them all for ${money(back)}: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))} against the ${money(SS_PRICE)} pack.`}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
+    <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Sell them all for ${money(back)}.` : SS.bought ? `A pack you bought. Sell them all for ${money(back)} of play money.` : `Sell them all for ${money(back)}: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))} against the ${money(SS_PRICE)} pack.`}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
     <div class="fan">${items.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>
     <div class="row" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, net >= 0 ? 90 : 30, net >= 0 ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
@@ -1744,7 +1749,7 @@ const Share = (() => {
 
     // the footer band
     c.save(); rr(30, 1090, W - 60, H - 1090 - 30, 34); c.clip(); c.fillStyle = "#0e0e18"; c.fillRect(30, 1090, W - 60, 240); c.restore();
-    pix("STIXX", 66, 1140, 10, INK, .95); T("play money · simulated", W - 66, 1142, 24, INK, 600, "right"); T("nothing here is real or charged", W - 66, 1180, 20, DIM, 500, "right");
+    pix("STIXX", 66, 1140, 10, INK, .95); T("play money · simulated", W - 66, 1142, 24, INK, 600, "right"); T("simulated prices · no cash value", W - 66, 1180, 20, DIM, 500, "right");
     T(`${RAR[r.card.rar].name} · ${fmt(r.card.chars)} characters`, 66, 1240, 19, DIM, 500); T(r.code, 66, 1270, 19, DIM, 500); T(r.sold ? "after the 10% selling fee" : "if you sold now, after the 10% fee", W - 66, 1270, 19, DIM, 500, "right");
 
     // when the replay ends: profit throws characters up, a loss glitches
@@ -2316,7 +2321,7 @@ function dailyModal(res) {
 }
 function renderChips() {
   const d = $("dailyBtn"); if (d) { const ready = dailyReady(); d.className = "chip" + (ready ? " ready" : ""); d.innerHTML = ready ? `<i></i>free <span class="xs">daily </span>pack` : `streak ${state.streak.n}`; d.title = ready ? "A free pack, once a day" : "Your daily streak"; }
-  const bt = document.querySelector('#btabs [data-v="home"]'); if (bt) bt.classList.toggle("dot", state.freePacks > 0 || dailyReady());
+  const bt = document.querySelector('#btabs [data-v="home"]'); if (bt) bt.classList.toggle("dot", state.freePacks > 0 || (state.paidPacks || 0) > 0 || dailyReady());
   const m = $("muteBtn"); if (m) { m.textContent = state.mute ? "sound off" : "sound on"; m.setAttribute("aria-pressed", state.mute ? "true" : "false"); }
 }
 
@@ -2439,6 +2444,7 @@ const Ref = (() => {
     if (!API.on || busy || !state.ageOK) return; busy = true;
     try {
       const r = await API.post("hello", { uid: state.uid, ref: state.ref.by }); if (!r || !r.code) return; info = r; last = Date.now(); state.ref.code = r.code; state.ref.n = r.invited; Fair.adopt(r.fair);
+      if ((r.paid || 0) > (state.paidSeen || 0)) { const add = r.paid - (state.paidSeen || 0); state.paidSeen = r.paid; state.paidPacks = (state.paidPacks || 0) + add; persist(); renderChips(); if (view === "home") renderHome(); toast(`${add} pack${add > 1 ? "s" : ""} you bought ${add > 1 ? "are" : "is"} ready to open.`); }                  // a running total from the server, so the same purchase can never be added twice
       if (r.credits > 0) { const c = await API.post("claim", { uid: state.uid }); if (c && c.packs > 0) { state.freePacks += c.packs; persist(); renderChips(); const w = c.welcome, f = c.friends; toast(w && f ? `Free packs: ${c.packs}. A welcome gift, and ${f} friend${f > 1 ? "s" : ""} opened a pack.` : w ? "A friend invited you. Here's a free pack." : `${f} friend${f > 1 ? "s" : ""} opened a pack. You got ${c.packs} free pack${c.packs > 1 ? "s" : ""}.`); Snd.claim(true); buzz([30, 40, 30]); const r2 = await API.post("hello", { uid: state.uid, ref: state.ref.by }); if (r2 && r2.code) info = r2; if (view === "home") renderHome(); } }
       if (state.s.packs > 0 && !r.activated) activated();
     } finally { busy = false; if (view === "invite" && $("modal").hidden) renderInvite(); }
@@ -2516,16 +2522,19 @@ async function rotateSeed() { const b = $("fairRotate"); if (b) b.disabled = tru
 
 /* ---- cash out: a notice, not a feature. Nothing in the beta can be paid out, and the window says so plainly. ---- */
 function cashModal() {
+  if (Shop.open()) { openModal(`<div class="minfo"><div><span class="label">cash out</span><h2>Not available</h2></div>
+    <p class="dim">You can't cash out. Real money buys packs, and nothing else. Your balance, your cards and every price in STIXX are part of the game and have no cash value.${Money.note(true)}</p>
+    <div class="row"><button class="btn solid" data-close>ok</button></div></div>`, true); return; }
   openModal(`<div class="minfo"><div><span class="label">cash out</span><h2>Coming at public release</h2></div>
     <p class="dim">Cashing out will be available on public release. At public release, cards are bought with real money through Stripe.</p>
-    <p class="small">Until then everything in the beta is play money. This balance and these cards can't be paid out, and nothing in the game is charged.${Sale.note()}</p>
+    <p class="small">Until then everything in the beta is play money. This balance and these cards can't be paid out, and nothing in the game is charged.${Money.note()}</p>
     <div class="row"><button class="btn solid" data-close>ok</button></div></div>`, true);
 }
 
 /* ---- the fine print ---- */
 function aboutModal() {
   openModal(`<div class="minfo"><div><span class="label">the fine print</span><h2>STIXX beta</h2></div>
-    <ul class="plain"><li><b>Play money only.</b> Nothing in the beta costs real money and nothing can be cashed out. Cards have no cash value. Cashing out, and buying cards with real money through Stripe, are planned for the public release and are not part of this beta.${Sale.note()}</li><li><b>18+.</b> The cards contain explicit language and violence, and packs are a game of chance, so STIXX is for adults.</li><li><b>The market is simulated.</b> Prices come from AI trading bots, not real people. Every number is labelled as simulated where it is one.</li><li><b>What is stored.</b> Your cards and settings stay in this browser. If you use invites or fair-play seeds online, our server holds a random id, your invite code, the days you visited and a few counts. No name, email or payment details, ever.</li><li><b>It's a beta.</b> Things will change, and progress can be lost if you clear your browser data or we reset the beta.</li><li><b>Take it easy.</b> You can set a pack limit or take a break on the Me page at any time.</li></ul>
+    <ul class="plain"><li>${Money.about()}</li><li><b>18+.</b> The cards contain explicit language and violence, and packs are a game of chance, so STIXX is for adults.</li><li><b>The market is simulated.</b> Prices come from AI trading bots, not real people. Every number is labelled as simulated where it is one.</li><li><b>What is stored.</b> Your cards and settings stay in this browser. If you use invites or fair-play seeds online, our server holds a random id, your invite code, the days you visited and a few counts. No name, email or payment details, ever.</li><li><b>It's a beta.</b> Things will change, and progress can be lost if you clear your browser data or we reset the beta.</li><li><b>Take it easy.</b> You can set a pack limit or take a break on the Me page at any time.</li></ul>
     <div class="row"><button class="btn solid" data-close>ok</button></div></div>`, true);
 }
 
@@ -2658,12 +2667,12 @@ const Clip = (() => {
   function endCard(u, s) {
     const a = ease(u / .5); ctx.globalAlpha = a * .9; ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
     cue(s.end + .1, () => { Snd.level(); buzz([20, 30, 20]); });
-    T(s.free ? "from a free pack" : `from a ${money(s.price)} pack`, W / 2, 560, 38, DIM, 600, "center", a);
+    T(s.free ? "from a free pack" : s.price < 0 ? "from a pack" : `from a ${money(s.price)} pack`, W / 2, 560, 38, DIM, 600, "center", a);
     T(money(s.total), W / 2, 760, 188, INK, 700, "center", a); T("worth of cards", W / 2, 830, 40, DIM, 600, "center", a);
     T(`best: ${s.best.card.name} · ${s.best.R.name}`, W / 2, 960, 40, s.best.R.col, 700, "center", a * sm(.3, .8, u));
     const k = sm(.6, 1.2, u); ctx.globalAlpha = k; rr(140, 1130, W - 280, 150, 24); ctx.fillStyle = INK; ctx.fill(); ctx.globalAlpha = 1; T("open yours free", W / 2, 1230, 62, "#050507", 700, "center", k);
     T(s.link ? s.link.replace(/^https?:\/\//, "") : location.host || "stixx", W / 2, 1360, s.link && s.link.length > 40 ? 30 : 38, INK, 600, "center", k);
-    T("play money · nothing is charged · 18+", W / 2, 1810, 26, DIM, 500, "center", k);
+    T("play money · no cash value · 18+", W / 2, 1810, 26, DIM, 500, "center", k);
   }
 
   /* ---- playing and recording ---- */
@@ -2718,17 +2727,10 @@ const Sale = (() => {
     } catch (e) { return null; }
   })();
   const open = () => !!cfg.open;
-  // the one sentence that keeps every "play money" line honest while a sale is on
-  const note = () => open() ? " The one exception is the physical Requiem pack, a separate real-money purchase on its own page." : "";
-  function words() {
-    const f = $("footMoney"), g = $("gateMoney");
-    if (f) f.textContent = open() ? "the game is play money, nothing in it is charged or paid out · the physical Requiem pack is the only real-money purchase" : "play money only, nothing is ever charged or paid out";
-    if (g) g.textContent = open() ? "The game is play money: nothing in it is ever charged, and nothing can be cashed out. The one exception is the physical Requiem pack, a separate real-money purchase on its own page." : "Everything here is play money: nothing is ever charged, and nothing can be cashed out.";
-  }
   async function load() {
     if (!API.on) return cfg; const r = await API.get("requiem/config"); if (!r || typeof r.open !== "boolean") return cfg;
     cfg = Object.assign({ loaded: true }, r); if (r.run) RQ.run = r.run; if (r.closes) RQ.closes = r.closes;
-    words(); if (view === "limited") renderLimited(); else if (view === "home") renderHome(); return cfg;
+    Money.words(); if (view === "limited") renderLimited(); else if (view === "home") renderHome(); return cfg;
   }
   const total = () => { const q = $("rqQty"); return money((cfg.price || RQ.price) * (q ? +q.value || 1 : 1)); };
   function qty() { const b = $("rqPay"); if (b && !b.dataset.busy) b.textContent = "Pay " + total(); }
@@ -2756,7 +2758,75 @@ const Sale = (() => {
     const text = !o ? "Checking your order…" : o.short ? "Your payment went through, but the run sold out first. You will be refunded." : `Your payment went through. Your pack${o.packs.length > 1 ? "s are" : " is"} number ${nos} of ${fmt(o.run || 0)}. We ship to the address you gave Stripe.`;
     return `<div class="rqnote ok" role="status"><b>Thank you.</b> <span id="rqPaidTxt">${esc(text)}</span></div>`;
   }
-  return { load, open, note, words, pay, qty, poll, banner, cfg: () => cfg, ret: () => ret, total };
+  return { load, open, pay, qty, poll, banner, cfg: () => cfg, ret: () => ret, total };
+})();
+
+/* ============================================================================
+   8i. DIGITAL PACKS. What real money buys in the game: pack openings, and nothing else. The cards stay game items with no cash value, every price in the game
+   stays simulated, and nothing can be cashed out. The server (pay.js) decides whether this is on, takes the payment through Stripe, and keeps a running total of
+   the packs each player has bought; the page adds the difference to the player's packs, so a purchase can never be added twice.
+   ========================================================================== */
+const Shop = (() => {
+  let cfg = { open: false };
+  const ret = (() => {                                                     // ?pk=paid&sid=… or ?pk=cancel, on the way back from Stripe
+    try {
+      const p = new URLSearchParams(location.search), k = p.get("pk"); if (!k) return null;
+      const sid = (p.get("sid") || "").replace(/[^\w]/g, "").slice(0, 120); p.delete("pk"); p.delete("sid");
+      history.replaceState(null, "", location.pathname + (p.toString() ? "?" + p : "") + location.hash); return { kind: k === "paid" ? "paid" : "cancel", sid };
+    } catch (e) { return null; }
+  })();
+  const open = () => !!cfg.open, price = () => cfg.cents || 199;
+  async function load() {
+    if (!API.on) return; const r = await API.get("shop/config?uid=" + encodeURIComponent(state.uid)); if (!r || typeof r.open !== "boolean") return;
+    cfg = r; Money.words(); if (view === "home") renderHome();
+  }
+  const total = () => { const q = $("shopQty"); return money(price() * (q ? +q.value || 1 : 1)); };
+  function qty() { const b = $("shopPay"); if (b && !b.dataset.busy) b.textContent = "Pay " + total(); }
+  function modal() {
+    if (!open()) return;
+    openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Buy packs</h2></div>
+      <p class="dim">Real money buys packs, and nothing else. Each pack holds random digital cards: you can't choose them, and the odds are on the <a href="#/odds" data-close>odds page</a>. The cards are game items with <b>no cash value</b>. Nothing in STIXX can be cashed out, and the prices you see in the game are simulated.</p>
+      <div class="rqbuyh"><div><b>${money(price())} per pack</b><span class="small">one flat price: no bundles, no discounts</span></div>
+        <label class="rqqty"><span class="small">Packs</span><select id="shopQty" aria-label="How many packs">${Array.from({ length: cfg.maxQty || 1 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}</select></label></div>
+      <label class="rqage"><input type="checkbox" id="shopAge"><span>I'm 18 or older, I understand the packs are random, and I'm spending real money.</span></label>
+      <button class="btn solid big" id="shopPay" disabled>Pay ${total()}</button>
+      <p class="small">Apple Pay, Google Pay or card, on Stripe's secure page. STIXX never sees your card. You are only charged after you confirm there. There is a limit of ${money(cfg.cap || 0)} a day${cfg.spentToday > 0 ? ` (you have used ${money(cfg.spentToday)} today)` : ""}. <a href="${esc(cfg.terms || "#")}" target="_blank" rel="noopener">Terms and refunds</a>.</p>
+      <div class="row"><button class="btn ghost" data-close>not now</button></div></div>`, true);
+  }
+  async function pay() {
+    const age = $("shopAge") && $("shopAge").checked, b = $("shopPay"); if (!age || !b || b.dataset.busy) return;
+    b.dataset.busy = 1; b.disabled = true; b.textContent = "Opening Stripe…";
+    const r = await API.post("shop/checkout", { uid: state.uid, qty: +($("shopQty") ? $("shopQty").value : 1) || 1, age: true });
+    if (r && typeof r.url === "string" && /^https:\/\//.test(r.url)) { location.href = r.url; return; }
+    delete b.dataset.busy; b.disabled = !($("shopAge") && $("shopAge").checked); qty(); toast((r && r.error) || "Couldn't reach the server. You have not been charged.");
+  }
+  const done = (title, text, button) => openModal(`<div class="minfo"><div><span class="label">real money</span><h2>${esc(title)}</h2></div><p class="dim" id="shopDoneTxt">${esc(text)}</p><div class="row">${button ? `<button class="btn solid" id="shopOpen">open a pack</button>` : ""}<button class="btn ${button ? "ghost" : "solid"}" data-close>${button ? "later" : "ok"}</button></div></div>`, true);
+  // back from Stripe: wait until the server has confirmed the payment, then collect the packs
+  async function back() {
+    if (!ret) return; if (ret.kind === "cancel") { toast("No payment was taken."); return; }
+    done("Thank you", "Checking your payment…", false);
+    for (let i = 0; i < 20 && ret.sid; i++) {
+      const r = await API.get("shop/order?sid=" + encodeURIComponent(ret.sid));
+      if (r && r.ok) {
+        if (r.short) { done("Thank you", "Your payment went through, but we couldn't add the packs to your game. You will be refunded.", false); return; }
+        await Ref.sync(); const n = r.qty || 1; done("Your packs are ready", `Your payment went through. ${n} pack${n > 1 ? "s are" : " is"} ready to open. You'll find ${n > 1 ? "them" : "it"} on the pack page.`, true); if (view === "home") renderHome(); return;
+      }
+      await sleep(2000);
+    }
+    if ($("shopDoneTxt")) $("shopDoneTxt").textContent = "Your payment is still being confirmed. Your packs will appear on the pack page within a few minutes.";
+  }
+  return { load, open, price, modal, pay, qty, back, cfg: () => cfg };
+})();
+
+/* ---- the one place that says what is and isn't real money, so no line in the game is ever wrong about it ---- */
+const Money = (() => {
+  const packs = () => Shop.open(), req = () => Sale.open();
+  const footer = () => packs() ? "the game's money is play money and can't be cashed out · real money only buys packs, whose cards have no cash value" + (req() ? " · the physical Requiem pack is a separate purchase" : "") : req() ? "the game is play money, nothing in it is charged or paid out · the physical Requiem pack is the only real-money purchase" : "play money only, nothing is ever charged or paid out";
+  const gate = () => packs() ? "The game's money is play money, and nothing can be cashed out. Real money can only be used to buy packs, whose cards have no cash value." + (req() ? " The physical Requiem pack is a separate real-money purchase, on its own page." : "") : req() ? "The game is play money: nothing in it is ever charged, and nothing can be cashed out. The one exception is the physical Requiem pack, a separate real-money purchase on its own page." : "Everything here is play money: nothing is ever charged, and nothing can be cashed out.";
+  const note = lead => (packs() ? (lead ? " " : " ") + "Real money only buys packs, and their cards have no cash value." : "") + (req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : "");
+  const about = () => packs() ? `<b>Real money buys packs, nothing else.</b> Cards, balances and every price in the game are play items with no cash value, and nothing can be cashed out.${req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : ""}` : `<b>Play money only.</b> Nothing in the beta costs real money and nothing can be cashed out. Cards have no cash value. Cashing out, and buying cards with real money through Stripe, are planned for the public release and are not part of this beta.${note()}`;
+  function words() { const f = $("footMoney"), g = $("gateMoney"); if (f) f.textContent = footer(); if (g) g.textContent = gate(); }
+  return { words, note, about, footer, gate };
 })();
 
 /* ============================================================================
@@ -2795,9 +2865,12 @@ document.addEventListener("click", e => {
     case "clShare": Clip.share(); break;
     case "clAgain": Clip.replay(); break;
     case "clClose": Clip.close(); break;
-    case "sumClip": if (SS) Clip.open(SS.items, SS.pack, SS.free, SS_PRICE); break;
+    case "sumClip": if (SS) Clip.open(SS.items, SS.pack, SS.free, SS.bought ? -1 : SS_PRICE); break;
     case "rqShare": rqShare(); break;
     case "rqPay": Sale.pay(); break;
+    case "buyBtn": Shop.modal(); break;
+    case "shopPay": Shop.pay(); break;
+    case "shopOpen": closeModal(); openPack(); break;
     case "alertX": hideAlert(); break;
     case "dailyBtn": Snd.click(); dailyModal(); break;
     case "claimDaily": { const r = claimDaily(); if (r) dailyModal(r); break; }
@@ -2806,7 +2879,7 @@ document.addEventListener("click", e => {
     case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
     case "sumSell": { const g = sell(SS.items.map(c => c.uid)); closeStage(); toast("Sold for " + money(g)); break; }
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
-    case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else location.hash = "#/invite"; break; }
+    case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || (state.paidPacks || 0) > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else location.hash = "#/invite"; break; }
     case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { toast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`); renderCollection(); } break; }
     case "resetBtn": if (t.dataset.armed) { startOver(); renderBal(); renderChips(); location.hash = "#/"; show("home"); toast("Fresh start. Your first pack is free."); } else { t.dataset.armed = 1; t.textContent = "tap again to wipe your cards and start over"; setTimeout(() => { delete t.dataset.armed; t.textContent = "start over"; }, 3500); } break;
     case "copyLink": Ref.copy(); break;
@@ -2818,7 +2891,7 @@ document.addEventListener("click", e => {
     case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); Ref.sync(); break;
   }
 });
-document.addEventListener("change", e => { if (e.target.id === "rqAge") { const b = $("rqPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "rqQty") Sale.qty(); if (e.target.id === "mSort") { MKF.sort = e.target.value; renderMarket(); } if (e.target.id === "cSort") { CF.sort = e.target.value; renderCollection(); } if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
+document.addEventListener("change", e => { if (e.target.id === "rqAge") { const b = $("rqPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "rqQty") Sale.qty(); if (e.target.id === "shopAge") { const b = $("shopPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "shopQty") Shop.qty(); if (e.target.id === "mSort") { MKF.sort = e.target.value; renderMarket(); } if (e.target.id === "cSort") { CF.sort = e.target.value; renderCollection(); } if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
 document.addEventListener("submit", e => { if (e.target.id === "vanityForm") { e.preventDefault(); Ref.vanity($("vanityIn").value); } if (e.target.id === "csForm") { e.preventDefault(); Fair.setClientSeed($("csIn").value); fairModal(true); toast("Client seed set"); } if (e.target.id === "vfForm") { e.preventDefault(); verifyHand(); } });
 document.addEventListener("keydown", e => {
   const k = e.key;
@@ -2834,7 +2907,7 @@ window.addEventListener("hashchange", route);
    10. START
    ========================================================================== */
 const lastSeen0 = state.lastSeen;                                       // when you were last here, read before this visit overwrites it
-MK.advance(); logWorth(); state.lastSeen = Date.now(); persist(); renderBal(); renderChips(); if (Sale.ret() && location.hash !== "#/limited") location.hash = "#/limited"; route(); renderTape(); Sale.load();
+MK.advance(); logWorth(); state.lastSeen = Date.now(); persist(); renderBal(); renderChips(); if (Sale.ret() && location.hash !== "#/limited") location.hash = "#/limited"; route(); renderTape(); Sale.load(); Shop.load(); Shop.back();
 if (!state.ageOK) $("gate").hidden = false; else setTimeout(() => Cut.maybeIntro(), 400);
 // the market moves every 20 seconds; redraw whatever is on screen when it does
 let lastTick = MK.tick();

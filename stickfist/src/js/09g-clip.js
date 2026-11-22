@@ -127,12 +127,12 @@ const Clip = (() => {
   function endCard(u, s) {
     const a = ease(u / .5); ctx.globalAlpha = a * .9; ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
     cue(s.end + .1, () => { Snd.level(); buzz([20, 30, 20]); });
-    T(s.free ? "from a free pack" : `from a ${money(s.price)} pack`, W / 2, 560, 38, DIM, 600, "center", a);
+    T(s.free ? "from a free pack" : s.price < 0 ? "from a pack" : `from a ${money(s.price)} pack`, W / 2, 560, 38, DIM, 600, "center", a);
     T(money(s.total), W / 2, 760, 188, INK, 700, "center", a); T("worth of cards", W / 2, 830, 40, DIM, 600, "center", a);
     T(`best: ${s.best.card.name} · ${s.best.R.name}`, W / 2, 960, 40, s.best.R.col, 700, "center", a * sm(.3, .8, u));
     const k = sm(.6, 1.2, u); ctx.globalAlpha = k; rr(140, 1130, W - 280, 150, 24); ctx.fillStyle = INK; ctx.fill(); ctx.globalAlpha = 1; T("open yours free", W / 2, 1230, 62, "#050507", 700, "center", k);
     T(s.link ? s.link.replace(/^https?:\/\//, "") : location.host || "stixx", W / 2, 1360, s.link && s.link.length > 40 ? 30 : 38, INK, 600, "center", k);
-    T("play money · nothing is charged · 18+", W / 2, 1810, 26, DIM, 500, "center", k);
+    T("play money · no cash value · 18+", W / 2, 1810, 26, DIM, 500, "center", k);
   }
 
   /* ---- playing and recording ---- */

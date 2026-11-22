@@ -1,6 +1,15 @@
-# Selling the Requiem pack with Stripe (Apple Pay included)
+# Taking real payments with Stripe (Apple Pay included)
 
-This is how to turn on real payments for the physical Requiem pack. It is **off** until you do every step below: the page shows the preview and the server refuses to take an order.
+There are two things you can sell, each with its own switch, both **off** until you set them up:
+
+- **Digital packs** (`SHOP_OPEN=1`): real money buys pack openings in the game. See "Digital packs" at the end of this file.
+- **The physical Requiem pack** (`REQUIEM_OPEN=1`): described first, below.
+
+They share the same Stripe account, keys, webhook, public address and terms page. The sections below on the account, Apple Pay, the server and the webhook apply to both.
+
+## The physical Requiem pack
+
+It is **off** until you do every step below: the page shows the preview and the server refuses to take an order.
 
 ## How it works
 
@@ -70,3 +79,38 @@ Also build the page for your server: `python3 build.py --release --url https://Y
 - **A real limit.** The page says "a run of N packs, printed once" from your run file. Print exactly that many and never reprint.
 - **Refunds, shipping and fulfilment** are manual: the admin list tells you what goes in each pack, and Stripe has the addresses.
 - **The beta's play-money wording.** While the sale is open the footer, the cash-out notice and the age gate each name the Requiem pack as the one real-money exception. Close the sale (`REQUIEM_OPEN` unset) and they go back to "play money only".
+
+## Digital packs
+
+**What real money buys:** pack openings, and nothing else. A pack costs one flat price (`SHOP_PACK_CENTS`, default $1.99; no bundles, no discounts). The player's balance, their cards and every price in the game stay play-money items with **no cash value**, and nothing can be cashed out. I built it this way on purpose: if real money bought play money at 1:1, or if cards could be sold for real money, the game would look and behave like gambling, and that is a different legal world.
+
+**How it works**
+1. On the pack page a **Buy packs** button appears only while the server says digital packs are on. It opens a window that says what real money buys, that the packs are random, that the cards have no cash value, the daily limit and a link to your terms and refunds page. The player ticks "I'm 18 or older, I understand the packs are random, and I'm spending real money", picks 1 to 10 packs and presses Pay.
+2. The server asks Stripe for a Checkout page (no shipping address: it is digital) and sends the player there. Apple Pay, Google Pay and cards appear on Stripe's page; STIXX never sees a card.
+3. When Stripe confirms the payment (the same signed webhook as the Requiem pack), the server adds the packs to that player's **running total** of bought packs. The page compares that total with how many it has already added, and adds the difference. Because it is a running total, a purchase can never be added twice, even if a message is lost or the player reloads. A pack you bought is shown as "a pack you bought", never "free", and opening it spends no play money.
+4. Packs the player has paid for survive "start over".
+
+**Settings** (in addition to the Stripe ones above: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PUBLIC_URL`, `REQUIEM_TERMS_URL`, which is your terms and refund policy)
+
+| Variable | Value |
+|---|---|
+| `SHOP_OPEN` | `1` to turn digital packs on (remove it to turn them off at once) |
+| `SHOP_PACK_CENTS` | the price of one pack; default `199`. This is your business decision: change it. |
+| `SHOP_MAX_PER_ORDER` | default `10` |
+| `SHOP_DAILY_CAP_CENTS` | the most one player can spend in a day (UTC); default `2500`. A spending limit for the player's own protection, counting payments still open. Lower it if you like. |
+
+Webhook events needed are the same four listed in step 6 above. Try it in test mode first: pay with `4242 4242 4242 4242`, and check the packs arrive once.
+
+**Seeing orders:** `https://YOUR-SITE/api/shop/orders?token=YOUR_ADMIN_TOKEN` lists paid orders (a short player id, packs, amount) with no personal details; the Stripe Dashboard has the buyer's payment details and handles refunds. A paid order that couldn't be matched to a player is marked `short`: refund it in Stripe.
+
+**What changes in the game's wording while digital packs are on.** The footer, the age gate, the cash-out notice and the fine print all say that real money buys packs only and the cards have no cash value, and the cash-out window stops saying "coming at public release". That line would promise buyers a payout, so it isn't shown while real money is taken. If you ever mean to let people cash out real money, that is regulated gambling in most places: get legal advice first, and note that nothing here supports it.
+
+**Things that are on you**
+- **Law.** Selling random packs for real money ("loot boxes") is restricted or regulated in some places, and you need real age verification, refund handling and sales tax for digital goods (Stripe Tax can calculate it). The 18+ tick box is not an age check. Get legal advice before you switch it on for the public.
+- **Marketing.** Anything that shows profits ("$7 to $752") has to say clearly that it is play money, and must not suggest real returns.
+- **iPhone and Android app stores.** This is a web app, so Stripe is fine in the browser. If you wrap it in an app for the App Store or Google Play, those stores require their own in-app purchase system for digital goods.
+- **Children.** Random-pack purchases must not be aimed at minors. Keep the 18+ gate and don't advertise where children are.
+
+## Connecting your Stripe account to Claude (optional)
+
+This is separate from the server's key. Claude can't take payments or hold your key; a connector only lets Claude see and configure things in your Stripe account when you ask, for example to check that Apple Pay is on, to see account status, or to add the webhook endpoint once your server has an address. Connect it from the card Claude shows you (it asks you to log in to Stripe and choose the account). Use test mode while you build. Your server still needs `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` set as environment variables where it runs.

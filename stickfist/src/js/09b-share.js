@@ -82,7 +82,7 @@ const Share = (() => {
 
     // the footer band
     c.save(); rr(30, 1090, W - 60, H - 1090 - 30, 34); c.clip(); c.fillStyle = "#0e0e18"; c.fillRect(30, 1090, W - 60, 240); c.restore();
-    pix("STIXX", 66, 1140, 10, INK, .95); T("play money · simulated", W - 66, 1142, 24, INK, 600, "right"); T("nothing here is real or charged", W - 66, 1180, 20, DIM, 500, "right");
+    pix("STIXX", 66, 1140, 10, INK, .95); T("play money · simulated", W - 66, 1142, 24, INK, 600, "right"); T("simulated prices · no cash value", W - 66, 1180, 20, DIM, 500, "right");
     T(`${RAR[r.card.rar].name} · ${fmt(r.card.chars)} characters`, 66, 1240, 19, DIM, 500); T(r.code, 66, 1270, 19, DIM, 500); T(r.sold ? "after the 10% selling fee" : "if you sold now, after the 10% fee", W - 66, 1270, 19, DIM, 500, "right");
 
     // when the replay ends: profit throws characters up, a loss glitches
