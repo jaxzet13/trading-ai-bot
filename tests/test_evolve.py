@@ -123,3 +123,23 @@ def test_near_copies_of_removed_rules_are_blocked():
             daily.update({d: [1.0 + (d % 3) * 0.01, 5, 0.5] for d in days})
     ids = {r["rid"] for r in R.eligible(ALL, days[-1], {"fv_drift"}, gone={"fv_drift:KXETH15M:1"})}
     assert "fv_drift:KXETH15M:7" not in ids and "fv_drift:KXNEAR15M:3" in ids
+
+
+def test_guards_report_pause_and_brake(tmp_path, monkeypatch):
+    """rotate guards reads the runner's log the way the runner applies its brakes."""
+    log, cfg = tmp_path / "real_log.jsonl", tmp_path / "cfg.json"
+    cfg.write_text(json.dumps({"limits": {"rule_pause_last_n": 5, "rule_pause_loss_usd": 2.0, "drawdown_brake_usd": 7.0},
+                               "golden_rules": [{"id": "A"}, {"id": "B"}]}))
+    ev = []
+    for i in range(5):                                  # A: 5 losing bets of $0.50 -> -2.50, paused
+        ev += [{"event": "order_intent", "ticker": f"a{i}", "rule": "A", "balance_crypto": 30.0},
+               {"event": "settle", "ticker": f"a{i}", "pnl": -0.5, "ts": 1}]
+    ev += [{"event": "order_intent", "ticker": "b0", "rule": "B", "balance_crypto": 30.0},
+           {"event": "settle", "ticker": "b0", "pnl": 1.0, "ts": 1}]
+    log.write_text("\n".join(json.dumps(e) for e in ev))
+    (tmp_path / "real_log_peak.json").write_text(json.dumps({"peak": 40.0}))
+    monkeypatch.setattr(R, "REAL_LOG", log)
+    monkeypatch.setattr(R, "CFG", cfg)
+    g = R.guards(log=lambda m: None)
+    assert g["rules"]["A"]["state"] == "PAUSED" and g["rules"]["B"]["state"] == "ok"
+    assert g["brake"]["halving"] is True                # 30 < 40 - 7

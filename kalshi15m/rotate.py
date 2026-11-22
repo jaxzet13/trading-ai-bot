@@ -435,6 +435,48 @@ def run(apply=False, log=print):
     return rec
 
 
+def guards(log=print):
+    """The runner's own brakes, read from its log the way it applies them: per live rule, the last
+    limits.rule_pause_last_n real bets against limits.rule_pause_loss_usd (PAUSED once they lost that much), and the
+    drawdown brake (bets halved while equity is more than limits.drawdown_brake_usd below its high-water mark).
+    Halving never shows up as a skipped signal, only as smaller bets, so it is reported here."""
+    cfg = json.loads(CFG.read_text())
+    L = cfg["limits"]
+    n, lim = L.get("rule_pause_last_n"), L.get("rule_pause_loss_usd")
+    since = L.get("rule_pause_ignore_before_ts") or 0
+    rule_of, pnl, order, bal = {}, {}, {}, None
+    for ln in open(REAL_LOG) if REAL_LOG.exists() else []:
+        try:
+            e = json.loads(ln)
+        except ValueError:
+            continue
+        tk, k = e.get("ticker"), e.get("event")
+        if k == "order_intent" and tk:
+            rule_of[tk] = e.get("rule")
+            bal = e.get("balance_crypto", bal)
+        elif k in ("settle", "exit") and tk and e.get("ts", 0) >= since and isinstance(e.get("pnl"), (int, float)):
+            r = rule_of.get(tk)
+            if tk not in pnl:
+                order.setdefault(r, []).append(tk)
+            pnl[tk] = pnl.get(tk, 0.0) + e["pnl"]
+    out = {"rules": {}}
+    for r in cfg["golden_rules"]:
+        last = order.get(r["id"], [])[-int(n or 0):]
+        tot = sum(pnl[t] for t in last)
+        st = ("PAUSED" if n and len(last) >= n and tot <= -lim else "ok") if n and lim else "no auto-pause"
+        out["rules"][r["id"]] = {"last_n_bets": len(last), "last_n_pnl": round(tot, 2), "state": st}
+        log(f"    {r['id']:26s} last {len(last):2d} real bets ${tot:+6.2f} (pause at -${lim:.2f} over {n}): {st}")
+    peak_f = REAL_LOG.with_name(REAL_LOG.stem + "_peak.json")
+    brake = L.get("drawdown_brake_usd")
+    if brake and peak_f.exists() and bal is not None:
+        peak = json.loads(peak_f.read_text())["peak"]
+        on = bal < peak - brake
+        out["brake"] = {"peak": peak, "below": round(peak - brake, 2), "balance": bal, "halving": on}
+        log(f"    drawdown brake: high ${peak:.2f}, bets halve below ${peak - brake:.2f}; last balance ${bal:.2f} "
+            f"(excl. open bets) -> {'BETS HALVED' if on else 'full size'}")
+    return out
+
+
 def tracking(hours=24, log=print):
     """Cold strategy or broken bot? For each live rule over the last `hours`: real bets and P&L vs the forward lab's
     replay of the same rule (data/lab/fwd_live_bets.json, Kalshi's own trades deciding fills). Both losing = the
@@ -474,8 +516,11 @@ def tracking(hours=24, log=print):
 
 def main(args=None):
     args = list(args or [])
-    if "tracking" in args:
-        tracking()
+    if "tracking" in args or "guards" in args:
+        if "tracking" in args:
+            tracking()
+        guards()
         return
     run(apply="apply" in args)
     tracking()
+    guards()
