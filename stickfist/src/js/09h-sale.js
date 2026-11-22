@@ -64,7 +64,7 @@ const Shop = (() => {
   const open = () => !!cfg.open && PACKS.some(p => cfg.prices && cfg.prices[p.id]), has = id => !!cfg.open && !!(cfg.prices && cfg.prices[id]), price = id => (cfg.prices && cfg.prices[id]) || 0;
   async function load() {
     if (!API.on) return; const r = await API.get("shop/config?uid=" + encodeURIComponent(state.uid)); if (!r || typeof r.open !== "boolean") return;
-    cfg = r; Money.words(); if (view === "home") renderHome();
+    cfg = r; Money.words(); const tb = $("topBuy"); if (tb) tb.hidden = !open(); if (view === "home") renderHome();
   }
   const chosen = () => { const s = $("shopPack"); return s ? s.value : curPack().id; }, count = () => { const q = $("shopQty"); return q ? +q.value || 1 : 1; };
   const total = () => rmoney(price(chosen()) * count());

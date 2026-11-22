@@ -276,7 +276,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(-
 .btn.solid.free { animation: freeGlow 2.4s ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { .btn.solid.free { animation: none; } }
 @media (max-height: 720px) { .banner { display: none; } .packcol { width: min(78vw, clamp(150px, calc((100vh - 400px) * .667), 330px)); } .home { gap: 14px; } }
 .chip.cash { border-color: var(--ln3); }
-@media (max-width: 420px) { .chip .xs { display: none; } header.top .wrap { gap: 6px 10px; } .logo { letter-spacing: .12em; } .wallet { gap: 6px; } .bal { font-size: 14px; } }
+@media (max-width: 420px) { .chip .xs { display: none; } #cashBtn { display: none; } header.top .wrap { gap: 6px 10px; } .logo { letter-spacing: .12em; } .wallet { gap: 6px; } .bal { font-size: 14px; } }
 
 /* ======================================================================================================================================
    v2: lists, pills, summary tiles, the phone's bottom bar and bottom sheet
@@ -441,7 +441,8 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
 .rqrun { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; margin: 4px 0 14px; } .rqrun > div { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border: 1px solid var(--ln2); border-radius: 10px; background: #09090b; } .rqrun span { flex: 1; } .rqrun b { font-variant-numeric: tabular-nums; }
 @media (min-width: 700px) { .rqrun { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 /* ---- digital packs: the buy row on the pack page ---- */
-.buyrow { margin: -8px 0 6px; text-align: center; } .buyrow[hidden] { display: none; }
+.buyrow { margin: 4px 0 10px; text-align: center; } .buyrow[hidden] { display: none; } .buyrow .btn { width: min(360px, 100%); }
+.chip.buy { background: var(--ink); color: #050506; border-color: var(--ink); font-weight: 600; } .chip.buy:hover { background: #fff; border-color: #fff; } .chip.buy[hidden] { display: none; }
 /* ---- selling: quick sell buttons, a big labelled Sell in the card window, and Undo ---- */
 .ctw { display: grid; gap: 8px; align-content: start; } .crw { display: flex; gap: 8px; align-items: stretch; } .crw .crow { flex: 1; min-width: 0; } .crw .sellq { flex: none; width: auto; min-width: 84px; }
 .sellq { min-height: 44px; padding: 8px 12px; border: 1px solid var(--ln3); border-radius: 10px; background: #0d0d10; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; font-variant-numeric: tabular-nums; } .sellq:hover { background: #17171c; border-color: var(--dim); } .sellq:active { transform: scale(.98); }
@@ -458,7 +459,7 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
     <nav class="tabs" id="tabs" aria-label="Sections">
       <a href="#/" data-v="home">pack</a><a href="#/collection" data-v="collection">cards</a><a href="#/market" data-v="market">market</a><a href="#/invite" data-v="invite">invite</a><a href="#/profile" data-v="profile">me</a>
     </nav>
-    <div class="wallet"><button class="chip" id="dailyBtn"></button><button class="chip cash" id="cashBtn">cash out</button><button class="chip soft" id="muteBtn" aria-pressed="false"></button><span class="bal" id="bal" title="Play money. Nothing is ever charged.">$0.00</span></div>
+    <div class="wallet"><button class="chip buy" id="topBuy" hidden>+ Buy<span class="xs"> packs</span></button><button class="chip" id="dailyBtn"></button><button class="chip cash" id="cashBtn">cash out</button><button class="chip soft" id="muteBtn" aria-pressed="false"></button><span class="bal" id="bal" title="Play money. Nothing is ever charged.">$0.00</span></div>
   </div>
 </header>
 <div class="tape" aria-hidden="true"><div class="tape-in" id="tapeIn"></div></div>
@@ -472,7 +473,7 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
       <div class="packcol" id="homePack"></div>
       <div class="packmeta"><h1 id="packName">First Print</h1><p class="dim" id="packLine"></p></div>
       <button class="btn solid big" id="openBtn" data-open>open pack</button>
-      <p class="buyrow" id="buyRow" hidden><button class="btn small" id="buyBtn">Buy packs</button></p>
+      <p class="buyrow" id="buyRow" hidden><button class="btn solid" id="buyBtn">Buy packs</button></p>
       <p class="small blurb" id="packBlurb"></p>
       <ol class="steps" id="how" hidden><li><b>1</b> Open a pack</li><li><b>2</b> Watch your cards' prices move</li><li><b>3</b> Sell when it's high</li></ol>
       <p class="honest" id="honest"></p>
@@ -1312,7 +1313,7 @@ function renderHome() {
   $("packTabs").live = PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-pack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("");
   $("packName").textContent = pk.name; $("packBlurb").textContent = pk.blurb;
   const fp = state.freePacks, pp = boughtOf(pk.id); $("packLine").textContent = `${pk.n} cards · ${money(ps.price)}`; $("openBtn").textContent = fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : pp ? `open a pack you bought${pp > 1 ? " · " + pp + " left" : ""}` : `open pack · ${money(ps.price)}`; $("openBtn").classList.toggle("free", fp > 0 || pp > 0);
-  $("buyRow").hidden = !Shop.has(pk.id); $("buyBtn").textContent = `Buy ${pk.name} packs · ${rmoney(Shop.price(pk.id))} each, real money`;
+  $("buyRow").hidden = !Shop.has(pk.id); $("buyBtn").textContent = `Buy packs · ${rmoney(Shop.price(pk.id))} each`;
   $("how").hidden = state.s.packs > 0; $("inviteBar").live = state.s.packs > 0 ? inviteBarHTML() : "";
   $("honest").live = `Every card is a picture made of text: the rarer the card, the more characters it holds. About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
   const mv = movers(); $("hot").live = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
@@ -1640,7 +1641,7 @@ async function openPack(pack) {
   // out of play money with nothing left to sell: one free pack a day so nobody is ever stuck
   if (!state.freePacks && state.coins < packPrice(pk) && !state.vault.length && Date.now() - state.rescueAt > 864e5) { state.freePacks++; state.rescueAt = Date.now(); persist(); toast("You're out of play money, so here's a free pack."); }
   const free = state.freePacks > 0, bought = !free && boughtOf(pk.id) > 0, price = free || bought ? 0 : packPrice(pk);      // a pack you bought costs no play money to open
-  if (state.coins < price) { toast(state.vault.length ? `You need ${money(price - state.coins)} more. Sell a card to open another pack.` : "You're out of play money. Your free daily pack is back tomorrow, or invite a friend for one now."); return; }
+  if (state.coins < price) { toast(state.vault.length ? `You need ${money(price - state.coins)} more. Sell a card to open another pack.` : "You're out of play money. Your free daily pack is back tomorrow, or invite a friend for one now.", Shop.has(pk.id) ? { key: "buy", label: "Buy packs" } : null); return; }
   opening = true; let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS) return;
   if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else if (bought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
   state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
@@ -2764,7 +2765,7 @@ const Shop = (() => {
   const open = () => !!cfg.open && PACKS.some(p => cfg.prices && cfg.prices[p.id]), has = id => !!cfg.open && !!(cfg.prices && cfg.prices[id]), price = id => (cfg.prices && cfg.prices[id]) || 0;
   async function load() {
     if (!API.on) return; const r = await API.get("shop/config?uid=" + encodeURIComponent(state.uid)); if (!r || typeof r.open !== "boolean") return;
-    cfg = r; Money.words(); if (view === "home") renderHome();
+    cfg = r; Money.words(); const tb = $("topBuy"); if (tb) tb.hidden = !open(); if (view === "home") renderHome();
   }
   const chosen = () => { const s = $("shopPack"); return s ? s.value : curPack().id; }, count = () => { const q = $("shopQty"); return q ? +q.value || 1 : 1; };
   const total = () => rmoney(price(chosen()) * count());
@@ -2833,6 +2834,7 @@ document.addEventListener("click", e => {
   if (t.dataset.opack) { oddsPack = t.dataset.opack; renderOdds(true); return; }
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.undo) { undoSale(); return; }
+  if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.qsell) { quickSell(t.dataset.qsell); return; }
   if (t.dataset.share) { const c = state.vault.find(x => x.uid === t.dataset.share); if (c && replayable(c)) Share.open(receiptOf(c, false)); else toast("A replay is only offered for a card that is up more than 50%."); return; }
   if (t.dataset.sell) {
@@ -2857,7 +2859,7 @@ document.addEventListener("click", e => {
     case "sumClip": if (SS) Clip.open(SS.items, SS.pack, SS.free, SS.bought ? -1 : SS_PRICE); break;
     case "rqShare": rqShare(); break;
     case "rqPay": Sale.pay(); break;
-    case "buyBtn": Shop.modal(); break;
+    case "buyBtn": case "topBuy": Shop.modal(); break;
     case "shopPay": Shop.pay(); break;
     case "shopOpen": closeModal(); openPack(); break;
     case "dailyBtn": Snd.click(); dailyModal(); break;

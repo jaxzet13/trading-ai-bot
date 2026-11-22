@@ -13,6 +13,7 @@ document.addEventListener("click", e => {
   if (t.dataset.opack) { oddsPack = t.dataset.opack; renderOdds(true); return; }
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.undo) { undoSale(); return; }
+  if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.qsell) { quickSell(t.dataset.qsell); return; }
   if (t.dataset.share) { const c = state.vault.find(x => x.uid === t.dataset.share); if (c && replayable(c)) Share.open(receiptOf(c, false)); else toast("A replay is only offered for a card that is up more than 50%."); return; }
   if (t.dataset.sell) {
@@ -37,7 +38,7 @@ document.addEventListener("click", e => {
     case "sumClip": if (SS) Clip.open(SS.items, SS.pack, SS.free, SS.bought ? -1 : SS_PRICE); break;
     case "rqShare": rqShare(); break;
     case "rqPay": Sale.pay(); break;
-    case "buyBtn": Shop.modal(); break;
+    case "buyBtn": case "topBuy": Shop.modal(); break;
     case "shopPay": Shop.pay(); break;
     case "shopOpen": closeModal(); openPack(); break;
     case "dailyBtn": Snd.click(); dailyModal(); break;
