@@ -30,7 +30,7 @@ for name, acts in VARIANTS.items():
     for i, a in enumerate(acts):
         s, e = span(a); d = e - s
         parts.append(f"[0:v]trim=start={s}:end={e},setpts=PTS-STARTPTS[v{i}];"
-                     f"[0:a]atrim=start={s}:end={e},asetpts=PTS-STARTPTS,afade=t=in:d=.06,afade=t=out:st={d - .06:.2f}:d=.06[a{i}]")
+                     f"[0:a]atrim=start={s}:end={e},asetpts=PTS-STARTPTS,afade=t=in:d=0.06,afade=t=out:st={d - 0.06:.2f}:d=0.06[a{i}]")
         labels.append(f"[v{i}][a{i}]")
     fc = ";".join(parts) + ";" + "".join(labels) + f"concat=n={len(acts)}:v=1:a=1[v][a]"
     out = os.path.join(OUT, name + ".mp4")
