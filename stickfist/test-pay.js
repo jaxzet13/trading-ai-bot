@@ -35,7 +35,7 @@ function start(env, dataName) {
 
 (async () => {
   await new Promise(r => stripe.listen(0, "127.0.0.1", r)); const SP = stripe.address().port;
-  const open = { REQUIEM_OPEN: "1", STRIPE_SECRET_KEY: KEY, STRIPE_WEBHOOK_SECRET: WH, PUBLIC_URL: "https://example.test", REQUIEM_TERMS_URL: "https://example.test/terms", STRIPE_API_BASE: "http://127.0.0.1:" + SP };
+  const open = { REQUIEM_OPEN: "1", STRIPE_SECRET_KEY: KEY, STRIPE_WEBHOOK_SECRET: WH, PUBLIC_URL: "https://example.test", REQUIEM_TERMS_URL: "https://example.test/terms", REQUIEM_UNIT_COST_CENTS: "1200", STRIPE_API_BASE: "http://127.0.0.1:" + SP };
 
   // ---- the sale is off unless every setting is there
   let s = await start({}, "off.json");
@@ -107,6 +107,27 @@ function start(env, dataName) {
   await s.kill(); s = await start(open, "on.json"); r = await call(s.port, "GET", "/api/requiem/order?sid=cs_test_4"); ok(r.json.packs && r.json.packs.join() === "3,4,5", "orders are still there after the server restarts");
   await s.kill();
 
+  // ---- you always keep more than it costs: nothing is sold at a loss, and nothing in the code can pay a player
+  {
+    const econ = async (env, name) => { const t = await start(Object.assign({}, open, env), name); const a = (await call(t.port, "GET", "/api/requiem/orders?token=tok")).json, c = (await call(t.port, "GET", "/api/requiem/config")).json; await t.kill(); return { a, c }; };
+    let e = await econ({}, "e1.json"); ok(e.c.open === true && e.a.economics.fee === 219 && e.a.economics.net === 6500 - 219 - 1200 && e.a.economics.marginPct === 78.2, "with a cost of $12.00 a pack you keep $50.81 of $65.00 (78.2%) after Stripe's $2.19; the admin view shows it");
+    e = await econ({ REQUIEM_UNIT_COST_CENTS: "" }, "e2.json"); ok(e.c.open === false && e.a.why.some(w => /REQUIEM_UNIT_COST_CENTS is not set/.test(w)), "the Requiem sale won't open until you say what a pack costs you");
+    e = await econ({ REQUIEM_UNIT_COST_CENTS: "6000" }, "e3.json"); ok(e.c.open === false && e.a.why.some(w => /under your minimum of 20%/.test(w)), "at a cost of $60.00 a pack the sale stays closed (you'd keep under 5%)");
+    e = await econ({ REQUIEM_UNIT_COST_CENTS: "5000" }, "e4.json"); ok(e.c.open === false && e.a.economics.marginPct < 20, "just under the 20% margin it is closed (19.7%)");
+    e = await econ({ REQUIEM_UNIT_COST_CENTS: "4900" }, "e5.json"); ok(e.c.open === true && e.a.economics.marginPct > 20, "just over it, open (21.2%)");
+    e = await econ({ REQUIEM_UNIT_COST_CENTS: "9000" }, "e6.json"); ok(e.c.open === false && e.a.economics.net < 0, "a cost above the price (a loss on every pack) is closed");
+    e = await econ({ REQUIEM_MIN_MARGIN_PCT: "90" }, "e7.json"); ok(e.c.open === false, "and you can raise the minimum margin (at 90% this one is closed)");
+    const shopEcon = async (env, name) => { const t = await start(Object.assign({}, open, { REQUIEM_OPEN: "0", SHOP_OPEN: "1" }, env), name); const a = (await call(t.port, "GET", "/api/shop/orders?token=tok")).json, c = (await call(t.port, "GET", "/api/shop/config")).json; await t.kill(); return { a, c }; };
+    let h = await shopEcon({}, "h1.json"); ok(h.a.economics.fp.fee === 33 && h.a.economics.fp.netPct === 67 && h.a.economics.ms.fee === 39 && h.a.economics.ms.netPct === 87 && h.c.prices.fp === 100, "a $1.00 pack keeps 67 cents after Stripe's 33 cent fee, a $3.00 pack keeps $2.61 (87%)");
+    h = await shopEcon({ SHOP_PRICES: '{"fp":100,"ms":300,"xx":50}' }, "h2.json"); ok(!h.c.prices.xx && h.c.prices.fp === 100 && h.a.economics.xx.offered === false, "a 50 cent pack (Stripe would keep 62%) is not offered, and the others still are");
+    h = await shopEcon({ SHOP_MIN_NET_PCT: "70" }, "h3.json"); ok(h.c.prices.fp === undefined && h.c.prices.ms === 300, "with a 70% minimum the $1.00 pack (67%) is dropped and the $3.00 pack stays");
+    h = await shopEcon({ SHOP_MIN_NET_PCT: "95" }, "h4.json"); ok(h.c.open === false && h.a.why.some(w => /no pack is offered/.test(w)), "and if no price clears the minimum the shop is closed");
+    const src = fs.readFileSync(path.join(__dirname, "pay.js"), "utf8") + fs.readFileSync(path.join(__dirname, "server.js"), "utf8");
+    const calls = [...src.matchAll(/stripe\("(GET|POST)", "([^"]+)"/g)].map(m => m[2]);
+    ok(calls.length >= 2 && calls.every(p => p === "/v1/checkout/sessions"), "the server's only call to Stripe is to start a Checkout session (" + calls.length + " places, all /v1/checkout/sessions)");
+    ok(!/\/v1\/(payouts|transfers|refunds|topups|treasury|issuing|payment_intents|charges|customers|subscriptions|balance)/.test(src), "nothing in the code can send money to anyone: no payouts, transfers, refunds or cash-out of any kind");
+  }
+
   // ---- digital packs (the sale of the physical Requiem pack is off in this server: the two are independent)
   const SHOP = Object.assign({}, open, { REQUIEM_OPEN: "0", SHOP_OPEN: "1" });
   s = await start(Object.assign({}, open, { }), "noshop.json"); r = await call(s.port, "GET", "/api/shop/config"); ok(r.json.open === false, "digital packs are closed unless SHOP_OPEN=1"); await s.kill();
@@ -157,6 +178,8 @@ function start(env, dataName) {
   ok(bigRun.packs.every(p => ["pallbearer", "vigil"].includes(p[0]) && ["pallbearer", "vigil", "halation", "witness"].includes(p[1])), "every pack follows the slot rules (card 1 is Pallbearer or Vigil; card 2 is never Orrery or Seraph)");
   ok(pub.commit === crypto.createHash("sha256").update(fs.readFileSync(path.join(big, "requiem-run.json"))).digest("hex"), "the published fingerprint matches the file");
 
+  const outTxt = execFileSync("python3", [path.join(__dirname, "design-concepts", "requiem", "requiem_run.py"), "--packs", "2500", "--unit-cost", "1200", "--out", path.join(tmp, "eco"), "--seed", "t"]).toString();
+  ok(/you keep \$50\.81 \(78\.2%\)/.test(outTxt) && /you keep \$127,025\.00/.test(outTxt) && /98\.6%/.test(outTxt), "the run assembler prints what you keep ($50.81 a pack, $127,025 over 2,500 packs) and how the planned worth compares with what buyers pay (98.6%)");
   stripe.close(); fs.rmSync(tmp, { recursive: true, force: true });
   console.log(fails ? `${fails} FAILED` : "all passed"); process.exit(fails ? 1 : 0);
 })().catch(e => { console.error("CRASH", e); process.exit(1); });

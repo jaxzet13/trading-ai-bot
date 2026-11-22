@@ -53,6 +53,8 @@ This writes `data/requiem-run.json` (the shuffled list of sealed packs; **keep i
 | `PUBLIC_URL` | `https://YOUR-SITE` (https is required with a live key) |
 | `REQUIEM_TERMS_URL` | the address of your terms page |
 | `REQUIEM_PRICE_CENTS` | `6500` (the price of one pack, shipping included; default 6500) |
+| `REQUIEM_UNIT_COST_CENTS` | **required.** What one pack costs you to print, pack and ship, in cents, e.g. `1200`. The sale won't open without it: the server uses it to check you make a profit. |
+| `REQUIEM_MIN_MARGIN_PCT` | the least you must keep of each pack's price after Stripe's fee and your cost; default `20`. The sale stays closed below it. |
 | `REQUIEM_MAX_PER_ORDER` | `3` (default 3) |
 | `REQUIEM_CLOSES` | optional, `2027-02-14`: orders close at the end of that day (UTC-5) |
 | `STRIPE_TAX` | optional, `1` to let Stripe Tax work out sales tax (set Stripe Tax up in the Dashboard first) |
@@ -97,6 +99,8 @@ Also build the page for your server: `python3 build.py --release --url https://Y
 | `SHOP_OPEN` | `1` to turn digital packs on (remove it to turn them off at once) |
 | `SHOP_PRICES` | the real price of each pack in cents, as JSON; default `{"fp":100,"ms":300}` ($1.00 and $3.00). Stripe's minimum charge is 50 cents. A pack left out of the list can't be bought. |
 | `SHOP_MAX_PER_ORDER` | default `10` |
+| `SHOP_MIN_NET_PCT` | the least of each digital pack's price that must be left after Stripe's fee; default `60`. A pack cheaper than that isn't offered (a 50 cent pack would lose 62% to the fee). |
+| `STRIPE_FEE_PCT`, `STRIPE_FEE_FIXED_CENTS` | Stripe's card fee, used only for these checks; defaults `2.9` and `30` (the usual US card rate: check yours) |
 | `SHOP_DAILY_CAP_CENTS` | the most one player can spend in a day (UTC); default `2500`. A spending limit for the player's own protection, counting payments still open. Lower it if you like. |
 
 Webhook events needed are the same four listed in step 6 above. Try it in test mode first: pay with `4242 4242 4242 4242`, and check the packs arrive once.
@@ -127,3 +131,23 @@ First Print is $1.00 and Moonshot is $3.00. To get there without touching the od
 Two things to know:
 - **The in-game price still floats with the market**, as it always has (that is what keeps the return near 89% whatever the cards are doing), so you will see First Print at about $1 and Moonshot at about $3, not exactly. The **real** price is fixed at $1.00 and $3.00.
 - **The starting balance is $2.00** (it was $10.00): two First Print packs, as before. Everything else that was in cents is scaled the same way, and the Requiem pack and the real-money shop are always in real dollars.
+
+## Are you always ahead of what players can make?
+
+Short answer: yes for the digital packs, by design, and for the physical Requiem pack as far as the numbers you control go. "Always" has limits, listed at the end.
+
+**Digital packs: players can't make real money at all.** Real money only buys pack openings. The cards, the balance and every price are play items with no cash value, and **no code in this project can pay anyone**: `node test-pay.js` reads the server's source and fails if it ever contains a payout, transfer, refund or any call to Stripe other than starting a Checkout session. Inside the game, a pack returns about 89% to 90% when you sell, measured at every market state over 90 days, and the game now refuses to let it pass 95% even if a price cap binds. So you take in the whole price, less Stripe's fee:
+
+| Pack | Price | Stripe's fee (2.9% + 30 cents) | You keep |
+|---|---|---|---|
+| First Print | $1.00 | $0.33 | $0.67 (67%) |
+| Moonshot | $3.00 | $0.39 | $2.61 (87%) |
+
+The fixed 30 cents is why very cheap packs are a bad deal for you: that is a third of a $1 pack. The server drops any price that leaves less than `SHOP_MIN_NET_PCT` (60%) after the fee, so it can't be set to lose money by mistake. Hosting, refunds and Stripe's dispute fees come out of what you keep.
+
+**The physical Requiem pack: you set the cost, the server checks the margin.** The sale won't open until you say what a pack costs you (`REQUIEM_UNIT_COST_CENTS`), and it refuses to open if you'd keep less than `REQUIEM_MIN_MARGIN_PCT` (20%) after Stripe's fee. At a $12.00 cost you keep $50.81 of each $65.00 pack (78.2%); over a 2,500-pack run that is $127,025. `python requiem_run.py --packs 2500 --unit-cost 1200` prints this, and the admin views (`/api/requiem/orders?token=…`, `/api/shop/orders?token=…`) show the live economics and why a sale is closed.
+
+**What "always" can't mean.**
+- Buyers of the physical pack can resell cards, and resale prices are set by buyers, not by you. At the planned worths in `01b-limited.js` the cards in a run add up to about 98.6% of what buyers pay for it. So if the market values the cards at those numbers, buyers *as a group* hold about what they paid, and a lucky buyer can come out well ahead on resale while you still keep your margin on every pack. If you want buyers as a group to hold clearly less than they paid, lower the planned worths and tell me; I haven't changed them without asking.
+- Fixed costs (design, the print run, shipping, hosting, a Stripe account) and refunds, chargebacks and unsold stock all come out of what you keep. A run you don't sell out of can lose money even though every pack sold made one.
+- None of this is tax or legal advice.

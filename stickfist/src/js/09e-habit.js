@@ -59,7 +59,6 @@ function dailyModal(res) {
 }
 function renderChips() {
   const d = $("dailyBtn"); if (d) { const ready = dailyReady(); d.className = "chip" + (ready ? " ready" : ""); d.innerHTML = ready ? `<i></i>free <span class="xs">daily </span>pack` : `streak ${state.streak.n}`; d.title = ready ? "A free pack, once a day" : "Your daily streak"; }
-  const bt = document.querySelector('#btabs [data-v="home"]'); if (bt) bt.classList.toggle("dot", state.freePacks > 0 || boughtAll() > 0 || dailyReady());
   const m = $("muteBtn"); if (m) { m.textContent = state.mute ? "sound off" : "sound on"; m.setAttribute("aria-pressed", state.mute ? "true" : "false"); }
 }
 
@@ -83,50 +82,6 @@ function chaseHTML() {
   const rows = miss.slice().sort((a, b) => MK.price(b) - MK.price(a)).slice(0, 3), hot = miss.map(c => ({ c, p: MK.pct(c, 24) })).sort((a, b) => b.p - a.p)[0];
   return `<span class="label">still out there in ${esc(pk.name)} · ${size - miss.length} of ${size} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${RAR[c.rar].name}</span>${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}<span class="dim">${chance(packP(c.id))}</span></button>`).join("")
     + (hot && hot.p >= .3 ? `<span class="hotflip"><b>${esc(hot.c.name)}</b> is up ${pctShort(hot.p).slice(1)} in a day and you don't have one. It turns up in ${chance(packP(hot.c.id), packOf(hot.c))}, and a pack costs ${money(packPrice(packOf(hot.c)))}.</span>` : "");
-}
-
-/* ---- price targets you set yourself ---- */
-function setTarget(no, dir, pct) {
-  const card = BY_NO[no], t = state.tg[no] = state.tg[no] || { up: null, dn: null };
-  if (dir === "clear") { delete state.tg[no]; } else { const p = MK.price(card); t[dir] = dir === "up" ? p * (1 + pct / 100) : p * (1 - pct / 100); }
-  persist();
-}
-function alertRow(card) {
-  const t = state.tg[card.no] || {}, has = t.up || t.dn;
-  return `<div class="alertrow"><span class="label">Tell me when it's…</span><div class="row">${[["up", 50, "up 50%"], ["up", 100, "up 100%"], ["up", 300, "up 300%"], ["dn", 30, "down 30%"]].map(([d, p, l]) => `<button class="btn small ghost" data-tgt="${card.no}|${d}|${p}">${l}</button>`).join("")}</div>${has ? `<div class="small">Your alerts: ${t.up ? "above " + moneyS(t.up) : ""}${t.up && t.dn ? " · " : ""}${t.dn ? "below " + moneyS(t.dn) : ""} <button class="linkbtn" data-tgt="${card.no}|clear">clear</button></div>` : `<div class="small">Counted from today's ${moneyS(MK.price(card))}. You get an alert here, and a note when you come back.</div>`}</div>`;
-}
-function checkTargets() {
-  for (const no of Object.keys(state.tg)) {
-    const card = BY_NO[no], t = state.tg[no], p = MK.price(card); let hit = null;
-    if (t.up && p >= t.up) { hit = { up: true, target: t.up }; t.up = null; } else if (t.dn && p <= t.dn) { hit = { up: false, target: t.dn }; t.dn = null; }
-    if (!t.up && !t.dn) delete state.tg[no];
-    if (hit) { persist(); showAlert(card, hit.up ? 1 : -1, { title: `${card.name} hit your ${hit.up ? "high" : "low"} target`, text: `It is ${moneyS(p)} now, ${hit.up ? "above" : "below"} the ${moneyS(hit.target)} you set.` }); return true; }
-  }
-  return false;
-}
-
-/* ---- while you were away: what really happened to your cards, from the market's own price path ---- */
-function recapData(since) {
-  const now = Date.now(), away = now - since, ticks = Math.min(Math.round(away / MK.TICK), 30000), hrs = clamp(Math.ceil(away / 36e5), 1, 168), groups = [];
-  for (const no of new Set(state.vault.map(c => c.no))) {
-    const cs = state.vault.filter(c => c.no === no), card = BY_NO[no], was = cs.reduce((a, c) => a + valueAgo(c, ticks), 0), nowV = cs.reduce((a, c) => a + valueOf(c), 0), ser = MK.series(card, hrs, 48), hi = Math.max(...ser), at = ser.indexOf(hi);
-    groups.push({ card, n: cs.length, was, now: nowV, d: nowV - was, p: nowV / Math.max(1, was) - 1, peakP: hi / ser[0] - 1, peakAgo: Math.round((47 - at) / 47 * hrs) });
-  }
-  const hits = []; for (const no of Object.keys(state.tg)) { const card = BY_NO[no], t = state.tg[no], p = MK.price(card); if (t.up && p >= t.up) { hits.push({ card, up: true, target: t.up, now: p }); t.up = null; } if (t.dn && p <= t.dn) { hits.push({ card, up: false, target: t.dn, now: p }); t.dn = null; } if (!t.up && !t.dn) delete state.tg[no]; }
-  const mine = new Set(state.vault.map(c => c.no)), hot = movers().rows.filter(r => !mine.has(r.c.no) && r.p24 >= .25).sort((a, b) => b.p24 - a.p24)[0];
-  return { away, groups, hits, hot, was: groups.reduce((a, g) => a + g.was, 0), now: groups.reduce((a, g) => a + g.now, 0) };
-}
-function maybeRecap(since) {
-  if (!since || !state.ageOK || SS || !$("modal").hidden || !$("cut").hidden || !$("share").hidden || !$("gate").hidden) return;
-  if (Date.now() - since < 15 * 60000 || (!state.vault.length && !Object.keys(state.tg).length)) return;
-  const r = recapData(since), d = r.now - r.was, up = d >= 0; persist();
-  const rows = r.groups.slice().sort((a, b) => Math.abs(b.d) - Math.abs(a.d)).slice(0, 3).map(g => `<button class="mover" data-card="${g.card.no}"><span class="nm">${esc(g.card.name)}${g.n > 1 ? ` <span class="faint">×${g.n}</span>` : ""}</span>${sparkSVG(MK.series(g.card, clamp(Math.ceil(r.away / 36e5), 1, 168), 24))}<span class="pc">${pctHTML(g.p)}</span><span class="dim">${g.peakP > Math.max(.25, g.p + .25) ? `it peaked ${pctShort(g.peakP)} ${whenText(g.peakAgo)} · ` : ""}${moneyS(g.was)} → ${moneyS(g.now)}</span></button>`).join("");
-  openModal(`<div class="minfo recap"><div><span class="label">while you were away · ${heldText(r.away)}</span><h2 class="${up ? "up" : "dn"}">${r.groups.length ? (up ? "+" : "−") + money(Math.abs(d)) : "Welcome back"}</h2>${r.groups.length ? `<p class="dim">${pctHTML(r.now / Math.max(1, r.was) - 1)} on your ${state.vault.length} card${state.vault.length === 1 ? "" : "s"}: ${money(r.was)} then, ${money(r.now)} now. Worked out from the market's price path, nothing made up.</p>` : ""}</div>
-    ${rows ? `<div class="rows">${rows}</div>` : ""}
-    ${r.hits.map(h => `<p class="small"><b>${esc(h.card.name)}</b> ${h.up ? "went above" : "fell below"} the ${moneyS(h.target)} you set and is ${moneyS(h.now)} now.</p>`).join("")}
-    ${r.hot ? `<p class="small">Meanwhile <b>${esc(r.hot.c.name)}</b> is up ${pctShort(r.hot.p24).slice(1)} today. You don't have one. It turns up in ${chance(packP(r.hot.c.id), packOf(r.hot.c))}.</p>` : ""}
-    <div class="row"><button class="btn solid" data-recap="profile">see your profile</button><button class="btn ghost" data-close>close</button></div></div>`, true);
-  Snd.alert(up); buzz(up ? [20, 30, 20] : [40]);
 }
 
 /* ---- keeping it healthy: a reminder every half hour, a limit on packs per day, a break nobody can talk you out of ---- */
@@ -160,6 +115,6 @@ function startBreak(h) { state.lim.breakUntil = Math.max(state.lim.breakUntil, D
 let rankSeen = null;
 function habitTick() {
   sessionTick(); const i = rankIdx(xpOf()); if (rankSeen === null) { rankSeen = i; state.rank = i; }                  // the rank you arrive with is not news
-  if (i > rankSeen) { rankSeen = i; state.rank = i; persist(); toast(`Rank up: ${RANKS[i][0]}`); Snd.level(); buzz([20, 30, 20, 30, 40]); }
+  if (i > rankSeen) { rankSeen = i; state.rank = i; persist(); }                                                          // your rank still moves, quietly: nothing pops up
   if (!document.hidden && Math.floor(Date.now() / 1000) % 30 === 0) { state.lastSeen = Date.now(); persist(); renderChips(); }
 }

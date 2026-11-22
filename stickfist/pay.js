@@ -14,6 +14,10 @@
      REQUIEM_MAX_PER_ORDER=3      packs per order
      REQUIEM_CLOSES=2027-02-14    orders close at the end of that day (UTC-5). Optional.
      STRIPE_TAX=1                 let Stripe Tax work out sales tax (set Stripe Tax up in the dashboard first). Optional.
+     REQUIEM_UNIT_COST_CENTS=1200 what one Requiem pack costs you to print, pack and ship, in cents. Required: the sale won't open without it.
+     REQUIEM_MIN_MARGIN_PCT=20    the least you must keep of each pack's price after Stripe's fee and your cost (default 20). The sale won't open below it.
+     SHOP_MIN_NET_PCT=60          the least of each digital pack's price that must be left after Stripe's fee (default 60). A pack cheaper than that is not offered.
+     STRIPE_FEE_PCT=2.9, STRIPE_FEE_FIXED_CENTS=30   Stripe's card fee, used for these checks (these are the usual US card rates: check yours)
      STRIPE_API_BASE=…            for tests only
 
    DIGITAL PACKS (what real money buys in the game: pack openings, nothing else; cards stay play-money game items with no cash value and nothing can be cashed out):
@@ -40,6 +44,8 @@ module.exports = function payments(ctx) {
     return {
       openFlag: E.REQUIEM_OPEN === "1", key: E.STRIPE_SECRET_KEY || "", whsec: E.STRIPE_WEBHOOK_SECRET || "", apiBase: (E.STRIPE_API_BASE || "https://api.stripe.com").replace(/\/$/, ""),
       site: (E.PUBLIC_URL || "").replace(/\/$/, ""), terms: E.REQUIEM_TERMS_URL || "", price: Math.round(+E.REQUIEM_PRICE_CENTS) || 6500, maxQty: Math.max(1, Math.min(10, Math.round(+E.REQUIEM_MAX_PER_ORDER) || 3)),
+      feePct: Number.isFinite(+E.STRIPE_FEE_PCT) && E.STRIPE_FEE_PCT ? +E.STRIPE_FEE_PCT : 2.9, feeFixed: /^\d+$/.test(E.STRIPE_FEE_FIXED_CENTS || "") ? +E.STRIPE_FEE_FIXED_CENTS : 30,
+      unitCost: /^\d+$/.test(E.REQUIEM_UNIT_COST_CENTS || "") ? +E.REQUIEM_UNIT_COST_CENTS : null, minMargin: Number.isFinite(+E.REQUIEM_MIN_MARGIN_PCT) && E.REQUIEM_MIN_MARGIN_PCT ? +E.REQUIEM_MIN_MARGIN_PCT : 20,
       closes: /^\d{4}-\d{2}-\d{2}$/.test(E.REQUIEM_CLOSES || "") ? E.REQUIEM_CLOSES : "", tax: E.STRIPE_TAX === "1", runFile: path.resolve(E.REQUIEM_RUN_FILE || path.join(dataDir, "requiem-run.json"))
     };
   };
@@ -60,8 +66,17 @@ module.exports = function payments(ctx) {
   const S = () => { const d = db(); return d.rq = d.rq || { sold: 0, orders: {}, hold: {}, commit: "" }; };
   const prune = () => { const s = S(), t = Date.now(); for (const [k, h] of Object.entries(s.hold)) if (h.exp < t) delete s.hold[k]; };
   const held = () => Object.values(S().hold).reduce((a, h) => a + h.qty, 0);
+  // what Stripe takes from one charge, and what is left: the checks below never let a product be sold at a loss
+  const feeOf = (cents, c) => Math.round(cents * c.feePct / 100 + c.feeFixed);
   const closesAt = c => c.closes ? Date.parse(c.closes + "T23:59:59-05:00") : 0;
 
+  function requiemEcon(c) {
+    const fee = feeOf(c.price, c), out = { price: c.price, fee, unitCost: c.unitCost, net: null, marginPct: null, why: "" };
+    if (c.unitCost === null) { out.why = "REQUIEM_UNIT_COST_CENTS is not set: say what one pack costs you to print, pack and ship, so the server can check you make a profit"; return out; }
+    out.net = c.price - fee - c.unitCost; out.marginPct = +(out.net / c.price * 100).toFixed(1);
+    if (out.net <= 0 || out.marginPct < c.minMargin) out.why = `at ${(c.price / 100).toFixed(2)} a pack you would keep only ${(out.net / 100).toFixed(2)} (${out.marginPct}%) after Stripe's fee and your cost, under your minimum of ${c.minMargin}%`;
+    return out;
+  }
   function status() {
     const c = settings(), why = [], rc = loadRun(c.runFile), s = S(); prune();
     if (!c.openFlag) why.push("REQUIEM_OPEN is not 1");
@@ -72,15 +87,16 @@ module.exports = function payments(ctx) {
     if (!rc) why.push("the run file is missing or invalid (run requiem_run.py)");
     else if (s.commit && s.commit !== rc.commit) why.push("the run file changed after sales began, which must never happen");
     if (c.closes && Date.now() > closesAt(c)) why.push("orders are closed");
+    const econ = requiemEcon(c); if (econ.why) why.push(econ.why);
     const left = rc ? rc.run.packs.length - s.sold - held() : 0;
-    return { c, rc, why, left, soldOut: !!rc && rc.run.packs.length - s.sold <= 0, open: !why.length && left > 0 };
+    return { c, rc, why, left, econ, soldOut: !!rc && rc.run.packs.length - s.sold <= 0, open: !why.length && left > 0 };
   }
 
 
   /* ---- digital packs ---- */
   const PACK_NAMES = { fp: "First Print", ms: "Moonshot" };
   const shopPrices = () => { let p = { fp: 100, ms: 300 }; try { const e = JSON.parse(process.env.SHOP_PRICES || "null"); if (e && typeof e === "object" && !Array.isArray(e)) p = e; } catch (x) {} const o = {}; for (const [k, v] of Object.entries(p)) if (/^[a-z]{1,12}$/.test(k) && Number.isInteger(v) && v >= 50 && v <= 100000) o[k] = v; return o; };
-  const shopSettings = () => { const E = process.env; return { open: E.SHOP_OPEN === "1", prices: shopPrices(), maxQty: Math.max(1, Math.min(50, Math.round(+E.SHOP_MAX_PER_ORDER) || 10)), cap: Math.round(+E.SHOP_DAILY_CAP_CENTS) || 2500 }; };
+  const shopSettings = () => { const E = process.env; return { open: E.SHOP_OPEN === "1", prices: shopPrices(), minNet: Number.isFinite(+E.SHOP_MIN_NET_PCT) && E.SHOP_MIN_NET_PCT ? +E.SHOP_MIN_NET_PCT : 60, maxQty: Math.max(1, Math.min(50, Math.round(+E.SHOP_MAX_PER_ORDER) || 10)), cap: Math.round(+E.SHOP_DAILY_CAP_CENTS) || 2500 }; };
   const SH = () => { const d = db(); return d.shop = d.shop || { orders: {}, hold: {}, spent: {} }; };
   const today = () => new Date().toISOString().slice(0, 10), validUid = u => typeof u === "string" && /^[a-f0-9]{16,64}$/.test(u);
   const shopPrune = () => { const h = SH().hold, t = Date.now(); for (const k of Object.keys(h)) if (h[k].exp < t) delete h[k]; };
@@ -92,8 +108,9 @@ module.exports = function payments(ctx) {
     if (!/^whsec_\S+$/.test(c.whsec)) why.push("STRIPE_WEBHOOK_SECRET is missing");
     if (!/^https?:\/\/\S+$/.test(c.site)) why.push("PUBLIC_URL is missing"); else if (/^sk_live_/.test(c.key) && !/^https:/.test(c.site)) why.push("PUBLIC_URL must be https with a live key");
     if (!/^https?:\/\/\S+$/.test(c.terms)) why.push("REQUIEM_TERMS_URL is missing: publish your terms and refund policy first");
-    if (!Object.keys(sc.prices).length) why.push("SHOP_PRICES has no valid price");
-    return { c, sc, why, open: !why.length };
+    const econ = {}; for (const [id, price] of Object.entries(sc.prices)) { const fee = feeOf(price, c), net = price - fee, netPct = +(net / price * 100).toFixed(1); econ[id] = { price, fee, net, netPct, offered: netPct >= sc.minNet }; if (netPct < sc.minNet) delete sc.prices[id]; }
+    if (!Object.keys(sc.prices).length) why.push("no pack is offered: SHOP_PRICES is empty, or each price leaves less than " + sc.minNet + "% after Stripe's fee");
+    return { c, sc, why, econ, open: !why.length };
   }
   function credit(o) {                                                     // a payment for digital packs is complete: add the packs to the player's running total
     const sh = SH(), md = o.metadata || {}; if (sh.orders[o.id]) return;   // already recorded: Stripe may deliver an event more than once
@@ -208,12 +225,12 @@ module.exports = function payments(ctx) {
     "GET /api/shop/order": (_b, _ip, q) => { const o = SH().orders[String(q.get("sid") || "")]; return o ? { ok: true, pack: o.pack, qty: o.qty, short: !!o.short } : { pending: true }; },
     "GET /api/shop/orders": (_b, _ip, q) => {
       if (!adminToken || q.get("token") !== adminToken) return [403, { error: "no" }]; const st = shopStatus(), sh = SH(), os = Object.entries(sh.orders);
-      return { open: st.open, why: st.why, orders: os.map(([sid, o]) => ({ sid, player: String(o.uid || "").slice(0, 8), pack: o.pack, qty: o.qty, cents: o.cents, at: new Date(o.at).toISOString(), short: o.short })), packs: os.reduce((a, [, o]) => a + (o.short ? 0 : o.qty), 0), cents: os.reduce((a, [, o]) => a + o.cents, 0) };
+      return { open: st.open, why: st.why, economics: st.econ, orders: os.map(([sid, o]) => ({ sid, player: String(o.uid || "").slice(0, 8), pack: o.pack, qty: o.qty, cents: o.cents, at: new Date(o.at).toISOString(), short: o.short })), packs: os.reduce((a, [, o]) => a + (o.short ? 0 : o.qty), 0), cents: os.reduce((a, [, o]) => a + o.cents, 0) };
     },
     // for you: every paid order and what is inside the packs to send. Needs ADMIN_TOKEN. Addresses are in the Stripe dashboard, not here.
     "GET /api/requiem/orders": (_b, _ip, q) => {
       if (!adminToken || q.get("token") !== adminToken) return [403, { error: "no" }]; const st = status(), s = S(), rc = st.rc;
-      return { open: st.open, why: st.why, run: rc ? rc.run.packs.length : 0, sold: s.sold, held: held(), commit: rc ? rc.commit : "", orders: Object.entries(s.orders).map(([sid, o]) => ({ sid, at: new Date(o.at).toISOString(), amount: o.amount, short: o.short, packs: o.packs.map(i => ({ no: i + 1, cards: rc ? rc.run.packs[i] : null })) })) };
+      return { open: st.open, why: st.why, economics: st.econ, run: rc ? rc.run.packs.length : 0, sold: s.sold, held: held(), commit: rc ? rc.commit : "", orders: Object.entries(s.orders).map(([sid, o]) => ({ sid, at: new Date(o.at).toISOString(), amount: o.amount, short: o.short, packs: o.packs.map(i => ({ no: i + 1, cards: rc ? rc.run.packs[i] : null })) })) };
     }
   };
   return { routes, webhook, status };

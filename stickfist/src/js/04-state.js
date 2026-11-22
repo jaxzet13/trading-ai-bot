@@ -70,10 +70,11 @@ function packDist(val, cap, pk) {
 const _base = {}; const baseEV = pk => _base[pk.id] || (_base[pk.id] = evOf(c => c.val, pk));
 // The pack's price follows the market: it moves with what the cards inside are worth now, so the pack always returns about the same share
 // (about 89%) whatever the market does. Recomputed whenever the market moves.
+const RTP_CEIL = .95;                                                                                   // a pack is never allowed to return more than 95% on average, whatever the cards are doing
 const _ps = {};
 function packStats(pk) {
   pk = pk || curPack(); const t = MK.tick(); if (_ps[pk.id] && _ps[pk.id].t === t) return _ps[pk.id];
-  const val = card => MK.tickPrice(card), ev = evOf(val, pk), price = clamp(Math.round(pk.price * ev / baseEV(pk)), pk.min, pk.max), cap = price * 3, dist = packDist(val, cap, pk);
+  const val = card => MK.tickPrice(card), ev = evOf(val, pk), price = Math.max(clamp(Math.round(pk.price * ev / baseEV(pk)), pk.min, pk.max), Math.ceil(ev / RTP_CEIL)), cap = price * 3, dist = packDist(val, cap, pk);
   let hit = 0, acc = 0, median = cap; for (let i = price; i <= cap; i++) hit += dist[i]; for (let i = 0; i <= cap; i++) { acc += dist[i]; if (acc >= .5) { median = i; break; } }
   return (_ps[pk.id] = { t, ev, hit, median, rtp: ev / price, price, pk });
 }

@@ -9,6 +9,7 @@ are in the output and are what the page shows.
     python requiem_run.py --packs 2500                  # writes ../../data/requiem-run.json (SECRET until the run sells out) and requiem-run.public.json
     python requiem_run.py --packs 2500 --out some/dir
     python requiem_run.py --packs 2500 --seed test      # a repeatable shuffle, for tests only: a real run must use the default, an unpredictable shuffle
+    python requiem_run.py --packs 2500 --unit-cost 1200 # also print what you keep: the price, Stripe's fee and your cost of $12.00 a pack
 
 What to do with the output:
   1. Print exactly the counts in requiem-run.public.json (that is how many of each card to order).
@@ -53,10 +54,27 @@ def assemble(n, rng, allow_missing=False):
     return [list(t) for t in zip(*lists)], per_slot
 
 
+def read_data():
+    src = open(os.path.join(ROOT, 'src', 'js', '01b-limited.js'), encoding='utf-8').read()
+    price = int(re.search(r'price:\s*(\d+)', src).group(1)); vals = {m[0]: int(m[1]) for m in re.findall(r'id:\s*"(\w+)",.*?val:\s*(\d+)', src)}
+    return price, vals
+
+
+def economics(n, totals, unit_cost, fee_pct=2.9, fee_fixed=30):
+    price, vals = read_data(); fee = int(price * fee_pct / 100 + fee_fixed + 0.5); net = price - fee - unit_cost; usd = lambda c: f"${c / 100:,.2f}"
+    print(f"\neconomics (estimates; Stripe's usual US card fee of {fee_pct}% + {fee_fixed} cents, check yours):")
+    print(f"  per pack: price {usd(price)}, Stripe fee {usd(fee)}, your cost {usd(unit_cost)}  ->  you keep {usd(net)} ({net / price * 100:.1f}%)")
+    print(f"  the whole run: revenue {usd(n * price)}, fees {usd(n * fee)}, your costs {usd(n * unit_cost)}  ->  you keep {usd(n * net)}")
+    worth = sum(totals.get(c, 0) * v for c, v in vals.items())
+    print(f"  at the planned worths the cards add up to {usd(worth)} against the {usd(n * price)} buyers pay ({worth / (n * price) * 100:.1f}%). Resale prices are set by buyers, not by you: this is a guide.")
+    if net <= 0: print("  WARNING: you lose money on every pack at this cost.")
+
+
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--packs', type=int, required=True, help='how many packs are in the run')
     ap.add_argument('--out', default=os.path.join(ROOT, 'data')); ap.add_argument('--seed', default='', help='a repeatable shuffle, for tests only')
     ap.add_argument('--allow-missing', action='store_true', help='let a card that rounds to zero stay out of the run')
+    ap.add_argument('--unit-cost', type=int, default=None, help='what one pack costs you to print, pack and ship, in cents: prints what you keep')
     a = ap.parse_args(); assert a.packs >= 1
     rng = random.Random(a.seed) if a.seed else random.SystemRandom()
     packs, per_slot = assemble(a.packs, rng, a.allow_missing)
@@ -72,6 +90,8 @@ def main():
     print(f"{a.packs} packs, {3 * a.packs} cards. SHA-256 commit: {commit}")
     for c, k in sorted(totals.items(), key=lambda x: x[1]): print(f"  {c:<11} {k:>6}   (1 in {a.packs / k:,.0f} packs on average)")
     print(f"wrote {os.path.join(a.out, 'requiem-run.json')} (keep private) and requiem-run.public.json")
+    if a.unit_cost is not None: economics(a.packs, totals, a.unit_cost)
+    else: print('\nTip: add --unit-cost <cents per pack> to see what you keep after Stripe and your costs. The sale will not open without REQUIEM_UNIT_COST_CENTS.')
 
 
 if __name__ == '__main__':
