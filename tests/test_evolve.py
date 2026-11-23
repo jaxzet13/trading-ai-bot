@@ -160,3 +160,15 @@ def test_lab_sizing_buys_more_contracts_when_cheap(tmp_path, monkeypatch):
     monkeypatch.setattr(R, "REAL_LOG", tmp_path / "none.jsonl")
     out = R.lab_sizing(log=lambda m: None)["A"]
     assert out["bets"] == 2 and abs(out["pnl_1c"] - (-0.05)) < 1e-9 and abs(out["pnl_sized"] - 2.2) < 1e-9
+
+
+def test_walk_reports_dollar_staked_pnl_when_scored():
+    """4th daily field = P&L at $1 stakes; walk() reports it next to the 1-contract numbers, old 3-field days skip it."""
+    days = list(range(20000, 20020))
+    mk = lambda i, sc: {"id": f"fv_drift:{sc}:{i}", "family": "fv_drift", "scope": sc, "params": {"i": i}}
+    ALL = [(1, days[0] * 86400, mk(1, "KXETH15M"), {d: [1.0, 5, 0.5, 3.0] for d in days}),
+           (1, days[0] * 86400, mk(3, "KXNEAR15M"), {d: [0.1, 5, 0.1, 0.2] for d in days})]
+    W = R.walk(ALL, ["fv_drift:KXNEAR15M:3"], {"fv_drift"})
+    assert abs(W["current"]["per_day_sized"] - 0.2) < 1e-9 and W["current"]["days_sized"] == W["current"]["days"] == len(days) - 7
+    assert W["strength"]["per_day_sized"] > W["strength"]["per_day"]
+    assert R.walk(_ALL(days), ["fv_drift:KXNEAR15M:3"], {"fv_drift"})["current"]["per_day_sized"] is None

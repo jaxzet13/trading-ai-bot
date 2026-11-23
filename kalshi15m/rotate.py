@@ -231,15 +231,25 @@ def walk(ALL, live_ids, fams, log=print):
     days = sorted({d for _, _, _, daily in ALL for d in daily})
     by_rid = {rid(g, c): daily for g, _, c, daily in ALL}
     res = {k: [] for k in list(POLICIES) + ["current"]}
+    rsz = {k: [] for k in res}            # the same picks at the runner's dollar stakes (4th daily field, when scored)
+    sz = lambda x: x[3] if len(x) > 3 else None
     for d in days:
         rows = eligible(ALL, d, fams)
         if not rows:
             continue
         for k, fn in POLICIES.items():
-            res[k].append(sum(r["daily"].get(d, [0])[0] for r in fn(rows)))
+            pk = fn(rows)
+            res[k].append(sum(r["daily"].get(d, [0])[0] for r in pk))
+            v = [sz(r["daily"][d]) for r in pk if d in r["daily"]]
+            rsz[k].append(None if None in v else sum(v))
         res["current"].append(sum(by_rid.get(i, {}).get(d, [0])[0] for i in live_ids))
-    out = {k: {"per_day": round(sum(v) / len(v), 3) if v else None, "days": len(v), "days_up": sum(x > 0 for x in v)}
-           for k, v in res.items()}
+        v = [sz(by_rid[i][d]) for i in live_ids if d in by_rid.get(i, {})]
+        rsz["current"].append(None if None in v else sum(v))
+    out = {}
+    for k, v in res.items():
+        s_ = [x for x in rsz[k] if x is not None]
+        out[k] = {"per_day": round(sum(v) / len(v), 3) if v else None, "days": len(v), "days_up": sum(x > 0 for x in v),
+                  "per_day_sized": round(sum(s_) / len(s_), 3) if s_ else None, "days_sized": len(s_)}
     return out
 
 
@@ -325,6 +335,10 @@ def run(apply=False, log=print):
     log("  rotate walk-forward ($/day, all chosen rules together, forward-lab bets): "
         + ", ".join(f"{k} {W[k]['per_day']:+.2f} ({W[k]['days_up']}/{W[k]['days']} up)" for k in ranked if W[k]["per_day"] is not None)
         + (f"; current live set {cur['per_day']:+.2f} ({cur['days_up']}/{cur['days']} up)" if cur["per_day"] is not None else ""))
+    if any(W[k].get("per_day_sized") is not None for k in W):
+        log("  rotate walk-forward at $1 stakes (dollar-staked like the runner; information only for now): "
+            + ", ".join(f"{k} {W[k]['per_day_sized']:+.2f} ({W[k]['days_sized']} d)" for k in list(ranked) + ["current"]
+                        if W[k].get("per_day_sized") is not None))
     rec = {"ts": int(time.time()), "walk": W, "best_policy": best, "live_before": live, "applied": False}
     trusted = (W[best]["days"] >= MIN_TEST_DAYS and W[best]["per_day"] > 0
                and (cur["per_day"] is None or W[best]["per_day"] > cur["per_day"]))

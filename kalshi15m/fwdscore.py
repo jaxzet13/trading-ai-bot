@@ -22,6 +22,7 @@ from statistics import NormalDist
 from . import data as D
 
 ROOT = Path(__file__).resolve().parent.parent
+SIZED_STAKE = 1.0          # $ per bet for the dollar-staked daily P&L (4th field of fwd*_daily.json)
 LABDIR = ROOT / "data" / "lab"
 FWD_DIR = ROOT / "data" / "kalshi15m" / "fwd"
 TAPE_DIR = FWD_DIR / "tape"
@@ -310,7 +311,7 @@ def settle(ctx, fills, b):
         sold = has_exit & (fills.exit_max[m, np.clip(ej, 0, 13), yes] >= sell - 1e-9)
         pnl = np.where(sold, nf * sell - lab3._fee(np.where(sold, sell, 0.0), nf, TAKER_RATE) - cost, pnl)
     day = ((ctx.open_ts[m] + 60 * (j + 1)) // 86400).astype(int)
-    out = {"placed": keep, "filled": filled, "pnl": np.where(filled, pnl, 0.0), "day": day}
+    out = {"placed": keep, "filled": filled, "pnl": np.where(filled, pnl, 0.0), "day": day, "nf": nf}
     # per-contract view for growth sizing (fwdgrowth): fill price, contracts that traded at our limit, what one
     # contract paid back (early-sale price or the settlement), entry time
     value = res.astype(float)
@@ -413,14 +414,20 @@ def score(download=True, log=print):
             f = np.concatenate([x["filled"] for x in parts])
             pn = np.concatenate([x["pnl"] for x in parts])[f]
             dy = np.concatenate([x["day"] for x in parts])[f]
+            lim = np.concatenate([np.asarray(b["limit"], float) for b in per.values()])[f]
+            nfc = np.maximum(np.concatenate([x["nf"] for x in parts])[f], 1)
             placed = int(sum(x["placed"].sum() for x in parts))
         else:
-            pn, dy, placed = np.array([]), np.array([], int), 0
+            pn, dy, lim, nfc, placed = np.array([]), np.array([], int), np.array([]), np.array([]), 0
+        # the runner stakes dollars, not 1 contract: P&L at SIZED_STAKE per bet (more contracts when cheap)
+        ps = pn / nfc * np.maximum(1, np.floor(SIZED_STAKE / np.maximum(lim, 0.01))) if len(pn) else pn
         daily = pd.Series(pn).groupby(dy).sum() if len(pn) else pd.Series(dtype=float)
         if len(pn):                            # per-day results for walk-forward tests of the selection itself
             cnt = pd.Series(np.ones(len(pn))).groupby(dy).sum()
             sq = pd.Series(pn ** 2).groupby(dy).sum()
-            daily_out[c["id"]] = {int(d): [round(float(daily[d]), 4), int(cnt[d]), round(float(sq[d]), 5)] for d in daily.index}
+            sz = pd.Series(ps).groupby(dy).sum()
+            daily_out[c["id"]] = {int(d): [round(float(daily[d]), 4), int(cnt[d]), round(float(sq[d]), 5),
+                                           round(float(sz[d]), 4)] for d in daily.index}
         rows.append({"id": c["id"], "family": c["family"], "scope": c["scope"], "rank": c["rank"],
                      "params": c["params"], "t_before": c["t_before"], "placed": placed, "filled": int(len(pn)),
                      "pnl": round(float(pn.sum()), 2), "t": round(_t(pn), 2),
