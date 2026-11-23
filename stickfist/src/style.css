@@ -510,3 +510,6 @@ a.back { display: inline-block; color: var(--dim); text-decoration: none; font-s
 .mp { display: grid; gap: 2px; justify-items: end; } .mp b { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; } .mp small.up { color: var(--ok); } .mp small.dn { color: var(--bad); }
 .msell { display: grid; gap: 1px; justify-items: center; align-content: center; height: 46px; border: 1px solid var(--ln3); border-radius: 12px; background: #0d0d10; color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; } .msell small { font-size: 12px; font-weight: 500; color: var(--dim); font-variant-numeric: tabular-nums; } .msell:active { transform: scale(.97); }
 .mtot { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0 4px; } .mtot b { font-size: 18px; font-variant-numeric: tabular-nums; }
+
+/* the stage header stays on one line on the smallest phones */
+@media (max-width: 400px) { .st-bar { padding: 12px 14px 0; gap: 8px; } .st-bar .pn, .st-bar .st-count { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; font-size: 13px; } .st-bar .pn { flex: 0 1 auto; } .st-bar .st-count { flex: 1 1 auto; text-align: center; } .st-title .nm { max-width: calc(100vw - 24px); } }

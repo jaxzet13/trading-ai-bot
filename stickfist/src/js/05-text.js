@@ -10,7 +10,7 @@ const BANNER = [
   "███████║   ██║   ██║██╔╝ ██╗██╔╝ ██╗",
   "╚══════╝   ╚═╝   ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝"
 ];
-const fill = (ch, n) => ch.repeat(n);
+const fill = (ch, n) => ch.repeat(Math.max(0, n | 0));
 const NOISE = "01#%&@$*+=-:.";
 const bar = (p, w) => { const n = Math.round(clamp(p, 0, 1) * w); return fill("█", n) + fill("░", w - n); };
 const chance = (p, pk) => p >= .5 ? Math.round(p * 100) + "% of " + (pk ? pk.name + " " : "") + "packs" : "1 in " + fmt(1 / p) + (pk ? " " + pk.name : "") + " packs";      // pass the pack to name it

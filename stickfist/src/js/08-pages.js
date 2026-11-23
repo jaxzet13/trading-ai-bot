@@ -12,6 +12,13 @@ function movers() {
   return { rows, gain: rows.filter(r => r.p24 > .005).sort((a, b) => b.p24 - a.p24).slice(0, 3), drop: rows.filter(r => r.p24 < -.005).sort((a, b) => a.p24 - b.p24).slice(0, 3) };
 }
 
+function fitHomePack() {
+  const col = document.querySelector("#homePack"), bt = $("btabs"); if (!col || view !== "home") return; const pc = col.closest(".packcol") || col; pc.style.width = "";
+  if (!bt || getComputedStyle(bt).display === "none") return;                                               // only on a phone, where the page must not scroll
+  const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 10, after = ["packmeta", "openBtn", "multiRow"].map(id => { const e = id === "packmeta" ? document.querySelector(".packmeta") : $(id); return e && !e.hidden ? e.offsetHeight + 12 : 0; }).reduce((a, b) => a + b, 0);
+  const ratio = pc.offsetHeight / Math.max(1, pc.offsetWidth) || 1.45, w = Math.max(100, Math.min(300, innerWidth * .74, (bottom - top - after) / ratio)); pc.style.width = Math.floor(w) + "px";
+}
+addEventListener("resize", () => { if (view === "home") fitHomePack(); });
 function renderHome() {
   const pk = curPack(), ps = packStats(pk); $("banner").textContent = BANNER.join("\n");
   $("packTabs").live = PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-pack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("");
@@ -25,6 +32,7 @@ function renderHome() {
   const bf = MK.flips().best[0]; if (bf && bf.gain > 0) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip this week: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
   $("chase").live = chaseHTML(); $("rqBar").live = "";      // the Requiem pack is for later: not on the pack page for now
   const hp = $("homePack"); if (hp.dataset.pack !== pk.id) { if (hp._ps) hp._ps.stop(); hp.innerHTML = packHTML(pk); hp.dataset.pack = pk.id; const el = hp.firstChild; tiltPack(el); el.style.cursor = "pointer"; el.onclick = () => openPack(); hp._ps = liveWindow(el, pk); }
+  fitHomePack(); requestAnimationFrame(fitHomePack);
 }
 
 const flipRow = e => `<button class="flip" data-card="${e.card.no}"><span class="nm">${esc(e.name)} <span class="faint">sold ${esc(e.card.name)}</span></span><span class="pc">${pctHTML(e.pct)}</span><span class="dim">held ${e.hours}h · ${money(e.got)} → ${money(e.sold)} · ${e.gain >= 0 ? "+" : "−"}${money(Math.abs(e.gain))}</span></button>`;

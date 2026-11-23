@@ -3,6 +3,8 @@
    ========================================================================== */
 let SS = null, SS_PRICE = 0, opening = false; const stage = $("stage"), hint = t => { $("stHint").textContent = t; };
 // the meter under the cards: what the cards turned over so far would sell for, against what the pack cost. It fills the same way for every pack, win or lose.
+// a long name in big block letters must never run off a narrow screen: shrink its pixel size until it fits
+function fitName(el) { const go = () => { const room = Math.min(innerWidth, (el.parentNode && el.parentNode.clientWidth) || innerWidth) - 24, w = el.scrollWidth; if (w > room && w) { const px = parseFloat(getComputedStyle(el).getPropertyValue("--px")) || 8; el.style.setProperty("--px", Math.max(2, Math.floor(px * room / w * 10) / 10) + "px"); } }; go(); requestAnimationFrame(go); }
 function meterInit(start) { const m = $("stMeter"), ref = SS.refAll || SS.ref; SS.got = start || 0; SS.paidBack = false; m.hidden = false; m.classList.remove("paid"); $("stMeterFill").style.width = Math.min(100, SS.got / Math.max(1, ref) * 100) + "%"; $("stMeterTxt").textContent = `${money(SS.got)} of ${money(ref)}`; SS.paidBack = SS.got >= ref; m.classList.toggle("paid", SS.paidBack); m.setAttribute("aria-label", `Your cards so far sell for ${money(SS.got)}; the pack cost ${money(ref)}`); }
 function meterAdd(c) {
   const m = $("stMeter"), ref = SS.refAll || SS.ref; SS.got += sellOf(c); const f = Math.min(1, SS.got / Math.max(1, ref)); $("stMeterFill").style.width = (f * 100) + "%"; $("stMeterTxt").textContent = `${money(SS.got)} of ${money(ref)}`; m.setAttribute("aria-label", `Your cards so far sell for ${money(SS.got)}; the pack cost ${money(ref)}`);
@@ -70,7 +72,7 @@ async function reveal(el, c, card, R, v) {
   if (T >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
   const t = $("stTitle"); t.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col);
   t.innerHTML = `<div class="rw">${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b> · ${pctHTML(MK.pct(card, 168))} <span class="dim">this week</span></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
-  blockReveal(t.querySelector(".nm"), card.name, 480); t.classList.remove("in"); void t.offsetWidth; t.classList.add("in");
+  { const nm = t.querySelector(".nm"); nm.style.removeProperty("--px"); blockReveal(nm, card.name, 480); fitName(nm); } t.classList.remove("in"); void t.offsetWidth; t.classList.add("in");
 }
 async function dismiss(el, c) {
   const dir = rand() < .5 ? -1 : 1; el.onclick = null; el.classList.remove("top"); el.classList.add("gone"); el.style.transform = `translate(${dir * 110}vw, -40px) rotate(${dir * 30}deg)`; el.style.opacity = "0";

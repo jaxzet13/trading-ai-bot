@@ -531,6 +531,9 @@ a.back { display: inline-block; color: var(--dim); text-decoration: none; font-s
 .mp { display: grid; gap: 2px; justify-items: end; } .mp b { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; } .mp small.up { color: var(--ok); } .mp small.dn { color: var(--bad); }
 .msell { display: grid; gap: 1px; justify-items: center; align-content: center; height: 46px; border: 1px solid var(--ln3); border-radius: 12px; background: #0d0d10; color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; } .msell small { font-size: 12px; font-weight: 500; color: var(--dim); font-variant-numeric: tabular-nums; } .msell:active { transform: scale(.97); }
 .mtot { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0 4px; } .mtot b { font-size: 18px; font-variant-numeric: tabular-nums; }
+
+/* the stage header stays on one line on the smallest phones */
+@media (max-width: 400px) { .st-bar { padding: 12px 14px 0; gap: 8px; } .st-bar .pn, .st-bar .st-count { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; font-size: 13px; } .st-bar .pn { flex: 0 1 auto; } .st-bar .st-count { flex: 1 1 auto; text-align: center; } .st-title .nm { max-width: calc(100vw - 24px); } }
 </style>
 </head>
 <body>
@@ -1182,7 +1185,7 @@ const BANNER = [
   "███████║   ██║   ██║██╔╝ ██╗██╔╝ ██╗",
   "╚══════╝   ╚═╝   ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝"
 ];
-const fill = (ch, n) => ch.repeat(n);
+const fill = (ch, n) => ch.repeat(Math.max(0, n | 0));
 const NOISE = "01#%&@$*+=-:.";
 const bar = (p, w) => { const n = Math.round(clamp(p, 0, 1) * w); return fill("█", n) + fill("░", w - n); };
 const chance = (p, pk) => p >= .5 ? Math.round(p * 100) + "% of " + (pk ? pk.name + " " : "") + "packs" : "1 in " + fmt(1 / p) + (pk ? " " + pk.name : "") + " packs";      // pass the pack to name it
@@ -1272,71 +1275,60 @@ const pctHTML = p => `<span class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"
 // a progress bar made of characters: [███░░] 
 const meter = (i, n) => "[" + fill("█", i) + fill("░", n - i) + "]";
 
-/* ---- the pack screen: the picture inside the pack. Every card goes through the same three beats so you always know what you are
-        looking at: DECODING (noise settles into the picture) -> DECODED (hold, with its name and character count) -> NEXT (it glitches out) ---- */
-const PACKPICS = new Map(), SPIN = "|/-\\";
-async function packPic(card) {
-  const src = imgOf(card, "");
-  if (PACKPICS.has(src)) return PACKPICS.get(src);
-  const img = await loadImg(src); if (!img) return null;
-  const cols = 80, rows = Math.round(cols * img.height / img.width / 1.73), c = document.createElement("canvas"); c.width = cols; c.height = rows;
-  const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(img, 0, 0, cols, rows);
-  let d; try { d = x.getImageData(0, 0, cols, rows).data; } catch (e) { return null; }
-  const n = cols * rows, L = new Float32Array(n), t = new Float32Array(n), bl = new Float32Array(n), col = new Uint8Array(n * 3), R = 3;
-  for (let i = 0; i < n; i++) { const r = d[i * 4], g = d[i * 4 + 1], b = d[i * 4 + 2], m = Math.max(r, g, b, 1); L[i] = (r * .3 + g * .59 + b * .11) / 255; col[i * 3] = r / m * 255; col[i * 3 + 1] = g / m * 255; col[i * 3 + 2] = b / m * 255; }
-  const S = Array.from(L).sort((a, b) => a - b), look = PACKLOOK[card.id] || {}, lo = S[Math.floor(S.length * (look.lo || .1))], hi = Math.max(lo + .2, S[Math.floor(S.length * (look.hi || .985))]);
-  for (let y = 0; y < rows; y++) for (let xx = 0; xx < cols; xx++) { let a = 0, k = 0; for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) { const yy = y + j, x2 = xx + i; if (yy >= 0 && yy < rows && x2 >= 0 && x2 < cols) { a += L[yy * cols + x2]; k++; } } bl[y * cols + xx] = a / k; }
-  for (let i = 0; i < n; i++) t[i] = Math.pow(clamp((L[i] - lo) / (hi - lo) * (look.base || .85) + (L[i] - bl[i]) * (look.local || 2.2), 0, 1), look.gamma || 1.15);
-  const r = { cols, rows, t, col }; PACKPICS.set(src, r); return r;
-}
-const PACKLOOK = {   // per-card tone tweaks for the pack screen: lo/hi = black and white points, base = overall level, local = edge boost, gamma = contrast
-  stitch: { base: 1.1, local: .5, gamma: .8, lo: .02 }, ronin: { base: .7, local: 3.4, gamma: 1.5 }, grimm: { base: .7, local: 3.2, gamma: 1.4 }, reaper: { base: .55, local: 3.6, gamma: 1.9 }
-};
+/* ---- the pack screen: the window in the pack plays the pack's own ASCII scene, not its cards (what is inside stays a surprise until you open it).
+        First Print is a print run: the logo is printed line by line under a moving print head, in ink that settles, then the sheet runs again.
+        Moonshot is a launch: a rocket on a flickering flame climbs through a starfield, with the Moon hanging in the corner. ---- */
+const SPIN = "|/-\\";
 class PackScreen {
   constructor(pk, pack) {
-    this.pk = pk; this.cv = pk.querySelector("canvas.scr"); this.ctx = this.cv.getContext("2d"); this.el = { stat: pk.querySelector(".r-stat"), name: pk.querySelector(".r-name"), sub: pk.querySelector(".r-sub"), meter: pk.querySelector(".r-meter") };
-    this.cards = (pack || PACKS[0]).order.map(id => BY_ID[id]); this.i = -1; this.pic = null; this.on = false; this.last = 0; this.ph = -1; this.shift = null; this.shiftAt = 0; this.loading = false;
-    this.IN = 1.0; this.HOLD = 2.6; this.OUT = .8;
+    this.pk = pk; this.pack = pack || PACKS[0]; this.cv = pk.querySelector("canvas.scr"); this.ctx = this.cv.getContext("2d");
+    this.el = { stat: pk.querySelector(".r-stat"), name: pk.querySelector(".r-name"), sub: pk.querySelector(".r-sub"), meter: pk.querySelector(".r-meter") };
+    this.on = false; this.last = 0; this.t0 = performance.now(); this.mask = null; this.stars = null;
+    const n = CARDS.filter(c => c.set === this.pack.set).length;
+    scramble(this.el.name, this.pack.name.toUpperCase(), 520); this.el.sub.textContent = `${n} cards inside · ${this.pack.n} in every pack`;
   }
-  fit() { const dpr = Math.min(devicePixelRatio || 1, 2), w = this.cv.clientWidth, h = this.cv.clientHeight; if (w && this.cv.width !== Math.round(w * dpr)) { this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr); } this.w = w; this.h = h; this.dpr = dpr; }
-  async advance() {
-    if (this.loading) return; this.loading = true;
-    const card = this.cards[(this.i + 1) % this.cards.length], pic = await packPic(card); this.loading = false; if (!pic) return;
-    this.i = (this.i + 1) % this.cards.length; this.card = card; this.pic = pic; this.th = Float32Array.from({ length: pic.cols * pic.rows }, (_, k) => .62 * Math.floor(k / pic.cols) / pic.rows + .38 * Math.random());
-    this.shift = new Float32Array(pic.rows); this.t0 = performance.now(); this.ph = -1;
-    scramble(this.el.name, card.name.toUpperCase(), 520); this.el.sub.textContent = `${rarLabel(card)} · ${fmt(card.chars)} characters`; this.el.meter.textContent = meter(this.i + 1, this.cards.length);
+  fit() {
+    const dpr = Math.min(devicePixelRatio || 1, 2), w = this.cv.clientWidth, h = this.cv.clientHeight; if (!w || !h) return;
+    if (this.cv.width !== Math.round(w * dpr) || this.cv.height !== Math.round(h * dpr)) { this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr); this.mask = null; this.stars = null; }
+    this.dpr = dpr; this.w = w; this.h = h; this.cols = Math.max(30, Math.round(w / 5.2)); this.rows = Math.max(20, Math.round(h / (w / this.cols * 1.6)));
   }
-  status(ph, now) { const s = ph === 1 ? "decoded" : (ph === 0 ? "decoding " : "next card ") + SPIN[Math.floor(now / 110) % 4]; if (s !== this.el.stat._s) { this.el.stat._s = s; this.el.stat.textContent = "> " + s; } }
+  logo() {                                                                              // the word, as a grid of on/off cells, for the print run
+    const c = document.createElement("canvas"), cols = this.cols, rows = this.rows; c.width = cols; c.height = rows; const g = c.getContext("2d");
+    g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; let fs = rows; g.font = `900 ${fs}px "Inter",sans-serif`; while (g.measureText("STIXX").width > cols * .9 && fs > 4) { fs -= .5; g.font = `900 ${fs}px "Inter",sans-serif`; }
+    g.save(); g.translate(cols / 2, rows * .46); g.scale(1, .62 * 1.15); g.fillText("STIXX", 0, 0); g.restore();      // cells are taller than wide, so the word is squashed to read upright
+    const d = g.getImageData(0, 0, cols, rows).data, m = new Float32Array(cols * rows); for (let k = 0; k < m.length; k++) m[k] = d[k * 4 + 3] / 255; return m;
+  }
+  status(now, s) { const v = "> " + s + " " + SPIN[Math.floor(now / 110) % 4]; if (v !== this.el.stat._s) { this.el.stat._s = v; this.el.stat.textContent = v; } const mt = meter((Math.floor(now / 380) % 5) + 1, 5); if (mt !== this.el.meter._s) { this.el.meter._s = mt; this.el.meter.textContent = mt; } }
   frame(now) {
-    const pic = this.pic; if (!pic) return; this.fit(); if (!this.w) return;
-    const { cols, rows } = pic, W = this.w, H = this.h, cw = W / cols, ch = H / rows, c = this.ctx, t = (now - this.t0) / 1000;
-    const ph = reduced ? 1 : t < this.IN ? 0 : t < this.IN + this.HOLD ? 1 : 2, p = ph === 0 ? t / this.IN : ph === 2 ? (t - this.IN - this.HOLD) / this.OUT : 0;
-    this.status(ph, now);
-    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.fillStyle = "#040405"; c.fillRect(0, 0, W, H); c.font = `700 ${Math.round(ch * .96)}px "JetBrains Mono","DejaVu Sans Mono",monospace`; c.textAlign = "center"; c.textBaseline = "middle";
-    if (ph === 2 && now - this.shiftAt > 80) { this.shiftAt = now; for (let y = 0; y < rows; y++) this.shift[y] = Math.random() < p * .7 ? Math.round((Math.random() * 2 - 1) * (1 + p * 9)) : 0; }
-    const scan = (t * 11) % (rows + 12) - 6, tint = this.card.tint;
-    for (let y = 0; y < rows; y++) {
-      const sh = ph === 2 ? this.shift[y] : 0;
-      for (let x = 0; x < cols; x++) {
-        const i = y * cols + x; let v = pic.t[i], mode = 0;
-        if (ph === 0) { const th = this.th[i]; if (p < th) mode = 1; else if (p < th + .1) mode = 2; }
-        else if (ph === 2 && Math.random() < p * p * 1.1) mode = 1;
-        if (mode === 0 && v < .04) continue;
-        let chr, fs;
-        if (mode === 1) { chr = NOISE[(Math.random() * 13) | 0]; c.globalAlpha = .22 + Math.random() * .25; fs = tint; }
-        else if (mode === 2) { chr = "@"; c.globalAlpha = 1; fs = "#fff"; }
-        else {
-          v += .05 * Math.sin(now / 420 + x * .31 + y * .23); const dd = Math.abs(y - scan); if (ph === 1 && dd < 2.2) v += .3 * (1 - dd / 2.2);
-          v = clamp(v, 0, 1); chr = RAMP[Math.min(9, Math.round(v * 9))]; if (chr === " ") continue; const k = .5 + .5 * v;
-          c.globalAlpha = 1; fs = `rgb(${pic.col[i * 3] * k | 0},${pic.col[i * 3 + 1] * k | 0},${pic.col[i * 3 + 2] * k | 0})`;
-        }
-        c.fillStyle = fs; c.fillText(chr, (x + .5 + sh) * cw, (y + .55) * ch);
-      }
-    }
+    this.fit(); if (!this.w) return; const { cols, rows, w: W, h: H } = this, cw = W / cols, ch = H / rows, c = this.ctx, t = (now - this.t0) / 1000;
+    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.fillStyle = "#040405"; c.fillRect(0, 0, W, H); c.font = `700 ${Math.round(ch * .92)}px "JetBrains Mono","DejaVu Sans Mono",monospace`; c.textAlign = "center"; c.textBaseline = "middle";
+    const put = (ch_, x, y, col, a) => { if (x < 0 || y < 0 || x >= cols || y >= rows) return; c.globalAlpha = a; c.fillStyle = col; c.fillText(ch_, (x + .5) * cw, (y + .55) * ch); };
+    const h3 = (a, b, k) => { let v = Math.imul(a * 73856093 ^ b * 19349663 ^ k * 83492791, 2654435761) >>> 0; return v / 4294967296; };
+    if (this.pack.id === "ms") this.launch(t, put, h3, cols, rows); else this.print(t, put, h3, cols, rows);
     c.globalAlpha = 1;
-    if (now - this.t0 > (this.IN + this.HOLD + this.OUT) * 1000 && !reduced) this.advance();
   }
-  start() { if (this.on) return; this.on = true; this.advance(); const loop = now => { if (!this.on) return; if (!this.pk.isConnected) { this.on = false; return; } if (!document.hidden && now - this.last > 42 && this.pk.offsetParent) { this.last = now; this.frame(now); } requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+  print(t, put, h3, cols, rows) {                                                       // First Print: the sheet is printed line by line, holds, then runs again
+    if (!this.mask) this.mask = this.logo(); const m = this.mask, CYC = 5.2, u = (t % CYC) / CYC, head = u < .55 ? u / .55 * (rows + 2) - 1 : rows + 9, fade = u > .86 ? (u - .86) / .14 : 0, run = Math.floor(t / CYC);
+    this.status(t * 1000, u < .55 ? "printing" : "printed");
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const k = y * cols + x, v = m[k], r = h3(x, y, run);
+      if (y > head) { if (r < .05) put(".:"[r < .025 ? 0 : 1], x, y, "#8d897f", .25); continue; }                    // paper not printed yet
+      if (Math.abs(y - head) < 1) { put("=#@%"[Math.floor(r * 4)], x, y, "#ffffff", .95); continue; }                // the print head
+      if (v > .35) { const ink = v > .7 ? "@" : v > .5 ? "#" : "%", wob = Math.max(0, 1 - (head - y) / 6); put(fade && r < fade ? "." : ink, x, y, wob > 0 ? "#ffffff" : "#ece7dc", fade ? 1 - fade * .8 : .9 + .1 * wob); }
+      else if (r < .035) put("·", x, y, "#5b5953", .5);
+    }
+    const st = Math.floor(t * 1.5); for (let k = 0; k < 6; k++) { const x = Math.floor(h3(k, st, 7) * cols), y = Math.floor(h3(k, st, 9) * rows); put("+", x, y, "#ece7dc", .3); }   // a few specks of ink in the air
+  }
+  launch(t, put, h3, cols, rows) {                                                      // Moonshot: a rocket climbs through the stars, the Moon in the corner
+    this.status(t * 1000, "launching");
+    for (const [n, sp, chs, col, a] of [[cols * rows * .035, 3, ".", "#8d897f", .55], [cols * rows * .012, 8, "·*", "#ece7dc", .85]]) for (let k = 0; k < n; k++) { const x = Math.floor(h3(k, 1, sp) * cols), y = Math.floor((h3(k, 2, sp) * rows + t * sp) % rows); put(chs[k % chs.length], x, y, col, a); }
+    const mx = cols - 7, my = 3, R = Math.max(2, Math.round(cols / 14)); for (let y = -R; y <= R; y++) for (let x = -R * 2; x <= R * 2; x++) { const d = Math.hypot(x / 2, y) / R; if (d <= 1) put(d > .8 ? "o" : (h3(x, y, 3) < .2 ? "o" : "@"), mx + x, my + y, "#b8d4ff", d > .8 ? .55 : .8); }
+    const cx = Math.floor(cols / 2), bob = Math.round(Math.sin(t * 2.2) * .8), top = Math.floor(rows * .16) + bob;
+    const ship = ["    /\\    ", "   /  \\   ", "  /    \\  ", "  |    |  ", "  | () |  ", "  |    |  ", "  |    |  ", "  |    |  ", " /|    |\\ ", "/_|____|_\\", "   /__\\   "]; ship.forEach((row, i) => [...row].forEach((chr, j) => { if (chr !== " ") put(chr, cx - 5 + j, top + i, i < 3 ? "#ffffff" : "#ece7dc", 1); }));
+    const fy = top + ship.length; for (let i = 0; i < 12; i++) for (let j = -3; j <= 3; j++) { const r = h3(j + 9, i, Math.floor(t * 14)), wdt = 3.4 - i * .25; if (Math.abs(j) > wdt || r > 1 - i * .09) continue; put("^*'\",."[Math.min(5, (i / 2 | 0) + (r * 2 | 0))], cx + j, fy + i, i < 2 ? "#ffffff" : i < 6 ? "#ffd27a" : "#ff8a5c", 1 - i * .07); }
+    for (let k = 0; k < 14; k++) { const age = (t * .9 + h3(k, 5, 1)) % 1, x = cx + Math.round((h3(k, 6, 1) - .5) * 20 * age), y = fy + 12 + Math.round(age * Math.max(1, rows - fy - 12)); put(age < .5 ? "O" : "o", x, y, "#8d897f", .5 * (1 - age)); }
+  }
+  start() { if (this.on) return; this.on = true; const loop = now => { if (!this.on) return; if (!this.pk.isConnected) { this.on = false; return; } if (!document.hidden && now - this.last > 42 && this.pk.offsetParent) { this.last = now; this.frame(now); } requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
   stop() { this.on = false; }
 }
 
@@ -1424,6 +1416,13 @@ function movers() {
   return { rows, gain: rows.filter(r => r.p24 > .005).sort((a, b) => b.p24 - a.p24).slice(0, 3), drop: rows.filter(r => r.p24 < -.005).sort((a, b) => a.p24 - b.p24).slice(0, 3) };
 }
 
+function fitHomePack() {
+  const col = document.querySelector("#homePack"), bt = $("btabs"); if (!col || view !== "home") return; const pc = col.closest(".packcol") || col; pc.style.width = "";
+  if (!bt || getComputedStyle(bt).display === "none") return;                                               // only on a phone, where the page must not scroll
+  const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 10, after = ["packmeta", "openBtn", "multiRow"].map(id => { const e = id === "packmeta" ? document.querySelector(".packmeta") : $(id); return e && !e.hidden ? e.offsetHeight + 12 : 0; }).reduce((a, b) => a + b, 0);
+  const ratio = pc.offsetHeight / Math.max(1, pc.offsetWidth) || 1.45, w = Math.max(100, Math.min(300, innerWidth * .74, (bottom - top - after) / ratio)); pc.style.width = Math.floor(w) + "px";
+}
+addEventListener("resize", () => { if (view === "home") fitHomePack(); });
 function renderHome() {
   const pk = curPack(), ps = packStats(pk); $("banner").textContent = BANNER.join("\n");
   $("packTabs").live = PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-pack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("");
@@ -1437,6 +1436,7 @@ function renderHome() {
   const bf = MK.flips().best[0]; if (bf && bf.gain > 0) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip this week: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
   $("chase").live = chaseHTML(); $("rqBar").live = "";      // the Requiem pack is for later: not on the pack page for now
   const hp = $("homePack"); if (hp.dataset.pack !== pk.id) { if (hp._ps) hp._ps.stop(); hp.innerHTML = packHTML(pk); hp.dataset.pack = pk.id; const el = hp.firstChild; tiltPack(el); el.style.cursor = "pointer"; el.onclick = () => openPack(); hp._ps = liveWindow(el, pk); }
+  fitHomePack(); requestAnimationFrame(fitHomePack);
 }
 
 const flipRow = e => `<button class="flip" data-card="${e.card.no}"><span class="nm">${esc(e.name)} <span class="faint">sold ${esc(e.card.name)}</span></span><span class="pc">${pctHTML(e.pct)}</span><span class="dim">held ${e.hours}h · ${money(e.got)} → ${money(e.sold)} · ${e.gain >= 0 ? "+" : "−"}${money(Math.abs(e.gain))}</span></button>`;
@@ -1564,7 +1564,7 @@ const rdot = card => `<i class="rd" style="--rc:${RAR[card.rar].col}"></i>`;
 const thumb = (card, fx) => `<span class="thumb" style="--rc:${RAR[card.rar].col}"><img src="${imgOf(card, fx, true)}" alt="" loading="lazy" draggable="false"></span>`;
 // every card has its own rarity: how often it turns up in a pack of its set. No two cards share one.
 const rarLabel = card => chanceS(packP(card.id));
-const chanceS = p => p >= .1 ? Math.round(p * 100) + "% of packs" : "1 in " + fmt(1 / p) + " packs";
+const chanceS = p => p >= .1 ? (p * 100).toFixed(1) + "% of packs" : "1 in " + fmt(1 / p) + " packs";
 const seg = (scope, key, opts, cur) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button data-f="${scope}:${key}:${v}" class="${v === cur ? "on" : ""}" aria-pressed="${v === cur}">${l}</button>`).join("")}</div>`;
 const selectHTML = (id, opts, cur, label) => `<label class="sortsel"><span>${label}</span><select id="${id}" aria-label="${label}">${opts.map(([v, l]) => `<option value="${v}"${v === cur ? " selected" : ""}>${l}</option>`).join("")}</select></label>`;
 // one card on one line: picture, name, a line of its last day, price, change
@@ -1763,6 +1763,8 @@ function rqShare() {
    ========================================================================== */
 let SS = null, SS_PRICE = 0, opening = false; const stage = $("stage"), hint = t => { $("stHint").textContent = t; };
 // the meter under the cards: what the cards turned over so far would sell for, against what the pack cost. It fills the same way for every pack, win or lose.
+// a long name in big block letters must never run off a narrow screen: shrink its pixel size until it fits
+function fitName(el) { const go = () => { const room = Math.min(innerWidth, (el.parentNode && el.parentNode.clientWidth) || innerWidth) - 24, w = el.scrollWidth; if (w > room && w) { const px = parseFloat(getComputedStyle(el).getPropertyValue("--px")) || 8; el.style.setProperty("--px", Math.max(2, Math.floor(px * room / w * 10) / 10) + "px"); } }; go(); requestAnimationFrame(go); }
 function meterInit(start) { const m = $("stMeter"), ref = SS.refAll || SS.ref; SS.got = start || 0; SS.paidBack = false; m.hidden = false; m.classList.remove("paid"); $("stMeterFill").style.width = Math.min(100, SS.got / Math.max(1, ref) * 100) + "%"; $("stMeterTxt").textContent = `${money(SS.got)} of ${money(ref)}`; SS.paidBack = SS.got >= ref; m.classList.toggle("paid", SS.paidBack); m.setAttribute("aria-label", `Your cards so far sell for ${money(SS.got)}; the pack cost ${money(ref)}`); }
 function meterAdd(c) {
   const m = $("stMeter"), ref = SS.refAll || SS.ref; SS.got += sellOf(c); const f = Math.min(1, SS.got / Math.max(1, ref)); $("stMeterFill").style.width = (f * 100) + "%"; $("stMeterTxt").textContent = `${money(SS.got)} of ${money(ref)}`; m.setAttribute("aria-label", `Your cards so far sell for ${money(SS.got)}; the pack cost ${money(ref)}`);
@@ -1830,7 +1832,7 @@ async function reveal(el, c, card, R, v) {
   if (T >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
   const t = $("stTitle"); t.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col);
   t.innerHTML = `<div class="rw">${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b> · ${pctHTML(MK.pct(card, 168))} <span class="dim">this week</span></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
-  blockReveal(t.querySelector(".nm"), card.name, 480); t.classList.remove("in"); void t.offsetWidth; t.classList.add("in");
+  { const nm = t.querySelector(".nm"); nm.style.removeProperty("--px"); blockReveal(nm, card.name, 480); fitName(nm); } t.classList.remove("in"); void t.offsetWidth; t.classList.add("in");
 }
 async function dismiss(el, c) {
   const dir = rand() < .5 ? -1 : 1; el.onclick = null; el.classList.remove("top"); el.classList.add("gone"); el.style.transform = `translate(${dir * 110}vw, -40px) rotate(${dir * 30}deg)`; el.style.opacity = "0";
