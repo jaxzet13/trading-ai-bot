@@ -995,9 +995,15 @@ const MK = (() => {
   const nowPos = () => (Date.now() - t0) / TICK - 1;
   const jitter = (m, i, pos) => { const f = pos - i, s = f * 20, k = Math.floor(s), u = s - k, e = u * u * (3 - 2 * u), ci = idx[m.c.no], a = (h3(ci, base + i, 100 + k) - .5) * 2, b = (h3(ci, base + i, 101 + k) - .5) * 2; return m.amp * Math.pow(Math.sin(Math.PI * f), .8) * (a + (b - a) * e); };
   const logAt = (card, back) => { const m = M(card), pos = nowPos() - (back || 0); if (pos <= 0) return m.X[0]; const i = Math.min(Math.floor(pos), m.n - 1), f = Math.min(1, pos - i); return m.X[i] + (m.X[i + 1] - m.X[i]) * f + jitter(m, i, pos); };
-  const price = (card, back) => Math.max(.5, card.val * Math.exp(logAt(card, back)));                 // in cents, not rounded: a card worth 10c can be 10.07c
-  const tickPrice = card => { const m = M(card); return Math.max(1, Math.round(card.val * Math.exp(m.X[Math.max(0, m.n - 1)]))); };   // the same price all through a round, for the pack
-  const pct = (card, hours) => Math.exp(logAt(card, 0) - logAt(card, Math.round(hours * 180))) - 1;
+  // A rarer card is always worth more than a commoner card of its pack: walking down each pack's ladder (cards in order of worth, which is also their order of
+  // rarity) from the rarest card, every card is held at least 3% under the card above it. The bots still move each card on its own; the cap only bites when a card runs up into the one above.
+  const STEP = 1.03, LAD = {}; CARDS.forEach(c => (LAD[c.set] = LAD[c.set] || []).push(c)); Object.values(LAD).forEach(a => a.sort((x, y) => x.val - y.val));
+  const floorBy = (card, f) => { const lad = LAD[card.set], k = lad.indexOf(card); let m = Infinity; for (let i = lad.length - 1; i >= k; i--) m = Math.min(m * (i === lad.length - 1 ? 1 : 1 / STEP), f(lad[i])); return m; };   // from the rarest card down: each card is capped a little under the card above it
+  const rawPrice = (card, back) => Math.max(.5, card.val * Math.exp(logAt(card, back)));
+  const rawTick = card => { const m = M(card); return Math.max(1, Math.round(card.val * Math.exp(m.X[Math.max(0, m.n - 1)]))); };
+  const price = (card, back) => floorBy(card, c => rawPrice(c, back));                                 // in cents, not rounded: a card worth 10c can be 10.07c
+  const tickPrice = card => floorBy(card, rawTick);                                                     // the same price all through a round, for the pack
+  const pct = (card, hours) => price(card, 0) / price(card, Math.round(hours * 180)) - 1;
   const series = (card, hours, pts) => { const m = M(card), span = Math.round(hours * 180), out = []; for (let k = 0; k < pts; k++) out.push(price(card, Math.round(span * (1 - k / (pts - 1))))); return out; };
   const buzz = card => { const m = M(card), S = m.S; return clamp(Math.round(Math.abs(S.f - S.s) * 3 + Math.max(0, S.x - S.a) * .5 + .4), 0, 5); };   // 0 to 5: how much attention the bots are giving the card right now: it is running, or it is far above where the market makers think it belongs
   // ---- the numbers a trading screen shows, all simulated: market cap, liquidity, volume, buys against sells
@@ -1801,7 +1807,7 @@ async function reveal(el, c, card, R, v) {
   if (T >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + T * 14, [R.col, "#fff"]);
   if (T >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
   const t = $("stTitle"); t.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col);
-  t.innerHTML = `<div class="rw">${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
+  t.innerHTML = `<div class="rw">${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b> · ${pctHTML(MK.pct(card, 168))} <span class="dim">this week</span></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
   blockReveal(t.querySelector(".nm"), card.name, 480); t.classList.remove("in"); void t.offsetWidth; t.classList.add("in");
 }
 async function dismiss(el, c) {
