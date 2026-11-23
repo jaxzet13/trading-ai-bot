@@ -143,3 +143,20 @@ def test_guards_report_pause_and_brake(tmp_path, monkeypatch):
     g = R.guards(log=lambda m: None)
     assert g["rules"]["A"]["state"] == "PAUSED" and g["rules"]["B"]["state"] == "ok"
     assert g["brake"]["halving"] is True                # 30 < 40 - 7
+
+
+def test_lab_sizing_buys_more_contracts_when_cheap(tmp_path, monkeypatch):
+    """The runner stakes dollars: a $1 stake buys 4 contracts at 25c and 1 at 80c; the lab bets 1 contract each."""
+    cfg = tmp_path / "cfg.json"
+    cfg.write_text(json.dumps({"limits": {"stake_usd": 1.0}, "golden_rules": [{"id": "A"}]}))
+    lab = tmp_path / "lab"
+    lab.mkdir()
+    (lab / "fwd_live_bets.json").write_text(json.dumps({"rules": {"A": [
+        {"filled": True, "limit": 0.25, "pnl": 0.75},      # cheap win: 4 contracts sized
+        {"filled": True, "limit": 0.80, "pnl": -0.80},     # dear loss: 1 contract either way
+        {"filled": False, "limit": 0.30, "pnl": 0.0}]}}))
+    monkeypatch.setattr(R, "CFG", cfg)
+    monkeypatch.setattr(R, "LABDIR", lab)
+    monkeypatch.setattr(R, "REAL_LOG", tmp_path / "none.jsonl")
+    out = R.lab_sizing(log=lambda m: None)["A"]
+    assert out["bets"] == 2 and abs(out["pnl_1c"] - (-0.05)) < 1e-9 and abs(out["pnl_sized"] - 2.2) < 1e-9

@@ -477,6 +477,39 @@ def guards(log=print):
     return out
 
 
+def lab_sizing(stake=None, log=print):
+    """The lab replays each live rule at 1 contract per bet; the runner stakes dollars (3% of balance), so it buys
+    more contracts when the price is cheap. Lab P&L of each live rule both ways, all forward days. (Nov 23: on the
+    live rules' 620 filled lab bets, entries at 15-25c returned +115% per dollar, 25-60c +13-16%, 60c+ about 0, so
+    dollar staking earns more than 1 contract; real bets agree: +0.115 vs +0.069 per dollar over 415 bets.)"""
+    cfg = json.loads(CFG.read_text())
+    L = cfg["limits"]
+    lab_path = LABDIR / "fwd_live_bets.json"
+    lab = json.loads(lab_path.read_text()) if lab_path.exists() else {"rules": {}}
+    if stake is None:
+        bal = None
+        for ln in open(REAL_LOG) if REAL_LOG.exists() else []:
+            if '"order_intent"' in ln:
+                try:
+                    bal = json.loads(ln).get("balance_crypto", bal)
+                except ValueError:
+                    pass
+        pct = L.get("stake_pct_of_balance")
+        stake = max(L.get("stake_usd_min", L["stake_usd"]), pct * bal) if pct and bal else L["stake_usd"]
+    out = {}
+    log(f"  lab replay of the live rules, 1 contract vs the runner's ${stake:.2f} stakes:")
+    for r in cfg["golden_rules"]:
+        bets = [b for b in lab["rules"].get(r["id"], []) if b.get("filled") and b.get("limit")]
+        one = sum(b["pnl"] for b in bets)
+        sized = sum(b["pnl"] * max(1, int(stake // b["limit"])) for b in bets)
+        cost = sum(b["limit"] * max(1, int(stake // b["limit"])) for b in bets)
+        out[r["id"]] = {"bets": len(bets), "pnl_1c": round(one, 2), "pnl_sized": round(sized, 2),
+                        "return_per_dollar": round(sized / cost, 3) if cost else None}
+        log(f"    {r['id']:26s} {len(bets):4d} bets  1 contract ${one:+7.2f}  sized ${sized:+7.2f}"
+            + (f"  ({sized / cost:+.3f} per $)" if cost else ""))
+    return out
+
+
 def tracking(hours=24, log=print):
     """Cold strategy or broken bot? For each live rule over the last `hours`: real bets and P&L vs the forward lab's
     replay of the same rule (data/lab/fwd_live_bets.json, Kalshi's own trades deciding fills). Both losing = the
@@ -524,8 +557,10 @@ def main(args=None):
     if "tracking" in args or "guards" in args:
         if "tracking" in args:
             tracking()
+            lab_sizing()
         guards()
         return
     run(apply="apply" in args)
     tracking()
+    lab_sizing()
     guards()
