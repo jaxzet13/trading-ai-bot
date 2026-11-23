@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data" / "tennis"
 BOOKS = DATA / "books"
 RESULTS = DATA / "results.jsonl"
+CHECKS = DATA / "arb_checks.jsonl"
 POLL_S = 15
 RESULT_EVERY_S = 1800
 KEYS = ("yes_ask", "yes_ask_size", "yes_bid", "yes_bid_size", "no_ask", "no_bid")
@@ -36,6 +37,37 @@ def snapshot(session=None):
             r["series"] = s
             rows.append(r)
     return rows
+
+
+def confirm_arbs(rows, log=print):
+    """For every match whose market-list prices show an arb, re-read both live order books at once and record
+    whether the arb is really there (data/tennis/arb_checks.jsonl). Only confirmed arbs count."""
+    from . import arb
+    by_event = {}
+    for r in rows:
+        by_event.setdefault(r["event"], []).append(r)
+    n = 0
+    for e, ms in by_event.items():
+        if len(ms) != 2:
+            continue
+        a, b = sorted(ms, key=lambda r: r["ticker"])
+        listed = arb.check(a, b)
+        if not listed:
+            continue
+        try:
+            t0 = time.time()
+            la, lb = api.orderbook_top(a["ticker"]), api.orderbook_top(b["ticker"])
+            live = arb.check(la, lb)
+            ms_ = round((time.time() - t0) * 1000)
+        except Exception as ex:
+            live, ms_ = None, None
+            log(f"  confirm {e}: {ex!r}")
+        with open(CHECKS, "a") as f:
+            f.write(json.dumps({"ts": round(time.time(), 1), "event": e, "series": a.get("series"),
+                                "listed": listed, "live": live, "book_ms": ms_,
+                                "live_prices": None if live is None else [la, lb]}) + "\n")
+        n += 1
+    return n
 
 
 def record_results(seen, log=print):
@@ -80,6 +112,7 @@ def run(once=False, log=print):
                 r["ts"] = round(t0, 1)
                 f.write(json.dumps(r, separators=(",", ":")) + "\n")
                 changed += 1
+        confirm_arbs(rows, log)
         if t0 >= next_results:
             record_results(seen, log)
             next_results = t0 + RESULT_EVERY_S

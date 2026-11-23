@@ -10,6 +10,9 @@ def main(argv=None):
     elif cmd == "arbs":
         from . import arb
         arb.scan()
+    elif cmd == "report":
+        from . import report
+        report.build()
     elif cmd == "markets":
         from . import collect
         rows = collect.snapshot()
@@ -20,7 +23,7 @@ def main(argv=None):
         for (s, e), ms in list(ev.items())[:20]:
             print(f"  {s:22s} " + "  vs  ".join(f"{m['player']} {m['yes_bid']}/{m['yes_ask']}" for m in ms))
     else:
-        sys.exit("usage: python -m tennis collect [once] | arbs | markets")
+        sys.exit("usage: python -m tennis collect [once] | arbs | report | markets")
 
 
 if __name__ == "__main__":

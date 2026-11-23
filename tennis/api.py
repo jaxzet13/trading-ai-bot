@@ -61,3 +61,15 @@ def top_of_book(m):
             "yes_bid": _f(m.get("yes_bid_dollars")), "yes_bid_size": _f(m.get("yes_bid_size_fp")),
             "no_ask": _f(m.get("no_ask_dollars")), "no_bid": _f(m.get("no_bid_dollars")),
             "volume": _f(m.get("volume_fp")), "close": m.get("close_time"), "status": m.get("status")}
+
+
+def orderbook_top(ticker, session=requests):
+    """Top of the live order book (not the cached market list): best YES/NO bids and the asks they imply.
+    YES ask = 1 - best NO bid (its size = that bid's size), NO ask = 1 - best YES bid."""
+    d = get(f"/markets/{ticker}/orderbook", {"depth": 1}, session=session).get("orderbook_fp") or {}
+    yb, nb = d.get("yes_dollars") or [], d.get("no_dollars") or []
+    best_yes = (float(yb[-1][0]), float(yb[-1][1])) if yb else (None, None)
+    best_no = (float(nb[-1][0]), float(nb[-1][1])) if nb else (None, None)
+    return {"ticker": ticker, "yes_bid": best_yes[0], "yes_bid_size": best_yes[1],
+            "yes_ask": round(1 - best_no[0], 4) if best_no[0] is not None else None, "yes_ask_size": best_no[1],
+            "no_ask": round(1 - best_yes[0], 4) if best_yes[0] is not None else None, "ts": time.time()}
