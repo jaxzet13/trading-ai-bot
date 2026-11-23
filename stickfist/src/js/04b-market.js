@@ -19,13 +19,13 @@ const MK = (() => {
   const FLOOR = Math.log(.35), DROP = Math.log(.5), AF = DT / (20 / 1440), AS = DT / .333;                       // the lowest a card can go, the most it can fall in a day (half), the fast and slow moving averages the bots watch
   // How each kind of card is traded: [degen wobble per day, maker pull when above fair value, maker pull when below, FOMO chase, sniper size, sniper trigger, whales per day, whale size, how fast attention builds]
   const BOT = {
-    common:    { vol: .40, kdn: 1.4, kup: 3, gf: 1.15, ss: .10, thr: .10, lw: .55, ws: .55, hg: 4 },
-    uncommon:  { vol: .35, kdn: 1.4, kup: 3, gf: 1.25, ss: .09, thr: .09, lw: .45, ws: .50, hg: 4 },
-    rare:      { vol: .26, kdn: 1.3, kup: 3, gf: 1.3,  ss: .06, thr: .07, lw: .30, ws: .40, hg: 3 },
-    epic:      { vol: .20, kdn: 1.3, kup: 3, gf: 1.35, ss: .05, thr: .06, lw: .25, ws: .32, hg: 3 },
-    legendary: { vol: .17, kdn: 1.2, kup: 3, gf: 1.35, ss: .04, thr: .05, lw: .18, ws: .26, hg: 3 },
-    mythic:    { vol: .13, kdn: 1.2, kup: 3, gf: .95,  ss: .03, thr: .04, lw: .12, ws: .20, hg: 3 },
-    secret:    { vol: .10, kdn: 1.2, kup: 3, gf: .85,  ss: .02, thr: .03, lw: .08, ws: .14, hg: 3 },
+    common:    { vol: 0.28, kdn: 1.4, kup: 3, gf: 1.15, ss: .10, thr: .10, lw: .55, ws: .55, hg: 4 },
+    uncommon:  { vol: 0.245, kdn: 1.4, kup: 3, gf: 1.25, ss: .09, thr: .09, lw: .45, ws: .50, hg: 4 },
+    rare:      { vol: 0.182, kdn: 1.3, kup: 3, gf: 1.3,  ss: .06, thr: .07, lw: .30, ws: .40, hg: 3 },
+    epic:      { vol: 0.14, kdn: 1.3, kup: 3, gf: 1.35, ss: .05, thr: .06, lw: .25, ws: .32, hg: 3 },
+    legendary: { vol: 0.119, kdn: 1.2, kup: 3, gf: 1.35, ss: .04, thr: .05, lw: .18, ws: .26, hg: 3 },
+    mythic:    { vol: 0.091, kdn: 1.2, kup: 3, gf: .95,  ss: .03, thr: .04, lw: .12, ws: .20, hg: 3 },
+    secret:    { vol: 0.07, kdn: 1.2, kup: 3, gf: .85,  ss: .02, thr: .03, lw: .08, ws: .14, hg: 3 },
   };
   const CAP = { stitch: 40, brick: 40, rook: 40, orbit: 35, phantom: 25, null: 16, shogun: 12, ronin: 16, grimm: 10, reaper: 5, umbra: 3.5, fuse: 40, ignition: 30, liftoff: 14, apogee: 15, luna: 8, mop: 40, pan: 40, cone: 40, tempest: 35, surge: 25, kraken: 12, spark: 40, countdown: 30, booster: 14, flare: 40, bubble: 40, gantry: 30 };   // the most a card can multiply its base worth by
   const TASTE = { stitch: .04, brick: .14, rook: -.07, orbit: .08, phantom: -.03, null: .15, shogun: 0, ronin: .08, grimm: .05, reaper: -.04, umbra: .1, fuse: .05, ignition: .02, liftoff: .1, apogee: .04, luna: .06, mop: .07, pan: -.02, cone: .1, tempest: .05, surge: .02, kraken: .06, spark: -.05, countdown: .08, booster: .03, flare: .04, bubble: .09, gantry: .06 };   // how good each card looks next to its rarity, in log units

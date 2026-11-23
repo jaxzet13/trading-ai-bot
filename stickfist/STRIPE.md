@@ -132,16 +132,16 @@ First Print is $1.00 and Moonshot is $3.00. To get there without touching the od
 | First Print | $4.99 | $1.00 | 89.5% to 89.3% | 44.5% to 44.5% | 62.9% to 62.8% of the price |
 | Moonshot | $5.79 | $3.00 | 90.2% to 90.4% | 43.1% to 43.1% | 20.4% to 20.5% of the price |
 
-**A later change to the odds (published on the odds page).** After the repricing the packs were re-tuned so that real wins are a little more common and the very top prizes a little rarer, with the average return left where it was (the 95% ceiling is untouched). The middle cards (Shogun and Liftoff) sell for a modest amount above the pack price and turn up more often; the jackpot cards (Ronin, Grimm, Reaper, Umbra, Apogee, Luna) are rarer by about a quarter.
+**The odds were then re-tuned for how packs feel** (and are published on the odds page). After the new cards and the repricing, players found it too hard to get back what a pack cost: with the market's ups and downs only about 30% of packs did. The values and chances were reworked, and the market made a little calmer (its everyday price noise cut by 30%), so that **about 40% of packs sell back at least their price, and a pack that does is typically worth about 1.8 times it**. A pack returns 93% on average (never more than 95%; the price rises to hold that line if the cards run hot).
 
-| Pack | Returns on average | Sells back at least the price | 2× the price or more | Under half the price |
+| Pack | Returns on average | Sells back at least the price | 2x the price or more | Under half the price |
 |---|---|---|---|---|
-| First Print, before | 89.3% | 44.5% | 4.8% | 49.8% |
-| First Print, now | 89.1% | 50.7% | 5.4% | 43.8% |
-| Moonshot, before | 90.4% | 43.1% | 13.5% | 56.5% |
-| Moonshot, now | 90.8% | 49.3% | 13.5% | 50.3% |
+| First Print, before | 89.1% | 30% in a typical market | 5.4% | 44% |
+| First Print, now | 93.0% | 40% (calm days up to 47%) | 4.5% | 52% |
+| Moonshot, before | 90.8% | 31% in a typical market | 13.5% | 50% |
+| Moonshot, now | 93.8% | 40% | 10.1% | 59% |
 
-This is not a way to make players better off over time: the return is still under 100%, so the more packs someone opens the more likely they are to be behind, and the daily pack limit, the break and the half-hourly reminder stay as they are. What it changes is how an individual pack feels, not who wins in the long run. The result screen says the same plain thing after every pack ("You paid $1.00 and got $0.62 of cards"), whether that is a win or a loss.
+This is not a way to make players better off over time: the return is still under 100%, so the more packs someone opens the more likely they are to be behind, and the daily pack limit, the break and the half-hourly reminder stay as they are. The house keeps at least 5% of what players spend in-game (the 95% ceiling), and real money only ever buys play money. The result screen says the same plain thing after every pack, win or lose.
 
 Two things to know:
 - **The in-game price still floats with the market**, as it always has (that is what keeps the return near 90% whatever the cards are doing), so you will see First Print at about $1 and Moonshot at about $3, not exactly. The **real** price is fixed at $1.00 and $3.00.
