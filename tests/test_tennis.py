@@ -95,3 +95,15 @@ def test_walk_forward_never_ranks_on_the_judged_day():
     w = lab.walk(daily, warmup=3, ks=(1,))
     # on day 9 the top-1 must still be A (ranked on days 0-8 only), so its day-9 loss is counted
     assert w["top"][1][0] < 0.1 and w["test_days"] == 7
+
+
+def test_practice_runner_runs_the_frozen_batch_before_anything_passes(tmp_path, monkeypatch):
+    """Before any strategy passes, the practice runner must still run the newest frozen batch (it ran none before)."""
+    from tennis import paper
+    (tmp_path / "forward").mkdir(); (tmp_path / "report").mkdir()
+    batch = [{"id": f"band:m0:0.{i}0-0.{i}5", "fam": "band", "M": 0, "lo": i / 10, "hi": i / 10 + 0.05} for i in range(1, 9)]
+    (tmp_path / "forward" / "batch_1.json").write_text(json.dumps({"frozen_at": 1, "strategies": batch}))
+    (tmp_path / "report" / "forward.json").write_text(json.dumps([{"code": s["id"], "t": None, "bets": 0, "passed": False} for s in batch]))
+    monkeypatch.setattr(paper, "DATA", tmp_path)
+    s, passed = paper._strategies()
+    assert not passed and [x["id"] for x in s] == [x["id"] for x in batch][:paper.FALLBACK_N]

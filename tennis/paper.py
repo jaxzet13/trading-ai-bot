@@ -25,19 +25,22 @@ from .history import STORE
 
 LOG = DATA / "paper_bets.jsonl"
 PARITY_C = 2.0
-FALLBACK_N = 5
+FALLBACK_N = 20
 
 
 def _strategies():
     fp = DATA / "report" / "forward.json"
     rows = json.loads(fp.read_text()) if fp.exists() else []
     passed = [r for r in rows if r.get("passed")]
-    pick = passed or [r for r in rows if r.get("t") is not None][:FALLBACK_N]
-    by_id = {}
+    by_id, latest = {}, []
     for bp in sorted((DATA / "forward").glob("batch_*.json")):
-        for s in json.loads(bp.read_text())["strategies"]:
+        latest = json.loads(bp.read_text())["strategies"]
+        for s in latest:
             by_id[s["id"]] = s
-    return [by_id[r["code"]] for r in pick if r["code"] in by_id], bool(passed)
+    if passed:
+        return [by_id[r["code"]] for r in passed if r["code"] in by_id], True
+    # nothing passed yet: run the newest frozen batch's top FALLBACK_N (frozen in leaderboard order), practice only
+    return latest[:FALLBACK_N], False
 
 
 def _start_times():

@@ -71,6 +71,13 @@ def digest(row, force=False, log=print):
              f"Best: {row['best']} · {row['best_bets']} bets" if row.get("best") else "Best: not enough bets yet",
              f"Top picks on unseen days: {row['top5_cents']:+.1f}¢ a bet vs {row['all_cents']:+.1f}¢ for all"
              + (" ✅" if beat else "")]
+    try:                                    # practice runner (no money): bets so far and settled profit
+        from .paper import _logged
+        pb = list(_logged().values())
+        if pb:
+            lines.append(f"Practice runner: {len(pb)} bets placed on live matches")
+    except Exception:
+        pass
     ok = post("🎾 Tennis lab", lines, GREEN if beat else BLUE, log)
     if ok:
         st["digest"] = time.time()
