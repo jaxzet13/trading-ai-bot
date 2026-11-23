@@ -44,12 +44,10 @@ def test_one_card_per_pick_then_edited_with_the_result(tmp_path, monkeypatch):
     D.run(once=True, send=f, log=lambda m: None)
     assert len(f.calls) == 2                            # the pick's card, then its edit; no restart message
     ch, card, edit = f.calls[0]
-    assert ch == "123" and edit is None and card["title"] == "SOL · NO" and card["color"] == D.BLUE
-    vals = {x["name"]: x["value"] for x in card["fields"]}
-    assert vals["Entry"] == "29¢" and vals["Contracts"] == "3" and vals["Cost"] == "$0.86" and vals["Pays if right"] == "$3.00"
-    assert "Jump strategy" in card["description"]
+    assert ch == "123" and edit is None and card["title"] == "SOL  NO  @ 29¢" and card["color"] == D.BLUE
+    assert card["description"].startswith("**$0.86** to win **$3.00**")
     ch, card, edit = f.calls[1]
-    assert edit == "m1" and card["color"] == D.RED and card["title"] == "SOL · NO · LOST −$0.86"
+    assert edit == "m1" and card["color"] == D.RED and card["title"] == "❌  SOL  NO  @ 29¢" and "Lost **−$0.86**" in card["description"]
     f.calls.clear()
     D.run(once=True, send=f, log=lambda m: None)
     assert f.calls == []                                # restart: nothing posted twice

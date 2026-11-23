@@ -73,25 +73,16 @@ class Feed:
         coin, side = _coin(p["series"]), str(p["side"] or "?").upper()
         price = p["cost"] / p["n"] if p["n"] else 0.0
         close = it.get("close_ts")
-        fields = [
-            {"name": "Pick", "value": f"**{side}**", "inline": True},
-            {"name": "Entry", "value": f"{price * 100:.0f}¢", "inline": True},
-            {"name": "Contracts", "value": f"{p['n']:g}", "inline": True},
-            {"name": "Cost", "value": f"${p['cost']:.2f}", "inline": True},
-            {"name": "Pays if right", "value": f"${p['n']:.2f}", "inline": True},
-            {"name": "Settles", "value": f"<t:{int(close)}:t>" if close else "—", "inline": True},
-        ]
+        head = f"{coin}  {side}  @ {price * 100:.0f}¢"
+        when = f"<t:{int(close)}:t>" if close else "soon"
         if result is None:
-            title, color = f"{coin} · {side}", BLUE
-            desc = f"{_strategy(it.get('rule'))} strategy · 15-minute market"
-        else:
-            pnl = float(result.get("pnl_kalshi", result.get("pnl")) or 0)
-            won = pnl > 0
-            title = f"{coin} · {side} · {'WON' if won else 'LOST'} {'+' if pnl >= 0 else '−'}${abs(pnl):.2f}"
-            color = GREEN if won else RED
-            desc = f"{_strategy(it.get('rule'))} strategy · settled {str(result.get('result', '')).upper() or '—'}"
-        return {"title": title, "description": desc, "color": color, "fields": fields,
-                "footer": {"text": f"Kalshi {p['series']} · {tk}"}, "timestamp": _iso(p["ts"] or time.time())}
+            return {"title": head, "color": BLUE,
+                    "description": f"**${p['cost']:.2f}** to win **${p['n']:.2f}**\nSettles {when}"}
+        pnl = float(result.get("pnl_kalshi", result.get("pnl")) or 0)
+        won = pnl > 0
+        return {"title": f"{'✅' if won else '❌'}  {head}", "color": GREEN if won else RED,
+                "description": f"{'Won' if won else 'Lost'} **{'+' if pnl >= 0 else '−'}${abs(pnl):.2f}**\n"
+                               f"${p['cost']:.2f} staked"}
 
 
 def _send(method, url, payload, session=requests, tries=4):
@@ -187,7 +178,6 @@ def main(args=None):
         demo.learn({"event": "fill", "ticker": "DEMO", "series": "KXNEAR15M", "side": "no", "n": 3, "cost": 0.84,
                     "fees": 0.02, "ts": time.time()})
         e = demo.card("DEMO")
-        e["title"] = "Example card · " + e["title"]
         print("test card posted" if post(_channel(), e) else "test card failed")
         return
     run(once=bool(args and args[0] == "once"))
