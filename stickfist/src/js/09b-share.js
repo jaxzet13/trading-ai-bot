@@ -83,7 +83,7 @@ const Share = (() => {
     // the footer band
     c.save(); rr(30, 1090, W - 60, H - 1090 - 30, 34); c.clip(); c.fillStyle = "#0e0e18"; c.fillRect(30, 1090, W - 60, 240); c.restore();
     pix("STIXX", 66, 1140, 10, INK, .95); T("play money · simulated", W - 66, 1142, 24, INK, 600, "right"); T("simulated prices · no cash value", W - 66, 1180, 20, DIM, 500, "right");
-    T(`${RAR[r.card.rar].name} · ${fmt(r.card.chars)} characters`, 66, 1240, 19, DIM, 500); T(r.code, 66, 1270, 19, DIM, 500); T(r.sold ? "after the 10% selling fee" : "if you sold now, after the 10% fee", W - 66, 1270, 19, DIM, 500, "right");
+    T(`${rarLabel(r.card)} · ${fmt(r.card.chars)} characters`, 66, 1240, 19, DIM, 500); T(r.code, 66, 1270, 19, DIM, 500); T(r.sold ? "after the 10% selling fee" : "if you sold now, after the 10% fee", W - 66, 1270, 19, DIM, 500, "right");
 
     // when the replay ends: profit throws characters up, a loss glitches
     if (live && rep && rt >= 1 && !burst) { burst = true; for (let i = 0; i < (finalUp ? 90 : 60); i++) parts.push({ x: 540 + (Math.random() - .5) * 600, y: 860, vx: (Math.random() - .5) * 460, vy: finalUp ? -160 - Math.random() * 380 : 40 + Math.random() * 120, ch: finalUp ? "$+*·"[i % 4] : "-x/\\"[i % 4], life: 1.4 + Math.random() * 1.2, age: 0 }); }

@@ -31,6 +31,7 @@ const Snd = (() => {
     claim(big) { if (!ready()) return; [0, 2, 4, big ? 6 : 5].forEach((k, i) => tone(NOTE[k], .4, "triangle", .13, i * .08)); },
     level() { if (!ready()) return; [0, 2, 4, 6, 7].forEach((k, i) => tone(NOTE[k], .5, "triangle", .12, i * .09)); },
     click() { if (!ready()) return; tone(900, .05, "sine", .07); },
+    paid() { if (!ready()) return; [0, 2, 4].forEach((k, i) => tone(NOTE[k + 1], .28, "triangle", .11, i * .07)); },           // the cards you have turned over have reached what the pack cost
     machine(n) {                                                // the dealing machine: a short whir, a run of ticks as the cards come out, and a thunk when the stack lands
       if (!ready()) return; hiss(1.0, .16, 0, 500, 4200); tone(70, 1.1, "sawtooth", .06, 0, 170);
       for (let i = 0; i < Math.min(24, n); i++) tone(520 + (i % 5) * 70, .035, "square", .028, .45 + i * .045);
@@ -86,7 +87,7 @@ function chaseHTML() {
   if (!state.s.packs && !state.vault.length) return "";
   const pk = curPack(), size = CARDS.filter(c => c.set === pk.set).length, miss = missingCards(pk.set); if (!miss.length) return `<span class="label">${esc(pk.name)}</span><span>You have every ${esc(pk.name)} card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
   const rows = miss.slice().sort((a, b) => MK.price(b) - MK.price(a)).slice(0, 3), hot = miss.map(c => ({ c, p: MK.pct(c, 24) })).sort((a, b) => b.p - a.p)[0];
-  return `<span class="label">still out there in ${esc(pk.name)} · ${size - miss.length} of ${size} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${RAR[c.rar].name}</span>${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}<span class="dim">${chance(packP(c.id))}</span></button>`).join("")
+  return `<span class="label">still out there in ${esc(pk.name)} · ${size - miss.length} of ${size} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${rarLabel(c)}</span>${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}<span class="dim">${chance(packP(c.id))}</span></button>`).join("")
     + (hot && hot.p >= .3 ? `<span class="hotflip"><b>${esc(hot.c.name)}</b> is up ${pctShort(hot.p).slice(1)} in a day and you don't have one. It turns up in ${chance(packP(hot.c.id), packOf(hot.c))}, and a pack costs ${money(packPrice(packOf(hot.c)))}.</span>` : "");
 }
 

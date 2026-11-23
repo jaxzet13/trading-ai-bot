@@ -2,6 +2,12 @@
    8. OPENING A PACK: tear it, reveal the cards one at a time, then keep or sell
    ========================================================================== */
 let SS = null, SS_PRICE = 0, opening = false; const stage = $("stage"), hint = t => { $("stHint").textContent = t; };
+// the meter under the cards: what the cards turned over so far would sell for, against what the pack cost. It fills the same way for every pack, win or lose.
+function meterInit(start) { const m = $("stMeter"), ref = SS.refAll || SS.ref; SS.got = start || 0; SS.paidBack = false; m.hidden = false; m.classList.remove("paid"); $("stMeterFill").style.width = Math.min(100, SS.got / Math.max(1, ref) * 100) + "%"; $("stMeterTxt").textContent = `${money(SS.got)} of ${money(ref)}`; SS.paidBack = SS.got >= ref; m.classList.toggle("paid", SS.paidBack); m.setAttribute("aria-label", `Your cards so far sell for ${money(SS.got)}; the pack cost ${money(ref)}`); }
+function meterAdd(c) {
+  const m = $("stMeter"), ref = SS.refAll || SS.ref; SS.got += sellOf(c); const f = Math.min(1, SS.got / Math.max(1, ref)); $("stMeterFill").style.width = (f * 100) + "%"; $("stMeterTxt").textContent = `${money(SS.got)} of ${money(ref)}`; m.setAttribute("aria-label", `Your cards so far sell for ${money(SS.got)}; the pack cost ${money(ref)}`);
+  if (!SS.paidBack && SS.got >= ref) { SS.paidBack = true; m.classList.add("paid"); Snd.paid(); buzz([18, 24, 36]); }
+}
 async function openPack(pack) {
   if (SS || opening) return; const pk = pack || curPack(), gate = packGate(); if (gate) { toast(gate); return; }
   { const k = Math.min(openN(), maxN(pk)); if (k >= 2) { openMany(pk, k); return; } }
@@ -31,7 +37,7 @@ async function tear() {
   const line = document.createElement("div"); line.className = "cutline"; line.style.top = ((A + B) / 2) + "%"; line.style.transform = `rotate(${(B - A) / 3}deg)`; wrap.appendChild(line);
   const r = wrap.getBoundingClientRect(); for (let i = 0; i <= 16; i++) { const k = i / 16; FX.burst(r.left + r.width * k, r.top + r.height * (A + (B - A) * k) / 100, 3, ["#ffffff", "#c9c5bb", "#8d897f"], 300 + Math.random() * 300); }
   stage.animate([{ transform: "translate(0,0)" }, { transform: "translate(-5px,3px)" }, { transform: "translate(4px,-3px)" }, { transform: "translate(0,0)" }], { duration: 220 });
-  await sleep(300); buildStack(); await sleep(260); wrap.classList.add("drop"); await sleep(420); SS.phase = "stack"; focusTop();
+  await sleep(300); buildStack(); await sleep(260); wrap.classList.add("drop"); await sleep(420); SS.phase = "stack"; meterInit(); focusTop();
 }
 function buildStack() {
   const st = $("stStack"); st.innerHTML = SS.items.map((c, i) => `<div class="sc rise" data-i="${i}" style="z-index:${50 - i};--rot:${i ? ((rand() - .5) * 5).toFixed(1) : 0}deg;--ox:${i * 2}px;--oy:${i * 3}px">${cardHTML(c)}</div>`).join("");
@@ -46,7 +52,10 @@ function focusTop() {
 async function advance() {
   if (!SS || SS.busy) return; if (SS.phase === "pack") { tear(); return; } if (SS.phase !== "stack") return;
   const el = scEl(SS.idx); if (!el) return; SS.busy = true; const c = SS.items[SS.idx], card = BY_NO[c.no];
-  if (!el.dataset.rev) { el.dataset.rev = 1; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); SS.busy = false; hint(SS.idx < SS.items.length - 1 ? "Tap for the next card" : "Tap to see what you got"); }
+  if (!el.dataset.rev) {
+    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); meterAdd(c); SS.busy = false; hint(SS.idx < SS.items.length - 1 ? "Tap for the next card" : "Tap to see what you got");
+    if (valueOf(c) < SMALL && RAR[card.rar].tier <= 1 && SS.n < 2 && at < SS.items.length - 1) setTimeout(() => { if (SS && SS.idx === at && !SS.busy && SS.phase === "stack") advance(); }, 750);       // a card worth next to nothing moves on by itself; anything that matters waits for you
+  }
   else { await dismiss(el, c); SS.busy = false; }
 }
 async function reveal(el, c, card, R, v) {
@@ -60,7 +69,7 @@ async function reveal(el, c, card, R, v) {
   if (T >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + T * 14, [R.col, "#fff"]);
   if (T >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
   const t = $("stTitle"); t.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col);
-  t.innerHTML = `<div class="rw">${R.name}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
+  t.innerHTML = `<div class="rw">${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
   blockReveal(t.querySelector(".nm"), card.name, 480); t.classList.remove("in"); void t.offsetWidth; t.classList.add("in");
 }
 async function dismiss(el, c) {
@@ -69,19 +78,21 @@ async function dismiss(el, c) {
   SS.idx++; await sleep(260); if (SS.idx >= SS.items.length) summary(); else focusTop();
 }
 function skipAll() { if (!SS || SS.phase === "summary") return; if (SS.phase === "wait") { Machine.stop(); return; } Machine.stop(); SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
+// one tap to turn the pack into money and open the next: only offered when the next pack is covered (a free pack, one you bought, or what these cards sell for plus your balance)
+const sellNext = back => { const pk = SS.pack, price = packPrice(pk), ok = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins + back >= price; return ok && back > 0 ? `<button class="btn solid" id="sumSellAgain">sell all · open another</button>` : ""; };
 const againLabel = pk => (openN() > 1 && maxN(pk) >= 2) ? (() => { const k = Math.min(openN(), maxN(pk)), c = Math.max(0, k - state.freePacks - boughtOf(pk.id)) * packPrice(pk); return `open ${k} more${c ? " · " + money(c) : ""}`; })() : state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
 function summary() {
-  if (SS.n > 1) { multiSummary(); return; }
+  $("stMeter").hidden = true; if (SS.n > 1) { multiSummary(); return; }
   SS.phase = "summary"; const items = SS.items, back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
   const best = items.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no];
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(back)}">${blockSVG(money(back))}</div><span class="dim" style="font-size:13px">of cards you can sell</span></div>
-    <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Its cards sell for ${money(back)}.` : SS.bought ? `A pack you bought. Its cards sell for ${money(back)} of play money.` : `You paid ${money(SS_PRICE)} and got ${money(back)} of cards: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))}.`}${x >= 2 ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
+    <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Its cards sell for ${money(back)}.` : SS.bought ? `A pack you bought. Its cards sell for ${money(back)} of play money.` : `You paid ${money(SS_PRICE)} and got ${money(back)} of cards: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))}.`}${x >= 2 ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${rarLabel(bc)}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
     <div class="fan">${items.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>
-    <div class="row acts" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
+    <div class="row acts" style="justify-content:center">${sellNext(back)}<button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
-function closeStage() { if (SS && SS.phase === "wait") return; Machine.stop(); stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view, true); }
+function closeStage() { if (SS && SS.phase === "wait") return; Machine.stop(); $("stMeter").hidden = true; stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view, true); }
 
 /* ---- several packs at once. Every pack is drawn, charged and counted exactly like a single pack (same odds, same daily limit); only the show is shorter: cards worth less than $0.50
    are not revealed one by one, they are totalled on the result, and nothing is sold or hidden: they are in your collection and in the sums. ---- */
@@ -107,7 +118,7 @@ async function openMany(pk, n) {
   const hi = items.filter(c => valueOf(c) >= SMALL).sort((a, b) => valueOf(a) - valueOf(b)); SS_PRICE = paid;
   Object.assign(mine, { items: hi, all: items, phase: "machine", free: freeN === packs, refAll: price * packs, paid, freeN, boughtN, n: packs });
   await anim; if (SS !== mine || mine.phase === "summary") return; mine.phase = "stack";
-  if (!hi.length) { summary(); return; } buildStack(); await sleep(400); focusTop();
+  if (!hi.length) { summary(); return; } meterInit(items.filter(c => valueOf(c) < SMALL).reduce((a, c) => a + sellOf(c), 0)); buildStack(); await sleep(400); focusTop();
 }
 
 function multiSummary() {
@@ -118,10 +129,10 @@ function multiSummary() {
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${SS.n} × ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(back)}">${blockSVG(money(back))}</div><span class="dim" style="font-size:13px">of cards you can sell</span></div>
     <div class="net ${net >= 0 ? "up" : "dn"}">${spent ? `You paid ${money(paid)} for ${spent} pack${spent > 1 ? "s" : ""}${SS.n - spent ? ` (${SS.n - spent} free)` : ""} and got ${money(back)} of cards: <span style="white-space:nowrap">${sign}${money(Math.abs(net))}</span>.` : `${SS.n} free packs. Their cards sell for ${money(back)}.`}${x >= 2 && spent ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div>
-    <div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div>
+    <div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${rarLabel(bc)}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div>
     ${lo.length ? `<div class="small dim" style="margin-top:10px">${lo.length} card${lo.length > 1 ? "s" : ""} worth under ${money(SMALL)} ${lo.length > 1 ? "were" : "was"} skipped past (${money(loBack)} to sell in all). They're all in your collection, shown here:</div>` : ""}</div>
     ${hi.length ? `<div class="fan">${hi.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : `<div class="small dim">Nothing worth ${money(SMALL)} or more this time.</div>`}
     ${lo.length ? `<div class="fan small">${smallFan}</div>` : ""}
-    <div class="row acts" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button>${lo.length ? `<button class="btn" id="sumSellSmall">sell the small ones · ${money(loBack)}</button>` : ""}<button class="btn solid" id="sumKeep">keep all</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
+    <div class="row acts" style="justify-content:center">${sellNext(back)}<button class="btn" id="sumSell">sell all · ${money(back)}</button>${lo.length ? `<button class="btn" id="sumSellSmall">sell the small ones · ${money(loBack)}</button>` : ""}<button class="btn" id="sumKeep">keep all</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }

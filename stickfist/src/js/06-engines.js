@@ -30,7 +30,7 @@ class PackScreen {
     const card = this.cards[(this.i + 1) % this.cards.length], pic = await packPic(card); this.loading = false; if (!pic) return;
     this.i = (this.i + 1) % this.cards.length; this.card = card; this.pic = pic; this.th = Float32Array.from({ length: pic.cols * pic.rows }, (_, k) => .62 * Math.floor(k / pic.cols) / pic.rows + .38 * Math.random());
     this.shift = new Float32Array(pic.rows); this.t0 = performance.now(); this.ph = -1;
-    scramble(this.el.name, card.name.toUpperCase(), 520); this.el.sub.textContent = `${RAR[card.rar].name} · ${fmt(card.chars)} characters`; this.el.meter.textContent = meter(this.i + 1, this.cards.length);
+    scramble(this.el.name, card.name.toUpperCase(), 520); this.el.sub.textContent = `${rarLabel(card)} · ${fmt(card.chars)} characters`; this.el.meter.textContent = meter(this.i + 1, this.cards.length);
   }
   status(ph, now) { const s = ph === 1 ? "decoded" : (ph === 0 ? "decoding " : "next card ") + SPIN[Math.floor(now / 110) % 4]; if (s !== this.el.stat._s) { this.el.stat._s = s; this.el.stat.textContent = "> " + s; } }
   frame(now) {

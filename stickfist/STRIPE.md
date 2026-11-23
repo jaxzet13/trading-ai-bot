@@ -137,9 +137,11 @@ First Print is $1.00 and Moonshot is $3.00. To get there without touching the od
 | Pack | Returns on average | Sells back at least the price | 2x the price or more | Under half the price |
 |---|---|---|---|---|
 | First Print, before | 89.1% | 30% in a typical market | 5.4% | 44% |
-| First Print, now | 93.0% | 40% (calm days up to 47%) | 4.5% | 52% |
+| First Print, now | 92% | 40% (calm days up to 47%) | 4.5% | 38% |
 | Moonshot, before | 90.8% | 31% in a typical market | 13.5% | 50% |
-| Moonshot, now | 93.8% | 40% | 10.1% | 59% |
+| Moonshot, now | 92% | 39% | 10.8% | 60% |
+
+Every card in a pack now has **its own worth and its own rarity**: no two cards share a value or a chance of turning up, and the rarer a card is, the more it is worth. A card's rarity is shown as how often it turns up ("46% of packs", "1 in 119 packs") instead of a shared word like "Common".
 
 This is not a way to make players better off over time: the return is still under 100%, so the more packs someone opens the more likely they are to be behind, and the daily pack limit, the break and the half-hourly reminder stay as they are. The house keeps at least 5% of what players spend in-game (the 95% ceiling), and real money only ever buys play money. The result screen says the same plain thing after every pack, win or lose.
 

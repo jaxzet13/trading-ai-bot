@@ -472,7 +472,22 @@ html { touch-action: manipulation; }                                            
   .sethead { margin: 14px 0 8px; } .sethead h3 { font-size: 17px; }
   #cActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; } #cActions .btn { min-height: 40px; padding: 6px 8px; font-size: 12.5px; line-height: 1.2; white-space: normal; } #cActions #sellAll { grid-column: 1 / -1; } #cActions .small { display: none; }
   #cFilters > :nth-child(3) { display: none; } #mFilters > :nth-child(2) { display: none; } .yours .go { display: none; }
-  #pRank p, #pChart { display: none; } #pWorth { margin-bottom: 14px; }
+  #pWorth { margin-bottom: 14px; }
   footer { padding-top: 10px; font-size: 11px; }
 }
 @media (max-width: 760px) and (max-height: 640px) { .rqwrap, .honest { display: none; } .packtabs .ptab { padding: 5px 14px; } .packmeta h1 { font-size: 18px; } }
+
+/* ---- two tabs: pack and me ---- */
+.btabs { grid-template-columns: repeat(2, 1fr) !important; }
+@media (min-width: 761px) { .btabs { display: none; } }
+a.back { display: inline-block; color: var(--dim); text-decoration: none; font-size: 14px; margin-bottom: 6px; min-height: 36px; line-height: 36px; } a.back:hover { color: var(--ink); }
+.pchart { margin-bottom: 18px; } .pmkt { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 14px; }
+.plinks { display: flex; flex-wrap: wrap; gap: 2px 20px; margin: 6px 0 22px; }
+#v-profile .wsplit { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 760px) { #v-profile .wsplit { grid-template-columns: 1fr 1fr; } #v-profile .wsplit > div:last-child { grid-column: 1 / -1; } #v-profile .bignum { font-size: 40px; } }
+
+/* ---- the value meter under the cards ---- */
+.meter { display: grid; gap: 6px; justify-items: center; width: min(320px, 78vw); } .meter[hidden] { display: none; }
+.meter .mbar { width: 100%; height: 6px; border-radius: 6px; background: #1a1a1f; overflow: hidden; } .meter .mbar i { display: block; height: 100%; width: 0; background: #8d897f; border-radius: 6px; transition: width .55s cubic-bezier(.2,.8,.2,1), background .3s; }
+.meter #stMeterTxt { font-size: 13px; color: var(--dim); font-variant-numeric: tabular-nums; } .meter.paid .mbar i { background: var(--ok); } .meter.paid #stMeterTxt { color: var(--ok); }
+.sum .big .bx { animation: slam .55s cubic-bezier(.2,1.4,.4,1) both; } .sum .net { animation: fadeup .5s .25s both; } @keyframes fadeup { from { opacity: 0; transform: translateY(6px); } }

@@ -74,7 +74,7 @@ const Clip = (() => {
       const inK = ease(u / .28), outK = ease((u - (r.dur - .22)) / .22), y = 1010 + (1 - inK) * 380 - outK * 80, a = inK * (1 - outK), w = 700;
       cue(r.t0 + .02, () => { Snd.reveal(tier); buzz(tier >= 3 ? [30, 25, 50] : [18]); }); cue(r.t0 + .26, () => { if (tier >= 1) burst(cx, 1010, 8 + tier * 10, tier >= 2 ? r.R.col : "#c9c5bb", 420 + tier * 80); });
       card(r, cx, y, w, a, (1 - inK) * .12 * (r.c.uid.charCodeAt(2) % 2 ? 1 : -1), tier >= 2 ? .5 + tier * .06 : .25);
-      T(`${r.R.name}${r.c.fx ? " · " + STYLES[r.c.fx].name : ""}`.toUpperCase(), cx, 1480, 30, r.R.col, 700, "center", a); T(r.card.name, cx, 1556, 62, INK, 700, "center", a); T(money(r.val), cx, 1630, 54, GREEN, 700, "center", a);
+      T(`${rarLabel(BY_NO[r.c.no])}${r.c.fx ? " · " + STYLES[r.c.fx].name : ""}`.toUpperCase(), cx, 1480, 30, r.R.col, 700, "center", a); T(r.card.name, cx, 1556, 62, INK, 700, "center", a); T(money(r.val), cx, 1630, 54, GREEN, 700, "center", a);
     }
     drawParts(dt);
     if (t > s.end) endCard(t - s.end, s);
@@ -95,7 +95,7 @@ const Clip = (() => {
     if (zu < 0 || zu > ZOOM + .05) {
       const inK = ease(u / .35), back = zu > ZOOM ? ease((zu - ZOOM) / .7) : 0, w = ZW0 * (zu > ZOOM ? 1 : .92 + .08 * inK);
       glow(cx, ZCY, 900, R.col, .3 * inK); card(r, cx, ZCY, w, inK, 0, .5);
-      if (zu > ZOOM) { const q = ease((zu - ZOOM) / .5); T(`${R.name}${r.c.fx ? " · " + STYLES[r.c.fx].name : ""}`.toUpperCase(), cx, 1500, 32, R.col, 700, "center", q); T(r.card.name, cx, 1585, 74, INK, 700, "center", q); T(money(r.val), cx, 1670, 62, GREEN, 700, "center", q); }
+      if (zu > ZOOM) { const q = ease((zu - ZOOM) / .5); T(`${rarLabel(BY_NO[r.c.no])}${r.c.fx ? " · " + STYLES[r.c.fx].name : ""}`.toUpperCase(), cx, 1500, 32, R.col, 700, "center", q); T(r.card.name, cx, 1585, 74, INK, 700, "center", q); T(money(r.val), cx, 1670, 62, GREEN, 700, "center", q); }
       else T("your best pull", cx, 1500, 34, DIM, 600, "center", inK);
       return;
     }
@@ -129,7 +129,7 @@ const Clip = (() => {
     cue(s.end + .1, () => { Snd.level(); buzz([20, 30, 20]); });
     T(s.free ? "from a free pack" : s.price < 0 ? "from a pack" : `from a ${money(s.price)} pack`, W / 2, 560, 38, DIM, 600, "center", a);
     T(money(s.total), W / 2, 760, 188, INK, 700, "center", a); T("worth of cards", W / 2, 830, 40, DIM, 600, "center", a);
-    T(`best: ${s.best.card.name} · ${s.best.R.name}`, W / 2, 960, 40, s.best.R.col, 700, "center", a * sm(.3, .8, u));
+    T(`best: ${s.best.card.name} · ${rarLabel(s.best.card)}`, W / 2, 960, 40, s.best.R.col, 700, "center", a * sm(.3, .8, u));
     const k = sm(.6, 1.2, u); ctx.globalAlpha = k; rr(140, 1130, W - 280, 150, 24); ctx.fillStyle = INK; ctx.fill(); ctx.globalAlpha = 1; T("open yours free", W / 2, 1230, 62, "#050507", 700, "center", k);
     T(s.link ? s.link.replace(/^https?:\/\//, "") : location.host || "stixx", W / 2, 1360, s.link && s.link.length > 40 ? 30 : 38, INK, 600, "center", k);
     T("play money · no cash value · 18+", W / 2, 1810, 26, DIM, 500, "center", k);

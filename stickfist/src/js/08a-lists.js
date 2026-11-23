@@ -6,7 +6,9 @@
 const pill = p => { const up = p > .0005, dn = p < -.0005, a = Math.abs(p * 100); return `<span class="pill ${up ? "up" : dn ? "dn" : "fl"}">${up ? "▲" : dn ? "▼" : "–"} ${a >= 100 ? fmt(a) : a.toFixed(1)}%</span>`; };
 const rdot = card => `<i class="rd" style="--rc:${RAR[card.rar].col}"></i>`;
 const thumb = (card, fx) => `<span class="thumb" style="--rc:${RAR[card.rar].col}"><img src="${imgOf(card, fx, true)}" alt="" loading="lazy" draggable="false"></span>`;
-const chanceS = p => p >= .5 ? Math.round(p * 100) + "% of packs" : "1 in " + fmt(1 / p) + " packs";
+// every card has its own rarity: how often it turns up in a pack of its set. No two cards share one.
+const rarLabel = card => chanceS(packP(card.id));
+const chanceS = p => p >= .1 ? Math.round(p * 100) + "% of packs" : "1 in " + fmt(1 / p) + " packs";
 const seg = (scope, key, opts, cur) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button data-f="${scope}:${key}:${v}" class="${v === cur ? "on" : ""}" aria-pressed="${v === cur}">${l}</button>`).join("")}</div>`;
 const selectHTML = (id, opts, cur, label) => `<label class="sortsel"><span>${label}</span><select id="${id}" aria-label="${label}">${opts.map(([v, l]) => `<option value="${v}"${v === cur ? " selected" : ""}>${l}</option>`).join("")}</select></label>`;
 // one card on one line: picture, name, a line of its last day, price, change
@@ -31,7 +33,7 @@ function renderMarket() {
   $("mFilters").live = seg("m", "show", [["all", "All"], ["up", "Going up"], ["down", "Going down"], ["mine", "Mine"]], MKF.show) + seg("m", "set", [["all", "All packs"], ...Object.keys(SETS).map(k => [k, SETS[k].name])], MKF.set) + selectHTML("mSort", [["move", "Biggest move"], ["price", "Highest price"], ["rare", "Rarest"]], MKF.sort, "Sort");
   let list = rows.filter(r => (MKF.set === "all" || r.c.set === MKF.set) && (MKF.show === "all" || (MKF.show === "up" && r.p24 > .0005) || (MKF.show === "down" && r.p24 < -.0005) || (MKF.show === "mine" && held.has(r.c.no))));
   list.sort(MKF.sort === "price" ? (a, b) => b.now - a.now : MKF.sort === "rare" ? (a, b) => RAR[b.c.rar].tier - RAR[a.c.rar].tier || b.now - a.now : (a, b) => Math.abs(b.p24) - Math.abs(a.p24));
-  $("mList").live = list.map(r => { const own = copiesOf(r.c.no).length; return cardRow(r.c, { s: r.s, price: moneyS(r.now), pill: pill(r.p24), sub: `${RAR[r.c.rar].name}${own ? ` · <span class="own">you have ×${own}</span>` : `<span class="setn"> · ${esc(SETS[r.c.set].name)}</span>`}` }); }).join("") || `<p class="small" style="padding:14px 2px">No cards match. Try another filter.</p>`;
+  $("mList").live = list.map(r => { const own = copiesOf(r.c.no).length; return cardRow(r.c, { s: r.s, price: moneyS(r.now), pill: pill(r.p24), sub: `${rarLabel(r.c)}${own ? ` · <span class="own">you have ×${own}</span>` : `<span class="setn"> · ${esc(SETS[r.c.set].name)}</span>`}` }); }).join("") || `<p class="small" style="padding:14px 2px">No cards match. Try another filter.</p>`;
   // for the curious
   const fl = MK.flips();
   $("mFlips").live = `<div><h3 class="sec">Best trades · this week</h3>${fl.best.map(flipRow).join("")}</div><div><h3 class="sec">Worst trades · this week</h3>${fl.worst.map(flipRow).join("")}</div>`;
@@ -61,7 +63,7 @@ function renderCollection() {
     const cs = copiesOf(c.no), best = cs[0], pk2 = packOf(c);
     return `<div class="ctw"><button class="ctile${best ? "" : " miss"}" data-card="${c.no}" aria-label="${esc(c.name)}"><span class="cimg">${cardHTML(best || { no: c.no }, { sm: true, locked: !best, thumb: true })}${best ? `<span class="cb n">×${cs.length}</span>` : ""}${best && best.fx ? `<span class="cb fx">${STYLES[best.fx].name}</span>` : ""}</span>
       <span class="cmeta">${best ? `<b>${moneyS(valueOf(best))}</b>${pill(gainOf(best))}` : `<b class="faint">Not found yet</b>`}</span>
-      <span class="csub">${best ? `${rdot(c)}${RAR[c.rar].name}${cs.length > 1 ? ` · ${cs.length} copies` : ""}` : `${rdot(c)}${RAR[c.rar].name} · ${chanceS(packP(c.id))}`}</span></button>${sellBtn(c.no)}</div>`;
+      <span class="csub">${best ? `${rdot(c)}${rarLabel(c)}${cs.length > 1 ? ` · ${cs.length} copies` : ""}` : `${rdot(c)}${rarLabel(c)} · ${chanceS(packP(c.id))}`}</span></button>${sellBtn(c.no)}</div>`;
   };
   $("cGrid").live = Object.keys(SETS).filter(k => CF.set === "all" || CF.set === k).map(k => {
     const all = CARDS.filter(c => c.set === k), got = all.filter(c => found.has(c.no)).length, list = all.filter(c => CF.show === "all" || (CF.show === "found" ? found.has(c.no) : !found.has(c.no))).sort(cmp);

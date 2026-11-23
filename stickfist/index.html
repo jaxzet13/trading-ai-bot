@@ -493,10 +493,25 @@ html { touch-action: manipulation; }                                            
   .sethead { margin: 14px 0 8px; } .sethead h3 { font-size: 17px; }
   #cActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; } #cActions .btn { min-height: 40px; padding: 6px 8px; font-size: 12.5px; line-height: 1.2; white-space: normal; } #cActions #sellAll { grid-column: 1 / -1; } #cActions .small { display: none; }
   #cFilters > :nth-child(3) { display: none; } #mFilters > :nth-child(2) { display: none; } .yours .go { display: none; }
-  #pRank p, #pChart { display: none; } #pWorth { margin-bottom: 14px; }
+  #pWorth { margin-bottom: 14px; }
   footer { padding-top: 10px; font-size: 11px; }
 }
 @media (max-width: 760px) and (max-height: 640px) { .rqwrap, .honest { display: none; } .packtabs .ptab { padding: 5px 14px; } .packmeta h1 { font-size: 18px; } }
+
+/* ---- two tabs: pack and me ---- */
+.btabs { grid-template-columns: repeat(2, 1fr) !important; }
+@media (min-width: 761px) { .btabs { display: none; } }
+a.back { display: inline-block; color: var(--dim); text-decoration: none; font-size: 14px; margin-bottom: 6px; min-height: 36px; line-height: 36px; } a.back:hover { color: var(--ink); }
+.pchart { margin-bottom: 18px; } .pmkt { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 14px; }
+.plinks { display: flex; flex-wrap: wrap; gap: 2px 20px; margin: 6px 0 22px; }
+#v-profile .wsplit { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 760px) { #v-profile .wsplit { grid-template-columns: 1fr 1fr; } #v-profile .wsplit > div:last-child { grid-column: 1 / -1; } #v-profile .bignum { font-size: 40px; } }
+
+/* ---- the value meter under the cards ---- */
+.meter { display: grid; gap: 6px; justify-items: center; width: min(320px, 78vw); } .meter[hidden] { display: none; }
+.meter .mbar { width: 100%; height: 6px; border-radius: 6px; background: #1a1a1f; overflow: hidden; } .meter .mbar i { display: block; height: 100%; width: 0; background: #8d897f; border-radius: 6px; transition: width .55s cubic-bezier(.2,.8,.2,1), background .3s; }
+.meter #stMeterTxt { font-size: 13px; color: var(--dim); font-variant-numeric: tabular-nums; } .meter.paid .mbar i { background: var(--ok); } .meter.paid #stMeterTxt { color: var(--ok); }
+.sum .big .bx { animation: slam .55s cubic-bezier(.2,1.4,.4,1) both; } .sum .net { animation: fadeup .5s .25s both; } @keyframes fadeup { from { opacity: 0; transform: translateY(6px); } }
 </style>
 </head>
 <body>
@@ -504,7 +519,7 @@ html { touch-action: manipulation; }                                            
   <div class="wrap">
     <a class="logo" href="#/">STIXX</a>
     <nav class="tabs" id="tabs" aria-label="Sections">
-      <a href="#/" data-v="home">pack</a><a href="#/collection" data-v="collection">cards</a><a href="#/market" data-v="market">market</a><a href="#/invite" data-v="invite">invite</a><a href="#/profile" data-v="profile">me</a>
+      <a href="#/" data-v="home">pack</a><a href="#/profile" data-v="profile">me</a>
     </nav>
     <div class="wallet"><button class="chip buy" id="topBuy" hidden>+ Add<span class="xs"> money</span></button><button class="chip" id="dailyBtn"></button><button class="chip cash" id="cashBtn">cash out</button><button class="chip soft" id="muteBtn" aria-pressed="false"></button><span class="bal" id="bal" title="Play money. Nothing is ever charged.">$0.00</span></div>
   </div>
@@ -534,7 +549,7 @@ html { touch-action: manipulation; }                                            
 
   <!-- MARKET -->
   <section class="view" id="v-market">
-    <div class="page-head"><h1 class="ttl">Market</h1><p>Every card has a price that moves every 20 seconds. The prices come from simulated AI traders, not real people, and everyone sees the same ones. Sell any card whenever you like.</p><p class="live"></p></div>
+    <div class="page-head"><a class="back" href="#/profile">‹ Me</a><h1 class="ttl">Market</h1><p>Every card has a price that moves every 20 seconds. The prices come from simulated AI traders, not real people, and everyone sees the same ones. Sell any card whenever you like.</p><p class="live"></p></div>
     <div id="mHero"></div>
     <div id="mPulse"></div>
     <div class="sechead"><h3>What's moving</h3><div id="mSeg"></div></div>
@@ -552,26 +567,27 @@ html { touch-action: manipulation; }                                            
 
   <!-- PROFILE -->
   <section class="view" id="v-profile">
-    <div class="page-head"><h1 class="ttl">Me</h1><p>Your play-money wallet. It moves with the market, so keep it open and watch.</p><p class="live"></p></div>
-    <div id="pRank"></div>
+    <div class="page-head"><h1 class="ttl">Me</h1><p class="live"></p></div>
     <div id="pWorth"></div>
-    <div id="pChart" style="margin-bottom:40px"></div>
+    <div id="pChart" class="pchart"></div>
     <h3 class="sec">Your cards</h3>
     <div class="clist" id="pTable"></div>
-    <p class="small" id="pNote" style="margin-bottom:30px"></p>
-    <div id="pLimits" style="margin-bottom:44px"></div>
-    <div id="pSettings" style="margin-bottom:44px"></div>
+    <p class="small" id="pNote"></p>
+    <h3 class="sec" id="pMktH">Market</h3>
+    <div class="pmkt" id="pMkt"></div>
+    <div class="plinks" id="pLinks"></div>
+    <details class="more big" id="pMore"><summary>Limits and settings</summary><div id="pLimits" style="margin:16px 0 28px"></div><div id="pSettings"></div></details>
   </section>
 
   <!-- INVITE -->
   <section class="view" id="v-invite">
-    <div class="page-head"><h1 class="ttl">Invite</h1><p id="iSub"></p></div>
+    <div class="page-head"><a class="back" href="#/profile">‹ Me</a><h1 class="ttl">Invite</h1><p id="iSub"></p></div>
     <div id="iBody"></div>
   </section>
 
   <!-- COLLECTION -->
   <section class="view" id="v-collection">
-    <div class="page-head"><h1 class="ttl">Cards</h1><p id="cSub"></p></div>
+    <div class="page-head"><a class="back" href="#/profile">‹ Me</a><h1 class="ttl">Cards</h1><p id="cSub"></p></div>
     <div class="csum" id="cSum"></div>
     <div class="actions" id="cActions"></div>
     <div class="filters" id="cFilters"></div>
@@ -593,9 +609,6 @@ html { touch-action: manipulation; }                                            
 
 <nav class="btabs" id="btabs" aria-label="Sections">
   <a href="#/" data-v="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18H7z"/><path d="M7 7l1.7-1.6L10.3 7l1.7-1.6L13.700 7l1.700-1.600L17 7"/><path d="M10 12h4M10 15h3"/></svg><span>pack</span></a>
-  <a href="#/collection" data-v="collection"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="11" height="15" rx="2"/><path d="M5 7v12a2 2 0 002 2h9"/></svg><span>cards</span></a>
-  <a href="#/market" data-v="market"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18l5-6 4 3 8-10"/><path d="M15 5h5v5"/></svg><span>market</span></a>
-  <a href="#/invite" data-v="invite"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="9" width="16" height="11" rx="1.500"/><path d="M12 9v11M3 9h18M12 9c-2.500 0-4-1-4-2.500S10 4 12 9M12 9c2.500 0 4-1 4-2.500S14 4 12 9"/></svg><span>invite</span></a>
   <a href="#/profile" data-v="profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.500 21c.7-4 3.800-6 7.500-6s6.800 2 7.500 6"/></svg><span>me</span></a>
 </nav>
 <footer><div class="wrap">STIXX beta · <span id="footMoney">play money only, nothing is ever charged or paid out</span> · 18+ · <a href="#/odds">odds</a> · <button class="linkbtn" id="fairBtn">fair play</button> · <button class="linkbtn" id="aboutBtn">fine print</button></div></footer>
@@ -605,7 +618,7 @@ html { touch-action: manipulation; }                                            
   <canvas id="fx"></canvas>
   <div class="st-bar"><span class="pn" id="stName"></span><span class="st-count" id="stCount"></span><button class="btn small ghost" id="stSkip">skip</button></div>
   <div class="st-center"><div class="st-title" id="stTitle"></div><div class="st-box" id="stBox"></div></div>
-  <div class="st-foot"><div class="st-hint" id="stHint"></div><div class="tray" id="stTray"></div></div>
+  <div class="st-foot"><div class="meter" id="stMeter" hidden role="img"><div class="mbar"><i id="stMeterFill"></i></div><span id="stMeterTxt"></span></div><div class="st-hint" id="stHint"></div><div class="tray" id="stTray"></div></div>
   <div class="summary" id="stSummary" hidden></div>
 </div>
 
@@ -656,37 +669,37 @@ const RAR = {
 };
 // val is in units of play money, 500 to the dollar (see UNIT). chars is the exact number printed on the card.
 const CARDS = [
-  { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "common",    chars: 2772,   val: 11,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
-  { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "common",    chars: 2816,   val: 11,    tint: "#a8ffbe", cap: "it is a colander. it works.", styles: true },
-  { no: "004", id: "rook",    name: "Rook",    sub: "pool noodle", rar: "common",   chars: 2816,   val: 11,    tint: "#a8ffbe", cap: "reach: floppy.", styles: true },
-  { no: "012", id: "orbit",   name: "Orbit",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 51,    tint: "#a9c9ff", cap: "already read the ending.", styles: true },
+  { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "common",    chars: 2772,   val: 8,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
+  { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "common",    chars: 2816,   val: 9,    tint: "#a8ffbe", cap: "it is a colander. it works.", styles: true },
+  { no: "004", id: "rook",    name: "Rook",    sub: "pool noodle", rar: "common",   chars: 2816,   val: 10,    tint: "#a8ffbe", cap: "reach: floppy.", styles: true },
+  { no: "012", id: "orbit",   name: "Orbit",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 33,    tint: "#a9c9ff", cap: "already read the ending.", styles: true },
   { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "uncommon",  chars: 15750,  val: 50,    tint: "#ece7dc", cap: "gone before the cape lands.", styles: true },
-  { no: "018", id: "null",    name: "Null",    sub: "star",       rar: "rare",      chars: 29260,  val: 261,   tint: "#a9c9ff", cap: "not on any record.", styles: true },
-  { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "rare",      chars: 31970,  val: 766,   tint: "#ffd27a", cap: "rents you the air.", styles: true },
+  { no: "018", id: "null",    name: "Null",    sub: "star",       rar: "rare",      chars: 29260,  val: 584,   tint: "#a9c9ff", cap: "not on any record.", styles: true },
+  { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "rare",      chars: 31970,  val: 522,   tint: "#ffd27a", cap: "rents you the air.", styles: true },
   { no: "006", id: "ronin",   name: "Ronin",   sub: "cliff",      rar: "epic",      chars: 71680,  val: 890,   tint: "#ff8ac9", cap: "", styles: true },
   { no: "011", id: "grimm",   name: "Grimm",   sub: "cathedral",  rar: "legendary", chars: 219520, val: 2340,  tint: "#a8ffb0", cap: "", styles: true },
   { no: "015", id: "reaper",  name: "Reaper",  sub: "ember",      rar: "mythic",    chars: 701000, val: 14500, tint: "#ffc87a", cap: "", styles: true },
   { no: "020", id: "umbra",   name: "Umbra",   sub: "eclipse",    rar: "secret",    chars: 1578000, val: 31250, tint: "#ffb54a", cap: "the sun blinked first.", styles: true },
   // ---- more First Print cards (same worth as the card each one shares a rarity with, so what a pack returns and how often it pays are unchanged; they only make the packs less repetitive)
   { no: "026", id: "mop",     name: "Mop",     sub: "bucket helmet", rar: "common",   chars: 2816,  val: 11,  tint: "#a8ffbe", cap: "swab the deck.",              styles: true },
-  { no: "027", id: "pan",     name: "Pan",     sub: "frying pan",    rar: "common",   chars: 2816,  val: 11,  tint: "#ece7dc", cap: "it's a frying pan. it counts.", styles: true },
-  { no: "028", id: "cone",    name: "Cone",    sub: "traffic cone",  rar: "common",   chars: 2816,  val: 11,  tint: "#ffd27a", cap: "caution: confident.",         styles: true },
-  { no: "029", id: "tempest", name: "Tempest", sub: "storm",         rar: "uncommon", chars: 7260,  val: 51,  tint: "#a9c9ff", cap: "weather is a choice.",         styles: true },
-  { no: "030", id: "surge",   name: "Surge",   sub: "big wave",      rar: "uncommon", chars: 15750, val: 50,  tint: "#9fe8ff", cap: "ride it before it breaks.",    styles: true },
-  { no: "031", id: "kraken",  name: "Kraken",  sub: "tentacles",     rar: "rare",     chars: 28000, val: 766, tint: "#c9a5ff", cap: "it was always down there.",    styles: true },
+  { no: "027", id: "pan",     name: "Pan",     sub: "frying pan",    rar: "common",   chars: 2816,  val: 12,  tint: "#ece7dc", cap: "it's a frying pan. it counts.", styles: true },
+  { no: "028", id: "cone",    name: "Cone",    sub: "traffic cone",  rar: "common",   chars: 2816,  val: 13,  tint: "#ffd27a", cap: "caution: confident.",         styles: true },
+  { no: "029", id: "tempest", name: "Tempest", sub: "storm",         rar: "uncommon", chars: 7260,  val: 41,  tint: "#a9c9ff", cap: "weather is a choice.",         styles: true },
+  { no: "030", id: "surge",   name: "Surge",   sub: "big wave",      rar: "uncommon", chars: 15750, val: 62,  tint: "#9fe8ff", cap: "ride it before it breaks.",    styles: true },
+  { no: "031", id: "kraken",  name: "Kraken",  sub: "tentacles",     rar: "rare",     chars: 28000, val: 466, tint: "#c9a5ff", cap: "it was always down there.",    styles: true },
   // ---- Moonshot: one launch, five altitudes. The higher the card, the rarer it is.
-  { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "common",    chars: 3600,   val: 44,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
-  { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "uncommon",  chars: 10080,  val: 80,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
-  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "rare",      chars: 40320,  val:  2400,  tint: "#ff7a6a", cap: "gravity lost the argument.",    styles: true },
-  { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "epic",      chars: 123480, val: 3314, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
+  { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "common",    chars: 3600,   val: 28,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
+  { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "uncommon",  chars: 10080,  val: 70,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
+  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "rare",      chars: 40320,  val:  2267,  tint: "#ff7a6a", cap: "gravity lost the argument.",    styles: true },
+  { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "epic",      chars: 123480, val: 3333, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
   { no: "025", set: "ms", id: "luna",     name: "Luna",     sub: "first flag",    rar: "legendary", chars: 448800, val: 8290, tint: "#b8d4ff", cap: "to the moon was never a joke.", styles: true },
   // ---- more Moonshot cards, each at the altitude (and worth) of a card already there
-  { no: "032", set: "ms", id: "spark",     name: "Spark",     sub: "sparkler",     rar: "common",   chars: 3600,   val: 44,   tint: "#ffb070", cap: "small things start fires.", styles: true },
-  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 80,   tint: "#a8ffbe", cap: "three. two. one.",           styles: true },
-  { no: "034", set: "ms", id: "booster",   name: "Booster",   sub: "stage split",  rar: "rare",     chars: 40320,  val:  2400, tint: "#ffd27a", cap: "dead weight, dropped.",      styles: true },
-  { no: "035", set: "ms", id: "flare",     name: "Flare",     sub: "signal flare", rar: "common",   chars: 3600,   val: 44,   tint: "#ff8a7a", cap: "the sky has been told.",     styles: true },
-  { no: "036", set: "ms", id: "bubble",    name: "Bubble",    sub: "fishbowl helmet", rar: "common", chars: 3600,  val: 44,   tint: "#ece7dc", cap: "all systems: smiling.",      styles: true },
-  { no: "037", set: "ms", id: "gantry",    name: "Gantry",    sub: "tower arm",    rar: "uncommon", chars: 10080,  val: 80,   tint: "#9fe8ff", cap: "the arm lets go.",           styles: true }
+  { no: "032", set: "ms", id: "spark",     name: "Spark",     sub: "sparkler",     rar: "common",   chars: 3600,   val: 32,   tint: "#ffb070", cap: "small things start fires.", styles: true },
+  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 81,   tint: "#a8ffbe", cap: "three. two. one.",           styles: true },
+  { no: "034", set: "ms", id: "booster",   name: "Booster",   sub: "stage split",  rar: "rare",     chars: 40320,  val:  2666, tint: "#ffd27a", cap: "dead weight, dropped.",      styles: true },
+  { no: "035", set: "ms", id: "flare",     name: "Flare",     sub: "signal flare", rar: "common",   chars: 3600,   val: 37,   tint: "#ff8a7a", cap: "the sky has been told.",     styles: true },
+  { no: "036", set: "ms", id: "bubble",    name: "Bubble",    sub: "fishbowl helmet", rar: "common", chars: 3600,  val: 42,   tint: "#ece7dc", cap: "all systems: smiling.",      styles: true },
+  { no: "037", set: "ms", id: "gantry",    name: "Gantry",    sub: "tower arm",    rar: "uncommon", chars: 10080,  val: 94,   tint: "#9fe8ff", cap: "the arm lets go.",           styles: true }
 ];
 // the sets: the two letters a copy id starts with, and what the set is called
 const SETS = { fp: { code: "IS", name: "First Print" }, ms: { code: "MS", name: "Moonshot" } };
@@ -709,21 +722,21 @@ const PACKS = [
     order: ["stitch", "brick", "rook", "mop", "pan", "cone", "orbit", "tempest", "phantom", "surge", "null", "shogun", "kraken", "ronin", "grimm", "reaper", "umbra"],
     slotNames: ["Card 1: a common", "Card 2: a common", "Card 3: a common, sometimes better", "Card 4: an uncommon or better", "Card 5: the best card in the pack"],
     slots: [
-      [["stitch", 1], ["brick", 1], ["rook", 1], ["mop", 1], ["pan", 1], ["cone", 1]],
-      [["stitch", 1], ["brick", 1], ["rook", 1], ["mop", 1], ["pan", 1], ["cone", 1]],
-      [["stitch", 15.5265], ["brick", 15.5265], ["rook", 15.5265], ["mop", 15.5265], ["pan", 15.5265], ["cone", 15.5265], ["orbit", 2.0523], ["tempest", 2.0523], ["phantom", 1.3682], ["surge", 1.3682]],
-      [["orbit", 13.2315], ["tempest", 13.2315], ["phantom", 30.4175], ["surge", 30.4175], ["null", 4.544], ["shogun", 4.079], ["kraken", 4.079]],
-      [["orbit", 24.793], ["tempest", 24.793], ["phantom", 5.869], ["surge", 5.869], ["null", 4.13], ["shogun", 16.793], ["kraken", 16.793], ["ronin", 0.84], ["grimm", 0.102], ["reaper", 0.012], ["umbra", 0.006]]
+      [["stitch", 19.1093], ["brick", 18.0583], ["rook", 17.0651], ["mop", 16.1265], ["pan", 15.2395], ["cone", 14.4014]],
+      [["stitch", 19.1093], ["brick", 18.0583], ["rook", 17.0651], ["mop", 16.1265], ["pan", 15.2395], ["cone", 14.4014]],
+      [["stitch", 17.6637], ["brick", 16.6922], ["rook", 15.7741], ["mop", 14.9065], ["pan", 14.0867], ["cone", 13.3119], ["orbit", 2.0734], ["tempest", 1.9469], ["phantom", 1.8281], ["surge", 1.7166]],
+      [["orbit", 23.8181], ["tempest", 22.3652], ["phantom", 21.0009], ["surge", 19.7198], ["kraken", 5.1015], ["shogun", 4.326], ["null", 3.6685]],
+      [["orbit", 12.2024], ["tempest", 11.4581], ["phantom", 10.7591], ["surge", 10.1028], ["kraken", 21.065], ["shogun", 17.8631], ["null", 15.1479], ["ronin", 1.2264], ["grimm", 0.1489], ["reaper", 0.0175], ["umbra", 0.0088]]
     ] },
   { id: "ms", set: "ms", name: "Moonshot", blurb: "One launch and what happens on the way up: a lit fuse on the ground, a rocket on its plume, a flag on the Moon. The higher the card, the rarer it is.", price: 1500, min: 750, max: 15000, n: 5,
     order: ["luna", "fuse", "spark", "flare", "bubble", "liftoff", "booster", "ignition", "countdown", "gantry", "apogee"],
     slotNames: ["Card 1: a low-altitude card, now and then an Ignition", "Card 2: a low-altitude card, now and then an Ignition", "Card 3: low altitude, sometimes a Liftoff", "Card 4: an Ignition or higher", "Card 5: the best card in the pack"],
     slots: [
-      [["fuse", 22.9105], ["spark", 22.9105], ["flare", 22.9105], ["bubble", 22.9105], ["ignition", 2.786], ["countdown", 2.786], ["gantry", 2.786], ["liftoff", 0], ["booster", 0]],
-      [["fuse", 18.6468], ["spark", 18.6468], ["flare", 18.6468], ["bubble", 18.6468], ["ignition", 8.471], ["countdown", 8.471], ["gantry", 8.471], ["liftoff", 0], ["booster", 0]],
-      [["fuse", 9.154], ["spark", 9.154], ["flare", 9.154], ["bubble", 9.154], ["ignition", 20.532], ["countdown", 20.532], ["gantry", 20.532], ["liftoff", 0.894], ["booster", 0.894]],
-      [["fuse", 6.0493], ["spark", 6.0493], ["flare", 6.0493], ["bubble", 6.0493], ["ignition", 22.063], ["countdown", 22.063], ["gantry", 22.063], ["liftoff", 4.057], ["booster", 4.057], ["apogee", 1.5]],
-      [["fuse", 7.3385], ["spark", 7.3385], ["flare", 7.3385], ["bubble", 7.3385], ["ignition", 12.701], ["countdown", 12.701], ["gantry", 12.701], ["liftoff", 13.909], ["booster", 13.909], ["apogee", 4.35], ["luna", 0.375]]
+      [["fuse", 28.0102], ["spark", 25.1121], ["flare", 22.5138], ["bubble", 20.1844], ["ignition", 1.4711], ["countdown", 1.3917], ["gantry", 1.3167]],
+      [["fuse", 26.7515], ["spark", 23.9836], ["flare", 21.5021], ["bubble", 19.2773], ["ignition", 2.9866], ["countdown", 2.8256], ["gantry", 2.6732]],
+      [["fuse", 18.332], ["spark", 16.4352], ["flare", 14.7347], ["bubble", 13.2102], ["ignition", 11.4692], ["countdown", 10.8507], ["gantry", 10.2656], ["liftoff", 2.6966], ["booster", 2.0058]],
+      [["fuse", 11.1804], ["spark", 10.0236], ["flare", 8.9865], ["bubble", 8.0567], ["ignition", 17.7373], ["countdown", 16.7809], ["gantry", 15.876], ["liftoff", 5.6534], ["booster", 4.2051], ["apogee", 1.5]],
+      [["fuse", 2.5292], ["spark", 2.2675], ["flare", 2.0329], ["bubble", 1.8225], ["ignition", 22.332], ["countdown", 21.1278], ["gantry", 19.9885], ["liftoff", 13.2896], ["booster", 9.8851], ["apogee", 4.35], ["luna", 0.375]]
     ] }
 ];
 const PACK_BY = Object.fromEntries(PACKS.map(p => [p.id, p])), packOf = card => PACK_BY[card.set];
@@ -1266,7 +1279,7 @@ class PackScreen {
     const card = this.cards[(this.i + 1) % this.cards.length], pic = await packPic(card); this.loading = false; if (!pic) return;
     this.i = (this.i + 1) % this.cards.length; this.card = card; this.pic = pic; this.th = Float32Array.from({ length: pic.cols * pic.rows }, (_, k) => .62 * Math.floor(k / pic.cols) / pic.rows + .38 * Math.random());
     this.shift = new Float32Array(pic.rows); this.t0 = performance.now(); this.ph = -1;
-    scramble(this.el.name, card.name.toUpperCase(), 520); this.el.sub.textContent = `${RAR[card.rar].name} · ${fmt(card.chars)} characters`; this.el.meter.textContent = meter(this.i + 1, this.cards.length);
+    scramble(this.el.name, card.name.toUpperCase(), 520); this.el.sub.textContent = `${rarLabel(card)} · ${fmt(card.chars)} characters`; this.el.meter.textContent = meter(this.i + 1, this.cards.length);
   }
   status(ph, now) { const s = ph === 1 ? "decoded" : (ph === 0 ? "decoding " : "next card ") + SPIN[Math.floor(now / 110) % 4]; if (s !== this.el.stat._s) { this.el.stat._s = s; this.el.stat.textContent = "> " + s; } }
   frame(now) {
@@ -1375,7 +1388,8 @@ function tiltPack(pk) {
 /* ============================================================================
    7. PAGES: pack, market, collection, odds
    ========================================================================== */
-const VIEWS = ["home", "market", "profile", "collection", "odds", "invite", "limited"]; let view = "home", modalNo = null, oddsPack = "";
+// two tabs: the pack, and you (your money, your cards, the market); the other pages hang off those two
+const VIEWS = ["home", "market", "profile", "collection", "odds", "invite", "limited"], TAB_OF = { home: "home", odds: "home", limited: "home", profile: "profile", market: "profile", collection: "profile", invite: "profile" }; let view = "home", modalNo = null, oddsPack = "";
 const copiesOf = no => state.vault.filter(c => c.no === no).sort((a, b) => valueOf(b) - valueOf(a));
 function renderBal(anim) { const el = $("bal"), from = +(el.dataset.v || state.coins); el.dataset.v = state.coins; if (anim) countTo(el, from, state.coins, money); else el.textContent = money(state.coins); if (typeof renderBroke === "function") renderBroke(); }
 
@@ -1411,22 +1425,25 @@ function worthSeries(pts) {
   return { out, mins: Math.round((now - t0) / 60000) };
 }
 function renderProfile() {
-  $("pRank").live = rankHTML(); $("pLimits").live = limitsHTML(); $("pSettings").live = settingsHTML();
-  const net = netWorth(), hold = holdingsValue(), back = state.vault.reduce((a, c) => a + sellOf(c), 0), basis = state.vault.reduce((a, c) => a + costOf(c), 0), all = profitAll(), d24 = profitSince(864e5);
-  $("pWorth").live = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}">${money(net)}</div><div class="wmeta"><span>${pnlHTML(d24, START + state.s.added)} <span class="dim">last 24h</span></span><span>${pnlHTML(all, START + state.s.added)} <span class="dim">since you started</span></span></div></div>
-    <div class="wsplit"><div><span class="label">cash</span><b>${money(state.coins)}</b><button class="btn small" id="cashBtn2" style="justify-self:start;margin-top:6px">cash out</button></div><div><span class="label">your cards, at market price</span><b>${moneyS(hold)}</b> ${state.vault.length ? pnlHTML(hold - basis, basis) : ""}</div><div><span class="label">they would sell for</span><b>${moneyS(back)}</b><span class="dim">after the 10% fee</span></div><div><span class="label">made or lost on sales</span><b>${pnlHTML(state.s.realized, 0)}</b></div></div>`;
+  $("pLimits").live = limitsHTML(); $("pSettings").live = settingsHTML();
+  const net = netWorth(), hold = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0), all = profitAll(), d24 = profitSince(864e5), found = new Set(state.vault.map(c => c.no)).size;
+  $("pWorth").live = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}">${money(net)}</div><div class="wmeta"><span>${pnlHTML(all, START + state.s.added)} <span class="dim">profit since you started</span></span><span>${pnlHTML(d24, START + state.s.added)} <span class="dim">today</span></span></div></div>
+    <div class="wsplit"><div><span class="label">cash</span><b>${money(state.coins)}</b></div><div><span class="label">your cards</span><b>${moneyS(hold)}</b> ${state.vault.length ? pnlHTML(hold - basis, basis) : ""}</div><div><span class="label">made or lost on sales</span><b>${pnlHTML(state.s.realized, 0)}</b></div></div>`;
   const ws = worthSeries(120);
-  $("pChart").live = ws ? `<div class="mk"><div class="label">Net worth · ${ws.mins >= 1380 ? "last 24 hours" : ws.mins < 90 ? "last " + ws.mins + " minutes" : "last " + Math.round(ws.mins / 60) + " hours"}</div>${lineChart(ws.out, { fmt: money, h: 190 })}</div>`
-    : `<div class="mk"><div class="label">Net worth</div><p class="small">Your line starts now and fills in as the market moves. Keep this page open and watch it.</p></div>`;
+  $("pChart").live = ws ? `<div class="mk">${lineChart(ws.out, { fmt: money, h: 120 })}</div>` : "";
   const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), s: MK.series(c, 24, 24), p24: MK.pct(c, 24) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
-  $("pTable").live = groups.length ? groups.map(g => `<div class="crw">${cardRow(g.c, { s: g.s, price: moneyS(g.val), pill: pill(g.val / Math.max(1, g.cost) - 1), sub: `${g.n > 1 ? `×${g.n} · ` : ""}${RAR[g.c.rar].name} · cost ${moneyS(g.cost)}` })}${sellBtn(g.c.no)}</div>`).join("") + `<div class="ctot"><span>All cards</span><span class="cval"><b>${moneyS(hold)}</b>${pill(hold / Math.max(1, basis) - 1)}</span></div>` : "";
-  $("pNote").innerHTML = groups.length ? `Tap a card to see its chart and sell it. “Cost” is what the card was worth when you got it. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${money(state.s.spent)} spent on packs · ${money(state.s.sold)} back from sales</span>` : `You don't hold any cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they will show up here with a live price.`;
+  $("pTable").live = groups.length ? groups.map(g => `<div class="crw">${cardRow(g.c, { s: g.s, price: moneyS(g.val), pill: pill(g.val / Math.max(1, g.cost) - 1), sub: `${g.n > 1 ? `×${g.n} · ` : ""}${rarLabel(g.c)} · cost ${moneyS(g.cost)}` })}${sellBtn(g.c.no)}</div>`).join("") + `<div class="ctot"><span>All cards</span><span class="cval"><b>${moneyS(hold)}</b>${pill(hold / Math.max(1, basis) - 1)}</span></div>` : "";
+  $("pNote").innerHTML = groups.length ? `Tap a card for its chart. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${money(state.s.spent)} spent · ${money(state.s.sold)} back from sales</span>` : `No cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they show up here with a live price.`;
+  // the market, simplified: what is moving most right now
+  const rows = movers().rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24)).slice(0, 4);
+  $("pMkt").live = rows.map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)}<span class="dim">24h</span></button>`).join("");
+  $("pLinks").live = `<a class="linkbtn plain" href="#/collection">All ${CARDS.length} cards · ${found} found ›</a><a class="linkbtn plain" href="#/market">Full market ›</a><a class="linkbtn plain" href="#/invite">Invite a friend ›</a>`;
 }
 
 let oddsKey = "";
 function renderOdds(force) {
   if (!PACK_BY[oddsPack]) oddsPack = state.pack; const key = oddsPack + "|" + MK.tick(); if (!force && key === oddsKey && $("oBody").firstChild) return; oddsKey = key; const opened = [...document.querySelectorAll("#oBody details")].map(d => d.open); const pk = PACK_BY[oddsPack], ps = packStats(pk), slotName = pk.slotNames;
-  const rows = CARDS.filter(c => c.set === pk.set).sort((a, b) => a.chars - b.chars).map(c => { const p = packP(c.id); return cardRow(c, { nospark: true, price: p >= .5 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p), pill: `<span class="small">of packs</span>`, sub: `${RAR[c.rar].name} · ${fmt(c.chars)} characters · now ${moneyS(MK.price(c))}` }); }).join("");
+  const rows = CARDS.filter(c => c.set === pk.set).sort((a, b) => a.chars - b.chars).map(c => { const p = packP(c.id); return cardRow(c, { nospark: true, price: p >= .5 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p), pill: `<span class="small">of packs</span>`, sub: `${rarLabel(c)} · ${fmt(c.chars)} characters · now ${moneyS(MK.price(c))}` }); }).join("");
   const tot = Object.values(STYLES).reduce((a, s) => a + s.p, 0), cap = id => MK.CAP[id];
   $("oBody").innerHTML = `
     <div class="packtabs" role="tablist" aria-label="Which pack">${PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-opack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("")}</div>
@@ -1453,7 +1470,7 @@ function renderOdds(force) {
 }
 function show(v, keep) {                                                  // keep: draw the page again where you are (after selling, say) instead of jumping back to the top
   view = VIEWS.includes(v) ? v : "home";
-  if (view === "odds") oddsKey = ""; VIEWS.forEach(x => $("v-" + x).classList.toggle("on", x === view)); document.querySelectorAll("#tabs a, #btabs a").forEach(a => a.classList.toggle("on", a.dataset.v === view));
+  if (view === "odds") oddsKey = ""; VIEWS.forEach(x => $("v-" + x).classList.toggle("on", x === view)); document.querySelectorAll("#tabs a, #btabs a").forEach(a => a.classList.toggle("on", a.dataset.v === (TAB_OF[view] || view)));
   ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds, invite: renderInvite, limited: renderLimited })[view](); if (!keep) scrollTo(0, 0);
 }
 function route() { const h = location.hash.replace(/^#\/?/, ""); show(h === "vault" || h === "index" ? "collection" : h || "home"); }
@@ -1472,7 +1489,7 @@ function cardModal(no, keep) {
   const ser = MK.series(card, 168, 56), now = MK.price(card), bz = MK.buzz(card), sv = MK.stats(card);
   const copies = cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div class="ci">${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${moneyS(costOf(c))}</small></div><div class="r"><span class="cv"><b>${moneyS(valueOf(c))}</b>${pill(gainOf(c))}</span>${replayable(c) ? `<button class="btn small ghost" data-share="${c.uid}">replay &amp; share</button>` : ""}<button class="btn small sellb" data-sell="${c.uid}" data-no="${no}" aria-label="Sell ${esc(card.name)} for ${money(sellOf(c))}, after the 10% fee">Sell for ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<div class="notyet"><b>You haven't found this card yet.</b><span class="small">It turns up in ${chance(p, packOf(card))}.</span><button class="btn small solid" data-open data-close>open a pack</button></div>`;
   openModal(`<div class="mcard">${cardHTML(best || { no }, { locked: !best })}</div><div class="minfo">
-    <div class="mhead"><span class="label" style="color:${R.col}">${R.name} · No. ${card.no}</span><h2>${esc(card.name)}</h2>
+    <div class="mhead"><span class="label" style="color:${R.col}">${rarLabel(card)} · No. ${card.no}</span><h2>${esc(card.name)}</h2>
       <div class="pricebox"><b>${moneyS(now)}</b>${pill(MK.pct(card, 24))}<span class="dim">today</span>${pill(MK.pct(card, 168))}<span class="dim">this week</span></div></div>
     ${copies}
     <div class="mk"><div class="label">Price · last 7 days</div>${lineChart(ser, { log: true, fmt: moneyS, h: 150 })}<div class="small">Simulated market · selling pays the price minus 10%.</div></div>
@@ -1517,7 +1534,9 @@ function quickSell(no) {
 const pill = p => { const up = p > .0005, dn = p < -.0005, a = Math.abs(p * 100); return `<span class="pill ${up ? "up" : dn ? "dn" : "fl"}">${up ? "▲" : dn ? "▼" : "–"} ${a >= 100 ? fmt(a) : a.toFixed(1)}%</span>`; };
 const rdot = card => `<i class="rd" style="--rc:${RAR[card.rar].col}"></i>`;
 const thumb = (card, fx) => `<span class="thumb" style="--rc:${RAR[card.rar].col}"><img src="${imgOf(card, fx, true)}" alt="" loading="lazy" draggable="false"></span>`;
-const chanceS = p => p >= .5 ? Math.round(p * 100) + "% of packs" : "1 in " + fmt(1 / p) + " packs";
+// every card has its own rarity: how often it turns up in a pack of its set. No two cards share one.
+const rarLabel = card => chanceS(packP(card.id));
+const chanceS = p => p >= .1 ? Math.round(p * 100) + "% of packs" : "1 in " + fmt(1 / p) + " packs";
 const seg = (scope, key, opts, cur) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button data-f="${scope}:${key}:${v}" class="${v === cur ? "on" : ""}" aria-pressed="${v === cur}">${l}</button>`).join("")}</div>`;
 const selectHTML = (id, opts, cur, label) => `<label class="sortsel"><span>${label}</span><select id="${id}" aria-label="${label}">${opts.map(([v, l]) => `<option value="${v}"${v === cur ? " selected" : ""}>${l}</option>`).join("")}</select></label>`;
 // one card on one line: picture, name, a line of its last day, price, change
@@ -1542,7 +1561,7 @@ function renderMarket() {
   $("mFilters").live = seg("m", "show", [["all", "All"], ["up", "Going up"], ["down", "Going down"], ["mine", "Mine"]], MKF.show) + seg("m", "set", [["all", "All packs"], ...Object.keys(SETS).map(k => [k, SETS[k].name])], MKF.set) + selectHTML("mSort", [["move", "Biggest move"], ["price", "Highest price"], ["rare", "Rarest"]], MKF.sort, "Sort");
   let list = rows.filter(r => (MKF.set === "all" || r.c.set === MKF.set) && (MKF.show === "all" || (MKF.show === "up" && r.p24 > .0005) || (MKF.show === "down" && r.p24 < -.0005) || (MKF.show === "mine" && held.has(r.c.no))));
   list.sort(MKF.sort === "price" ? (a, b) => b.now - a.now : MKF.sort === "rare" ? (a, b) => RAR[b.c.rar].tier - RAR[a.c.rar].tier || b.now - a.now : (a, b) => Math.abs(b.p24) - Math.abs(a.p24));
-  $("mList").live = list.map(r => { const own = copiesOf(r.c.no).length; return cardRow(r.c, { s: r.s, price: moneyS(r.now), pill: pill(r.p24), sub: `${RAR[r.c.rar].name}${own ? ` · <span class="own">you have ×${own}</span>` : `<span class="setn"> · ${esc(SETS[r.c.set].name)}</span>`}` }); }).join("") || `<p class="small" style="padding:14px 2px">No cards match. Try another filter.</p>`;
+  $("mList").live = list.map(r => { const own = copiesOf(r.c.no).length; return cardRow(r.c, { s: r.s, price: moneyS(r.now), pill: pill(r.p24), sub: `${rarLabel(r.c)}${own ? ` · <span class="own">you have ×${own}</span>` : `<span class="setn"> · ${esc(SETS[r.c.set].name)}</span>`}` }); }).join("") || `<p class="small" style="padding:14px 2px">No cards match. Try another filter.</p>`;
   // for the curious
   const fl = MK.flips();
   $("mFlips").live = `<div><h3 class="sec">Best trades · this week</h3>${fl.best.map(flipRow).join("")}</div><div><h3 class="sec">Worst trades · this week</h3>${fl.worst.map(flipRow).join("")}</div>`;
@@ -1572,7 +1591,7 @@ function renderCollection() {
     const cs = copiesOf(c.no), best = cs[0], pk2 = packOf(c);
     return `<div class="ctw"><button class="ctile${best ? "" : " miss"}" data-card="${c.no}" aria-label="${esc(c.name)}"><span class="cimg">${cardHTML(best || { no: c.no }, { sm: true, locked: !best, thumb: true })}${best ? `<span class="cb n">×${cs.length}</span>` : ""}${best && best.fx ? `<span class="cb fx">${STYLES[best.fx].name}</span>` : ""}</span>
       <span class="cmeta">${best ? `<b>${moneyS(valueOf(best))}</b>${pill(gainOf(best))}` : `<b class="faint">Not found yet</b>`}</span>
-      <span class="csub">${best ? `${rdot(c)}${RAR[c.rar].name}${cs.length > 1 ? ` · ${cs.length} copies` : ""}` : `${rdot(c)}${RAR[c.rar].name} · ${chanceS(packP(c.id))}`}</span></button>${sellBtn(c.no)}</div>`;
+      <span class="csub">${best ? `${rdot(c)}${rarLabel(c)}${cs.length > 1 ? ` · ${cs.length} copies` : ""}` : `${rdot(c)}${rarLabel(c)} · ${chanceS(packP(c.id))}`}</span></button>${sellBtn(c.no)}</div>`;
   };
   $("cGrid").live = Object.keys(SETS).filter(k => CF.set === "all" || CF.set === k).map(k => {
     const all = CARDS.filter(c => c.set === k), got = all.filter(c => found.has(c.no)).length, list = all.filter(c => CF.show === "all" || (CF.show === "found" ? found.has(c.no) : !found.has(c.no))).sort(cmp);
@@ -1715,6 +1734,12 @@ function rqShare() {
    8. OPENING A PACK: tear it, reveal the cards one at a time, then keep or sell
    ========================================================================== */
 let SS = null, SS_PRICE = 0, opening = false; const stage = $("stage"), hint = t => { $("stHint").textContent = t; };
+// the meter under the cards: what the cards turned over so far would sell for, against what the pack cost. It fills the same way for every pack, win or lose.
+function meterInit(start) { const m = $("stMeter"), ref = SS.refAll || SS.ref; SS.got = start || 0; SS.paidBack = false; m.hidden = false; m.classList.remove("paid"); $("stMeterFill").style.width = Math.min(100, SS.got / Math.max(1, ref) * 100) + "%"; $("stMeterTxt").textContent = `${money(SS.got)} of ${money(ref)}`; SS.paidBack = SS.got >= ref; m.classList.toggle("paid", SS.paidBack); m.setAttribute("aria-label", `Your cards so far sell for ${money(SS.got)}; the pack cost ${money(ref)}`); }
+function meterAdd(c) {
+  const m = $("stMeter"), ref = SS.refAll || SS.ref; SS.got += sellOf(c); const f = Math.min(1, SS.got / Math.max(1, ref)); $("stMeterFill").style.width = (f * 100) + "%"; $("stMeterTxt").textContent = `${money(SS.got)} of ${money(ref)}`; m.setAttribute("aria-label", `Your cards so far sell for ${money(SS.got)}; the pack cost ${money(ref)}`);
+  if (!SS.paidBack && SS.got >= ref) { SS.paidBack = true; m.classList.add("paid"); Snd.paid(); buzz([18, 24, 36]); }
+}
 async function openPack(pack) {
   if (SS || opening) return; const pk = pack || curPack(), gate = packGate(); if (gate) { toast(gate); return; }
   { const k = Math.min(openN(), maxN(pk)); if (k >= 2) { openMany(pk, k); return; } }
@@ -1744,7 +1769,7 @@ async function tear() {
   const line = document.createElement("div"); line.className = "cutline"; line.style.top = ((A + B) / 2) + "%"; line.style.transform = `rotate(${(B - A) / 3}deg)`; wrap.appendChild(line);
   const r = wrap.getBoundingClientRect(); for (let i = 0; i <= 16; i++) { const k = i / 16; FX.burst(r.left + r.width * k, r.top + r.height * (A + (B - A) * k) / 100, 3, ["#ffffff", "#c9c5bb", "#8d897f"], 300 + Math.random() * 300); }
   stage.animate([{ transform: "translate(0,0)" }, { transform: "translate(-5px,3px)" }, { transform: "translate(4px,-3px)" }, { transform: "translate(0,0)" }], { duration: 220 });
-  await sleep(300); buildStack(); await sleep(260); wrap.classList.add("drop"); await sleep(420); SS.phase = "stack"; focusTop();
+  await sleep(300); buildStack(); await sleep(260); wrap.classList.add("drop"); await sleep(420); SS.phase = "stack"; meterInit(); focusTop();
 }
 function buildStack() {
   const st = $("stStack"); st.innerHTML = SS.items.map((c, i) => `<div class="sc rise" data-i="${i}" style="z-index:${50 - i};--rot:${i ? ((rand() - .5) * 5).toFixed(1) : 0}deg;--ox:${i * 2}px;--oy:${i * 3}px">${cardHTML(c)}</div>`).join("");
@@ -1759,7 +1784,10 @@ function focusTop() {
 async function advance() {
   if (!SS || SS.busy) return; if (SS.phase === "pack") { tear(); return; } if (SS.phase !== "stack") return;
   const el = scEl(SS.idx); if (!el) return; SS.busy = true; const c = SS.items[SS.idx], card = BY_NO[c.no];
-  if (!el.dataset.rev) { el.dataset.rev = 1; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); SS.busy = false; hint(SS.idx < SS.items.length - 1 ? "Tap for the next card" : "Tap to see what you got"); }
+  if (!el.dataset.rev) {
+    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); meterAdd(c); SS.busy = false; hint(SS.idx < SS.items.length - 1 ? "Tap for the next card" : "Tap to see what you got");
+    if (valueOf(c) < SMALL && RAR[card.rar].tier <= 1 && SS.n < 2 && at < SS.items.length - 1) setTimeout(() => { if (SS && SS.idx === at && !SS.busy && SS.phase === "stack") advance(); }, 750);       // a card worth next to nothing moves on by itself; anything that matters waits for you
+  }
   else { await dismiss(el, c); SS.busy = false; }
 }
 async function reveal(el, c, card, R, v) {
@@ -1773,7 +1801,7 @@ async function reveal(el, c, card, R, v) {
   if (T >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + T * 14, [R.col, "#fff"]);
   if (T >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
   const t = $("stTitle"); t.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col);
-  t.innerHTML = `<div class="rw">${R.name}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
+  t.innerHTML = `<div class="rw">${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
   blockReveal(t.querySelector(".nm"), card.name, 480); t.classList.remove("in"); void t.offsetWidth; t.classList.add("in");
 }
 async function dismiss(el, c) {
@@ -1782,19 +1810,21 @@ async function dismiss(el, c) {
   SS.idx++; await sleep(260); if (SS.idx >= SS.items.length) summary(); else focusTop();
 }
 function skipAll() { if (!SS || SS.phase === "summary") return; if (SS.phase === "wait") { Machine.stop(); return; } Machine.stop(); SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
+// one tap to turn the pack into money and open the next: only offered when the next pack is covered (a free pack, one you bought, or what these cards sell for plus your balance)
+const sellNext = back => { const pk = SS.pack, price = packPrice(pk), ok = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins + back >= price; return ok && back > 0 ? `<button class="btn solid" id="sumSellAgain">sell all · open another</button>` : ""; };
 const againLabel = pk => (openN() > 1 && maxN(pk) >= 2) ? (() => { const k = Math.min(openN(), maxN(pk)), c = Math.max(0, k - state.freePacks - boughtOf(pk.id)) * packPrice(pk); return `open ${k} more${c ? " · " + money(c) : ""}`; })() : state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
 function summary() {
-  if (SS.n > 1) { multiSummary(); return; }
+  $("stMeter").hidden = true; if (SS.n > 1) { multiSummary(); return; }
   SS.phase = "summary"; const items = SS.items, back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
   const best = items.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no];
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(back)}">${blockSVG(money(back))}</div><span class="dim" style="font-size:13px">of cards you can sell</span></div>
-    <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Its cards sell for ${money(back)}.` : SS.bought ? `A pack you bought. Its cards sell for ${money(back)} of play money.` : `You paid ${money(SS_PRICE)} and got ${money(back)} of cards: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))}.`}${x >= 2 ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
+    <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Its cards sell for ${money(back)}.` : SS.bought ? `A pack you bought. Its cards sell for ${money(back)} of play money.` : `You paid ${money(SS_PRICE)} and got ${money(back)} of cards: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))}.`}${x >= 2 ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${rarLabel(bc)}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
     <div class="fan">${items.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>
-    <div class="row acts" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
+    <div class="row acts" style="justify-content:center">${sellNext(back)}<button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
-function closeStage() { if (SS && SS.phase === "wait") return; Machine.stop(); stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view, true); }
+function closeStage() { if (SS && SS.phase === "wait") return; Machine.stop(); $("stMeter").hidden = true; stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view, true); }
 
 /* ---- several packs at once. Every pack is drawn, charged and counted exactly like a single pack (same odds, same daily limit); only the show is shorter: cards worth less than $0.50
    are not revealed one by one, they are totalled on the result, and nothing is sold or hidden: they are in your collection and in the sums. ---- */
@@ -1820,7 +1850,7 @@ async function openMany(pk, n) {
   const hi = items.filter(c => valueOf(c) >= SMALL).sort((a, b) => valueOf(a) - valueOf(b)); SS_PRICE = paid;
   Object.assign(mine, { items: hi, all: items, phase: "machine", free: freeN === packs, refAll: price * packs, paid, freeN, boughtN, n: packs });
   await anim; if (SS !== mine || mine.phase === "summary") return; mine.phase = "stack";
-  if (!hi.length) { summary(); return; } buildStack(); await sleep(400); focusTop();
+  if (!hi.length) { summary(); return; } meterInit(items.filter(c => valueOf(c) < SMALL).reduce((a, c) => a + sellOf(c), 0)); buildStack(); await sleep(400); focusTop();
 }
 
 function multiSummary() {
@@ -1831,11 +1861,11 @@ function multiSummary() {
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${SS.n} × ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(back)}">${blockSVG(money(back))}</div><span class="dim" style="font-size:13px">of cards you can sell</span></div>
     <div class="net ${net >= 0 ? "up" : "dn"}">${spent ? `You paid ${money(paid)} for ${spent} pack${spent > 1 ? "s" : ""}${SS.n - spent ? ` (${SS.n - spent} free)` : ""} and got ${money(back)} of cards: <span style="white-space:nowrap">${sign}${money(Math.abs(net))}</span>.` : `${SS.n} free packs. Their cards sell for ${money(back)}.`}${x >= 2 && spent ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div>
-    <div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div>
+    <div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${rarLabel(bc)}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div>
     ${lo.length ? `<div class="small dim" style="margin-top:10px">${lo.length} card${lo.length > 1 ? "s" : ""} worth under ${money(SMALL)} ${lo.length > 1 ? "were" : "was"} skipped past (${money(loBack)} to sell in all). They're all in your collection, shown here:</div>` : ""}</div>
     ${hi.length ? `<div class="fan">${hi.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : `<div class="small dim">Nothing worth ${money(SMALL)} or more this time.</div>`}
     ${lo.length ? `<div class="fan small">${smallFan}</div>` : ""}
-    <div class="row acts" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button>${lo.length ? `<button class="btn" id="sumSellSmall">sell the small ones · ${money(loBack)}</button>` : ""}<button class="btn solid" id="sumKeep">keep all</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
+    <div class="row acts" style="justify-content:center">${sellNext(back)}<button class="btn" id="sumSell">sell all · ${money(back)}</button>${lo.length ? `<button class="btn" id="sumSellSmall">sell the small ones · ${money(loBack)}</button>` : ""}<button class="btn" id="sumKeep">keep all</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
 
@@ -1924,7 +1954,7 @@ const Share = (() => {
     // the footer band
     c.save(); rr(30, 1090, W - 60, H - 1090 - 30, 34); c.clip(); c.fillStyle = "#0e0e18"; c.fillRect(30, 1090, W - 60, 240); c.restore();
     pix("STIXX", 66, 1140, 10, INK, .95); T("play money · simulated", W - 66, 1142, 24, INK, 600, "right"); T("simulated prices · no cash value", W - 66, 1180, 20, DIM, 500, "right");
-    T(`${RAR[r.card.rar].name} · ${fmt(r.card.chars)} characters`, 66, 1240, 19, DIM, 500); T(r.code, 66, 1270, 19, DIM, 500); T(r.sold ? "after the 10% selling fee" : "if you sold now, after the 10% fee", W - 66, 1270, 19, DIM, 500, "right");
+    T(`${rarLabel(r.card)} · ${fmt(r.card.chars)} characters`, 66, 1240, 19, DIM, 500); T(r.code, 66, 1270, 19, DIM, 500); T(r.sold ? "after the 10% selling fee" : "if you sold now, after the 10% fee", W - 66, 1270, 19, DIM, 500, "right");
 
     // when the replay ends: profit throws characters up, a loss glitches
     if (live && rep && rt >= 1 && !burst) { burst = true; for (let i = 0; i < (finalUp ? 90 : 60); i++) parts.push({ x: 540 + (Math.random() - .5) * 600, y: 860, vx: (Math.random() - .5) * 460, vy: finalUp ? -160 - Math.random() * 380 : 40 + Math.random() * 120, ch: finalUp ? "$+*·"[i % 4] : "-x/\\"[i % 4], life: 1.4 + Math.random() * 1.2, age: 0 }); }
@@ -2451,6 +2481,7 @@ const Snd = (() => {
     claim(big) { if (!ready()) return; [0, 2, 4, big ? 6 : 5].forEach((k, i) => tone(NOTE[k], .4, "triangle", .13, i * .08)); },
     level() { if (!ready()) return; [0, 2, 4, 6, 7].forEach((k, i) => tone(NOTE[k], .5, "triangle", .12, i * .09)); },
     click() { if (!ready()) return; tone(900, .05, "sine", .07); },
+    paid() { if (!ready()) return; [0, 2, 4].forEach((k, i) => tone(NOTE[k + 1], .28, "triangle", .11, i * .07)); },           // the cards you have turned over have reached what the pack cost
     machine(n) {                                                // the dealing machine: a short whir, a run of ticks as the cards come out, and a thunk when the stack lands
       if (!ready()) return; hiss(1.0, .16, 0, 500, 4200); tone(70, 1.1, "sawtooth", .06, 0, 170);
       for (let i = 0; i < Math.min(24, n); i++) tone(520 + (i % 5) * 70, .035, "square", .028, .45 + i * .045);
@@ -2506,7 +2537,7 @@ function chaseHTML() {
   if (!state.s.packs && !state.vault.length) return "";
   const pk = curPack(), size = CARDS.filter(c => c.set === pk.set).length, miss = missingCards(pk.set); if (!miss.length) return `<span class="label">${esc(pk.name)}</span><span>You have every ${esc(pk.name)} card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
   const rows = miss.slice().sort((a, b) => MK.price(b) - MK.price(a)).slice(0, 3), hot = miss.map(c => ({ c, p: MK.pct(c, 24) })).sort((a, b) => b.p - a.p)[0];
-  return `<span class="label">still out there in ${esc(pk.name)} · ${size - miss.length} of ${size} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${RAR[c.rar].name}</span>${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}<span class="dim">${chance(packP(c.id))}</span></button>`).join("")
+  return `<span class="label">still out there in ${esc(pk.name)} · ${size - miss.length} of ${size} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${rarLabel(c)}</span>${money(MK.price(c))} ${pctHTML(MK.pct(c, 24))}<span class="dim">${chance(packP(c.id))}</span></button>`).join("")
     + (hot && hot.p >= .3 ? `<span class="hotflip"><b>${esc(hot.c.name)}</b> is up ${pctShort(hot.p).slice(1)} in a day and you don't have one. It turns up in ${chance(packP(hot.c.id), packOf(hot.c))}, and a pack costs ${money(packPrice(packOf(hot.c)))}.</span>` : "");
 }
 
@@ -2737,7 +2768,7 @@ const Clip = (() => {
       const inK = ease(u / .28), outK = ease((u - (r.dur - .22)) / .22), y = 1010 + (1 - inK) * 380 - outK * 80, a = inK * (1 - outK), w = 700;
       cue(r.t0 + .02, () => { Snd.reveal(tier); buzz(tier >= 3 ? [30, 25, 50] : [18]); }); cue(r.t0 + .26, () => { if (tier >= 1) burst(cx, 1010, 8 + tier * 10, tier >= 2 ? r.R.col : "#c9c5bb", 420 + tier * 80); });
       card(r, cx, y, w, a, (1 - inK) * .12 * (r.c.uid.charCodeAt(2) % 2 ? 1 : -1), tier >= 2 ? .5 + tier * .06 : .25);
-      T(`${r.R.name}${r.c.fx ? " · " + STYLES[r.c.fx].name : ""}`.toUpperCase(), cx, 1480, 30, r.R.col, 700, "center", a); T(r.card.name, cx, 1556, 62, INK, 700, "center", a); T(money(r.val), cx, 1630, 54, GREEN, 700, "center", a);
+      T(`${rarLabel(BY_NO[r.c.no])}${r.c.fx ? " · " + STYLES[r.c.fx].name : ""}`.toUpperCase(), cx, 1480, 30, r.R.col, 700, "center", a); T(r.card.name, cx, 1556, 62, INK, 700, "center", a); T(money(r.val), cx, 1630, 54, GREEN, 700, "center", a);
     }
     drawParts(dt);
     if (t > s.end) endCard(t - s.end, s);
@@ -2758,7 +2789,7 @@ const Clip = (() => {
     if (zu < 0 || zu > ZOOM + .05) {
       const inK = ease(u / .35), back = zu > ZOOM ? ease((zu - ZOOM) / .7) : 0, w = ZW0 * (zu > ZOOM ? 1 : .92 + .08 * inK);
       glow(cx, ZCY, 900, R.col, .3 * inK); card(r, cx, ZCY, w, inK, 0, .5);
-      if (zu > ZOOM) { const q = ease((zu - ZOOM) / .5); T(`${R.name}${r.c.fx ? " · " + STYLES[r.c.fx].name : ""}`.toUpperCase(), cx, 1500, 32, R.col, 700, "center", q); T(r.card.name, cx, 1585, 74, INK, 700, "center", q); T(money(r.val), cx, 1670, 62, GREEN, 700, "center", q); }
+      if (zu > ZOOM) { const q = ease((zu - ZOOM) / .5); T(`${rarLabel(BY_NO[r.c.no])}${r.c.fx ? " · " + STYLES[r.c.fx].name : ""}`.toUpperCase(), cx, 1500, 32, R.col, 700, "center", q); T(r.card.name, cx, 1585, 74, INK, 700, "center", q); T(money(r.val), cx, 1670, 62, GREEN, 700, "center", q); }
       else T("your best pull", cx, 1500, 34, DIM, 600, "center", inK);
       return;
     }
@@ -2792,7 +2823,7 @@ const Clip = (() => {
     cue(s.end + .1, () => { Snd.level(); buzz([20, 30, 20]); });
     T(s.free ? "from a free pack" : s.price < 0 ? "from a pack" : `from a ${money(s.price)} pack`, W / 2, 560, 38, DIM, 600, "center", a);
     T(money(s.total), W / 2, 760, 188, INK, 700, "center", a); T("worth of cards", W / 2, 830, 40, DIM, 600, "center", a);
-    T(`best: ${s.best.card.name} · ${s.best.R.name}`, W / 2, 960, 40, s.best.R.col, 700, "center", a * sm(.3, .8, u));
+    T(`best: ${s.best.card.name} · ${rarLabel(s.best.card)}`, W / 2, 960, 40, s.best.R.col, 700, "center", a * sm(.3, .8, u));
     const k = sm(.6, 1.2, u); ctx.globalAlpha = k; rr(140, 1130, W - 280, 150, 24); ctx.fillStyle = INK; ctx.fill(); ctx.globalAlpha = 1; T("open yours free", W / 2, 1230, 62, "#050507", 700, "center", k);
     T(s.link ? s.link.replace(/^https?:\/\//, "") : location.host || "stixx", W / 2, 1360, s.link && s.link.length > 40 ? 30 : 38, INK, 600, "center", k);
     T("play money · no cash value · 18+", W / 2, 1810, 26, DIM, 500, "center", k);
@@ -3093,6 +3124,7 @@ document.addEventListener("click", e => {
     case "muteBtn": state.mute = !state.mute; persist(); renderChips(); if (!state.mute) Snd.click(); break;
     case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
     case "sumSell": { const g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
+    case "sumSellAgain": { const pk = SS.pack, g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); setTimeout(() => openPack(pk), 300); break; }
     case "sumSellSmall": { const g = sell((SS.all || []).filter(c => valueOf(c) < SMALL).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
     case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else if (Shop.has(pk.id)) setTimeout(() => Shop.modal(pk.id), 200); else location.hash = "#/invite"; break; }
@@ -3122,6 +3154,8 @@ document.addEventListener("keydown", e => {
   if (k === "Escape" && !$("modal").hidden) { closeModal(); return; }
   if ((k === " " || k === "Enter") && view === "home" && $("modal").hidden && $("share").hidden && $("gate").hidden && !e.repeat && !/^(BUTTON|INPUT|SELECT|A|SUMMARY)$/.test(e.target.tagName)) { e.preventDefault(); openPack(); }
 });
+// while cards are being revealed a tap anywhere on the stage goes on to the next one (the card itself still works), so a thumb never has to aim
+stage.addEventListener("click", e => { if (SS && SS.phase === "stack" && !e.target.closest("button, a, .summary, .st-bar")) advance(); });
 window.addEventListener("hashchange", route);
 
 /* ============================================================================
