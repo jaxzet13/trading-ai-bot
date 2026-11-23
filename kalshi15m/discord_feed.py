@@ -54,6 +54,8 @@ class Feed:
     def __init__(self):
         self.intent = {}                # ticker -> order_intent event
         self.picks = {}                 # ticker -> {"n", "cost", "side", "series", "ts"}
+        self.total = 0.0                # real P&L over the whole log (since Nov 12)
+        self.day = {}                   # UTC day -> real P&L
 
     def learn(self, e):
         k, tk = e.get("event"), e.get("ticker")
@@ -64,6 +66,11 @@ class Feed:
                                            "series": e.get("series"), "ts": e.get("ts", 0)})
             p["n"] += float(e.get("n") or e.get("count") or 0)
             p["cost"] += float(e.get("cost") or 0) + float(e.get("fees") or 0)
+        elif k == "settle" and tk:
+            v = float(e.get("pnl_kalshi", e.get("pnl")) or 0)
+            self.total += v
+            d = int(e.get("ts", 0) // 86400)
+            self.day[d] = self.day.get(d, 0.0) + v
 
     def card(self, tk, result=None):
         """What the slip for pick `tk` shows (pick_card.render arguments); `result` = its settle event."""
@@ -75,6 +82,8 @@ class Feed:
         if result is not None:
             pnl = float(result.get("pnl_kalshi", result.get("pnl")) or 0)
             c.update(status="won" if pnl > 0 else "lost", pnl=pnl)
+        now = (result or {}).get("ts") or p["ts"] or time.time()       # totals as of this event (learn() first)
+        c.update(today=round(self.day.get(int(now // 86400), 0.0), 2), alltime=round(self.total, 2))
         return c
 
 
@@ -171,7 +180,8 @@ def main(args=None):
     args = list(args or [])
     if args and args[0] == "test":
         demo = {"coin": "NEAR", "side": "no", "price": 0.29, "stake": 0.86, "payout": 3.0,
-                "settles_ts": int(time.time()) + 600, "status": "live", "pnl": None}
+                "settles_ts": int(time.time()) + 600, "status": "live", "pnl": None,
+                "today": 0.0, "alltime": 0.0}
         print("test slip posted" if post(_channel(), demo) else "test slip failed")
         return
     run(once=bool(args and args[0] == "once"))

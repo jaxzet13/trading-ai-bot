@@ -48,6 +48,7 @@ def test_one_card_per_pick_then_edited_with_the_result(tmp_path, monkeypatch):
     assert abs(card["price"] - 0.2867) < 1e-3 and abs(card["stake"] - 0.86) < 1e-9 and card["payout"] == 3.0
     ch, card, edit = f.calls[1]
     assert edit == "m1" and card["status"] == "lost" and card["pnl"] == -0.86
+    assert card["alltime"] == 0.14 and card["today"] == 0.14          # old +1.00 win plus this -0.86, same UTC day
     f.calls.clear()
     D.run(once=True, send=f, log=lambda m: None)
     assert f.calls == []                                # restart: nothing posted twice

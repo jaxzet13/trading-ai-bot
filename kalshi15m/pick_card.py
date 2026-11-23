@@ -10,7 +10,7 @@ import time
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 S = 2                                    # draw at 2x for crisp text on phones
-W, H = 900, 316
+W, H = 900, 372
 FONT_DIR = "/usr/share/fonts/opentype/inter/"
 BG, CARD, LINE = (9, 11, 17), (17, 21, 31), (34, 40, 56)
 TEXT, MUTED = (240, 243, 248), (130, 139, 160)
@@ -34,7 +34,7 @@ def _xy(*v):
     return tuple(int(x * S) for x in v)
 
 
-def render(coin, side, price, stake, payout, settles_ts=None, status="live", pnl=None):
+def render(coin, side, price, stake, payout, settles_ts=None, status="live", pnl=None, today=None, alltime=None):
     accent, word = STATUS[status]
     img = Image.new("RGB", _xy(W, H), BG)
     # soft glow in the status colour behind the card
@@ -91,6 +91,22 @@ def render(coin, side, price, stake, payout, settles_ts=None, status="live", pnl
         if i:
             d.line(_xy(x - 18, 190, x - 18, 258), fill=LINE, width=2 * S)
 
+    # footer: today's and all-time P&L
+    if today is not None or alltime is not None:
+        d.rounded_rectangle(_xy(36, 290, W - 36, H - 36), radius=16 * S, fill=(12, 15, 23))
+        pos, neg = (52, 211, 153), (248, 113, 113)
+        items = [("TODAY", today), ("ALL-TIME", alltime)]
+        x = 60
+        for label, v in items:
+            if v is None:
+                continue
+            d.text(_xy(x, 318), label, font=_font("semi", 14), fill=MUTED, anchor="lm")
+            x += d.textlength(label, font=_font("semi", 14)) / S + 12
+            txt = f"{'+' if v >= 0 else '−'}${abs(v):.2f}"
+            d.text(_xy(x, 318), txt, font=_font("bold", 20), fill=pos if v >= 0 else neg, anchor="lm")
+            x += d.textlength(txt, font=_font("bold", 20)) / S + 40
+        d.text(_xy(W - 60, 318), "KALSHI BOT", font=_font("semi", 13), fill=(70, 78, 98), anchor="rm")
+
     out = io.BytesIO()
     img.save(out, "PNG", optimize=True)
     return out.getvalue()
@@ -99,6 +115,6 @@ def render(coin, side, price, stake, payout, settles_ts=None, status="live", pnl
 if __name__ == "__main__":
     import sys
     base = sys.argv[1] if len(sys.argv) > 1 else "/tmp"
-    open(f"{base}/card_live.png", "wb").write(render("NEAR", "no", 0.29, 0.86, 3.00, time.time() + 600))
-    open(f"{base}/card_won.png", "wb").write(render("SOL", "yes", 0.18, 0.38, 2.00, status="won", pnl=1.62))
-    open(f"{base}/card_lost.png", "wb").write(render("ZEC", "no", 0.52, 0.54, 1.00, status="lost", pnl=-0.54))
+    open(f"{base}/card_live.png", "wb").write(render("NEAR", "no", 0.29, 0.86, 3.00, time.time() + 600, today=4.12, alltime=29.75))
+    open(f"{base}/card_won.png", "wb").write(render("SOL", "yes", 0.18, 0.38, 2.00, status="won", pnl=1.62, today=5.74, alltime=31.37))
+    open(f"{base}/card_lost.png", "wb").write(render("ZEC", "no", 0.52, 0.54, 1.00, status="lost", pnl=-0.54, today=-1.20, alltime=28.55))
