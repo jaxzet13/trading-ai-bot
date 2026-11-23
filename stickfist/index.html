@@ -520,6 +520,17 @@ a.back { display: inline-block; color: var(--dim); text-decoration: none; font-s
   body.on-home .packcol { width: clamp(110px, min(70vw, calc((100dvh - 475px) * .714)), 290px); }
   body.on-home .home { gap: 12px; padding-top: 4px; }
 }
+
+/* ---- Me: easy on the eyes. One clean row per card: picture, name and rarity, worth and change, one same-size sell button ---- */
+#v-profile .page-head .live { display: none; }
+#v-profile .wmeta { display: grid; gap: 4px; font-size: 15px; } #v-profile .wmeta .up, #v-profile .wsplit .up { color: var(--ok); } #v-profile .wmeta .dn, #v-profile .wsplit .dn { color: var(--bad); }
+#v-profile .wsplit b { font-size: 20px; font-variant-numeric: tabular-nums; } #v-profile .wsplit .label { font-size: 12.5px; }
+.mrow { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--ln); }
+.mmain { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; background: none; border: 0; padding: 0; color: inherit; text-align: left; font: inherit; cursor: pointer; min-width: 0; }
+.mmain .thumb { width: 44px; height: 44px; } .mn { display: grid; gap: 2px; min-width: 0; } .mn b { font-size: 16px; font-weight: 600; } .mn small, .mp small { font-size: 13px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp { display: grid; gap: 2px; justify-items: end; } .mp b { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; } .mp small.up { color: var(--ok); } .mp small.dn { color: var(--bad); }
+.msell { display: grid; gap: 1px; justify-items: center; align-content: center; height: 46px; border: 1px solid var(--ln3); border-radius: 12px; background: #0d0d10; color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; } .msell small { font-size: 12px; font-weight: 500; color: var(--dim); font-variant-numeric: tabular-nums; } .msell:active { transform: scale(.97); }
+.mtot { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0 4px; } .mtot b { font-size: 18px; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
@@ -1438,17 +1449,20 @@ function worthSeries(pts) {
   const out = []; let j = 0; for (let i = 0; i < pts; i++) { const ts = t0 + (now - t0) * i / (pts - 1); while (j + 1 < h.length && h[j + 1][0] <= ts) j++; out.push(h[j][1]); } out[pts - 1] = netWorth();
   return { out, mins: Math.round((now - t0) / 60000) };
 }
+// money as people read it on a phone: cents, with "<$0.01" for anything smaller
+const moneyR = u => { const d = Math.abs(u) / UNIT; return d > 0 && d < .01 ? "<$0.01" : "$" + d.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+const signR = (u, label) => `<span class="${u > 0 ? "up" : u < 0 ? "dn" : "fl"}">${u > 0 ? "+" : u < 0 ? "−" : ""}${moneyR(u)}</span>${label ? ` <span class="dim">${label}</span>` : ""}`;
+const pctR = p => `<small class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲" : p < -.0005 ? "▼" : "–"} ${Math.abs(p) >= 10 ? "×" + (1 + p).toFixed(0) : Math.round(Math.abs(p) * 100) + "%"}</small>`;
 function renderProfile() {
   $("pLimits").live = limitsHTML(); $("pSettings").live = settingsHTML();
   const net = netWorth(), hold = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0), all = profitAll(), d24 = profitSince(864e5), found = new Set(state.vault.map(c => c.no)).size;
-  $("pWorth").live = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}">${money(net)}</div><div class="wmeta"><span>${pnlHTML(all, START + state.s.added)} <span class="dim">profit since you started</span></span><span>${pnlHTML(d24, START + state.s.added)} <span class="dim">today</span></span></div></div>
-    <div class="wsplit"><div><span class="label">cash</span><b>${money(state.coins)}</b></div><div><span class="label">your cards</span><b>${moneyS(hold)}</b> ${state.vault.length ? pnlHTML(hold - basis, basis) : ""}</div><div><span class="label">made or lost on sales</span><b>${pnlHTML(state.s.realized, 0)}</b></div></div>`;
+  $("pWorth").live = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}">${moneyR(net)}</div><div class="wmeta"><span>${signR(all, "since you started")}</span><span>${signR(d24, "today")}</span></div></div>
+    <div class="wsplit"><div><span class="label">cash</span><b>${moneyR(state.coins)}</b></div><div><span class="label">your cards</span><b>${moneyR(hold)}</b></div><div><span class="label">made on sales</span><b>${signR(state.s.realized)}</b></div></div>`;
   const ws = worthSeries(120);
-  $("pChart").live = ws ? `<div class="mk">${lineChart(ws.out, { fmt: money, h: 120 })}</div>` : "";
-  const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), s: MK.series(c, 24, 24), p24: MK.pct(c, 24) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
-  $("pTable").live = groups.length ? groups.map(g => `<div class="crw">${cardRow(g.c, { s: g.s, price: moneyS(g.val), pill: pill(g.val / Math.max(1, g.cost) - 1), sub: `${g.n > 1 ? `×${g.n} · ` : ""}${rarLabel(g.c)} · cost ${moneyS(g.cost)}` })}${sellBtn(g.c.no)}</div>`).join("") + `<div class="ctot"><span>All cards</span><span class="cval"><b>${moneyS(hold)}</b>${pill(hold / Math.max(1, basis) - 1)}</span></div>` : "";
-  $("pNote").innerHTML = groups.length ? `Tap a card for its chart. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${money(state.s.spent)} spent · ${money(state.s.sold)} back from sales</span>` : `No cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they show up here with a live price.`;
-  // the market, simplified: what is moving most right now
+  $("pChart").live = ws ? `<div class="mk">${lineChart(ws.out, { fmt: money, h: 110 })}</div>` : "";
+  const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), q: quickCopy(c.no) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
+  $("pTable").live = groups.length ? groups.map(g => `<div class="mrow"><button class="mmain" data-card="${g.c.no}" aria-label="${esc(g.c.name)}">${thumb(g.c)}<span class="mn"><b>${esc(g.c.name)}</b><small>${g.n > 1 ? `×${g.n} · ` : ""}${rarLabel(g.c)}</small></span><span class="mp"><b>${moneyR(g.val)}</b>${pctR(g.val / Math.max(1, g.cost) - 1)}</span></button><button class="msell" data-qsell="${g.c.no}" aria-label="${esc(quickAria(g.c.no))}">${g.n > 1 ? "Sell 1" : "Sell"}<small>${moneyR(sellOf(g.q))}</small></button></div>`).join("") + `<div class="mtot"><span>All your cards</span><b>${moneyR(hold)}</b></div>` : "";
+  $("pNote").innerHTML = groups.length ? `Tap a card for its chart. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${moneyR(state.s.spent)} spent · ${moneyR(state.s.sold)} back from sales</span>` : `No cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they show up here with a live price.`;
   const rows = movers().rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24)).slice(0, 4);
   $("pMkt").live = rows.map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)}<span class="dim">24h</span></button>`).join("");
   $("pLinks").live = `<a class="linkbtn plain" href="#/collection">All ${CARDS.length} cards · ${found} found ›</a><a class="linkbtn plain" href="#/market">Full market ›</a><a class="linkbtn plain" href="#/invite">Invite a friend ›</a>`;
@@ -1808,7 +1822,7 @@ async function reveal(el, c, card, R, v) {
   // How big the moment is follows the rarity, or what this copy really sells for next to what the pack costs, whichever is bigger. A styled copy of a plain card can be worth more than a rare one.
   const x = sellOf(c) / Math.max(1, SS.ref), T = Math.max(R.tier, x >= 10 ? 5 : x >= 4 ? 4 : x >= 2 ? 3 : 0);
   const ms = reduced ? 10 : [650, 850, 1300, 1900, 2700, 3500, 5200][T], rect = el.getBoundingClientRect(), mid = [rect.left + rect.width / 2, rect.top + rect.height / 2]; hint(""); $("stTitle").innerHTML = ""; stage.style.setProperty("--rc", R.col);
-  if (SS.n < 2 && x >= 1 && Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); await Cut.play(card.id); }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest, but only for a copy that sells for at least what the pack cost. A card that barely gives anything gets no film (it is still there to watch from its card window)
+  if (SS.n < 2 && x >= 2 && Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); await Cut.play(card.id); }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest, but only for a copy that sells for at least what the pack cost. A card that barely gives anything gets no film (it is still there to watch from its card window)
   await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
   Snd.reveal(T); if (T >= 2) buzz(T >= 5 ? [40, 30, 60, 30, 90] : T >= 3 ? [30, 25, 50] : [25]);
   FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][T], T >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + T * 130);

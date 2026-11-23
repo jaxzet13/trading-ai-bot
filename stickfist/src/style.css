@@ -499,3 +499,14 @@ a.back { display: inline-block; color: var(--dim); text-decoration: none; font-s
   body.on-home .packcol { width: clamp(110px, min(70vw, calc((100dvh - 475px) * .714)), 290px); }
   body.on-home .home { gap: 12px; padding-top: 4px; }
 }
+
+/* ---- Me: easy on the eyes. One clean row per card: picture, name and rarity, worth and change, one same-size sell button ---- */
+#v-profile .page-head .live { display: none; }
+#v-profile .wmeta { display: grid; gap: 4px; font-size: 15px; } #v-profile .wmeta .up, #v-profile .wsplit .up { color: var(--ok); } #v-profile .wmeta .dn, #v-profile .wsplit .dn { color: var(--bad); }
+#v-profile .wsplit b { font-size: 20px; font-variant-numeric: tabular-nums; } #v-profile .wsplit .label { font-size: 12.5px; }
+.mrow { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--ln); }
+.mmain { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; background: none; border: 0; padding: 0; color: inherit; text-align: left; font: inherit; cursor: pointer; min-width: 0; }
+.mmain .thumb { width: 44px; height: 44px; } .mn { display: grid; gap: 2px; min-width: 0; } .mn b { font-size: 16px; font-weight: 600; } .mn small, .mp small { font-size: 13px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp { display: grid; gap: 2px; justify-items: end; } .mp b { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; } .mp small.up { color: var(--ok); } .mp small.dn { color: var(--bad); }
+.msell { display: grid; gap: 1px; justify-items: center; align-content: center; height: 46px; border: 1px solid var(--ln3); border-radius: 12px; background: #0d0d10; color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; } .msell small { font-size: 12px; font-weight: 500; color: var(--dim); font-variant-numeric: tabular-nums; } .msell:active { transform: scale(.97); }
+.mtot { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0 4px; } .mtot b { font-size: 18px; font-variant-numeric: tabular-nums; }
