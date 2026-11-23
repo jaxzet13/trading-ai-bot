@@ -172,3 +172,16 @@ def test_walk_reports_dollar_staked_pnl_when_scored():
     assert abs(W["current"]["per_day_sized"] - 0.2) < 1e-9 and W["current"]["days_sized"] == W["current"]["days"] == len(days) - 7
     assert W["strength"]["per_day_sized"] > W["strength"]["per_day"]
     assert R.walk(_ALL(days), ["fv_drift:KXNEAR15M:3"], {"fv_drift"})["current"]["per_day_sized"] is None
+
+
+def test_fwdwalk_scores_picks_at_dollar_stakes(tmp_path, monkeypatch):
+    """fwdlab walk: every method's picks are also scored on the 4th daily field (P&L at $1 stakes)."""
+    from kalshi15m import fwdwalk as FW
+    days = range(20000, 20012)
+    D = {f"fv_drift:KXETH15M:{i}": {str(d): [0.1 * i, 5, 0.1, 0.3 * i] for d in days} for i in range(1, 8)}
+    (tmp_path / "d.json").write_text(json.dumps({"days": D}))
+    (tmp_path / "c.json").write_text(json.dumps({"candidates": [{"id": k, "scope": "KXETH15M"} for k in D]}))
+    monkeypatch.setattr(FW, "LABDIR", tmp_path)
+    out = FW.walk(tmp_path / "d.json", tmp_path / "c.json", log=lambda m: None)
+    m = out["methods"]["top5_by_pnl"]
+    assert abs(m["pick_per_day_sized"] - 0.3 * (7 + 6 + 5 + 4 + 3) / 5) < 1e-9 and m["all_per_day_sized"] == 1.2

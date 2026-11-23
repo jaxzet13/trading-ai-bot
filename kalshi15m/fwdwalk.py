@@ -42,9 +42,13 @@ def walk(daily_path=LABDIR / "fwd_daily.json", cands_path=LABDIR / "fwd_candidat
     C = {c["id"]: c for c in json.loads(Path(cands_path).read_text())["candidates"]}
     days = sorted({int(d) for v in D.values() for d in v})
     out = {"generated": int(time.time()), "days": len(days), "test_days": max(len(days) - WARMUP_DAYS, 0), "methods": {}}
+    # each method's picks are also scored at $1 stakes (4th daily field: the runner stakes dollars). Nov 23: ranking
+    # by past dollar-staked P&L picked WORSE than by 1-contract P&L (top 5: -0.49 vs -0.45 $/day at $1 stakes, all
+    # strategies +0.10); ranking by t did best (+0.06) but still trailed the average, so rankings stay on t / 1 contract.
+    szd = lambda c, d: (lambda x: x[3] if len(x) > 3 else None)(D[c].get(str(d), [0, 0, 0, 0]))
     for K in (5, 20, 100):
         for crit in ("t", "pnl"):
-            pick_day, base_day = [], []
+            pick_day, base_day, pick_sz, base_sz = [], [], [], []
             for i, d in enumerate(days):
                 if i < WARMUP_DAYS:
                     continue
@@ -58,11 +62,17 @@ def walk(daily_path=LABDIR / "fwd_daily.json", cands_path=LABDIR / "fwd_candidat
                 sc.sort(reverse=True)
                 pick_day.append(sum(_agg(D[c], [d])[1] for _, c in sc[:K]) / K)
                 base_day.append(sum(_agg(D[c], [d])[1] for _, c in sc) / len(sc))
+                pz, bz = [szd(c, d) for _, c in sc[:K]], [szd(c, d) for _, c in sc]
+                if None not in pz and None not in bz:
+                    pick_sz.append(sum(pz) / K)
+                    base_sz.append(sum(bz) / len(bz))
             if pick_day:
                 out["methods"][f"top{K}_by_{crit}"] = {
                     "pick_per_day": round(st.mean(pick_day), 4), "pick_days_up": sum(x > 0 for x in pick_day),
                     "all_per_day": round(st.mean(base_day), 4), "all_days_up": sum(x > 0 for x in base_day),
-                    "n_days": len(pick_day), "beats_all": st.mean(pick_day) > st.mean(base_day)}
+                    "n_days": len(pick_day), "beats_all": st.mean(pick_day) > st.mean(base_day),
+                    "pick_per_day_sized": round(st.mean(pick_sz), 4) if pick_sz else None,
+                    "all_per_day_sized": round(st.mean(base_sz), 4) if base_sz else None}
     scope = defaultdict(list)
     for c in D:
         if c in C:
@@ -111,6 +121,8 @@ def walk(daily_path=LABDIR / "fwd_daily.json", cands_path=LABDIR / "fwd_candidat
     (LABDIR / "fwd_walk.json").write_text(json.dumps(out, indent=1))
     for k, m in out["methods"].items():
         log(f"  {k:16s} picks {m['pick_per_day']:+.3f}/day ({m['pick_days_up']}/{m['n_days']} up)  vs all {m['all_per_day']:+.3f}"
-            f"  {'BEATS' if m['beats_all'] else 'worse'}" + (f"  now: {', '.join(m['current_pick'])}" if m.get("current_pick") else ""))
+            f"  {'BEATS' if m['beats_all'] else 'worse'}"
+            + (f"  | at $1 stakes {m['pick_per_day_sized']:+.3f} vs all {m['all_per_day_sized']:+.3f}" if m.get("pick_per_day_sized") is not None else "")
+            + (f"  now: {', '.join(m['current_pick'])}" if m.get("current_pick") else ""))
     log("fwdlab walk: " + out["summary"])
     return out
