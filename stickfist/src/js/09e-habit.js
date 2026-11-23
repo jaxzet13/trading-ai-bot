@@ -31,6 +31,11 @@ const Snd = (() => {
     claim(big) { if (!ready()) return; [0, 2, 4, big ? 6 : 5].forEach((k, i) => tone(NOTE[k], .4, "triangle", .13, i * .08)); },
     level() { if (!ready()) return; [0, 2, 4, 6, 7].forEach((k, i) => tone(NOTE[k], .5, "triangle", .12, i * .09)); },
     click() { if (!ready()) return; tone(900, .05, "sine", .07); },
+    machine(n) {                                                // the dealing machine: a short whir, a run of ticks as the cards come out, and a thunk when the stack lands
+      if (!ready()) return; hiss(1.0, .16, 0, 500, 4200); tone(70, 1.1, "sawtooth", .06, 0, 170);
+      for (let i = 0; i < Math.min(24, n); i++) tone(520 + (i % 5) * 70, .035, "square", .028, .45 + i * .045);
+      tone(120, .16, "sine", .3, 1.75, 55); tone(1046.5, .25, "triangle", .08, 1.78);
+    },
     tap() { if (!ready()) return null; if (!dst) { dst = ac.createMediaStreamDestination(); comp.connect(dst); } return dst.stream; },       // what you hear, as a stream, so a recorded clip can carry the sound
   };
 })();

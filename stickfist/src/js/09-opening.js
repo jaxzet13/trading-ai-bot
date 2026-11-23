@@ -66,7 +66,7 @@ async function dismiss(el, c) {
   const m = document.createElement("div"); m.className = "mini"; m.innerHTML = cardHTML(c, { sm: true }); $("stTray").appendChild(m); $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   SS.idx++; await sleep(260); if (SS.idx >= SS.items.length) summary(); else focusTop();
 }
-function skipAll() { if (!SS || SS.phase === "summary") return; SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
+function skipAll() { if (!SS || SS.phase === "summary") return; Machine.stop(); SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
 const againLabel = pk => (openN() > 1 && maxN(pk) >= 2) ? (() => { const k = Math.min(openN(), maxN(pk)), c = Math.max(0, k - state.freePacks - boughtOf(pk.id)) * packPrice(pk); return `open ${k} more${c ? " · " + money(c) : ""}`; })() : state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
 function summary() {
   if (SS.n > 1) { multiSummary(); return; }
@@ -79,7 +79,7 @@ function summary() {
     <div class="row acts" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
-function closeStage() { stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view, true); }
+function closeStage() { Machine.stop(); stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view, true); }
 
 /* ---- several packs at once. Every pack is drawn, charged and counted exactly like a single pack (same odds, same daily limit); only the show is shorter: cards worth less than $0.50
    are not revealed one by one, they are totalled on the result, and nothing is sold or hidden: they are in your collection and in the sums. ---- */
@@ -101,10 +101,12 @@ async function openMany(pk, n) {
   } finally { opening = false; }
   if (!packs) return; save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
   const hi = items.filter(c => valueOf(c) >= SMALL).sort((a, b) => valueOf(a) - valueOf(b)); SS_PRICE = paid;
-  SS = { items: hi, all: items, idx: 0, phase: "stack", busy: false, pack: pk, free: freeN === packs, bought: false, ref: price, n: packs, refAll: price * packs, paid, freeN, boughtN };
+  SS = { items: hi, all: items, idx: 0, phase: "machine", busy: false, pack: pk, free: freeN === packs, bought: false, ref: price, n: packs, refAll: price * packs, paid, freeN, boughtN };
   $("stName").textContent = `${pk.name} × ${packs}`; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
   $("stBox").innerHTML = `<div class="cstack" id="stStack"></div>`; stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
-  if (!hi.length) { summary(); return; } buildStack(); await sleep(500); focusTop();
+  $("stHint").textContent = "";                                                                        // the dealing machine, then the cards
+  const mine = SS; await Machine.play(packs, items.length, pk.name); if (SS !== mine || mine.phase === "summary") return; mine.phase = "stack";
+  if (!hi.length) { summary(); return; } buildStack(); await sleep(400); focusTop();
 }
 
 function multiSummary() {
