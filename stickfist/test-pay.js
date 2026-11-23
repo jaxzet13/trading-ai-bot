@@ -124,9 +124,9 @@ function start(env, dataName) {
     e = await econ({ REQUIEM_UNIT_COST_CENTS: "9000" }, "e6.json"); ok(e.c.open === false && e.a.economics.net < 0, "a cost above the price (a loss on every pack) is closed");
     e = await econ({ REQUIEM_MIN_MARGIN_PCT: "90" }, "e7.json"); ok(e.c.open === false, "and you can raise the minimum margin (at 90% this one is closed)");
     const shopEcon = async (env, name) => { const t = await start(Object.assign({}, open, { REQUIEM_OPEN: "0", SHOP_OPEN: "1" }, env), name); const a = (await call(t.port, "GET", "/api/shop/orders?token=tok")).json, c = (await call(t.port, "GET", "/api/shop/config")).json; await t.kill(); return { a, c }; };
-    let h = await shopEcon({}, "h1.json"); ok(h.a.economics.fp.fee === 33 && h.a.economics.fp.netPct === 67 && h.a.economics.ms.fee === 39 && h.a.economics.ms.netPct === 87 && h.c.prices.fp === 100, "a $1.00 pack keeps 67 cents after Stripe's 33 cent fee, a $3.00 pack keeps $2.61 (87%)");
+    let h = await shopEcon({ SHOP_PRICES: '{"fp":100,"ms":300}' }, "h1.json"); ok(h.a.economics.fp.fee === 33 && h.a.economics.fp.netPct === 67 && h.a.economics.ms.fee === 39 && h.a.economics.ms.netPct === 87 && h.c.prices.fp === 100, "a $1.00 pack keeps 67 cents after Stripe's 33 cent fee, a $3.00 pack keeps $2.61 (87%)");
     h = await shopEcon({ SHOP_PRICES: '{"fp":100,"ms":300,"xx":50}' }, "h2.json"); ok(!h.c.prices.xx && h.c.prices.fp === 100 && h.a.economics.xx.offered === false, "a 50 cent pack (Stripe would keep 62%) is not offered, and the others still are");
-    h = await shopEcon({ SHOP_MIN_NET_PCT: "70" }, "h3.json"); ok(h.c.prices.fp === undefined && h.c.prices.ms === 300, "with a 70% minimum the $1.00 pack (67%) is dropped and the $3.00 pack stays");
+    h = await shopEcon({ SHOP_MIN_NET_PCT: "70", SHOP_PRICES: '{"fp":100,"ms":300}' }, "h3.json"); ok(h.c.prices.fp === undefined && h.c.prices.ms === 300, "with a 70% minimum the $1.00 pack (67%) is dropped and the $3.00 pack stays");
     h = await shopEcon({ SHOP_MIN_NET_PCT: "95" }, "h4.json"); ok(h.c.open === false && h.a.why.some(w => /no pack is offered/.test(w)), "and if no price clears the minimum the shop is closed");
     const src = fs.readFileSync(path.join(__dirname, "pay.js"), "utf8") + fs.readFileSync(path.join(__dirname, "server.js"), "utf8");
     const calls = [...src.matchAll(/stripe\("(GET|POST)", "([^"]+)"/g)].map(m => m[2]);
@@ -135,7 +135,18 @@ function start(env, dataName) {
   }
 
   // ---- digital packs (the sale of the physical Requiem pack is off in this server: the two are independent)
-  const SHOP = Object.assign({}, open, { REQUIEM_OPEN: "0", SHOP_OPEN: "1" });
+  const SHOP = Object.assign({}, open, { REQUIEM_OPEN: "0", SHOP_OPEN: "1", SHOP_PRICES: '{"fp":100,"ms":300}', SHOP_MAX_PER_ORDER: "10" });      // per-pack prices still work
+  {
+    const t = await start(Object.assign({}, open, { REQUIEM_OPEN: "0", SHOP_OPEN: "1" }), "cash.json"); const cu = crypto.randomBytes(8).toString("hex"); seen.length = 0;
+    let q = await call(t.port, "GET", "/api/shop/config"); ok(q.json.open === true && JSON.stringify(q.json.prices) === '{"cash":100}' && q.json.maxQty === 25 && q.json.cap === 2500, "by default real money buys play money at $1.00 each, up to 25 at a time, with the $25 daily limit");
+    await call(t.port, "POST", "/api/hello", { uid: cu }); q = await call(t.port, "POST", "/api/shop/checkout", { uid: cu, pack: "cash", qty: 10, age: true }); const csid = q.json.url && q.json.url.split("/").pop(); const f = seen[0] && seen[0].form || {};
+    ok(/cs_test_/.test(csid || "") && f["line_items[0][quantity]"] === "10" && f["line_items[0][price_data][unit_amount]"] === "100" && /play money/.test(f["line_items[0][price_data][product_data][name]"]) && /no cash value/.test(f["line_items[0][price_data][product_data][description]"]) && f["metadata[pack]"] === "cash", "$10 of play money is one Stripe line: 10 x $1.00, named \"play money\", with \"no cash value\" on the page");
+    q = await call(t.port, "POST", "/api/shop/checkout", { uid: cu, pack: "cash", qty: 26, age: true }); ok(q.json.error && !q.json.url, "more than 25 dollars in one order is refused");
+    q = await call(t.port, "POST", "/api/shop/checkout", { uid: cu, pack: "cash", qty: 16, age: true }); ok(q.json.error && /limit/.test(q.json.error), "and the $25 daily limit counts the $10 still open ($16 more would pass it)");
+    sessions[csid].payment_status = "paid"; q = await call(t.port, "GET", "/api/shop/order?sid=" + csid); ok(q.json.ok && q.json.pack === "cash" && q.json.qty === 10, "when Stripe says it is paid the order is recorded as $10 of play money");
+    q = await call(t.port, "POST", "/api/hello", { uid: cu }); ok(q.json.paid.cash === 10, "and the player's running total of dollars added is 10");
+    await t.kill();
+  }
   s = await start(Object.assign({}, open, { }), "noshop.json"); r = await call(s.port, "GET", "/api/shop/config"); ok(r.json.open === false, "digital packs are closed unless SHOP_OPEN=1"); await s.kill();
   s = await start(SHOP, "shop.json"); const Q = s.port, uid = crypto.randomBytes(8).toString("hex"), uid2 = crypto.randomBytes(8).toString("hex"); seen.length = 0;
   r = await call(Q, "GET", "/api/shop/config"); ok(r.json.open === true && r.json.prices.fp === 100 && r.json.prices.ms === 300 && r.json.maxQty === 10 && r.json.cap === 2500 && r.json.terms === "https://example.test/terms", "with SHOP_OPEN=1 digital packs are on: First Print $1.00, Moonshot $3.00, up to 10 at a time, a $25.00 daily limit");

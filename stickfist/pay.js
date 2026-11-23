@@ -22,8 +22,9 @@
 
    DIGITAL PACKS (what real money buys in the game: pack openings, nothing else; cards stay play-money game items with no cash value and nothing can be cashed out):
      SHOP_OPEN=1                  the switch for selling digital packs (needs the same STRIPE_*, PUBLIC_URL and REQUIEM_TERMS_URL settings: the terms page is your terms and refund policy)
-     SHOP_PRICES={"fp":100,"ms":300}  the real price of each pack in cents: First Print $1.00, Moonshot $3.00. One flat price per pack: no bundles or discounts. Stripe's minimum is 50 cents.
-     SHOP_MAX_PER_ORDER=10        packs per order
+     SHOP_PRICES={"cash":100}     what real money buys, in cents each. "cash" is play money at $1.00 for each dollar (the quantity is the number of dollars): no bundles, no bonuses, no discounts.
+                                  Packs can still be priced one by one, e.g. {"fp":100,"ms":300}. Stripe's minimum is 50 cents.
+     SHOP_MAX_PER_ORDER=25        dollars (or packs) per order
      SHOP_DAILY_CAP_CENTS=2500    the most one player can spend in a day (UTC), counting payments still open. A spending limit for the player's own protection.
    A paid pack is credited to the player's id when Stripe confirms the payment (a running total for each pack, so the page can never add the same pack twice); the page then adds it to their packs.
 
@@ -94,9 +95,9 @@ module.exports = function payments(ctx) {
 
 
   /* ---- digital packs ---- */
-  const PACK_NAMES = { fp: "First Print", ms: "Moonshot" };
-  const shopPrices = () => { let p = { fp: 100, ms: 300 }; try { const e = JSON.parse(process.env.SHOP_PRICES || "null"); if (e && typeof e === "object" && !Array.isArray(e)) p = e; } catch (x) {} const o = {}; for (const [k, v] of Object.entries(p)) if (/^[a-z]{1,12}$/.test(k) && Number.isInteger(v) && v >= 50 && v <= 100000) o[k] = v; return o; };
-  const shopSettings = () => { const E = process.env; return { open: E.SHOP_OPEN === "1", prices: shopPrices(), minNet: Number.isFinite(+E.SHOP_MIN_NET_PCT) && E.SHOP_MIN_NET_PCT ? +E.SHOP_MIN_NET_PCT : 60, maxQty: Math.max(1, Math.min(50, Math.round(+E.SHOP_MAX_PER_ORDER) || 10)), cap: Math.round(+E.SHOP_DAILY_CAP_CENTS) || 2500 }; };
+  const PACK_NAMES = { fp: "First Print", ms: "Moonshot", cash: "play money" };      // "cash" is not a pack: it is play money at $1.00 for each dollar paid, and the quantity is the number of dollars
+  const shopPrices = () => { let p = { cash: 100 }; try { const e = JSON.parse(process.env.SHOP_PRICES || "null"); if (e && typeof e === "object" && !Array.isArray(e)) p = e; } catch (x) {} const o = {}; for (const [k, v] of Object.entries(p)) if (/^[a-z]{1,12}$/.test(k) && Number.isInteger(v) && v >= 50 && v <= 100000) o[k] = v; return o; };
+  const shopSettings = () => { const E = process.env; return { open: E.SHOP_OPEN === "1", prices: shopPrices(), minNet: Number.isFinite(+E.SHOP_MIN_NET_PCT) && E.SHOP_MIN_NET_PCT ? +E.SHOP_MIN_NET_PCT : 60, maxQty: Math.max(1, Math.min(100, Math.round(+E.SHOP_MAX_PER_ORDER) || 25)), cap: Math.round(+E.SHOP_DAILY_CAP_CENTS) || 2500 }; };
   const SH = () => { const d = db(); return d.shop = d.shop || { orders: {}, hold: {}, spent: {} }; };
   const today = () => new Date().toISOString().slice(0, 10), validUid = u => typeof u === "string" && /^[a-f0-9]{16,64}$/.test(u);
   const shopPrune = () => { const h = SH().hold, t = Date.now(); for (const k of Object.keys(h)) if (h[k].exp < t) delete h[k]; };
@@ -225,9 +226,9 @@ module.exports = function payments(ctx) {
       if (spent + cents > sc.cap) return { error: spent >= sc.cap ? `You've reached today's limit of ${money(sc.cap)}. It resets tomorrow (UTC).` : `That would go over today's limit of ${money(sc.cap)}. You can spend up to ${money(sc.cap - spent)} more today.` };
       if (limited("shco:" + ip, 8, 600000)) return [429, { error: "slow down" }];
       const p = {
-        mode: "payment", line_items: { 0: { quantity: qty, price_data: { currency: "usd", unit_amount: unit, product_data: { name: "STIXX digital pack: " + (PACK_NAMES[pack] || pack), description: "A pack of random digital cards for the STIXX game. The cards have no cash value and can't be cashed out." } } } },
+        mode: "payment", line_items: { 0: { quantity: qty, price_data: { currency: "usd", unit_amount: unit, product_data: pack === "cash" ? { name: "STIXX play money ($1.00 each)", description: "Play money for the STIXX game. It has no cash value and can't be cashed out." } : { name: "STIXX digital pack: " + (PACK_NAMES[pack] || pack), description: "A pack of random digital cards for the STIXX game. The cards have no cash value and can't be cashed out." } } } },
         success_url: `${c.site}/?pk=paid&sid={CHECKOUT_SESSION_ID}`, cancel_url: `${c.site}/?pk=cancel`, expires_at: Math.floor(Date.now() / 1000) + 31 * 60, client_reference_id: b.uid,
-        metadata: { kind: "packs", uid: b.uid, pack, qty, age: "18+" }, custom_text: { submit: { message: "Random digital cards, 18+ only. The cards have no cash value and can't be cashed out." } }
+        metadata: { kind: "packs", uid: b.uid, pack, qty, age: "18+" }, custom_text: { submit: { message: pack === "cash" ? "Adds play money to your STIXX balance, 18+ only. Play money has no cash value and can't be cashed out. Packs in the game are random." : "Random digital cards, 18+ only. The cards have no cash value and can't be cashed out." } }
       };
       if (c.tax) p.automatic_tax = { enabled: "true" };
       let s; try { s = await stripe("POST", "/v1/checkout/sessions", p); } catch (e) { console.error("shop checkout:", e.message); return { error: "Payment isn't available right now. You have not been charged." }; }

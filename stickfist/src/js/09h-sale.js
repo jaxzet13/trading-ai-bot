@@ -64,15 +64,30 @@ const Shop = (() => {
       history.replaceState(null, "", location.pathname + (p.toString() ? "?" + p : "") + location.hash); return { kind: k === "paid" ? "paid" : "cancel", sid };
     } catch (e) { return null; }
   })();
-  const open = () => !!cfg.open && PACKS.some(p => cfg.prices && cfg.prices[p.id]), has = id => !!cfg.open && !!(cfg.prices && cfg.prices[id]), price = id => (cfg.prices && cfg.prices[id]) || 0;
+  const cash = () => !!cfg.open && !!(cfg.prices && cfg.prices.cash), open = () => cash() || !!cfg.open && PACKS.some(p => cfg.prices && cfg.prices[p.id]), has = id => cash() || !!cfg.open && !!(cfg.prices && cfg.prices[id]), price = id => (cfg.prices && cfg.prices[id]) || 0;
   async function load() {
     if (!API.on) return; const r = await API.get("shop/config?uid=" + encodeURIComponent(state.uid)); if (!r || typeof r.open !== "boolean") return;
-    cfg = r; Money.words(); const tb = $("topBuy"); if (tb) tb.hidden = !open(); renderBroke(); if (view === "home") renderHome();
+    cfg = r; Money.words(); const tb = $("topBuy"); if (tb) { tb.hidden = !open(); tb.innerHTML = cash() ? '+ Add<span class="xs"> money</span>' : '+ Buy<span class="xs"> packs</span>'; } renderBroke(); if (view === "home") renderHome();
   }
-  const chosen = () => { const s = $("shopPack"); return s ? s.value : curPack().id; }, count = () => { const q = $("shopQty"); return q ? +q.value || 1 : 1; };
+  const chosen = () => { const s = $("shopPack"); return s ? s.value : cash() ? "cash" : curPack().id; }, count = () => { const q = $("shopQty"); return q ? +q.value || 1 : 1; };
   const total = () => rmoney(price(chosen()) * count());
   function qty() { const b = $("shopPay"); if (b && !b.dataset.busy) b.textContent = "Pay " + total(); const e = $("shopEach"); if (e) e.textContent = rmoney(price(chosen())) + " per pack"; }
+  const AMOUNTS = [1, 2, 3, 5, 10, 15, 25];
+  function cashModal(want) {                                               // real money adds play money to the balance, $1.00 for each dollar: no bonuses, no bundles
+    const room = Math.max(0, Math.floor(((cfg.cap || 0) - (cfg.spentToday || 0)) / (price("cash") || 100))), opts = AMOUNTS.filter(n => n <= Math.min(cfg.maxQty || 25, room));
+    if (!opts.length) { openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Daily limit reached</h2></div><p class="dim">You've added the most you can today (${rmoney(cfg.cap || 0)}). It resets tomorrow (UTC).</p><div class="row"><button class="btn" data-close>ok</button></div></div>`, true); return; }
+    const need = want && PACK_BY[want] ? Math.max(1, Math.ceil((packPrice(PACK_BY[want]) - state.coins) / UNIT)) : 0, pick = opts.find(n => n >= need) || opts[opts.length - 1];
+    openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Add money</h2></div>
+      <p class="dim">Real money adds <b>play money</b> to your balance: $1.00 for every $1.00 you pay, with no bonuses. You spend it on packs. Packs are random, and the odds are on the <a href="#/odds" data-close>odds page</a>. <b>Play money and cards have no cash value, and nothing in STIXX can be cashed out.</b> The prices you see in the game are simulated.</p>
+      <div class="rqbuyh"><label class="rqqty" style="justify-items:start"><span class="small">Add</span><select id="shopQty" aria-label="How much to add">${opts.map(n => `<option value="${n}"${n === pick ? " selected" : ""}>${rmoney(n * (price("cash") || 100))}</option>`).join("")}</select></label></div>
+      <p class="small" style="margin:-6px 0 0">Your balance is ${money(state.coins)} now.</p>
+      <label class="rqage"><input type="checkbox" id="shopAge"><span>I'm 18 or older, I understand the packs are random, and I'm spending real money.</span></label>
+      <button class="btn solid big" id="shopPay" disabled>Pay ${rmoney(pick * (price("cash") || 100))}</button>
+      <p class="small">Apple Pay, Google Pay or card, on Stripe's secure page. STIXX never sees your card. You are only charged after you confirm there. There is a limit of ${rmoney(cfg.cap || 0)} a day${cfg.spentToday > 0 ? ` (you have used ${rmoney(cfg.spentToday)} today)` : ""}. <a href="${esc(cfg.terms || "#")}" target="_blank" rel="noopener">Terms and refunds</a>.</p>
+      <div class="row"><button class="btn ghost" data-close>not now</button></div></div>`, true);
+  }
   function modal(want) {
+    if (cash()) { cashModal(want); return; }
     const ids = PACKS.filter(p => has(p.id)).map(p => p.id); if (!ids.length) return; const pref = want || curPack().id, cur = ids.includes(pref) ? pref : ids[0];
     openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Buy packs</h2></div>
       <p class="dim">Real money buys packs, and nothing else. Each pack holds random digital cards: you can't choose them, and the odds are on the <a href="#/odds" data-close>odds page</a>. The cards are game items with <b>no cash value</b>. Nothing in STIXX can be cashed out, and the prices you see in the game are simulated.</p>
@@ -100,6 +115,7 @@ const Shop = (() => {
       const r = await API.get("shop/order?sid=" + encodeURIComponent(ret.sid));
       if (r && r.ok) {
         if (r.short) { done("Thank you", "Your payment went through, but we couldn't add the packs to your game. You will be refunded.", false); return; }
+        if (r.pack === "cash") { await Ref.sync(); done("Money added", `Your payment went through. ${money((r.qty || 1) * UNIT)} of play money was added to your balance.`, true); if (view === "home") renderHome(); return; }
         await Ref.sync(); const n = r.qty || 1, pn = PACK_BY[r.pack] ? PACK_BY[r.pack].name + " " : ""; if (PACK_BY[r.pack] && state.pack !== r.pack) { state.pack = r.pack; persist(); }
         done("Your packs are ready", `Your payment went through. ${n} ${pn}pack${n > 1 ? "s are" : " is"} ready to open. You'll find ${n > 1 ? "them" : "it"} on the pack page.`, true); if (view === "home") renderHome(); return;
       }
@@ -107,16 +123,17 @@ const Shop = (() => {
     }
     if ($("shopDoneTxt")) $("shopDoneTxt").textContent = "Your payment is still being confirmed. Your packs will appear on the pack page within a few minutes.";
   }
-  return { load, open, has, price, modal, pay, qty, back, cfg: () => cfg };
+  return { load, open, has, cash, price, modal, pay, qty, back, cfg: () => cfg };
 })();
 
 /* ---- the one place that says what is and isn't real money, so no line in the game is ever wrong about it ---- */
 const Money = (() => {
   const packs = () => Shop.open(), req = () => Sale.open();
-  const footer = () => packs() ? "the game's money is play money and can't be cashed out · real money only buys packs, whose cards have no cash value" + (req() ? " · the physical Requiem pack is a separate purchase" : "") : req() ? "the game is play money, nothing in it is charged or paid out · the physical Requiem pack is the only real-money purchase" : "play money only, nothing is ever charged or paid out";
-  const gate = () => packs() ? "The game's money is play money, and nothing can be cashed out. Real money can only be used to buy packs, whose cards have no cash value." + (req() ? " The physical Requiem pack is a separate real-money purchase, on its own page." : "") : req() ? "The game is play money: nothing in it is ever charged, and nothing can be cashed out. The one exception is the physical Requiem pack, a separate real-money purchase on its own page." : "Everything here is play money: nothing is ever charged, and nothing can be cashed out.";
-  const note = lead => (packs() ? (lead ? " " : " ") + "Real money only buys packs, and their cards have no cash value." : "") + (req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : "");
-  const about = () => packs() ? `<b>Real money buys packs, nothing else.</b> Cards, balances and every price in the game are play items with no cash value, and nothing can be cashed out.${req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : ""}` : `<b>Play money only.</b> Nothing in the beta costs real money and nothing can be cashed out. Cards have no cash value. Cashing out, and buying cards with real money through Stripe, are planned for the public release and are not part of this beta.${note()}`;
+  const cashy = () => Shop.cash();
+  const footer = () => cashy() ? "the game's money is play money and can't be cashed out · real money only adds play money, which has no cash value" + (req() ? " · the physical Requiem pack is a separate purchase" : "") : packs() ? "the game's money is play money and can't be cashed out · real money only buys packs, whose cards have no cash value" + (req() ? " · the physical Requiem pack is a separate purchase" : "") : req() ? "the game is play money, nothing in it is charged or paid out · the physical Requiem pack is the only real-money purchase" : "play money only, nothing is ever charged or paid out";
+  const gate = () => cashy() ? "The game's money is play money, and nothing can be cashed out. Real money can only be used to add play money, which has no cash value." + (req() ? " The physical Requiem pack is a separate real-money purchase, on its own page." : "") : packs() ? "The game's money is play money, and nothing can be cashed out. Real money can only be used to buy packs, whose cards have no cash value." + (req() ? " The physical Requiem pack is a separate real-money purchase, on its own page." : "") : req() ? "The game is play money: nothing in it is ever charged, and nothing can be cashed out. The one exception is the physical Requiem pack, a separate real-money purchase on its own page." : "Everything here is play money: nothing is ever charged, and nothing can be cashed out.";
+  const note = lead => (cashy() ? " Real money only adds play money, which has no cash value." : packs() ? (lead ? " " : " ") + "Real money only buys packs, and their cards have no cash value." : "") + (req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : "");
+  const about = () => cashy() ? `<b>Real money adds play money, nothing else.</b> Play money, cards and every price in the game have no cash value, and nothing can be cashed out.${req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : ""}` : packs() ? `<b>Real money buys packs, nothing else.</b> Cards, balances and every price in the game are play items with no cash value, and nothing can be cashed out.${req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : ""}` : `<b>Play money only.</b> Nothing in the beta costs real money and nothing can be cashed out. Cards have no cash value. Cashing out, and buying cards with real money through Stripe, are planned for the public release and are not part of this beta.${note()}`;
   function words() { const f = $("footMoney"), g = $("gateMoney"); if (f) f.textContent = footer(); if (g) g.textContent = gate(); }
   return { words, note, about, footer, gate };
 })();

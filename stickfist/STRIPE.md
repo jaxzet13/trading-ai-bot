@@ -2,7 +2,7 @@
 
 There are two things you can sell, each with its own switch, both **off** until you set them up:
 
-- **Digital packs** (`SHOP_OPEN=1`): real money buys pack openings in the game. See "Digital packs" at the end of this file.
+- **Adding money to the game** (`SHOP_OPEN=1`): real money adds play money to a player's balance, $1.00 for every $1.00, and the player spends it on packs. See "Digital packs" at the end of this file.
 - **The physical Requiem pack** (`REQUIEM_OPEN=1`): described first, below.
 
 They share the same Stripe account, keys, webhook, public address and terms page. The sections below on the account, Apple Pay, the server and the webhook apply to both.
@@ -88,21 +88,21 @@ The packs are credited two ways, and either is enough: Stripe's signed webhook, 
 
 ## Digital packs
 
-**What real money buys:** pack openings, and nothing else. Each pack has one flat real price (`SHOP_PRICES`: First Print **$1.00**, Moonshot **$3.00**; no bundles, no discounts). The player's balance, their cards and every price in the game stay play-money items with **no cash value**, and nothing can be cashed out. I built it this way on purpose: if real money bought play money at 1:1, or if cards could be sold for real money, the game would look and behave like gambling, and that is a different legal world.
+**What real money buys:** play money, at $1.00 for every $1.00 paid, in whole dollars from $1 to $25 an order. No bundles, no bonuses, no discounts. The player spends the balance on packs at the game's own price, which moves with the card market (that is why real money buys a balance and not a fixed pack: a pack's in-game price changes all day). Balances, cards and every price in the game have **no cash value**, and **no code in this project can pay anyone**: nothing can be cashed out. Say that clearly wherever you advertise.
 
 **How it works**
 1. On the pack page a **Buy packs** button appears only while the server says digital packs are on. It opens a window that says what real money buys, that the packs are random, that the cards have no cash value, the daily limit and a link to your terms and refunds page. The player ticks "I'm 18 or older, I understand the packs are random, and I'm spending real money", picks 1 to 10 packs and presses Pay.
 2. The server asks Stripe for a Checkout page (no shipping address: it is digital) and sends the player there. Apple Pay, Google Pay and cards appear on Stripe's page; STIXX never sees a card.
-3. When Stripe confirms the payment (the same signed webhook as the Requiem pack), the server adds the packs to that player's **running total** of bought packs, kept separately for each pack (a bought Moonshot pack opens as Moonshot). The page compares that total with how many it has already added, and adds the difference. Because it is a running total, a purchase can never be added twice, even if a message is lost or the player reloads. A pack you bought is shown as "a pack you bought", never "free", and opening it spends no play money.
-4. Packs the player has paid for survive "start over".
+3. When Stripe confirms the payment (the signed webhook, or the server asking Stripe itself), the server adds the dollars to that player's **running total**. The page compares that total with how many dollars it has already added, and adds the difference to the balance. Because it is a running total, a purchase can never be added twice, even if a message is lost or the player reloads. Money that came from a payment counts as money handed to the player, never as profit.
+4. The balance is reset by "start over", as it always was.
 
 **Settings** (in addition to the Stripe ones above: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PUBLIC_URL`, `REQUIEM_TERMS_URL`, which is your terms and refund policy)
 
 | Variable | Value |
 |---|---|
 | `SHOP_OPEN` | `1` to turn digital packs on (remove it to turn them off at once) |
-| `SHOP_PRICES` | the real price of each pack in cents, as JSON; default `{"fp":100,"ms":300}` ($1.00 and $3.00). Stripe's minimum charge is 50 cents. A pack left out of the list can't be bought. |
-| `SHOP_MAX_PER_ORDER` | default `10` |
+| `SHOP_PRICES` | what real money buys, in cents each, as JSON; default `{"cash":100}` (play money at $1.00 per dollar). Packs can still be priced one by one instead, e.g. `{"fp":100,"ms":300}`, but the game's pack prices move with the market, so the default is better. Stripe's minimum charge is 50 cents. |
+| `SHOP_MAX_PER_ORDER` | dollars per order; default `25` |
 | `SHOP_MIN_NET_PCT` | the least of each digital pack's price that must be left after Stripe's fee; default `60`. A pack cheaper than that isn't offered (a 50 cent pack would lose 62% to the fee). |
 | `STRIPE_FEE_PCT`, `STRIPE_FEE_FIXED_CENTS` | Stripe's card fee, used only for these checks; defaults `2.9` and `30` (the usual US card rate: check yours) |
 | `SHOP_DAILY_CAP_CENTS` | the most one player can spend in a day (UTC); default `2500`. A spending limit for the player's own protection, counting payments still open. Lower it if you like. |

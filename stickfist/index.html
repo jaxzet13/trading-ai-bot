@@ -460,7 +460,7 @@ body.broke .wallet > :not(#topBuy), body.broke .tape { display: none !important;
     <nav class="tabs" id="tabs" aria-label="Sections">
       <a href="#/" data-v="home">pack</a><a href="#/collection" data-v="collection">cards</a><a href="#/market" data-v="market">market</a><a href="#/invite" data-v="invite">invite</a><a href="#/profile" data-v="profile">me</a>
     </nav>
-    <div class="wallet"><button class="chip buy" id="topBuy" hidden>+ Buy<span class="xs"> packs</span></button><button class="chip" id="dailyBtn"></button><button class="chip cash" id="cashBtn">cash out</button><button class="chip soft" id="muteBtn" aria-pressed="false"></button><span class="bal" id="bal" title="Play money. Nothing is ever charged.">$0.00</span></div>
+    <div class="wallet"><button class="chip buy" id="topBuy" hidden>+ Add<span class="xs"> money</span></button><button class="chip" id="dailyBtn"></button><button class="chip cash" id="cashBtn">cash out</button><button class="chip soft" id="muteBtn" aria-pressed="false"></button><span class="bal" id="bal" title="Play money. Nothing is ever charged.">$0.00</span></div>
   </div>
 </header>
 <div class="tape" aria-hidden="true"><div class="tape-in" id="tapeIn"></div></div>
@@ -1313,8 +1313,8 @@ function renderHome() {
   const pk = curPack(), ps = packStats(pk); $("banner").textContent = BANNER.join("\n");
   $("packTabs").live = PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-pack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("");
   $("packName").textContent = pk.name; $("packBlurb").textContent = pk.blurb;
-  const fp = state.freePacks, pp = boughtOf(pk.id); $("packLine").textContent = `${pk.n} cards · ${money(ps.price)}`; $("openBtn").textContent = fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : pp ? `open a pack you bought${pp > 1 ? " · " + pp + " left" : ""}` : (Shop.has(pk.id) && state.coins < ps.price) ? `buy a pack · ${rmoney(Shop.price(pk.id))}` : `open pack · ${money(ps.price)}`; $("openBtn").classList.toggle("free", fp > 0 || pp > 0);
-  $("buyRow").hidden = !Shop.has(pk.id) || (!fp && !pp && state.coins < ps.price); $("buyBtn").textContent = `Buy packs · ${rmoney(Shop.price(pk.id))} each`;
+  const fp = state.freePacks, pp = boughtOf(pk.id); $("packLine").textContent = `${pk.n} cards · ${money(ps.price)}`; $("openBtn").textContent = fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : pp ? `open a pack you bought${pp > 1 ? " · " + pp + " left" : ""}` : (Shop.cash() && state.coins < ps.price) ? "add money to open a pack" : (Shop.has(pk.id) && state.coins < ps.price) ? `buy a pack · ${rmoney(Shop.price(pk.id))}` : `open pack · ${money(ps.price)}`; $("openBtn").classList.toggle("free", fp > 0 || pp > 0);
+  $("buyRow").hidden = !Shop.has(pk.id) || (!fp && !pp && state.coins < ps.price); $("buyBtn").textContent = Shop.cash() ? "Add money" : `Buy packs · ${rmoney(Shop.price(pk.id))} each`;
   $("how").hidden = state.s.packs > 0; $("inviteBar").live = state.s.packs > 0 ? inviteBarHTML() : "";
   $("honest").live = `Every card is a picture made of text: the rarer the card, the more characters it holds. About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
   const mv = movers(); $("hot").live = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
@@ -1643,7 +1643,7 @@ async function openPack(pack) {
   if (!state.freePacks && !Shop.has(pk.id) && state.coins < packPrice(pk) && !state.vault.length && Date.now() - state.rescueAt > 864e5) { state.freePacks++; state.rescueAt = Date.now(); persist(); toast("You're out of play money, so here's a free pack."); }
   const free = state.freePacks > 0, bought = !free && boughtOf(pk.id) > 0, price = free || bought ? 0 : packPrice(pk);      // a pack you bought costs no play money to open
   if (state.coins < price && Shop.has(pk.id)) { Shop.modal(pk.id); return; }      // out of play money and buying is on: straight to the buy window, this pack already chosen (the 18+ and real-money confirmation stays: Stripe opens after it)
-  if (state.coins < price) { toast(state.vault.length ? `You need ${money(price - state.coins)} more. Sell a card to open another pack.` : "You're out of play money. Your free daily pack is back tomorrow, or invite a friend for one now.", Shop.has(pk.id) ? { key: "buy", label: "Buy packs" } : null); return; }
+  if (state.coins < price) { toast(state.vault.length ? `You need ${money(price - state.coins)} more. Sell a card to open another pack.` : "You're out of play money. Your free daily pack is back tomorrow, or invite a friend for one now.", Shop.has(pk.id) ? { key: "buy", label: Shop.cash() ? "Add money" : "Buy packs" } : null); return; }
   opening = true; let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS) return;
   if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else if (bought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
   state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
@@ -1701,7 +1701,7 @@ async function dismiss(el, c) {
   SS.idx++; await sleep(260); if (SS.idx >= SS.items.length) summary(); else focusTop();
 }
 function skipAll() { if (!SS || SS.phase === "summary") return; SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
-const againLabel = pk => state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
+const againLabel = pk => state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
 function summary() {
   SS.phase = "summary"; const items = SS.items, back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
   const best = items.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no];
@@ -2433,7 +2433,10 @@ const Ref = (() => {
     if (!API.on || busy || !state.ageOK) return; busy = true;
     try {
       const r = await API.post("hello", { uid: state.uid, ref: state.ref.by }); if (!r || !r.code) return; info = r; last = Date.now(); state.ref.code = r.code; state.ref.n = r.invited; Fair.adopt(r.fair);
-      { let add = 0; state.paid = state.paid || {}; state.paidSeen = state.paidSeen || {}; for (const id of Object.keys(r.paid || {})) { const d = (r.paid[id] || 0) - (state.paidSeen[id] || 0); if (d > 0 && PACK_BY[id]) { add += d; state.paidSeen[id] = r.paid[id]; state.paid[id] = (state.paid[id] || 0) + d; } }       // a running total per pack from the server, so the same purchase can never be added twice
+      { let add = 0, dollars = 0; state.paid = state.paid || {}; state.paidSeen = state.paidSeen || {}; for (const id of Object.keys(r.paid || {})) { const d = (r.paid[id] || 0) - (state.paidSeen[id] || 0);
+          if (d > 0 && id === "cash") { dollars += d; state.paidSeen.cash = r.paid.cash; state.coins += d * UNIT; state.s.added += d * UNIT; continue; }       // play money bought with real money: counted as money handed to you, never as profit
+          if (d > 0 && PACK_BY[id]) { add += d; state.paidSeen[id] = r.paid[id]; state.paid[id] = (state.paid[id] || 0) + d; } }       // a running total per pack from the server, so the same purchase can never be added twice
+        if (dollars > 0) { persist(); renderBal(true); renderChips(); if (view === "home") renderHome(); toast(`${money(dollars * UNIT)} of play money was added to your balance.`); }
         if (add > 0) { persist(); renderChips(); if (view === "home") renderHome(); toast(`${add} pack${add > 1 ? "s" : ""} you bought ${add > 1 ? "are" : "is"} ready to open.`); } }
       if (r.credits > 0) { const c = await API.post("claim", { uid: state.uid }); if (c && c.packs > 0) { state.freePacks += c.packs; persist(); renderChips(); const r2 = await API.post("hello", { uid: state.uid, ref: state.ref.by }); if (r2 && r2.code) info = r2; if (view === "home") renderHome(); } }
       if (state.s.packs > 0 && !r.activated) activated();
@@ -2513,7 +2516,7 @@ async function rotateSeed() { const b = $("fairRotate"); if (b) b.disabled = tru
 /* ---- cash out: a notice, not a feature. Nothing in the beta can be paid out, and the window says so plainly. ---- */
 function cashModal() {
   if (Shop.open()) { openModal(`<div class="minfo"><div><span class="label">cash out</span><h2>Not available</h2></div>
-    <p class="dim">You can't cash out. Real money buys packs, and nothing else. Your balance, your cards and every price in STIXX are part of the game and have no cash value.${Money.note(true)}</p>
+    <p class="dim">You can't cash out. Real money ${Shop.cash() ? "adds play money" : "buys packs"}, and nothing else. Your balance, your cards and every price in STIXX are part of the game and have no cash value.${Money.note(true)}</p>
     <div class="row"><button class="btn solid" data-close>ok</button></div></div>`, true); return; }
   openModal(`<div class="minfo"><div><span class="label">cash out</span><h2>Coming at public release</h2></div>
     <p class="dim">Cashing out will be available on public release. At public release, cards are bought with real money through Stripe.</p>
@@ -2768,15 +2771,30 @@ const Shop = (() => {
       history.replaceState(null, "", location.pathname + (p.toString() ? "?" + p : "") + location.hash); return { kind: k === "paid" ? "paid" : "cancel", sid };
     } catch (e) { return null; }
   })();
-  const open = () => !!cfg.open && PACKS.some(p => cfg.prices && cfg.prices[p.id]), has = id => !!cfg.open && !!(cfg.prices && cfg.prices[id]), price = id => (cfg.prices && cfg.prices[id]) || 0;
+  const cash = () => !!cfg.open && !!(cfg.prices && cfg.prices.cash), open = () => cash() || !!cfg.open && PACKS.some(p => cfg.prices && cfg.prices[p.id]), has = id => cash() || !!cfg.open && !!(cfg.prices && cfg.prices[id]), price = id => (cfg.prices && cfg.prices[id]) || 0;
   async function load() {
     if (!API.on) return; const r = await API.get("shop/config?uid=" + encodeURIComponent(state.uid)); if (!r || typeof r.open !== "boolean") return;
-    cfg = r; Money.words(); const tb = $("topBuy"); if (tb) tb.hidden = !open(); renderBroke(); if (view === "home") renderHome();
+    cfg = r; Money.words(); const tb = $("topBuy"); if (tb) { tb.hidden = !open(); tb.innerHTML = cash() ? '+ Add<span class="xs"> money</span>' : '+ Buy<span class="xs"> packs</span>'; } renderBroke(); if (view === "home") renderHome();
   }
-  const chosen = () => { const s = $("shopPack"); return s ? s.value : curPack().id; }, count = () => { const q = $("shopQty"); return q ? +q.value || 1 : 1; };
+  const chosen = () => { const s = $("shopPack"); return s ? s.value : cash() ? "cash" : curPack().id; }, count = () => { const q = $("shopQty"); return q ? +q.value || 1 : 1; };
   const total = () => rmoney(price(chosen()) * count());
   function qty() { const b = $("shopPay"); if (b && !b.dataset.busy) b.textContent = "Pay " + total(); const e = $("shopEach"); if (e) e.textContent = rmoney(price(chosen())) + " per pack"; }
+  const AMOUNTS = [1, 2, 3, 5, 10, 15, 25];
+  function cashModal(want) {                                               // real money adds play money to the balance, $1.00 for each dollar: no bonuses, no bundles
+    const room = Math.max(0, Math.floor(((cfg.cap || 0) - (cfg.spentToday || 0)) / (price("cash") || 100))), opts = AMOUNTS.filter(n => n <= Math.min(cfg.maxQty || 25, room));
+    if (!opts.length) { openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Daily limit reached</h2></div><p class="dim">You've added the most you can today (${rmoney(cfg.cap || 0)}). It resets tomorrow (UTC).</p><div class="row"><button class="btn" data-close>ok</button></div></div>`, true); return; }
+    const need = want && PACK_BY[want] ? Math.max(1, Math.ceil((packPrice(PACK_BY[want]) - state.coins) / UNIT)) : 0, pick = opts.find(n => n >= need) || opts[opts.length - 1];
+    openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Add money</h2></div>
+      <p class="dim">Real money adds <b>play money</b> to your balance: $1.00 for every $1.00 you pay, with no bonuses. You spend it on packs. Packs are random, and the odds are on the <a href="#/odds" data-close>odds page</a>. <b>Play money and cards have no cash value, and nothing in STIXX can be cashed out.</b> The prices you see in the game are simulated.</p>
+      <div class="rqbuyh"><label class="rqqty" style="justify-items:start"><span class="small">Add</span><select id="shopQty" aria-label="How much to add">${opts.map(n => `<option value="${n}"${n === pick ? " selected" : ""}>${rmoney(n * (price("cash") || 100))}</option>`).join("")}</select></label></div>
+      <p class="small" style="margin:-6px 0 0">Your balance is ${money(state.coins)} now.</p>
+      <label class="rqage"><input type="checkbox" id="shopAge"><span>I'm 18 or older, I understand the packs are random, and I'm spending real money.</span></label>
+      <button class="btn solid big" id="shopPay" disabled>Pay ${rmoney(pick * (price("cash") || 100))}</button>
+      <p class="small">Apple Pay, Google Pay or card, on Stripe's secure page. STIXX never sees your card. You are only charged after you confirm there. There is a limit of ${rmoney(cfg.cap || 0)} a day${cfg.spentToday > 0 ? ` (you have used ${rmoney(cfg.spentToday)} today)` : ""}. <a href="${esc(cfg.terms || "#")}" target="_blank" rel="noopener">Terms and refunds</a>.</p>
+      <div class="row"><button class="btn ghost" data-close>not now</button></div></div>`, true);
+  }
   function modal(want) {
+    if (cash()) { cashModal(want); return; }
     const ids = PACKS.filter(p => has(p.id)).map(p => p.id); if (!ids.length) return; const pref = want || curPack().id, cur = ids.includes(pref) ? pref : ids[0];
     openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Buy packs</h2></div>
       <p class="dim">Real money buys packs, and nothing else. Each pack holds random digital cards: you can't choose them, and the odds are on the <a href="#/odds" data-close>odds page</a>. The cards are game items with <b>no cash value</b>. Nothing in STIXX can be cashed out, and the prices you see in the game are simulated.</p>
@@ -2804,6 +2822,7 @@ const Shop = (() => {
       const r = await API.get("shop/order?sid=" + encodeURIComponent(ret.sid));
       if (r && r.ok) {
         if (r.short) { done("Thank you", "Your payment went through, but we couldn't add the packs to your game. You will be refunded.", false); return; }
+        if (r.pack === "cash") { await Ref.sync(); done("Money added", `Your payment went through. ${money((r.qty || 1) * UNIT)} of play money was added to your balance.`, true); if (view === "home") renderHome(); return; }
         await Ref.sync(); const n = r.qty || 1, pn = PACK_BY[r.pack] ? PACK_BY[r.pack].name + " " : ""; if (PACK_BY[r.pack] && state.pack !== r.pack) { state.pack = r.pack; persist(); }
         done("Your packs are ready", `Your payment went through. ${n} ${pn}pack${n > 1 ? "s are" : " is"} ready to open. You'll find ${n > 1 ? "them" : "it"} on the pack page.`, true); if (view === "home") renderHome(); return;
       }
@@ -2811,16 +2830,17 @@ const Shop = (() => {
     }
     if ($("shopDoneTxt")) $("shopDoneTxt").textContent = "Your payment is still being confirmed. Your packs will appear on the pack page within a few minutes.";
   }
-  return { load, open, has, price, modal, pay, qty, back, cfg: () => cfg };
+  return { load, open, has, cash, price, modal, pay, qty, back, cfg: () => cfg };
 })();
 
 /* ---- the one place that says what is and isn't real money, so no line in the game is ever wrong about it ---- */
 const Money = (() => {
   const packs = () => Shop.open(), req = () => Sale.open();
-  const footer = () => packs() ? "the game's money is play money and can't be cashed out · real money only buys packs, whose cards have no cash value" + (req() ? " · the physical Requiem pack is a separate purchase" : "") : req() ? "the game is play money, nothing in it is charged or paid out · the physical Requiem pack is the only real-money purchase" : "play money only, nothing is ever charged or paid out";
-  const gate = () => packs() ? "The game's money is play money, and nothing can be cashed out. Real money can only be used to buy packs, whose cards have no cash value." + (req() ? " The physical Requiem pack is a separate real-money purchase, on its own page." : "") : req() ? "The game is play money: nothing in it is ever charged, and nothing can be cashed out. The one exception is the physical Requiem pack, a separate real-money purchase on its own page." : "Everything here is play money: nothing is ever charged, and nothing can be cashed out.";
-  const note = lead => (packs() ? (lead ? " " : " ") + "Real money only buys packs, and their cards have no cash value." : "") + (req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : "");
-  const about = () => packs() ? `<b>Real money buys packs, nothing else.</b> Cards, balances and every price in the game are play items with no cash value, and nothing can be cashed out.${req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : ""}` : `<b>Play money only.</b> Nothing in the beta costs real money and nothing can be cashed out. Cards have no cash value. Cashing out, and buying cards with real money through Stripe, are planned for the public release and are not part of this beta.${note()}`;
+  const cashy = () => Shop.cash();
+  const footer = () => cashy() ? "the game's money is play money and can't be cashed out · real money only adds play money, which has no cash value" + (req() ? " · the physical Requiem pack is a separate purchase" : "") : packs() ? "the game's money is play money and can't be cashed out · real money only buys packs, whose cards have no cash value" + (req() ? " · the physical Requiem pack is a separate purchase" : "") : req() ? "the game is play money, nothing in it is charged or paid out · the physical Requiem pack is the only real-money purchase" : "play money only, nothing is ever charged or paid out";
+  const gate = () => cashy() ? "The game's money is play money, and nothing can be cashed out. Real money can only be used to add play money, which has no cash value." + (req() ? " The physical Requiem pack is a separate real-money purchase, on its own page." : "") : packs() ? "The game's money is play money, and nothing can be cashed out. Real money can only be used to buy packs, whose cards have no cash value." + (req() ? " The physical Requiem pack is a separate real-money purchase, on its own page." : "") : req() ? "The game is play money: nothing in it is ever charged, and nothing can be cashed out. The one exception is the physical Requiem pack, a separate real-money purchase on its own page." : "Everything here is play money: nothing is ever charged, and nothing can be cashed out.";
+  const note = lead => (cashy() ? " Real money only adds play money, which has no cash value." : packs() ? (lead ? " " : " ") + "Real money only buys packs, and their cards have no cash value." : "") + (req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : "");
+  const about = () => cashy() ? `<b>Real money adds play money, nothing else.</b> Play money, cards and every price in the game have no cash value, and nothing can be cashed out.${req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : ""}` : packs() ? `<b>Real money buys packs, nothing else.</b> Cards, balances and every price in the game are play items with no cash value, and nothing can be cashed out.${req() ? " The physical Requiem pack is a separate real-money purchase on its own page." : ""}` : `<b>Play money only.</b> Nothing in the beta costs real money and nothing can be cashed out. Cards have no cash value. Cashing out, and buying cards with real money through Stripe, are planned for the public release and are not part of this beta.${note()}`;
   function words() { const f = $("footMoney"), g = $("gateMoney"); if (f) f.textContent = footer(); if (g) g.textContent = gate(); }
   return { words, note, about, footer, gate };
 })();
