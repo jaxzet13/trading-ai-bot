@@ -60,6 +60,8 @@ def main():
     ev.add_argument("args", nargs="*", help="once [WORKERS] | loop [WORKERS] | board")
     ro = sub.add_parser("rotate", help="which strategies should trade real money: walk-forward test of the rotation policy, apply only if it beats the current set (see rotate.py)")
     ro.add_argument("args", nargs="*", help="[apply]")
+    dc = sub.add_parser("discord", help="post every real-money bet and result to a Discord channel, live (see discord_feed.py)")
+    dc.add_argument("args", nargs="*", help="run | once | test")
     zf = sub.add_parser("zecfwd", help="ZEC forward test: replay the frozen ZEC rule on markets since Nov 4 on Kalshi's trade tape, check the paper run, grade the real-money gate")
     zf.add_argument("args", nargs="*", help="--no-download")
     lrm = sub.add_parser("labrm", help="real-money backtest of the golden strategies (real fills from Kalshi trades, the account limits; see labrm.py)")
@@ -140,6 +142,9 @@ def main():
     elif a.cmd == "rotate":
         from . import rotate
         rotate.main(a.args)
+    elif a.cmd == "discord":
+        from . import discord_feed
+        discord_feed.main(a.args)
     elif a.cmd == "zecfwd":
         from . import zecfwd
         zecfwd.main(a.args)
