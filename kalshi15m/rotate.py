@@ -527,7 +527,11 @@ def lab_sizing(stake=None, log=print):
 def hours(log=print):
     """Is night still better? Real bets and the lab's replay of the live rules by 4-hour UTC block, return per dollar
     staked. Since Nov 23 the runner bets x2 from 04 to 12 UTC and x0.5 otherwise (limits.stake_hour_mult) because the
-    live rules made +0.37/$ real and +0.35/$ in the lab there vs +0.03 and +0.09 the rest of the day."""
+    live rules made +0.37/$ real and +0.35/$ in the lab there vs +0.03 and +0.09 the rest of the day. Over the 60-day
+    history (search window, 2,590 trades of the three live rules) that night edge does NOT hold: 04-12 +0.151/$ vs
+    +0.137/$ otherwise (p=0.41, night ahead in 4 of 10 weeks). What does hold in all three data sets is a weak
+    20-24 UTC block: history +0.007/$ vs +0.169/$ (p=0.016, worse in 8 of 10 weeks, all three rules), lab -0.08,
+    real -0.06."""
     real, out = {}, {"real": {}, "lab": {}}
     for ln in open(REAL_LOG) if REAL_LOG.exists() else []:
         try:
