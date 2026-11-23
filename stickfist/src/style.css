@@ -446,3 +446,33 @@ html { touch-action: manipulation; }                                            
   #cActions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; } #cActions .btn { flex: 1 1 auto; min-height: 44px; } #cActions .btn.ghost { border: 1px solid var(--ln3); } #cActions .small { flex: 1 1 100%; }
 }
 @media (max-width: 360px) { .slot .row { grid-template-columns: 84px minmax(0, 1fr) max-content; gap: 6px; } .slot .bar { display: none; } .slot .row .pct { text-align: right; } }
+
+/* ---- the phone, lean: the point first and less to scroll. Everything cut here is still on the desktop page or one tap away. ---- */
+@media (max-width: 760px) {
+  .tape, .banner, .dsk { display: none !important; }
+  main.wrap { padding-top: 12px; }
+  .page-head { margin-bottom: 10px; gap: 4px; } .page-head p:not(.live), #cSub { display: none; } h1.ttl { font-size: 24px; }
+  /* home: pack, open, how many, add money, all in one screen */
+  #packBlurb, #buyRow, #inviteBar, #hot, #chase { display: none !important; }
+  .home { gap: 10px; }
+  .packcol { width: clamp(110px, min(60vw, calc((100dvh - 478px) * .714)), 230px); }
+  .packmeta { gap: 2px; } .packmeta h1 { font-size: 20px; } .packmeta .dim { font-size: 13px; }
+  .honest { font-size: 12.5px; max-width: 34ch; }
+  .rqwrap { margin: 0; } .rqbar { padding: 8px 12px; gap: 10px; border-radius: 12px; grid-template-columns: 34px minmax(0, 1fr) auto; } .rqbar .rqtx b { font-size: 14px; } .rqbar .rqtx span:not(.label) { display: none; }
+  .multi { margin: 0; }
+  /* market: the index and the list, nothing in between */
+  #mHero, #mMovers, #v-market .sechead { display: none; }
+  .pulse { grid-template-columns: 1fr 1fr; padding: 12px 14px; gap: 4px 14px; } .pulse .pa { grid-column: auto; } .pulse .pa .small, .pulse .pb, .pulse .heat { display: none; } .pbig b { font-size: 26px; } .pbig { margin: 2px 0 0; }
+  .yours { padding: 10px 14px; }
+  .filters { margin-bottom: 8px; }
+  /* cards: three to a row, the numbers that matter in one line */
+  .csum { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; } .csum .stat.go { display: none; } .stat { padding: 10px 12px; gap: 4px; } .sbig b { font-size: 20px; } .csum .stat .bar, .csum .stat .srow, .csum .stat > span.small { display: none; } .csum .stat .sbig span { font-size: 12px; }
+  .cgrid { grid-template-columns: repeat(3, 1fr); gap: 12px 8px; } .cmeta b { font-size: 13px; } .cmeta .pill, .csub { display: none; } .cb { font-size: 10.5px; padding: 1px 6px; top: 5px; } .cb.n { left: 5px; } .cb.fx { display: none; }
+  .ctw .sellq { min-height: 44px; padding: 5px 4px; font-size: 11.5px; width: 100%; }
+  .sethead { margin: 14px 0 8px; } .sethead h3 { font-size: 17px; }
+  #cActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; } #cActions .btn { min-height: 40px; padding: 6px 8px; font-size: 12.5px; line-height: 1.2; white-space: normal; } #cActions #sellAll { grid-column: 1 / -1; } #cActions .small { display: none; }
+  #cFilters > :nth-child(3) { display: none; } #mFilters > :nth-child(2) { display: none; } .yours .go { display: none; }
+  #pRank p, #pChart { display: none; } #pWorth { margin-bottom: 14px; }
+  footer { padding-top: 10px; font-size: 11px; }
+}
+@media (max-width: 760px) and (max-height: 640px) { .rqwrap, .honest { display: none; } .packtabs .ptab { padding: 5px 14px; } .packmeta h1 { font-size: 18px; } }

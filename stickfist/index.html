@@ -467,6 +467,36 @@ html { touch-action: manipulation; }                                            
   #cActions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; } #cActions .btn { flex: 1 1 auto; min-height: 44px; } #cActions .btn.ghost { border: 1px solid var(--ln3); } #cActions .small { flex: 1 1 100%; }
 }
 @media (max-width: 360px) { .slot .row { grid-template-columns: 84px minmax(0, 1fr) max-content; gap: 6px; } .slot .bar { display: none; } .slot .row .pct { text-align: right; } }
+
+/* ---- the phone, lean: the point first and less to scroll. Everything cut here is still on the desktop page or one tap away. ---- */
+@media (max-width: 760px) {
+  .tape, .banner, .dsk { display: none !important; }
+  main.wrap { padding-top: 12px; }
+  .page-head { margin-bottom: 10px; gap: 4px; } .page-head p:not(.live), #cSub { display: none; } h1.ttl { font-size: 24px; }
+  /* home: pack, open, how many, add money, all in one screen */
+  #packBlurb, #buyRow, #inviteBar, #hot, #chase { display: none !important; }
+  .home { gap: 10px; }
+  .packcol { width: clamp(110px, min(60vw, calc((100dvh - 478px) * .714)), 230px); }
+  .packmeta { gap: 2px; } .packmeta h1 { font-size: 20px; } .packmeta .dim { font-size: 13px; }
+  .honest { font-size: 12.5px; max-width: 34ch; }
+  .rqwrap { margin: 0; } .rqbar { padding: 8px 12px; gap: 10px; border-radius: 12px; grid-template-columns: 34px minmax(0, 1fr) auto; } .rqbar .rqtx b { font-size: 14px; } .rqbar .rqtx span:not(.label) { display: none; }
+  .multi { margin: 0; }
+  /* market: the index and the list, nothing in between */
+  #mHero, #mMovers, #v-market .sechead { display: none; }
+  .pulse { grid-template-columns: 1fr 1fr; padding: 12px 14px; gap: 4px 14px; } .pulse .pa { grid-column: auto; } .pulse .pa .small, .pulse .pb, .pulse .heat { display: none; } .pbig b { font-size: 26px; } .pbig { margin: 2px 0 0; }
+  .yours { padding: 10px 14px; }
+  .filters { margin-bottom: 8px; }
+  /* cards: three to a row, the numbers that matter in one line */
+  .csum { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; } .csum .stat.go { display: none; } .stat { padding: 10px 12px; gap: 4px; } .sbig b { font-size: 20px; } .csum .stat .bar, .csum .stat .srow, .csum .stat > span.small { display: none; } .csum .stat .sbig span { font-size: 12px; }
+  .cgrid { grid-template-columns: repeat(3, 1fr); gap: 12px 8px; } .cmeta b { font-size: 13px; } .cmeta .pill, .csub { display: none; } .cb { font-size: 10.5px; padding: 1px 6px; top: 5px; } .cb.n { left: 5px; } .cb.fx { display: none; }
+  .ctw .sellq { min-height: 44px; padding: 5px 4px; font-size: 11.5px; width: 100%; }
+  .sethead { margin: 14px 0 8px; } .sethead h3 { font-size: 17px; }
+  #cActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; } #cActions .btn { min-height: 40px; padding: 6px 8px; font-size: 12.5px; line-height: 1.2; white-space: normal; } #cActions #sellAll { grid-column: 1 / -1; } #cActions .small { display: none; }
+  #cFilters > :nth-child(3) { display: none; } #mFilters > :nth-child(2) { display: none; } .yours .go { display: none; }
+  #pRank p, #pChart { display: none; } #pWorth { margin-bottom: 14px; }
+  footer { padding-top: 10px; font-size: 11px; }
+}
+@media (max-width: 760px) and (max-height: 640px) { .rqwrap, .honest { display: none; } .packtabs .ptab { padding: 5px 14px; } .packmeta h1 { font-size: 18px; } }
 </style>
 </head>
 <body>
@@ -1363,7 +1393,7 @@ function renderHome() {
   { const r = $("multiRow"), top = maxN(pk), opts = MANY.filter(n => n === 1 || n <= top); r.hidden = top < 2; r.innerHTML = `<span class="small dim">open at once</span>` + opts.map(n => `<button type="button" class="seg1${n === Math.min(openN(), top) ? " on" : ""}" data-many="${n}" aria-pressed="${n === Math.min(openN(), top)}">${n}</button>`).join(""); }
   $("buyRow").hidden = !Shop.has(pk.id) || (!fp && !pp && state.coins < ps.price); $("buyBtn").textContent = Shop.cash() ? "Add money" : `Buy packs · ${rmoney(Shop.price(pk.id))} each`;
   $("how").hidden = state.s.packs > 0; $("inviteBar").live = state.s.packs > 0 ? inviteBarHTML() : "";
-  $("honest").live = `Every card is a picture made of text: the rarer the card, the more characters it holds. About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
+  $("honest").live = `<span class="dsk">Every card is a picture made of text: the rarer the card, the more characters it holds. </span>About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
   const mv = movers(); $("hot").live = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
   const bf = MK.flips().best[0]; if (bf && bf.gain > 0) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip this week: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
   $("chase").live = chaseHTML(); $("rqBar").live = rqBarHTML();
@@ -1526,6 +1556,7 @@ const CF = { show: "all", set: "all", sort: "num" };
 // the copies that are worth more now than they were when you got them (physical cards you added are left alone)
 function upCopies() { return state.vault.filter(c => !c.phys && gainOf(c) > 0); }
 function extras() { const out = []; for (const c of CARDS) copiesOf(c.no).slice(1).forEach(x => { if (!x.phys) out.push(x); }); return out; }
+let sellAllAt = 0, sellAllT = 0;                                                                      // "sell all" asks first: when it was asked, so the question survives the page redrawing as prices move
 function renderCollection() {
   noteFound(); const found = new Set(state.vault.map(c => c.no)), worth = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0), ex = extras(), exSum = ex.reduce((a, c) => a + sellOf(c), 0), fx = Object.keys(state.foundFx).length, pk = curPack(), ch = chaseChance(pk);
   $("cSub").textContent = "Tap a card to see its price and to sell it.";
@@ -1534,7 +1565,7 @@ function renderCollection() {
     <div class="stat"><span class="label">Styles found</span><div class="sbig"><b>${fx}</b><span>of ${FX_ALL}</span></div><div class="bar"><i style="width:${fx / FX_ALL * 100}%"></i></div></div>
     <div class="stat go"><span class="label">Next ${esc(pk.name)} pack</span><div class="sbig"><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span>a new card</span></div><button class="btn small solid" data-open>${state.freePacks ? "open free pack" : "open pack"}</button></div>`;
   const up = upCopies(), upSum = up.reduce((a, c) => a + sellOf(c), 0);
-  $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + (up.length ? `<button class="btn" id="sellUp">sell the ${up.length} that ${up.length === 1 ? "is" : "are"} up · ${money(upSum)}</button>` : "") + (state.vault.length ? `<button class="btn ghost" id="sellAll" data-label="sell all ${state.vault.length} · ${money(state.vault.reduce((a, c) => a + sellOf(c), 0))}">sell all ${state.vault.length} · ${money(state.vault.reduce((a, c) => a + sellOf(c), 0))}</button>` : "") + (ex.length || up.length || state.vault.length ? `<span class="small">${ex.length ? "Extras keep your best copy of every card. " : ""}You can undo a sale for a few seconds.</span>` : "");
+  $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + (up.length ? `<button class="btn" id="sellUp">sell the ${up.length} that ${up.length === 1 ? "is" : "are"} up · ${money(upSum)}</button>` : "") + (state.vault.length ? (() => { const sum = state.vault.reduce((a, c) => a + sellOf(c), 0), armed = sellAllAt && Date.now() - sellAllAt < 4000; return `<button class="btn ghost" id="sellAll">${armed ? "tap again to sell all" : "sell all"} ${state.vault.length} · ${money(sum)}</button>`; })() : "") + (ex.length || up.length || state.vault.length ? `<span class="small">${ex.length ? "Extras keep your best copy of every card. " : ""}You can undo a sale for a few seconds.</span>` : "");
   $("cFilters").live = seg("c", "show", [["all", "All"], ["found", "Found"], ["missing", "Missing"]], CF.show) + selectHTML("cSort", [["num", "Number"], ["rare", "Rarest first"], ["value", "Most valuable"], ["new", "Newest"]], CF.sort, "Sort") + seg("c", "set", [["all", "All packs"], ...Object.keys(SETS).map(k => [k, SETS[k].name])], CF.set);
   const val = c => { const b = copiesOf(c.no)[0]; return b ? valueOf(b) : MK.price(c); }, cmp = { num: (a, b) => +a.no - +b.no, rare: (a, b) => RAR[b.rar].tier - RAR[a.rar].tier || +a.no - +b.no, value: (a, b) => val(b) - val(a), new: (a, b) => ((copiesOf(b.no)[0] || { t: 0 }).t) - ((copiesOf(a.no)[0] || { t: 0 }).t) || +a.no - +b.no }[CF.sort];
   const tile = c => {
@@ -3067,9 +3098,9 @@ document.addEventListener("click", e => {
     case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else if (Shop.has(pk.id)) setTimeout(() => Shop.modal(pk.id), 200); else location.hash = "#/invite"; break; }
     case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { soldToast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`, g); renderCollection(); } break; }
     case "sellAll": {                                                      // sell everything: the first tap asks, the second sells, and the sale can be undone for a few seconds
-      const all = state.vault.slice(); if (!all.length) break; const sum = all.reduce((a, c) => a + sellOf(c), 0);
-      if (!t.dataset.armed) { t.dataset.armed = "1"; t.textContent = `tap again to sell all ${all.length} · ${money(sum)}`; clearTimeout(t._d); t._d = setTimeout(() => { if (t.isConnected) { delete t.dataset.armed; t.textContent = t.dataset.label; } }, 4000); break; }
-      const g = sell(all.map(c => c.uid)); if (g) { soldToast(`Sold all ${all.length} cards for ${money(g)}`, g); renderCollection(); } break; }
+      const all = state.vault.slice(); if (!all.length) break;
+      if (!(sellAllAt && Date.now() - sellAllAt < 4000)) { sellAllAt = Date.now(); renderCollection(); clearTimeout(sellAllT); sellAllT = setTimeout(() => { sellAllAt = 0; if (view === "collection") renderCollection(); }, 4000); break; }
+      sellAllAt = 0; clearTimeout(sellAllT); const g = sell(all.map(c => c.uid)); if (g) { soldToast(`Sold all ${all.length} cards for ${money(g)}`, g); renderCollection(); } break; }
     case "sellUp": { const up = upCopies(), g = sell(up.map(c => c.uid)); if (g) { soldToast(`Sold ${up.length} card${up.length === 1 ? "" : "s"} that ${up.length === 1 ? "was" : "were"} up, for ${money(g)}`, g); renderCollection(); } break; }
     case "resetBtn": if (t.dataset.armed) { startOver(); renderBal(); renderChips(); location.hash = "#/"; show("home"); toast("Fresh start. Your first pack is free."); } else { t.dataset.armed = 1; t.textContent = "tap again to wipe your cards and start over"; setTimeout(() => { delete t.dataset.armed; t.textContent = "start over"; }, 3500); } break;
     case "copyLink": Ref.copy(); break;
