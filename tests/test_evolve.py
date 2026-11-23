@@ -185,3 +185,23 @@ def test_fwdwalk_scores_picks_at_dollar_stakes(tmp_path, monkeypatch):
     out = FW.walk(tmp_path / "d.json", tmp_path / "c.json", log=lambda m: None)
     m = out["methods"]["top5_by_pnl"]
     assert abs(m["pick_per_day_sized"] - 0.3 * (7 + 6 + 5 + 4 + 3) / 5) < 1e-9 and m["all_per_day_sized"] == 1.2
+
+
+def test_hours_splits_night_and_day(tmp_path, monkeypatch):
+    """rotate hours: return per dollar by 4-hour UTC block and night (04-12) vs day, real and lab."""
+    log = tmp_path / "real.jsonl"
+    day0 = 20000 * 86400
+    ev = [{"event": "order_intent", "ticker": "n", "ts": day0 + 5 * 3600}, {"event": "fill", "ticker": "n", "cost": 1.0},
+          {"event": "settle", "ticker": "n", "pnl_kalshi": 0.5},
+          {"event": "order_intent", "ticker": "d", "ts": day0 + 14 * 3600}, {"event": "fill", "ticker": "d", "cost": 1.0},
+          {"event": "settle", "ticker": "d", "pnl_kalshi": -0.25}]
+    log.write_text("\n".join(json.dumps(e) for e in ev))
+    lab = tmp_path / "lab"
+    lab.mkdir()
+    (lab / "fwd_live_bets.json").write_text(json.dumps({"rules": {"A": [
+        {"ts": day0 + 6 * 3600, "filled": True, "limit": 0.5, "pnl": 0.5}, {"ts": day0 + 22 * 3600, "filled": True, "limit": 0.5, "pnl": -0.5}]}}))
+    monkeypatch.setattr(R, "REAL_LOG", log)
+    monkeypatch.setattr(R, "LABDIR", lab)
+    out = R.hours(log=lambda m: None)
+    assert out["real"]["night_vs_day"] == [0.5, -0.25] and out["real"]["04-08"]["bets"] == 1
+    assert out["lab"]["night_vs_day"] == [1.0, -1.0] and out["lab"]["20-24"]["per_dollar"] == -1.0

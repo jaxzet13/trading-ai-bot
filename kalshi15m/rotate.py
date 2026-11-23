@@ -524,6 +524,45 @@ def lab_sizing(stake=None, log=print):
     return out
 
 
+def hours(log=print):
+    """Is night still better? Real bets and the lab's replay of the live rules by 4-hour UTC block, return per dollar
+    staked. Since Nov 23 the runner bets x2 from 04 to 12 UTC and x0.5 otherwise (limits.stake_hour_mult) because the
+    live rules made +0.37/$ real and +0.35/$ in the lab there vs +0.03 and +0.09 the rest of the day."""
+    real, out = {}, {"real": {}, "lab": {}}
+    for ln in open(REAL_LOG) if REAL_LOG.exists() else []:
+        try:
+            e = json.loads(ln)
+        except ValueError:
+            continue
+        tk, k = e.get("ticker"), e.get("event")
+        if k == "order_intent" and tk:
+            real[tk] = {"ts": e.get("ts", 0), "cost": 0.0}
+        elif k == "fill" and tk in real:
+            real[tk]["cost"] += float(e.get("cost") or 0)
+        elif k == "settle" and tk in real:
+            real[tk]["pnl"] = float(e.get("pnl_kalshi", e.get("pnl")) or 0)
+    lab_path = LABDIR / "fwd_live_bets.json"
+    lab = json.loads(lab_path.read_text()) if lab_path.exists() else {"rules": {}}
+    rows = {"real": [(v["ts"], v["pnl"], v["cost"]) for v in real.values() if "pnl" in v and v["cost"] > 0],
+            "lab": [(b["ts"], b["pnl"], b["limit"]) for bs in lab["rules"].values() for b in bs if b.get("filled") and b.get("limit")]}
+    blk = lambda ts: int(ts % 86400 // 3600) // 4
+    for name, xs in rows.items():
+        cells = []
+        for b in range(6):
+            sel = [x for x in xs if blk(x[0]) == b]
+            c = sum(x[2] for x in sel)
+            r = round(sum(x[1] for x in sel) / c, 3) if c else None
+            out[name][f"{4 * b:02d}-{4 * b + 4:02d}"] = {"bets": len(sel), "per_dollar": r}
+            cells.append(f"{4 * b:02d}-{4 * b + 4:02d} {r:+.2f}/$ ({len(sel)})" if r is not None else f"{4 * b:02d}-{4 * b + 4:02d} -")
+        night = [x for x in xs if 4 <= int(x[0] % 86400 // 3600) < 12]
+        day = [x for x in xs if not 4 <= int(x[0] % 86400 // 3600) < 12]
+        f = lambda s: sum(x[1] for x in s) / sum(x[2] for x in s) if s and sum(x[2] for x in s) else 0.0
+        out[name]["night_vs_day"] = [round(f(night), 3), round(f(day), 3)]
+        log(f"  {name} by UTC hour, return per $: " + "  ".join(cells)
+            + f"  | night 04-12 {f(night):+.2f}/$ vs day {f(day):+.2f}/$")
+    return out
+
+
 def tracking(hours=24, log=print):
     """Cold strategy or broken bot? For each live rule over the last `hours`: real bets and P&L vs the forward lab's
     replay of the same rule (data/lab/fwd_live_bets.json, Kalshi's own trades deciding fills). Both losing = the
@@ -568,13 +607,18 @@ def tracking(hours=24, log=print):
 
 def main(args=None):
     args = list(args or [])
+    if "hours" in args:
+        hours()
+        return
     if "tracking" in args or "guards" in args:
         if "tracking" in args:
             tracking()
             lab_sizing()
+            hours()
         guards()
         return
     run(apply="apply" in args)
     tracking()
     lab_sizing()
+    hours()
     guards()
