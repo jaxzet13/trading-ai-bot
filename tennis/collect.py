@@ -62,6 +62,10 @@ def confirm_arbs(rows, log=print):
         except Exception as ex:
             live, ms_ = None, None
             log(f"  confirm {e}: {ex!r}")
+        if live:
+            from . import notify
+            best_live = max(live, key=lambda x: x["profit"])
+            notify.arb(f"{a.get('player')} vs {b.get('player')}", best_live["kind"].upper(), best_live["n"], best_live["profit"], log)
         with open(CHECKS, "a") as f:
             f.write(json.dumps({"ts": round(time.time(), 1), "event": e, "series": a.get("series"),
                                 "listed": listed, "live": live, "book_ms": ms_,
