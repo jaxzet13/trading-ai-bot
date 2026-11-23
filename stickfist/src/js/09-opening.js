@@ -4,6 +4,7 @@
 let SS = null, SS_PRICE = 0, opening = false; const stage = $("stage"), hint = t => { $("stHint").textContent = t; };
 async function openPack(pack) {
   if (SS || opening) return; const pk = pack || curPack(), gate = packGate(); if (gate) { toast(gate); return; }
+  { const k = Math.min(openN(), maxN(pk)); if (k >= 2) { openMany(pk, k); return; } }
   // out of play money with nothing left to sell: one free pack a day so nobody is ever stuck
   if (!state.freePacks && !Shop.has(pk.id) && state.coins < packPrice(pk) && !state.vault.length && Date.now() - state.rescueAt > 864e5) { state.freePacks++; state.rescueAt = Date.now(); persist(); toast("You're out of play money, so here's a free pack."); }
   const free = state.freePacks > 0, bought = !free && boughtOf(pk.id) > 0, price = free || bought ? 0 : packPrice(pk);      // a pack you bought costs no play money to open
@@ -12,7 +13,7 @@ async function openPack(pack) {
   opening = true; let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS) return;
   if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else if (bought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
   state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
-  SS = { items, idx: 0, phase: "pack", busy: false, pack: pk, free, bought, ref: packPrice(pk) };            // ref: what this pack costs at today's price, free or not, so a pull can be measured against it
+  SS = { items, idx: 0, phase: "pack", busy: false, pack: pk, free, bought, ref: packPrice(pk), n: 1 };            // ref: what this pack costs at today's price, free or not, so a pull can be measured against it
   $("stName").textContent = pk.name; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
   $("stBox").innerHTML = `<div class="st-pack enter" id="stPack">${packHTML(pk)}</div><div class="cstack" id="stStack"></div>`;
   hint("Tap the pack to tear it open"); stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
@@ -50,7 +51,7 @@ async function reveal(el, c, card, R, v) {
   // How big the moment is follows the rarity, or what this copy really sells for next to what the pack costs, whichever is bigger. A styled copy of a plain card can be worth more than a rare one.
   const x = sellOf(c) / Math.max(1, SS.ref), T = Math.max(R.tier, x >= 10 ? 5 : x >= 4 ? 4 : x >= 2 ? 3 : 0);
   const ms = reduced ? 10 : [650, 850, 1300, 1900, 2700, 3500, 5200][T], rect = el.getBoundingClientRect(), mid = [rect.left + rect.width / 2, rect.top + rect.height / 2]; hint(""); $("stTitle").innerHTML = ""; stage.style.setProperty("--rc", R.col);
-  if (x >= 1 && Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); await Cut.play(card.id); }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest, but only for a copy that sells for at least what the pack cost. A card that barely gives anything gets no film (it is still there to watch from its card window)
+  if (SS.n < 2 && x >= 1 && Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); await Cut.play(card.id); }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest, but only for a copy that sells for at least what the pack cost. A card that barely gives anything gets no film (it is still there to watch from its card window)
   await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
   Snd.reveal(T); if (T >= 2) buzz(T >= 5 ? [40, 30, 60, 30, 90] : T >= 3 ? [30, 25, 50] : [25]);
   FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][T], T >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + T * 130);
@@ -66,8 +67,9 @@ async function dismiss(el, c) {
   SS.idx++; await sleep(260); if (SS.idx >= SS.items.length) summary(); else focusTop();
 }
 function skipAll() { if (!SS || SS.phase === "summary") return; SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
-const againLabel = pk => state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
+const againLabel = pk => (openN() > 1 && maxN(pk) >= 2) ? (() => { const k = Math.min(openN(), maxN(pk)), c = Math.max(0, k - state.freePacks - boughtOf(pk.id)) * packPrice(pk); return `open ${k} more${c ? " · " + money(c) : ""}`; })() : state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
 function summary() {
+  if (SS.n > 1) { multiSummary(); return; }
   SS.phase = "summary"; const items = SS.items, back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
   const best = items.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no];
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
@@ -78,3 +80,43 @@ function summary() {
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
 function closeStage() { stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view); }
+
+/* ---- several packs at once. Every pack is drawn, charged and counted exactly like a single pack (same odds, same daily limit); only the show is shorter: cards worth less than $0.50
+   are not revealed one by one, they are totalled on the result, and nothing is sold or hidden: they are in your collection and in the sums. ---- */
+const SMALL = UNIT / 2, MANY = [1, 3, 5, 10];                                                          // "small" is under $0.50 (UNIT units are a dollar)
+const openN = () => MANY.includes(state.openN) ? state.openN : 1;
+function maxN(pk) {                                                                                     // how many of this pack could be opened right now: free ones, ones you bought, then what the balance covers, never past the daily limit
+  const price = Math.max(1, packPrice(pk)), have = state.freePacks + boughtOf(pk.id) + Math.floor(state.coins / price), l = state.lim, room = l && l.packs ? Math.max(0, l.packs - packsToday()) : 10;
+  return Math.max(0, Math.min(10, have, room));
+}
+async function openMany(pk, n) {
+  if (SS || opening) return; const price = packPrice(pk); let items = [], paid = 0, freeN = 0, boughtN = 0, packs = 0; opening = true;
+  try {
+    for (let i = 0; i < n; i++) {
+      if (packGate()) break; const isFree = state.freePacks > 0, isBought = !isFree && boughtOf(pk.id) > 0, cost = isFree || isBought ? 0 : price; if (state.coins < cost) break;
+      const got = await Fair.next(pk); if (SS) break;
+      if (isFree) { state.freePacks--; state.s.free++; state.s.added += Math.round(got.reduce((a, c) => a + c.cost, 0)); freeN++; } else if (isBought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(got.reduce((a, c) => a + c.cost, 0)); boughtN++; } else { state.coins -= cost; paid += cost; }
+      state.s.packs++; state.s.spent += cost; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); state.vault.push(...got); items.push(...got); packs++;
+    }
+  } finally { opening = false; }
+  if (!packs) return; save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
+  const hi = items.filter(c => valueOf(c) >= SMALL).sort((a, b) => valueOf(a) - valueOf(b)); SS_PRICE = paid;
+  SS = { items: hi, all: items, idx: 0, phase: "stack", busy: false, pack: pk, free: freeN === packs, bought: false, ref: price, n: packs, refAll: price * packs, paid, freeN, boughtN };
+  $("stName").textContent = `${pk.name} × ${packs}`; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
+  $("stBox").innerHTML = `<div class="cstack" id="stStack"></div>`; stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
+  if (!hi.length) { summary(); return; } buildStack(); await sleep(500); focusTop();
+}
+
+function multiSummary() {
+  SS.phase = "summary"; const all = SS.all, hi = SS.items, lo = all.filter(c => valueOf(c) < SMALL), back = all.reduce((a, c) => a + sellOf(c), 0), loBack = lo.reduce((a, c) => a + sellOf(c), 0), paid = SS.paid, net = back - paid, x = back / Math.max(1, SS.refAll), won = back >= SS.refAll;
+  const best = all.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no], sign = net >= 0 ? "+" : "−", spent = SS.n - SS.freeN - SS.boughtN;
+  const names = {}; lo.forEach(c => { names[BY_NO[c.no].name] = (names[BY_NO[c.no].name] || 0) + 1; }); const list = Object.entries(names).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${esc(k)} ×${v}`).join(", ");
+  $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
+  $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${SS.n} × ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(back)}">${blockSVG(money(back))}</div><span class="dim" style="font-size:13px">of cards you can sell</span></div>
+    <div class="net ${net >= 0 ? "up" : "dn"}">${spent ? `You paid ${money(paid)} for ${spent} pack${spent > 1 ? "s" : ""}${SS.n - spent ? ` (${SS.n - spent} free)` : ""} and got ${money(back)} of cards: <span style="white-space:nowrap">${sign}${money(Math.abs(net))}</span>.` : `${SS.n} free packs. Their cards sell for ${money(back)}.`}${x >= 2 && spent ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div>
+    <div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${RAR[bc.rar].name}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div>
+    ${lo.length ? `<div class="small dim" style="margin-top:10px">${lo.length} card${lo.length > 1 ? "s" : ""} worth under ${money(SMALL)} ${lo.length > 1 ? "were" : "was"} skipped past, ${money(loBack)} to sell in all: ${list}. They're in your collection.</div>` : ""}</div>
+    ${hi.length ? `<div class="fan">${hi.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : `<div class="small dim">Nothing worth ${money(SMALL)} or more this time.</div>`}
+    <div class="row" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button>${lo.length ? `<button class="btn" id="sumSellSmall">sell the small ones · ${money(loBack)}</button>` : ""}<button class="btn solid" id="sumKeep">keep all</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
+  $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
+}

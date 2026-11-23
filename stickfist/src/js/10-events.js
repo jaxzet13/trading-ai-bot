@@ -14,6 +14,7 @@ document.addEventListener("click", e => {
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.undo) { undoSale(); return; }
   if (t.dataset.buy) { Shop.modal(); return; }
+  if (t.dataset.many) { state.openN = +t.dataset.many || 1; persist(); Snd.click(); if (view === "home") renderHome(); return; }
   if (t.dataset.qsell) { quickSell(t.dataset.qsell); return; }
   if (t.dataset.share) { const c = state.vault.find(x => x.uid === t.dataset.share); if (c && replayable(c)) Share.open(receiptOf(c, false)); else toast("A replay is only offered for a card that is up more than 50%."); return; }
   if (t.dataset.sell) {
@@ -46,7 +47,8 @@ document.addEventListener("click", e => {
     case "claimOpen": closeModal(); openPack(); break;
     case "muteBtn": state.mute = !state.mute; persist(); renderChips(); if (!state.mute) Snd.click(); break;
     case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
-    case "sumSell": { const g = sell(SS.items.map(c => c.uid)); closeStage(); soldToast(null, g); break; }
+    case "sumSell": { const g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
+    case "sumSellSmall": { const g = sell((SS.all || []).filter(c => valueOf(c) < SMALL).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
     case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else if (Shop.has(pk.id)) setTimeout(() => Shop.modal(pk.id), 200); else location.hash = "#/invite"; break; }
     case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { soldToast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`, g); renderCollection(); } break; }

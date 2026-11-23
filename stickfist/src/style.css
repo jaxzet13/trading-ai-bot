@@ -422,6 +422,7 @@ button, a, .seg button, .crow, .ctile, .mvc { touch-action: manipulation; }
 /* ---- digital packs: the buy row on the pack page ---- */
 .buyrow { margin: 4px 0 10px; text-align: center; } .buyrow[hidden] { display: none; } .buyrow .btn { width: min(360px, 100%); }
 .chip.buy { background: var(--ink); color: #050506; border-color: var(--ink); font-weight: 600; } .chip.buy:hover { background: #fff; border-color: #fff; } .chip.buy[hidden] { display: none; }
+.multi { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 12px; } .multi[hidden] { display: none; } .multi .seg1 { min-width: 40px; padding: 6px 12px; border: 1px solid var(--ln3); border-radius: 999px; background: transparent; color: var(--dim); font: inherit; font-size: 13px; font-weight: 600; } .multi .seg1.on { background: var(--ink); color: #050506; border-color: var(--ink); }
 body.broke .wallet > :not(#topBuy), body.broke .tape { display: none !important; }       /* nothing to open and nothing to open it with: the top bar is just the one way forward */
 /* ---- selling: quick sell buttons, a big labelled Sell in the card window, and Undo ---- */
 .ctw { display: grid; gap: 8px; align-content: start; } .crw { display: flex; gap: 8px; align-items: stretch; } .crw .crow { flex: 1; min-width: 0; } .crw .sellq { flex: none; width: auto; min-width: 84px; }
