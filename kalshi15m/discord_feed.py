@@ -1,7 +1,7 @@
 """Live Discord feed of the real-money picks (python -m kalshi15m discord [test|once|run]).
 
-One card (a Discord embed) per pick: coin, side, entry price, contracts, cost, strategy, when it settles. When the
-pick settles the same card is edited in place: green with the profit, red with the loss. Nothing else is posted
+One custom bet-slip image (kalshi15m/pick_card.py) per pick: coin, side, entry price, contracts, cost, strategy, when it settles. When the
+pick settles the same message gets the redrawn slip: WON in green with the profit, LOST in red. Nothing else is posted
 (restarts, totals and research stay in the Claude chat). Account holder, Nov 23: "shown as like a professional
 html ... only shows which picks it took and all the important details".
 
@@ -66,30 +66,25 @@ class Feed:
             p["cost"] += float(e.get("cost") or 0) + float(e.get("fees") or 0)
 
     def card(self, tk, result=None):
-        """The embed for pick `tk`; `result` = the settle event once it has settled."""
+        """What the slip for pick `tk` shows (pick_card.render arguments); `result` = its settle event."""
         p, it = self.picks.get(tk), self.intent.get(tk, {})
         if not p:
             return None
-        coin, side = _coin(p["series"]), str(p["side"] or "?").upper()
-        price = p["cost"] / p["n"] if p["n"] else 0.0
-        close = it.get("close_ts")
-        head = f"{coin}  {side}  @ {price * 100:.0f}¢"
-        when = f"<t:{int(close)}:t>" if close else "soon"
-        if result is None:
-            return {"title": head, "color": BLUE,
-                    "description": f"**${p['cost']:.2f}** to win **${p['n']:.2f}**\nSettles {when}"}
-        pnl = float(result.get("pnl_kalshi", result.get("pnl")) or 0)
-        won = pnl > 0
-        return {"title": f"{'✅' if won else '❌'}  {head}", "color": GREEN if won else RED,
-                "description": f"{'Won' if won else 'Lost'} **{'+' if pnl >= 0 else '−'}${abs(pnl):.2f}**\n"
-                               f"${p['cost']:.2f} staked"}
+        c = {"coin": _coin(p["series"]), "side": str(p["side"] or "?"), "price": p["cost"] / p["n"] if p["n"] else 0.0,
+             "stake": p["cost"], "payout": p["n"], "settles_ts": it.get("close_ts"), "status": "live", "pnl": None}
+        if result is not None:
+            pnl = float(result.get("pnl_kalshi", result.get("pnl")) or 0)
+            c.update(status="won" if pnl > 0 else "lost", pnl=pnl)
+        return c
 
 
-def _send(method, url, payload, session=requests, tries=4):
-    """POST/PATCH a message -> its id, or None if it could not be sent."""
+def _send(method, url, png, session=requests, tries=4):
+    """POST/PATCH a message whose only content is the slip image -> its id, or None if it could not be sent."""
+    payload = json.dumps({"attachments": [{"id": 0, "filename": "pick.png"}], "embeds": [], "content": ""})
     for i in range(tries):
         try:
-            r = session.request(method, url, json=payload, headers=HEADERS, timeout=15)
+            r = session.request(method, url, data={"payload_json": payload},
+                                files={"files[0]": ("pick.png", png, "image/png")}, headers=HEADERS, timeout=20)
         except requests.RequestException:
             time.sleep(2 ** i)
             continue
@@ -106,10 +101,12 @@ def _send(method, url, payload, session=requests, tries=4):
     return None
 
 
-def post(channel, embed, edit_id=None):
+def post(channel, card, edit_id=None):
+    from .pick_card import render
+    png = render(**card)
     if edit_id:
-        return _send("PATCH", f"{API}/channels/{channel}/messages/{edit_id}", {"embeds": [embed]})
-    return _send("POST", f"{API}/channels/{channel}/messages", {"embeds": [embed]})
+        return _send("PATCH", f"{API}/channels/{channel}/messages/{edit_id}", png)
+    return _send("POST", f"{API}/channels/{channel}/messages", png)
 
 
 def _channel():
@@ -173,12 +170,9 @@ def run(once=False, send=post, poll_s=5.0, log=print):
 def main(args=None):
     args = list(args or [])
     if args and args[0] == "test":
-        demo = Feed()
-        demo.intent["DEMO"] = {"rule": "fv_drift:KXNEAR15M:14", "close_ts": int(time.time()) + 600}
-        demo.learn({"event": "fill", "ticker": "DEMO", "series": "KXNEAR15M", "side": "no", "n": 3, "cost": 0.84,
-                    "fees": 0.02, "ts": time.time()})
-        e = demo.card("DEMO")
-        print("test card posted" if post(_channel(), e) else "test card failed")
+        demo = {"coin": "NEAR", "side": "no", "price": 0.29, "stake": 0.86, "payout": 3.0,
+                "settles_ts": int(time.time()) + 600, "status": "live", "pnl": None}
+        print("test slip posted" if post(_channel(), demo) else "test slip failed")
         return
     run(once=bool(args and args[0] == "once"))
 

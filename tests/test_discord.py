@@ -44,10 +44,10 @@ def test_one_card_per_pick_then_edited_with_the_result(tmp_path, monkeypatch):
     D.run(once=True, send=f, log=lambda m: None)
     assert len(f.calls) == 2                            # the pick's card, then its edit; no restart message
     ch, card, edit = f.calls[0]
-    assert ch == "123" and edit is None and card["title"] == "SOL  NO  @ 29¢" and card["color"] == D.BLUE
-    assert card["description"].startswith("**$0.86** to win **$3.00**")
+    assert ch == "123" and edit is None and card["status"] == "live" and card["coin"] == "SOL" and card["side"] == "no"
+    assert abs(card["price"] - 0.2867) < 1e-3 and abs(card["stake"] - 0.86) < 1e-9 and card["payout"] == 3.0
     ch, card, edit = f.calls[1]
-    assert edit == "m1" and card["color"] == D.RED and card["title"] == "❌  SOL  NO  @ 29¢" and "Lost **−$0.86**" in card["description"]
+    assert edit == "m1" and card["status"] == "lost" and card["pnl"] == -0.86
     f.calls.clear()
     D.run(once=True, send=f, log=lambda m: None)
     assert f.calls == []                                # restart: nothing posted twice
@@ -60,4 +60,11 @@ def test_failed_send_is_retried_next_time(tmp_path, monkeypatch):
     D.run(once=True, send=Fake(fail=True), log=lambda m: None)
     f = Fake()
     D.run(once=True, send=f, log=lambda m: None)
-    assert [c[2] for c in f.calls] == [None, "m1"] and f.calls[1][1]["color"] == D.RED
+    assert [c[2] for c in f.calls] == [None, "m1"] and f.calls[1][1]["status"] == "lost"
+
+
+def test_slip_renders_for_every_state():
+    from kalshi15m import pick_card
+    for st, pnl in (("live", None), ("won", 1.6), ("lost", -0.5)):
+        png = pick_card.render("SOL", "yes", 0.2, 0.4, 2.0, 1795470300, status=st, pnl=pnl)
+        assert png[:8] == b"\x89PNG\r\n\x1a\n" and len(png) > 10000
