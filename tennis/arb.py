@@ -48,29 +48,43 @@ def check(a, b):
     return out
 
 
-def scan(paths=None, log=print):
-    """Replay the recorded books in time order, keep the latest row per market, check each match when it changes.
-    An arb that stays open across snapshots is counted once (when it opens)."""
-    paths = paths or sorted(BOOKS.glob("*.jsonl"))
-    book, by_event, live, found = {}, defaultdict(set), set(), []
+def snapshots(paths):
+    """Yield (ts, book) once per recorder snapshot, after ALL of that snapshot's rows are applied: a match is only
+    ever judged on both players' prices from the same moment (judging after each row would pair one player's new
+    price with the other's previous one and invent arbs)."""
+    book, cur = {}, None
     for p in paths:
         for ln in open(p):
             r = json.loads(ln)
+            if cur is not None and r["ts"] != cur:
+                yield cur, book
+            cur = r["ts"]
             book[r["ticker"]] = r
-            by_event[r["event"]].add(r["ticker"])
-            ts = by_event[r["event"]]
-            if len(ts) != 2:
+    if cur is not None:
+        yield cur, book
+
+
+def scan(paths=None, log=print):
+    """Replay the recorded books snapshot by snapshot and check every match. An arb that stays open across
+    snapshots is counted once (when it opens). These are market-list arbs; collect.confirm_arbs re-checks each one
+    in the live order books."""
+    paths = paths or sorted(BOOKS.glob("*.jsonl"))
+    live, found = set(), []
+    for ts, book in snapshots(paths):
+        by_event = defaultdict(list)
+        for r in book.values():
+            by_event[r["event"]].append(r)
+        for e, ms in by_event.items():
+            if len(ms) != 2:
                 continue
-            a, b = (book[t] for t in sorted(ts))
+            a, b = sorted(ms, key=lambda r: r["ticker"])
             arbs = check(a, b)
             for x in arbs:
-                key = (r["event"], x["kind"])
-                if key not in live:
-                    found.append({**x, "event": r["event"], "series": r.get("series"), "ts": r["ts"]})
-                live.add(key)
-            for kind in ("yes+yes", "no+no"):
-                if not any(x["kind"] == kind for x in arbs):
-                    live.discard((r["event"], kind))
+                if (e, x["kind"]) not in live:
+                    found.append({**x, "event": e, "series": a.get("series"), "ts": ts})
+            now = {(e, x["kind"]) for x in arbs}
+            live -= {(e, k) for k in ("yes+yes", "no+no")} - now
+            live |= now
     tot = sum(x["profit"] for x in found)
     log(f"arbs: {len(found)} opened in {len(paths)} day(s) of books, locked-in profit if all taken ${tot:.2f}")
     for x in found[-15:]:

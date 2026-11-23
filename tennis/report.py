@@ -28,33 +28,36 @@ def _cost_with_fees(p1, p2):
 def build(log=print):
     OUT.mkdir(parents=True, exist_ok=True)
     paths = sorted(BOOKS.glob("*.jsonl"))
-    book, by_event, best, first_ts, last_ts, n_rows = {}, defaultdict(set), {}, None, None, 0
+    by_event, best, first_ts, last_ts, n_rows, book = defaultdict(set), {}, None, None, 0, {}
     for p in paths:
-        for ln in open(p):
-            r = json.loads(ln)
-            n_rows += 1
-            first_ts = first_ts or r["ts"]
-            last_ts = r["ts"]
-            book[r["ticker"]] = r
+        n_rows += sum(1 for _ in open(p))
+    for ts, book in arb.snapshots(paths):        # judge each match on prices from the same snapshot only
+        first_ts = first_ts or ts
+        last_ts = ts
+        evs = defaultdict(list)
+        for r in book.values():
             by_event[r["event"]].add(r["ticker"])
-            ts = by_event[r["event"]]
-            if len(ts) != 2:
+            evs[r["event"]].append(r)
+        for e, ms in evs.items():
+            if len(ms) != 2:
                 continue
-            a, b = (book[t] for t in sorted(ts))
+            a, b = sorted(ms, key=lambda r: r["ticker"])
+            if ts - min(a["ts"], b["ts"]) > 3600:  # a match that left the list long ago
+                continue
             for kind, p1, p2 in (("YES+YES", a.get("yes_ask"), b.get("yes_ask")),
                                  ("NO+NO", 1 - a["yes_bid"] if a.get("yes_bid") else None,
                                   1 - b["yes_bid"] if b.get("yes_bid") else None)):
                 if not p1 or not p2:
                     continue
                 c = _cost_with_fees(p1, p2)
-                cur = best.get(r["event"])
+                cur = best.get(e)
                 if cur is None or c < cur["cost_with_fees"]:
-                    best[r["event"]] = {"match": f"{a.get('player')} vs {b.get('player')}", "tour": TOUR.get(r.get("series"), r.get("series")),
-                                        "side": kind, "price_a": round(p1, 2), "price_b": round(p2, 2),
-                                        "cost_with_fees": c, "gap_cents": round((c - 1) * 100, 1),
-                                        "seen": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(r["ts"]))}
+                    best[e] = {"match": f"{a.get('player')} vs {b.get('player')}", "tour": TOUR.get(a.get("series"), a.get("series")),
+                               "side": kind, "price_a": round(p1, 2), "price_b": round(p2, 2),
+                               "cost_with_fees": c, "gap_cents": round((c - 1) * 100, 1),
+                               "seen": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(ts))}
     found = arb.scan(paths, log=lambda m: None) if paths else []
-    closest = sorted(best.values(), key=lambda x: x["cost_with_fees"])[:25]
+    closest = sorted(best.values(), key=lambda x: x["cost_with_fees"])
     arbs = [{"match": x["event"], "tour": TOUR.get(x.get("series"), x.get("series")), "side": x["kind"].upper(),
              "contracts": x["n"], "cost": x["cost"], "profit": x["profit"],
              "opened": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(x["ts"]))} for x in found]

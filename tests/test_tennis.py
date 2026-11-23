@@ -43,3 +43,12 @@ def test_scan_counts_an_open_arb_once(tmp_path):
     p.write_text("".join(json.dumps(r) + "\n" for r in rows))
     found = arb.scan([p], log=lambda m: None)
     assert [x["ts"] for x in found] == [2, 5]
+
+
+def test_scan_never_pairs_a_new_price_with_an_old_one(tmp_path):
+    """Both players move in the same snapshot: judging after each row would invent an arb (new A + old B)."""
+    rows = [_row("A", "E", 0.83, 50, 0.82, 50, 1), _row("B", "E", 0.18, 50, 0.17, 50, 1),
+            _row("A", "E", 0.79, 50, 0.78, 50, 2), _row("B", "E", 0.22, 50, 0.21, 50, 2)]   # A down, B up
+    p = tmp_path / "d.jsonl"
+    p.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    assert arb.scan([p], log=lambda m: None) == []
