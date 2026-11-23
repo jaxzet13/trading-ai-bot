@@ -457,6 +457,16 @@ body.broke .wallet > :not(#topBuy), body.broke .tape { display: none !important;
 .toast { display: flex; align-items: center; gap: 14px; } .toast-act { background: #050506; color: var(--ink); border: 0; border-radius: 8px; min-height: 36px; padding: 6px 14px; font: inherit; font-weight: 700; cursor: pointer; }
 .sellq:focus-visible, .toast-act:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 @media (max-width: 520px) { .crw .crow { grid-template-columns: 44px minmax(0, 1fr) auto; } .crw .crow .spark { display: none; } .crw .sellq { min-width: 78px; font-size: 12.5px; padding: 8px 10px; } }
+
+/* ---- phone polish: touch targets, no zoom on typing, tidy action rows ---- */
+html { touch-action: manipulation; }                                                                       /* no double-tap zoom delay on taps */
+@media (pointer: coarse), (max-width: 760px) {
+  .linkbtn, footer a, footer button, .invitelink, .mover.mini, #fairBtn, #fairBtn2, #aboutBtn, #resetBtn, .legal a { display: inline-flex; align-items: center; min-height: 40px; padding-top: 6px; padding-bottom: 6px; }     /* a text link is still 40px to hit */
+  .chase { gap: 2px 14px; }
+  input, select, textarea { font-size: 16px; }                                                              /* iOS zooms the page when you tap a field smaller than this */
+  #cActions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; } #cActions .btn { flex: 1 1 auto; min-height: 44px; } #cActions .btn.ghost { border: 1px solid var(--ln3); } #cActions .small { flex: 1 1 100%; }
+}
+@media (max-width: 360px) { .slot .row { grid-template-columns: 84px minmax(0, 1fr) max-content; gap: 6px; } .slot .bar { display: none; } .slot .row .pct { text-align: right; } }
 </style>
 </head>
 <body>
