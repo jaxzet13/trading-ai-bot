@@ -1259,3 +1259,37 @@ def test_rule_pause_off_by_default():
         r.log({"event": "order_intent", "ticker": f"KXT-{i}", "rule": "A"})
         r.log({"event": "settle", "ticker": f"KXT-{i}", "pnl": -1.0})
     assert r.rule_paused("A") is None
+
+
+def test_stake_hour_mult_night_double_day_half():
+    d, clock, fake, kp = setup()
+    cfg = json.loads(json.dumps(CFG))
+    cfg["limits"]["stake_hour_mult"] = {"start_utc": 4, "end_utc": 12, "in": 2.0, "out": 0.5}
+    r = make_runner(d, clock, fake, kp, cfg=cfg)
+    full = cfg["limits"]["stake_usd"]
+    day0 = clock.t - clock.t % 86400
+    clock.t = day0 + 5 * 3600                          # 05:00 UTC: night, double
+    assert r.base_stake() == full * 2.0
+    clock.t = day0 + 12 * 3600                         # 12:00 UTC: day, half
+    assert r.base_stake() == full * 0.5
+    clock.t = day0 + 3 * 3600 + 3599                   # 03:59:59 UTC: still day
+    assert r.base_stake() == full * 0.5
+    cfg["limits"]["stake_hour_mult"] = {"start_utc": 22, "end_utc": 6, "in": 2.0, "out": 0.5}   # wraps midnight
+    r2 = make_runner(d, clock, fake, kp, cfg=cfg)
+    clock.t = day0 + 23 * 3600
+    assert r2.base_stake() == full * 2.0
+
+
+def test_stake_hour_mult_rejects_bad_config():
+    d, clock, fake, kp = setup()
+    for bad in ({"start_utc": 4, "end_utc": 4, "in": 2, "out": 0.5}, {"start_utc": 4, "end_utc": 12, "in": 9, "out": 0.5},
+                {"start_utc": 4, "end_utc": 12, "in": 2}):
+        cfg = json.loads(json.dumps(CFG))
+        cfg["limits"]["stake_hour_mult"] = bad
+        p = Path(d) / "bad.json"
+        p.write_text(json.dumps(cfg))
+        try:
+            real.load_config(p)
+            assert False, bad
+        except real.Stop:
+            pass

@@ -1194,7 +1194,20 @@ class Runner:
             stake = self.L["stake_usd"]
         else:
             stake = max(self.L["stake_usd_min"], pct * self.crypto_balance)
-        return stake * self.brake_factor()
+        return stake * self.brake_factor() * self.hour_factor()
+
+    def hour_factor(self):
+        """limits.stake_hour_mult (optional): {"start_utc": a, "end_utc": b, "in": x, "out": y} multiplies every
+        stake by x from hour a to b UTC (wrapping past midnight when a > b) and by y outside it. Nov 23, account
+        holder: "during the day half the money you put in, during night double it" (night = 04-12 UTC, where the
+        live rules made +0.37/$ real and +0.35/$ in the lab vs +0.03 and +0.09 the rest of the day)."""
+        m = self.L.get("stake_hour_mult")
+        if not m:
+            return 1.0
+        h = int(self.clock() % 86400 // 3600)
+        a, b = int(m["start_utc"]), int(m["end_utc"])
+        inside = a <= h < b if a < b else (h >= a or h < b)
+        return float(m["in"] if inside else m["out"])
 
     def rule_paused(self, rule):
         """limits.rule_pause_last_n / rule_pause_loss_usd: a rule whose last N closed real bets lost that much or
@@ -1311,6 +1324,13 @@ def load_config(path=CONFIG) -> dict:
                                               or not 0 < lim["min_one_contract_max_usd"] <= 2):
         raise Stop(f"{path}: min_one_contract_max_usd must be in (0, 2]", EXIT_CONFIG)
     num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool)
+    if "stake_hour_mult" in lim:
+        m = lim["stake_hour_mult"]
+        ok = isinstance(m, dict) and set(m) == {"start_utc", "end_utc", "in", "out"} \
+            and all(isinstance(m[k], int) and not isinstance(m[k], bool) and 0 <= m[k] <= 23 for k in ("start_utc", "end_utc")) \
+            and m["start_utc"] != m["end_utc"] and all(num(m[k]) and 0 < m[k] <= 4 for k in ("in", "out"))
+        if not ok:
+            raise Stop(f"{path}: stake_hour_mult must be {{start_utc, end_utc (0-23, different), in, out (0-4]}}", EXIT_CONFIG)
     if "drawdown_brake_usd" in lim and (not num(lim["drawdown_brake_usd"]) or lim["drawdown_brake_usd"] <= 0):
         raise Stop(f"{path}: drawdown_brake_usd must be a number > 0", EXIT_CONFIG)
     if "drawdown_brake_factor" in lim and (not num(lim["drawdown_brake_factor"]) or not 0 < lim["drawdown_brake_factor"] <= 1):

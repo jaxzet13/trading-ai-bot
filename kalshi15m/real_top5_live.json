@@ -1,5 +1,5 @@
 {
- "_note": "REAL MONEY, started Nov 12 ~15:45 UTC at the account holder's request: 'Start running 5 of the most consistent strategies until you hit 4 dollars, make sure it's running 24/7 no stop'. The forward lab's 5 most consistent (one per family x coin, by share of forward days up then forward t, 7.8 forward days); NONE passed the 4.16 bar. Balance at start $7.54; new bets stop for good once the balance incl. open bets is below $4.00. Daily loss caps 3.6 so the $4 floor is the stop that binds. Stop by hand: touch STOP_TOP5. Nov 15: fv_vol:KXHYPE15M:20 dropped at the account holder's OK (weakest in the forward lab; crowded out fv_season on HYPE). Nov 15: bets 1.5x ($0.75) with the daily-loss, open-risk and window limits raised 1.5x, at the account holder's choice. Nov 15: drawdown brake - bets halve while equity is more than $7 below its high-water mark (start $25.17, Nov 14 high). Nov 15: rule auto-pause - a rule whose last 40 closed bets lost $5+ places no new bets until reviewed (limits.rule_pause_ignore_before_ts restarts its count). Nov 16: compounding stake - 3% of the crypto balance per bet, never below $0.75 (same size as before at today's ~$25), so bets grow with the account; the account holder asked to use the data to make it more profitable. Nov 20: fv_tau:KXZEC15M:10 added as a 5th rule at the account holder's OK (forward lab +$10.33 on 67 filled bets, t 2.55, 11/15 days up; the walk-forward test of the set rose from +2.77 to +3.42 $/day with it). Not a passed strategy (bar 4.16). Nov 20 01:55 UTC: removed fv_drift:KXETH15M:9 ($-0.91 on 40 bets), fv_season:KXHYPE15M:4 ($-0.58 on 60 bets): unprofitable after 25+ real bets (account holder's rule, Nov 20). Nov 22: daily loss caps (per-coin and account) raised from $5.40 to $8.00 at the account holder's request ('Raise the cap to 8$ since I always want the bot running'). Nov 22 20:45 UTC: daily loss caps removed (set to $1000, unreachable) at the account holder's request ('Continue betting get rid of the cap'); the $4 floor, drawdown brake and rule auto-pause stay. Nov 23 02:20 UTC, account holder: 'Do whatever is best for our profit and don't half the bets keep trading the same way you always': drawdown brake removed (bets stay full size, 3% of balance); fv_drift:KXNEAR15M:14 un-paused (rule_pause_ignore_before_ts restarts every rule's 40-bet count; its Nov 22 real losses matched the lab bet for bet at 1 contract, a cold day, not an execution fault). $4 floor stays.",
+ "_note": "REAL MONEY, started Nov 12 ~15:45 UTC at the account holder's request: 'Start running 5 of the most consistent strategies until you hit 4 dollars, make sure it's running 24/7 no stop'. The forward lab's 5 most consistent (one per family x coin, by share of forward days up then forward t, 7.8 forward days); NONE passed the 4.16 bar. Balance at start $7.54; new bets stop for good once the balance incl. open bets is below $4.00. Daily loss caps 3.6 so the $4 floor is the stop that binds. Stop by hand: touch STOP_TOP5. Nov 15: fv_vol:KXHYPE15M:20 dropped at the account holder's OK (weakest in the forward lab; crowded out fv_season on HYPE). Nov 15: bets 1.5x ($0.75) with the daily-loss, open-risk and window limits raised 1.5x, at the account holder's choice. Nov 15: drawdown brake - bets halve while equity is more than $7 below its high-water mark (start $25.17, Nov 14 high). Nov 15: rule auto-pause - a rule whose last 40 closed bets lost $5+ places no new bets until reviewed (limits.rule_pause_ignore_before_ts restarts its count). Nov 16: compounding stake - 3% of the crypto balance per bet, never below $0.75 (same size as before at today's ~$25), so bets grow with the account; the account holder asked to use the data to make it more profitable. Nov 20: fv_tau:KXZEC15M:10 added as a 5th rule at the account holder's OK (forward lab +$10.33 on 67 filled bets, t 2.55, 11/15 days up; the walk-forward test of the set rose from +2.77 to +3.42 $/day with it). Not a passed strategy (bar 4.16). Nov 20 01:55 UTC: removed fv_drift:KXETH15M:9 ($-0.91 on 40 bets), fv_season:KXHYPE15M:4 ($-0.58 on 60 bets): unprofitable after 25+ real bets (account holder's rule, Nov 20). Nov 22: daily loss caps (per-coin and account) raised from $5.40 to $8.00 at the account holder's request ('Raise the cap to 8$ since I always want the bot running'). Nov 22 20:45 UTC: daily loss caps removed (set to $1000, unreachable) at the account holder's request ('Continue betting get rid of the cap'); the $4 floor, drawdown brake and rule auto-pause stay. Nov 23 02:20 UTC, account holder: 'Do whatever is best for our profit and don't half the bets keep trading the same way you always': drawdown brake removed (bets stay full size, 3% of balance); fv_drift:KXNEAR15M:14 un-paused (rule_pause_ignore_before_ts restarts every rule's 40-bet count; its Nov 22 real losses matched the lab bet for bet at 1 contract, a cold day, not an execution fault). $4 floor stays. Nov 23 ~11:55 UTC, account holder: 'during the day half the money you put in, during night double it': stakes x2 from 04 to 12 UTC (11pm-7am Eastern) and x0.5 the rest of the day (limits.stake_hour_mult); account open-risk and window caps raised 3.0->9.0 and 4.5->9.0, max contracts per order 10->30, so the doubled night bets on three coins are not blocked.",
  "series": [
   "KXNEAR15M",
   "KXSOL15M",
@@ -55,7 +55,7 @@
  "log": "data/kalshi15m/real_top5_live_log.jsonl",
  "limits": {
   "stake_usd": 0.75,
-  "max_contracts_per_order": 10,
+  "max_contracts_per_order": 30,
   "max_daily_loss_usd": 1000.0,
   "max_trades_per_day": 30,
   "max_open_positions": 1,
@@ -66,10 +66,10 @@
   "max_decision_lag_s": 5.0,
   "walk_cents": 5,
   "walk_keep_edge": 0.08,
-  "max_total_open_risk_usd": 3.0,
+  "max_total_open_risk_usd": 9.0,
   "max_total_daily_loss_usd": 1000.0,
   "min_balance_counts_open_bets": true,
-  "max_window_cost_usd": 4.5,
+  "max_window_cost_usd": 9.0,
   "max_entries_per_window_side": 2,
   "min_one_contract_max_usd": 1.0,
   "drawdown_peak_usd": 25.17,
@@ -77,7 +77,13 @@
   "rule_pause_loss_usd": 5.0,
   "stake_pct_of_balance": 0.03,
   "stake_usd_min": 0.75,
-  "rule_pause_ignore_before_ts": 1795401129
+  "rule_pause_ignore_before_ts": 1795401129,
+  "stake_hour_mult": {
+   "start_utc": 4,
+   "end_utc": 12,
+   "in": 2.0,
+   "out": 0.5
+  }
  },
  "golden_priority": "config"
 }
