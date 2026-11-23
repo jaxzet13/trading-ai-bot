@@ -480,7 +480,10 @@ def guards(log=print):
 def tracking(hours=24, log=print):
     """Cold strategy or broken bot? For each live rule over the last `hours`: real bets and P&L vs the forward lab's
     replay of the same rule (data/lab/fwd_live_bets.json, Kalshi's own trades deciding fills). Both losing = the
-    strategy is cold; real losing while the lab wins = an execution problem worth looking at."""
+    strategy is cold; real losing while the lab wins = an execution problem worth looking at. The lab bets 1 contract
+    while the runner stakes dollars (more contracts at cheap prices), so the verdict compares real P&L per contract
+    (Nov 22: NEAR real -$6.33 vs lab -$2.49 on the same 24 bets, same outcomes 24/24 and better fill prices; the gap
+    was only that sizing)."""
     since = time.time() - hours * 3600
     cfg = json.loads(CFG.read_text())
     lab_path = LABDIR / "fwd_live_bets.json"
@@ -497,20 +500,22 @@ def tracking(hours=24, log=print):
         elif e.get("event") == "settle" and e.get("ticker") in rule:
             rid_, t = rule[e["ticker"]]
             if since <= t <= upto:
-                a = real.setdefault(rid_, [0, 0.0])
+                a = real.setdefault(rid_, [0, 0.0, 0.0])
                 a[0] += 1
                 a[1] += float(e.get("pnl") or 0)
+                a[2] += float(e.get("pnl") or 0) / max(float(e.get("n") or 1), 1.0)   # per contract, as the lab bets
     out = {}
     log(f"  real vs lab, last {hours} h (to {time.strftime('%H:%M UTC', time.gmtime(upto))}):")
     for r in cfg["golden_rules"]:
         i = r["id"]
         lb = [b for b in lab["rules"].get(i, []) if b.get("filled") and since <= b["ts"] <= upto]
-        rn, rp = real.get(i, [0, 0.0])
+        rn, rp, r1 = real.get(i, [0, 0.0, 0.0])
         lp = sum(b["pnl"] for b in lb)
-        verdict = ("no bets" if not rn and not lb else "cold strategy (lab lost too)" if rp < 0 and lp < 0
-                   else "CHECK EXECUTION (lab made money)" if rp < 0 <= lp and rn >= 3 else "ok")
-        out[i] = {"real_bets": rn, "real_pnl": round(rp, 2), "lab_bets": len(lb), "lab_pnl": round(lp, 2), "verdict": verdict}
-        log(f"    {i:26s} real {rn:3d} bets ${rp:+6.2f} | lab {len(lb):3d} bets ${lp:+6.2f} | {verdict}")
+        verdict = ("no bets" if not rn and not lb else "cold strategy (lab lost too)" if r1 < 0 and lp < 0
+                   else "CHECK EXECUTION (lab made money)" if r1 < 0 <= lp and rn >= 3 else "ok")
+        out[i] = {"real_bets": rn, "real_pnl": round(rp, 2), "real_pnl_1c": round(r1, 2), "lab_bets": len(lb),
+                  "lab_pnl": round(lp, 2), "verdict": verdict}
+        log(f"    {i:26s} real {rn:3d} bets ${rp:+6.2f} (${r1:+6.2f} at 1 contract) | lab {len(lb):3d} bets ${lp:+6.2f} | {verdict}")
     return out
 
 
