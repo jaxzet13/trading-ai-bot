@@ -491,3 +491,11 @@ a.back { display: inline-block; color: var(--dim); text-decoration: none; font-s
 .meter .mbar { width: 100%; height: 6px; border-radius: 6px; background: #1a1a1f; overflow: hidden; } .meter .mbar i { display: block; height: 100%; width: 0; background: #8d897f; border-radius: 6px; transition: width .55s cubic-bezier(.2,.8,.2,1), background .3s; }
 .meter #stMeterTxt { font-size: 13px; color: var(--dim); font-variant-numeric: tabular-nums; } .meter.paid .mbar i { background: var(--ok); } .meter.paid #stMeterTxt { color: var(--ok); }
 .sum .big .bx { animation: slam .55s cubic-bezier(.2,1.4,.4,1) both; } .sum .net { animation: fadeup .5s .25s both; } @keyframes fadeup { from { opacity: 0; transform: translateY(6px); } }
+
+/* ---- the pack page is just the pack: bigger, and nothing to scroll ---- */
+#honest { display: none !important; }
+@media (max-width: 760px) {
+  body.on-home { overflow: hidden; height: 100dvh; } body.on-home footer { display: none; } body.on-home main.wrap { padding-bottom: 0; }
+  body.on-home .packcol { width: clamp(110px, min(70vw, calc((100dvh - 475px) * .714)), 290px); }
+  body.on-home .home { gap: 12px; padding-top: 4px; }
+}
