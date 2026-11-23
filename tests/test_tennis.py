@@ -52,3 +52,46 @@ def test_scan_never_pairs_a_new_price_with_an_old_one(tmp_path):
     p = tmp_path / "d.jsonl"
     p.write_text("".join(json.dumps(r) + "\n" for r in rows))
     assert arb.scan([p], log=lambda m: None) == []
+
+
+def _mkt(rel, mid, askhi=None, bidlo=None, value=1.0, day=1):
+    import numpy as np
+    rel = np.array(rel, float); mid = np.array(mid, float)
+    return {"ticker": "T", "event": "E", "series": "KXATPMATCH", "day": day, "start": 0, "value": value, "rel": rel, "mid": mid,
+            "askhi": np.array(askhi if askhi is not None else mid + 0.01, float),
+            "bidlo": np.array(bidlo if bidlo is not None else mid - 0.01, float)}
+
+
+def test_band_bet_fills_next_minute_at_worst_ask_and_pays_settlement():
+    from tennis import lab
+    m = _mkt([-2, -1, 0, 1], [0.60, 0.62, 0.65, 0.70], askhi=[0.61, 0.63, 0.66, 0.74], value=1.0)
+    s = {"fam": "band", "M": 0, "lo": 0.60, "hi": 0.70, "id": "x"}
+    side, p, pnl, at = lab.bet(m, s)
+    assert side == "yes" and p == 0.74                      # decided at minute 0, filled at minute 1's ask high
+    assert abs(pnl - (1 - 0.74 - api.fee(0.74, 1))) < 1e-9
+
+
+def test_no_bet_when_price_outside_band_or_no_next_minute():
+    from tennis import lab
+    s = {"fam": "band", "M": 0, "lo": 0.60, "hi": 0.70, "id": "x"}
+    assert lab.bet(_mkt([-1, 0, 1], [0.5, 0.75, 0.8]), s) is None
+    assert lab.bet(_mkt([-1, 0, 9], [0.5, 0.65, 0.8]), s) is None    # next bar 9 minutes later: no fill
+
+
+def test_swing_momentum_buys_no_at_one_minus_bid_low():
+    from tennis import lab
+    m = _mkt([10, 15, 20, 21], [0.60, 0.58, 0.45, 0.44], bidlo=[0.59, 0.57, 0.44, 0.40], value=0.0)
+    s = {"fam": "swing", "phase": "early", "w": 10, "d": 0.10, "dir": "down", "act": "mom", "id": "y"}
+    side, p, pnl, at = lab.bet(m, s)
+    assert side == "no" and abs(p - 0.60) < 1e-9 and at == 20     # 1 - next bar's bid low (0.40)
+    assert abs(pnl - (1 - 0.60 - api.fee(0.60, 1))) < 1e-9
+
+
+def test_walk_forward_never_ranks_on_the_judged_day():
+    from tennis import lab
+    # strategy A wins every day but loses big on the last; B loses early, wins the last day
+    daily = {"A": {d: [1.0, 10, 1.0] for d in range(10)}, "B": {d: [-1.0, 10, 1.0] for d in range(10)}}
+    daily["A"][9] = [-5.0, 10, 5.0]; daily["B"][9] = [5.0, 10, 5.0]
+    w = lab.walk(daily, warmup=3, ks=(1,))
+    # on day 9 the top-1 must still be A (ranked on days 0-8 only), so its day-9 loss is counted
+    assert w["top"][1][0] < 0.1 and w["test_days"] == 7
