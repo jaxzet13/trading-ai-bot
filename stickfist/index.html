@@ -1378,10 +1378,10 @@ function renderOdds(force) {
     <details><summary>Fair play</summary><ul class="plain"><li>A pack is worth less than it costs on average, and the numbers above are worked out exactly from the odds and today's prices.</li><li>Every pack is drawn from a seed that was committed to before you opened it, so you can check afterwards that the cards followed the odds above. <button class="linkbtn" id="fairBtn2">Check your packs</button></li><li>The odds never change with what you have spent, pulled or been given.</li><li>The money is play money. Nothing is ever charged and nothing can be cashed out.</li></ul></details>`;
   document.querySelectorAll("#oBody details").forEach((d, i) => { if (opened[i]) d.open = true; });
 }
-function show(v) {
+function show(v, keep) {                                                  // keep: draw the page again where you are (after selling, say) instead of jumping back to the top
   view = VIEWS.includes(v) ? v : "home";
   if (view === "odds") oddsKey = ""; VIEWS.forEach(x => $("v-" + x).classList.toggle("on", x === view)); document.querySelectorAll("#tabs a, #btabs a").forEach(a => a.classList.toggle("on", a.dataset.v === view));
-  ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds, invite: renderInvite, limited: renderLimited })[view](); scrollTo(0, 0);
+  ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds, invite: renderInvite, limited: renderLimited })[view](); if (!keep) scrollTo(0, 0);
 }
 function route() { const h = location.hash.replace(/^#\/?/, ""); show(h === "vault" || h === "index" ? "collection" : h || "home"); }
 // the market moved: redraw whatever is on screen without jumping the page
@@ -1421,7 +1421,7 @@ const soldToast = (msg, g) => toast(msg || "Sold for " + money(g), { key: "undo"
 function undoSale() {
   const s = lastSale; if (!s || Date.now() - s.at > 9000) { toast("Too late to undo that."); return; }
   if (state.coins < s.g) { toast("You've already spent that money, so it can't be undone."); return; }
-  lastSale = null; state.vault.push(...s.copies); state.coins -= s.g; state.s.sold -= s.g; state.s.realized -= s.realized; save(); renderBal(true); show(view); if (modalNo && !$("modal").hidden) cardModal(modalNo, true);
+  lastSale = null; state.vault.push(...s.copies); state.coins -= s.g; state.s.sold -= s.g; state.s.realized -= s.realized; save(); renderBal(true); show(view, true); if (modalNo && !$("modal").hidden) cardModal(modalNo, true);
   toast(s.copies.length > 1 ? `Put ${s.copies.length} cards back` : "Put it back in your cards"); Snd.click();
 }
 // the copy a quick sell gives up: your only copy, or the cheapest of several (so the best one stays)
@@ -1433,7 +1433,7 @@ const sellBtn = no => copiesOf(no).length ? `<button class="sellq" data-qsell="$
 const REPLAY_MIN = .5, replayable = c => gainOf(c) > REPLAY_MIN;
 function quickSell(no) {
   const c = quickCopy(no); if (!c) return; const rec = receiptOf(c, true), g = sell([c.uid]); if (!g) return;
-  soldToast("Sold " + BY_NO[no].name + " for " + money(g), g); if (!$("modal").hidden) closeModal(); show(view); if (rec.rise > REPLAY_MIN) Share.open(rec);
+  soldToast("Sold " + BY_NO[no].name + " for " + money(g), g); if (!$("modal").hidden) closeModal(); show(view, true); if (rec.rise > REPLAY_MIN) Share.open(rec);
 }
 
 /* ============================================================================
@@ -1491,7 +1491,7 @@ function renderCollection() {
     <div class="stat"><span class="label">Styles found</span><div class="sbig"><b>${fx}</b><span>of ${FX_ALL}</span></div><div class="bar"><i style="width:${fx / FX_ALL * 100}%"></i></div></div>
     <div class="stat go"><span class="label">Next ${esc(pk.name)} pack</span><div class="sbig"><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span>a new card</span></div><button class="btn small solid" data-open>${state.freePacks ? "open free pack" : "open pack"}</button></div>`;
   const up = upCopies(), upSum = up.reduce((a, c) => a + sellOf(c), 0);
-  $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + (up.length ? `<button class="btn" id="sellUp">sell the ${up.length} that ${up.length === 1 ? "is" : "are"} up · ${money(upSum)}</button>` : "") + (ex.length || up.length ? `<span class="small">${ex.length ? "Extras keep your best copy of every card. " : ""}You can undo a sale for a few seconds.</span>` : "");
+  $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + (up.length ? `<button class="btn" id="sellUp">sell the ${up.length} that ${up.length === 1 ? "is" : "are"} up · ${money(upSum)}</button>` : "") + (state.vault.length ? `<button class="btn ghost" id="sellAll" data-label="sell all ${state.vault.length} · ${money(state.vault.reduce((a, c) => a + sellOf(c), 0))}">sell all ${state.vault.length} · ${money(state.vault.reduce((a, c) => a + sellOf(c), 0))}</button>` : "") + (ex.length || up.length || state.vault.length ? `<span class="small">${ex.length ? "Extras keep your best copy of every card. " : ""}You can undo a sale for a few seconds.</span>` : "");
   $("cFilters").live = seg("c", "show", [["all", "All"], ["found", "Found"], ["missing", "Missing"]], CF.show) + selectHTML("cSort", [["num", "Number"], ["rare", "Rarest first"], ["value", "Most valuable"], ["new", "Newest"]], CF.sort, "Sort") + seg("c", "set", [["all", "All packs"], ...Object.keys(SETS).map(k => [k, SETS[k].name])], CF.set);
   const val = c => { const b = copiesOf(c.no)[0]; return b ? valueOf(b) : MK.price(c); }, cmp = { num: (a, b) => +a.no - +b.no, rare: (a, b) => RAR[b.rar].tier - RAR[a.rar].tier || +a.no - +b.no, value: (a, b) => val(b) - val(a), new: (a, b) => ((copiesOf(b.no)[0] || { t: 0 }).t) - ((copiesOf(a.no)[0] || { t: 0 }).t) || +a.no - +b.no }[CF.sort];
   const tile = c => {
@@ -1718,7 +1718,7 @@ function summary() {
     <div class="row" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
-function closeStage() { stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view); }
+function closeStage() { stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view, true); }
 
 /* ---- several packs at once. Every pack is drawn, charged and counted exactly like a single pack (same odds, same daily limit); only the show is shorter: cards worth less than $0.50
    are not revealed one by one, they are totalled on the result, and nothing is sold or hidden: they are in your collection and in the sums. ---- */
@@ -2915,7 +2915,7 @@ document.addEventListener("click", e => {
   if (t.dataset.sell) {
     const c = state.vault.find(x => x.uid === t.dataset.sell), rec = c ? receiptOf(c, true) : null;
     const g = sell([t.dataset.sell]); if (!g) return; soldToast(null, g);
-    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view); if (rec && rec.rise > REPLAY_MIN) Share.open(rec); return;
+    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view, true); if (rec && rec.rise > REPLAY_MIN) Share.open(rec); return;
   }
   if (/^sum/.test(t.id) && SS && performance.now() - SS.sumAt < 500) return;
   switch (t.id) {
@@ -2947,6 +2947,10 @@ document.addEventListener("click", e => {
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
     case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else if (Shop.has(pk.id)) setTimeout(() => Shop.modal(pk.id), 200); else location.hash = "#/invite"; break; }
     case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { soldToast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`, g); renderCollection(); } break; }
+    case "sellAll": {                                                      // sell everything: the first tap asks, the second sells, and the sale can be undone for a few seconds
+      const all = state.vault.slice(); if (!all.length) break; const sum = all.reduce((a, c) => a + sellOf(c), 0);
+      if (!t.dataset.armed) { t.dataset.armed = "1"; t.textContent = `tap again to sell all ${all.length} · ${money(sum)}`; clearTimeout(t._d); t._d = setTimeout(() => { if (t.isConnected) { delete t.dataset.armed; t.textContent = t.dataset.label; } }, 4000); break; }
+      const g = sell(all.map(c => c.uid)); if (g) { soldToast(`Sold all ${all.length} cards for ${money(g)}`, g); renderCollection(); } break; }
     case "sellUp": { const up = upCopies(), g = sell(up.map(c => c.uid)); if (g) { soldToast(`Sold ${up.length} card${up.length === 1 ? "" : "s"} that ${up.length === 1 ? "was" : "were"} up, for ${money(g)}`, g); renderCollection(); } break; }
     case "resetBtn": if (t.dataset.armed) { startOver(); renderBal(); renderChips(); location.hash = "#/"; show("home"); toast("Fresh start. Your first pack is free."); } else { t.dataset.armed = 1; t.textContent = "tap again to wipe your cards and start over"; setTimeout(() => { delete t.dataset.armed; t.textContent = "start over"; }, 3500); } break;
     case "copyLink": Ref.copy(); break;

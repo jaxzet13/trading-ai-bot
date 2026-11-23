@@ -79,7 +79,7 @@ function summary() {
     <div class="row" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
-function closeStage() { stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view); }
+function closeStage() { stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view, true); }
 
 /* ---- several packs at once. Every pack is drawn, charged and counted exactly like a single pack (same odds, same daily limit); only the show is shorter: cards worth less than $0.50
    are not revealed one by one, they are totalled on the result, and nothing is sold or hidden: they are in your collection and in the sums. ---- */

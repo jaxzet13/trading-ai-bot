@@ -77,10 +77,10 @@ function renderOdds(force) {
     <details><summary>Fair play</summary><ul class="plain"><li>A pack is worth less than it costs on average, and the numbers above are worked out exactly from the odds and today's prices.</li><li>Every pack is drawn from a seed that was committed to before you opened it, so you can check afterwards that the cards followed the odds above. <button class="linkbtn" id="fairBtn2">Check your packs</button></li><li>The odds never change with what you have spent, pulled or been given.</li><li>The money is play money. Nothing is ever charged and nothing can be cashed out.</li></ul></details>`;
   document.querySelectorAll("#oBody details").forEach((d, i) => { if (opened[i]) d.open = true; });
 }
-function show(v) {
+function show(v, keep) {                                                  // keep: draw the page again where you are (after selling, say) instead of jumping back to the top
   view = VIEWS.includes(v) ? v : "home";
   if (view === "odds") oddsKey = ""; VIEWS.forEach(x => $("v-" + x).classList.toggle("on", x === view)); document.querySelectorAll("#tabs a, #btabs a").forEach(a => a.classList.toggle("on", a.dataset.v === view));
-  ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds, invite: renderInvite, limited: renderLimited })[view](); scrollTo(0, 0);
+  ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds, invite: renderInvite, limited: renderLimited })[view](); if (!keep) scrollTo(0, 0);
 }
 function route() { const h = location.hash.replace(/^#\/?/, ""); show(h === "vault" || h === "index" ? "collection" : h || "home"); }
 // the market moved: redraw whatever is on screen without jumping the page
@@ -120,7 +120,7 @@ const soldToast = (msg, g) => toast(msg || "Sold for " + money(g), { key: "undo"
 function undoSale() {
   const s = lastSale; if (!s || Date.now() - s.at > 9000) { toast("Too late to undo that."); return; }
   if (state.coins < s.g) { toast("You've already spent that money, so it can't be undone."); return; }
-  lastSale = null; state.vault.push(...s.copies); state.coins -= s.g; state.s.sold -= s.g; state.s.realized -= s.realized; save(); renderBal(true); show(view); if (modalNo && !$("modal").hidden) cardModal(modalNo, true);
+  lastSale = null; state.vault.push(...s.copies); state.coins -= s.g; state.s.sold -= s.g; state.s.realized -= s.realized; save(); renderBal(true); show(view, true); if (modalNo && !$("modal").hidden) cardModal(modalNo, true);
   toast(s.copies.length > 1 ? `Put ${s.copies.length} cards back` : "Put it back in your cards"); Snd.click();
 }
 // the copy a quick sell gives up: your only copy, or the cheapest of several (so the best one stays)
@@ -132,5 +132,5 @@ const sellBtn = no => copiesOf(no).length ? `<button class="sellq" data-qsell="$
 const REPLAY_MIN = .5, replayable = c => gainOf(c) > REPLAY_MIN;
 function quickSell(no) {
   const c = quickCopy(no); if (!c) return; const rec = receiptOf(c, true), g = sell([c.uid]); if (!g) return;
-  soldToast("Sold " + BY_NO[no].name + " for " + money(g), g); if (!$("modal").hidden) closeModal(); show(view); if (rec.rise > REPLAY_MIN) Share.open(rec);
+  soldToast("Sold " + BY_NO[no].name + " for " + money(g), g); if (!$("modal").hidden) closeModal(); show(view, true); if (rec.rise > REPLAY_MIN) Share.open(rec);
 }

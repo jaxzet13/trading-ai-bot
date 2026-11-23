@@ -20,7 +20,7 @@ document.addEventListener("click", e => {
   if (t.dataset.sell) {
     const c = state.vault.find(x => x.uid === t.dataset.sell), rec = c ? receiptOf(c, true) : null;
     const g = sell([t.dataset.sell]); if (!g) return; soldToast(null, g);
-    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view); if (rec && rec.rise > REPLAY_MIN) Share.open(rec); return;
+    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view, true); if (rec && rec.rise > REPLAY_MIN) Share.open(rec); return;
   }
   if (/^sum/.test(t.id) && SS && performance.now() - SS.sumAt < 500) return;
   switch (t.id) {
@@ -52,6 +52,10 @@ document.addEventListener("click", e => {
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
     case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else if (Shop.has(pk.id)) setTimeout(() => Shop.modal(pk.id), 200); else location.hash = "#/invite"; break; }
     case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { soldToast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`, g); renderCollection(); } break; }
+    case "sellAll": {                                                      // sell everything: the first tap asks, the second sells, and the sale can be undone for a few seconds
+      const all = state.vault.slice(); if (!all.length) break; const sum = all.reduce((a, c) => a + sellOf(c), 0);
+      if (!t.dataset.armed) { t.dataset.armed = "1"; t.textContent = `tap again to sell all ${all.length} · ${money(sum)}`; clearTimeout(t._d); t._d = setTimeout(() => { if (t.isConnected) { delete t.dataset.armed; t.textContent = t.dataset.label; } }, 4000); break; }
+      const g = sell(all.map(c => c.uid)); if (g) { soldToast(`Sold all ${all.length} cards for ${money(g)}`, g); renderCollection(); } break; }
     case "sellUp": { const up = upCopies(), g = sell(up.map(c => c.uid)); if (g) { soldToast(`Sold ${up.length} card${up.length === 1 ? "" : "s"} that ${up.length === 1 ? "was" : "were"} up, for ${money(g)}`, g); renderCollection(); } break; }
     case "resetBtn": if (t.dataset.armed) { startOver(); renderBal(); renderChips(); location.hash = "#/"; show("home"); toast("Fresh start. Your first pack is free."); } else { t.dataset.armed = 1; t.textContent = "tap again to wipe your cards and start over"; setTimeout(() => { delete t.dataset.armed; t.textContent = "start over"; }, 3500); } break;
     case "copyLink": Ref.copy(); break;
