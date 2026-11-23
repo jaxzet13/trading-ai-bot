@@ -76,7 +76,8 @@ def update(days=60, log=print, max_s=None):
                 if t_end and time.time() > t_end:
                     break
                 start, end = _ts(m["occurrence_datetime"]), _ts(m.get("settlement_ts") or m["close_time"])
-                if not start or not end:
+                if not start or not end or end <= start - PRE_S + 120:   # settled before the window (walkover)
+                    have.add(m["ticker"])
                     continue
                 try:
                     b = bars(s, m["ticker"], start - PRE_S, min(end, start + MAX_S))

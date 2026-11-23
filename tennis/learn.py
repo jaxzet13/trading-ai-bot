@@ -131,6 +131,14 @@ def round_(rng, log=print):
     with open(LOG, "a") as f:
         f.write(json.dumps(row) + "\n")
     notify.digest(row, log=log)
+    try:                                          # practice runner results and the arb summary, for the dashboard
+        from . import paper, report
+        pb = paper.settle_and_check()
+        (REPORT / "paper.json").write_text(json.dumps([{k: b.get(k) for k in ("ts", "ticker", "strategy", "side", "price",
+                                                        "pnl", "parity", "practice_only")} for b in pb][-200:], indent=0))
+        report.build(log=lambda m: None)
+    except Exception as e:
+        log(f"  paper/report failed: {e!r}")
     prog = [json.loads(ln) for ln in open(LOG) if ln.strip()]
     (REPORT / "progress.json").write_text(json.dumps(prog[-500:], indent=0))
     log(f"learn: {len(ms)} markets, {len(pop)} strategies (+{born} bred, -{len(dead)} dropped); walk-forward top-5 "
