@@ -91,8 +91,36 @@ CARDS = {
                      default=('ramp', dict(style='duo', pal='blue', black=0.05, white=0.90, gamma=0.85, glow=0.7))),
     'luna':     dict(src='moonshot/sources/luna.jpg', count=448800, cols=800, aspect=1.73, view=(0.5, 0.44, 0.80), text='to the moon was never a joke.',
                      default=('ramp', dict(style='irid', pal='moon', black=0.05, white=0.90, gamma=0.8, glow=0.8))),
+    # ---- more cards for both packs (sources in ../more-cards/sources): three more commons, two uncommons and a rare for First Print, three for Moonshot
+    'mop':       dict(src='more-cards/sources/mop.jpg', count=2816, cols=64, aspect=1.73, view=(0.5, 0.5, 1.05), text='swab the deck.',
+                      default=('ramp', dict(style='classic', pal='phosphor', black=0.06, white=0.80, gamma=0.7, glow=0.35))),
+    'pan':       dict(src='more-cards/sources/pan.jpg', count=2816, cols=64, aspect=1.73, view=(0.5, 0.5, 0.97), text="it's a frying pan. it counts.",
+                      default=('ramp', dict(style='classic', pal='bone', black=0.06, white=0.80, gamma=0.7, glow=0.35))),
+    'cone':      dict(src='more-cards/sources/cone.jpg', count=2816, cols=64, aspect=1.73, view=(0.5, 0.5, 0.97), text='caution: confident.',
+                      default=('ramp', dict(style='duo', pal='amber', black=0.06, white=0.85, gamma=0.8, glow=0.5))),
+    'tempest':   dict(src='more-cards/sources/tempest.jpg', count=7260, cols=110, aspect=2.0, view=(0.5, 0.5, 0.97), text='weather is a choice.',
+                      tone=dict(black=0.02, white=0.5, gamma=0.55), tone_except=('kin', 'wire', 'ice'),
+                      default=('ramp', dict(style='duo', pal='blue', black=0.02, white=0.55, gamma=0.6, glow=0.8))),
+    'surge':     dict(src='more-cards/sources/surge.jpg', count=15750, cols=150, aspect=1.73, view=(0.5, 0.5, 0.97), text='ride it before it breaks.',
+                      tone=dict(black=0.02, white=0.55, gamma=0.6), tone_except=('kin', 'wire', 'ice', 'scratch'),
+                      default=('ramp', dict(style='classic', pal='ice', black=0.02, white=0.6, gamma=0.65, glow=0.8))),
+    'kraken':    dict(src='more-cards/sources/kraken.jpg', count=28000, cols=200, aspect=1.73, view=(0.5, 0.5, 0.97), text='it was always down there.',
+                      tone=dict(black=0.02, white=0.6, gamma=0.6), tone_except=('kin', 'wire', 'ice', 'scratch'),
+                      default=('ramp', dict(style='irid', pal='aurora', black=0.02, white=0.7, gamma=0.7, glow=0.8))),
+    'spark':     dict(src='more-cards/sources/spark.jpg', count=3600, cols=72, aspect=1.73, view=(0.5, 0.5, 0.97), text='small things start fires.',
+                      default=('ramp', dict(style='duo', pal='amber', black=0.06, white=0.85, gamma=0.8, glow=0.6))),
+    'countdown': dict(src='more-cards/sources/countdown.jpg', count=10080, cols=120, aspect=1.73, view=(0.5, 0.5, 0.97), text='three. two. one.',
+                      default=('ramp', dict(style='classic', pal='phosphor', black=0.06, white=0.85, gamma=0.8, glow=0.7))),
+    'booster':   dict(src='more-cards/sources/booster.jpg', count=40320, cols=240, aspect=1.73, view=(0.5, 0.5, 0.97), text='dead weight, dropped.',
+                      default=('ramp', dict(style='duo', pal='amber', black=0.06, white=0.90, gamma=0.85, glow=0.7))),
+    'flare':     dict(src='more-cards/sources/flare.jpg', count=3600, cols=72, aspect=1.73, view=(0.5, 0.5, 1.0), text='the sky has been told.',
+                      default=('ramp', dict(style='duo', pal='blood', black=0.06, white=0.85, gamma=0.8, glow=0.6))),
+    'bubble':    dict(src='more-cards/sources/bubble.jpg', count=3600, cols=72, aspect=1.73, view=(0.5, 0.5, 1.0), text='all systems: smiling.',
+                      default=('ramp', dict(style='classic', pal='bone', black=0.06, white=0.85, gamma=0.8, glow=0.5))),
+    'gantry':    dict(src='more-cards/sources/gantry.jpg', count=10080, cols=120, aspect=1.73, view=(0.5, 0.5, 1.0), text='the arm lets go.',
+                      default=('ramp', dict(style='classic', pal='ice', black=0.04, white=0.8, gamma=0.7, glow=0.6))),
 }
-HEAVY_FIRST = ['umbra', 'reaper', 'luna', 'grimm', 'apogee', 'ronin', 'shogun', 'liftoff', 'null', 'phantom', 'orbit', 'ignition', 'rook', 'brick', 'fuse']
+HEAVY_FIRST = ['umbra', 'reaper', 'luna', 'grimm', 'apogee', 'ronin', 'shogun', 'liftoff', 'booster', 'null', 'kraken', 'phantom', 'surge', 'orbit', 'tempest', 'ignition', 'countdown', 'rook', 'brick', 'fuse', 'mop', 'pan', 'cone', 'spark', 'flare', 'bubble', 'gantry']
 
 
 def grid(cfg):
