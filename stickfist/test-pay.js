@@ -184,6 +184,10 @@ function start(env, dataName) {
   r = await hook(Q, ev("cs_oddpack", uid, "zz!", 1, 100)); r = await call(Q, "GET", "/api/shop/order?sid=cs_oddpack"); const r2 = await call(Q, "POST", "/api/hello", { uid }); ok(r.json.short === true && r2.json.paid.fp === 3 && !r2.json.paid["zz!"], "a payment naming a pack that doesn't exist credits nothing and is marked short");
   r = await call(Q, "GET", "/api/shop/orders"); ok(r.status === 403, "the order list needs the admin token"); r = await call(Q, "GET", "/api/shop/orders?token=tok"); ok(r.json.packs === 11 && r.json.cents === 300 + 2400 + 200 + 100 && r.json.orders.length === 4 && r.json.orders.every(o => o.player.length === 8) && !/address|email|phone/i.test(JSON.stringify(r.json)), "the admin list has the orders and the packs credited (3 First Print + 8 Moonshot), with no personal details");
   r = await call(Q, "GET", "/api/requiem/config"); ok(r.json.open === false, "selling digital packs doesn't open the Requiem sale");
+  { const fu = crypto.randomBytes(8).toString("hex"); await call(Q, "POST", "/api/hello", { uid: fu });
+    const d1 = await call(Q, "POST", "/api/fair/draws", { uid: fu, cs: "ABC", n: 4 }), d2 = await call(Q, "POST", "/api/fair/draw", { uid: fu, cs: "ABC" });
+    ok(d1.json.draws.length === 4 && d1.json.draws.map(x => x.nonce).join() === "0,1,2,3" && /^[0-9a-f]{64}$/.test(d1.json.commit) && d2.json.nonce === 4, "a batch of 4 draws takes the next 4 numbers in order, and a single draw after it continues at 4");
+    ok((await call(Q, "POST", "/api/fair/draws", { uid: fu, cs: "ABC", n: 99 })).json.draws.length === 10, "a batch is capped at 10"); ok((await call(Q, "POST", "/api/fair/draws", { uid: "deadbeefdeadbeef", cs: "ABC", n: 2 })).status === 404, "and an unknown player gets nothing"); }
   // a payment the webhook never reported: the server asks Stripe itself
   const uid3 = crypto.randomBytes(8).toString("hex"); await call(Q, "POST", "/api/hello", { uid: uid3 });
   r = await call(Q, "POST", "/api/shop/checkout", { uid: uid3, pack: "fp", qty: 2, age: true }); const sid4 = r.json.url.split("/").pop();

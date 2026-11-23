@@ -10,14 +10,16 @@ async function openPack(pack) {
   const free = state.freePacks > 0, bought = !free && boughtOf(pk.id) > 0, price = free || bought ? 0 : packPrice(pk);      // a pack you bought costs no play money to open
   if (state.coins < price && Shop.has(pk.id)) { Shop.modal(pk.id); return; }      // out of play money and buying is on: straight to the buy window, this pack already chosen (the 18+ and real-money confirmation stays: Stripe opens after it)
   if (state.coins < price) { toast(state.vault.length ? `You need ${money(price - state.coins)} more. Sell a card to open another pack.` : "You're out of play money. Your free daily pack is back tomorrow, or invite a friend for one now.", Shop.has(pk.id) ? { key: "buy", label: Shop.cash() ? "Add money" : "Buy packs" } : null); return; }
-  opening = true; let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS) return;
-  if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else if (bought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
-  state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
-  SS = { items, idx: 0, phase: "pack", busy: false, pack: pk, free, bought, ref: packPrice(pk), n: 1 };            // ref: what this pack costs at today's price, free or not, so a pull can be measured against it
+  // the stage comes up at once, with the pack on it, while the draw is on its way (a round trip to the server): no waiting on a blank screen
+  opening = true; const mine = SS = { items: null, idx: 0, phase: "wait", busy: false, pack: pk, free, bought, ref: packPrice(pk), n: 1 };      // ref: what this pack costs at today's price, free or not, so a pull can be measured against it
   $("stName").textContent = pk.name; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
   $("stBox").innerHTML = `<div class="st-pack enter" id="stPack">${packHTML(pk)}</div><div class="cstack" id="stStack"></div>`;
-  hint("Tap the pack to tear it open"); stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
-  const pkEl = $("stPack").firstChild; SS.ps = liveWindow(pkEl, pk); tiltPack(pkEl); $("stPack").addEventListener("click", tear);
+  hint(""); stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
+  const pkEl = $("stPack").firstChild; mine.ps = liveWindow(pkEl, pk); tiltPack(pkEl);
+  let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS !== mine) return;
+  if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else if (bought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
+  state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); SS_PRICE = price; state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
+  mine.items = items; mine.phase = "pack"; hint("Tap the pack to tear it open"); $("stPack").addEventListener("click", tear);
 }
 async function tear() {
   if (!SS || SS.phase !== "pack") return; SS.phase = "tearing"; hint(""); Snd.tear(); buzz(35); const wrap = $("stPack"), pk = wrap.querySelector(".pk");
@@ -66,7 +68,7 @@ async function dismiss(el, c) {
   const m = document.createElement("div"); m.className = "mini"; m.innerHTML = cardHTML(c, { sm: true }); $("stTray").appendChild(m); $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   SS.idx++; await sleep(260); if (SS.idx >= SS.items.length) summary(); else focusTop();
 }
-function skipAll() { if (!SS || SS.phase === "summary") return; Machine.stop(); SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
+function skipAll() { if (!SS || SS.phase === "summary") return; if (SS.phase === "wait") { Machine.stop(); return; } Machine.stop(); SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
 const againLabel = pk => (openN() > 1 && maxN(pk) >= 2) ? (() => { const k = Math.min(openN(), maxN(pk)), c = Math.max(0, k - state.freePacks - boughtOf(pk.id)) * packPrice(pk); return `open ${k} more${c ? " · " + money(c) : ""}`; })() : state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
 function summary() {
   if (SS.n > 1) { multiSummary(); return; }
@@ -79,7 +81,7 @@ function summary() {
     <div class="row acts" style="justify-content:center"><button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn solid" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
-function closeStage() { Machine.stop(); stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view, true); }
+function closeStage() { if (SS && SS.phase === "wait") return; Machine.stop(); stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view, true); }
 
 /* ---- several packs at once. Every pack is drawn, charged and counted exactly like a single pack (same odds, same daily limit); only the show is shorter: cards worth less than $0.50
    are not revealed one by one, they are totalled on the result, and nothing is sold or hidden: they are in your collection and in the sums. ---- */
@@ -90,22 +92,21 @@ function maxN(pk) {                                                             
   return Math.max(0, Math.min(10, have, room));
 }
 async function openMany(pk, n) {
-  if (SS || opening) return; const price = packPrice(pk); let items = [], paid = 0, freeN = 0, boughtN = 0, packs = 0; opening = true;
-  try {
-    for (let i = 0; i < n; i++) {
-      if (packGate()) break; const isFree = state.freePacks > 0, isBought = !isFree && boughtOf(pk.id) > 0, cost = isFree || isBought ? 0 : price; if (state.coins < cost) break;
-      const got = await Fair.next(pk); if (SS) break;
-      if (isFree) { state.freePacks--; state.s.free++; state.s.added += Math.round(got.reduce((a, c) => a + c.cost, 0)); freeN++; } else if (isBought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(got.reduce((a, c) => a + c.cost, 0)); boughtN++; } else { state.coins -= cost; paid += cost; }
-      state.s.packs++; state.s.spent += cost; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); state.vault.push(...got); items.push(...got); packs++;
-    }
-  } finally { opening = false; }
-  if (!packs) return; save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
-  const hi = items.filter(c => valueOf(c) >= SMALL).sort((a, b) => valueOf(a) - valueOf(b)); SS_PRICE = paid;
-  SS = { items: hi, all: items, idx: 0, phase: "machine", busy: false, pack: pk, free: freeN === packs, bought: false, ref: price, n: packs, refAll: price * packs, paid, freeN, boughtN };
-  $("stName").textContent = `${pk.name} × ${packs}`; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
+  if (SS || opening) return; const price = packPrice(pk); opening = true;
+  const mine = SS = { items: [], all: [], idx: 0, phase: "wait", busy: false, pack: pk, free: false, bought: false, ref: price, n };            // the machine starts at once; the draws are fetched in one request while it plays
+  $("stName").textContent = `${pk.name} × ${n}`; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title"; $("stHint").textContent = "";
   $("stBox").innerHTML = `<div class="cstack" id="stStack"></div>`; stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
-  $("stHint").textContent = "";                                                                        // the dealing machine, then the cards
-  const mine = SS; await Machine.play(packs, items.length, pk.name); if (SS !== mine || mine.phase === "summary") return; mine.phase = "stack";
+  const anim = Machine.play(n, n * pk.n, pk.name); let sets; try { sets = await Fair.nextMany(pk, n); } finally { opening = false; } if (SS !== mine) return;
+  let items = [], paid = 0, freeN = 0, boughtN = 0, packs = 0;
+  for (const got of sets) {
+    const isFree = state.freePacks > 0, isBought = !isFree && boughtOf(pk.id) > 0, cost = isFree || isBought ? 0 : price;
+    if (isFree) { state.freePacks--; state.s.free++; state.s.added += Math.round(got.reduce((a, c) => a + c.cost, 0)); freeN++; } else if (isBought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(got.reduce((a, c) => a + c.cost, 0)); boughtN++; } else { state.coins -= cost; paid += cost; }       // every pack is charged exactly like a single one
+    state.s.packs++; state.s.spent += cost; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); state.vault.push(...got); items.push(...got); packs++;
+  }
+  save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
+  const hi = items.filter(c => valueOf(c) >= SMALL).sort((a, b) => valueOf(a) - valueOf(b)); SS_PRICE = paid;
+  Object.assign(mine, { items: hi, all: items, phase: "machine", free: freeN === packs, refAll: price * packs, paid, freeN, boughtN, n: packs });
+  await anim; if (SS !== mine || mine.phase === "summary") return; mine.phase = "stack";
   if (!hi.length) { summary(); return; } buildStack(); await sleep(400); focusTop();
 }
 

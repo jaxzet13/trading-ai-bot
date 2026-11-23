@@ -58,9 +58,24 @@ const Fair = (() => {
       if (r && /^[0-9a-f]{64}$/.test(r.digest || "")) { const seen = f.srv && f.srv.epoch === r.epoch ? f.srv.commit : r.commit; hex = r.digest; nonce = r.nonce; epoch = "S" + r.epoch; mode = "server"; commit = seen; f.srv = { commit: seen, nonce: r.nonce + 1, epoch: r.epoch }; }     // the commitment you were shown before the draw is the one that gets checked
     }
     if (!hex) { const L = f.local; nonce = L.nonce++; epoch = "L" + L.epoch; commit = L.commit; hex = hmacHex(L.seed, `${f.cs}:${nonce}`); }
+    return settle(pk, f, hex, nonce, epoch, mode, commit);
+  }
+  function settle(pk, f, hex, nonce, epoch, mode, commit) {
     const items = pullPack(pk, digestU(hex, pk.slots.length));
     f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: items.map(c => BY_NO[c.no].id), t: Date.now() }); if (f.log.length > LOG) f.log.shift();
     return items;
+  }
+  // the cards for n packs with one request to the server (the same draws, in order, as n single requests would give)
+  async function nextMany(pk, n) {
+    const f = F(); let r = null;
+    if (API.on && n > 1) { r = await API.post("fair/draws", { uid: state.uid, cs: f.cs, n }); if (!(r && Array.isArray(r.draws) && r.draws.length === n && r.draws.every(d => /^[0-9a-f]{64}$/.test(d.digest || "")))) r = null; }
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      if (r) { const d = r.draws[i], seen = f.srv && f.srv.epoch === r.epoch ? f.srv.commit : r.commit; f.srv = { commit: seen, nonce: d.nonce + 1, epoch: r.epoch }; out.push(settle(pk, f, d.digest, d.nonce, "S" + r.epoch, "server", seen)); }
+      else if (API.on && n === 1) out.push(await next(pk));
+      else { const L = f.local, nonce = L.nonce++; out.push(settle(pk, f, hmacHex(L.seed, `${f.cs}:${nonce}`), nonce, "L" + L.epoch, "local", L.commit)); }
+    }
+    return out;
   }
   // check one logged draw against a revealed seed
   function check(entry, seed) {
@@ -79,5 +94,5 @@ const Fair = (() => {
   }
   const adopt = fi => { const f = F(); if (fi && /^[0-9a-f]{64}$/.test(fi.commit || "") && (!f.srv || f.srv.epoch !== fi.epoch)) f.srv = { commit: fi.commit, nonce: fi.nonce, epoch: fi.epoch }; persist(); };      // the server's commitment, shown before any pack is drawn from it
   const setClientSeed = v => { const s = String(v).replace(/[^\w.-]/g, "").slice(0, 24); if (s) { F().cs = s; persist(); } return F().cs; };
-  return { F, next, check, status, rotate, setClientSeed, cardsOf, seedFor, adopt };
+  return { F, next, nextMany, check, status, rotate, setClientSeed, cardsOf, seedFor, adopt };
 })();
