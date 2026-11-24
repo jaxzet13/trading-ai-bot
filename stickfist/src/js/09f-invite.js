@@ -42,22 +42,42 @@ const Ref = (() => {
 })();
 
 const BONUS_AT = [[5, 2], [10, 3], [25, 5]], MAX_FRIENDS = 30;
+const GIFT = `<svg class="gift" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8M2 7h20v5H2zM12 21V7M12 7S10.5 3 8 3 5 5.5 7 7h5zM12 7s1.5-4 4-4 3 2.5 1 4h-5z"/></svg>`;
 function inviteBarHTML() {
   const i = Ref.info(); return `<a class="invitelink" href="#/invite"><b>Invite a friend, get a free pack.</b> They get one too.</a>${i && i.invited ? ` <span class="faint">${i.invited} friend${i.invited > 1 ? "s" : ""} so far</span>` : ""}`;
 }
+// the always-visible way in from the home page: one tap to the invite screen
+function homeInviteHTML() {
+  if (!API.on) return "";
+  const i = Ref.info(), n = i ? i.invited : 0;
+  return `${GIFT}<span class="hi-main"><b>Free packs — invite friends</b><small>You both get a pack. No money needed.</small></span>${n ? `<span class="hi-n" title="friends who joined">${n}</span>` : `<span class="hi-go">Invite ›</span>`}`;
+}
+// the bold card at the top of Me: the main way to earn packs
+function inviteHeroHTML() {
+  const i = Ref.info(), joined = i ? i.joined : 0, earned = i ? i.earned : 0, next = i && API.on ? BONUS_AT.find(([n]) => n > i.invited) : null;
+  const action = API.on ? `<button class="btn solid big" id="pInviteShare">Invite a friend</button>` : `<a class="btn solid big" href="#/invite">See how invites work</a>`;
+  return `<div class="invhero2">
+    <div class="ih-head">${GIFT}<div><span class="ih-badge">Free packs</span><h3>Invite friends, get packs</h3></div></div>
+    <p class="ih-sub">Send your link. Your friend gets a free pack the moment they join — and you get one when they open it. It's the main free way to get packs.</p>
+    ${action}
+    <div class="ih-stats"><div><b>${joined}</b><span>friends joined</span></div><div><b>${earned}</b><span>packs earned</span></div>${next ? `<div><b>${next[0] - i.invited}</b><span>to +${next[1]} bonus</span></div>` : `<div><b>+2</b><span>at 5 friends</span></div>`}</div>
+  </div>`;
+}
 function renderInvite() {
-  $("iSub").textContent = "Give a free pack. Get a free pack.";
+  $("iSub").textContent = "The main way to get packs — free.";
   const i = Ref.info();
-  if (!API.on) { $("iBody").innerHTML = `<div class="inv"><p class="dim">Invites switch on when the beta goes live. Here is how they will work:</p><ol class="plain"><li>You get a link that ends in your own code.</li><li>A friend who opens it gets a free pack as soon as they join.</li><li>When they open it, you get a free pack too. Every 5 friends adds bonus packs.</li></ol><p class="small">This copy of STIXX isn't connected to the beta server, so it can't count invites or hand out rewards, and it won't pretend to.</p></div>`; return; }
+  if (!API.on) { $("iBody").innerHTML = `<div class="inv"><p class="dim" style="text-align:center">Invites switch on when the beta goes live. Here is how they work:</p><div class="invsteps"><div class="istep"><span>1</span>You get a link that ends in your own code.</div><div class="istep"><span>2</span>A friend who opens it gets a free pack as soon as they join.</div><div class="istep"><span>3</span>When they open it, you get a free pack too. Every 5 friends adds bonus packs.</div></div><p class="small">This copy of STIXX isn't connected to the beta server, so it can't count invites or hand out rewards, and it won't pretend to.</p></div>`; return; }
   if (!i) { $("iBody").innerHTML = `<p class="small">Getting your link…</p>`; Ref.sync(); return; }
   const next = BONUS_AT.find(([n]) => n > i.invited), u = Ref.link(i.code), typed = document.activeElement && document.activeElement.id === "vanityIn" ? document.activeElement.value : "";
   $("iBody").innerHTML = `<div class="inv">
-    <div class="invhero"><span class="label">your link</span><input id="invLink" class="linkbox" readonly value="${esc(u)}" aria-label="Your invite link" onfocus="this.select()">
-      <div class="row"><button class="btn solid" id="copyLink">copy link</button><button class="btn" id="shareLink">share…</button></div>
-      <p class="small">A friend gets a free pack the moment they join. You get one when they open it.</p></div>
-    <div class="invstats"><div><span class="label">friends joined</span><b>${i.joined}</b></div><div><span class="label">opened a pack</span><b>${i.invited}</b></div><div><span class="label">free packs you've earned</span><b>${i.earned}</b></div><div><span class="label">waiting for you</span><b>${i.credits}</b></div></div>
-    <div><span class="label">bonus packs</span>${next ? `<div class="mono-meter" aria-hidden="true">${meter(i.invited, next[0])}</div><p class="small" style="margin-top:6px">${i.invited} of ${next[0]} friends. At ${next[0]} you get ${next[1]} bonus packs on top.</p>` : `<p class="small">You've earned every bonus. Thank you.</p>`}</div>
-    <form id="vanityForm" autocomplete="off"><span class="label">make the link yours</span>
+    <div class="invbig">${GIFT}<h2>You both get a free pack</h2><p>Share your link. The moment a friend joins, they get a free pack — and when they open it, so do you.</p>
+      <button class="btn solid big" id="shareLink">Share your link</button>
+      <div class="linkrow"><input id="invLink" class="linkbox" readonly value="${esc(u)}" aria-label="Your invite link" onfocus="this.select()"><button class="btn" id="copyLink">Copy</button></div></div>
+    <div class="invsteps"><div class="istep"><span>1</span>Send your link to a friend.</div><div class="istep"><span>2</span>They join and get a free pack.</div><div class="istep"><span>3</span>They open it — you get one too.</div></div>
+    <div class="invstats"><div><span class="label">friends joined</span><b>${i.joined}</b></div><div><span class="label">opened a pack</span><b>${i.invited}</b></div><div><span class="label">packs you've earned</span><b>${i.earned}</b></div>${i.credits ? `<div class="ready"><span class="label">waiting for you</span><b>${i.credits}</b></div>` : ""}</div>
+    <div class="invbonus"><div class="row" style="justify-content:space-between"><span class="label">Bonus packs</span>${next ? `<span class="small">${i.invited} of ${next[0]} friends</span>` : `<span class="small">all bonuses earned</span>`}</div>
+      ${next ? `<div class="gbar"><i style="width:${(i.invited / next[0] * 100).toFixed(0)}%"></i></div><p class="small" style="margin-top:8px">At ${next[0]} friends you get <b>+${next[1]} bonus packs</b> on top. Tiers: 5 → +2, 10 → +3, 25 → +5.</p>` : `<p class="small">You've earned every bonus. Thank you.</p>`}</div>
+    <form id="vanityForm" autocomplete="off"><span class="label">Make the link yours</span>
       <div class="row"><input id="vanityIn" placeholder="${i.activated ? "YOURNAME" : "open a pack first"}" maxlength="16" spellcheck="false" value="${esc(typed)}" ${i.activated ? "" : "disabled"} style="text-transform:uppercase;min-width:0;flex:1"><button class="btn" type="submit" ${i.activated ? "" : "disabled"}>claim</button></div>
       <div class="small" id="vanityMsg">${i.activated ? "3 to 16 letters or numbers. One change a day. Creators: put your name here and share the link." : "You can pick your own code once you've opened your first pack."}</div></form>
     <p class="small">Rewards are free packs of play-money cards and have no cash value. One reward per friend, up to ${MAX_FRIENDS} friends, and we check for abuse, so invites from the same person or device don't count.</p></div>`;

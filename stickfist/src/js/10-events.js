@@ -66,6 +66,7 @@ document.addEventListener("click", e => {
     case "fairBtn3": case "fairBtn": case "fairBtn2": fairModal(); break;
     case "cashBtn": case "cashBtn2": cashModal(); break;
     case "pShare": History.share(); break;
+    case "pInviteShare": case "sumInvite": Ref.share(); break;
     case "gMore": Goals.toggle(); break;
     case "pAllBtn": pAll = !pAll; renderProfile(); break;
     case "tipX": state.tg = state.tg || {}; state.tg.a2hs = 1; persist(); renderProfile(); break;

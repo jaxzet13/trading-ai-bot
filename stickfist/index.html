@@ -839,6 +839,39 @@ footer { border-top: 1px solid var(--ln); background: rgba(255,255,255,.012); } 
 .vchip { position: fixed; left: 0; top: 0; z-index: 12; padding: 6px 12px; border-radius: 999px; background: #07080a; color: var(--ink); border: 1px solid color-mix(in srgb, var(--rc, #fff) 70%, transparent); box-shadow: 0 0 22px -4px var(--rc, #fff); font: 800 15px/1 Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; pointer-events: none; white-space: nowrap; will-change: transform; }
 .meter.hit .mbar { animation: meterHit .34s cubic-bezier(.2, .9, .3, 1.4); } @keyframes meterHit { 35% { transform: scaleY(2.1); filter: brightness(1.6); } }
 .meter .mbar i { transition: width .5s cubic-bezier(.2, .8, .2, 1); }
+
+/* ============================================================================
+   REFERRALS, up front. The free way to get packs, made obvious: a button on the home page, a bold card on Me, a simple invite screen.
+   ========================================================================== */
+svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+/* home: a slim green-edged pill under the trust chips */
+.homeinvite { display: flex; align-items: center; gap: 12px; width: min(420px, 100%); margin: 2px auto 0; padding: 11px 14px; border-radius: 16px; border: 1px solid rgba(59,228,119,.4); background: linear-gradient(100deg, rgba(59,228,119,.14), rgba(59,228,119,.05)); color: var(--ink); text-align: left; }
+.homeinvite:active { transform: scale(.98); }
+.homeinvite .gift { width: 22px; height: 22px; stroke: var(--acc); }
+.homeinvite .hi-main { display: grid; gap: 1px; min-width: 0; flex: 1; } .homeinvite .hi-main b { font-size: 14px; font-weight: 700; letter-spacing: -.01em; } .homeinvite .hi-main small { font-size: 12px; color: var(--dim); }
+.homeinvite .hi-go { color: var(--acc); font-weight: 700; font-size: 13px; white-space: nowrap; }
+.homeinvite .hi-n { display: grid; place-items: center; min-width: 28px; height: 28px; padding: 0 7px; border-radius: 999px; background: var(--acc); color: #04130a; font-weight: 800; font-size: 14px; }
+/* Me: the bold invite card */
+.invhero2 { margin: 0 0 22px; padding: 18px; border-radius: 20px; border: 1px solid rgba(59,228,119,.35); background: radial-gradient(120% 100% at 0% 0%, rgba(59,228,119,.16), transparent 60%), linear-gradient(180deg, var(--s2), var(--s1)); box-shadow: var(--sh); }
+.invhero2 .ih-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; } .invhero2 .ih-head .gift { width: 30px; height: 30px; stroke: var(--acc); }
+.invhero2 .ih-badge { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--acc); } .invhero2 h3 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.02em; text-transform: none; color: var(--ink); }
+.invhero2 .ih-sub { margin: 0 0 14px; color: var(--dim); font-size: 14px; line-height: 1.5; }
+.invhero2 .btn.solid.big { width: 100%; margin-bottom: 14px; }
+.invhero2 .ih-stats { display: grid; grid-auto-flow: column; gap: 10px; } .invhero2 .ih-stats > div { text-align: center; padding: 8px; border-radius: 12px; background: rgba(255,255,255,.04); } .invhero2 .ih-stats b { display: block; font-size: 20px; font-weight: 800; letter-spacing: -.02em; } .invhero2 .ih-stats span { font-size: 11px; color: var(--dim); }
+/* the invite page */
+#v-invite .inv { display: grid; gap: 18px; }
+.invbig { text-align: center; padding: 26px 18px; border-radius: 22px; border: 1px solid rgba(59,228,119,.35); background: radial-gradient(120% 90% at 50% 0%, rgba(59,228,119,.18), transparent 60%), linear-gradient(180deg, var(--s2), var(--s1)); box-shadow: var(--sh); }
+.invbig .gift { width: 44px; height: 44px; stroke: var(--acc); margin-bottom: 8px; }
+.invbig h2 { margin: 0 0 8px; font-size: 26px; font-weight: 800; letter-spacing: -.03em; } .invbig p { margin: 0 auto 18px; max-width: 34ch; color: var(--dim); font-size: 14.5px; line-height: 1.5; }
+.invbig .btn.solid.big { width: 100%; max-width: 340px; margin: 0 auto 14px; }
+.linkrow { display: flex; gap: 8px; max-width: 420px; margin: 0 auto; } .linkbox { flex: 1; min-width: 0; font-family: var(--m); font-size: 13px; background: var(--bg); border: 1px solid var(--ln2); border-radius: 12px; padding: 11px 12px; color: var(--ink); }
+.invsteps { display: grid; gap: 10px; } .istep { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border-radius: 14px; background: var(--s1); border: 1px solid var(--ln); font-size: 14px; }
+.istep span { display: grid; place-items: center; width: 26px; height: 26px; flex: none; border-radius: 50%; background: var(--acc); color: #04130a; font-weight: 800; font-size: 13px; }
+.invstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 10px; } .invstats > div { padding: 12px; border-radius: 14px; background: var(--s1); border: 1px solid var(--ln); text-align: center; } .invstats b { display: block; font-size: 24px; font-weight: 800; letter-spacing: -.02em; margin-top: 2px; } .invstats .ready { border-color: rgba(59,228,119,.5); } .invstats .ready b { color: var(--acc); }
+.invbonus { padding: 14px 16px; border-radius: 16px; background: var(--s1); border: 1px solid var(--ln); } .invbonus .gbar { margin-top: 10px; }
+#vanityForm { display: grid; gap: 8px; }
+/* the quiet nudge under a pack result */
+.invnudge { width: 100%; max-width: 360px; margin: 10px auto 0; gap: 8px; color: var(--acc); background: rgba(59,228,119,.08); border-color: rgba(59,228,119,.25); } .invnudge .gift { width: 16px; height: 16px; }
 </style>
 </head>
 <body>
@@ -863,6 +896,7 @@ footer { border-top: 1px solid var(--ln); background: rgba(255,255,255,.012); } 
       <div class="packmeta"><h1 id="packName">First Print</h1><p class="dim" id="packLine"></p></div>
       <button class="btn solid big" id="openBtn" data-open>open pack</button>
       <div class="multi" id="multiRow" role="group" aria-label="How many packs to open at once" hidden></div>
+      <a class="homeinvite" id="homeInvite" href="#/invite" hidden></a>
       <div class="hometrust" id="homeTrust"><button class="tchip" id="fairBtn3" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.500 6v6c0 4.500 3.200 7.800 7.500 9 4.300-1.200 7.500-4.500 7.500-9V6z"/><path d="m9 12 2.200 2.200L15.500 10"/></svg>Provably fair</button><a class="tchip" href="#/odds"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Odds</a><span class="tchip" id="tStripe" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Stripe</span></div>
       <p class="buyrow" id="buyRow" hidden><button class="btn solid" id="buyBtn">Buy packs</button></p>
       <p class="small blurb" id="packBlurb"></p>
@@ -895,6 +929,7 @@ footer { border-top: 1px solid var(--ln); background: rgba(255,255,255,.012); } 
     <div class="page-head"><h1 class="ttl">Me</h1><p class="live"></p></div>
     <div class="hero-card"><div id="pWorth"></div><div id="pChart" class="pchart"></div></div>
     <div id="pRank"></div>
+    <div id="pInvite"></div>
     <button class="btn pshare" id="pShare" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span id="pShareTxt">Share my stats</span></button>
     <h3 class="sec">Goals</h3>
     <div id="pGoals"></div>
@@ -1836,7 +1871,7 @@ function movers() { const rows = myMovers(); return { rows, gain: rows.filter(r 
 function fitHomePack() {
   const col = document.querySelector("#homePack"), bt = $("btabs"); if (!col || view !== "home") return; const pc = col.closest(".packcol") || col; pc.style.width = "";
   if (!bt || getComputedStyle(bt).display === "none") return;                                               // only on a phone, where the page must not scroll
-  const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 10, after = ["packmeta", "openBtn", "multiRow", "homeTrust"].map(id => { const e = id === "packmeta" ? document.querySelector(".packmeta") : $(id); return e && !e.hidden ? e.offsetHeight + 12 : 0; }).reduce((a, b) => a + b, 0);
+  const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 10, after = ["packmeta", "openBtn", "multiRow", "homeTrust", "homeInvite"].map(id => { const e = id === "packmeta" ? document.querySelector(".packmeta") : $(id); return e && !e.hidden ? e.offsetHeight + 12 : 0; }).reduce((a, b) => a + b, 0);
   const ratio = pc.offsetHeight / Math.max(1, pc.offsetWidth) || 1.45, w = Math.max(100, Math.min(300, innerWidth * .74, (bottom - top - after) / ratio)); pc.style.width = Math.floor(w) + "px";
 }
 addEventListener("resize", () => { if (view === "home") fitHomePack(); });
@@ -1854,6 +1889,7 @@ function renderHome() {
   $("chase").live = chaseHTML(); $("rqBar").live = "";      // the Requiem pack is for later: not on the pack page for now
   const hp = $("homePack"); if (hp.dataset.pack !== pk.id) { if (hp._ps) hp._ps.stop(); hp.innerHTML = packHTML(pk); hp.dataset.pack = pk.id; const el = hp.firstChild; tiltPack(el); el.style.cursor = "pointer"; el.onclick = () => openPack(); hp._ps = liveWindow(el, pk); }
   document.body.dataset.pack = pk.id; { const ts = $("tStripe"); if (ts) ts.hidden = !Shop.open(); }
+  { const hi = $("homeInvite"), html = homeInviteHTML(); hi.hidden = !html; hi.innerHTML = html; }
   fitHomePack(); requestAnimationFrame(fitHomePack);
 }
 
@@ -1885,14 +1921,14 @@ function renderProfile() {
     <div class="wsplit"><div><span class="label">cash</span><b>${moneyR(state.coins)}</b></div><div><span class="label">your cards</span><b>${moneyR(hold)}</b></div><div><span class="label">made on sales</span><b>${signR(state.s.realized)}</b></div></div>`;
   const cs = cardsSeries(pRange, 72);
   $("pChart").live = cs ? `<div class="mk"><div class="row chead"><span class="label">Your cards · ${pRange === 24 ? "last 24 hours" : "last 7 days"} ${pill(cs[cs.length - 1] / Math.max(1, cs[0]) - 1)}</span><span class="seg mini" role="group"><button data-prange="24" class="${pRange === 24 ? "on" : ""}" aria-pressed="${pRange === 24}">24h</button><button data-prange="168" class="${pRange === 168 ? "on" : ""}" aria-pressed="${pRange === 168}">7d</button></span></div>${lineChart(cs, { fmt: money, h: 120 })}</div>` : "";
-  $("pGoals").live = Goals.html(); Goals.badge(); $("pTip").live = tipHTML(); $("pRank").live = rankLine();
+  $("pGoals").live = Goals.html(); Goals.badge(); $("pTip").live = tipHTML(); $("pRank").live = rankLine(); $("pInvite").live = inviteHeroHTML();
   const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), q: quickCopy(c.no), hot: cs.some(x => { const m = Val.moves(x, 6)[0]; return m && m.pct > .15; }) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
   const shown = pAll ? groups : groups.slice(0, 6);
   $("pTable").live = groups.length ? shown.map(g => `<div class="mrow"><button class="mmain" data-card="${g.c.no}" aria-label="${esc(g.c.name)}">${thumb(g.c)}<span class="mn"><b>${esc(g.c.name)}${g.hot ? ` <i class="rush" title="AI buyers rushed into a copy in the last few hours">buyers in</i>` : ""}</b><small>${g.n > 1 ? `×${g.n} · ` : ""}${rarLabel(g.c)}</small></span><span class="mp"><b data-tick="g${g.c.no}" data-v="${g.val.toFixed(2)}">${moneyR(g.val)}</b>${pctR(g.val / Math.max(1, g.cost) - 1)}</span></button><button class="msell" data-qsell="${g.c.no}" aria-label="${esc(quickAria(g.c.no))}">${g.n > 1 ? "Sell 1" : "Sell"}<small>${moneyR(sellOf(g.q))}</small></button></div>`).join("") + (groups.length > 6 ? `<button class="linkbtn plain pall" id="pAllBtn">${pAll ? "Show fewer" : `Show all ${groups.length} cards`}</button>` : "") + `<div class="mtot"><span>All your cards</span><b>${moneyR(hold)}</b></div>` : "";
   $("pNote").innerHTML = groups.length ? `Tap a card for its chart. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${moneyR(state.s.spent)} spent · ${moneyR(state.s.sold)} back from sales</span>` : `No cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they show up here with a live price.`;
   const rows = movers().rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24)).slice(0, 4); $("pMktH").hidden = !rows.length;
   $("pMkt").live = rows.map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)}<span class="dim">24h</span></button>`).join("");
-  $("pLinks").live = `<a class="linkbtn plain" href="#/collection">All ${CARDS.length} cards · ${found} found ›</a><a class="linkbtn plain" href="#/market">All movers ›</a><a class="linkbtn plain" href="#/invite">Invite a friend ›</a>`;
+  $("pLinks").live = `<a class="linkbtn plain" href="#/collection">All ${CARDS.length} cards · ${found} found ›</a><a class="linkbtn plain" href="#/market">All movers ›</a>`;
 }
 
 let oddsKey = "";
@@ -2409,9 +2445,11 @@ function summary() {
     <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Its cards sell for ${money(back)}.` : SS.bought ? `A pack you bought. Its cards sell for ${money(back)} of play money.` : `You paid ${money(SS_PRICE)} and got ${money(back)} of cards: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))}.`}${x >= 2 ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${rarLabel(bc)}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
     <div class="fan">${items.map(c => `<div class="${SS.fresh && SS.fresh.has(c.uid) ? "isnew" : ""}">${cardHTML(c, { sm: true })}</div>`).join("")}</div>
     ${goalLine()}
-    <div class="row acts" style="justify-content:center">${sellNext(back)}<button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
+    <div class="row acts" style="justify-content:center">${sellNext(back)}<button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div>${invNudge()}</div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
+// one quiet line under a pack result: the free way to get another
+function invNudge() { return (typeof API !== "undefined" && API.on) ? `<button class="btn ghost invnudge" id="sumInvite">${GIFT} Invite a friend — you both get a free pack</button>` : ""; }
 function closeStage() { if (SS && SS.phase === "wait") return; Machine.stop(); $("stMeter").hidden = true; stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view, true); }
 
 /* ---- several packs at once. Every pack is drawn, charged and counted exactly like a single pack (same odds, same daily limit); only the show is shorter: cards worth less than $0.50
@@ -2453,7 +2491,7 @@ function multiSummary() {
     ${lo.length ? `<div class="small dim" style="margin-top:10px">${lo.length} card${lo.length > 1 ? "s" : ""} worth under ${money(SMALL)} ${lo.length > 1 ? "were" : "was"} skipped past (${money(loBack)} to sell in all). They're all in your collection, shown here:</div>` : ""}</div>
     ${hi.length ? `<div class="fan">${hi.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : `<div class="small dim">Nothing worth ${money(SMALL)} or more this time.</div>`}
     ${lo.length ? `<div class="fan small">${smallFan}</div>` : ""}
-    <div class="row acts" style="justify-content:center">${sellNext(back)}<button class="btn" id="sumSell">sell all · ${money(back)}</button>${lo.length ? `<button class="btn" id="sumSellSmall">sell the small ones · ${money(loBack)}</button>` : ""}<button class="btn" id="sumKeep">keep all</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
+    <div class="row acts" style="justify-content:center">${sellNext(back)}<button class="btn" id="sumSell">sell all · ${money(back)}</button>${lo.length ? `<button class="btn" id="sumSellSmall">sell the small ones · ${money(loBack)}</button>` : ""}<button class="btn" id="sumKeep">keep all</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div>${invNudge()}</div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
 
@@ -3231,22 +3269,42 @@ const Ref = (() => {
 })();
 
 const BONUS_AT = [[5, 2], [10, 3], [25, 5]], MAX_FRIENDS = 30;
+const GIFT = `<svg class="gift" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8M2 7h20v5H2zM12 21V7M12 7S10.5 3 8 3 5 5.5 7 7h5zM12 7s1.5-4 4-4 3 2.5 1 4h-5z"/></svg>`;
 function inviteBarHTML() {
   const i = Ref.info(); return `<a class="invitelink" href="#/invite"><b>Invite a friend, get a free pack.</b> They get one too.</a>${i && i.invited ? ` <span class="faint">${i.invited} friend${i.invited > 1 ? "s" : ""} so far</span>` : ""}`;
 }
+// the always-visible way in from the home page: one tap to the invite screen
+function homeInviteHTML() {
+  if (!API.on) return "";
+  const i = Ref.info(), n = i ? i.invited : 0;
+  return `${GIFT}<span class="hi-main"><b>Free packs — invite friends</b><small>You both get a pack. No money needed.</small></span>${n ? `<span class="hi-n" title="friends who joined">${n}</span>` : `<span class="hi-go">Invite ›</span>`}`;
+}
+// the bold card at the top of Me: the main way to earn packs
+function inviteHeroHTML() {
+  const i = Ref.info(), joined = i ? i.joined : 0, earned = i ? i.earned : 0, next = i && API.on ? BONUS_AT.find(([n]) => n > i.invited) : null;
+  const action = API.on ? `<button class="btn solid big" id="pInviteShare">Invite a friend</button>` : `<a class="btn solid big" href="#/invite">See how invites work</a>`;
+  return `<div class="invhero2">
+    <div class="ih-head">${GIFT}<div><span class="ih-badge">Free packs</span><h3>Invite friends, get packs</h3></div></div>
+    <p class="ih-sub">Send your link. Your friend gets a free pack the moment they join — and you get one when they open it. It's the main free way to get packs.</p>
+    ${action}
+    <div class="ih-stats"><div><b>${joined}</b><span>friends joined</span></div><div><b>${earned}</b><span>packs earned</span></div>${next ? `<div><b>${next[0] - i.invited}</b><span>to +${next[1]} bonus</span></div>` : `<div><b>+2</b><span>at 5 friends</span></div>`}</div>
+  </div>`;
+}
 function renderInvite() {
-  $("iSub").textContent = "Give a free pack. Get a free pack.";
+  $("iSub").textContent = "The main way to get packs — free.";
   const i = Ref.info();
-  if (!API.on) { $("iBody").innerHTML = `<div class="inv"><p class="dim">Invites switch on when the beta goes live. Here is how they will work:</p><ol class="plain"><li>You get a link that ends in your own code.</li><li>A friend who opens it gets a free pack as soon as they join.</li><li>When they open it, you get a free pack too. Every 5 friends adds bonus packs.</li></ol><p class="small">This copy of STIXX isn't connected to the beta server, so it can't count invites or hand out rewards, and it won't pretend to.</p></div>`; return; }
+  if (!API.on) { $("iBody").innerHTML = `<div class="inv"><p class="dim" style="text-align:center">Invites switch on when the beta goes live. Here is how they work:</p><div class="invsteps"><div class="istep"><span>1</span>You get a link that ends in your own code.</div><div class="istep"><span>2</span>A friend who opens it gets a free pack as soon as they join.</div><div class="istep"><span>3</span>When they open it, you get a free pack too. Every 5 friends adds bonus packs.</div></div><p class="small">This copy of STIXX isn't connected to the beta server, so it can't count invites or hand out rewards, and it won't pretend to.</p></div>`; return; }
   if (!i) { $("iBody").innerHTML = `<p class="small">Getting your link…</p>`; Ref.sync(); return; }
   const next = BONUS_AT.find(([n]) => n > i.invited), u = Ref.link(i.code), typed = document.activeElement && document.activeElement.id === "vanityIn" ? document.activeElement.value : "";
   $("iBody").innerHTML = `<div class="inv">
-    <div class="invhero"><span class="label">your link</span><input id="invLink" class="linkbox" readonly value="${esc(u)}" aria-label="Your invite link" onfocus="this.select()">
-      <div class="row"><button class="btn solid" id="copyLink">copy link</button><button class="btn" id="shareLink">share…</button></div>
-      <p class="small">A friend gets a free pack the moment they join. You get one when they open it.</p></div>
-    <div class="invstats"><div><span class="label">friends joined</span><b>${i.joined}</b></div><div><span class="label">opened a pack</span><b>${i.invited}</b></div><div><span class="label">free packs you've earned</span><b>${i.earned}</b></div><div><span class="label">waiting for you</span><b>${i.credits}</b></div></div>
-    <div><span class="label">bonus packs</span>${next ? `<div class="mono-meter" aria-hidden="true">${meter(i.invited, next[0])}</div><p class="small" style="margin-top:6px">${i.invited} of ${next[0]} friends. At ${next[0]} you get ${next[1]} bonus packs on top.</p>` : `<p class="small">You've earned every bonus. Thank you.</p>`}</div>
-    <form id="vanityForm" autocomplete="off"><span class="label">make the link yours</span>
+    <div class="invbig">${GIFT}<h2>You both get a free pack</h2><p>Share your link. The moment a friend joins, they get a free pack — and when they open it, so do you.</p>
+      <button class="btn solid big" id="shareLink">Share your link</button>
+      <div class="linkrow"><input id="invLink" class="linkbox" readonly value="${esc(u)}" aria-label="Your invite link" onfocus="this.select()"><button class="btn" id="copyLink">Copy</button></div></div>
+    <div class="invsteps"><div class="istep"><span>1</span>Send your link to a friend.</div><div class="istep"><span>2</span>They join and get a free pack.</div><div class="istep"><span>3</span>They open it — you get one too.</div></div>
+    <div class="invstats"><div><span class="label">friends joined</span><b>${i.joined}</b></div><div><span class="label">opened a pack</span><b>${i.invited}</b></div><div><span class="label">packs you've earned</span><b>${i.earned}</b></div>${i.credits ? `<div class="ready"><span class="label">waiting for you</span><b>${i.credits}</b></div>` : ""}</div>
+    <div class="invbonus"><div class="row" style="justify-content:space-between"><span class="label">Bonus packs</span>${next ? `<span class="small">${i.invited} of ${next[0]} friends</span>` : `<span class="small">all bonuses earned</span>`}</div>
+      ${next ? `<div class="gbar"><i style="width:${(i.invited / next[0] * 100).toFixed(0)}%"></i></div><p class="small" style="margin-top:8px">At ${next[0]} friends you get <b>+${next[1]} bonus packs</b> on top. Tiers: 5 → +2, 10 → +3, 25 → +5.</p>` : `<p class="small">You've earned every bonus. Thank you.</p>`}</div>
+    <form id="vanityForm" autocomplete="off"><span class="label">Make the link yours</span>
       <div class="row"><input id="vanityIn" placeholder="${i.activated ? "YOURNAME" : "open a pack first"}" maxlength="16" spellcheck="false" value="${esc(typed)}" ${i.activated ? "" : "disabled"} style="text-transform:uppercase;min-width:0;flex:1"><button class="btn" type="submit" ${i.activated ? "" : "disabled"}>claim</button></div>
       <div class="small" id="vanityMsg">${i.activated ? "3 to 16 letters or numbers. One change a day. Creators: put your name here and share the link." : "You can pick your own code once you've opened your first pack."}</div></form>
     <p class="small">Rewards are free packs of play-money cards and have no cash value. One reward per friend, up to ${MAX_FRIENDS} friends, and we check for abuse, so invites from the same person or device don't count.</p></div>`;
@@ -3838,6 +3896,7 @@ document.addEventListener("click", e => {
     case "fairBtn3": case "fairBtn": case "fairBtn2": fairModal(); break;
     case "cashBtn": case "cashBtn2": cashModal(); break;
     case "pShare": History.share(); break;
+    case "pInviteShare": case "sumInvite": Ref.share(); break;
     case "gMore": Goals.toggle(); break;
     case "pAllBtn": pAll = !pAll; renderProfile(); break;
     case "tipX": state.tg = state.tg || {}; state.tg.a2hs = 1; persist(); renderProfile(); break;

@@ -818,3 +818,36 @@ footer { border-top: 1px solid var(--ln); background: rgba(255,255,255,.012); } 
 .vchip { position: fixed; left: 0; top: 0; z-index: 12; padding: 6px 12px; border-radius: 999px; background: #07080a; color: var(--ink); border: 1px solid color-mix(in srgb, var(--rc, #fff) 70%, transparent); box-shadow: 0 0 22px -4px var(--rc, #fff); font: 800 15px/1 Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; pointer-events: none; white-space: nowrap; will-change: transform; }
 .meter.hit .mbar { animation: meterHit .34s cubic-bezier(.2, .9, .3, 1.4); } @keyframes meterHit { 35% { transform: scaleY(2.1); filter: brightness(1.6); } }
 .meter .mbar i { transition: width .5s cubic-bezier(.2, .8, .2, 1); }
+
+/* ============================================================================
+   REFERRALS, up front. The free way to get packs, made obvious: a button on the home page, a bold card on Me, a simple invite screen.
+   ========================================================================== */
+svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+/* home: a slim green-edged pill under the trust chips */
+.homeinvite { display: flex; align-items: center; gap: 12px; width: min(420px, 100%); margin: 2px auto 0; padding: 11px 14px; border-radius: 16px; border: 1px solid rgba(59,228,119,.4); background: linear-gradient(100deg, rgba(59,228,119,.14), rgba(59,228,119,.05)); color: var(--ink); text-align: left; }
+.homeinvite:active { transform: scale(.98); }
+.homeinvite .gift { width: 22px; height: 22px; stroke: var(--acc); }
+.homeinvite .hi-main { display: grid; gap: 1px; min-width: 0; flex: 1; } .homeinvite .hi-main b { font-size: 14px; font-weight: 700; letter-spacing: -.01em; } .homeinvite .hi-main small { font-size: 12px; color: var(--dim); }
+.homeinvite .hi-go { color: var(--acc); font-weight: 700; font-size: 13px; white-space: nowrap; }
+.homeinvite .hi-n { display: grid; place-items: center; min-width: 28px; height: 28px; padding: 0 7px; border-radius: 999px; background: var(--acc); color: #04130a; font-weight: 800; font-size: 14px; }
+/* Me: the bold invite card */
+.invhero2 { margin: 0 0 22px; padding: 18px; border-radius: 20px; border: 1px solid rgba(59,228,119,.35); background: radial-gradient(120% 100% at 0% 0%, rgba(59,228,119,.16), transparent 60%), linear-gradient(180deg, var(--s2), var(--s1)); box-shadow: var(--sh); }
+.invhero2 .ih-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; } .invhero2 .ih-head .gift { width: 30px; height: 30px; stroke: var(--acc); }
+.invhero2 .ih-badge { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--acc); } .invhero2 h3 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.02em; text-transform: none; color: var(--ink); }
+.invhero2 .ih-sub { margin: 0 0 14px; color: var(--dim); font-size: 14px; line-height: 1.5; }
+.invhero2 .btn.solid.big { width: 100%; margin-bottom: 14px; }
+.invhero2 .ih-stats { display: grid; grid-auto-flow: column; gap: 10px; } .invhero2 .ih-stats > div { text-align: center; padding: 8px; border-radius: 12px; background: rgba(255,255,255,.04); } .invhero2 .ih-stats b { display: block; font-size: 20px; font-weight: 800; letter-spacing: -.02em; } .invhero2 .ih-stats span { font-size: 11px; color: var(--dim); }
+/* the invite page */
+#v-invite .inv { display: grid; gap: 18px; }
+.invbig { text-align: center; padding: 26px 18px; border-radius: 22px; border: 1px solid rgba(59,228,119,.35); background: radial-gradient(120% 90% at 50% 0%, rgba(59,228,119,.18), transparent 60%), linear-gradient(180deg, var(--s2), var(--s1)); box-shadow: var(--sh); }
+.invbig .gift { width: 44px; height: 44px; stroke: var(--acc); margin-bottom: 8px; }
+.invbig h2 { margin: 0 0 8px; font-size: 26px; font-weight: 800; letter-spacing: -.03em; } .invbig p { margin: 0 auto 18px; max-width: 34ch; color: var(--dim); font-size: 14.5px; line-height: 1.5; }
+.invbig .btn.solid.big { width: 100%; max-width: 340px; margin: 0 auto 14px; }
+.linkrow { display: flex; gap: 8px; max-width: 420px; margin: 0 auto; } .linkbox { flex: 1; min-width: 0; font-family: var(--m); font-size: 13px; background: var(--bg); border: 1px solid var(--ln2); border-radius: 12px; padding: 11px 12px; color: var(--ink); }
+.invsteps { display: grid; gap: 10px; } .istep { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border-radius: 14px; background: var(--s1); border: 1px solid var(--ln); font-size: 14px; }
+.istep span { display: grid; place-items: center; width: 26px; height: 26px; flex: none; border-radius: 50%; background: var(--acc); color: #04130a; font-weight: 800; font-size: 13px; }
+.invstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 10px; } .invstats > div { padding: 12px; border-radius: 14px; background: var(--s1); border: 1px solid var(--ln); text-align: center; } .invstats b { display: block; font-size: 24px; font-weight: 800; letter-spacing: -.02em; margin-top: 2px; } .invstats .ready { border-color: rgba(59,228,119,.5); } .invstats .ready b { color: var(--acc); }
+.invbonus { padding: 14px 16px; border-radius: 16px; background: var(--s1); border: 1px solid var(--ln); } .invbonus .gbar { margin-top: 10px; }
+#vanityForm { display: grid; gap: 8px; }
+/* the quiet nudge under a pack result */
+.invnudge { width: 100%; max-width: 360px; margin: 10px auto 0; gap: 8px; color: var(--acc); background: rgba(59,228,119,.08); border-color: rgba(59,228,119,.25); } .invnudge .gift { width: 16px; height: 16px; }
