@@ -13,6 +13,8 @@ document.addEventListener("click", e => {
   if (t.dataset.opack) { oddsPack = t.dataset.opack; renderOdds(true); return; }
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.buy) { Shop.modal(); return; }
+  if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
+  if (t.dataset.prange) { pRange = +t.dataset.prange === 168 ? 168 : 24; renderProfile(); return; }
   if (t.dataset.many) { state.openN = +t.dataset.many || 1; persist(); Snd.click(); if (view === "home") renderHome(); return; }
   if (t.dataset.qsell) { quickSell(t.dataset.qsell); return; }
   if (t.dataset.share) { const c = state.vault.find(x => x.uid === t.dataset.share); if (c && replayable(c)) Share.open(receiptOf(c, false)); else toast("A replay is only offered for a card that is up more than 50%."); return; }
@@ -64,6 +66,8 @@ document.addEventListener("click", e => {
     case "fairBtn": case "fairBtn2": fairModal(); break;
     case "cashBtn": case "cashBtn2": cashModal(); break;
     case "pShare": History.share(); break;
+    case "gMore": Goals.toggle(); break;
+    case "tipX": state.tg = state.tg || {}; state.tg.a2hs = 1; persist(); renderProfile(); break;
     case "hMore": History.toggle(); break;
     case "aboutBtn": aboutModal(); break;
     case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); Ref.sync(); break;

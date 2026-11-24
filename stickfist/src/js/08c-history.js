@@ -69,12 +69,12 @@ const History = (() => {
     return cv;
   }
   async function share() {
-    const btn = $("pShare"); if (btn) { btn.disabled = true; btn.textContent = "Making your card…"; }
+    const btn = $("pShare"); if (btn) { btn.disabled = true; $("pShareTxt").textContent = "Making your card…"; }
     try {
       const cv = await card(), blob = await new Promise(r => cv.toBlob(r, "image/png")), file = new File([blob], "stixx-stats.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: "My STIXX" }); } catch (e) {} }
       else { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "stixx-stats.png"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Saved your stats card"); }
-    } finally { if (btn) { btn.disabled = false; btn.textContent = "Share my stats"; } }
+    } finally { if (btn) { btn.disabled = false; $("pShareTxt").textContent = "Share my stats"; } }
   }
   return { log, html, toggle, stats, card, share };
 })();

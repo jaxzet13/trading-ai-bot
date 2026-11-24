@@ -565,6 +565,87 @@ svg.lock { width: 14px; height: 14px; flex: none; fill: none; stroke: currentCol
 .spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--ink); animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
+
+/* ============================================================================
+   THE FEEL PASS. How the page behaves under a thumb: every press answers, sheets and pages glide, numbers flash when they move.
+   ========================================================================== */
+/* nothing on the page selects or pops a menu when pressed, except the things worth copying */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea, .cid, .cid b, [contenteditable], .selectable { -webkit-user-select: text; user-select: text; }
+img { -webkit-user-drag: none; }
+/* every press answers at once */
+button, .btn, .crow, .mrow, .ctile, .btabs a, .ptab, .mover, .mvc, .chip, .seg button, .msell, .sellq { transition: transform .14s cubic-bezier(.2, .8, .2, 1), background .15s, border-color .15s, opacity .15s; }
+button:active:not(:disabled), .btn:active:not(:disabled), .btabs a:active, .chip:active { transform: scale(.955); }
+.btn.solid.big:active:not(:disabled) { transform: scale(.975); }
+.crow:active, .mrow .mmain:active, .ctile:active { transform: scale(.985); }
+@media (prefers-reduced-motion: reduce) { button:active, .btn:active, .btabs a:active, .crow:active, .ctile:active { transform: none !important; } }
+/* the main button has weight */
+.btn.solid.big { box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 10px 30px -12px rgba(236,231,220,.35); }
+.btn.solid.free.big { box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 10px 34px -10px rgba(159,216,166,.55); }
+/* frosted bars, like the system's own */
+header.top { background: rgba(5,5,6,.72); -webkit-backdrop-filter: saturate(160%) blur(18px); backdrop-filter: saturate(160%) blur(18px); }
+@media (max-width: 760px) { .btabs { background: rgba(8,8,10,.72) !important; -webkit-backdrop-filter: saturate(160%) blur(20px); backdrop-filter: saturate(160%) blur(20px); } }
+/* a toast that looks like it belongs on a phone */
+.toast { border-radius: 999px; padding: 11px 20px; font-weight: 600; box-shadow: 0 12px 40px -8px rgba(0,0,0,.8); animation: toastIn .32s cubic-bezier(.2, .9, .3, 1.2) both; }
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 14px) scale(.94); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+/* numbers flash when they move */
+.tk-up { animation: tkUp 1s ease-out; } .tk-dn { animation: tkDn 1s ease-out; }
+@keyframes tkUp { 0%, 25% { color: var(--ok); text-shadow: 0 0 14px rgba(159,216,166,.55); } } @keyframes tkDn { 0%, 25% { color: var(--bad); text-shadow: 0 0 14px rgba(232,120,109,.5); } }
+/* coins to the balance */
+.coin { position: fixed; left: 0; top: 0; z-index: 95; margin: -9px 0 0 -9px; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; background: var(--ok); color: #06140a; font: 800 11px/1 Inter, system-ui, sans-serif; pointer-events: none; will-change: transform; box-shadow: 0 0 12px rgba(159,216,166,.6); }
+#bal.bump { animation: balBump .5s cubic-bezier(.2, .9, .3, 1.4); } @keyframes balBump { 30% { transform: scale(1.16); color: var(--ok); } }
+#bal { display: inline-block; transform-origin: right center; }
+/* the stage glows in the colour of the card that just turned over */
+.stage::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity .6s; background: radial-gradient(70% 42% at 50% 47%, color-mix(in srgb, var(--rc, #ece7dc) 22%, transparent), transparent 72%); }
+.stage:has(.st-title.in)::before { opacity: 1; }
+.newtag { display: inline-block; padding: 1px 7px; border-radius: 999px; background: var(--ok); color: #06140a; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; vertical-align: 1px; }
+.fan > .isnew { position: relative; } .fan > .isnew::after { content: "new"; position: absolute; top: -7px; right: -5px; z-index: 2; padding: 1px 6px; border-radius: 999px; background: var(--ok); color: #06140a; font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.goalline { margin: 14px auto 0; max-width: 34ch; text-align: center; font-size: 13px; color: var(--dim); line-height: 1.5; } .goalline b { color: var(--ok); font-weight: 600; }
+
+/* ---- the gate: the first thing anyone sees ---- */
+.gate { background: radial-gradient(90% 60% at 50% 20%, #15151a, var(--bg) 70%); padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom)); }
+.gatebox { width: min(400px, 100%); justify-items: center; text-align: center; gap: 16px; }
+.glogo { font-weight: 800; letter-spacing: .42em; font-size: 15px; padding-left: .42em; color: var(--ink); }
+.gatebox .art { margin: 6px 0 2px; color: var(--dim); font-size: 14px; line-height: 1.25; text-align: left; }
+.gttl { margin: 0; font-size: 28px; line-height: 1.12; letter-spacing: -.02em; font-weight: 700; }
+.gsub { margin: 0; font-size: 15px; line-height: 1.55; }
+.gatebox label.gcheck { align-items: center; gap: 12px; width: 100%; min-height: 54px; padding: 10px 14px; border: 1px solid var(--ln2); border-radius: 14px; background: #0b0b0e; color: var(--ink); font-size: 14px; text-align: left; cursor: pointer; }
+.gcheck input { width: 22px; height: 22px; flex: none; accent-color: var(--ok); }
+.gatebox .btn.solid.big { width: 100%; min-height: 56px; }
+.gfine { margin: 0; }
+
+/* ---- Me: chart header, goals, buyer rush, tip ---- */
+.chead { align-items: center; gap: 10px; } .chead .label { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.seg.mini { padding: 2px; } .seg.mini button { min-height: 28px; padding: 4px 11px; font-size: 12px; }
+.goals { display: grid; border-top: 1px solid var(--ln); }
+.goal { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--ln); }
+.gmain { display: grid; gap: 7px; min-width: 0; } .gmain b { font-size: 15px; font-weight: 600; } .gmain small { color: var(--dim); font-size: 12.5px; }
+.gbar { height: 6px; border-radius: 6px; background: #17171b; overflow: hidden; } .gbar i { display: block; height: 100%; border-radius: 6px; background: var(--ink); transition: width .5s cubic-bezier(.2, .8, .2, 1); }
+.goal.rdy .gbar i { background: var(--ok); } .goal.got { opacity: .5; } .goal.got .gbar i { background: var(--dim); }
+.grew { color: var(--dim); font-size: 13px; font-weight: 600; white-space: nowrap; } .gdone { color: var(--ok); font-weight: 800; }
+.btn.solid.free.gclaim { padding: 10px 16px; min-height: 44px; border-radius: 12px; font-size: 14px; }
+.gmore { margin: 8px 0 26px; }
+.rush { display: inline-block; font-style: normal; font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #06140a; background: var(--ok); border-radius: 999px; padding: 1px 6px; vertical-align: 2px; animation: rushPulse 1.6s ease-in-out infinite; }
+@keyframes rushPulse { 50% { box-shadow: 0 0 0 5px rgba(159,216,166,0); } 0%, 100% { box-shadow: 0 0 0 0 rgba(159,216,166,.5); } }
+@media (prefers-reduced-motion: reduce) { .rush { animation: none; } }
+.tip { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; margin: 6px 0 22px; padding: 14px 14px 14px 16px; border: 1px solid var(--ln2); border-radius: 14px; background: #0b0b0e; }
+.tip div { display: grid; gap: 4px; } .tip b { font-size: 14px; } .tip span { color: var(--dim); font-size: 13px; line-height: 1.45; }
+.x2 { width: 32px; height: 32px; border: 0; border-radius: 50%; background: #17171b; color: var(--dim); font-size: 16px; line-height: 1; }
+/* ---- the card window: one price, two labelled changes ---- */
+.pricebox .chgs { display: flex; flex-wrap: wrap; gap: 6px 14px; width: 100%; } .pricebox .chgs span { display: inline-flex; align-items: center; gap: 6px; } .pricebox .chgs small { color: var(--dim); font-size: 12px; }
+
+.btn.solid.free.gclaim { animation: none; box-shadow: none; }
+/* iPhone: a field under 16px makes the page zoom when tapped; and the page behind a sheet or the stage stays still */
+@media (max-width: 760px) { select, input[type="text"], input[type="email"], input[type="number"], textarea { font-size: 16px; } }
+body:has(#modal:not([hidden])), body:has(#stage:not([hidden])) { overflow: hidden; }
+.mbox, .summary { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
+/* the share button is an option, not the headline */
+.btn.pshare { gap: 8px; min-height: 46px; border-radius: 12px; font-weight: 600; } .btn.pshare svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* the pack on the home page is alive: it floats a little */
+@media (prefers-reduced-motion: no-preference) { body.on-home #homePack { animation: packFloat 5.5s ease-in-out infinite; } }
+@keyframes packFloat { 50% { translate: 0 -5px; } }
+#homePack { filter: drop-shadow(0 24px 34px rgba(0,0,0,.6)); }
 </style>
 </head>
 <body>
@@ -620,7 +701,9 @@ svg.lock { width: 14px; height: 14px; flex: none; fill: none; stroke: currentCol
     <div class="page-head"><h1 class="ttl">Me</h1><p class="live"></p></div>
     <div id="pWorth"></div>
     <div id="pChart" class="pchart"></div>
-    <button class="btn solid pshare" id="pShare" type="button">Share my stats</button>
+    <button class="btn pshare" id="pShare" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span id="pShareTxt">Share my stats</span></button>
+    <h3 class="sec">Goals</h3>
+    <div id="pGoals"></div>
     <h3 class="sec">Your cards</h3>
     <div class="clist" id="pTable"></div>
     <p class="small" id="pNote"></p>
@@ -629,6 +712,7 @@ svg.lock { width: 14px; height: 14px; flex: none; fill: none; stroke: currentCol
     <h3 class="sec" id="pMktH">Moving now</h3>
     <div class="pmkt" id="pMkt"></div>
     <div class="plinks" id="pLinks"></div>
+    <div id="pTip"></div>
     <details class="more big" id="pMore"><summary>Limits and settings</summary><div id="pLimits" style="margin:16px 0 28px"></div><div id="pSettings"></div></details>
   </section>
 
@@ -697,13 +781,16 @@ svg.lock { width: 14px; height: 14px; flex: none; fill: none; stroke: currentCol
 <div class="modal" id="modal" hidden><div class="mbox" id="mbox"></div></div>
 <div class="gate" id="gate" hidden>
   <div class="gatebox">
+    <div class="glogo" aria-label="STIXX">STIXX</div>
     <pre class="art" aria-hidden="true">  .---.
- ( o o )   18+ only.
+ ( o o )
   \ ~ /
  --'-'--</pre>
-    <p class="dim">STIXX cards contain explicit language and violence. <span id="gateMoney">Everything here is play money: nothing is ever charged, and nothing can be cashed out.</span></p>
-    <label for="ageOK"><input type="checkbox" id="ageOK"> I'm 18 or older and I understand it's play money.</label>
+    <h1 class="gttl">Card packs made of text</h1>
+    <p class="dim gsub">Open a pack, pull cards, and watch what the AI buyers do with them. <span id="gateMoney">Everything here is play money: nothing is ever charged, and nothing can be cashed out.</span></p>
+    <label class="gcheck" for="ageOK"><input type="checkbox" id="ageOK"><span>I'm 18 or older and I understand it's play money.</span></label>
     <button class="btn solid big" id="gateGo" disabled>enter</button>
+    <p class="small faint gfine">18+ only. STIXX cards contain explicit language and violence.</p>
   </div>
 </div>
 
@@ -834,11 +921,12 @@ const RQ_BY_ID = Object.fromEntries(RQ.cards.map(c => [c.id, c]));
    2. UTILITIES
    ========================================================================== */
 const $ = id => document.getElementById(id);
-const money = c => (c < 0 ? "-$" : "$") + (Math.abs(c) / UNIT).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// One way to write money everywhere: two decimals, or three under ten cents (a common card is worth a couple of cents, and "$0.02" would hide which).
+const money = c => { const a = Math.abs(c) / UNIT, d = a > 0 && a < .0995 ? 3 : 2; return (c < 0 ? "-$" : "$") + (a > 0 && a < .001 ? "0.001" : a.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d })); };
 // real money (the Requiem pack and buying packs) is in real cents, never in game units
 const rmoney = c => (c < 0 ? "-$" : "$") + (Math.abs(c) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 // money for things that move: a 10 cent card needs four decimals for you to see it breathe
-const moneyS = c => { const a = Math.abs(c) / UNIT, d = a >= 1 ? 2 : a >= .1 ? 3 : 4; return (c < 0 ? "-$" : "$") + a.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
+const moneyS = money;
 // update a container in place instead of rebuilding it, so buttons you are pressing, scroll positions and pictures are never disturbed
 function patchKids(a, b) {
   const an = a.childNodes, bn = b.childNodes;
@@ -1480,7 +1568,7 @@ class Veil {
   frame() {
     const { ctx, cols, rows, cell, p } = this, rh = cell * 1.55; ctx.clearRect(0, 0, this.w, this.h);
     ctx.font = `700 ${Math.round(cell * 1.02)}px "JetBrains Mono","DejaVu Sans Mono",monospace`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    const idle = .13 + this.tier * .045;
+    const idle = .34 + this.tier * .05;
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
       const i = r * cols + c, th = this.thr[i]; if (p >= 0 && p > th + .1) continue;
       ctx.globalAlpha = 1; ctx.fillStyle = "#050506"; ctx.fillRect(c * cell, r * rh, cell + 1, rh + 1);
@@ -1561,7 +1649,7 @@ function renderHome() {
   const pk = curPack(), ps = packStats(pk); $("banner").textContent = BANNER.join("\n");
   $("packTabs").live = PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-pack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("");
   $("packName").textContent = pk.name; $("packBlurb").textContent = pk.blurb;
-  const fp = state.freePacks, pp = boughtOf(pk.id); $("packLine").innerHTML = `${pk.n} cards · ${money(ps.price)} · <a class="linkbtn" href="#/odds">odds</a>`; const mk = Math.min(openN(), maxN(pk)), many = mk >= 2; $("openBtn").textContent = many ? `open ${mk} packs${(() => { const c = Math.max(0, mk - fp - pp) * ps.price; return c ? " · " + money(c) : ""; })()}` : fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : pp ? `open a pack you bought${pp > 1 ? " · " + pp + " left" : ""}` : (Shop.cash() && state.coins < ps.price) ? "add money to open a pack" : (Shop.has(pk.id) && state.coins < ps.price) ? `buy a pack · ${rmoney(Shop.price(pk.id))}` : `open pack · ${money(ps.price)}`; $("openBtn").classList.toggle("free", fp > 0 || pp > 0);
+  const fp = state.freePacks, pp = boughtOf(pk.id); { noteFound(); const inSet = CARDS.filter(c => c.set === pk.set); $("packLine").innerHTML = `${pk.n} cards · ${money(ps.price)}${state.s.packs ? ` · ${inSet.filter(c => state.found[c.no]).length}/${inSet.length} found` : ""} · <a class="linkbtn" href="#/odds">odds</a>`; } const mk = Math.min(openN(), maxN(pk)), many = mk >= 2; $("openBtn").textContent = many ? `open ${mk} packs${(() => { const c = Math.max(0, mk - fp - pp) * ps.price; return c ? " · " + money(c) : ""; })()}` : fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : pp ? `open a pack you bought${pp > 1 ? " · " + pp + " left" : ""}` : (Shop.cash() && state.coins < ps.price) ? "add money to open a pack" : (Shop.has(pk.id) && state.coins < ps.price) ? `buy a pack · ${rmoney(Shop.price(pk.id))}` : `open pack · ${money(ps.price)}`; $("openBtn").classList.toggle("free", fp > 0 || pp > 0);
   { const r = $("multiRow"), top = maxN(pk), opts = MANY.filter(n => n === 1 || n <= top); r.hidden = top < 2; r.innerHTML = `<span class="small dim">open at once</span>` + opts.map(n => `<button type="button" class="seg1${n === Math.min(openN(), top) ? " on" : ""}" data-many="${n}" aria-pressed="${n === Math.min(openN(), top)}">${n}</button>`).join(""); }
   $("buyRow").hidden = !Shop.has(pk.id) || (!fp && !pp && state.coins < ps.price); $("buyBtn").textContent = Shop.cash() ? "Add money" : `Buy packs · ${rmoney(Shop.price(pk.id))} each`;
   $("how").hidden = state.s.packs > 0; $("inviteBar").live = state.s.packs > 0 ? inviteBarHTML() : "";
@@ -1578,24 +1666,32 @@ const usd = n => n >= 1e9 ? "$" + (n / 1e9).toFixed(2) + "B" : n >= 1e6 ? "$" + 
 const agoText = m => m === 0 ? "just now" : m < 60 ? m + " min ago" : m < 2880 ? Math.floor(m / 60) + "h ago" : Math.floor(m / 1440) + " days ago";
 const whenText = h => h < 2 ? "just now" : h < 48 ? h + " hours ago" : Math.round(h / 24) + " days ago";
 // the profile: your money, live, and every card you hold with its price and profit or loss
+// what the cards you hold now were worth over the last hours: each copy's own path, at its starting value before you pulled it
+let pRange = 24, awaySince = 0;
+function cardsSeries(hours, n) { const v = state.vault; if (!v.length) return null; const t = Date.now(), out = []; for (let i = 0; i < n; i++) { const ti = t - hours * 36e5 * (1 - i / (n - 1)); let s = 0; for (const c of v) s += ti <= (c.t || 0) ? Val.startOf(c) : Val.at(c, ti, i < n - 1); out.push(s); } return out; }
+// what your cards did while the app was closed (this visit only, and only if you were gone a while)
+function awayLine() { if (!awaySince || Date.now() - awaySince < 30 * 60000 || !state.vault.length) return ""; let d = 0; for (const c of state.vault) if ((c.t || 0) < awaySince) d += valueOf(c) - Val.at(c, awaySince, true); const h = (Date.now() - awaySince) / 36e5; return Math.abs(d) < 1 ? "" : `<span>${signR(d, "while you were away " + (h >= 48 ? Math.round(h / 24) + " days" : h >= 1 ? Math.round(h) + "h" : Math.round(h * 60) + " min"))}</span>`; }
+// iPhone only, and only in the browser: how to put it on the Home Screen. Shown until dismissed, never as a pop-up.
+function tipHTML() { if (typeof Hap === "undefined" || !Hap.ios || navigator.standalone || (state.tg && state.tg.a2hs)) return ""; return `<div class="tip"><div><b>Make it an app</b><span>Tap Share in Safari, then “Add to Home Screen”. STIXX opens full screen from your Home Screen.</span></div><button class="x2" id="tipX" aria-label="Dismiss">×</button></div>`; }
 function worthSeries(pts) {
   const h = state.hist, now = Date.now(), t0 = Math.max(h.length ? h[0][0] : now, now - 864e5); if (now - t0 < 90000) return null;
   const out = []; let j = 0; for (let i = 0; i < pts; i++) { const ts = t0 + (now - t0) * i / (pts - 1); while (j + 1 < h.length && h[j + 1][0] <= ts) j++; out.push(h[j][1]); } out[pts - 1] = netWorth();
   return { out, mins: Math.round((now - t0) / 60000) };
 }
 // money as people read it on a phone: cents, with "<$0.01" for anything smaller
-const moneyR = u => { const d = Math.abs(u) / UNIT; return d > 0 && d < .01 ? "<$0.01" : "$" + d.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+const moneyR = u => money(Math.abs(u));
 const signR = (u, label) => `<span class="${u > 0 ? "up" : u < 0 ? "dn" : "fl"}">${u > 0 ? "+" : u < 0 ? "−" : ""}${moneyR(u)}</span>${label ? ` <span class="dim">${label}</span>` : ""}`;
 const pctR = p => `<small class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲" : p < -.0005 ? "▼" : "–"} ${Math.abs(p) >= 10 ? "×" + (1 + p).toFixed(0) : Math.round(Math.abs(p) * 100) + "%"}</small>`;
 function renderProfile() {
   $("pLimits").live = limitsHTML(); $("pSettings").live = settingsHTML(); $("pHist").live = History.html();
   const net = netWorth(), hold = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0), all = profitAll(), d24 = profitSince(864e5), found = new Set(state.vault.map(c => c.no)).size;
-  $("pWorth").live = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}">${moneyR(net)}</div><div class="wmeta"><span>${signR(all, "since you started")}</span><span>${signR(d24, "today")}</span></div></div>
+  $("pWorth").live = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}" data-tick="net" data-v="${Math.round(net)}">${moneyR(net)}</div><div class="wmeta"><span>${signR(all, "since you started")}</span>${Math.abs(d24) >= 5 ? `<span>${signR(d24, "today")}</span>` : ""}${awayLine()}</div></div>
     <div class="wsplit"><div><span class="label">cash</span><b>${moneyR(state.coins)}</b></div><div><span class="label">your cards</span><b>${moneyR(hold)}</b></div><div><span class="label">made on sales</span><b>${signR(state.s.realized)}</b></div></div>`;
-  const ws = worthSeries(120);
-  $("pChart").live = ws ? `<div class="mk">${lineChart(ws.out, { fmt: money, h: 110 })}</div>` : "";
-  const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), q: quickCopy(c.no) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
-  $("pTable").live = groups.length ? groups.map(g => `<div class="mrow"><button class="mmain" data-card="${g.c.no}" aria-label="${esc(g.c.name)}">${thumb(g.c)}<span class="mn"><b>${esc(g.c.name)}</b><small>${g.n > 1 ? `×${g.n} · ` : ""}${rarLabel(g.c)}</small></span><span class="mp"><b>${moneyR(g.val)}</b>${pctR(g.val / Math.max(1, g.cost) - 1)}</span></button><button class="msell" data-qsell="${g.c.no}" aria-label="${esc(quickAria(g.c.no))}">${g.n > 1 ? "Sell 1" : "Sell"}<small>${moneyR(sellOf(g.q))}</small></button></div>`).join("") + `<div class="mtot"><span>All your cards</span><b>${moneyR(hold)}</b></div>` : "";
+  const cs = cardsSeries(pRange, 72);
+  $("pChart").live = cs ? `<div class="mk"><div class="row chead"><span class="label">Your cards · ${pRange === 24 ? "last 24 hours" : "last 7 days"} ${pill(cs[cs.length - 1] / Math.max(1, cs[0]) - 1)}</span><span class="seg mini" role="group"><button data-prange="24" class="${pRange === 24 ? "on" : ""}" aria-pressed="${pRange === 24}">24h</button><button data-prange="168" class="${pRange === 168 ? "on" : ""}" aria-pressed="${pRange === 168}">7d</button></span></div>${lineChart(cs, { fmt: money, h: 120 })}</div>` : "";
+  $("pGoals").live = Goals.html(); Goals.badge(); $("pTip").live = tipHTML();
+  const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), q: quickCopy(c.no), hot: cs.some(x => { const m = Val.moves(x, 6)[0]; return m && m.pct > .15; }) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
+  $("pTable").live = groups.length ? groups.map(g => `<div class="mrow"><button class="mmain" data-card="${g.c.no}" aria-label="${esc(g.c.name)}">${thumb(g.c)}<span class="mn"><b>${esc(g.c.name)}${g.hot ? ` <i class="rush" title="AI buyers rushed into a copy in the last few hours">buyers in</i>` : ""}</b><small>${g.n > 1 ? `×${g.n} · ` : ""}${rarLabel(g.c)}</small></span><span class="mp"><b data-tick="g${g.c.no}" data-v="${g.val.toFixed(2)}">${moneyR(g.val)}</b>${pctR(g.val / Math.max(1, g.cost) - 1)}</span></button><button class="msell" data-qsell="${g.c.no}" aria-label="${esc(quickAria(g.c.no))}">${g.n > 1 ? "Sell 1" : "Sell"}<small>${moneyR(sellOf(g.q))}</small></button></div>`).join("") + `<div class="mtot"><span>All your cards</span><b>${moneyR(hold)}</b></div>` : "";
   $("pNote").innerHTML = groups.length ? `Tap a card for its chart. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${moneyR(state.s.spent)} spent · ${moneyR(state.s.sold)} back from sales</span>` : `No cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they show up here with a live price.`;
   const rows = movers().rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24)).slice(0, 4); $("pMktH").hidden = !rows.length;
   $("pMkt").live = rows.map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)}<span class="dim">24h</span></button>`).join("");
@@ -1637,6 +1733,7 @@ function route() { const h = location.hash.replace(/^#\/?/, ""); show(h === "vau
 function refreshLive() {
   if (SS || !$("share").hidden || !$("cut").hidden || view === "invite" || view === "limited") return; ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds })[view]();
   if (modalNo && !$("modal").hidden) cardModal(modalNo, true);   // updated in place: the buttons you are pressing stay where they are
+  if (typeof Tick !== "undefined") Tick.scan();
 }
 
 /* ---- the card window ---- */
@@ -1649,7 +1746,7 @@ function cardModal(no, keep) {
   const copies = cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div class="ci">${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${moneyS(costOf(c))}</small></div><div class="r"><span class="cv"><b>${moneyS(valueOf(c))}</b>${pill(gainOf(c))}</span>${replayable(c) ? `<button class="btn small ghost" data-share="${c.uid}">replay &amp; share</button>` : ""}<button class="btn small sellb" data-sell="${c.uid}" data-no="${no}" aria-label="Sell ${esc(card.name)} for ${money(sellOf(c))}, after the 10% fee">Sell for ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<div class="notyet"><b>You haven't found this card yet.</b><span class="small">It turns up in ${chance(p, packOf(card))}.</span><button class="btn small solid" data-open data-close>open a pack</button></div>`;
   openModal(`<div class="mcard">${cardHTML(best || { no }, { locked: !best })}</div><div class="minfo">
     <div class="mhead"><span class="label" style="color:${R.col}">${rarLabel(card)} · No. ${card.no}</span><h2>${esc(card.name)}</h2>
-      <div class="pricebox">${best ? `<b>${moneyS(now)}</b>${pill(Val.pct(best, 24))}<span class="dim">today</span>${pill(gainOf(best))}<span class="dim">since you pulled it</span>` : `<b>${moneyS(card.val)}</b><span class="dim">starting value</span>`}</div></div>
+      <div class="pricebox">${best ? `<b data-tick="m${card.no}" data-v="${now.toFixed(2)}">${moneyS(now)}</b><div class="chgs"><span>${pill(Val.pct(best, 24))}<small>today</small></span><span>${pill(gainOf(best))}<small>since you pulled it</small></span></div>` : `<b>${moneyS(card.val)}</b><span class="dim">starting value</span>`}</div></div>
     ${copies}
     ${best ? `<div class="mk"><div class="label">Your best copy · ${hrs >= 168 ? "last 7 days" : "since you pulled it"}</div>${ser.length > 1 && hrs > .05 ? lineChart(ser, { log: true, fmt: moneyS, h: 150 }) : `<p class="small">Just pulled. Its value starts moving now.</p>`}<div class="small">${Val.watching(best)} AI buyers watching${mv ? ` · ${mv.ago ? mv.ago + "h ago" : "this hour"} buyers ${mv.pct > 0 ? "rushed in" : "dumped it"} ${pctShort(mv.pct)}` : ""} · simulated</div></div>` : ""}
     <p class="dim facts">${fmt(card.chars)} characters · starts at ${money(card.val)} · turns up in ${chance(p, packOf(card))}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
@@ -1660,8 +1757,8 @@ function cardModal(no, keep) {
 let lastSale = null;
 function sell(uids) {
   let g = 0, realized = 0; const copies = [];
-  for (const u of uids) { const c = state.vault.find(x => x.uid === u); if (c) { g += sellOf(c); realized += sellOf(c) - costOf(c); copies.push(c); state.vault = state.vault.filter(x => x !== c); } }
-  if (g) { state.coins += g; state.s.sold += g; state.s.realized += realized; lastSale = { copies, g, realized, at: Date.now() }; save(); renderBal(true); Snd.sell(); buzz([25, 35, 25]); }
+  for (const u of uids) { const c = state.vault.find(x => x.uid === u); if (c) { g += sellOf(c); realized += sellOf(c) - costOf(c); state.s.bestX = Math.max(state.s.bestX || 0, sellOf(c) / Math.max(1, Val.startOf(c))); copies.push(c); state.vault = state.vault.filter(x => x !== c); } }
+  if (g) { state.coins += g; state.s.sold += g; state.s.realized += realized; state.s.nSold = (state.s.nSold || 0) + copies.length; lastSale = { copies, g, realized, at: Date.now() }; save(); renderBal(true); Snd.sell(); buzz([25, 35, 25]); if (typeof coinBurst === "function") coinBurst(lastTap, 3 + Math.min(6, copies.length)); Goals.badge(); }
   return g;
 }
 const soldToast = (msg, g) => toast(msg || "Sold for " + money(g));                        // a sale is final: no undo
@@ -1702,7 +1799,7 @@ function renderMarket() {
   $("mFilters").live = n ? seg("m", "show", [["all", "All"], ["up", "Rising"], ["down", "Falling"]], MKF.show) + selectHTML("mSort", [["move", "Biggest move"], ["price", "Highest value"], ["new", "Newest"]], MKF.sort, "Sort") : "";
   let list = rows.filter(r => MKF.show === "all" || (MKF.show === "up" && r.p24 > .0005) || (MKF.show === "down" && r.p24 < -.0005));
   list.sort(MKF.sort === "price" ? (a, b) => b.now - a.now : MKF.sort === "new" ? (a, b) => (b.copy.t || 0) - (a.copy.t || 0) : (a, b) => Math.abs(b.p24) - Math.abs(a.p24));
-  $("mList").live = list.map(r => cardRow(r.c, { fx: r.copy.fx, s: r.s, price: moneyR(r.now), pill: pill(r.p24), sub: `#${r.copy.serial} · ${esc(String(r.copy.code || "").slice(-4))}${r.copy.fx ? " · " + esc(STYLES[r.copy.fx].name) : ""}` })).join("") || (n ? `<p class="small" style="padding:18px 0">Nothing here right now.</p>` : "");
+  $("mList").live = list.map(r => cardRow(r.c, { fx: r.copy.fx, s: r.s, price: `<span data-tick="c${r.copy.uid}" data-v="${r.now.toFixed(2)}">${moneyR(r.now)}</span>`, pill: pill(r.p24), sub: `#${r.copy.serial} · ${esc(String(r.copy.code || "").slice(-4))}${r.copy.fx ? " · " + esc(STYLES[r.copy.fx].name) : ""}` })).join("") || (n ? `<p class="small" style="padding:18px 0">Nothing here right now.</p>` : "");
 }
 
 /* ---- the collection ---- */
@@ -1937,12 +2034,12 @@ const History = (() => {
     return cv;
   }
   async function share() {
-    const btn = $("pShare"); if (btn) { btn.disabled = true; btn.textContent = "Making your card…"; }
+    const btn = $("pShare"); if (btn) { btn.disabled = true; $("pShareTxt").textContent = "Making your card…"; }
     try {
       const cv = await card(), blob = await new Promise(r => cv.toBlob(r, "image/png")), file = new File([blob], "stixx-stats.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: "My STIXX" }); } catch (e) {} }
       else { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "stixx-stats.png"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Saved your stats card"); }
-    } finally { if (btn) { btn.disabled = false; btn.textContent = "Share my stats"; } }
+    } finally { if (btn) { btn.disabled = false; $("pShareTxt").textContent = "Share my stats"; } }
   }
   return { log, html, toggle, stats, card, share };
 })();
@@ -1975,7 +2072,7 @@ async function openPack(pack) {
   const pkEl = $("stPack").firstChild; mine.ps = liveWindow(pkEl, pk); tiltPack(pkEl);
   let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS !== mine) return;
   if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else if (bought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
-  state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); History.log(pk, 1, free || bought ? 0 : price, price, items); SS_PRICE = price; state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
+  state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); History.log(pk, 1, free || bought ? 0 : price, price, items); SS_PRICE = price; { noteFound(); const seenNo = new Set(); mine.fresh = new Set(items.filter(c => { const nw = !state.found[c.no] && !seenNo.has(c.no); seenNo.add(c.no); return nw; }).map(c => c.uid)); } state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
   mine.items = items; mine.phase = "pack"; hint("Tap the pack to tear it open"); $("stPack").addEventListener("click", tear);
 }
 async function tear() {
@@ -2020,7 +2117,7 @@ async function reveal(el, c, card, R, v) {
   if (T >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + T * 14, [R.col, "#fff"]);
   if (T >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
   const t = $("stTitle"); t.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col);
-  t.innerHTML = `<div class="rw">${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b> <span class="dim">· ${Val.watching(c)} AI buyers watching</span></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
+  t.innerHTML = `<div class="rw">${SS.fresh && SS.fresh.has(c.uid) ? `<span class="newtag">new</span> ` : ""}${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b> <span class="dim">· ${Val.watching(c)} AI buyers watching</span></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
   { const nm = t.querySelector(".nm"); nm.style.removeProperty("--px"); blockReveal(nm, card.name, 480); fitName(nm); } t.classList.remove("in"); void t.offsetWidth; t.classList.add("in");
 }
 async function dismiss(el, c) {
@@ -2032,6 +2129,13 @@ function skipAll() { if (!SS || SS.phase === "summary") return; if (SS.phase ===
 // one tap to turn the pack into money and open the next: only offered when the next pack is covered (a free pack, one you bought, or what these cards sell for plus your balance)
 const sellNext = back => { const pk = SS.pack, price = packPrice(pk), ok = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins + back >= price; return ok && back > 0 ? `<button class="btn solid" id="sumSellAgain">sell all · open another</button>` : ""; };
 const againLabel = pk => (openN() > 1 && maxN(pk) >= 2) ? (() => { const k = Math.min(openN(), maxN(pk)), c = Math.max(0, k - state.freePacks - boughtOf(pk.id)) * packPrice(pk); return `open ${k} more${c ? " · " + money(c) : ""}`; })() : state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
+// under a pack's result: how many of its cards were new, and how close the next goal is
+function goalLine() {
+  const nw = SS && SS.fresh ? SS.fresh.size : 0, rd = Goals.ready().length, nx = Goals.next(), parts = [];
+  if (nw) parts.push(`<b>${nw} new card${nw > 1 ? "s" : ""}</b> for your collection`);
+  if (rd) parts.push(`<b>${rd} goal${rd > 1 ? "s" : ""} done</b>: claim ${rd > 1 ? "them" : "it"} on Me`); else if (nx && nx.left <= 5) parts.push(`${nx.left} more to “${esc(nx.g.t)}” (+${nx.g.r} free pack${nx.g.r > 1 ? "s" : ""})`);
+  return parts.length ? `<p class="goalline">${parts.join(" · ")}</p>` : "";
+}
 function summary() {
   $("stMeter").hidden = true; if (SS.n > 1) { multiSummary(); return; }
   SS.phase = "summary"; const items = SS.items, back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
@@ -2039,7 +2143,8 @@ function summary() {
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(back)}">${blockSVG(money(back))}</div><span class="dim" style="font-size:13px">of cards you can sell</span></div>
     <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Its cards sell for ${money(back)}.` : SS.bought ? `A pack you bought. Its cards sell for ${money(back)} of play money.` : `You paid ${money(SS_PRICE)} and got ${money(back)} of cards: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))}.`}${x >= 2 ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${rarLabel(bc)}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
-    <div class="fan">${items.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>
+    <div class="fan">${items.map(c => `<div class="${SS.fresh && SS.fresh.has(c.uid) ? "isnew" : ""}">${cardHTML(c, { sm: true })}</div>`).join("")}</div>
+    ${goalLine()}
     <div class="row acts" style="justify-content:center">${sellNext(back)}<button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div></div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
@@ -2710,7 +2815,21 @@ const Snd = (() => {
   };
 })();
 const tapped = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;       // browsers allow sound and vibration only after you have tapped something
-const buzz = p => { if (!state.mute && !reduced && navigator.vibrate && tapped()) { try { navigator.vibrate(p); } catch (e) {} } };
+// An iPhone never vibrates for a web page, but a switch control gives a light tap when it flips. An unseen one, flipped from a tap, gives the page the same tap.
+const Hap = (() => {
+  const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); let lab = null, last = 0;
+  function tick() {
+    const t = performance.now(); if (t - last < 40) return; last = t;
+    if (!lab) { lab = document.createElement("label"); lab.setAttribute("aria-hidden", "true"); lab.style.cssText = "position:fixed;left:-99px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none"; const i = document.createElement("input"); i.type = "checkbox"; i.setAttribute("switch", ""); i.tabIndex = -1; lab.appendChild(i); document.body.appendChild(lab); }
+    try { lab.click(); } catch (e) {}
+  }
+  return { ios, tick };
+})();
+const buzz = p => {
+  if (state.mute || reduced || !tapped()) return;
+  if (navigator.vibrate) { try { navigator.vibrate(p); } catch (e) {} return; }
+  if (Hap.ios) { const n = Array.isArray(p) ? Math.min(3, Math.ceil(p.length / 2)) : 1; Hap.tick(); for (let i = 1; i < n; i++) setTimeout(Hap.tick, i * 95); }
+};
 document.addEventListener("pointerdown", () => Snd.unlock(), { once: true }); document.addEventListener("keydown", () => Snd.unlock(), { once: true });
 
 /* ---- the daily drop and the streak ---- */
@@ -3335,6 +3454,50 @@ const Machine = (() => {
 })();
 
 /* ============================================================================
+   8j. GOALS. Things to aim for, each with a free pack or two at the end: filling the collection, opening packs, and selling well.
+   A goal is finished by playing, never by paying, and nothing here has a timer. Finished goals wait until you claim them.
+   ========================================================================== */
+const Goals = (() => {
+  const foundN = () => { noteFound(); return Object.keys(state.found).length; };
+  const LIST = [
+    { id: "f5", t: "Find 5 different cards", n: 5, v: foundN, r: 1 },
+    { id: "f10", t: "Find 10 different cards", n: 10, v: foundN, r: 1 },
+    { id: "f15", t: "Find 15 different cards", n: 15, v: foundN, r: 1 },
+    { id: "f20", t: "Find 20 different cards", n: 20, v: foundN, r: 1 },
+    { id: "f25", t: "Find 25 different cards", n: 25, v: foundN, r: 2 },
+    { id: "fall", t: `Find all ${CARDS.length} cards`, n: CARDS.length, v: foundN, r: 3 },
+    { id: "p10", t: "Open 10 packs", n: 10, v: () => state.s.packs, r: 1 },
+    { id: "p50", t: "Open 50 packs", n: 50, v: () => state.s.packs, r: 1 },
+    { id: "p100", t: "Open 100 packs", n: 100, v: () => state.s.packs, r: 2 },
+    { id: "s1", t: "Sell your first card", n: 1, v: () => state.s.nSold || 0, r: 1 },
+    { id: "x2", t: "Sell a card for 2× what it started at", n: 2, v: () => state.s.bestX || 0, r: 1, x: true },
+    { id: "x5", t: "Sell a card for 5× what it started at", n: 5, v: () => state.s.bestX || 0, r: 2, x: true },
+    { id: "x10", t: "Sell a card for 10× what it started at", n: 10, v: () => state.s.bestX || 0, r: 3, x: true },
+  ];
+  const got = () => (state.goals = state.goals || {});
+  const done = g => g.v() >= g.n, claimed = g => !!got()[g.id];
+  const ready = () => LIST.filter(g => done(g) && !claimed(g));
+  function claim(id) {
+    const g = LIST.find(x => x.id === id); if (!g || claimed(g) || !done(g)) return;
+    got()[g.id] = Date.now(); state.freePacks += g.r; save(); renderChips(); Snd.level(); buzz([30, 40, 30, 40, 60]);
+    toast(`Goal done: +${g.r} free pack${g.r > 1 ? "s" : ""}`); badge(); if (view === "profile") renderProfile(); if (view === "home") renderHome();
+  }
+  let open = false;
+  function html() {
+    const rd = ready(), rest = LIST.filter(g => !claimed(g) && !done(g)).sort((a, b) => b.v() / b.n - a.v() / a.n), nDone = LIST.filter(claimed).length;
+    const show = open ? rd.concat(rest, LIST.filter(claimed)) : rd.concat(rest).slice(0, 2);
+    const row = g => { const v = Math.min(g.n, g.v()), c = claimed(g), d = done(g), pc = Math.max(0, Math.min(1, v / g.n));
+      return `<div class="goal${c ? " got" : d ? " rdy" : ""}"><div class="gmain"><b>${esc(g.t)}</b><div class="gbar" role="img" aria-label="${g.x ? (Math.round(v * 10) / 10) + "×" : Math.floor(v)} of ${g.n}${g.x ? "×" : ""}"><i style="width:${(pc * 100).toFixed(1)}%"></i></div><small>${c ? "done" : g.x ? `best so far ${v ? (Math.round(v * 10) / 10) + "×" : "–"}` : `${Math.floor(v)} of ${g.n}`}</small></div>${c ? `<span class="gdone" aria-hidden="true">✓</span>` : d ? `<button class="btn solid free gclaim" data-goal="${g.id}">Claim +${g.r}</button>` : `<span class="grew">+${g.r} pack${g.r > 1 ? "s" : ""}</span>`}</div>`; };
+    return `<div class="goals">${show.map(row).join("")}</div><button class="linkbtn plain gmore" id="gMore">${open ? "Show less" : `All goals · ${nDone} of ${LIST.length} done${rd.length > 2 ? ` · ${rd.length} to claim` : ""}`}</button>`;
+  }
+  function toggle() { open = !open; if (view === "profile") renderProfile(); }
+  function badge() {}                                                                      // no badge dots anywhere: a finished goal waits quietly on the Me page and in the pack result
+  // the closest goal you haven't finished, for a one-line nudge after a pack
+  function next() { const g = LIST.filter(g => !claimed(g) && !done(g) && !g.x).sort((a, b) => b.v() / b.n - a.v() / a.n)[0]; return g ? { g, left: g.n - Math.floor(g.v()) } : null; }
+  return { html, claim, toggle, badge, ready, next, LIST };
+})();
+
+/* ============================================================================
    9. EVENTS
    ========================================================================== */
 document.addEventListener("click", e => {
@@ -3349,6 +3512,8 @@ document.addEventListener("click", e => {
   if (t.dataset.opack) { oddsPack = t.dataset.opack; renderOdds(true); return; }
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.buy) { Shop.modal(); return; }
+  if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
+  if (t.dataset.prange) { pRange = +t.dataset.prange === 168 ? 168 : 24; renderProfile(); return; }
   if (t.dataset.many) { state.openN = +t.dataset.many || 1; persist(); Snd.click(); if (view === "home") renderHome(); return; }
   if (t.dataset.qsell) { quickSell(t.dataset.qsell); return; }
   if (t.dataset.share) { const c = state.vault.find(x => x.uid === t.dataset.share); if (c && replayable(c)) Share.open(receiptOf(c, false)); else toast("A replay is only offered for a card that is up more than 50%."); return; }
@@ -3400,6 +3565,8 @@ document.addEventListener("click", e => {
     case "fairBtn": case "fairBtn2": fairModal(); break;
     case "cashBtn": case "cashBtn2": cashModal(); break;
     case "pShare": History.share(); break;
+    case "gMore": Goals.toggle(); break;
+    case "tipX": state.tg = state.tg || {}; state.tg.a2hs = 1; persist(); renderProfile(); break;
     case "hMore": History.toggle(); break;
     case "aboutBtn": aboutModal(); break;
     case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); Ref.sync(); break;
@@ -3420,10 +3587,62 @@ stage.addEventListener("click", e => { if (SS && SS.phase === "stack" && !e.targ
 window.addEventListener("hashchange", route);
 
 /* ============================================================================
+   10b. FEEL. The small things that make the page behave like an app on a phone: a light tap under every press, sheets you can flick away,
+   numbers that flash when they move, and coins that fly to your balance when you sell. None of it changes what anything is worth.
+   ========================================================================== */
+// a light tap for every button, tab and row you press
+document.addEventListener("click", e => { const t = e.target.closest && e.target.closest("button, .btabs a, .ptab, .crow, .mrow, .ctile, a.btn, .mover"); if (t && !t.disabled) buzz(8); }, true);
+
+// tapping the tab you are already on goes back to the top, as it does in any phone app
+document.addEventListener("click", e => { const a = e.target.closest && e.target.closest(".btabs a.on"); if (a && scrollY > 0) scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" }); });
+
+// the card window is a sheet on a phone: drag it down from its top to put it away
+(() => {
+  const box = $("mbox"), modal = $("modal"); let y0 = null, dy = 0, t0 = 0;
+  const phone = () => matchMedia("(max-width: 760px)").matches;
+  box.addEventListener("touchstart", e => { if (!phone() || box.classList.contains("ec") || box.scrollTop > 0 || e.touches.length !== 1) { y0 = null; return; } const r = box.getBoundingClientRect(); if (e.touches[0].clientY - r.top > 70) { y0 = null; return; } y0 = e.touches[0].clientY; dy = 0; t0 = performance.now(); box.style.transition = "none"; }, { passive: true });
+  box.addEventListener("touchmove", e => { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); box.style.transform = `translateY(${dy}px)`; modal.style.background = `rgba(5,5,6,${Math.max(.3, .92 - dy / 600)})`; }, { passive: true });
+  const end = () => {
+    if (y0 == null) return; const fast = dy > 40 && dy / Math.max(1, performance.now() - t0) > .55; y0 = null; box.style.transition = "transform .22s cubic-bezier(.2,.8,.2,1)";
+    if (dy > 120 || fast) { box.style.transform = "translateY(105%)"; setTimeout(() => { closeModal(); box.style.transform = ""; box.style.transition = ""; modal.style.background = ""; }, 200); buzz(8); }
+    else { box.style.transform = ""; modal.style.background = ""; setTimeout(() => { box.style.transition = ""; }, 240); }
+  };
+  box.addEventListener("touchend", end); box.addEventListener("touchcancel", end);
+})();
+
+// a number that just moved flashes green or red for a moment, like a ticker
+const Tick = (() => {
+  const seen = new Map();
+  function scan() {
+    if (reduced) return; const live = new Set();
+    document.querySelectorAll("[data-tick]").forEach(el => {
+      const k = el.dataset.tick, v = +el.dataset.v; live.add(k); if (!isFinite(v)) return; const was = seen.get(k); seen.set(k, v);
+      if (was == null || was === v || Math.abs(v - was) / Math.max(1, Math.abs(was)) < .0005) return;
+      el.classList.remove("tk-up", "tk-dn"); void el.offsetWidth; el.classList.add(v > was ? "tk-up" : "tk-dn");
+    });
+    for (const k of seen.keys()) if (!live.has(k)) seen.delete(k);
+  }
+  return { scan };
+})();
+
+let lastTap = null; addEventListener("pointerdown", e => { lastTap = { left: e.clientX, top: e.clientY, width: 0, height: 0 }; }, true);
+// selling: a few coins fly from where you tapped up to your balance
+function coinBurst(from, n) {
+  const bal = $("bal"); if (reduced || !bal || !from) return; const a = from.getBoundingClientRect ? from.getBoundingClientRect() : from, b = bal.getBoundingClientRect(); if (!b.width) return;
+  const x0 = a.left + a.width / 2, y0 = a.top + a.height / 2, x1 = b.left + b.width / 2, y1 = b.top + b.height / 2; n = Math.max(3, Math.min(9, n || 5));
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement("span"); c.className = "coin"; c.textContent = "$"; c.setAttribute("aria-hidden", "true"); document.body.appendChild(c);
+    const sx = (Math.random() - .5) * 70, sy = -20 - Math.random() * 50, d = 420 + i * 45 + Math.random() * 80;
+    c.animate([{ transform: `translate(${x0}px, ${y0}px) scale(.6)`, opacity: 0 }, { transform: `translate(${x0 + sx}px, ${y0 + sy}px) scale(1.15)`, opacity: 1, offset: .25 }, { transform: `translate(${x1}px, ${y1}px) scale(.5)`, opacity: .9 }], { duration: d, easing: "cubic-bezier(.5,0,.3,1)", fill: "forwards" }).onfinish = () => c.remove();
+  }
+  setTimeout(() => { bal.classList.remove("bump"); void bal.offsetWidth; bal.classList.add("bump"); }, 430);
+}
+
+/* ============================================================================
    10. START
    ========================================================================== */
 // (when you were last here is kept for the market catch-up only; nothing welcomes you back with a summary)
-MK.advance(); logWorth(); state.lastSeen = Date.now(); persist(); renderBal(); renderChips(); if (Sale.ret() && location.hash !== "#/limited") location.hash = "#/limited"; route(); renderTape(); Sale.load(); Shop.load(); Shop.back();
+awaySince = state.lastSeen || 0; MK.advance(); logWorth(); state.lastSeen = Date.now(); persist(); renderBal(); renderChips(); if (Sale.ret() && location.hash !== "#/limited") location.hash = "#/limited"; route(); renderTape(); Goals.badge(); Sale.load(); Shop.load(); Shop.back();
 if (!state.ageOK) $("gate").hidden = false; else setTimeout(() => Cut.maybeIntro(), 400);
 // the market moves every 20 seconds; redraw whatever is on screen when it does
 let lastTick = MK.tick();

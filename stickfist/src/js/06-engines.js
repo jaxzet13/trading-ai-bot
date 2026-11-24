@@ -95,7 +95,7 @@ class Veil {
   frame() {
     const { ctx, cols, rows, cell, p } = this, rh = cell * 1.55; ctx.clearRect(0, 0, this.w, this.h);
     ctx.font = `700 ${Math.round(cell * 1.02)}px "JetBrains Mono","DejaVu Sans Mono",monospace`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    const idle = .13 + this.tier * .045;
+    const idle = .34 + this.tier * .05;
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
       const i = r * cols + c, th = this.thr[i]; if (p >= 0 && p > th + .1) continue;
       ctx.globalAlpha = 1; ctx.fillStyle = "#050506"; ctx.fillRect(c * cell, r * rh, cell + 1, rh + 1);

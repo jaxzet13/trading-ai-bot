@@ -23,7 +23,7 @@ function renderMarket() {
   $("mFilters").live = n ? seg("m", "show", [["all", "All"], ["up", "Rising"], ["down", "Falling"]], MKF.show) + selectHTML("mSort", [["move", "Biggest move"], ["price", "Highest value"], ["new", "Newest"]], MKF.sort, "Sort") : "";
   let list = rows.filter(r => MKF.show === "all" || (MKF.show === "up" && r.p24 > .0005) || (MKF.show === "down" && r.p24 < -.0005));
   list.sort(MKF.sort === "price" ? (a, b) => b.now - a.now : MKF.sort === "new" ? (a, b) => (b.copy.t || 0) - (a.copy.t || 0) : (a, b) => Math.abs(b.p24) - Math.abs(a.p24));
-  $("mList").live = list.map(r => cardRow(r.c, { fx: r.copy.fx, s: r.s, price: moneyR(r.now), pill: pill(r.p24), sub: `#${r.copy.serial} · ${esc(String(r.copy.code || "").slice(-4))}${r.copy.fx ? " · " + esc(STYLES[r.copy.fx].name) : ""}` })).join("") || (n ? `<p class="small" style="padding:18px 0">Nothing here right now.</p>` : "");
+  $("mList").live = list.map(r => cardRow(r.c, { fx: r.copy.fx, s: r.s, price: `<span data-tick="c${r.copy.uid}" data-v="${r.now.toFixed(2)}">${moneyR(r.now)}</span>`, pill: pill(r.p24), sub: `#${r.copy.serial} · ${esc(String(r.copy.code || "").slice(-4))}${r.copy.fx ? " · " + esc(STYLES[r.copy.fx].name) : ""}` })).join("") || (n ? `<p class="small" style="padding:18px 0">Nothing here right now.</p>` : "");
 }
 
 /* ---- the collection ---- */

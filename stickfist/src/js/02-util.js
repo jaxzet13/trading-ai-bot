@@ -2,11 +2,12 @@
    2. UTILITIES
    ========================================================================== */
 const $ = id => document.getElementById(id);
-const money = c => (c < 0 ? "-$" : "$") + (Math.abs(c) / UNIT).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// One way to write money everywhere: two decimals, or three under ten cents (a common card is worth a couple of cents, and "$0.02" would hide which).
+const money = c => { const a = Math.abs(c) / UNIT, d = a > 0 && a < .0995 ? 3 : 2; return (c < 0 ? "-$" : "$") + (a > 0 && a < .001 ? "0.001" : a.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d })); };
 // real money (the Requiem pack and buying packs) is in real cents, never in game units
 const rmoney = c => (c < 0 ? "-$" : "$") + (Math.abs(c) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 // money for things that move: a 10 cent card needs four decimals for you to see it breathe
-const moneyS = c => { const a = Math.abs(c) / UNIT, d = a >= 1 ? 2 : a >= .1 ? 3 : 4; return (c < 0 ? "-$" : "$") + a.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
+const moneyS = money;
 // update a container in place instead of rebuilding it, so buttons you are pressing, scroll positions and pictures are never disturbed
 function patchKids(a, b) {
   const an = a.childNodes, bn = b.childNodes;

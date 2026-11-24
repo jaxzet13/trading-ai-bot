@@ -41,7 +41,21 @@ const Snd = (() => {
   };
 })();
 const tapped = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;       // browsers allow sound and vibration only after you have tapped something
-const buzz = p => { if (!state.mute && !reduced && navigator.vibrate && tapped()) { try { navigator.vibrate(p); } catch (e) {} } };
+// An iPhone never vibrates for a web page, but a switch control gives a light tap when it flips. An unseen one, flipped from a tap, gives the page the same tap.
+const Hap = (() => {
+  const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); let lab = null, last = 0;
+  function tick() {
+    const t = performance.now(); if (t - last < 40) return; last = t;
+    if (!lab) { lab = document.createElement("label"); lab.setAttribute("aria-hidden", "true"); lab.style.cssText = "position:fixed;left:-99px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none"; const i = document.createElement("input"); i.type = "checkbox"; i.setAttribute("switch", ""); i.tabIndex = -1; lab.appendChild(i); document.body.appendChild(lab); }
+    try { lab.click(); } catch (e) {}
+  }
+  return { ios, tick };
+})();
+const buzz = p => {
+  if (state.mute || reduced || !tapped()) return;
+  if (navigator.vibrate) { try { navigator.vibrate(p); } catch (e) {} return; }
+  if (Hap.ios) { const n = Array.isArray(p) ? Math.min(3, Math.ceil(p.length / 2)) : 1; Hap.tick(); for (let i = 1; i < n; i++) setTimeout(Hap.tick, i * 95); }
+};
 document.addEventListener("pointerdown", () => Snd.unlock(), { once: true }); document.addEventListener("keydown", () => Snd.unlock(), { once: true });
 
 /* ---- the daily drop and the streak ---- */

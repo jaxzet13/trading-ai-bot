@@ -2,7 +2,7 @@
    10. START
    ========================================================================== */
 // (when you were last here is kept for the market catch-up only; nothing welcomes you back with a summary)
-MK.advance(); logWorth(); state.lastSeen = Date.now(); persist(); renderBal(); renderChips(); if (Sale.ret() && location.hash !== "#/limited") location.hash = "#/limited"; route(); renderTape(); Sale.load(); Shop.load(); Shop.back();
+awaySince = state.lastSeen || 0; MK.advance(); logWorth(); state.lastSeen = Date.now(); persist(); renderBal(); renderChips(); if (Sale.ret() && location.hash !== "#/limited") location.hash = "#/limited"; route(); renderTape(); Goals.badge(); Sale.load(); Shop.load(); Shop.back();
 if (!state.ageOK) $("gate").hidden = false; else setTimeout(() => Cut.maybeIntro(), 400);
 // the market moves every 20 seconds; redraw whatever is on screen when it does
 let lastTick = MK.tick();

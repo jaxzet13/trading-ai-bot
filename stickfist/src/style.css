@@ -544,3 +544,84 @@ svg.lock { width: 14px; height: 14px; flex: none; fill: none; stroke: currentCol
 .spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--ink); animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
+
+/* ============================================================================
+   THE FEEL PASS. How the page behaves under a thumb: every press answers, sheets and pages glide, numbers flash when they move.
+   ========================================================================== */
+/* nothing on the page selects or pops a menu when pressed, except the things worth copying */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea, .cid, .cid b, [contenteditable], .selectable { -webkit-user-select: text; user-select: text; }
+img { -webkit-user-drag: none; }
+/* every press answers at once */
+button, .btn, .crow, .mrow, .ctile, .btabs a, .ptab, .mover, .mvc, .chip, .seg button, .msell, .sellq { transition: transform .14s cubic-bezier(.2, .8, .2, 1), background .15s, border-color .15s, opacity .15s; }
+button:active:not(:disabled), .btn:active:not(:disabled), .btabs a:active, .chip:active { transform: scale(.955); }
+.btn.solid.big:active:not(:disabled) { transform: scale(.975); }
+.crow:active, .mrow .mmain:active, .ctile:active { transform: scale(.985); }
+@media (prefers-reduced-motion: reduce) { button:active, .btn:active, .btabs a:active, .crow:active, .ctile:active { transform: none !important; } }
+/* the main button has weight */
+.btn.solid.big { box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 10px 30px -12px rgba(236,231,220,.35); }
+.btn.solid.free.big { box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 10px 34px -10px rgba(159,216,166,.55); }
+/* frosted bars, like the system's own */
+header.top { background: rgba(5,5,6,.72); -webkit-backdrop-filter: saturate(160%) blur(18px); backdrop-filter: saturate(160%) blur(18px); }
+@media (max-width: 760px) { .btabs { background: rgba(8,8,10,.72) !important; -webkit-backdrop-filter: saturate(160%) blur(20px); backdrop-filter: saturate(160%) blur(20px); } }
+/* a toast that looks like it belongs on a phone */
+.toast { border-radius: 999px; padding: 11px 20px; font-weight: 600; box-shadow: 0 12px 40px -8px rgba(0,0,0,.8); animation: toastIn .32s cubic-bezier(.2, .9, .3, 1.2) both; }
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 14px) scale(.94); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+/* numbers flash when they move */
+.tk-up { animation: tkUp 1s ease-out; } .tk-dn { animation: tkDn 1s ease-out; }
+@keyframes tkUp { 0%, 25% { color: var(--ok); text-shadow: 0 0 14px rgba(159,216,166,.55); } } @keyframes tkDn { 0%, 25% { color: var(--bad); text-shadow: 0 0 14px rgba(232,120,109,.5); } }
+/* coins to the balance */
+.coin { position: fixed; left: 0; top: 0; z-index: 95; margin: -9px 0 0 -9px; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; background: var(--ok); color: #06140a; font: 800 11px/1 Inter, system-ui, sans-serif; pointer-events: none; will-change: transform; box-shadow: 0 0 12px rgba(159,216,166,.6); }
+#bal.bump { animation: balBump .5s cubic-bezier(.2, .9, .3, 1.4); } @keyframes balBump { 30% { transform: scale(1.16); color: var(--ok); } }
+#bal { display: inline-block; transform-origin: right center; }
+/* the stage glows in the colour of the card that just turned over */
+.stage::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity .6s; background: radial-gradient(70% 42% at 50% 47%, color-mix(in srgb, var(--rc, #ece7dc) 22%, transparent), transparent 72%); }
+.stage:has(.st-title.in)::before { opacity: 1; }
+.newtag { display: inline-block; padding: 1px 7px; border-radius: 999px; background: var(--ok); color: #06140a; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; vertical-align: 1px; }
+.fan > .isnew { position: relative; } .fan > .isnew::after { content: "new"; position: absolute; top: -7px; right: -5px; z-index: 2; padding: 1px 6px; border-radius: 999px; background: var(--ok); color: #06140a; font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.goalline { margin: 14px auto 0; max-width: 34ch; text-align: center; font-size: 13px; color: var(--dim); line-height: 1.5; } .goalline b { color: var(--ok); font-weight: 600; }
+
+/* ---- the gate: the first thing anyone sees ---- */
+.gate { background: radial-gradient(90% 60% at 50% 20%, #15151a, var(--bg) 70%); padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom)); }
+.gatebox { width: min(400px, 100%); justify-items: center; text-align: center; gap: 16px; }
+.glogo { font-weight: 800; letter-spacing: .42em; font-size: 15px; padding-left: .42em; color: var(--ink); }
+.gatebox .art { margin: 6px 0 2px; color: var(--dim); font-size: 14px; line-height: 1.25; text-align: left; }
+.gttl { margin: 0; font-size: 28px; line-height: 1.12; letter-spacing: -.02em; font-weight: 700; }
+.gsub { margin: 0; font-size: 15px; line-height: 1.55; }
+.gatebox label.gcheck { align-items: center; gap: 12px; width: 100%; min-height: 54px; padding: 10px 14px; border: 1px solid var(--ln2); border-radius: 14px; background: #0b0b0e; color: var(--ink); font-size: 14px; text-align: left; cursor: pointer; }
+.gcheck input { width: 22px; height: 22px; flex: none; accent-color: var(--ok); }
+.gatebox .btn.solid.big { width: 100%; min-height: 56px; }
+.gfine { margin: 0; }
+
+/* ---- Me: chart header, goals, buyer rush, tip ---- */
+.chead { align-items: center; gap: 10px; } .chead .label { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.seg.mini { padding: 2px; } .seg.mini button { min-height: 28px; padding: 4px 11px; font-size: 12px; }
+.goals { display: grid; border-top: 1px solid var(--ln); }
+.goal { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--ln); }
+.gmain { display: grid; gap: 7px; min-width: 0; } .gmain b { font-size: 15px; font-weight: 600; } .gmain small { color: var(--dim); font-size: 12.5px; }
+.gbar { height: 6px; border-radius: 6px; background: #17171b; overflow: hidden; } .gbar i { display: block; height: 100%; border-radius: 6px; background: var(--ink); transition: width .5s cubic-bezier(.2, .8, .2, 1); }
+.goal.rdy .gbar i { background: var(--ok); } .goal.got { opacity: .5; } .goal.got .gbar i { background: var(--dim); }
+.grew { color: var(--dim); font-size: 13px; font-weight: 600; white-space: nowrap; } .gdone { color: var(--ok); font-weight: 800; }
+.btn.solid.free.gclaim { padding: 10px 16px; min-height: 44px; border-radius: 12px; font-size: 14px; }
+.gmore { margin: 8px 0 26px; }
+.rush { display: inline-block; font-style: normal; font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #06140a; background: var(--ok); border-radius: 999px; padding: 1px 6px; vertical-align: 2px; animation: rushPulse 1.6s ease-in-out infinite; }
+@keyframes rushPulse { 50% { box-shadow: 0 0 0 5px rgba(159,216,166,0); } 0%, 100% { box-shadow: 0 0 0 0 rgba(159,216,166,.5); } }
+@media (prefers-reduced-motion: reduce) { .rush { animation: none; } }
+.tip { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; margin: 6px 0 22px; padding: 14px 14px 14px 16px; border: 1px solid var(--ln2); border-radius: 14px; background: #0b0b0e; }
+.tip div { display: grid; gap: 4px; } .tip b { font-size: 14px; } .tip span { color: var(--dim); font-size: 13px; line-height: 1.45; }
+.x2 { width: 32px; height: 32px; border: 0; border-radius: 50%; background: #17171b; color: var(--dim); font-size: 16px; line-height: 1; }
+/* ---- the card window: one price, two labelled changes ---- */
+.pricebox .chgs { display: flex; flex-wrap: wrap; gap: 6px 14px; width: 100%; } .pricebox .chgs span { display: inline-flex; align-items: center; gap: 6px; } .pricebox .chgs small { color: var(--dim); font-size: 12px; }
+
+.btn.solid.free.gclaim { animation: none; box-shadow: none; }
+/* iPhone: a field under 16px makes the page zoom when tapped; and the page behind a sheet or the stage stays still */
+@media (max-width: 760px) { select, input[type="text"], input[type="email"], input[type="number"], textarea { font-size: 16px; } }
+body:has(#modal:not([hidden])), body:has(#stage:not([hidden])) { overflow: hidden; }
+.mbox, .summary { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
+/* the share button is an option, not the headline */
+.btn.pshare { gap: 8px; min-height: 46px; border-radius: 12px; font-weight: 600; } .btn.pshare svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* the pack on the home page is alive: it floats a little */
+@media (prefers-reduced-motion: no-preference) { body.on-home #homePack { animation: packFloat 5.5s ease-in-out infinite; } }
+@keyframes packFloat { 50% { translate: 0 -5px; } }
+#homePack { filter: drop-shadow(0 24px 34px rgba(0,0,0,.6)); }
