@@ -986,8 +986,9 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 /* the card window on a phone: the card is the hero (large, centred, glowing in its colour), the name and price sit under it */
 @media (max-width: 760px) {
   .mbox:not(.slim):not(.rq) { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-  .mbox:not(.slim):not(.rq) .mcard { grid-column: 1; grid-row: 1; width: min(56vw, 230px); margin: 14px auto 4px; position: relative; }
-  .mbox:not(.slim):not(.rq) .mcard::before { content: ""; position: absolute; inset: -16% -46%; z-index: -1; pointer-events: none; background: radial-gradient(closest-side, color-mix(in srgb, var(--glow, #fff) 26%, transparent), transparent); }
+  .mbox:not(.slim):not(.rq) { overflow-x: hidden; }
+  .mbox:not(.slim):not(.rq) .mcard { grid-column: 1; grid-row: 1; width: min(56vw, 230px, 30vh); margin: 14px auto 4px; position: relative; }
+  .mbox:not(.slim):not(.rq) .mcard::before { content: ""; position: absolute; inset: -14% -30%; z-index: -1; pointer-events: none; background: radial-gradient(closest-side, color-mix(in srgb, var(--glow, #fff) 26%, transparent), transparent); }
   .mbox:not(.slim):not(.rq) .mhead { grid-column: 1; grid-row: 2; padding-right: 0; justify-items: center; text-align: center; }
   .mbox:not(.slim):not(.rq) .mhead .pricebox { justify-content: center; } .mbox:not(.slim):not(.rq) .mhead .chgs { justify-content: center; }
 }

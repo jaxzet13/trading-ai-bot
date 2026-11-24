@@ -198,7 +198,7 @@ def render(cid, key, out_dir, quality=84):
     name = (cfg.get('plain', cid) if key == 'plain' else f'{cid}-{key}') + '.jpg'; path = os.path.join(out_dir, name); q = quality
     while True:
         Image.fromarray(out).save(path, 'JPEG', quality=q, optimize=True, progressive=True)
-        if os.path.getsize(path) <= 190 * 1024 or q <= 62: break
+        if os.path.getsize(path) <= 166 * 1024 or q <= 56: break            # the app holds every card picture to 170 KB
         q -= 4
     return path, q, os.path.getsize(path) // 1024
 
