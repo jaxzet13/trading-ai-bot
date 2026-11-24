@@ -106,7 +106,7 @@ function refreshLive() {
 
 /* ---- the card window ---- */
 function openModal(html, slim, keep) { $("mbox").className = "mbox" + (slim ? " slim" : ""); const full = `<button class="x" data-close aria-label="Close">×</button>` + html; if (keep) put($("mbox"), full); else $("mbox").innerHTML = full; $("modal").hidden = false; }
-const closeModal = () => { $("modal").hidden = true; $("mbox").innerHTML = ""; modalNo = null; };
+const closeModal = () => { try { Shop.drop(); } catch (e) {} $("modal").hidden = true; $("mbox").innerHTML = ""; modalNo = null; };
 function cardModal(no, keep) {
   modalNo = no; const card = BY_NO[no], R = RAR[card.rar], cs = copiesOf(no), best = cs[0], p = packP(card.id), have = new Set(cs.map(c => c.fx)), keys = [""].concat(Object.keys(STYLES));
   const styles = card.styles ? `<div><div class="label" style="margin-bottom:8px">Styles found: ${keys.filter(k => have.has(k)).length} of ${keys.length}</div><div class="stylerow">${keys.map(k => `<figure class="${have.has(k) ? "" : "off"}" title="${styleName(k)}${k ? " · 1 in " + fmt(1 / STYLES[k].p) + " · ×" + STYLES[k].x : ""}"><img src="${imgOf(card, k, true)}" alt="" loading="lazy"><figcaption>${styleName(k)}</figcaption></figure>`).join("")}</div></div>` : "";

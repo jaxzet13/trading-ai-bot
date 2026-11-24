@@ -21,7 +21,7 @@ const stripe = http.createServer((req, res) => {
     if (failNext) { failNext = false; res.writeHead(500, { "content-type": "application/json" }); return res.end(JSON.stringify({ error: { message: "boom" } })); }
     const id = "cs_test_" + (++n), form = Object.fromEntries(new URLSearchParams(b)); seen.push({ path: req.url, headers: req.headers, form });
     sessions[id] = { id, payment_status: "unpaid", amount_total: (+form["line_items[0][price_data][unit_amount]"] || 0) * (+form["line_items[0][quantity]"] || 1), metadata: { kind: form["metadata[kind]"], uid: form["metadata[uid]"], pack: form["metadata[pack]"], qty: form["metadata[qty]"] } };
-    res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify({ id, url: "https://checkout.stripe.test/pay/" + id }));
+    res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify(form.ui_mode === "embedded" ? { id, client_secret: id + "_secret_x" } : { id, url: "https://checkout.stripe.test/pay/" + id }));
   });
 });
 
@@ -145,6 +145,15 @@ function start(env, dataName) {
     q = await call(t.port, "POST", "/api/shop/checkout", { uid: cu, pack: "cash", qty: 16, age: true }); ok(q.json.error && /limit/.test(q.json.error), "and the $25 daily limit counts the $10 still open ($16 more would pass it)");
     sessions[csid].payment_status = "paid"; q = await call(t.port, "GET", "/api/shop/order?sid=" + csid); ok(q.json.ok && q.json.pack === "cash" && q.json.qty === 10, "when Stripe says it is paid the order is recorded as $10 of play money");
     q = await call(t.port, "POST", "/api/hello", { uid: cu }); ok(q.json.paid.cash === 10, "and the player's running total of dollars added is 10");
+    await t.kill();
+  }
+  {   // checkout inside the app: with a publishable key the page gets a client secret, Stripe's page is never involved, and the order answer carries the totals to credit
+    const t = await start(Object.assign({}, open, { REQUIEM_OPEN: "0", SHOP_OPEN: "1", STRIPE_PUBLISHABLE_KEY: "pk_test_123" }), "emb.json"); const cu = crypto.randomBytes(8).toString("hex"); seen.length = 0;
+    let q = await call(t.port, "GET", "/api/shop/config"); ok(q.json.pk === "pk_test_123", "the config hands the page the publishable key (public by design)");
+    await call(t.port, "POST", "/api/hello", { uid: cu }); q = await call(t.port, "POST", "/api/shop/checkout", { uid: cu, pack: "cash", qty: 1, age: true, embedded: true }); const f = seen[0] && seen[0].form || {};
+    ok(q.json.secret && q.json.sid && !q.json.url && f.ui_mode === "embedded" && f.redirect_on_completion === "never" && !f.success_url, "asked for in-app checkout, the server makes an embedded session and returns its client secret");
+    sessions[q.json.sid].payment_status = "paid"; const o = await call(t.port, "GET", "/api/shop/order?sid=" + q.json.sid); ok(o.json.ok && o.json.paid && o.json.paid.cash === 1, "once paid, one check returns the buyer's running total, so the page credits at once");
+    const r2 = await call(t.port, "POST", "/api/shop/checkout", { uid: cu, pack: "cash", qty: 1, age: true }); ok(r2.json.url && r2.json.sid, "without asking for in-app checkout it still uses Stripe's page");
     await t.kill();
   }
   s = await start(Object.assign({}, open, { }), "noshop.json"); r = await call(s.port, "GET", "/api/shop/config"); ok(r.json.open === false, "digital packs are closed unless SHOP_OPEN=1"); await s.kill();

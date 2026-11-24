@@ -55,6 +55,15 @@ const Sale = (() => {
 // Nothing to open and nothing to open it with: no free pack, no bought pack, and not enough play money for the cheapest pack. Only while buying is on.
 const isBroke = () => Shop.open() && !state.freePacks && PACKS.every(p => !boughtOf(p.id) && state.coins < packPrice(p));
 function renderBroke() { document.body.classList.toggle("broke", isBroke()); }
+// what the server says you have paid for, as running totals: add only the difference, so the same purchase can never be added twice. Returns what was added.
+function applyPaid(paid, quiet) {
+  let add = 0, dollars = 0; state.paid = state.paid || {}; state.paidSeen = state.paidSeen || {};
+  for (const id of Object.keys(paid || {})) { const d = (paid[id] || 0) - (state.paidSeen[id] || 0); if (d <= 0) continue;
+    if (id === "cash") { dollars += d; state.paidSeen.cash = paid.cash; state.coins += d * UNIT; state.s.added += d * UNIT; }      // play money bought with real money: counted as money handed to you, never as profit
+    else if (PACK_BY[id]) { add += d; state.paidSeen[id] = paid[id]; state.paid[id] = (state.paid[id] || 0) + d; } }
+  if (dollars || add) { persist(); renderBal(true); renderChips(); renderBroke(); if (view === "home") renderHome(); if (!quiet) toast(dollars ? `${money(dollars * UNIT)} added to your balance` : `${add} pack${add > 1 ? "s" : ""} ready to open`); }
+  return { dollars, add };
+}
 const Shop = (() => {
   let cfg = { open: false, prices: {} };
   const ret = (() => {                                                     // ?pk=paid&sid=… or ?pk=cancel, on the way back from Stripe
@@ -73,7 +82,8 @@ const Shop = (() => {
   const total = () => rmoney(price(chosen()) * count());
   function qty() { const b = $("shopPay"); if (b && !b.dataset.busy) b.textContent = "Pay " + total(); const e = $("shopEach"); if (e) e.textContent = rmoney(price(chosen())) + " per pack"; }
   const AMOUNTS = [1, 2, 3, 5, 10, 15, 25];
-  function cashModal(want) {                                               // real money adds play money to the balance, $1.00 for each dollar: no bonuses, no bundles
+  function cashModal(w) {
+    want = w || want;                                               // real money adds play money to the balance, $1.00 for each dollar: no bonuses, no bundles
     const room = Math.max(0, Math.floor(((cfg.cap || 0) - (cfg.spentToday || 0)) / (price("cash") || 100))), opts = AMOUNTS.filter(n => n <= Math.min(cfg.maxQty || 25, room));
     if (!opts.length) { openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Daily limit reached</h2></div><p class="dim">You've added the most you can today (${rmoney(cfg.cap || 0)}). It resets tomorrow (UTC).</p><div class="row"><button class="btn" data-close>ok</button></div></div>`, true); return; }
     const need = want && PACK_BY[want] ? Math.max(1, Math.ceil((packPrice(PACK_BY[want]) - state.coins) / UNIT)) : 0, pick = opts.find(n => n >= need) || opts[opts.length - 1];
@@ -87,9 +97,9 @@ const Shop = (() => {
       <p class="small">Apple Pay, Google Pay or card, on Stripe's secure page. STIXX never sees your card. You are only charged after you confirm there. There is a limit of ${rmoney(cfg.cap || 0)} a day${cfg.spentToday > 0 ? ` (you have used ${rmoney(cfg.spentToday)} today)` : ""}. <a href="${esc(cfg.terms || "#")}" target="_blank" rel="noopener">Terms and refunds</a>.</p>
       <div class="row"><button class="btn ghost" data-close>not now</button></div></div>`, true);
   }
-  function modal(want) {
-    if (cash()) { cashModal(want); return; }
-    const ids = PACKS.filter(p => has(p.id)).map(p => p.id); if (!ids.length) return; const pref = want || curPack().id, cur = ids.includes(pref) ? pref : ids[0];
+  function modal(w) {
+    if (cash()) { cashModal(w); return; } want = w || null;
+    const ids = PACKS.filter(p => has(p.id)).map(p => p.id); if (!ids.length) return; const pref = w || curPack().id, cur = ids.includes(pref) ? pref : ids[0];
     openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Buy packs</h2></div>
       <p class="dim">Real money buys packs, and nothing else. Each pack holds random digital cards: you can't choose them, and the odds are on the <a href="#/odds" data-close>odds page</a>. The cards are game items with <b>no cash value</b>. Nothing in STIXX can be cashed out, and the prices you see in the game are simulated.</p>
       <div class="rqbuyh"><label class="rqqty" style="justify-items:start"><span class="small">Pack</span><select id="shopPack" aria-label="Which pack">${ids.map(id => `<option value="${id}"${id === cur ? " selected" : ""}>${esc(PACK_BY[id].name)} · ${rmoney(price(id))}</option>`).join("")}</select></label>
@@ -100,31 +110,65 @@ const Shop = (() => {
       <p class="small">Apple Pay, Google Pay or card, on Stripe's secure page. STIXX never sees your card. You are only charged after you confirm there. There is a limit of ${rmoney(cfg.cap || 0)} a day${cfg.spentToday > 0 ? ` (you have used ${rmoney(cfg.spentToday)} today)` : ""}. <a href="${esc(cfg.terms || "#")}" target="_blank" rel="noopener">Terms and refunds</a>.</p>
       <div class="row"><button class="btn ghost" data-close>not now</button></div></div>`, true);
   }
+  /* ---- paying: Stripe's own checkout opens inside the app (no leaving, no coming back), and the money or packs land the moment it says paid.
+          Without Stripe's script (blocked, offline, no publishable key) it falls back to Stripe's page and back. ---- */
+  let stripeJs = null, ec = null, want = null, pendingT = 0;
+  const loadStripe = () => stripeJs || (stripeJs = new Promise(res => { if (window.Stripe) return res(window.Stripe); const sc = document.createElement("script"); sc.src = "https://js.stripe.com/v3/"; sc.async = true;
+    const to = setTimeout(() => res(null), 7000); sc.onload = () => { clearTimeout(to); res(window.Stripe || null); }; sc.onerror = () => { clearTimeout(to); stripeJs = null; res(null); }; document.head.appendChild(sc); }));
+  const PEND = "stixx-pending-pay", setPending = sid => { try { localStorage.setItem(PEND, JSON.stringify({ sid, t: Date.now(), want })); } catch (e) {} }, getPending = () => { try { const p = JSON.parse(localStorage.getItem(PEND) || "null"); return p && Date.now() - p.t < 36e5 ? p : null; } catch (e) { return null; } }, clearPending = () => { try { localStorage.removeItem(PEND); } catch (e) {} };
+  function drop() { if (ec) { try { ec.destroy(); } catch (e) {} ec = null; } }
   async function pay() {
     const age = $("shopAge") && $("shopAge").checked, b = $("shopPay"); if (!age || !b || b.dataset.busy) return;
-    b.dataset.busy = 1; b.disabled = true; b.textContent = "Opening Stripe…";
-    const r = await API.post("shop/checkout", { uid: state.uid, pack: chosen(), qty: count(), age: true });
-    if (r && typeof r.url === "string" && /^https:\/\//.test(r.url)) { location.href = r.url; return; }
+    b.dataset.busy = 1; b.disabled = true; b.textContent = "Opening checkout…";
+    const S = cfg.pk ? loadStripe() : Promise.resolve(null);                                              // fetch Stripe's script while the session is made
+    const r = await API.post("shop/checkout", { uid: state.uid, pack: chosen(), qty: count(), age: true, embedded: !!cfg.pk });
+    if (r && r.secret && r.sid) {
+      const Stripe = await S; if (Stripe) { try { await mountEmbedded(Stripe, r); return; } catch (e) { console.error(e); } }
+      const r2 = await API.post("shop/checkout", { uid: state.uid, pack: chosen(), qty: count(), age: true });      // the script didn't load: use Stripe's page instead
+      if (r2 && r2.url) { setPending(r2.sid); location.href = r2.url; return; }
+    } else if (r && typeof r.url === "string" && /^https:\/\//.test(r.url)) { setPending(r.sid); location.href = r.url; return; }
     delete b.dataset.busy; b.disabled = !($("shopAge") && $("shopAge").checked); qty(); toast((r && r.error) || "Couldn't reach the server. You have not been charged.");
   }
+  async function mountEmbedded(Stripe, r) {
+    drop(); const st = Stripe(cfg.pk); setPending(r.sid);
+    openModal(`<div class="ecwrap"><div class="echead"><span class="label">secure checkout</span><span class="small dim"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg> Stripe</span></div><div id="ecMount" class="ecmount"><p class="dim small">Loading…</p></div></div>`, false);
+    $("mbox").classList.add("ec");
+    ec = await st.initEmbeddedCheckout({ fetchClientSecret: async () => r.secret, onComplete: () => finish(r.sid) });
+    const m = $("ecMount"); if (!m) { drop(); return; } m.innerHTML = ""; ec.mount("#ecMount");
+  }
+  // paid: ask the server (which asks Stripe directly), quickly and often, then credit and get out of the way
+  async function finish(sid, fromReturn) {
+    if (!sid) return; drop(); clearTimeout(pendingT);
+    openModal(`<div class="minfo paydone"><div class="spinner" aria-hidden="true"></div><h2>Payment received</h2><p class="dim" id="shopDoneTxt">Adding it to your balance…</p></div>`, true);
+    for (let i = 0; i < 40; i++) {
+      const r = await API.get("shop/order?sid=" + encodeURIComponent(sid));
+      if (r && r.ok) {
+        clearPending();
+        if (r.short) { openModal(`<div class="minfo"><h2>Thank you</h2><p class="dim">Your payment went through, but we couldn't add it to your game. You will be refunded automatically.</p><div class="row"><button class="btn solid" data-close>ok</button></div></div>`, true); return; }
+        let paid = r.paid; if (!paid) { const h = await API.post("hello", { uid: state.uid, ref: state.ref.by }); paid = (h && h.paid) || {}; }      // an older server: ask for the totals
+        const got = applyPaid(paid, true); if (r.pack && PACK_BY[r.pack] && state.pack !== r.pack) { state.pack = r.pack; persist(); }
+        closeModal(); const wpk = (want && PACK_BY[want]) || curPack(); want = null;
+        toast(got.dollars ? `${money(got.dollars * UNIT)} added` : got.add ? `${got.add} pack${got.add > 1 ? "s" : ""} added` : "Payment received");
+        if (view !== "home") location.hash = "#/";
+        if (got.add || state.coins >= packPrice(wpk)) { if (state.pack !== wpk.id) { state.pack = wpk.id; persist(); } setTimeout(() => openPack(), 250); }      // straight into the pack you came to open
+        return;
+      }
+      await sleep(i < 15 ? 350 : 1500);
+    }
+    const t = $("shopDoneTxt"); if (t) t.textContent = "Stripe is still confirming your payment. It will be added within a few minutes, even if you close the app.";
+  }
+  // a payment started before the app was closed or sent to Stripe's page: when you come back to the app, finish it
+  function resume() { const p = getPending(); if (!p || !p.sid || ec) return; if (p.want) want = p.want; pendingT = setTimeout(() => API.get("shop/order?sid=" + encodeURIComponent(p.sid)).then(r => { if (r && r.ok) finish(p.sid, true); }), 150); }
+  addEventListener("pageshow", e => { if (e.persisted) { const b = $("shopPay"); if (b) { delete b.dataset.busy; b.disabled = !($("shopAge") && $("shopAge").checked); qty(); } } resume(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) resume(); });
   const done = (title, text, button) => openModal(`<div class="minfo"><div><span class="label">real money</span><h2>${esc(title)}</h2></div><p class="dim" id="shopDoneTxt">${esc(text)}</p><div class="row">${button ? `<button class="btn solid" id="shopOpen">open a pack</button>` : ""}<button class="btn ${button ? "ghost" : "solid"}" data-close>${button ? "later" : "ok"}</button></div></div>`, true);
   // back from Stripe: wait until the server has confirmed the payment, then collect the packs
   async function back() {
-    if (!ret) return; if (ret.kind === "cancel") { toast("No payment was taken."); return; }
-    done("Thank you", "Checking your payment…", false);
-    for (let i = 0; i < 20 && ret.sid; i++) {
-      const r = await API.get("shop/order?sid=" + encodeURIComponent(ret.sid));
-      if (r && r.ok) {
-        if (r.short) { done("Thank you", "Your payment went through, but we couldn't add the packs to your game. You will be refunded.", false); return; }
-        if (r.pack === "cash") { await Ref.sync(); done("Money added", `Your payment went through. ${money((r.qty || 1) * UNIT)} of play money was added to your balance.`, true); if (view === "home") renderHome(); return; }
-        await Ref.sync(); const n = r.qty || 1, pn = PACK_BY[r.pack] ? PACK_BY[r.pack].name + " " : ""; if (PACK_BY[r.pack] && state.pack !== r.pack) { state.pack = r.pack; persist(); }
-        done("Your packs are ready", `Your payment went through. ${n} ${pn}pack${n > 1 ? "s are" : " is"} ready to open. You'll find ${n > 1 ? "them" : "it"} on the pack page.`, true); if (view === "home") renderHome(); return;
-      }
-      await sleep(2000);
-    }
-    if ($("shopDoneTxt")) $("shopDoneTxt").textContent = "Your payment is still being confirmed. Your packs will appear on the pack page within a few minutes.";
+    if (!ret) { resume(); return; } if (ret.kind === "cancel") { clearPending(); toast("No payment was taken."); return; }
+    const p = getPending(); if (p && p.want) want = p.want; finish(ret.sid || (p && p.sid), true);
   }
-  return { load, open, has, cash, price, modal, pay, qty, back, cfg: () => cfg };
+
+  return { load, open, has, cash, price, modal, pay, qty, back, drop, cfg: () => cfg };
 })();
 
 /* ---- the one place that says what is and isn't real money, so no line in the game is ever wrong about it ---- */

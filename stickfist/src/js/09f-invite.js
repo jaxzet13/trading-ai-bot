@@ -16,11 +16,7 @@ const Ref = (() => {
     if (!API.on || busy || !state.ageOK) return; busy = true;
     try {
       const r = await API.post("hello", { uid: state.uid, ref: state.ref.by }); if (!r || !r.code) return; info = r; last = Date.now(); state.ref.code = r.code; state.ref.n = r.invited; Fair.adopt(r.fair);
-      { let add = 0, dollars = 0; state.paid = state.paid || {}; state.paidSeen = state.paidSeen || {}; for (const id of Object.keys(r.paid || {})) { const d = (r.paid[id] || 0) - (state.paidSeen[id] || 0);
-          if (d > 0 && id === "cash") { dollars += d; state.paidSeen.cash = r.paid.cash; state.coins += d * UNIT; state.s.added += d * UNIT; continue; }       // play money bought with real money: counted as money handed to you, never as profit
-          if (d > 0 && PACK_BY[id]) { add += d; state.paidSeen[id] = r.paid[id]; state.paid[id] = (state.paid[id] || 0) + d; } }       // a running total per pack from the server, so the same purchase can never be added twice
-        if (dollars > 0) { persist(); renderBal(true); renderChips(); if (view === "home") renderHome(); toast(`${money(dollars * UNIT)} of play money was added to your balance.`); }
-        if (add > 0) { persist(); renderChips(); if (view === "home") renderHome(); toast(`${add} pack${add > 1 ? "s" : ""} you bought ${add > 1 ? "are" : "is"} ready to open.`); } }
+      applyPaid(r.paid);
       if (r.credits > 0) { const c = await API.post("claim", { uid: state.uid }); if (c && c.packs > 0) { state.freePacks += c.packs; persist(); renderChips(); const r2 = await API.post("hello", { uid: state.uid, ref: state.ref.by }); if (r2 && r2.code) info = r2; if (view === "home") renderHome(); } }
       if (state.s.packs > 0 && !r.activated) activated();
     } finally { busy = false; if (view === "invite" && $("modal").hidden) renderInvite(); }

@@ -214,7 +214,8 @@ module.exports = function payments(ctx) {
 
     /* ---- digital packs ---- */
     "GET /api/shop/config": (_b, _ip, q) => {
-      const st = shopStatus(), uid = q.get("uid"); return { open: st.open, prices: st.sc.prices, maxQty: st.sc.maxQty, cap: st.sc.cap, terms: st.c.terms, spentToday: validUid(uid) ? shopSpent(uid) : 0 };
+      const st = shopStatus(), uid = q.get("uid"), pk = String(process.env.STRIPE_PUBLISHABLE_KEY || "").trim();
+      return { open: st.open, prices: st.sc.prices, maxQty: st.sc.maxQty, cap: st.sc.cap, terms: st.c.terms, spentToday: validUid(uid) ? shopSpent(uid) : 0, pk: /^pk_(test|live)_\w+$/.test(pk) ? pk : "" };
     },
     "POST /api/shop/checkout": async (b, ip) => {
       const st = shopStatus(), c = st.c, sc = st.sc; if (!st.open) return { error: "Buying packs isn't available right now." };
@@ -226,17 +227,19 @@ module.exports = function payments(ctx) {
       if (spent + cents > sc.cap) return { error: spent >= sc.cap ? `You've reached today's limit of ${money(sc.cap)}. It resets tomorrow (UTC).` : `That would go over today's limit of ${money(sc.cap)}. You can spend up to ${money(sc.cap - spent)} more today.` };
       if (limited("shco:" + ip, 8, 600000)) return [429, { error: "slow down" }];
       const p = {
-        mode: "payment", line_items: { 0: { quantity: qty, price_data: { currency: "usd", unit_amount: unit, product_data: pack === "cash" ? { name: "STIXX play money ($1.00 each)", description: "Play money for the STIXX game. It has no cash value and can't be cashed out." } : { name: "STIXX digital pack: " + (PACK_NAMES[pack] || pack), description: "A pack of random digital cards for the STIXX game. The cards have no cash value and can't be cashed out." } } } },
-        success_url: `${c.site}/?pk=paid&sid={CHECKOUT_SESSION_ID}`, cancel_url: `${c.site}/?pk=cancel`, expires_at: Math.floor(Date.now() / 1000) + 31 * 60, client_reference_id: b.uid,
-        metadata: { kind: "packs", uid: b.uid, pack, qty, age: "18+" }, custom_text: { submit: { message: pack === "cash" ? "Adds play money to your STIXX balance, 18+ only. Play money has no cash value and can't be cashed out. Packs in the game are random." : "Random digital cards, 18+ only. The cards have no cash value and can't be cashed out." } }
+        mode: "payment", line_items: { 0: { quantity: qty, price_data: { currency: "usd", unit_amount: unit, product_data: pack === "cash" ? { name: "STIXX play money", description: "$1.00 of play money for each $1.00. Play money has no cash value." } : { name: "STIXX digital pack: " + (PACK_NAMES[pack] || pack), description: "A pack of random digital cards for the STIXX game. The cards have no cash value and can't be cashed out." } } } },
+        expires_at: Math.floor(Date.now() / 1000) + 31 * 60, client_reference_id: b.uid, submit_type: "pay",
+        metadata: { kind: "packs", uid: b.uid, pack, qty, age: "18+" }, custom_text: { submit: { message: pack === "cash" ? "18+ only. Play money has no cash value and can't be cashed out." : "18+ only. Random digital cards with no cash value." } }
       };
+      const embedded = b.embedded === true && /^pk_(test|live)_\w+$/.test(String(process.env.STRIPE_PUBLISHABLE_KEY || "").trim());
+      if (embedded) { p.ui_mode = "embedded"; p.redirect_on_completion = "never"; } else { p.success_url = `${c.site}/?pk=paid&sid={CHECKOUT_SESSION_ID}`; p.cancel_url = `${c.site}/?pk=cancel`; }
       if (c.tax) p.automatic_tax = { enabled: "true" };
       let s; try { s = await stripe("POST", "/v1/checkout/sessions", p); } catch (e) { console.error("shop checkout:", e.message); return { error: "Payment isn't available right now. You have not been charged." }; }
-      if (!s || !s.id || !s.url) return { error: "Payment isn't available right now. You have not been charged." };
-      SH().hold[s.id] = { uid: b.uid, cents, exp: Date.now() + 32 * 60000 }; touch(); return { url: s.url };
+      if (!s || !s.id || !(embedded ? s.client_secret : s.url)) return { error: "Payment isn't available right now. You have not been charged." };
+      SH().hold[s.id] = { uid: b.uid, cents, exp: Date.now() + 32 * 60000 }; touch(); return embedded ? { sid: s.id, secret: s.client_secret } : { url: s.url, sid: s.id };
     },
     // after paying: has the payment been confirmed and credited yet?
-    "GET /api/shop/order": async (_b, ip, q) => { const sid = String(q.get("sid") || ""); let o = SH().orders[sid]; if (!o && SID.test(sid) && !limited("pull:" + ip, 60, 60000)) { await pull(sid); o = SH().orders[sid]; } return o ? { ok: true, pack: o.pack, qty: o.qty, short: !!o.short } : { pending: true }; },
+    "GET /api/shop/order": async (_b, ip, q) => { const sid = String(q.get("sid") || ""); let o = SH().orders[sid]; if (!o && SID.test(sid) && !limited("pull:" + ip, 60, 60000)) { await pull(sid); o = SH().orders[sid]; } if (!o) return { pending: true }; const u = db().users[o.uid]; return { ok: true, pack: o.pack, qty: o.qty, short: !!o.short, paid: (u && u.paidTotals) || {} }; },
     "GET /api/shop/orders": (_b, _ip, q) => {
       if (!adminToken || q.get("token") !== adminToken) return [403, { error: "no" }]; const st = shopStatus(), sh = SH(), os = Object.entries(sh.orders);
       return { open: st.open, why: st.why, economics: st.econ, orders: os.map(([sid, o]) => ({ sid, player: String(o.uid || "").slice(0, 8), pack: o.pack, qty: o.qty, cents: o.cents, at: new Date(o.at).toISOString(), short: o.short })), packs: os.reduce((a, [, o]) => a + (o.short ? 0 : o.qty), 0), cents: os.reduce((a, [, o]) => a + o.cents, 0) };
