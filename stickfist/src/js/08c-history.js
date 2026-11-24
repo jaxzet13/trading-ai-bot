@@ -20,13 +20,13 @@ const History = (() => {
   let showAll = false;
   function html() {
     const o = all(); if (!o.length) return `<p class="dim small hempty">Your openings will show up here, starting with your next pack.</p>`;
-    const rows = o.slice().reverse().slice(0, showAll ? MAX : 6).map(e => {
+    const rows = o.slice().reverse().slice(0, showAll ? MAX : 3).map(e => {
       const pk = PACK_BY[e.p], d = e.ref ? e.v / e.ref - 1 : 0, mins = Math.round((Date.now() - e.t) / 60000);
       const th = e.c.slice(0, 4).map(([no, fx], i) => { const card = BY_NO[no]; return card ? `<img src="${imgOf(card, fx, true)}" alt="${esc(card.name)}" loading="lazy" style="--rc:${RAR[card.rar].col};z-index:${4 - i}">` : ""; }).join("");
       const lead = BY_NO[e.c[0] && e.c[0][0]];
       return `<div class="hrow"><div class="hth">${th}</div><div class="hmid"><b>${esc(pk ? pk.name : e.p)}${e.n > 1 ? ` <span class="dim">×${e.n}</span>` : ""}</b><span class="dim">${agoText(mins)} · ${e.paid ? "paid " + moneyR(e.paid) : "free"}${lead ? ` · best ${esc(lead.name)}` : ""}</span></div><div class="hval"><b>${moneyR(e.v)}</b>${e.ref ? pctR(d) : ""}</div></div>`;
     }).join("");
-    const more = o.length > 6 ? `<button class="linkbtn plain hmore" id="hMore">${showAll ? "Show less" : `Show all ${o.length}`}</button>` : "";
+    const more = o.length > 3 ? `<button class="linkbtn plain hmore" id="hMore">${showAll ? "Show less" : `Show all ${o.length}`}</button>` : "";
     return `<div class="hlist">${rows}</div>${more}`;
   }
   function toggle() { showAll = !showAll; $("pHist").innerHTML = html(); }
@@ -39,17 +39,18 @@ const History = (() => {
     const st = stats(), net = netWorth(), pl = profitAll(), best = st.best, bc = best && BY_NO[best.no], col = bc ? (best.fx ? STYLE_TINT[best.fx] : RAR[bc.rar].col) : "#ece7dc";
     const F = (w, s) => `${w} ${s}px Inter, system-ui, sans-serif`, M = (w, s) => `${w} ${s}px "JetBrains Mono", ui-monospace, monospace`;
     // background: near black, a soft glow in the best card's colour, a faint field of characters
-    g.fillStyle = "#050506"; g.fillRect(0, 0, W, H);
+    g.fillStyle = "#07080a"; g.fillRect(0, 0, W, H);
     const gl = g.createRadialGradient(W / 2, 980, 40, W / 2, 980, 900); gl.addColorStop(0, col + "55"); gl.addColorStop(1, "#05050600"); g.fillStyle = gl; g.fillRect(0, 0, W, H);
     g.font = M(500, 22); g.fillStyle = "rgba(236,231,220,.06)"; const chs = ".:-=+*#%@"; let sd = 7;
     for (let y = 30; y < H; y += 34) { let row = ""; for (let x = 0; x < 64; x++) { sd = (sd * 16807) % 2147483647; row += chs[sd % chs.length]; } g.fillText(row, 14, y); }
     g.textAlign = "center"; g.textBaseline = "alphabetic";
     // header
-    g.fillStyle = "#ece7dc"; g.font = F(800, 54); g.letterSpacing = "18px"; g.fillText("STIXX", W / 2 + 9, 150); g.letterSpacing = "0px";
+    { const mx = W / 2 - 150, my = 100, k = 60 / 28; g.fillStyle = "#3be477"; g.beginPath(); g.roundRect(mx, my, 60, 60, 16); g.fill(); g.fillStyle = "#04130a"; for (const [x, y, w, h] of [[10, 6, 11, 3.2], [7, 9.2, 3.2, 3.2], [10, 12.4, 8, 3.2], [17.8, 15.6, 3.2, 3.2], [7, 18.8, 11, 3.2]]) g.fillRect(mx + x * k, my + y * k, w * k, h * k);
+      g.textAlign = "left"; g.fillStyle = "#f5f3ee"; g.font = F(800, 50); g.letterSpacing = "12px"; g.fillText("STIXX", mx + 82, 148); g.letterSpacing = "0px"; g.textAlign = "center"; }
     g.fillStyle = "#9a968b"; g.font = F(500, 34); g.fillText(o.title || "my collection", W / 2, 215);
     // the big number
     g.fillStyle = "#ffffff"; g.font = F(800, 150); g.fillText(moneyR(net), W / 2, 380);
-    g.fillStyle = pl >= 0 ? "#9be0a6" : "#ff8a80"; g.font = F(700, 46); g.fillText(`${pl >= 0 ? "+" : "−"}${moneyR(pl)} since I started`, W / 2, 455);
+    g.fillStyle = pl >= 0 ? "#3be477" : "#ff6b6b"; g.font = F(700, 46); g.fillText(`${pl >= 0 ? "+" : "−"}${moneyR(pl)} since I started`, W / 2, 455);
     // the best card
     if (bc) {
       const im = await load(imgOf(bc, best.fx, false)), cw = 600, chh = Math.round(cw * 1092 / 900), cx = (W - cw) / 2, cy = 530;

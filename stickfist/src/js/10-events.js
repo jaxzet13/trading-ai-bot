@@ -63,10 +63,11 @@ document.addEventListener("click", e => {
     case "copyLink": Ref.copy(); break;
     case "shareLink": Ref.share(); break;
     case "fairRotate": rotateSeed(); break;
-    case "fairBtn": case "fairBtn2": fairModal(); break;
+    case "fairBtn3": case "fairBtn": case "fairBtn2": fairModal(); break;
     case "cashBtn": case "cashBtn2": cashModal(); break;
     case "pShare": History.share(); break;
     case "gMore": Goals.toggle(); break;
+    case "pAllBtn": pAll = !pAll; renderProfile(); break;
     case "tipX": state.tg = state.tg || {}; state.tg.a2hs = 1; persist(); renderProfile(); break;
     case "hMore": History.toggle(); break;
     case "aboutBtn": aboutModal(); break;

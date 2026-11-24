@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>STIXX: ASCII card packs</title>
 <meta name="description" content="Open free packs of ASCII trading cards, watch their prices move like memecoins, and sell when you think they are at the top. Play money only. 18+.">
-<meta name="theme-color" content="#050506">
+<meta name="theme-color" content="#07080a">
 <meta name="stixx-api" content="">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="STIXX">
@@ -13,7 +13,7 @@
 <meta property="og:description" content="Open free packs of ASCII trading cards, watch their prices move like memecoins, and sell when you think they are at the top. Play money only. 18+.">
 <meta property="og:image" content="og.png">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23050506'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' text-anchor='middle' fill='%23ece7dc'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='7.5' fill='%233be477'/%3E%3Cpath fill='%2304130a' d='M10 6h11v3.2H10zM7 9.2h3.2v3.2H7zM10 12.4h8v3.2h-8zM17.8 15.6H21v3.2h-3.2zM7 18.8h11V22H7z'/%3E%3C/svg%3E">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -646,12 +646,176 @@ body:has(#modal:not([hidden])), body:has(#stage:not([hidden])) { overflow: hidde
 @media (prefers-reduced-motion: no-preference) { body.on-home #homePack { animation: packFloat 5.5s ease-in-out infinite; } }
 @keyframes packFloat { 50% { translate: 0 -5px; } }
 #homePack { filter: drop-shadow(0 24px 34px rgba(0,0,0,.6)); }
+
+/* ============================================================================
+   SKIN 2. One look for the whole app: a deep slate ground, raised panels, one green accent, real buttons. The ASCII stays inside the cards and packs;
+   everything around it is built to read as a finished product.
+   ========================================================================== */
+:root {
+  --bg: #07080a; --s1: #0f1115; --s2: #161920; --s3: #1d2129;
+  --ink: #f5f3ee; --dim: #9a9ea8; --faint: #5c606a;
+  --ln: rgba(255,255,255,.06); --ln2: rgba(255,255,255,.10); --ln3: rgba(255,255,255,.17);
+  --acc: #3be477; --acc2: #8dffb6; --ok: #3be477; --bad: #ff6b6b;
+  --r: 18px; --sh: 0 1px 0 rgba(255,255,255,.05) inset, 0 18px 40px -22px rgba(0,0,0,.9);
+}
+html { background: var(--bg); }
+body { background: radial-gradient(120% 46% at 50% -8%, rgba(59,228,119,.085), transparent 62%) fixed, var(--bg); font-size: 15px; letter-spacing: -.003em; }
+.label { font-size: 11.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--dim); }
+h3.sec { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin: 0 0 10px; }
+h1.ttl { font-weight: 800; letter-spacing: -.03em; }
+a.back { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px 0 8px; margin-left: -8px; border-radius: 999px; color: var(--dim); font-weight: 600; font-size: 14px; } a.back:active { background: var(--s2); }
+
+/* ---- brand ---- */
+.mark { width: 26px; height: 26px; flex: none; filter: drop-shadow(0 4px 10px rgba(59,228,119,.35)); }
+.logo { display: inline-flex; align-items: center; gap: 9px; font-weight: 800; letter-spacing: .14em; font-size: 15px; }
+.glogo { display: inline-flex; align-items: center; gap: 10px; padding-left: 0; } .glogo .mark { width: 34px; height: 34px; }
+footer .flogo { display: inline-flex; align-items: center; gap: 8px; } footer .flogo .mark { width: 20px; height: 20px; filter: none; }
+
+/* ---- header ---- */
+header.top { background: rgba(7,8,10,.7); border-bottom: 1px solid var(--ln); }
+.wallet .bal { display: inline-flex; align-items: center; height: 34px; padding: 0 13px; border-radius: 999px; background: var(--s2); border: 1px solid var(--ln2); font-weight: 700; font-size: 14px; letter-spacing: -.01em; }
+.chip { height: 34px; padding: 0 12px; border: 1px solid var(--ln2); background: var(--s1); font-weight: 600; }
+.chip:hover { background: var(--s2); border-color: var(--ln3); }
+.chip.ready { border-color: rgba(59,228,119,.5); color: var(--acc); background: rgba(59,228,119,.09); } .chip.ready i { background: var(--acc); box-shadow: 0 0 10px var(--acc); }
+.chip.buy { background: linear-gradient(180deg, var(--acc2), var(--acc)); color: #04130a; border-color: transparent; font-weight: 700; } .chip.buy:hover { background: var(--acc2); border-color: transparent; }
+@media (max-width: 760px) { .chip { height: 32px; padding: 0 10px; } .wallet .bal { height: 32px; padding: 0 11px; } }
+
+/* ---- buttons ---- */
+.btn { min-height: 42px; padding: 9px 16px; border-radius: 13px; border: 1px solid var(--ln2); background: var(--s2); font-weight: 600; letter-spacing: -.005em; }
+.btn:hover:not(:disabled) { background: var(--s3); border-color: var(--ln3); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--dim); }
+.btn.small { min-height: 34px; border-radius: 10px; }
+.btn.solid { background: linear-gradient(180deg, var(--acc2), var(--acc) 62%); border-color: transparent; color: #04130a; font-weight: 700; border-radius: 15px; box-shadow: 0 1px 0 rgba(255,255,255,.45) inset, 0 12px 30px -12px rgba(59,228,119,.6); }
+.btn.solid:hover:not(:disabled) { background: linear-gradient(180deg, #b0ffcb, #55ec8b 62%); border-color: transparent; }
+.btn.solid.big { min-height: 58px; border-radius: 18px; font-size: 17px; letter-spacing: -.01em; box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 16px 40px -14px rgba(59,228,119,.7); }
+.btn.solid.free { background: linear-gradient(180deg, var(--acc2), var(--acc) 62%); color: #04130a; }
+.btn:disabled { opacity: .35; box-shadow: none; }
+.linkbtn { color: var(--dim); text-decoration-color: rgba(255,255,255,.2); } .linkbtn.plain { text-decoration: none; font-weight: 600; color: var(--ink); font-size: 14px; }
+input, select { background: var(--s2); border: 1px solid var(--ln2); border-radius: 12px; }
+.seg { background: var(--s1); border: 1px solid var(--ln2); } .seg button.on { background: var(--ink); color: #07080a; }
+.pill { padding: 3px 9px; font-weight: 700; } .pill.up { color: var(--acc); background: rgba(59,228,119,.13); } .pill.dn { color: var(--bad); background: rgba(255,107,107,.13); }
+
+/* ---- the tab bar floats ---- */
+@media (max-width: 760px) {
+  .btabs { left: 50%; right: auto; transform: translateX(-50%); width: min(300px, calc(100vw - 48px)); bottom: calc(10px + env(safe-area-inset-bottom)); grid-template-columns: 1fr 1fr; gap: 4px; padding: 5px !important; border: 1px solid var(--ln2); border-radius: 999px; background: rgba(22,25,32,.78) !important; box-shadow: 0 18px 40px -12px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.07) inset; }
+  .btabs a { grid-auto-flow: column; justify-content: center; gap: 8px; min-height: 46px; padding: 0 14px; border-radius: 999px; font-size: 14px; font-weight: 700; text-transform: capitalize; letter-spacing: -.01em; }
+  .btabs svg { width: 21px; height: 21px; }
+  .btabs a.on { background: var(--ink); color: #07080a; } .btabs a.on::before { display: none; } .btabs a.on svg { stroke-width: 2.2; }
+  .btabs a:active { transform: scale(.96); }
+  main.wrap { padding-bottom: calc(104px + env(safe-area-inset-bottom)); } footer { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
+
+/* ---- home: the pack is the hero ---- */
+/* a soft light behind the pack, in the pack's own colour (fixed to the screen, so it never widens the page) */
+body.on-home::before { content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(75% 38% at 50% 44%, var(--halo, rgba(59,228,119,.17)), transparent 70%); }
+body.on-home[data-pack="ms"]::before { --halo: rgba(255,160,70,.17); }
+body.on-home main.wrap, body.on-home header.top { position: relative; z-index: 1; } body.on-home header.top { position: sticky; z-index: 20; }
+.packmeta h1 { color: var(--ink); }
+.packtabs { gap: 6px; padding: 4px; border-radius: 16px; background: var(--s1); border: 1px solid var(--ln); flex-wrap: nowrap; }
+.ptab { min-width: 0; flex: 1 1 0; padding: 8px 20px; border: 0; border-radius: 12px; background: transparent; } .ptab b { font-weight: 700; } .ptab span { font-weight: 600; }
+.ptab.on { background: var(--s3); box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 6px 16px -8px #000; } .ptab.on span { color: var(--acc); }
+.pk { border-radius: 10px; border-color: rgba(255,255,255,.14); box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.12) inset; }
+.packmeta h1 { font-weight: 800; letter-spacing: -.025em; }
+.home > .btn.solid.big { width: min(420px, 100%); }
+.multi .seg1 { min-width: 44px; min-height: 36px; border-color: var(--ln2); background: var(--s1); color: var(--dim); } .multi .seg1.on { background: var(--ink); color: #07080a; border-color: var(--ink); }
+.hometrust { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.tchip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--ln); background: rgba(255,255,255,.03); color: var(--dim); font: inherit; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.tchip svg { width: 13px; height: 13px; fill: none; stroke: var(--acc); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 760px) { body.on-home .home { gap: 11px; } .packtabs { width: min(340px, 100%); } }
+
+/* ---- panels: lists live on raised surfaces ---- */
+#pTable, .goals, .hlist, #mList, #oBody .clist, .copies .copy, .tip, .stat, .pulse, .facts > div, #pMkt {
+  background: linear-gradient(180deg, var(--s1), #0c0e12); border: 1px solid var(--ln); border-radius: var(--r); box-shadow: var(--sh);
+}
+#pTable:empty, #mList:empty, #pMkt:empty { display: none; }
+#pTable, .goals, .hlist, #mList, #oBody .clist { padding: 4px 14px; border-top: 1px solid var(--ln); overflow: hidden; }
+.mrow, .goal, .hrow, .crow { border-bottom: 1px solid var(--ln); } .mrow:last-of-type, .goal:last-child, .hrow:last-child, #mList .crow:last-child, #oBody .clist .crow:last-child { border-bottom: 0; }
+.mrow { padding: 12px 0; } .crow { border-top: 0; }
+.mtot { border-top: 1px solid var(--ln); padding: 14px 0 10px; }
+.thumb, .mmain .thumb { border-radius: 11px; border-color: color-mix(in srgb, var(--rc, #444) 60%, #20232b); }
+.mn b { font-weight: 700; letter-spacing: -.01em; } .mp b { font-weight: 700; }
+.mp small.up { color: var(--acc); } .mp small.dn { color: var(--bad); }
+.msell { border: 1px solid var(--ln2); border-radius: 13px; background: var(--s3); font-weight: 700; } .msell small { color: var(--acc); font-weight: 600; }
+.sellq { border-color: var(--ln2); background: var(--s2); border-radius: 12px; font-weight: 600; }
+#pMkt { padding: 8px 14px; }
+
+/* ---- Me: the hero card ---- */
+.hero-card { display: flex; flex-direction: column; margin: 4px 0 14px; padding: 20px 18px 16px; border-radius: 24px; border: 1px solid var(--ln2); background: radial-gradient(120% 90% at 0% 0%, rgba(59,228,119,.13), transparent 55%), linear-gradient(180deg, var(--s2), var(--s1)); box-shadow: var(--sh); }
+.hero-card #pWorth { display: contents; } .hero-card .worth { order: 1; margin-bottom: 12px; gap: 8px; } .hero-card #pChart { order: 2; margin: 0 0 14px; } .hero-card .wsplit { order: 3; margin: 0; }
+.hero-card .bignum { font-size: 46px; font-weight: 800; letter-spacing: -.04em; }
+#v-profile .hero-card .wmeta { gap: 3px; font-size: 14px; font-weight: 600; } #v-profile .wmeta .dim { font-weight: 500; }
+#v-profile .hero-card .wsplit { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+#v-profile .hero-card .wsplit > div { grid-column: auto !important; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid var(--ln); gap: 3px; }
+#v-profile .hero-card .wsplit .label { font-size: 10.5px; } #v-profile .hero-card .wsplit b { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+.hero-card .mk { padding: 0; gap: 10px; } .chead .label { text-transform: none; letter-spacing: 0; font-size: 12.5px; font-weight: 500; }
+#v-profile .page-head { margin-bottom: 6px; }
+.rankline { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; margin: 0 0 14px; padding: 11px 14px; border-radius: 16px; border: 1px solid var(--ln); background: var(--s1); }
+.rankline .rk { display: inline-flex; align-items: center; gap: 8px; } .rankline .rk i { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; background: var(--acc); color: #04130a; font-style: normal; font-weight: 800; font-size: 12px; } .rankline .rk b { font-size: 14px; font-weight: 700; white-space: nowrap; }
+.rbar { height: 6px; border-radius: 6px; background: var(--s3); overflow: hidden; } .rbar i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--acc), var(--acc2)); }
+.rankline small { color: var(--dim); font-size: 12px; white-space: nowrap; }
+.btn.pshare { width: 100%; margin: 0 0 26px; background: var(--s1); border-color: var(--ln); }
+#v-profile h3.sec { margin-top: 26px; }
+.gbar { background: var(--s3); } .gbar i { background: linear-gradient(90deg, var(--acc), var(--acc2)); } .goal.rdy .gbar i { background: var(--acc); }
+.gmain b { font-weight: 700; letter-spacing: -.01em; } .grew { padding: 5px 10px; border-radius: 999px; background: rgba(59,228,119,.1); color: var(--acc); font-size: 12px; font-weight: 700; }
+.rush { background: var(--acc); }
+.plinks { display: grid; gap: 8px; margin: 14px 0 22px; } .plinks a { display: flex; align-items: center; justify-content: space-between; min-height: 50px; padding: 0 16px; border-radius: 16px; border: 1px solid var(--ln); background: var(--s1); }
+details.more.big { border: 1px solid var(--ln); border-radius: var(--r); background: var(--s1); }
+.hth img { border-radius: 6px; box-shadow: 0 0 0 2px var(--s1); }
+
+/* ---- stats tiles, odds facts ---- */
+.stat { padding: 14px; } .stat .label, .facts .label { font-size: 10.5px; }
+.facts > div { padding: 16px; } .facts .bignum.sm { font-size: 30px; font-weight: 800; letter-spacing: -.03em; }
+.pulse { padding: 16px; }
+@media (max-width: 760px) { #oBody .facts { grid-template-columns: repeat(3, 1fr); gap: 8px; } #oBody .facts > div { padding: 12px; } #oBody .facts .bignum.sm { font-size: 22px; } #oBody .facts span { font-size: 11.5px; line-height: 1.35; } }
+p.facts { display: block; }
+
+/* ---- sheets and windows ---- */
+.modal { background: rgba(3,4,5,.72); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.mbox { background: linear-gradient(180deg, var(--s2), var(--s1) 40%); border-color: var(--ln2); box-shadow: 0 -20px 60px -20px #000; }
+@media (max-width: 760px) { .mbox { border-radius: 28px 28px 0 0; } .mbox::before { background: var(--ln3); width: 38px; height: 5px; top: 9px; } }
+.x { border-radius: 50%; background: var(--s3); border: 0; color: var(--dim); }
+.copies .copy { padding: 14px; } .mhead h2 { font-weight: 800; letter-spacing: -.025em; }
+.minfo h2 { font-weight: 800; letter-spacing: -.025em; }
+.rqage { border: 1px solid var(--ln2); border-radius: 14px; background: var(--s1); padding: 12px 14px; }
+.trust { padding: 10px 12px; border-radius: 12px; background: rgba(59,228,119,.06); border: 1px solid rgba(59,228,119,.16); margin-top: 0; } .trust .lock { color: var(--acc); }
+
+/* ---- the stage ---- */
+.stage, .summary { background: radial-gradient(110% 50% at 50% -6%, rgba(59,228,119,.07), transparent 60%), #05060a; }
+.meter .mbar { background: var(--s3); } .meter.paid .mbar i { background: linear-gradient(90deg, var(--acc), var(--acc2)); box-shadow: 0 0 14px rgba(59,228,119,.6); }
+.sum .net.up { color: var(--acc); } .sum .acts .btn { min-height: 48px; border-radius: 14px; }
+.st-bar .btn.ghost { background: rgba(255,255,255,.06); color: var(--ink); border-radius: 999px; padding: 6px 14px; }
+.newtag, .fan > .isnew::after { background: var(--acc); }
+
+/* ---- the gate ---- */
+.gate { background: radial-gradient(110% 55% at 50% 0%, rgba(59,228,119,.16), transparent 60%), var(--bg); grid-template-columns: minmax(0, 1fr); }
+.gatebox { width: 100%; max-width: 400px; justify-self: center; }
+.gatebox .art { display: none; }
+.gttl { font-size: 32px; font-weight: 800; letter-spacing: -.035em; }
+.gpoints { list-style: none; margin: 2px 0 4px; padding: 0; display: grid; gap: 9px; width: 100%; text-align: left; }
+.gpoints li { position: relative; padding: 0 0 0 30px; font-size: 14.5px; color: var(--ink); line-height: 1.4; }
+.gpoints li::before { content: ""; position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 50%; background: rgba(59,228,119,.15) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233be477' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12.500 4 4 8-9'/%3E%3C/svg%3E") center / 13px no-repeat; }
+.gatebox label.gcheck { background: var(--s1); border-color: var(--ln2); border-radius: 16px; }
+
+/* ---- footer ---- */
+footer { border-top: 1px solid var(--ln); background: rgba(255,255,255,.012); } footer .fnote .lock { color: var(--acc); }
+.toast { background: var(--ink); color: #07080a; }
+
+@media (max-width: 760px) { body.on-home .packmeta h1 { display: none; } }      /* the tab and the pack itself already say its name: the room goes to the pack */
+.hometrust { flex-wrap: nowrap; }
+
+/* the week of the daily streak, as seven days */
+.days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
+.days i { display: grid; place-items: center; aspect-ratio: 1; border-radius: 12px; background: var(--s3); border: 1px solid var(--ln); color: var(--faint); font-style: normal; font-size: 13px; font-weight: 700; }
+.days i.on { background: linear-gradient(180deg, var(--acc2), var(--acc)); color: #04130a; border-color: transparent; box-shadow: 0 6px 16px -8px rgba(59,228,119,.8); }
+.days i.bonus:not(.on) { border-style: dashed; border-color: rgba(59,228,119,.45); color: var(--acc); }
+.pall { display: block; width: 100%; padding: 14px 0 12px; text-align: center; border-bottom: 1px solid var(--ln); color: var(--acc); }
 </style>
 </head>
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="logo" href="#/">STIXX</a>
+    <a class="logo" href="#/" aria-label="STIXX"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7.5" fill="var(--acc)"/><path fill="#04130a" d="M10 6h11v3.2H10zM7 9.2h3.2v3.2H7zM10 12.4h8v3.2h-8zM17.8 15.6H21v3.2h-3.2zM7 18.800h11V22H7z"/></svg><span>STIXX</span></a>
     <nav class="tabs" id="tabs" aria-label="Sections">
       <a href="#/" data-v="home">pack</a><a href="#/profile" data-v="profile">me</a>
     </nav>
@@ -670,6 +834,7 @@ body:has(#modal:not([hidden])), body:has(#stage:not([hidden])) { overflow: hidde
       <div class="packmeta"><h1 id="packName">First Print</h1><p class="dim" id="packLine"></p></div>
       <button class="btn solid big" id="openBtn" data-open>open pack</button>
       <div class="multi" id="multiRow" role="group" aria-label="How many packs to open at once" hidden></div>
+      <div class="hometrust" id="homeTrust"><button class="tchip" id="fairBtn3" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.500 6v6c0 4.500 3.200 7.800 7.500 9 4.300-1.200 7.500-4.500 7.500-9V6z"/><path d="m9 12 2.200 2.200L15.500 10"/></svg>Provably fair</button><a class="tchip" href="#/odds"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Odds</a><span class="tchip" id="tStripe" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Stripe</span></div>
       <p class="buyrow" id="buyRow" hidden><button class="btn solid" id="buyBtn">Buy packs</button></p>
       <p class="small blurb" id="packBlurb"></p>
       <ol class="steps" id="how" hidden><li><b>1</b> Open a pack</li><li><b>2</b> Watch your cards' prices move</li><li><b>3</b> Sell when it's high</li></ol>
@@ -699,8 +864,8 @@ body:has(#modal:not([hidden])), body:has(#stage:not([hidden])) { overflow: hidde
   <!-- PROFILE -->
   <section class="view" id="v-profile">
     <div class="page-head"><h1 class="ttl">Me</h1><p class="live"></p></div>
-    <div id="pWorth"></div>
-    <div id="pChart" class="pchart"></div>
+    <div class="hero-card"><div id="pWorth"></div><div id="pChart" class="pchart"></div></div>
+    <div id="pRank"></div>
     <button class="btn pshare" id="pShare" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span id="pShareTxt">Share my stats</span></button>
     <h3 class="sec">Goals</h3>
     <div id="pGoals"></div>
@@ -749,7 +914,7 @@ body:has(#modal:not([hidden])), body:has(#stage:not([hidden])) { overflow: hidde
   <a href="#/profile" data-v="profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.500 21c.7-4 3.800-6 7.500-6s6.800 2 7.500 6"/></svg><span>me</span></a>
 </nav>
 <footer><div class="wrap">
-  <div class="fmain"><span class="flogo">STIXX</span><nav class="flinks" aria-label="About STIXX"><a href="/terms">Terms &amp; privacy</a><a href="#/odds">Odds</a><button class="linkbtn" id="fairBtn">Fair play</button><button class="linkbtn" id="aboutBtn">How money works</button></nav></div>
+  <div class="fmain"><span class="flogo"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7.5" fill="var(--acc)"/><path fill="#04130a" d="M10 6h11v3.2H10zM7 9.2h3.2v3.2H7zM10 12.4h8v3.2h-8zM17.8 15.6H21v3.2h-3.2zM7 18.800h11V22H7z"/></svg><span>STIXX</span></span><nav class="flinks" aria-label="About STIXX"><a href="/terms">Terms &amp; privacy</a><a href="#/odds">Odds</a><button class="linkbtn" id="fairBtn">Fair play</button><button class="linkbtn" id="aboutBtn">How money works</button></nav></div>
   <p class="fnote"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="footMoney">Play money only. Nothing is charged or paid out.</span></p>
   <p class="fnote faint">18+ · © 2026 STIXX</p>
 </div></footer>
@@ -781,13 +946,14 @@ body:has(#modal:not([hidden])), body:has(#stage:not([hidden])) { overflow: hidde
 <div class="modal" id="modal" hidden><div class="mbox" id="mbox"></div></div>
 <div class="gate" id="gate" hidden>
   <div class="gatebox">
-    <div class="glogo" aria-label="STIXX">STIXX</div>
+    <div class="glogo" aria-label="STIXX"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7.5" fill="var(--acc)"/><path fill="#04130a" d="M10 6h11v3.2H10zM7 9.2h3.2v3.2H7zM10 12.4h8v3.2h-8zM17.8 15.6H21v3.2h-3.2zM7 18.800h11V22H7z"/></svg><span>STIXX</span></div>
     <pre class="art" aria-hidden="true">  .---.
  ( o o )
   \ ~ /
  --'-'--</pre>
     <h1 class="gttl">Card packs made of text</h1>
     <p class="dim gsub">Open a pack, pull cards, and watch what the AI buyers do with them. <span id="gateMoney">Everything here is play money: nothing is ever charged, and nothing can be cashed out.</span></p>
+    <ul class="gpoints"><li>A free pack to start, and one every day</li><li>Odds published, every pack provably fair</li><li>Play money with no cash value · 18+</li></ul>
     <label class="gcheck" for="ageOK"><input type="checkbox" id="ageOK"><span>I'm 18 or older and I understand it's play money.</span></label>
     <button class="btn solid big" id="gateGo" disabled>enter</button>
     <p class="small faint gfine">18+ only. STIXX cards contain explicit language and violence.</p>
@@ -1641,7 +1807,7 @@ function movers() { const rows = myMovers(); return { rows, gain: rows.filter(r 
 function fitHomePack() {
   const col = document.querySelector("#homePack"), bt = $("btabs"); if (!col || view !== "home") return; const pc = col.closest(".packcol") || col; pc.style.width = "";
   if (!bt || getComputedStyle(bt).display === "none") return;                                               // only on a phone, where the page must not scroll
-  const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 10, after = ["packmeta", "openBtn", "multiRow"].map(id => { const e = id === "packmeta" ? document.querySelector(".packmeta") : $(id); return e && !e.hidden ? e.offsetHeight + 12 : 0; }).reduce((a, b) => a + b, 0);
+  const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 10, after = ["packmeta", "openBtn", "multiRow", "homeTrust"].map(id => { const e = id === "packmeta" ? document.querySelector(".packmeta") : $(id); return e && !e.hidden ? e.offsetHeight + 12 : 0; }).reduce((a, b) => a + b, 0);
   const ratio = pc.offsetHeight / Math.max(1, pc.offsetWidth) || 1.45, w = Math.max(100, Math.min(300, innerWidth * .74, (bottom - top - after) / ratio)); pc.style.width = Math.floor(w) + "px";
 }
 addEventListener("resize", () => { if (view === "home") fitHomePack(); });
@@ -1658,6 +1824,7 @@ function renderHome() {
   const bf = null; if (bf) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip this week: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
   $("chase").live = chaseHTML(); $("rqBar").live = "";      // the Requiem pack is for later: not on the pack page for now
   const hp = $("homePack"); if (hp.dataset.pack !== pk.id) { if (hp._ps) hp._ps.stop(); hp.innerHTML = packHTML(pk); hp.dataset.pack = pk.id; const el = hp.firstChild; tiltPack(el); el.style.cursor = "pointer"; el.onclick = () => openPack(); hp._ps = liveWindow(el, pk); }
+  document.body.dataset.pack = pk.id; { const ts = $("tStripe"); if (ts) ts.hidden = !Shop.open(); }
   fitHomePack(); requestAnimationFrame(fitHomePack);
 }
 
@@ -1667,7 +1834,7 @@ const agoText = m => m === 0 ? "just now" : m < 60 ? m + " min ago" : m < 2880 ?
 const whenText = h => h < 2 ? "just now" : h < 48 ? h + " hours ago" : Math.round(h / 24) + " days ago";
 // the profile: your money, live, and every card you hold with its price and profit or loss
 // what the cards you hold now were worth over the last hours: each copy's own path, at its starting value before you pulled it
-let pRange = 24, awaySince = 0;
+let pRange = 24, awaySince = 0, pAll = false;
 function cardsSeries(hours, n) { const v = state.vault; if (!v.length) return null; const t = Date.now(), out = []; for (let i = 0; i < n; i++) { const ti = t - hours * 36e5 * (1 - i / (n - 1)); let s = 0; for (const c of v) s += ti <= (c.t || 0) ? Val.startOf(c) : Val.at(c, ti, i < n - 1); out.push(s); } return out; }
 // what your cards did while the app was closed (this visit only, and only if you were gone a while)
 function awayLine() { if (!awaySince || Date.now() - awaySince < 30 * 60000 || !state.vault.length) return ""; let d = 0; for (const c of state.vault) if ((c.t || 0) < awaySince) d += valueOf(c) - Val.at(c, awaySince, true); const h = (Date.now() - awaySince) / 36e5; return Math.abs(d) < 1 ? "" : `<span>${signR(d, "while you were away " + (h >= 48 ? Math.round(h / 24) + " days" : h >= 1 ? Math.round(h) + "h" : Math.round(h * 60) + " min"))}</span>`; }
@@ -1689,9 +1856,10 @@ function renderProfile() {
     <div class="wsplit"><div><span class="label">cash</span><b>${moneyR(state.coins)}</b></div><div><span class="label">your cards</span><b>${moneyR(hold)}</b></div><div><span class="label">made on sales</span><b>${signR(state.s.realized)}</b></div></div>`;
   const cs = cardsSeries(pRange, 72);
   $("pChart").live = cs ? `<div class="mk"><div class="row chead"><span class="label">Your cards · ${pRange === 24 ? "last 24 hours" : "last 7 days"} ${pill(cs[cs.length - 1] / Math.max(1, cs[0]) - 1)}</span><span class="seg mini" role="group"><button data-prange="24" class="${pRange === 24 ? "on" : ""}" aria-pressed="${pRange === 24}">24h</button><button data-prange="168" class="${pRange === 168 ? "on" : ""}" aria-pressed="${pRange === 168}">7d</button></span></div>${lineChart(cs, { fmt: money, h: 120 })}</div>` : "";
-  $("pGoals").live = Goals.html(); Goals.badge(); $("pTip").live = tipHTML();
+  $("pGoals").live = Goals.html(); Goals.badge(); $("pTip").live = tipHTML(); $("pRank").live = rankLine();
   const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), q: quickCopy(c.no), hot: cs.some(x => { const m = Val.moves(x, 6)[0]; return m && m.pct > .15; }) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
-  $("pTable").live = groups.length ? groups.map(g => `<div class="mrow"><button class="mmain" data-card="${g.c.no}" aria-label="${esc(g.c.name)}">${thumb(g.c)}<span class="mn"><b>${esc(g.c.name)}${g.hot ? ` <i class="rush" title="AI buyers rushed into a copy in the last few hours">buyers in</i>` : ""}</b><small>${g.n > 1 ? `×${g.n} · ` : ""}${rarLabel(g.c)}</small></span><span class="mp"><b data-tick="g${g.c.no}" data-v="${g.val.toFixed(2)}">${moneyR(g.val)}</b>${pctR(g.val / Math.max(1, g.cost) - 1)}</span></button><button class="msell" data-qsell="${g.c.no}" aria-label="${esc(quickAria(g.c.no))}">${g.n > 1 ? "Sell 1" : "Sell"}<small>${moneyR(sellOf(g.q))}</small></button></div>`).join("") + `<div class="mtot"><span>All your cards</span><b>${moneyR(hold)}</b></div>` : "";
+  const shown = pAll ? groups : groups.slice(0, 6);
+  $("pTable").live = groups.length ? shown.map(g => `<div class="mrow"><button class="mmain" data-card="${g.c.no}" aria-label="${esc(g.c.name)}">${thumb(g.c)}<span class="mn"><b>${esc(g.c.name)}${g.hot ? ` <i class="rush" title="AI buyers rushed into a copy in the last few hours">buyers in</i>` : ""}</b><small>${g.n > 1 ? `×${g.n} · ` : ""}${rarLabel(g.c)}</small></span><span class="mp"><b data-tick="g${g.c.no}" data-v="${g.val.toFixed(2)}">${moneyR(g.val)}</b>${pctR(g.val / Math.max(1, g.cost) - 1)}</span></button><button class="msell" data-qsell="${g.c.no}" aria-label="${esc(quickAria(g.c.no))}">${g.n > 1 ? "Sell 1" : "Sell"}<small>${moneyR(sellOf(g.q))}</small></button></div>`).join("") + (groups.length > 6 ? `<button class="linkbtn plain pall" id="pAllBtn">${pAll ? "Show fewer" : `Show all ${groups.length} cards`}</button>` : "") + `<div class="mtot"><span>All your cards</span><b>${moneyR(hold)}</b></div>` : "";
   $("pNote").innerHTML = groups.length ? `Tap a card for its chart. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${moneyR(state.s.spent)} spent · ${moneyR(state.s.sold)} back from sales</span>` : `No cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they show up here with a live price.`;
   const rows = movers().rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24)).slice(0, 4); $("pMktH").hidden = !rows.length;
   $("pMkt").live = rows.map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)}<span class="dim">24h</span></button>`).join("");
@@ -1985,13 +2153,13 @@ const History = (() => {
   let showAll = false;
   function html() {
     const o = all(); if (!o.length) return `<p class="dim small hempty">Your openings will show up here, starting with your next pack.</p>`;
-    const rows = o.slice().reverse().slice(0, showAll ? MAX : 6).map(e => {
+    const rows = o.slice().reverse().slice(0, showAll ? MAX : 3).map(e => {
       const pk = PACK_BY[e.p], d = e.ref ? e.v / e.ref - 1 : 0, mins = Math.round((Date.now() - e.t) / 60000);
       const th = e.c.slice(0, 4).map(([no, fx], i) => { const card = BY_NO[no]; return card ? `<img src="${imgOf(card, fx, true)}" alt="${esc(card.name)}" loading="lazy" style="--rc:${RAR[card.rar].col};z-index:${4 - i}">` : ""; }).join("");
       const lead = BY_NO[e.c[0] && e.c[0][0]];
       return `<div class="hrow"><div class="hth">${th}</div><div class="hmid"><b>${esc(pk ? pk.name : e.p)}${e.n > 1 ? ` <span class="dim">×${e.n}</span>` : ""}</b><span class="dim">${agoText(mins)} · ${e.paid ? "paid " + moneyR(e.paid) : "free"}${lead ? ` · best ${esc(lead.name)}` : ""}</span></div><div class="hval"><b>${moneyR(e.v)}</b>${e.ref ? pctR(d) : ""}</div></div>`;
     }).join("");
-    const more = o.length > 6 ? `<button class="linkbtn plain hmore" id="hMore">${showAll ? "Show less" : `Show all ${o.length}`}</button>` : "";
+    const more = o.length > 3 ? `<button class="linkbtn plain hmore" id="hMore">${showAll ? "Show less" : `Show all ${o.length}`}</button>` : "";
     return `<div class="hlist">${rows}</div>${more}`;
   }
   function toggle() { showAll = !showAll; $("pHist").innerHTML = html(); }
@@ -2004,17 +2172,18 @@ const History = (() => {
     const st = stats(), net = netWorth(), pl = profitAll(), best = st.best, bc = best && BY_NO[best.no], col = bc ? (best.fx ? STYLE_TINT[best.fx] : RAR[bc.rar].col) : "#ece7dc";
     const F = (w, s) => `${w} ${s}px Inter, system-ui, sans-serif`, M = (w, s) => `${w} ${s}px "JetBrains Mono", ui-monospace, monospace`;
     // background: near black, a soft glow in the best card's colour, a faint field of characters
-    g.fillStyle = "#050506"; g.fillRect(0, 0, W, H);
+    g.fillStyle = "#07080a"; g.fillRect(0, 0, W, H);
     const gl = g.createRadialGradient(W / 2, 980, 40, W / 2, 980, 900); gl.addColorStop(0, col + "55"); gl.addColorStop(1, "#05050600"); g.fillStyle = gl; g.fillRect(0, 0, W, H);
     g.font = M(500, 22); g.fillStyle = "rgba(236,231,220,.06)"; const chs = ".:-=+*#%@"; let sd = 7;
     for (let y = 30; y < H; y += 34) { let row = ""; for (let x = 0; x < 64; x++) { sd = (sd * 16807) % 2147483647; row += chs[sd % chs.length]; } g.fillText(row, 14, y); }
     g.textAlign = "center"; g.textBaseline = "alphabetic";
     // header
-    g.fillStyle = "#ece7dc"; g.font = F(800, 54); g.letterSpacing = "18px"; g.fillText("STIXX", W / 2 + 9, 150); g.letterSpacing = "0px";
+    { const mx = W / 2 - 150, my = 100, k = 60 / 28; g.fillStyle = "#3be477"; g.beginPath(); g.roundRect(mx, my, 60, 60, 16); g.fill(); g.fillStyle = "#04130a"; for (const [x, y, w, h] of [[10, 6, 11, 3.2], [7, 9.2, 3.2, 3.2], [10, 12.4, 8, 3.2], [17.8, 15.6, 3.2, 3.2], [7, 18.8, 11, 3.2]]) g.fillRect(mx + x * k, my + y * k, w * k, h * k);
+      g.textAlign = "left"; g.fillStyle = "#f5f3ee"; g.font = F(800, 50); g.letterSpacing = "12px"; g.fillText("STIXX", mx + 82, 148); g.letterSpacing = "0px"; g.textAlign = "center"; }
     g.fillStyle = "#9a968b"; g.font = F(500, 34); g.fillText(o.title || "my collection", W / 2, 215);
     // the big number
     g.fillStyle = "#ffffff"; g.font = F(800, 150); g.fillText(moneyR(net), W / 2, 380);
-    g.fillStyle = pl >= 0 ? "#9be0a6" : "#ff8a80"; g.font = F(700, 46); g.fillText(`${pl >= 0 ? "+" : "−"}${moneyR(pl)} since I started`, W / 2, 455);
+    g.fillStyle = pl >= 0 ? "#3be477" : "#ff6b6b"; g.font = F(700, 46); g.fillText(`${pl >= 0 ? "+" : "−"}${moneyR(pl)} since I started`, W / 2, 455);
     // the best card
     if (bc) {
       const im = await load(imgOf(bc, best.fx, false)), cw = 600, chh = Math.round(cw * 1092 / 900), cx = (W - cw) / 2, cy = 530;
@@ -2848,7 +3017,7 @@ function dailyModal(res) {
   const st = state.streak, ready = dailyReady(), n = st.n, nextM = [3, 7, 14, 30].find(m => m > n), wk = n > 0 && n % 7 === 0 ? 7 : n % 7, have = state.freePacks;
   openModal(`<div class="minfo"><div><span class="label">Free daily pack</span><h2>${res ? "+" + res.packs + " free pack" + (res.packs > 1 ? "s" : "") : ready ? "Your free pack is ready" : "You've got today's pack"}</h2></div>
     ${res ? `<p class="dim">Day ${res.n} in a row.${res.bonus ? ` That is a streak bonus: ${res.bonus} extra.` : ""}${res.used ? " A streak freeze covered the day you missed." : ""} You have ${have} free pack${have === 1 ? "" : "s"} to open.</p>` : ready ? `<p class="dim">One free pack every day. Nothing to buy.</p>` : `<p class="dim">Come back tomorrow for the next one.${have ? ` You have ${have} free pack${have === 1 ? "" : "s"} to open now.` : ""}</p>`}
-    <div><div class="label">Streak · day ${n}</div><div class="mono-meter" aria-hidden="true">${meter(wk, 7)}</div><p class="small" style="margin-top:6px">${nextM ? `Day ${nextM} adds ${STREAK_BONUS[nextM]} extra free pack${STREAK_BONUS[nextM] > 1 ? "s" : ""}. ` : ""}Miss a day and your streak survives if you have a freeze (you have ${st.freezes}). You earn one every 7 days, up to 2.</p></div>
+    <div><div class="label">Streak · day ${n}</div><div class="days" role="img" aria-label="${wk} of 7 days this week">${[1, 2, 3, 4, 5, 6, 7].map(d => `<i class="${d <= wk ? "on" : ""}${d === 7 ? " bonus" : ""}">${d === 7 ? "+1" : d}</i>`).join("")}</div><p class="small" style="margin-top:10px">${nextM ? `Day ${nextM} adds ${STREAK_BONUS[nextM]} extra free pack${STREAK_BONUS[nextM] > 1 ? "s" : ""}. ` : ""}Miss a day and your streak survives if you have a freeze (you have ${st.freezes}). You earn one every 7 days, up to 2.</p></div>
     <div class="row">${ready ? `<button class="btn solid" id="claimDaily">claim your pack</button>` : have ? `<button class="btn solid" id="claimOpen">open a free pack</button>` : ""}<button class="btn ghost" data-close>${ready ? "not now" : "close"}</button></div></div>`, true);
 }
 function renderChips() {
@@ -2863,6 +3032,11 @@ const FX_ALL = CARDS.length * 13;
 function noteFound() { for (const c of state.vault) { state.found[c.no] = 1; state.foundFx[c.no + "|" + (c.fx || "")] = 1; } }
 const xpOf = () => { noteFound(); return state.s.packs * 4 + Object.keys(state.found).length * 40 + Object.keys(state.foundFx).length * 12 + state.streak.best * 10; };
 const rankIdx = xp => { let i = 0; RANKS.forEach(([, x], k) => { if (xp >= x) i = k; }); return i; };
+// the same rank as one slim line for the Me page: where you are, and how far the next one is
+function rankLine() {
+  if (!state.s.packs) return ""; const xp = xpOf(), i = rankIdx(xp), cur = RANKS[i], nx = RANKS[i + 1], pc = nx ? (xp - cur[1]) / (nx[1] - cur[1]) : 1;
+  return `<div class="rankline"><span class="rk"><i>${i + 1}</i><b>${esc(cur[0])}</b></span><div class="rbar" role="img" aria-label="${xp} xp"><i style="width:${(pc * 100).toFixed(1)}%"></i></div><small>${nx ? `${nx[1] - xp} xp to ${esc(nx[0])}` : "top rank"}</small></div>`;
+}
 function rankHTML() {
   const xp = xpOf(), i = rankIdx(xp), cur = RANKS[i], nx = RANKS[i + 1];
   return `<div class="rank"><div><span class="label">rank</span><b>${cur[0]}</b></div><div class="mono-meter" aria-hidden="true">${meter(nx ? Math.round((xp - cur[1]) / (nx[1] - cur[1]) * 16) : 16, 16)}</div><div class="small">${xp} xp${nx ? ` · ${nx[1] - xp} to ${nx[0]}` : " · top rank"}. It comes from cards and styles you find, packs you open and your daily streak.</div></div>`;
@@ -3562,10 +3736,11 @@ document.addEventListener("click", e => {
     case "copyLink": Ref.copy(); break;
     case "shareLink": Ref.share(); break;
     case "fairRotate": rotateSeed(); break;
-    case "fairBtn": case "fairBtn2": fairModal(); break;
+    case "fairBtn3": case "fairBtn": case "fairBtn2": fairModal(); break;
     case "cashBtn": case "cashBtn2": cashModal(); break;
     case "pShare": History.share(); break;
     case "gMore": Goals.toggle(); break;
+    case "pAllBtn": pAll = !pAll; renderProfile(); break;
     case "tipX": state.tg = state.tg || {}; state.tg.a2hs = 1; persist(); renderProfile(); break;
     case "hMore": History.toggle(); break;
     case "aboutBtn": aboutModal(); break;

@@ -74,7 +74,7 @@ function dailyModal(res) {
   const st = state.streak, ready = dailyReady(), n = st.n, nextM = [3, 7, 14, 30].find(m => m > n), wk = n > 0 && n % 7 === 0 ? 7 : n % 7, have = state.freePacks;
   openModal(`<div class="minfo"><div><span class="label">Free daily pack</span><h2>${res ? "+" + res.packs + " free pack" + (res.packs > 1 ? "s" : "") : ready ? "Your free pack is ready" : "You've got today's pack"}</h2></div>
     ${res ? `<p class="dim">Day ${res.n} in a row.${res.bonus ? ` That is a streak bonus: ${res.bonus} extra.` : ""}${res.used ? " A streak freeze covered the day you missed." : ""} You have ${have} free pack${have === 1 ? "" : "s"} to open.</p>` : ready ? `<p class="dim">One free pack every day. Nothing to buy.</p>` : `<p class="dim">Come back tomorrow for the next one.${have ? ` You have ${have} free pack${have === 1 ? "" : "s"} to open now.` : ""}</p>`}
-    <div><div class="label">Streak · day ${n}</div><div class="mono-meter" aria-hidden="true">${meter(wk, 7)}</div><p class="small" style="margin-top:6px">${nextM ? `Day ${nextM} adds ${STREAK_BONUS[nextM]} extra free pack${STREAK_BONUS[nextM] > 1 ? "s" : ""}. ` : ""}Miss a day and your streak survives if you have a freeze (you have ${st.freezes}). You earn one every 7 days, up to 2.</p></div>
+    <div><div class="label">Streak · day ${n}</div><div class="days" role="img" aria-label="${wk} of 7 days this week">${[1, 2, 3, 4, 5, 6, 7].map(d => `<i class="${d <= wk ? "on" : ""}${d === 7 ? " bonus" : ""}">${d === 7 ? "+1" : d}</i>`).join("")}</div><p class="small" style="margin-top:10px">${nextM ? `Day ${nextM} adds ${STREAK_BONUS[nextM]} extra free pack${STREAK_BONUS[nextM] > 1 ? "s" : ""}. ` : ""}Miss a day and your streak survives if you have a freeze (you have ${st.freezes}). You earn one every 7 days, up to 2.</p></div>
     <div class="row">${ready ? `<button class="btn solid" id="claimDaily">claim your pack</button>` : have ? `<button class="btn solid" id="claimOpen">open a free pack</button>` : ""}<button class="btn ghost" data-close>${ready ? "not now" : "close"}</button></div></div>`, true);
 }
 function renderChips() {
@@ -89,6 +89,11 @@ const FX_ALL = CARDS.length * 13;
 function noteFound() { for (const c of state.vault) { state.found[c.no] = 1; state.foundFx[c.no + "|" + (c.fx || "")] = 1; } }
 const xpOf = () => { noteFound(); return state.s.packs * 4 + Object.keys(state.found).length * 40 + Object.keys(state.foundFx).length * 12 + state.streak.best * 10; };
 const rankIdx = xp => { let i = 0; RANKS.forEach(([, x], k) => { if (xp >= x) i = k; }); return i; };
+// the same rank as one slim line for the Me page: where you are, and how far the next one is
+function rankLine() {
+  if (!state.s.packs) return ""; const xp = xpOf(), i = rankIdx(xp), cur = RANKS[i], nx = RANKS[i + 1], pc = nx ? (xp - cur[1]) / (nx[1] - cur[1]) : 1;
+  return `<div class="rankline"><span class="rk"><i>${i + 1}</i><b>${esc(cur[0])}</b></span><div class="rbar" role="img" aria-label="${xp} xp"><i style="width:${(pc * 100).toFixed(1)}%"></i></div><small>${nx ? `${nx[1] - xp} xp to ${esc(nx[0])}` : "top rank"}</small></div>`;
+}
 function rankHTML() {
   const xp = xpOf(), i = rankIdx(xp), cur = RANKS[i], nx = RANKS[i + 1];
   return `<div class="rank"><div><span class="label">rank</span><b>${cur[0]}</b></div><div class="mono-meter" aria-hidden="true">${meter(nx ? Math.round((xp - cur[1]) / (nx[1] - cur[1]) * 16) : 16, 16)}</div><div class="small">${xp} xp${nx ? ` · ${nx[1] - xp} to ${nx[0]}` : " · top rank"}. It comes from cards and styles you find, packs you open and your daily streak.</div></div>`;

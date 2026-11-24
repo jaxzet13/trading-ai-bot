@@ -27,7 +27,7 @@ API = arg('--api', '/' if RELEASE else '')          # '' = no server: the page r
 URL = arg('--url', '').rstrip('/')
 TITLE = 'STIXX: ASCII card packs'
 DESC = 'Open free packs of ASCII trading cards, watch their prices move like memecoins, and sell when you think they are at the top. Play money only. 18+.'
-ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23050506'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' text-anchor='middle' fill='%23ece7dc'%3ES%3C/text%3E%3C/svg%3E"
+ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='7.5' fill='%233be477'/%3E%3Cpath fill='%2304130a' d='M10 6h11v3.2H10zM7 9.2h3.2v3.2H7zM10 12.4h8v3.2h-8zM17.8 15.6H21v3.2h-3.2zM7 18.8h11V22H7z'/%3E%3C/svg%3E"
 OG_IMG = (URL + '/' if URL else '') + 'og.png'
 
 PWA = '''<link rel="manifest" href="manifest.webmanifest">
@@ -44,7 +44,7 @@ HEAD = f'''<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{TITLE}</title>
 <meta name="description" content="{DESC}">
-<meta name="theme-color" content="#050506">
+<meta name="theme-color" content="#07080a">
 <meta name="stixx-api" content="{API}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="STIXX">

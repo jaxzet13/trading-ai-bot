@@ -14,7 +14,7 @@ function movers() { const rows = myMovers(); return { rows, gain: rows.filter(r 
 function fitHomePack() {
   const col = document.querySelector("#homePack"), bt = $("btabs"); if (!col || view !== "home") return; const pc = col.closest(".packcol") || col; pc.style.width = "";
   if (!bt || getComputedStyle(bt).display === "none") return;                                               // only on a phone, where the page must not scroll
-  const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 10, after = ["packmeta", "openBtn", "multiRow"].map(id => { const e = id === "packmeta" ? document.querySelector(".packmeta") : $(id); return e && !e.hidden ? e.offsetHeight + 12 : 0; }).reduce((a, b) => a + b, 0);
+  const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 10, after = ["packmeta", "openBtn", "multiRow", "homeTrust"].map(id => { const e = id === "packmeta" ? document.querySelector(".packmeta") : $(id); return e && !e.hidden ? e.offsetHeight + 12 : 0; }).reduce((a, b) => a + b, 0);
   const ratio = pc.offsetHeight / Math.max(1, pc.offsetWidth) || 1.45, w = Math.max(100, Math.min(300, innerWidth * .74, (bottom - top - after) / ratio)); pc.style.width = Math.floor(w) + "px";
 }
 addEventListener("resize", () => { if (view === "home") fitHomePack(); });
@@ -31,6 +31,7 @@ function renderHome() {
   const bf = null; if (bf) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip this week: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
   $("chase").live = chaseHTML(); $("rqBar").live = "";      // the Requiem pack is for later: not on the pack page for now
   const hp = $("homePack"); if (hp.dataset.pack !== pk.id) { if (hp._ps) hp._ps.stop(); hp.innerHTML = packHTML(pk); hp.dataset.pack = pk.id; const el = hp.firstChild; tiltPack(el); el.style.cursor = "pointer"; el.onclick = () => openPack(); hp._ps = liveWindow(el, pk); }
+  document.body.dataset.pack = pk.id; { const ts = $("tStripe"); if (ts) ts.hidden = !Shop.open(); }
   fitHomePack(); requestAnimationFrame(fitHomePack);
 }
 
@@ -40,7 +41,7 @@ const agoText = m => m === 0 ? "just now" : m < 60 ? m + " min ago" : m < 2880 ?
 const whenText = h => h < 2 ? "just now" : h < 48 ? h + " hours ago" : Math.round(h / 24) + " days ago";
 // the profile: your money, live, and every card you hold with its price and profit or loss
 // what the cards you hold now were worth over the last hours: each copy's own path, at its starting value before you pulled it
-let pRange = 24, awaySince = 0;
+let pRange = 24, awaySince = 0, pAll = false;
 function cardsSeries(hours, n) { const v = state.vault; if (!v.length) return null; const t = Date.now(), out = []; for (let i = 0; i < n; i++) { const ti = t - hours * 36e5 * (1 - i / (n - 1)); let s = 0; for (const c of v) s += ti <= (c.t || 0) ? Val.startOf(c) : Val.at(c, ti, i < n - 1); out.push(s); } return out; }
 // what your cards did while the app was closed (this visit only, and only if you were gone a while)
 function awayLine() { if (!awaySince || Date.now() - awaySince < 30 * 60000 || !state.vault.length) return ""; let d = 0; for (const c of state.vault) if ((c.t || 0) < awaySince) d += valueOf(c) - Val.at(c, awaySince, true); const h = (Date.now() - awaySince) / 36e5; return Math.abs(d) < 1 ? "" : `<span>${signR(d, "while you were away " + (h >= 48 ? Math.round(h / 24) + " days" : h >= 1 ? Math.round(h) + "h" : Math.round(h * 60) + " min"))}</span>`; }
@@ -62,9 +63,10 @@ function renderProfile() {
     <div class="wsplit"><div><span class="label">cash</span><b>${moneyR(state.coins)}</b></div><div><span class="label">your cards</span><b>${moneyR(hold)}</b></div><div><span class="label">made on sales</span><b>${signR(state.s.realized)}</b></div></div>`;
   const cs = cardsSeries(pRange, 72);
   $("pChart").live = cs ? `<div class="mk"><div class="row chead"><span class="label">Your cards · ${pRange === 24 ? "last 24 hours" : "last 7 days"} ${pill(cs[cs.length - 1] / Math.max(1, cs[0]) - 1)}</span><span class="seg mini" role="group"><button data-prange="24" class="${pRange === 24 ? "on" : ""}" aria-pressed="${pRange === 24}">24h</button><button data-prange="168" class="${pRange === 168 ? "on" : ""}" aria-pressed="${pRange === 168}">7d</button></span></div>${lineChart(cs, { fmt: money, h: 120 })}</div>` : "";
-  $("pGoals").live = Goals.html(); Goals.badge(); $("pTip").live = tipHTML();
+  $("pGoals").live = Goals.html(); Goals.badge(); $("pTip").live = tipHTML(); $("pRank").live = rankLine();
   const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), q: quickCopy(c.no), hot: cs.some(x => { const m = Val.moves(x, 6)[0]; return m && m.pct > .15; }) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
-  $("pTable").live = groups.length ? groups.map(g => `<div class="mrow"><button class="mmain" data-card="${g.c.no}" aria-label="${esc(g.c.name)}">${thumb(g.c)}<span class="mn"><b>${esc(g.c.name)}${g.hot ? ` <i class="rush" title="AI buyers rushed into a copy in the last few hours">buyers in</i>` : ""}</b><small>${g.n > 1 ? `×${g.n} · ` : ""}${rarLabel(g.c)}</small></span><span class="mp"><b data-tick="g${g.c.no}" data-v="${g.val.toFixed(2)}">${moneyR(g.val)}</b>${pctR(g.val / Math.max(1, g.cost) - 1)}</span></button><button class="msell" data-qsell="${g.c.no}" aria-label="${esc(quickAria(g.c.no))}">${g.n > 1 ? "Sell 1" : "Sell"}<small>${moneyR(sellOf(g.q))}</small></button></div>`).join("") + `<div class="mtot"><span>All your cards</span><b>${moneyR(hold)}</b></div>` : "";
+  const shown = pAll ? groups : groups.slice(0, 6);
+  $("pTable").live = groups.length ? shown.map(g => `<div class="mrow"><button class="mmain" data-card="${g.c.no}" aria-label="${esc(g.c.name)}">${thumb(g.c)}<span class="mn"><b>${esc(g.c.name)}${g.hot ? ` <i class="rush" title="AI buyers rushed into a copy in the last few hours">buyers in</i>` : ""}</b><small>${g.n > 1 ? `×${g.n} · ` : ""}${rarLabel(g.c)}</small></span><span class="mp"><b data-tick="g${g.c.no}" data-v="${g.val.toFixed(2)}">${moneyR(g.val)}</b>${pctR(g.val / Math.max(1, g.cost) - 1)}</span></button><button class="msell" data-qsell="${g.c.no}" aria-label="${esc(quickAria(g.c.no))}">${g.n > 1 ? "Sell 1" : "Sell"}<small>${moneyR(sellOf(g.q))}</small></button></div>`).join("") + (groups.length > 6 ? `<button class="linkbtn plain pall" id="pAllBtn">${pAll ? "Show fewer" : `Show all ${groups.length} cards`}</button>` : "") + `<div class="mtot"><span>All your cards</span><b>${moneyR(hold)}</b></div>` : "";
   $("pNote").innerHTML = groups.length ? `Tap a card for its chart. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${moneyR(state.s.spent)} spent · ${moneyR(state.s.sold)} back from sales</span>` : `No cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they show up here with a live price.`;
   const rows = movers().rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24)).slice(0, 4); $("pMktH").hidden = !rows.length;
   $("pMkt").live = rows.map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)}<span class="dim">24h</span></button>`).join("");
