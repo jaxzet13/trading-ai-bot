@@ -107,3 +107,20 @@ def test_practice_runner_runs_the_frozen_batch_before_anything_passes(tmp_path, 
     monkeypatch.setattr(paper, "DATA", tmp_path)
     s, passed = paper._strategies()
     assert not passed and [x["id"] for x in s] == [x["id"] for x in batch][:paper.FALLBACK_N]
+
+
+def test_live_minute_close_is_the_price_at_the_boundary(tmp_path, monkeypatch):
+    """A drop in the last seconds of a minute belongs to that minute's close, as in Kalshi's official bar."""
+    import time as _t
+    from tennis import paper
+    books = tmp_path / "books"; books.mkdir()
+    base = 1_000_000_020 - (1_000_000_020 % 60)          # a minute boundary
+    snaps = [(base + 5, 0.24, 0.25), (base + 35, 0.19, 0.20),            # inside minute 0: last sample 0.195 mid
+             (base + 62, 0.11, 0.12),                                    # 2 s after the boundary: the real close
+             (base + 125, 0.11, 0.12), (base + 185, 0.11, 0.12)]
+    (books / "d.jsonl").write_text("".join(json.dumps({"ticker": "T", "event": "E", "series": "S", "ts": ts,
+                                                        "yes_bid": b, "yes_ask": a}) + "\n" for ts, b, a in snaps))
+    monkeypatch.setattr(paper, "BOOKS", books)
+    ms = paper.live_markets({"T": base}, base + 240)
+    m = ms[0]
+    assert abs(m["mid"][0] - 0.115) < 1e-9 and m["rel"][0] == 1.0     # minute 0 closes at the boundary price

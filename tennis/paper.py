@@ -25,6 +25,7 @@ from .history import STORE
 
 LOG = DATA / "paper_bets.jsonl"
 PARITY_C = 2.0
+CLOSE_LAG_S = 20
 FALLBACK_N = 20
 
 
@@ -69,28 +70,40 @@ def live_markets(starts, now):
     for tk, rs in rows.items():
         rs.sort()
         cur_min = int(now // 60)
-        per = defaultdict(list)
-        last = None
-        for ts, b, a, ev, se in rs:
-            per[int(ts // 60)].append((b, a))
-            last = (b, a, ev, se)
-        mins = sorted(m for m in per if m < cur_min)             # closed minutes only
-        if len(mins) < 2:
-            continue
-        # carry the book forward through minutes with no change (the recorder logs changes only)
+        last = rs[-1]
+        ts_ = [r[0] for r in rs]
+        # Kalshi's official 1-minute bar ends at the minute boundary and closes at the price THERE. The recorder
+        # samples every 15 s, so the last sample inside a minute can miss a move in its final seconds (Nov 24
+        # parity check: a drop from 0.19 to 0.11 at 79:55 made the live runner bet where the lab would not).
+        # So a minute's close is the first sample at or after its end (within CLOSE_LAG_S), else the last one
+        # inside it; its low/high cover every sample from the previous close through this one.
+        import bisect
         full, prev = [], None
-        for m in range(mins[0], cur_min):
-            if m in per:
-                bs = per[m]
-                prev = (bs[-1][0], min(x[0] for x in bs), bs[-1][1], max(x[1] for x in bs))
-            if prev:
-                full.append((m * 60 + 60, *prev))
+        first_min = int(rs[0][0] // 60)
+        for m_ in range(first_min, cur_min):
+            end = (m_ + 1) * 60
+            k = bisect.bisect_left(ts_, end)
+            if k < len(rs) and rs[k][0] - end <= CLOSE_LAG_S:
+                close = rs[k]
+            elif k > 0 and rs[k - 1][0] >= end - 60:
+                close = rs[k - 1]
+            else:
+                close = None
+            lo_i = bisect.bisect_left(ts_, end - 60)
+            hi_i = (k + 1) if (k < len(rs) and close is rs[k]) else k
+            span = rs[lo_i:hi_i] or ([close] if close else [])
+            if close:
+                prev = (close[1], min(x[1] for x in span), close[2], max(x[2] for x in span))
+            elif prev:
+                prev = (prev[0], prev[0], prev[2], prev[2])          # unchanged book: the recorder logs changes only
+            if prev and end <= now - CLOSE_LAG_S:
+                full.append((end, *prev))
         if len(full) < 2:
             continue
         b = np.array(full, float)
         start = starts[tk]
         rel = (b[:, 0] - start) / 60.0
-        out.append({"ticker": tk, "event": last[2], "series": last[3], "day": int(start // 86400), "start": start,
+        out.append({"ticker": tk, "event": last[3], "series": last[4], "day": int(start // 86400), "start": start,
                     "value": np.nan, "rel": rel, "mid": (b[:, 1] + b[:, 3]) / 2, "bidlo": b[:, 2], "askhi": b[:, 4]})
     return out
 
@@ -159,6 +172,6 @@ def settle_and_check():
         parity = None
         if b["ticker"] in hist and b["strategy"] in strat_by_id:
             rr = lab.bet(hist[b["ticker"]], strat_by_id[b["strategy"]])
-            parity = bool(rr and rr[0] == b["side"] and abs(rr[1] - b["price"]) * 100 <= PARITY_C)
+            parity = bool(rr and rr[0] == b["side"] and round(abs(rr[1] - b["price"]) * 100, 6) <= PARITY_C)
         out.append({**b, "pnl": pnl, "parity": parity})
     return out
