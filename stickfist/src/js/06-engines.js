@@ -9,7 +9,7 @@ class PackScreen {
   constructor(pk, pack) {
     this.pk = pk; this.pack = pack || PACKS[0]; this.cv = pk.querySelector("canvas.scr"); this.ctx = this.cv.getContext("2d");
     this.el = { stat: pk.querySelector(".r-stat"), name: pk.querySelector(".r-name"), sub: pk.querySelector(".r-sub"), meter: pk.querySelector(".r-meter") };
-    this.on = false; this.last = 0; this.t0 = performance.now(); this.off = document.createElement("canvas"); this.g = this.off.getContext("2d", { willReadFrequently: true }); this.cache = new Map();
+    this.on = false; this.last = 0; this.t0 = performance.now(); this.off = document.createElement("canvas"); this.g = this.off.getContext("2d", { willReadFrequently: true }); this.cache = new Map(); this.layer = document.createElement("canvas"); this.lc = this.layer.getContext("2d");
     const n = CARDS.filter(c => c.set === this.pack.set).length;
     scramble(this.el.name, this.pack.name.toUpperCase(), 520); this.el.sub.textContent = `${n} cards inside · ${this.pack.n} in every pack`;
   }
@@ -17,7 +17,7 @@ class PackScreen {
     const dpr = Math.min(devicePixelRatio || 1, 2), w = this.cv.clientWidth, h = this.cv.clientHeight; if (!w || !h) return;
     if (this.cv.width !== Math.round(w * dpr) || this.cv.height !== Math.round(h * dpr)) { this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr); }
     this.dpr = dpr; this.w = w; this.h = h; this.cols = Math.max(48, Math.round(w / 3.1)); const cw = w / this.cols; this.rows = Math.max(30, Math.round(h / (cw * 1.62)));
-    if (this.off.width !== this.cols || this.off.height !== this.rows) { this.off.width = this.cols; this.off.height = this.rows; }
+    if (this.off.width !== this.cols || this.off.height !== this.rows) { this.off.width = this.layer.width = this.cols; this.off.height = this.layer.height = this.rows; }
   }
   status(now, s) { const v = "> " + s + " " + SPIN[Math.floor(now / 110) % 4]; if (v !== this.el.stat._s) { this.el.stat._s = v; this.el.stat.textContent = v; } const mt = meter((Math.floor(now / 380) % 5) + 1, 5); if (mt !== this.el.meter._s) { this.el.meter._s = mt; this.el.meter.textContent = mt; } }
   col(r, g, b) { const k = (r >> 4) << 8 | (g >> 4) << 4 | b >> 4; let v = this.cache.get(k); if (!v) { v = `rgb(${(r >> 4) * 17},${(g >> 4) * 17},${(b >> 4) * 17})`; this.cache.set(k, v); } return v; }
@@ -43,6 +43,7 @@ class PackScreen {
     g.fillStyle = "#1c1b19"; for (let y = 8; y < H; y += 9) for (let x = 6 + (y / 9 % 2) * 4.5; x < W; x += 9) g.fillRect(x, y, 1.6, 1.6);
     g.strokeStyle = "#5a574f"; g.lineWidth = 1.4; const cm = 10, L = 14; for (const [x, y, sx, sy] of [[cm, cm, 1, 1], [W - cm, cm, -1, 1], [cm, H - cm, 1, -1], [W - cm, H - cm, -1, -1]]) { g.beginPath(); g.moveTo(x, y + sy * L); g.lineTo(x, y); g.lineTo(x + sx * L, y); g.stroke(); }
     const glow = g.createRadialGradient(W / 2, H * .45, 0, W / 2, H * .45, W * .7); glow.addColorStop(0, "rgba(120,90,40,.55)"); glow.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = glow; g.fillRect(0, 0, W, H);
+    const G0 = g, Lc = this.lc; Lc.setTransform(1, 0, 0, 1, 0, 0); Lc.clearRect(0, 0, this.cols, this.rows); Lc.setTransform(this.cols / W, 0, 0, this.rows / H, 0, 0); g = Lc;     // the ink goes on its own clear layer, so the shine only lights the ink
     g.save(); g.beginPath(); g.rect(0, 0, W, Math.max(0, head)); g.clip(); g.globalAlpha = fade;
     const cx = W / 2, cy = H * .44, fs = fit("STIXX", 900, W * .86, H * .4);
     g.textAlign = "center"; g.textBaseline = "middle"; g.font = `900 ${fs}px "Inter",system-ui,sans-serif`;
@@ -52,7 +53,7 @@ class PackScreen {
     const ry = cy + fs * 1.05, rl = g.createLinearGradient(W * .14, 0, W * .86, 0); rl.addColorStop(0, "rgba(255,196,106,0)"); rl.addColorStop(.5, "#ffc46a"); rl.addColorStop(1, "rgba(255,196,106,0)"); g.fillStyle = rl; g.fillRect(W * .14, ry, W * .72, Math.max(3, H * .012));      // a gold rule under the name
         if (u > 3 && u < 4.4) { const p = (u - 3) / 1.4, bx = -W * .4 + p * W * 1.8, sh = g.createLinearGradient(bx - W * .25, 0, bx + W * .25, 0); sh.addColorStop(0, "rgba(255,255,255,0)"); sh.addColorStop(.5, "rgba(255,246,220,.75)"); sh.addColorStop(1, "rgba(255,255,255,0)"); g.globalCompositeOperation = "source-atop"; g.fillStyle = sh; g.fillRect(0, 0, W, H); g.globalCompositeOperation = "source-over"; }
     if (head < H) { const wet = g.createLinearGradient(0, head - 26, 0, head); wet.addColorStop(0, "rgba(255,210,120,0)"); wet.addColorStop(1, "rgba(255,200,110,.55)"); g.globalCompositeOperation = "source-atop"; g.fillStyle = wet; g.fillRect(0, head - 26, W, 26); g.globalCompositeOperation = "source-over"; }
-    g.restore();
+    g.restore(); g = G0; g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(this.layer, 0, 0); g.restore();
     if (head > -4 && head < H + 4) { g.save(); g.fillStyle = "rgba(255,220,150,.12)"; g.fillRect(0, head - 6, W, 12); g.fillStyle = "#fff6dc"; g.fillRect(0, head - 1.2, W, 2.4); g.restore(); }
   }
   launch(g, t, W, H) {                                                                   // Moonshot: a rocket climbs through moving stars, the Moon in the corner

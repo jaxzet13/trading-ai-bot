@@ -53,9 +53,12 @@
     <div class="page-head"><h1 class="ttl">Me</h1><p class="live"></p></div>
     <div id="pWorth"></div>
     <div id="pChart" class="pchart"></div>
+    <button class="btn solid pshare" id="pShare" type="button">Share my stats</button>
     <h3 class="sec">Your cards</h3>
     <div class="clist" id="pTable"></div>
     <p class="small" id="pNote"></p>
+    <h3 class="sec">History</h3>
+    <div id="pHist"></div>
     <h3 class="sec" id="pMktH">Market</h3>
     <div class="pmkt" id="pMkt"></div>
     <div class="plinks" id="pLinks"></div>
@@ -94,7 +97,11 @@
   <a href="#/" data-v="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18H7z"/><path d="M7 7l1.7-1.6L10.3 7l1.7-1.6L13.700 7l1.700-1.600L17 7"/><path d="M10 12h4M10 15h3"/></svg><span>pack</span></a>
   <a href="#/profile" data-v="profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.500 21c.7-4 3.800-6 7.500-6s6.800 2 7.500 6"/></svg><span>me</span></a>
 </nav>
-<footer><div class="wrap">STIXX beta · <span id="footMoney">play money only, nothing is ever charged or paid out</span> · 18+ · <a href="#/odds">odds</a> · <button class="linkbtn" id="fairBtn">fair play</button> · <button class="linkbtn" id="aboutBtn">fine print</button></div></footer>
+<footer><div class="wrap">
+  <div class="fmain"><span class="flogo">STIXX</span><nav class="flinks" aria-label="About STIXX"><a href="/terms">Terms &amp; privacy</a><a href="#/odds">Odds</a><button class="linkbtn" id="fairBtn">Fair play</button><button class="linkbtn" id="aboutBtn">How money works</button></nav></div>
+  <p class="fnote"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="footMoney">Play money only. Nothing is charged or paid out.</span></p>
+  <p class="fnote faint">18+ · © 2026 STIXX</p>
+</div></footer>
 
 <!-- opening -->
 <div class="stage" id="stage" hidden tabindex="-1">

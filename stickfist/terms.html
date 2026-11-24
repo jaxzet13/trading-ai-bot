@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>STIXX: terms, refunds and privacy</title>
-<meta name="robots" content="noindex">
+<title>STIXX · Terms, refunds and privacy</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
@@ -17,13 +17,13 @@ main { max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; } h1 { font-si
 </head>
 <body>
 <main>
+<p><a href="/" class="dim">‹ Back to STIXX</a></p>
 <h1>Terms, refunds and privacy</h1>
-<p class="dim">STIXX · last updated <span class="fill">[DATE]</span></p>
+<p class="dim">STIXX · last updated {{DATE}}</p>
 
-<div class="draft"><b>DRAFT, not yet reviewed.</b> Everything in <span class="fill">[yellow brackets]</span> is for the owner to fill in, and a lawyer should read this before real money is taken. Delete this box when that is done. Until it is deleted, customers see this notice.</div>
 
 <h2>Who we are</h2>
-<p><span class="fill">[BUSINESS NAME]</span>, <span class="fill">[ADDRESS]</span>. Questions, refunds and complaints: <span class="fill">[CONTACT EMAIL]</span>. We answer within <span class="fill">[2 business days]</span>.</p>
+<p>{{WHO}} Questions, refunds and complaints: {{CONTACT}}. We answer within 2 business days.</p>
 
 <h2>What real money buys</h2>
 <ul>
@@ -31,24 +31,17 @@ main { max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; } h1 { font-si
 <li><b>Play money, the cards and every price in the game have no cash value.</b> They can't be cashed out, sold for real money or transferred to anyone for real money. Nothing in the game pays out money.</li>
 <li><b>Packs are random.</b> What is in a pack is decided by chance. The exact odds are on the Odds page and don't change with what you have spent or pulled. On average a pack's cards sell back in the game for about 93% of the pack's in-game price (never more than 95%), and about 40% of packs sell back at least what they cost. That is play money and never becomes cash.</li>
 <li><b>You must be 18 or older.</b> Don't buy packs if you are not.</li>
-<li><b>Spending limit.</b> You can spend at most <span class="fill">[$25]</span> a day. The game also limits how many packs you can open in a day and reminds you to take breaks. If you want to stop, stop: you owe nothing further.</li>
+<li><b>Spending limit.</b> You can spend at most {{CAP}} a day. The game also limits how many packs you can open in a day and reminds you to take breaks. If you want to stop, stop: you owe nothing further.</li>
 </ul>
 
 <h2>Refunds</h2>
 <ul>
-<li>Play money you have added and not spent: refunded in full on request within <span class="fill">[14 days]</span> of paying.</li>
+<li>Play money you have added and not spent: refunded in full on request within 14 days of paying.</li>
 <li>Play money you have already spent on packs can't be refunded, because opened packs can't be un-opened, unless something went wrong (you were charged twice, the money didn't arrive, or the game failed while you were opening a pack). In those cases we refund or replace it.</li>
-<li>Refunds go back to the card or wallet you paid with, usually within <span class="fill">[5 to 10 business days]</span>.</li>
-<li>Ask at <span class="fill">[CONTACT EMAIL]</span> with the time of the payment.</li>
+<li>Refunds go back to the card or wallet you paid with, usually within 5 to 10 business days.</li>
+<li>Ask at {{CONTACT}} with the time of the payment.</li>
 </ul>
 
-<h2>The physical Requiem pack <span class="dim">(only while on sale)</span></h2>
-<ul>
-<li>Price $65.00 per pack, shipping included, to addresses in the United States only. Each pack is numbered and sealed from a single printed run of <span class="fill">[RUN SIZE]</span> packs. The run is never reprinted. How many of each card are in the run is published on the Requiem page, with a fingerprint of the list that was published before the first sale.</li>
-<li>We ship within <span class="fill">[X business days]</span> of your payment and email tracking to the address Stripe holds for you. A pack that arrives damaged or doesn't arrive: refunded or replaced.</li>
-<li>Unopened and unshipped: refunded on request. Shipped: refunded if you return it sealed within <span class="fill">[14 days]</span> of delivery, at <span class="fill">[our / your]</span> cost.</li>
-<li>The cards in the pack are collectibles. We make no promise about what they will be worth later, and the "planned values" on the Requiem page are our own guide, not a price anyone has agreed to pay.</li>
-</ul>
 
 <h2>Fair play</h2>
 <ul>
@@ -60,15 +53,15 @@ main { max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; } h1 { font-si
 <ul>
 <li><b>Payments</b> are handled by Stripe. We never see or store your card number. Stripe shows us whether a payment succeeded.</li>
 <li><b>What we keep</b> for play money: a random player id (not your name), counters, the days you visited, a one-way hash of your network address (never the address), the pack seed, and for each purchase a Stripe session id and the amount.</li>
-<li><b>What we don't keep</b>: your name, email, card details or home address on our own server. For the Requiem pack, your shipping address and phone number stay in Stripe and are used only to deliver your pack.</li>
+<li><b>What we don't keep</b>: your name, email, card details or home address on our own server.</li>
 <li>Your cards and balance are stored in your own browser. Clearing your browser data clears them.</li>
-<li>We don't sell your data. Ask at <span class="fill">[CONTACT EMAIL]</span> to have what we hold about you deleted, as far as the law allows us to <span class="fill">[confirm you can do this by hand: the server file is keyed by a random player id the player can read out to you]</span>.</li>
+<li>We don't sell your data. Ask at {{CONTACT}} to have what we hold about you deleted (give us your player id from Me › Limits and settings), as far as the law allows.</li>
 </ul>
 
 <h2>Everything else</h2>
 <ul>
 <li>We can change these terms; the date at the top says when. A change never reduces what you already paid for.</li>
-<li>These terms are governed by the laws of <span class="fill">[STATE]</span>.</li>
+{{LAW}}
 <li>If you think you are spending more than you should, please stop and talk to someone: in the United States you can call or text the National Problem Gambling Helpline at 1-800-GAMBLER (1-800-426-2537).</li>
 </ul>
 </main>

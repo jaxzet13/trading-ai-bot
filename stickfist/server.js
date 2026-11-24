@@ -151,9 +151,20 @@ const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; cha
 const gz = new Map();
 function send(res, code, body, type, extra) { const h = Object.assign({ "content-type": type, "x-content-type-options": "nosniff" }, extra || {}); res.writeHead(code, h); res.end(body); }
 function json(res, code, obj) { send(res, code, JSON.stringify(obj), "application/json", { "cache-control": "no-store", "access-control-allow-origin": CORS }); }
+// the terms page is filled in from the server's settings, so it never shows a blank to fill in
+const escH = v => String(v).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+function termsPage() {
+  const e = process.env, mail = (e.SUPPORT_EMAIL || "").trim(), name = (e.BUSINESS_NAME || "STIXX").trim(), addr = (e.BUSINESS_ADDRESS || "").trim(), law = (e.GOVERNING_STATE || "").trim();
+  let cap = 25; try { cap = Math.round((JSON.parse(e.SHOP_DAILY_CAP_CENTS || "2500") || 2500) / 100); } catch (x) {}
+  return fs.readFileSync(path.join(STATIC, "terms.html"), "utf8")
+    .replace(/{{DATE}}/g, "November 23, 2026").replace(/{{WHO}}/g, escH(name + (addr ? ", " + addr : "")) + ".")
+    .replace(/{{CONTACT}}/g, mail ? `<a href="mailto:${escH(mail)}">${escH(mail)}</a>` : "the support contact on your Stripe receipt")
+    .replace(/{{CAP}}/g, "$" + cap).replace(/{{LAW}}/g, law ? `<li>These terms are governed by the laws of ${escH(law)}.</li>` : "");
+}
 function serveStatic(req, res, url) {
   let p = decodeURIComponent(url.pathname); if (p === "/" || p === "") p = "/index.html"; else if (p === "/terms" || p === "/terms/") p = "/terms.html"; const file = path.join(STATIC, path.normalize(p));
   if (!file.startsWith(STATIC + path.sep) || /(^|[\\/])(server\.js|pay\.js|data|\.git|src|node_modules)([\\/]|$)/.test(path.relative(STATIC, file)) || /\.(py|md|sh|json)$/.test(file) && !/manifest\.json$/.test(file)) return send(res, 404, "Not found", "text/plain");
+  if (p === "/terms.html") { try { return send(res, 200, termsPage(), MIME[".html"], { "cache-control": "no-cache" }); } catch (e) { return send(res, 404, "Not found", "text/plain"); } }
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) return send(res, 404, "Not found", "text/plain");
     const ext = path.extname(file).toLowerCase(), type = MIME[ext] || "application/octet-stream", cache = ext === ".html" ? "no-cache" : "public, max-age=86400";

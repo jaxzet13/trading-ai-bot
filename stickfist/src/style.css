@@ -513,3 +513,25 @@ a.back { display: inline-block; color: var(--dim); text-decoration: none; font-s
 
 /* the stage header stays on one line on the smallest phones */
 @media (max-width: 400px) { .st-bar { padding: 12px 14px 0; gap: 8px; } .st-bar .pn, .st-bar .st-count { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; font-size: 13px; } .st-bar .pn { flex: 0 1 auto; } .st-bar .st-count { flex: 1 1 auto; text-align: center; } .st-title .nm { max-width: calc(100vw - 24px); } }
+
+/* ---- footer: reads like a real site's ---- */
+footer .wrap { display: grid; gap: 10px; padding-top: 22px; padding-bottom: 26px; }
+footer .fmain { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
+footer .flogo { font-weight: 800; letter-spacing: .28em; color: var(--ink); font-size: 14px; }
+footer .flinks { display: flex; flex-wrap: wrap; gap: 6px 18px; } footer .flinks a, footer .flinks .linkbtn { color: var(--dim); text-decoration: none; font-size: 13px; } footer .flinks a:hover, footer .flinks .linkbtn:hover { color: var(--ink); }
+footer .fnote { margin: 0; font-size: 12px; color: var(--dim); display: flex; align-items: center; gap: 6px; line-height: 1.5; }
+svg.lock { width: 14px; height: 14px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+/* ---- payment window: who handles the money ---- */
+.trust { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 8px; font-size: 13px; color: var(--dim); margin-top: -4px; }
+.trust b { color: var(--ink); } .trust .pays { width: 100%; text-align: center; font-size: 12px; opacity: .8; }
+/* ---- Me: share button and history ---- */
+.pshare { width: 100%; margin: 4px 0 26px; }
+.hlist { display: grid; border-top: 1px solid var(--line); margin-bottom: 8px; }
+.hrow { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.hth { display: flex; width: 76px; } .hth img { width: 32px; height: 39px; object-fit: cover; border-radius: 4px; border: 1px solid var(--rc, var(--line)); background: #000; box-shadow: 0 0 0 2px var(--bg); }
+.hth img + img { margin-left: -18px; }
+.hmid { display: grid; gap: 2px; min-width: 0; } .hmid b { font-size: 15px; font-weight: 600; } .hmid .dim { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hval { display: grid; justify-items: end; gap: 2px; } .hval b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.hmore { margin: 6px 0 22px; } .hempty { margin: 0 0 22px; }
+#v-profile h3.sec { margin-top: 30px; } #v-profile .pshare + h3.sec { margin-top: 0; }
+.hth img { position: relative; }
