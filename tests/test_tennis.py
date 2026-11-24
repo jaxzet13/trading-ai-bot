@@ -140,7 +140,7 @@ def test_fast_scorer_matches_bet_exactly():
         ms.append({"ticker": f"T{k}", "event": f"E{k}", "series": ["KXATPMATCH", "KXWTAMATCH", "KXITFMATCH"][k % 3],
                    "day": 20000 + k % 5, "start": 0, "value": float(rng.random() < 0.5), "rel": rel, "mid": mid,
                    "askhi": mid + 0.01, "bidlo": mid - 0.01})
-    strats = [s for s in lab.strategies() if s["fam"] == "swing" or s["M"] in (-60, 0, 30)]
+    strats = [s for s in lab.strategies() if s["fam"] in ("swing", "drift") or s["M"] in (-60, 0, 30)]
     days, P, N, Q = lab.score_matrix(ms, strats, log=lambda m: None)
     for r, s in enumerate(strats):
         pnl, n = 0.0, 0
@@ -149,3 +149,20 @@ def test_fast_scorer_matches_bet_exactly():
             if b:
                 pnl += b[2]; n += 1
         assert n == N[r].sum() and abs(pnl - P[r].sum()) < 1e-9, s["id"]
+
+
+def test_drift_backs_the_move_at_next_minute_ask():
+    """drift mom/up: price rose 10c over the hour before minute -10 -> buy YES at the next minute's ask high."""
+    import numpy as np
+    from tennis import lab
+    rel = np.arange(-100, 5, 1.0)
+    mid = np.where(rel <= -70, 0.50, 0.60)
+    m = {"ticker": "T", "series": "KXATPMATCH", "day": 1, "start": 0, "value": 1.0, "rel": rel, "mid": mid,
+         "askhi": mid + 0.01, "bidlo": mid - 0.01}
+    s = lab._drift(-10, 60, 0.08, "up", "mom", "all")
+    side, p, pnl, minute = lab.bet(m, s)
+    assert side == "yes" and abs(p - 0.61) < 1e-9 and minute == -10.0
+    assert abs(pnl - (1 - 0.61 - 0.02)) < 1e-9
+    assert lab.bet(m, lab._drift(-10, 60, 0.12, "up", "mom", "all")) is None          # moved less than d
+    side, p, _, _ = lab.bet(m, lab._drift(-10, 60, 0.08, "up", "rev", "all"))         # fade: buy NO at 1 - bid low
+    assert side == "no" and abs(p - 0.41) < 1e-9

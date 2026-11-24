@@ -113,8 +113,10 @@ def build(log=print):
 
 def real_test():
     """Real-money test runs (tennis/realtest.py log): filled bets, settled profit, bets still open, refused orders."""
-    fp = DATA / "real_test_log.jsonl"
-    ev = [json.loads(ln) for ln in open(fp) if ln.strip()] if fp.exists() else []
+    ev = []
+    for fp in (DATA / "real_test_log.jsonl", DATA / "auto_log.jsonl"):     # the 2-hour test and the auto-better
+        if fp.exists():
+            ev += [json.loads(ln) for ln in open(fp) if ln.strip()]
     fills = [e for e in ev if e.get("event") == "fill" and e.get("n", 0) > 0]
     settled = {e["ticker"]: e for e in ev if e.get("event") == "settle"}
     return {"real_bets": len(fills), "real_won": sum(1 for e in settled.values() if e["pnl"] > 0),

@@ -41,6 +41,11 @@ def _describe(s):
     if s["fam"] == "band":
         when = "at the start" if s["M"] == 0 else (f"{-s['M']} min before the start" if s["M"] < 0 else f"{s['M']} min into the match")
         return f"Back a player priced {round(s['lo'] * 100)}–{round(s['hi'] * 100)}¢ {when}"
+    if s["fam"] == "drift":
+        when = "at the start" if s["M"] == 0 else f"{-s['M']} min before the start"
+        moved = "fell" if s["dir"] == "down" else "rose"
+        act = "back that player" if (s["dir"] == "up") == (s["act"] == "mom") else "bet against that player"
+        return f"If a player's price {moved} {round(s['d'] * 100)}¢+ in the {s['L']} min before, {act} {when}"
     move = "drops" if s["dir"] == "down" else "rises"
     act = "bet on the bounce" if s["act"] == "rev" else "bet it keeps going"
     ph = {"early": "in the first hour", "late": "after the first hour", "all": "during play"}[s["phase"]]

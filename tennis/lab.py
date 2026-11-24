@@ -10,6 +10,8 @@ Same honesty rules as the crypto lab:
 Families (each match has one market per player; backing a player = YES on their market):
   band   at minute M of the match clock (M < 0 = before the start), back a player whose mid price is in [lo, hi)
   swing  in play, when a player's mid moves by d or more within w minutes: back the bounce (rev) or the move (mom)
+  drift  before the start (or at it), when a player's mid moved by d or more over the L minutes up to minute M:
+         back the move (mom: follow the money) or fade it (rev); one bet at minute M
 Every rule bets at most once per market.
 """
 from __future__ import annotations
@@ -35,6 +37,9 @@ SCOPE_NAME = {"all": "", "atp": "ATP", "wta": "WTA", "chal": "Challenger", "itf"
 SWING_W = [5, 10, 20, 30]
 SWING_D = [0.05, 0.10, 0.15, 0.20, 0.25]
 PHASES = {"early": (0, 60), "late": (60, 240), "all": (0, 240)}
+DRIFT_M = [-120, -60, -30, -10, 0]
+DRIFT_L = [30, 60, 120, 240]
+DRIFT_D = [0.03, 0.05, 0.08, 0.12]
 MIN_BETS = 30
 
 
@@ -80,7 +85,24 @@ def strategies():
                         for act in ("rev", "mom"):
                             out.append({"id": _sid(f"swing:{ph}:{direction}{d:.2f}/{w}m:{act}", scope), "fam": "swing",
                                         "phase": ph, "w": w, "d": d, "dir": direction, "act": act, "scope": scope})
+        for M in DRIFT_M:
+            for L in DRIFT_L:
+                for d in DRIFT_D:
+                    for direction in ("down", "up"):
+                        for act in ("rev", "mom"):
+                            out.append(_drift(M, L, d, direction, act, scope))
     return out
+
+
+def _drift(M, L, d, direction, act, scope):
+    return {"id": _sid(f"drift:m{M}:{direction}{d:.2f}/{L}m:{act}", scope), "fam": "drift", "M": M, "L": L,
+            "d": d, "dir": direction, "act": act, "scope": scope}
+
+
+def _bar_at(rel, t):
+    """Index of the last bar at or before minute t, if it is within 10 minutes of t, else None."""
+    i = int(np.searchsorted(rel, t, side="right")) - 1
+    return i if i >= 0 and t - rel[i] <= 10 else None
 
 
 def in_scope(m, s):
@@ -116,6 +138,18 @@ def bet(m, s):
             return None
         p = _fill(m, i, "yes")
         return None if p is None else ("yes", p, _pay(m, "yes", p), float(rel[i]))
+    if s["fam"] == "drift":
+        i, j = _bar_at(rel, s["M"]), _bar_at(rel, s["M"] - s["L"])
+        if i is None or j is None or j >= i or not (np.isfinite(mid[i]) and np.isfinite(mid[j])):
+            return None
+        if not 0.10 <= mid[i] <= 0.90:
+            return None
+        ch = mid[i] - mid[j]
+        if not ((s["dir"] == "up" and ch >= s["d"]) or (s["dir"] == "down" and ch <= -s["d"])):
+            return None
+        side = "yes" if (s["dir"] == "up") == (s["act"] == "mom") else "no"
+        p = _fill(m, i, side)
+        return None if p is None else (side, p, _pay(m, side, p), float(rel[i]))
     a, b = PHASES[s["phase"]]
     w, d = s["w"], s["d"]
     sel = np.nonzero((rel >= a) & (rel < b))[0]
@@ -203,6 +237,11 @@ def mutate(s, rng):
         lo = round(min(0.9, max(0.02, s["lo"] + rng.choice([-0.03, -0.02, 0.02, 0.03]))), 2)
         hi = round(min(0.98, max(lo + 0.04, s["hi"] + rng.choice([-0.03, -0.02, 0.02, 0.03]))), 2)
         c.update(lo=lo, hi=hi, id=_sid(f"band:m{c['M']}:{lo:.2f}-{hi:.2f}", s.get("scope", "all")))
+    elif s["fam"] == "drift":
+        M = int(min(0, s["M"] + rng.choice([-10, -5, 5, 10])))
+        L = int(max(10, s["L"] + rng.choice([-30, -15, 15, 30])))
+        d = round(max(0.02, s["d"] + rng.choice([-0.02, -0.01, 0.01, 0.02])), 2)
+        c = _drift(M, L, d, s["dir"], s["act"], s.get("scope", "all"))
     else:
         c["w"] = int(max(2, s["w"] + rng.choice([-5, -2, 2, 5])))
         c["d"] = round(max(0.03, s["d"] + rng.choice([-0.03, -0.02, 0.02, 0.03])), 2)
@@ -272,6 +311,29 @@ def _swing_arrays(ms, phase, w, d, direction):
     return ok_y, pay_y, ok_n, pay_n
 
 
+def _drift_arrays(ms, M, L):
+    """Per market, what a drift rule (M, L) sees: (mid at M, change over L, ok/pnl backing yes, ok/pnl backing no)."""
+    n = len(ms)
+    mid_i = np.full(n, np.nan); ch = np.full(n, np.nan)
+    ok_y = np.zeros(n, bool); ok_n = np.zeros(n, bool); pay_y = np.zeros(n); pay_n = np.zeros(n)
+    for k, m in enumerate(ms):
+        rel, mid = m["rel"], m["mid"]
+        i, j = _bar_at(rel, M), _bar_at(rel, M - L)
+        if i is None or j is None or j >= i or not (np.isfinite(mid[i]) and np.isfinite(mid[j])):
+            continue
+        mid_i[k], ch[k] = mid[i], mid[i] - mid[j]
+        if i + 1 >= len(rel) or rel[i + 1] - rel[i] > 3.01:
+            continue
+        py = m["askhi"][i + 1]
+        if np.isfinite(py) and 0.02 <= py <= 0.98:
+            ok_y[k], pay_y[k] = True, m["value"] - py - _fee_vec(py)
+        bl = m["bidlo"][i + 1]
+        pn = 1 - bl if np.isfinite(bl) else np.nan
+        if np.isfinite(pn) and 0.02 <= pn <= 0.98:
+            ok_n[k], pay_n[k] = True, (1 - m["value"]) - pn - _fee_vec(pn)
+    return mid_i, ch, ok_y, pay_y, ok_n, pay_n
+
+
 def score_matrix(ms, strats, log=print):
     """-> (days, P, N, Q): per strategy (rows, in strats order) and day (columns) the P&L, bets and P&L^2."""
     t0 = time.time()
@@ -280,10 +342,12 @@ def score_matrix(ms, strats, log=print):
     D, S = len(days), len(strats)
     P, N, Q = np.zeros((S, D)), np.zeros((S, D)), np.zeros((S, D))
     scope = _scope_masks(ms)
-    by_m, by_sw = defaultdict(list), defaultdict(list)
+    by_m, by_sw, by_dr = defaultdict(list), defaultdict(list), defaultdict(list)
     for r, s in enumerate(strats):
         if s["fam"] == "band":
             by_m[s["M"]].append(r)
+        elif s["fam"] == "drift":
+            by_dr[(s["M"], s["L"])].append(r)
         else:
             by_sw[(s["phase"], s["w"], s["d"], s["dir"])].append(r)
     def put(r, mask, pay):
@@ -302,6 +366,15 @@ def score_matrix(ms, strats, log=print):
             back = (dr == "down") == (s["act"] == "rev")
             sc = scope[s.get("scope", "all")]
             put(r, (ok_y if back else ok_n) & sc, pay_y if back else pay_n)
+    for (M, L), rows in by_dr.items():
+        mid_i, ch, ok_y, pay_y, ok_n, pay_n = _drift_arrays(ms, M, L)
+        with np.errstate(invalid="ignore"):
+            band = (mid_i >= 0.10) & (mid_i <= 0.90)
+            for r in rows:
+                s = strats[r]
+                moved = (ch >= s["d"]) if s["dir"] == "up" else (ch <= -s["d"])
+                back = (s["dir"] == "up") == (s["act"] == "mom")
+                put(r, band & moved & (ok_y if back else ok_n) & scope[s.get("scope", "all")], pay_y if back else pay_n)
     log(f"  scored {S} strategies on {len(ms)} markets ({time.time() - t0:.0f}s)")
     return days, P, N, Q
 
