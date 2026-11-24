@@ -161,6 +161,11 @@ def run(log=print, auto=False):
         except Exception as e:
             log(f"  market data failed: {e!r}"); time.sleep(30); continue
         for m in markets:
+            # auto mode bets Challenger matches only: in the Nov 24 pooled test of 28,590 markets the one persistent
+            # bias was Challenger favourites (80-95c winning 2-3c more often than priced); ITF favourites at the
+            # same prices won LESS often than priced and ATP/WTA were noise
+            if auto and m.get("series") not in lab.SCOPES["chal"]:
+                continue
             for s in strats:
                 key = (m["ticker"], s["id"])
                 if key in done or m["ticker"] in held:
