@@ -102,10 +102,22 @@ def build(log=print):
                 "open_matches_now": sum(open_now.values()), "arbs_listed": len(arbs),
                 "arbs_checked": listed, "arbs_confirmed": confirmed, "confirmed_profit": round(conf_profit, 2),
                 "closest_gap_cents": closest[0]["gap_cents"] if closest else None,
-                "updated": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())}]
+                "updated": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime()), **real_test()}]
     arbs = confirmed_rows                         # the dashboard lists only arbs the live books confirmed
     for name, rows in (("summary", summary), ("closest", closest), ("arbs", arbs), ("tours", tours)):
         (OUT / f"{name}.json").write_text(json.dumps(rows, indent=0))
     log(f"report: {hours} h recorded, {len(by_event)} matches, {summary[0]['arbs_listed']} arbs in the market list, "
         f"{confirmed}/{listed} confirmed in the live books")
     return summary[0]
+
+
+def real_test():
+    """Real-money test runs (tennis/realtest.py log): filled bets, settled profit, bets still open, refused orders."""
+    fp = DATA / "real_test_log.jsonl"
+    ev = [json.loads(ln) for ln in open(fp) if ln.strip()] if fp.exists() else []
+    fills = [e for e in ev if e.get("event") == "fill" and e.get("n", 0) > 0]
+    settled = {e["ticker"]: e for e in ev if e.get("event") == "settle"}
+    return {"real_bets": len(fills), "real_won": sum(1 for e in settled.values() if e["pnl"] > 0),
+            "real_pnl": round(sum(e["pnl"] for e in settled.values()), 2),
+            "real_open": sum(1 for f in fills if f["ticker"] not in settled),
+            "real_refused": sum(1 for e in ev if e.get("event") == "error")}
