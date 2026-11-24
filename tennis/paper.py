@@ -169,9 +169,14 @@ def settle_and_check():
             v = 1.0 if r["result"] == "yes" else 0.0
             win = v if b["side"] == "yes" else 1 - v
             pnl = round(win - b["price"] - api.fee(b["price"], 1), 4)
-        parity = None
+        parity = same_call = lab_price = None
         if b["ticker"] in hist and b["strategy"] in strat_by_id:
             rr = lab.bet(hist[b["ticker"]], strat_by_id[b["strategy"]])
-            parity = bool(rr and rr[0] == b["side"] and round(abs(rr[1] - b["price"]) * 100, 6) <= PARITY_C)
-        out.append({**b, "pnl": pnl, "parity": parity})
+            # same_call: the lab, on official candles, bets the same side at the same minute. The price can still
+            # differ: the lab charges the fill minute's worst ask, which 15-second samples can miss in a fast minute
+            # (Nov 24: live 90c vs lab 93c on a spike), so the lab is the more pessimistic of the two.
+            same_call = bool(rr and rr[0] == b["side"] and abs(rr[3] - b["minute"]) < 0.01)
+            lab_price = round(rr[1], 4) if rr else None
+            parity = bool(same_call and round(abs(rr[1] - b["price"]) * 100, 6) <= PARITY_C)
+        out.append({**b, "pnl": pnl, "parity": parity, "same_call": same_call, "lab_price": lab_price})
     return out
