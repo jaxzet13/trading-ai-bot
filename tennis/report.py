@@ -119,7 +119,26 @@ def real_test():
             ev += [json.loads(ln) for ln in open(fp) if ln.strip()]
     fills = [e for e in ev if e.get("event") == "fill" and e.get("n", 0) > 0]
     settled = {e["ticker"]: e for e in ev if e.get("event") == "settle"}
+    # real vs lab: replay each filled bet's strategy on the official candlesticks once the history has the match
+    same = checked = 0
+    try:
+        from . import lab
+        from .history import STORE
+        want = {f["ticker"] for f in fills}
+        strat = {}
+        for bp in sorted((DATA / "forward_old").glob("batch_*.json")) + sorted((DATA / "forward").glob("batch_*.json")):
+            for x in json.loads(bp.read_text())["strategies"]:
+                strat[x["id"]] = x
+        hist = {m["ticker"]: m for m in lab.load()} if want and STORE.exists() else {}
+        for f in fills:
+            if f["ticker"] in hist and f["strategy"] in strat:
+                r = lab.bet(hist[f["ticker"]], strat[f["strategy"]])
+                checked += 1
+                same += bool(r and r[0] == f["side"])
+    except Exception:
+        pass
     return {"real_bets": len(fills), "real_won": sum(1 for e in settled.values() if e["pnl"] > 0),
+            "real_lab_checked": checked, "real_lab_same": same,
             "real_pnl": round(sum(e["pnl"] for e in settled.values()), 2),
             "real_open": sum(1 for f in fills if f["ticker"] not in settled),
             "real_refused": sum(1 for e in ev if e.get("event") == "error")}
