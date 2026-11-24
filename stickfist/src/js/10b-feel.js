@@ -49,3 +49,14 @@ function coinBurst(from, n) {
   }
   setTimeout(() => { bal.classList.remove("bump"); void bal.offsetWidth; bal.classList.add("bump"); }, 430);
 }
+
+/* ---- the card in the card window leans toward your finger or the mouse (it sways on its own until you touch it) ---- */
+(function () {
+  const box = $("mbox"); if (!box) return; let on = null;
+  const set = (m, e) => { const c = m.querySelector(".card"); if (!c || c.classList.contains("locked")) return; const r = m.getBoundingClientRect(), cl = v => Math.max(-.5, Math.min(.5, v)), x = cl((e.clientX - r.left) / r.width - .5), y = cl((e.clientY - r.top) / r.height - .5);
+    m.classList.add("held"); c.style.setProperty("--ry", (x * 28).toFixed(1) + "deg"); c.style.setProperty("--rx", (-y * 22).toFixed(1) + "deg"); };
+  const drop = () => { if (!on) return; const c = on.querySelector(".card"); on.classList.remove("held"); if (c) { c.style.removeProperty("--rx"); c.style.removeProperty("--ry"); } on = null; };
+  box.addEventListener("pointerdown", e => { const m = e.target.closest(".mcard"); if (m) { on = m; set(m, e); } });
+  box.addEventListener("pointermove", e => { const m = e.target.closest(".mcard"); if (e.pointerType === "mouse" && m) { on = m; set(m, e); } else if (on && e.pointerType !== "mouse") set(on, e); else if (on && !m) drop(); });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(t => box.addEventListener(t, drop));
+})();

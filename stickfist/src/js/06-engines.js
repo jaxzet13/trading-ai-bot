@@ -90,7 +90,24 @@ class Veil {
     this.cell = Math.max(9, Math.round(w / 24)); this.cols = Math.ceil(w / this.cell); this.rows = Math.ceil(h / (this.cell * 1.55));
     this.thr = Float32Array.from({ length: this.cols * this.rows }, (_, i) => .72 * Math.floor(i / this.cols) / this.rows + .28 * Math.random());
     this.gl = Array.from({ length: this.cols * this.rows }, () => "01#%&@$*+=-:."[Math.floor(Math.random() * 13)]);
-    this.p = -1; this.live = false;
+    this.p = -1; this.live = false; this.dpr = dpr; this.back = this.drawBack(w, h, dpr);
+  }
+  // the back of a card: a steel frame, a field of quiet type, and the STIXX mark in the middle, lit in the colour of what is underneath
+  drawBack(w, h, dpr) {
+    const cv = document.createElement("canvas"); cv.width = w * dpr; cv.height = h * dpr; const x = cv.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const rr = (a, b, c, d, r) => { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + c, b, a + c, b + d, r); x.arcTo(a + c, b + d, a, b + d, r); x.arcTo(a, b + d, a, b, r); x.arcTo(a, b, a + c, b, r); x.closePath(); };
+    let g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, "#16181d"); g.addColorStop(.5, "#08090b"); g.addColorStop(1, "#111317"); x.fillStyle = g; x.fillRect(0, 0, w, h);
+    const cx = w / 2, cy = h * .47, R = w * .46; g = x.createRadialGradient(cx, cy, 0, cx, cy, R); g.addColorStop(0, this.col); g.addColorStop(1, "transparent"); x.globalAlpha = .2 + this.tier * .035; x.fillStyle = g; x.fillRect(0, 0, w, h); x.globalAlpha = 1;
+    const f = w * .0115; g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, "#d9dce2"); g.addColorStop(.2, "#8b8f98"); g.addColorStop(.48, "#3c3f46"); g.addColorStop(.84, "#8b8f98"); g.addColorStop(1, "#c8ccd4");
+    x.strokeStyle = g; x.lineWidth = f; rr(f / 2, f / 2, w - f, h - f, w * .05 - f / 2); x.stroke();                                       // the frame
+    const m = w * .05; x.strokeStyle = this.col; x.globalAlpha = .55; x.lineWidth = Math.max(1, w * .004); rr(m, m, w - m * 2, h - m * 2, w * .03); x.stroke();   // an inner line in the rarity's colour
+    x.globalAlpha = .18; x.lineWidth = 1; rr(m * 1.5, m * 1.5, w - m * 3, h - m * 3, w * .022); x.stroke(); x.globalAlpha = 1;
+    const s = w * .25, k = s / 28, ox = cx - s / 2, oy = cy - s / 2; x.shadowColor = this.col; x.shadowBlur = w * .09; x.fillStyle = "#000"; rr(ox, oy, s, s, 7.5 * k); x.fill(); x.shadowBlur = 0;   // the mark
+    x.strokeStyle = "rgba(255,255,255,.28)"; x.lineWidth = Math.max(1, k * .6); rr(ox, oy, s, s, 7.5 * k); x.stroke();
+    x.fillStyle = "#fff"; x.beginPath(); x.arc(ox + 14 * k, oy + 5.9 * k, 1.55 * k, 0, 7); x.fill();
+    x.strokeStyle = "#fff"; x.lineWidth = 1.7 * k; x.lineCap = "round"; x.beginPath(); x.moveTo(ox + 8.2 * k, oy + 9.8 * k); x.lineTo(ox + 19.8 * k, oy + 21.4 * k); x.moveTo(ox + 19.8 * k, oy + 9.8 * k); x.lineTo(ox + 8.2 * k, oy + 21.4 * k); x.stroke();
+    x.font = `800 ${Math.round(w * .058)}px Inter,system-ui,sans-serif`; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = "rgba(255,255,255,.9)"; "STIXX".split("").forEach((c, i) => x.fillText(c, cx + (i - 2) * w * .078, cy + s * .82));
+    this.hole = [cx, cy + s * .12, w * .31]; return cv;
   }
   frame() {
     const { ctx, cols, rows, cell, p } = this, rh = cell * 1.55; ctx.clearRect(0, 0, this.w, this.h);
@@ -98,9 +115,11 @@ class Veil {
     const idle = .34 + this.tier * .05;
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
       const i = r * cols + c, th = this.thr[i]; if (p >= 0 && p > th + .1) continue;
-      ctx.globalAlpha = 1; ctx.fillStyle = "#050506"; ctx.fillRect(c * cell, r * rh, cell + 1, rh + 1);
+      const d = this.dpr, x0 = c * cell, y0 = r * rh, sw = Math.min(cell + 1, this.w - x0), sh = Math.min(rh + 1, this.h - y0); ctx.globalAlpha = 1; ctx.drawImage(this.back, x0 * d, y0 * d, sw * d, sh * d, x0, y0, sw, sh);
+      const hx = x0 + cell / 2 - this.hole[0], hy = y0 + rh / 2 - this.hole[1], near = Math.min(1, Math.max(0, (Math.hypot(hx, hy) - this.hole[2] * .78) / (this.hole[2] * .5))), edge = c < 2 || c > cols - 3 || r < 1 || r > rows - 2;   // the type keeps clear of the mark and the frame
       const front = p >= 0 && p > th; if (Math.random() < (front ? .9 : .12)) this.gl[i] = "01#%&@$*+=-:."[Math.floor(Math.random() * 13)];
-      ctx.globalAlpha = front ? 1 : idle + (this.live && this.tier ? .12 * Math.sin(performance.now() / 260 + c * .6 + r * .4) : 0);
+      if (!front && (edge || near <= 0)) continue;
+      ctx.globalAlpha = front ? 1 : (idle * .62 + (this.live && this.tier ? .12 * Math.sin(performance.now() / 260 + c * .6 + r * .4) : 0)) * near;
       ctx.fillStyle = front ? "#fff" : this.col; ctx.fillText(this.gl[i], c * cell + cell / 2, r * rh + rh / 2);
     }
     ctx.globalAlpha = 1;

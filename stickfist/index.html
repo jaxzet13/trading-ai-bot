@@ -929,6 +929,69 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .rb-wait { margin: 8px 0 0; font-size: 13px; color: var(--dim); line-height: 1.45; } .rb-wait b { color: var(--ink); }
 .rb-node i { font-size: 10.5px; }
 .rb-track .rb-node:last-child i { right: -9px; }
+
+/* ============================================================================
+   THE CARD, v3: a framed trading card
+   A ring in the rarity's colour lit from the corner, the picture in its own window, the rarity and number over the picture,
+   a nameplate under it, and foil that sweeps across when the card is shown. Sizes are in cqw (the card's own width), so one
+   design holds from a 60 px thumbnail to the full-screen reveal.
+   ========================================================================== */
+.card.v3 { background: linear-gradient(158deg, #1a1c22 0%, #0b0c0f 46%, #131519 100%); border-radius: 5% / 3.57%; isolation: isolate; box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 8px 18px -6px rgba(0,0,0,.7); }   /* the card's own sizes cannot use cqw (that unit measures a parent), so: percentages and px */
+.card.v3::before { content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; padding: 1.15cqw; pointer-events: none;
+  background: linear-gradient(142deg, color-mix(in srgb, var(--rc) 45%, #fff) 0%, var(--rc) 18%, color-mix(in srgb, var(--rc) 42%, #000) 46%, color-mix(in srgb, var(--rc) 80%, #000) 62%, var(--rc) 84%, color-mix(in srgb, var(--rc) 50%, #fff) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.card.v3.t0 { --rc: #8b8f98; }                                              /* commons get a brushed-steel frame, not a dull one */
+.card.v3 .pic { left: 3.3cqw; right: 3.3cqw; top: 3.3cqw; bottom: 21.6cqw; width: auto; height: auto; border-radius: 2.7cqw; overflow: hidden; background: #020203; }
+.card.v3 .pic::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0 0 0 .3cqw color-mix(in srgb, var(--rc) 55%, transparent), inset 0 0 0 .75cqw rgba(0,0,0,.55), inset 0 -9cqw 9cqw -7cqw rgba(0,0,0,.6), inset 0 7cqw 8cqw -7cqw rgba(0,0,0,.5); }
+.card.v3 .hd { position: absolute; left: 5.4cqw; right: 5.4cqw; top: 5.4cqw; z-index: 2; display: flex; justify-content: space-between; align-items: center; gap: 2cqw; font-size: 2.9cqw; line-height: 1; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; pointer-events: none; }
+.card.v3 .hd > span { display: inline-flex; align-items: center; gap: 1.5cqw; padding: 1.4cqw 2.4cqw; border-radius: 99px; background: rgba(4,5,7,.66); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 38%, transparent); color: color-mix(in srgb, var(--rc) 62%, #fff); white-space: nowrap; }
+.card.v3 .rr b { font-weight: 700; }
+.card.v3 .rr i { width: 2cqw; height: 2cqw; rotate: 45deg; border-radius: .25cqw; background: linear-gradient(135deg, #fff, var(--rc) 55%); box-shadow: 0 0 1.6cqw var(--rc); }
+.card.v3 .hd .no { color: rgba(255,255,255,.62); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); font-family: "JetBrains Mono", ui-monospace, monospace; font-weight: 400; letter-spacing: .1em; }
+.card.v3 .hd .fxn { color: #0a0b0d; background: linear-gradient(120deg, #fff, var(--tint) 45%, #fff 95%); box-shadow: 0 0 2.4cqw color-mix(in srgb, var(--tint) 60%, transparent); }
+.card.v3 .strip { left: 6.2cqw; right: 6.2cqw; top: 118.4cqw; bottom: 3.6cqw; align-content: center; gap: calc(1.5cqw * var(--k)); }
+.card.v3 .l1 { font-size: calc(3.45cqw * var(--k)); }
+.card.v3 .nm { font-weight: 800; letter-spacing: .16em; color: color-mix(in srgb, var(--tint, var(--ink)) 82%, #fff); text-shadow: 0 0 2.4cqw color-mix(in srgb, var(--tint, #fff) 38%, transparent); }
+.card.v3 .hr { height: .3cqw; min-height: 1px; opacity: 1; border-radius: 1cqw; background: linear-gradient(90deg, color-mix(in srgb, var(--rc) 85%, transparent), color-mix(in srgb, var(--rc) 12%, transparent)); }
+.card.v3 .l2 { font-size: calc(1.95cqw * var(--k)); }
+/* thumbnails: just the gem, a little more frame */
+.card.v3.sm::before { padding: 1.5cqw; } .card.v3.sm .hd { left: 5cqw; top: 5cqw; } .card.v3.sm .hd .no, .card.v3.sm .rr b { display: none; } .card.v3.sm .hd .fxn { font-size: 3.6cqw; padding: 1.4cqw 2.4cqw; letter-spacing: .08em; }
+.card.v3.sm .rr { padding: 1.9cqw; } .card.v3.sm .rr i { width: 2.6cqw; height: 2.6cqw; } .card.v3.sm .l1 { font-size: 5.6cqw; } .card.v3.sm .l2 { font-size: 3.3cqw; } .card.v3.sm .strip { gap: 2.2cqw; }
+.card.v3.t0.sm .rr, .card.v3.t0.sm .hd { display: none; }                   /* a common thumbnail stays clean */
+.card.v3.locked::before { opacity: .35; } .card.v3.locked .hd { display: none; }
+/* the rarer the card, the more it glows */
+.card.v3.t2 { box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 8px 18px -6px rgba(0,0,0,.7), 0 0 14px -3px color-mix(in srgb, var(--rc) 45%, transparent); }
+.card.v3.t3 { box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 8px 18px -6px rgba(0,0,0,.7), 0 0 18px -3px color-mix(in srgb, var(--rc) 60%, transparent); }
+.card.v3.t4, .card.v3.t5, .card.v3.t6 { box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 8px 18px -6px rgba(0,0,0,.7), 0 0 24px -3px color-mix(in srgb, var(--rc) 75%, transparent); }
+.card.v3.t6::before, .card.v3.fx::before { background: conic-gradient(from var(--spin, 200deg) at 50% 50%, #fff, var(--rc) 12%, #7ee8ff 28%, #c9a5ff 42%, #ff8ac9 56%, #ffd27a 70%, var(--rc) 86%, #fff); }
+.card.v3.fx { --rc: var(--tint); }
+/* foil: one sweep of light when a full-size card is shown, a slow repeat on rare cards and styled copies */
+.card.v3 .sheen { position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none; mix-blend-mode: screen; opacity: 0;
+  background: linear-gradient(112deg, transparent 36%, rgba(255,255,255,.20) 46%, color-mix(in srgb, var(--tint, #fff) 34%, transparent) 52%, transparent 62%) 130% 0 / 320% 100% no-repeat; }
+.card.v3.fx .sheen { background-image: linear-gradient(112deg, transparent 30%, rgba(255,90,170,.20) 40%, rgba(255,230,120,.22) 46%, rgba(120,255,190,.22) 52%, rgba(120,170,255,.20) 58%, transparent 68%); }
+.card.v3.sm .sheen, .card.v3.locked .sheen { display: none; }
+@keyframes cardsweep { 0% { opacity: 1; background-position: 130% 0; } 100% { opacity: 1; background-position: -30% 0; } }
+@keyframes cardidle { 0%, 58% { opacity: 1; background-position: 130% 0; } 92%, 100% { opacity: 1; background-position: -30% 0; } }
+.mcard .card.v3 .sheen, .sc.lit .card.v3 .sheen { animation: cardsweep 1.15s .12s cubic-bezier(.3,.6,.3,1) both; }
+.mcard .card.v3.fx .sheen, .mcard .card.v3.t3 .sheen, .mcard .card.v3.t4 .sheen, .mcard .card.v3.t5 .sheen, .mcard .card.v3.t6 .sheen,
+.sc.lit .card.v3.fx .sheen, .sc.lit .card.v3.t3 .sheen, .sc.lit .card.v3.t4 .sheen, .sc.lit .card.v3.t5 .sheen, .sc.lit .card.v3.t6 .sheen { animation: cardsweep 1.15s .12s cubic-bezier(.3,.6,.3,1) both, cardidle 4.6s 1.6s ease-in-out infinite; }
+/* in the card window the card leans with your finger or the mouse, and sways a little on its own */
+.mcard { perspective: 900px; } .mcard .card.v3 { transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .3s; will-change: transform; }
+.mcard:not(.held) .card.v3:not(.locked) { animation: cardsway 7s ease-in-out infinite; } @keyframes cardsway { 0%, 100% { transform: rotateY(-7deg) rotateX(2deg); } 50% { transform: rotateY(7deg) rotateX(-2deg); } }
+.mcard.held .card.v3 { transition: transform .08s linear; }
+.sc.lit .card.v3 { box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 0 70px -10px var(--rc, #fff), 0 30px 60px -30px #000; }
+@media (prefers-reduced-motion: reduce) { .card.v3 .sheen { animation: none !important; } .mcard .card.v3 { animation: none !important; } }
+.mcard { touch-action: none; }
+
+/* the card window on a phone: the card is the hero (large, centred, glowing in its colour), the name and price sit under it */
+@media (max-width: 760px) {
+  .mbox:not(.slim):not(.rq) { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .mbox:not(.slim):not(.rq) .mcard { grid-column: 1; grid-row: 1; width: min(56vw, 230px); margin: 14px auto 4px; position: relative; }
+  .mbox:not(.slim):not(.rq) .mcard::before { content: ""; position: absolute; inset: -16% -46%; z-index: -1; pointer-events: none; background: radial-gradient(closest-side, color-mix(in srgb, var(--glow, #fff) 26%, transparent), transparent); }
+  .mbox:not(.slim):not(.rq) .mhead { grid-column: 1; grid-row: 2; padding-right: 0; justify-items: center; text-align: center; }
+  .mbox:not(.slim):not(.rq) .mhead .pricebox { justify-content: center; } .mbox:not(.slim):not(.rq) .mhead .chgs { justify-content: center; }
+}
+.card.v3.sm .hd { justify-content: flex-end; } .card.v3.sm .rr { order: 2; }
 </style>
 </head>
 <body>
@@ -1847,7 +1910,24 @@ class Veil {
     this.cell = Math.max(9, Math.round(w / 24)); this.cols = Math.ceil(w / this.cell); this.rows = Math.ceil(h / (this.cell * 1.55));
     this.thr = Float32Array.from({ length: this.cols * this.rows }, (_, i) => .72 * Math.floor(i / this.cols) / this.rows + .28 * Math.random());
     this.gl = Array.from({ length: this.cols * this.rows }, () => "01#%&@$*+=-:."[Math.floor(Math.random() * 13)]);
-    this.p = -1; this.live = false;
+    this.p = -1; this.live = false; this.dpr = dpr; this.back = this.drawBack(w, h, dpr);
+  }
+  // the back of a card: a steel frame, a field of quiet type, and the STIXX mark in the middle, lit in the colour of what is underneath
+  drawBack(w, h, dpr) {
+    const cv = document.createElement("canvas"); cv.width = w * dpr; cv.height = h * dpr; const x = cv.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const rr = (a, b, c, d, r) => { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + c, b, a + c, b + d, r); x.arcTo(a + c, b + d, a, b + d, r); x.arcTo(a, b + d, a, b, r); x.arcTo(a, b, a + c, b, r); x.closePath(); };
+    let g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, "#16181d"); g.addColorStop(.5, "#08090b"); g.addColorStop(1, "#111317"); x.fillStyle = g; x.fillRect(0, 0, w, h);
+    const cx = w / 2, cy = h * .47, R = w * .46; g = x.createRadialGradient(cx, cy, 0, cx, cy, R); g.addColorStop(0, this.col); g.addColorStop(1, "transparent"); x.globalAlpha = .2 + this.tier * .035; x.fillStyle = g; x.fillRect(0, 0, w, h); x.globalAlpha = 1;
+    const f = w * .0115; g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, "#d9dce2"); g.addColorStop(.2, "#8b8f98"); g.addColorStop(.48, "#3c3f46"); g.addColorStop(.84, "#8b8f98"); g.addColorStop(1, "#c8ccd4");
+    x.strokeStyle = g; x.lineWidth = f; rr(f / 2, f / 2, w - f, h - f, w * .05 - f / 2); x.stroke();                                       // the frame
+    const m = w * .05; x.strokeStyle = this.col; x.globalAlpha = .55; x.lineWidth = Math.max(1, w * .004); rr(m, m, w - m * 2, h - m * 2, w * .03); x.stroke();   // an inner line in the rarity's colour
+    x.globalAlpha = .18; x.lineWidth = 1; rr(m * 1.5, m * 1.5, w - m * 3, h - m * 3, w * .022); x.stroke(); x.globalAlpha = 1;
+    const s = w * .25, k = s / 28, ox = cx - s / 2, oy = cy - s / 2; x.shadowColor = this.col; x.shadowBlur = w * .09; x.fillStyle = "#000"; rr(ox, oy, s, s, 7.5 * k); x.fill(); x.shadowBlur = 0;   // the mark
+    x.strokeStyle = "rgba(255,255,255,.28)"; x.lineWidth = Math.max(1, k * .6); rr(ox, oy, s, s, 7.5 * k); x.stroke();
+    x.fillStyle = "#fff"; x.beginPath(); x.arc(ox + 14 * k, oy + 5.9 * k, 1.55 * k, 0, 7); x.fill();
+    x.strokeStyle = "#fff"; x.lineWidth = 1.7 * k; x.lineCap = "round"; x.beginPath(); x.moveTo(ox + 8.2 * k, oy + 9.8 * k); x.lineTo(ox + 19.8 * k, oy + 21.4 * k); x.moveTo(ox + 19.8 * k, oy + 9.8 * k); x.lineTo(ox + 8.2 * k, oy + 21.4 * k); x.stroke();
+    x.font = `800 ${Math.round(w * .058)}px Inter,system-ui,sans-serif`; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = "rgba(255,255,255,.9)"; "STIXX".split("").forEach((c, i) => x.fillText(c, cx + (i - 2) * w * .078, cy + s * .82));
+    this.hole = [cx, cy + s * .12, w * .31]; return cv;
   }
   frame() {
     const { ctx, cols, rows, cell, p } = this, rh = cell * 1.55; ctx.clearRect(0, 0, this.w, this.h);
@@ -1855,9 +1935,11 @@ class Veil {
     const idle = .34 + this.tier * .05;
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
       const i = r * cols + c, th = this.thr[i]; if (p >= 0 && p > th + .1) continue;
-      ctx.globalAlpha = 1; ctx.fillStyle = "#050506"; ctx.fillRect(c * cell, r * rh, cell + 1, rh + 1);
+      const d = this.dpr, x0 = c * cell, y0 = r * rh, sw = Math.min(cell + 1, this.w - x0), sh = Math.min(rh + 1, this.h - y0); ctx.globalAlpha = 1; ctx.drawImage(this.back, x0 * d, y0 * d, sw * d, sh * d, x0, y0, sw, sh);
+      const hx = x0 + cell / 2 - this.hole[0], hy = y0 + rh / 2 - this.hole[1], near = Math.min(1, Math.max(0, (Math.hypot(hx, hy) - this.hole[2] * .78) / (this.hole[2] * .5))), edge = c < 2 || c > cols - 3 || r < 1 || r > rows - 2;   // the type keeps clear of the mark and the frame
       const front = p >= 0 && p > th; if (Math.random() < (front ? .9 : .12)) this.gl[i] = "01#%&@$*+=-:."[Math.floor(Math.random() * 13)];
-      ctx.globalAlpha = front ? 1 : idle + (this.live && this.tier ? .12 * Math.sin(performance.now() / 260 + c * .6 + r * .4) : 0);
+      if (!front && (edge || near <= 0)) continue;
+      ctx.globalAlpha = front ? 1 : (idle * .62 + (this.live && this.tier ? .12 * Math.sin(performance.now() / 260 + c * .6 + r * .4) : 0)) * near;
       ctx.fillStyle = front ? "#fff" : this.col; ctx.fillText(this.gl[i], c * cell + cell / 2, r * rh + rh / 2);
     }
     ctx.globalAlpha = 1;
@@ -1891,11 +1973,13 @@ const FX = (() => {
    6. CARDS AND THE PACK
    ========================================================================== */
 function cardHTML(copy, o) {
-  o = o || {}; const card = BY_NO[copy.no], fx = copy.fx || "", tint = fx ? STYLE_TINT[fx] : card.tint, code = copy.code || "";
-  return `<div class="card t${RAR[card.rar].tier}${o.sm ? " sm" : ""}${o.locked ? " locked" : ""}" style="--tint:${tint}" data-no="${card.no}">
+  o = o || {}; const card = BY_NO[copy.no], fx = copy.fx || "", tint = fx ? STYLE_TINT[fx] : card.tint, code = copy.code || "", R = RAR[card.rar];
+  // a framed card: a ring in the rarity's colour, the picture in a window, the rarity and number over it, a nameplate under it, and foil that catches the light
+  return `<div class="card v3 t${R.tier}${fx ? " fx" : ""}${o.sm ? " sm" : ""}${o.locked ? " locked" : ""}" style="--tint:${tint};--rc:${R.col}" data-no="${card.no}">
     <div class="pic"><img src="${imgOf(card, fx, o.thumb)}" alt="${esc(card.name)}" draggable="false"${o.thumb ? ' loading="lazy"' : ""}></div>
+    <div class="hd"><span class="rr"><i></i><b>${R.name}</b></span>${fx ? `<span class="fxn">${esc(STYLES[fx].name)}</span>` : `<span class="no">${SETS[card.set].code} ${card.no}</span>`}</div>
     <div class="strip"><div class="l1"><span class="nm">${esc(card.name)}</span><i class="hr"></i><span class="ct"><b>${fmt(card.chars)}</b><u>chars</u></span></div>
-    <div class="l2">${code ? idHTML(code, card.rar) : `<span>No. ${card.no}</span>`}${card.cap ? `<span class="cap">${esc(card.cap)}</span>` : ""}</div></div></div>`;
+    <div class="l2">${code ? idHTML(code, card.rar) : `<span>No. ${card.no}</span>`}${card.cap ? `<span class="cap">${esc(card.cap)}</span>` : ""}</div></div><i class="sheen"></i></div>`;
 }
 const CRIMPS = { fp: fill("╱╲", 120), ms: fill("△▲", 120) };
 const packHTML = pack => `<div class="pk pk-${pack.id}"><div class="crimp t">${CRIMPS[pack.id]}</div><div class="win"><canvas class="scr"></canvas></div>
@@ -2033,7 +2117,7 @@ function cardModal(no, keep) {
   const styles = card.styles ? `<div><div class="label" style="margin-bottom:8px">Styles found: ${keys.filter(k => have.has(k)).length} of ${keys.length}</div><div class="stylerow">${keys.map(k => `<figure class="${have.has(k) ? "" : "off"}" title="${styleName(k)}${k ? " · 1 in " + fmt(1 / STYLES[k].p) + " · ×" + STYLES[k].x : ""}"><img src="${imgOf(card, k, true)}" alt="" loading="lazy"><figcaption>${styleName(k)}</figcaption></figure>`).join("")}</div></div>` : "";
   const hrs = best ? Math.min(168, Math.max(1, (Date.now() - (best.t || Date.now())) / 36e5)) : 0, ser = best ? Val.series(best, hrs, 56) : null, now = best ? valueOf(best) : card.val, mv = best ? Val.moves(best, 72)[0] : null;
   const copies = cs.length ? `<div><div class="label" style="margin-bottom:8px">Your ${cs.length === 1 ? "copy" : "copies"}</div><div class="copies">${cs.map(c => `<div class="copy"><div class="ci">${idHTML(c.code, card.rar)}<small>${styleName(c.fx)}${c.fx ? " · ×" + STYLES[c.fx].x : ""} · ${c.phys ? "added" : "pulled"} ${new Date(c.t).toLocaleDateString()} · cost ${moneyS(costOf(c))}</small></div><div class="r"><span class="cv"><b>${moneyS(valueOf(c))}</b>${pill(gainOf(c))}</span>${replayable(c) ? `<button class="btn small ghost" data-share="${c.uid}">replay &amp; share</button>` : ""}<button class="btn small sellb" data-sell="${c.uid}" data-no="${no}" aria-label="Sell ${esc(card.name)} for ${money(sellOf(c))}, after the 10% fee">Sell for ${money(sellOf(c))}</button></div></div>`).join("")}</div></div>` : `<div class="notyet"><b>You haven't found this card yet.</b><span class="small">It turns up in ${chance(p, packOf(card))}.</span><button class="btn small solid" data-open data-close>open a pack</button></div>`;
-  openModal(`<div class="mcard">${cardHTML(best || { no }, { locked: !best })}</div><div class="minfo">
+  openModal(`<div class="mcard" style="--glow:${best && best.fx ? STYLE_TINT[best.fx] : R.tier ? R.col : card.tint}">${cardHTML(best || { no }, { locked: !best })}</div><div class="minfo">
     <div class="mhead"><span class="label" style="color:${R.col}">${rarLabel(card)} · No. ${card.no}</span><h2>${esc(card.name)}</h2>
       <div class="pricebox">${best ? `<b data-tick="m${card.no}" data-v="${now.toFixed(2)}">${moneyS(now)}</b><div class="chgs"><span>${pill(Val.pct(best, 24))}<small>today</small></span><span>${pill(gainOf(best))}<small>since you pulled it</small></span></div>` : `<b>${moneyS(card.val)}</b><span class="dim">starting value</span>`}</div></div>
     ${copies}
@@ -4068,6 +4152,17 @@ function coinBurst(from, n) {
   }
   setTimeout(() => { bal.classList.remove("bump"); void bal.offsetWidth; bal.classList.add("bump"); }, 430);
 }
+
+/* ---- the card in the card window leans toward your finger or the mouse (it sways on its own until you touch it) ---- */
+(function () {
+  const box = $("mbox"); if (!box) return; let on = null;
+  const set = (m, e) => { const c = m.querySelector(".card"); if (!c || c.classList.contains("locked")) return; const r = m.getBoundingClientRect(), cl = v => Math.max(-.5, Math.min(.5, v)), x = cl((e.clientX - r.left) / r.width - .5), y = cl((e.clientY - r.top) / r.height - .5);
+    m.classList.add("held"); c.style.setProperty("--ry", (x * 28).toFixed(1) + "deg"); c.style.setProperty("--rx", (-y * 22).toFixed(1) + "deg"); };
+  const drop = () => { if (!on) return; const c = on.querySelector(".card"); on.classList.remove("held"); if (c) { c.style.removeProperty("--rx"); c.style.removeProperty("--ry"); } on = null; };
+  box.addEventListener("pointerdown", e => { const m = e.target.closest(".mcard"); if (m) { on = m; set(m, e); } });
+  box.addEventListener("pointermove", e => { const m = e.target.closest(".mcard"); if (e.pointerType === "mouse" && m) { on = m; set(m, e); } else if (on && e.pointerType !== "mouse") set(on, e); else if (on && !m) drop(); });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(t => box.addEventListener(t, drop));
+})();
 
 /* ============================================================================
    10. START
