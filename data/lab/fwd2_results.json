@@ -1,18 +1,18 @@
 {
- "generated": 1795481837,
+ "generated": 1795482282,
  "fwd_start": 1794725100,
  "frozen_at": 1794723670,
  "days": 8.76,
  "markets": {
-  "KXBTC15M": 832,
-  "KXETH15M": 832,
-  "KXSOL15M": 832,
-  "KXXRP15M": 832,
-  "KXHYPE15M": 832,
-  "KXBNB15M": 832,
-  "KXNEAR15M": 832,
-  "KXDOGE15M": 832,
-  "KXZEC15M": 832
+  "KXBTC15M": 833,
+  "KXETH15M": 833,
+  "KXSOL15M": 833,
+  "KXXRP15M": 833,
+  "KXHYPE15M": 833,
+  "KXBNB15M": 833,
+  "KXNEAR15M": 833,
+  "KXDOGE15M": 833,
+  "KXZEC15M": 833
  },
  "n_candidates": 3188,
  "bar_t": 4.16,
@@ -22,17 +22,17 @@
   "alpha": 0.05
  },
  "traded": 3188,
- "profitable": 1745,
+ "profitable": 1744,
  "traded10": 2876,
- "profitable10": 1540,
+ "profitable10": 1539,
  "passed": 0,
  "by_scope": {
   "ALL": {
    "n": 270,
    "traded": 270,
-   "profitable": 130,
+   "profitable": 128,
    "best_t": 4.54,
-   "median_pnl": -0.655
+   "median_pnl": -0.885
   },
   "KXBNB15M": {
    "n": 57,
@@ -93,7 +93,7 @@
   "KXZEC15M": {
    "n": 360,
    "traded": 360,
-   "profitable": 275,
+   "profitable": 276,
    "best_t": 2.84,
    "median_pnl": 2.27
   }
@@ -109,14 +109,14 @@
   "fv_drift": {
    "n": 180,
    "traded": 180,
-   "profitable": 99,
-   "best_t": 2.04,
+   "profitable": 98,
+   "best_t": 1.97,
    "median_pnl": 0.73
   },
   "fv_dyn": {
    "n": 180,
    "traded": 180,
-   "profitable": 132,
+   "profitable": 131,
    "best_t": 1.81,
    "median_pnl": 1.5550000000000002
   },
@@ -165,7 +165,7 @@
   "fv_season": {
    "n": 177,
    "traded": 177,
-   "profitable": 89,
+   "profitable": 90,
    "best_t": 1.97,
    "median_pnl": 0.14
   },
@@ -174,7 +174,7 @@
    "traded": 193,
    "profitable": 127,
    "best_t": 2.28,
-   "median_pnl": 1.12
+   "median_pnl": 1.07
   },
   "fv_shape": {
    "n": 180,
@@ -754,30 +754,6 @@
    "status": "open"
   },
   {
-   "id": "fv_drift:ALL:1",
-   "family": "fv_drift",
-   "scope": "ALL",
-   "rank": 1,
-   "params": {
-    "start": 3,
-    "end": 11,
-    "edge": 0.2,
-    "band": "25-75",
-    "L": 15,
-    "a": -0.25,
-    "vm": 1.0
-   },
-   "t_before": 1.02,
-   "placed": 1179,
-   "filled": 788,
-   "pnl": 27.55,
-   "t": 2.04,
-   "win_rate": 0.4,
-   "days_up": 7,
-   "days": 10,
-   "status": "open"
-  },
-  {
    "id": "fv_prev:KXNEAR15M:15",
    "family": "fv_prev",
    "scope": "KXNEAR15M",
@@ -846,6 +822,30 @@
    "win_rate": 0.667,
    "days_up": 7,
    "days": 8,
+   "status": "open"
+  },
+  {
+   "id": "fv_drift:ALL:1",
+   "family": "fv_drift",
+   "scope": "ALL",
+   "rank": 1,
+   "params": {
+    "start": 3,
+    "end": 11,
+    "edge": 0.2,
+    "band": "25-75",
+    "L": 15,
+    "a": -0.25,
+    "vm": 1.0
+   },
+   "t_before": 1.02,
+   "placed": 1181,
+   "filled": 790,
+   "pnl": 26.59,
+   "t": 1.97,
+   "win_rate": 0.399,
+   "days_up": 7,
+   "days": 10,
    "status": "open"
   },
   {
@@ -1624,30 +1624,29 @@
    "status": "open"
   },
   {
-   "id": "fv_drift:ALL:2",
-   "family": "fv_drift",
-   "scope": "ALL",
-   "rank": 2,
+   "id": "fv_session:KXHYPE15M:3",
+   "family": "fv_session",
+   "scope": "KXHYPE15M",
+   "rank": 3,
    "params": {
-    "start": 3,
-    "end": 10,
-    "edge": 0.2,
-    "band": "25-75",
-    "L": 15,
-    "a": -0.25,
-    "vm": 1.0
+    "start": 4,
+    "end": 11,
+    "edge": 0.11,
+    "band": "20-80",
+    "sess": "us",
+    "vm": 1.25
    },
-   "t_before": 0.95,
-   "placed": 1075,
-   "filled": 711,
-   "pnl": 22.52,
-   "t": 1.75,
-   "win_rate": 0.398,
-   "days_up": 8,
-   "days": 10,
+   "t_before": 2.55,
+   "placed": 53,
+   "filled": 31,
+   "pnl": 6.72,
+   "t": 1.74,
+   "win_rate": 0.419,
+   "days_up": 6,
+   "days": 8,
    "status": "open"
   }
  ],
  "selection": "Top 20 settings per family x scope by the t-stat of search window + exam days combined, at real-money scoring; profitable in both, >= 100 search and >= 30 exam trades. Nothing from after the forward start was loaded. Gen 2: search = all data to Nov 1, exam = gen 1's forward days (Nov 4 to Nov 15 03:45 UTC), forward scoring starts after the freeze.",
- "runtime_s": 26
+ "runtime_s": 14
 }

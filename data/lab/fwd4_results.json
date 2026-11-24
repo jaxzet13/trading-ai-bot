@@ -1,18 +1,18 @@
 {
- "generated": 1795481885,
+ "generated": 1795482298,
  "fwd_start": 1795129200,
  "frozen_at": 1795127828,
- "days": 4.08,
+ "days": 4.09,
  "markets": {
-  "KXBTC15M": 391,
-  "KXETH15M": 391,
-  "KXSOL15M": 391,
-  "KXXRP15M": 391,
-  "KXHYPE15M": 391,
-  "KXBNB15M": 391,
-  "KXNEAR15M": 391,
-  "KXDOGE15M": 391,
-  "KXZEC15M": 391
+  "KXBTC15M": 392,
+  "KXETH15M": 392,
+  "KXSOL15M": 392,
+  "KXXRP15M": 392,
+  "KXHYPE15M": 392,
+  "KXBNB15M": 392,
+  "KXNEAR15M": 392,
+  "KXDOGE15M": 392,
+  "KXZEC15M": 392
  },
  "n_candidates": 300,
  "bar_t": 3.59,
@@ -96,7 +96,7 @@
    "n": 16,
    "traded": 16,
    "profitable": 12,
-   "best_t": 1.33,
+   "best_t": 1.1,
    "median_pnl": 1.01
   },
   "fv_dyn": {
@@ -146,7 +146,7 @@
    "traded": 10,
    "profitable": 2,
    "best_t": 0.36,
-   "median_pnl": -1.51
+   "median_pnl": -1.225
   },
   "fv_session": {
    "n": 39,
@@ -405,30 +405,6 @@
    "status": "open"
   },
   {
-   "id": "fv_drift:KXZEC15M:e4.168",
-   "family": "fv_drift",
-   "scope": "KXZEC15M",
-   "rank": 168,
-   "params": {
-    "start": 3,
-    "end": 13,
-    "edge": 0.2,
-    "band": "25-75",
-    "L": 15,
-    "a": -0.25,
-    "vm": 1.0
-   },
-   "t_before": 2.15,
-   "placed": 47,
-   "filled": 26,
-   "pnl": 3.21,
-   "t": 1.33,
-   "win_rate": 0.5,
-   "days_up": 4,
-   "days": 5,
-   "status": "open"
-  },
-  {
    "id": "fv_tau:KXZEC15M:e4.71",
    "family": "fv_tau",
    "scope": "KXZEC15M",
@@ -496,30 +472,6 @@
    "win_rate": 0.458,
    "days_up": 3,
    "days": 4,
-   "status": "open"
-  },
-  {
-   "id": "fv_drift:KXZEC15M:e4.153",
-   "family": "fv_drift",
-   "scope": "KXZEC15M",
-   "rank": 153,
-   "params": {
-    "start": 2,
-    "end": 13,
-    "edge": 0.2,
-    "band": "25-75",
-    "L": 15,
-    "a": -0.25,
-    "vm": 1.0
-   },
-   "t_before": 2.27,
-   "placed": 47,
-   "filled": 28,
-   "pnl": 3.09,
-   "t": 1.19,
-   "win_rate": 0.5,
-   "days_up": 4,
-   "days": 5,
    "status": "open"
   },
   {
@@ -591,6 +543,30 @@
    "win_rate": 0.487,
    "days_up": 5,
    "days": 5,
+   "status": "open"
+  },
+  {
+   "id": "fv_drift:KXZEC15M:e4.168",
+   "family": "fv_drift",
+   "scope": "KXZEC15M",
+   "rank": 168,
+   "params": {
+    "start": 3,
+    "end": 13,
+    "edge": 0.2,
+    "band": "25-75",
+    "L": 15,
+    "a": -0.25,
+    "vm": 1.0
+   },
+   "t_before": 2.15,
+   "placed": 48,
+   "filled": 27,
+   "pnl": 2.74,
+   "t": 1.1,
+   "win_rate": 0.481,
+   "days_up": 4,
+   "days": 6,
    "status": "open"
   },
   {
@@ -710,6 +686,30 @@
    "win_rate": 0.415,
    "days_up": 5,
    "days": 5,
+   "status": "open"
+  },
+  {
+   "id": "fv_drift:KXZEC15M:e4.153",
+   "family": "fv_drift",
+   "scope": "KXZEC15M",
+   "rank": 153,
+   "params": {
+    "start": 2,
+    "end": 13,
+    "edge": 0.2,
+    "band": "25-75",
+    "L": 15,
+    "a": -0.25,
+    "vm": 1.0
+   },
+   "t_before": 2.27,
+   "placed": 48,
+   "filled": 29,
+   "pnl": 2.62,
+   "t": 0.98,
+   "win_rate": 0.483,
+   "days_up": 4,
+   "days": 6,
    "status": "open"
   },
   {
@@ -1622,5 +1622,5 @@
   }
  ],
  "selection": "Evolved from the 40 strongest strategies of all earlier batches on their own forward days: parameter steps, crossovers and moves to other coins, screened on the history and the forward days so far at real-money scoring (profitable in both, >= 100 history and >= 20 forward trades), best 300 by t-stat. The forward days so far were used to breed them, so only days after the freeze count as their test.",
- "runtime_s": 30
+ "runtime_s": 7
 }

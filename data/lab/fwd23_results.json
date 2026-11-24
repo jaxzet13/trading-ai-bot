@@ -1,18 +1,18 @@
 {
- "generated": 1795482053,
+ "generated": 1795482455,
  "fwd_start": 1795238100,
  "frozen_at": 1795237028,
- "days": 2.82,
+ "days": 2.83,
  "markets": {
-  "KXBTC15M": 270,
-  "KXETH15M": 270,
-  "KXSOL15M": 270,
-  "KXXRP15M": 270,
-  "KXHYPE15M": 270,
-  "KXBNB15M": 270,
-  "KXNEAR15M": 270,
-  "KXDOGE15M": 270,
-  "KXZEC15M": 270
+  "KXBTC15M": 271,
+  "KXETH15M": 271,
+  "KXSOL15M": 271,
+  "KXXRP15M": 271,
+  "KXHYPE15M": 271,
+  "KXBNB15M": 271,
+  "KXNEAR15M": 271,
+  "KXDOGE15M": 271,
+  "KXZEC15M": 271
  },
  "n_candidates": 176,
  "bar_t": 3.45,
@@ -32,7 +32,7 @@
    "traded": 23,
    "profitable": 1,
    "best_t": 0.05,
-   "median_pnl": -10.89
+   "median_pnl": -11.32
   },
   "KXBTC15M": {
    "n": 2,
@@ -53,7 +53,7 @@
    "traded": 15,
    "profitable": 3,
    "best_t": 0.87,
-   "median_pnl": -3.59
+   "median_pnl": -3.02
   },
   "KXNEAR15M": {
    "n": 60,
@@ -160,7 +160,7 @@
    "traded": 2,
    "profitable": 1,
    "best_t": 0.3,
-   "median_pnl": -6.77
+   "median_pnl": -7.015
   }
  },
  "top": [
@@ -941,6 +941,30 @@
    "status": "open"
   },
   {
+   "id": "fv_t:KXHYPE15M:e23.139",
+   "family": "fv_t",
+   "scope": "KXHYPE15M",
+   "rank": 139,
+   "params": {
+    "start": 4,
+    "end": 10,
+    "edge": 0.1,
+    "band": "20-80",
+    "nu": 20,
+    "vol": "blend",
+    "vm": 1.3
+   },
+   "t_before": 1.12,
+   "placed": 110,
+   "filled": 60,
+   "pnl": 1.34,
+   "t": 0.31,
+   "win_rate": 0.317,
+   "days_up": 3,
+   "days": 4,
+   "status": "open"
+  },
+  {
    "id": "fv_drift:KXNEAR15M:e23.146",
    "family": "fv_drift",
    "scope": "KXNEAR15M",
@@ -1087,30 +1111,6 @@
    "status": "open"
   },
   {
-   "id": "fv_t:KXHYPE15M:e23.139",
-   "family": "fv_t",
-   "scope": "KXHYPE15M",
-   "rank": 139,
-   "params": {
-    "start": 4,
-    "end": 10,
-    "edge": 0.1,
-    "band": "20-80",
-    "nu": 20,
-    "vol": "blend",
-    "vm": 1.3
-   },
-   "t_before": 1.12,
-   "placed": 109,
-   "filled": 59,
-   "pnl": 0.77,
-   "t": 0.18,
-   "win_rate": 0.305,
-   "days_up": 2,
-   "days": 3,
-   "status": "open"
-  },
-  {
    "id": "fv_liq:KXZEC15M:e23.7",
    "family": "fv_liq",
    "scope": "KXZEC15M",
@@ -1222,7 +1222,7 @@
     "vm": 1.25
    },
    "t_before": 0.77,
-   "placed": 161,
+   "placed": 162,
    "filled": 92,
    "pnl": 0.5,
    "t": 0.09,
@@ -1540,7 +1540,7 @@
     "vm": 1.25
    },
    "t_before": 0.99,
-   "placed": 150,
+   "placed": 151,
    "filled": 74,
    "pnl": -0.08,
    "t": -0.02,
@@ -1625,5 +1625,5 @@
   }
  ],
  "selection": "Evolved from the 40 strongest strategies of all earlier batches on their own forward days: parameter steps, crossovers and moves to other coins, screened on the history and the forward days so far at real-money scoring (profitable in both, >= 100 history and >= 20 forward trades), best 300 by t-stat. The forward days so far were used to breed them, so only days after the freeze count as their test.",
- "runtime_s": 5
+ "runtime_s": 6
 }
