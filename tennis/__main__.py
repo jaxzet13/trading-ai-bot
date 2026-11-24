@@ -24,6 +24,9 @@ def main(argv=None):
             if "once" in a:
                 break
             _t.sleep(60)
+    elif cmd == "realtest":
+        from . import realtest
+        realtest.run()
     elif cmd == "learn":
         from . import learn
         learn.run(once="once" in a)
