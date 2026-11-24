@@ -124,3 +124,28 @@ def test_live_minute_close_is_the_price_at_the_boundary(tmp_path, monkeypatch):
     ms = paper.live_markets({"T": base}, base + 240)
     m = ms[0]
     assert abs(m["mid"][0] - 0.115) < 1e-9 and m["rel"][0] == 1.0     # minute 0 closes at the boundary price
+
+
+def test_fast_scorer_matches_bet_exactly():
+    """score_matrix (used to rank thousands of strategies) must give exactly the bets bet() gives (used live)."""
+    import numpy as np
+    from tennis import lab
+    rng = np.random.default_rng(3)
+    ms = []
+    for k in range(40):
+        rel = np.arange(-200, 200, 1.0)
+        rel = rel[rng.random(len(rel)) > 0.1]                                  # gaps, like real bars
+        mid = np.clip(0.5 + np.cumsum(rng.normal(0, 0.02, len(rel))), 0.03, 0.97)
+        mid[rng.random(len(rel)) < 0.03] = np.nan
+        ms.append({"ticker": f"T{k}", "event": f"E{k}", "series": ["KXATPMATCH", "KXWTAMATCH", "KXITFMATCH"][k % 3],
+                   "day": 20000 + k % 5, "start": 0, "value": float(rng.random() < 0.5), "rel": rel, "mid": mid,
+                   "askhi": mid + 0.01, "bidlo": mid - 0.01})
+    strats = [s for s in lab.strategies() if s["fam"] == "swing" or s["M"] in (-60, 0, 30)]
+    days, P, N, Q = lab.score_matrix(ms, strats, log=lambda m: None)
+    for r, s in enumerate(strats):
+        pnl, n = 0.0, 0
+        for m in ms:
+            b = lab.bet(m, s)
+            if b:
+                pnl += b[2]; n += 1
+        assert n == N[r].sum() and abs(pnl - P[r].sum()) < 1e-9, s["id"]

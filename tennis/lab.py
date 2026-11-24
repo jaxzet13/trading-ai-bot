@@ -25,9 +25,13 @@ import numpy as np
 from . import api
 from .history import STORE
 
-MINUTES = [-120, -60, -30, -10, 0, 15, 30, 60, 90, 120]
-WIDTHS = [0.10, 0.15, 0.20]
+MINUTES = list(range(-180, 181, 10))           # match clock, every 10 min from 3 h before to 3 h into play
+WIDTHS = [0.05, 0.10, 0.15, 0.20]
 LOS = [round(0.05 * i, 2) for i in range(1, 19)]
+# tour filter: a strategy can be limited to one kind of tennis ("all" keeps the old ids unchanged)
+SCOPES = {"all": None, "atp": {"KXATPMATCH"}, "wta": {"KXWTAMATCH"},
+          "chal": {"KXATPCHALLENGERMATCH", "KXWTACHALLENGERMATCH"}, "itf": {"KXITFMATCH", "KXITFWMATCH"}}
+SCOPE_NAME = {"all": "", "atp": "ATP", "wta": "WTA", "chal": "Challenger", "itf": "ITF"}
 SWING_W = [5, 10, 20, 30]
 SWING_D = [0.05, 0.10, 0.15, 0.20, 0.25]
 PHASES = {"early": (0, 60), "late": (60, 240), "all": (0, 240)}
@@ -55,22 +59,33 @@ def load(path=STORE):
     return ms
 
 
+def _sid(base, scope):
+    return base if scope == "all" else f"{base}:{scope}"
+
+
 def strategies():
     out = []
-    for M in MINUTES:
-        for w in WIDTHS:
-            for lo in LOS:
-                hi = round(lo + w, 2)
-                if hi <= 0.98:
-                    out.append({"id": f"band:m{M}:{lo:.2f}-{hi:.2f}", "fam": "band", "M": M, "lo": lo, "hi": hi})
-    for ph in PHASES:
-        for w in SWING_W:
-            for d in SWING_D:
-                for direction in ("down", "up"):
-                    for act in ("rev", "mom"):
-                        out.append({"id": f"swing:{ph}:{direction}{d:.2f}/{w}m:{act}", "fam": "swing", "phase": ph,
-                                    "w": w, "d": d, "dir": direction, "act": act})
+    for scope in SCOPES:
+        for M in MINUTES:
+            for w in WIDTHS:
+                for lo in LOS:
+                    hi = round(lo + w, 2)
+                    if hi <= 0.98:
+                        out.append({"id": _sid(f"band:m{M}:{lo:.2f}-{hi:.2f}", scope), "fam": "band", "M": M,
+                                    "lo": lo, "hi": hi, "scope": scope})
+        for ph in PHASES:
+            for w in SWING_W:
+                for d in SWING_D:
+                    for direction in ("down", "up"):
+                        for act in ("rev", "mom"):
+                            out.append({"id": _sid(f"swing:{ph}:{direction}{d:.2f}/{w}m:{act}", scope), "fam": "swing",
+                                        "phase": ph, "w": w, "d": d, "dir": direction, "act": act, "scope": scope})
     return out
+
+
+def in_scope(m, s):
+    sc = SCOPES.get(s.get("scope", "all"))
+    return sc is None or m["series"] in sc
 
 
 def _fill(m, i, side):
@@ -89,6 +104,8 @@ def _pay(m, side, p):
 
 def bet(m, s):
     """The one bet strategy s makes on market m -> (side, price, pnl, minute) or None."""
+    if not in_scope(m, s):
+        return None
     rel, mid = m["rel"], m["mid"]
     if s["fam"] == "band":
         idx = np.nonzero(rel <= s["M"])[0]
@@ -185,9 +202,152 @@ def mutate(s, rng):
         c["M"] = int(s["M"] + rng.choice([-15, -5, 5, 15]))
         lo = round(min(0.9, max(0.02, s["lo"] + rng.choice([-0.03, -0.02, 0.02, 0.03]))), 2)
         hi = round(min(0.98, max(lo + 0.04, s["hi"] + rng.choice([-0.03, -0.02, 0.02, 0.03]))), 2)
-        c.update(lo=lo, hi=hi, id=f"band:m{c['M']}:{lo:.2f}-{hi:.2f}")
+        c.update(lo=lo, hi=hi, id=_sid(f"band:m{c['M']}:{lo:.2f}-{hi:.2f}", s.get("scope", "all")))
     else:
         c["w"] = int(max(2, s["w"] + rng.choice([-5, -2, 2, 5])))
         c["d"] = round(max(0.03, s["d"] + rng.choice([-0.03, -0.02, 0.02, 0.03])), 2)
-        c["id"] = f"swing:{c['phase']}:{c['dir']}{c['d']:.2f}/{c['w']}m:{c['act']}"
+        c["id"] = _sid(f"swing:{c['phase']}:{c['dir']}{c['d']:.2f}/{c['w']}m:{c['act']}", s.get("scope", "all"))
     return c
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Fast scoring: the same rules as bet(), computed for every market at once so thousands of strategies fit in a
+# round. tests/test_tennis.py checks that score_matrix() gives exactly what bet() gives, bet by bet.
+
+def _fee_vec(p):
+    return np.ceil(api.TAKER_RATE * p * (1 - p) * 100 - 1e-9) / 100
+
+
+def _scope_masks(ms):
+    series = np.array([m["series"] for m in ms])
+    return {k: (np.ones(len(ms), bool) if v is None else np.isin(series, list(v))) for k, v in SCOPES.items()}
+
+
+def _band_arrays(ms, M):
+    """Per market, what a band rule at minute M sees: (ok, mid at the decision bar, fill price, pnl backing YES)."""
+    n = len(ms)
+    ok = np.zeros(n, bool); mid = np.full(n, np.nan); price = np.full(n, np.nan); pay = np.zeros(n)
+    for k, m in enumerate(ms):
+        rel = m["rel"]
+        i = np.searchsorted(rel, M, side="right") - 1
+        if i < 0 or M - rel[i] > 10 or not np.isfinite(m["mid"][i]):
+            continue
+        j = i + 1
+        if j >= len(rel) or rel[j] - rel[i] > 3.01:
+            continue
+        p = m["askhi"][j]
+        if not (np.isfinite(p) and 0.02 <= p <= 0.98):
+            continue
+        ok[k], mid[k], price[k] = True, m["mid"][i], p
+        pay[k] = m["value"] - p - _fee_vec(p)
+    return ok, mid, price, pay
+
+
+def _swing_arrays(ms, phase, w, d, direction):
+    """Per market, the first in-play trigger of a swing rule and the pnl of backing (yes) / opposing (no) it."""
+    a, b = PHASES[phase]
+    n = len(ms)
+    ok_y = np.zeros(n, bool); ok_n = np.zeros(n, bool); pay_y = np.zeros(n); pay_n = np.zeros(n)
+    for k, m in enumerate(ms):
+        rel, mid = m["rel"], m["mid"]
+        idx = np.arange(len(rel))
+        j = np.searchsorted(rel, rel - w, side="left")
+        refok = (j < idx) & np.isfinite(mid[np.minimum(j, len(rel) - 1)])
+        ch = mid - mid[np.minimum(j, len(rel) - 1)]
+        cond = ((rel >= a) & (rel < b) & np.isfinite(mid) & (mid >= 0.10) & (mid <= 0.90) & refok
+                & ((ch <= -d) if direction == "down" else (ch >= d)))
+        hit = np.nonzero(cond)[0]
+        if not len(hit):
+            continue
+        i = hit[0]
+        if i + 1 >= len(rel) or rel[i + 1] - rel[i] > 3.01:
+            continue
+        py = m["askhi"][i + 1]
+        if np.isfinite(py) and 0.02 <= py <= 0.98:
+            ok_y[k], pay_y[k] = True, m["value"] - py - _fee_vec(py)
+        bl = m["bidlo"][i + 1]
+        pn = 1 - bl if np.isfinite(bl) else np.nan
+        if np.isfinite(pn) and 0.02 <= pn <= 0.98:
+            ok_n[k], pay_n[k] = True, (1 - m["value"]) - pn - _fee_vec(pn)
+    return ok_y, pay_y, ok_n, pay_n
+
+
+def score_matrix(ms, strats, log=print):
+    """-> (days, P, N, Q): per strategy (rows, in strats order) and day (columns) the P&L, bets and P&L^2."""
+    t0 = time.time()
+    days = np.array(sorted({m["day"] for m in ms}))
+    dix = np.searchsorted(days, np.array([m["day"] for m in ms]))
+    D, S = len(days), len(strats)
+    P, N, Q = np.zeros((S, D)), np.zeros((S, D)), np.zeros((S, D))
+    scope = _scope_masks(ms)
+    by_m, by_sw = defaultdict(list), defaultdict(list)
+    for r, s in enumerate(strats):
+        if s["fam"] == "band":
+            by_m[s["M"]].append(r)
+        else:
+            by_sw[(s["phase"], s["w"], s["d"], s["dir"])].append(r)
+    def put(r, mask, pay):
+        P[r] = np.bincount(dix[mask], pay[mask], D)
+        N[r] = np.bincount(dix[mask], None, D)
+        Q[r] = np.bincount(dix[mask], pay[mask] ** 2, D)
+    for M, rows in by_m.items():
+        ok, mid, _, pay = _band_arrays(ms, M)
+        for r in rows:
+            s = strats[r]
+            put(r, ok & (mid >= s["lo"]) & (mid < s["hi"]) & scope[s.get("scope", "all")], pay)
+    for (ph, w, d, dr), rows in by_sw.items():
+        ok_y, pay_y, ok_n, pay_n = _swing_arrays(ms, ph, w, d, dr)
+        for r in rows:
+            s = strats[r]
+            back = (dr == "down") == (s["act"] == "rev")
+            sc = scope[s.get("scope", "all")]
+            put(r, (ok_y if back else ok_n) & sc, pay_y if back else pay_n)
+    log(f"  scored {S} strategies on {len(ms)} markets ({time.time() - t0:.0f}s)")
+    return days, P, N, Q
+
+
+def metrics(days, P, N, Q, hold_frac=1 / 3):
+    """Consistency of every strategy: totals, t, days up, worst drawdown, and history vs hold-out (the last third
+    of the days, which the leaderboard ranking never uses)."""
+    D = len(days)
+    cut = int(round(D * (1 - hold_frac)))
+    def t_of(p, n, q):
+        mu = np.divide(p, n, out=np.zeros_like(p), where=n > 0)
+        var = np.divide(q - n * mu * mu, n - 1, out=np.zeros_like(p), where=n > 1)
+        se = np.sqrt(np.divide(var, n, out=np.full_like(p, np.inf), where=n > 0))
+        return np.where((n >= 3) & (var > 0), mu / np.where(se > 0, se, np.inf), -9.0)
+    n, p, q = N.sum(1), P.sum(1), Q.sum(1)
+    ns, ps, qs = N[:, :cut].sum(1), P[:, :cut].sum(1), Q[:, :cut].sum(1)
+    nh, ph, qh = N[:, cut:].sum(1), P[:, cut:].sum(1), Q[:, cut:].sum(1)
+    cum = np.cumsum(P, 1)
+    dd = (np.maximum.accumulate(np.maximum(cum, 0), 1) - cum).max(1)
+    return {"n": n, "pnl": p, "t": t_of(p, n, q), "days_up": (P > 0).sum(1), "days_active": (N > 0).sum(1),
+            "max_dd": dd, "n_hist": ns, "pnl_hist": ps, "t_hist": t_of(ps, ns, qs),
+            "n_hold": nh, "pnl_hold": ph, "t_hold": t_of(ph, nh, qh), "cut_day": int(days[cut]) if cut < D else None}
+
+
+def walk_matrix(P, N, Q, warmup=7, ks=(1, 5, 20, 50)):
+    """Vectorized lab.walk(): on each day rank strategies on the days before it only (>= MIN_BETS bets, by t),
+    back the top K that day, compare with backing every eligible strategy."""
+    D = P.shape[1]
+    cP, cN, cQ = np.cumsum(P, 1), np.cumsum(N, 1), np.cumsum(Q, 1)
+    res = {k: [0.0, 0.0] for k in ks}
+    base = [0.0, 0.0]
+    tdays = 0
+    for i in range(warmup, D):
+        n, p, q = cN[:, i - 1], cP[:, i - 1], cQ[:, i - 1]
+        elig = n >= MIN_BETS
+        if not elig.any():
+            continue
+        mu = np.divide(p, n, out=np.zeros_like(p), where=n > 0)
+        var = np.divide(q - n * mu * mu, n - 1, out=np.zeros_like(p), where=n > 1)
+        t = np.where(elig & (var > 0), mu / np.sqrt(np.where(var > 0, var, 1) / np.where(n > 0, n, 1)), -np.inf)
+        order = np.argsort(-t)
+        tdays += 1
+        for k in ks:
+            top = order[:k]
+            top = top[np.isfinite(t[top])]
+            res[k][0] += P[top, i].sum(); res[k][1] += N[top, i].sum()
+        base[0] += P[elig, i].sum(); base[1] += N[elig, i].sum()
+    agg = lambda x: (round(x[0] / max(x[1], 1), 4), int(x[1]))
+    return {"test_days": tdays, "top": {k: agg(v) for k, v in res.items()}, "all": agg(base)}

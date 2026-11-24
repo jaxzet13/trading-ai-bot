@@ -26,7 +26,7 @@ from .history import STORE
 LOG = DATA / "paper_bets.jsonl"
 PARITY_C = 2.0
 CLOSE_LAG_S = 20
-FALLBACK_N = 20
+FALLBACK_N = 50
 
 
 def _strategies():
@@ -157,7 +157,7 @@ def settle_and_check():
             if m["ticker"] in want:
                 hist[m["ticker"]] = m
     strat_by_id = {}
-    for bp in sorted((DATA / "forward").glob("batch_*.json")):
+    for bp in sorted((DATA / "forward_old").glob("batch_*.json")) + sorted((DATA / "forward").glob("batch_*.json")):
         for s in json.loads(bp.read_text())["strategies"]:
             strat_by_id[s["id"]] = s
     from . import api
