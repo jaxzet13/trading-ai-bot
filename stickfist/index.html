@@ -993,6 +993,18 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
   .mbox:not(.slim):not(.rq) .mhead .pricebox { justify-content: center; } .mbox:not(.slim):not(.rq) .mhead .chgs { justify-content: center; }
 }
 .card.v3.sm .hd { justify-content: flex-end; } .card.v3.sm .rr { order: 2; }
+
+/* ---- the pack page's "what next" line, and claiming goals where they were earned ---- */
+.homenext { display: flex; align-items: center; gap: 12px; width: min(420px, 100%); margin: 2px auto 0; padding: 10px 14px; border-radius: 16px; border: 1px solid var(--ln2); background: var(--s1); text-align: left; }
+.homenext[hidden] { display: none; }
+.homenext.rdy { border-color: rgba(59,228,119,.45); background: linear-gradient(100deg, rgba(59,228,119,.16), rgba(59,228,119,.05)); }
+.homenext .hn-main { display: grid; gap: 6px; min-width: 0; flex: 1; } .homenext .hn-main b { font-size: 13.5px; font-weight: 650; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .homenext .hn-main small { font-size: 12px; color: var(--dim); margin-top: -4px; }
+.homenext .gbar { display: block; height: 6px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; } .homenext .gbar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2bbf62, var(--acc)); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.homenext .hn-r { display: grid; justify-items: end; gap: 1px; flex: none; } .homenext .hn-r b { font-size: 14px; font-variant-numeric: tabular-nums; } .homenext .hn-r small { font-size: 11.5px; color: var(--acc); white-space: nowrap; }
+.homenext .hn-ic { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: rgba(59,228,119,.18); color: var(--acc); font-weight: 800; font-size: 14px; }
+.homenext .hn-claim { flex: none; min-height: 38px; padding: 0 14px; font-size: 13.5px; border-radius: 12px; }
+.goalline.claim { display: grid; gap: 10px; justify-items: center; max-width: none; } .goalline.claim .btn { min-height: 44px; padding: 0 18px; font-size: 14.5px; border-radius: 14px; } .goalline.claim .btn b { color: inherit; font-weight: 800; }
+.goalline .claimed { color: var(--acc); font-weight: 700; font-size: 15px; animation: claimpop .45s cubic-bezier(.2,1.4,.4,1); } @keyframes claimpop { from { transform: scale(.7); opacity: 0; } }
 </style>
 </head>
 <body>
@@ -1017,6 +1029,7 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
       <div class="packmeta"><h1 id="packName">First Print</h1><p class="dim" id="packLine"></p></div>
       <button class="btn solid big" id="openBtn" data-open>open pack</button>
       <div class="multi" id="multiRow" role="group" aria-label="How many packs to open at once" hidden></div>
+      <div class="homenext" id="homeNext" hidden></div>
       <a class="homeinvite" id="homeInvite" href="#/invite" hidden></a>
       <div class="hometrust" id="homeTrust"><button class="tchip" id="fairBtn3" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.500 6v6c0 4.500 3.200 7.800 7.500 9 4.300-1.200 7.500-4.500 7.500-9V6z"/><path d="m9 12 2.200 2.200L15.500 10"/></svg>Provably fair</button><a class="tchip" href="#/odds"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Odds</a><span class="tchip" id="tStripe" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Stripe</span></div>
       <p class="buyrow" id="buyRow" hidden><button class="btn solid" id="buyBtn">Buy packs</button></p>
@@ -1178,17 +1191,17 @@ const CARDS = [
   { no: "028", id: "cone",    name: "Cone",    sub: "traffic cone",  rar: "common",   chars: 6432,  val: 9,  tint: "#ffd27a", cap: "caution: confident.",         styles: true },
   { no: "029", id: "tempest", name: "Tempest", sub: "storm",         rar: "uncommon", chars: 7260,  val: 21,  tint: "#a9c9ff", cap: "weather is a choice.",         styles: true },
   { no: "030", id: "surge",   name: "Surge",   sub: "big wave",      rar: "uncommon", chars: 15750, val: 31,  tint: "#9fe8ff", cap: "ride it before it breaks.",    styles: true },
-  { no: "031", id: "kraken",  name: "Kraken",  sub: "tentacles",     rar: "rare",     chars: 28000, val: 233, tint: "#c9a5ff", cap: "it was always down there.",    styles: true },
+  { no: "031", id: "kraken",  name: "Kraken",  sub: "tentacles",     rar: "rare",     chars: 28000, val: 233, tint: "#9fe8d8", cap: "it was always down there.",    styles: true },
   // ---- Moonshot: one launch, five altitudes. The higher the card, the rarer it is.
   { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "common",    chars: 8736,   val: 14,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
   { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "uncommon",  chars: 10080,  val: 35,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
-  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "rare",      chars: 40320,  val:  1134,  tint: "#ff7a6a", cap: "gravity lost the argument.",    styles: true },
+  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "rare",      chars: 40320,  val:  1134,  tint: "#ffb070", cap: "gravity lost the argument.",    styles: true },
   { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "epic",      chars: 123480, val: 1667, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
   { no: "025", set: "ms", id: "luna",     name: "Luna",     sub: "first flag",    rar: "legendary", chars: 448800, val: 4145, tint: "#b8d4ff", cap: "to the moon was never a joke.", styles: true },
   // ---- more Moonshot cards, each at the altitude (and worth) of a card already there
   { no: "032", set: "ms", id: "spark",     name: "Spark",     sub: "sparkler",     rar: "common",   chars: 8736,   val: 16,   tint: "#ffb070", cap: "small things start fires.", styles: true },
-  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 41,   tint: "#a8ffbe", cap: "three. two. one.",           styles: true },
-  { no: "034", set: "ms", id: "booster",   name: "Booster",   sub: "stage split",  rar: "rare",     chars: 40320,  val:  1333, tint: "#ffd27a", cap: "dead weight, dropped.",      styles: true },
+  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 41,   tint: "#ff8a7a", cap: "three. two. one.",           styles: true },
+  { no: "034", set: "ms", id: "booster",   name: "Booster",   sub: "stage split",  rar: "rare",     chars: 40320,  val:  1333, tint: "#ffc98a", cap: "dead weight, dropped.",      styles: true },
   { no: "035", set: "ms", id: "flare",     name: "Flare",     sub: "signal flare", rar: "common",   chars: 8736,   val: 19,   tint: "#ff8a7a", cap: "the sky has been told.",     styles: true },
   { no: "036", set: "ms", id: "bubble",    name: "Bubble",    sub: "fishbowl helmet", rar: "common", chars: 8736,  val: 21,   tint: "#ece7dc", cap: "all systems: smiling.",      styles: true },
   { no: "037", set: "ms", id: "gantry",    name: "Gantry",    sub: "tower arm",    rar: "uncommon", chars: 10080,  val: 47,   tint: "#9fe8ff", cap: "the arm lets go.",           styles: true }
@@ -2010,7 +2023,7 @@ function movers() { const rows = myMovers(); return { rows, gain: rows.filter(r 
 function fitHomePack() {
   const col = document.querySelector("#homePack"), bt = $("btabs"); if (!col || view !== "home") return; const pc = col.closest(".packcol") || col; pc.style.width = "";
   if (!bt || getComputedStyle(bt).display === "none") return;                                               // only on a phone, where the page must not scroll
-  const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 10, after = ["packmeta", "openBtn", "multiRow", "homeTrust", "homeInvite"].map(id => { const e = id === "packmeta" ? document.querySelector(".packmeta") : $(id); return e && !e.hidden ? e.offsetHeight + 12 : 0; }).reduce((a, b) => a + b, 0);
+  const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 10, after = ["packmeta", "openBtn", "multiRow", "homeTrust", "homeInvite", "homeNext"].map(id => { const e = id === "packmeta" ? document.querySelector(".packmeta") : $(id); return e && !e.hidden ? e.offsetHeight + 12 : 0; }).reduce((a, b) => a + b, 0);
   const ratio = pc.offsetHeight / Math.max(1, pc.offsetWidth) || 1.45, w = Math.max(100, Math.min(300, innerWidth * .74, (bottom - top - after) / ratio)); pc.style.width = Math.floor(w) + "px";
 }
 addEventListener("resize", () => { if (view === "home") fitHomePack(); });
@@ -2029,6 +2042,7 @@ function renderHome() {
   const hp = $("homePack"); if (hp.dataset.pack !== pk.id) { if (hp._ps) hp._ps.stop(); hp.innerHTML = packHTML(pk); hp.dataset.pack = pk.id; const el = hp.firstChild; tiltPack(el); el.style.cursor = "pointer"; el.onclick = () => openPack(); hp._ps = liveWindow(el, pk); }
   document.body.dataset.pack = pk.id; { const ts = $("tStripe"); if (ts) ts.hidden = !Shop.open(); }
   { const hi = $("homeInvite"), html = homeInviteHTML(); hi.hidden = !html; hi.innerHTML = html; }
+  { const hn = $("homeNext"), html = innerHeight >= 700 || Goals.ready().length ? Goals.homeHTML() : ""; hn.hidden = !html; if (hn.dataset.sig !== html) { hn.dataset.sig = html; hn.innerHTML = html; hn.className = "homenext" + (Goals.ready().length ? " rdy" : ""); } }   // what to aim for next (left out on a short screen unless there is something to claim)
   fitHomePack(); requestAnimationFrame(fitHomePack);
 }
 
@@ -2574,7 +2588,8 @@ const againLabel = pk => (openN() > 1 && maxN(pk) >= 2) ? (() => { const k = Mat
 function goalLine() {
   const nw = SS && SS.fresh ? SS.fresh.size : 0, rd = Goals.ready().length, nx = Goals.next(), parts = [];
   if (nw) parts.push(`<b>${nw} new card${nw > 1 ? "s" : ""}</b> for your collection`);
-  if (rd) parts.push(`<b>${rd} goal${rd > 1 ? "s" : ""} done</b>: claim ${rd > 1 ? "them" : "it"} on Me`); else if (nx && nx.left <= 5) parts.push(`${nx.left} more to “${esc(nx.g.t)}” (+${nx.g.r} free pack${nx.g.r > 1 ? "s" : ""})`);
+  if (rd) { const tot = Goals.ready().reduce((a, g) => a + g.r, 0); return `<div class="goalline claim" id="goalLine">${nw ? `<span><b>${nw} new card${nw > 1 ? "s" : ""}</b> for your collection</span>` : ""}<button class="btn solid free" id="sumClaim"><b>${rd} goal${rd > 1 ? "s" : ""} done</b>&nbsp;· claim +${tot} free pack${tot > 1 ? "s" : ""}</button></div>`; }
+  if (0) parts.push(""); else if (nx && nx.left <= 5) parts.push(`${nx.left} more to “${esc(nx.g.t)}” (+${nx.g.r} free pack${nx.g.r > 1 ? "s" : ""})`);
   return parts.length ? `<p class="goalline">${parts.join(" · ")}</p>` : "";
 }
 function summary() {
@@ -4007,7 +4022,16 @@ const Goals = (() => {
   function badge() {}                                                                      // no badge dots anywhere: a finished goal waits quietly on the Me page and in the pack result
   // the closest goal you haven't finished, for a one-line nudge after a pack
   function next() { const g = LIST.filter(g => !claimed(g) && !done(g) && !g.x).sort((a, b) => b.v() / b.n - a.v() / a.n)[0]; return g ? { g, left: g.n - Math.floor(g.v()) } : null; }
-  return { html, claim, toggle, badge, ready, next, LIST };
+  // every finished goal at once, from wherever you are (the pack result, the pack page): the reward lands where it was earned
+  function claimAll() { const rd = ready(); if (!rd.length) return 0; let n = 0; rd.forEach(g => { got()[g.id] = Date.now(); n += g.r; }); state.freePacks += n; save(); renderChips(); Snd.level(); buzz([30, 40, 30, 40, 60]); return n; }
+  // the pack page's one line about what to aim for: a finished goal to claim, or the closest one and how far it is
+  function homeHTML() {
+    const rd = ready(), tot = rd.reduce((a, g) => a + g.r, 0), nx = next();
+    if (rd.length) return `<span class="hn-ic ok" aria-hidden="true">✓</span><span class="hn-main"><b>${rd.length > 1 ? rd.length + " goals done" : esc(rd[0].t)}</b><small>${rd.length > 1 ? "Free packs waiting" : "Goal done"}</small></span><button class="btn solid free hn-claim" id="homeClaim">Claim +${tot} pack${tot > 1 ? "s" : ""}</button>`;
+    if (!nx) return ""; const v = Math.floor(nx.g.v()), pc = Math.max(.03, Math.min(1, v / nx.g.n));
+    return `<span class="hn-main"><b>Next: ${esc(nx.g.t)}</b><span class="gbar" role="img" aria-label="${v} of ${nx.g.n}"><i style="width:${(pc * 100).toFixed(1)}%"></i></span></span><span class="hn-r"><b>${v}/${nx.g.n}</b><small>+${nx.g.r} free pack${nx.g.r > 1 ? "s" : ""}</small></span>`;
+  }
+  return { html, claim, claimAll, homeHTML, toggle, badge, ready, next, LIST };
 })();
 
 /* ============================================================================
@@ -4026,6 +4050,12 @@ document.addEventListener("click", e => {
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
+  if (t.id === "sumClaim" || t.id === "homeClaim") {                                       // finished goals pay out right where you are, and the next button already says "open a free pack"
+    const r = t.getBoundingClientRect(), n = Goals.claimAll(); if (!n) return;
+    if (typeof FX !== "undefined" && FX.burst) FX.burst(r.left + r.width / 2, r.top + r.height / 2, 18, ["#3be477", "#fff"], 320);
+    if (t.id === "sumClaim") { const gl = $("goalLine"); if (gl) gl.innerHTML = `<span class="claimed">+${n} free pack${n > 1 ? "s" : ""} added</span>`; const a = $("sumAgain"); if (a && SS) a.textContent = againLabel(SS.pack); }
+    else { toast(`+${n} free pack${n > 1 ? "s" : ""}`); renderHome(); }
+    return; }
   if (t.dataset.addamt) { Shop.setAmt(+t.dataset.addamt); return; }
   if (t.dataset.prange) { pRange = +t.dataset.prange === 168 ? 168 : 24; renderProfile(); return; }
   if (t.dataset.many) { state.openN = +t.dataset.many || 1; persist(); Snd.click(); if (view === "home") renderHome(); return; }

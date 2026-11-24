@@ -1,4 +1,4 @@
-"""The ten commons (and Phantom), redrawn: every look of each card (the plain one and the twelve chance styles).
+"""The ten commons, Phantom, and the full-colour uncommons and rares, redrawn: every look of each card (the plain one and the twelve chance styles).
 
 The old commons were 64 characters across in one flat tint on plain black, which read as "just letters on a card".
 These are drawn properly, from the same source art and still made of nothing but characters:
@@ -45,6 +45,24 @@ CARDS = {
     'phantom': dict(UN, src='ascii-engines/sources/winged.png', view=(0.50, 0.44, 0.84), accent=(170, 160, 255), text='gone before the cape lands.', gain=2.7, gamma=0.72, floor=False),
     'bubble': dict(MS, src='more-cards/sources/bubble.jpg',   view=(0.50, 0.50, 1.02), accent=(110, 210, 255), text='all systems: smiling.'),
 }
+# ---- the uncommons and rares whose source art is a full-colour scene. Their old looks flattened it to one tint; here the plain look
+# keeps the art's own colours. Same grids as before (cols x rows = the count printed on the card), no dotted backdrop or floor (the
+# scene is the backdrop), and a stronger picture under the type because the characters are small.
+def G(cols, rows): cw = max(3, round(1800 / cols)); return dict(cols=cols, rows=rows, cw=cw, ch=max(4, round(cols * cw * PH / PW / rows)), floor=False, dots=False, under=0.34, wash=0.05)
+CARDS.update({
+    'orbit':     dict(G(110, 66),  src='ascii-engines/sources/galaxy.png', view=(0.5, 0.37, 0.74), accent=(120, 170, 255), text='already read the ending.', gain=1.25),
+    'tempest':   dict(G(110, 66),  src='more-cards/sources/tempest.jpg',   view=(0.5, 0.50, 0.97), accent=(120, 170, 255), text='weather is a choice.', gain=1.2),
+    'surge':     dict(G(150, 105), src='more-cards/sources/surge.jpg',     view=(0.5, 0.50, 0.97), accent=(110, 230, 220), text='ride it before it breaks.', gain=1.2),
+    'null':      dict(G(220, 133), src='ascii-engines/sources/star.png',   view=(0.5, 0.38, 0.86), accent=(150, 180, 255), text='not on any record.', gain=1.3),
+    'shogun':    dict(G(230, 139), src='ascii-engines/sources/wings.png',  view=(0.5, 0.40, 0.80), accent=(255, 210, 120), text='rents you the air.', tint=(1.0, 0.84, 0.50)),
+    'kraken':    dict(G(200, 140), src='more-cards/sources/kraken.jpg',    view=(0.5, 0.50, 0.97), accent=(120, 230, 200), text='it was always down there.', gain=1.3),
+    'ignition':  dict(G(120, 84),  src='moonshot/sources/ignition.jpg',    view=(0.5, 0.46, 0.90), accent=(255, 160, 70),  text='no turning back from here.'),
+    'countdown': dict(G(120, 84),  src='more-cards/sources/countdown.jpg', view=(0.5, 0.50, 0.97), accent=(255, 80, 70),   text='three. two. one.'),
+    'gantry':    dict(G(120, 84),  src='more-cards/sources/gantry.jpg',    view=(0.5, 0.50, 1.00), accent=(255, 190, 110), text='the arm lets go.', gain=1.15),
+    'liftoff':   dict(G(240, 168), src='moonshot/sources/liftoff.jpg',     view=(0.5, 0.46, 0.90), accent=(255, 170, 90),  text='gravity lost the argument.'),
+    'booster':   dict(G(240, 168), src='more-cards/sources/booster.jpg',   view=(0.5, 0.50, 0.97), accent=(255, 180, 90),  text='dead weight, dropped.'),
+    'apogee':    dict(G(420, 294), src='moonshot/sources/apogee.jpg',      view=(0.5, 0.46, 0.90), accent=(110, 200, 255), text='the top is quiet.'),
+})
 # key (the app's style key), how it is drawn, its colour (dark end, bright end), extras
 STYLES = {
     'plain':   dict(mode='ascii'),
@@ -113,10 +131,10 @@ def render(cid, key, out_dir, quality=84):
             h = (u[i] * 0.9 + v[i] * 1.5 + b * 0.25 + 0.04 * np.sin(v[i] * 37)) % 1.0; return np.array(colorsys.hsv_to_rgb(h, 0.52, 1.0), np.float32) * (0.5 + 0.5 * b)
         if plain:
             c = hue[i]; sat = float(c.max() - c.min())
-            return (c * 0.92 + 0.08 if sat > 0.22 else np.array([1.0, 0.975, 0.91], np.float32)) * (0.42 + 0.58 * b ** 0.8)   # props keep their colour; the figure is a warm white
+            return (c * 0.92 + 0.08 if sat > 0.22 else tint) * (0.42 + 0.58 * b ** 0.8)   # props keep their colour; the figure is a warm white
         return (lo + (hi - lo) * b ** 2.2) * (0.42 + 0.58 * b ** 0.8)
 
-    canvas = np.zeros((H, W, 3), np.float32); under = 0.20
+    canvas = np.zeros((H, W, 3), np.float32); under = 0.20; tint = np.array(cfg.get('tint', (1.0, 0.975, 0.91)), np.float32)
     # ---- the figure
     if mode in ('ascii', 'text'):
         solid = mean > 0.90; g = fit(np.clip(P, 0, 1), V, ASCII, rng); t = [c if c != ' ' else '·' for c in cfg['text'].upper()] + ['·']; k = 0
@@ -159,12 +177,13 @@ def render(cid, key, out_dir, quality=84):
             paint(canvas, mask, c, x, y, cw, ch, colour(i, b))
         under = 0.0 if mode == 'dissolve' else 0.10
     # ---- a faint picture of the figure under the type, so it reads as one solid drawing from across the room
+    if under: under = max(under, cfg.get('under', 0)) if mode in ('ascii', 'text', 'braille', 'edge') else under
     if under:
         smooth = np.clip(cv2.GaussianBlur(cv2.resize(fine, (W, H), interpolation=cv2.INTER_CUBIC), (0, 0), cw * 0.35), 0, 1); sl = smooth.max(axis=2, keepdims=True)
         if st.get('irid'):
             yy, xx = np.mgrid[0:H, 0:W]; hh = ((xx / W) * 0.9 + (yy / H) * 1.5) % 1.0; hsv = np.stack([hh * 179, np.full_like(hh, 133), np.full_like(hh, 255)], 2).astype(np.uint8); tint = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB).astype(np.float32) / 255
             canvas += tint * sl * under
-        elif plain: canvas += smooth * np.array([1.0, 0.975, 0.91], np.float32) * under
+        elif plain: canvas += smooth * tint * under
         else: canvas += (lo + (hi - lo) * sl ** 2.2) * sl * under
     # ---- the backdrop: a dotted glow behind the figure and a floor of lines under its feet, in the card's colour
     figure = (mean > 0.2).reshape(rows, cols); lit = np.flatnonzero(figure.sum(1) >= 3); foot = int(lit.max()) if len(lit) else rows - 4; floor_y = min(rows - 3, max(int(rows * 0.80), foot - 1))
@@ -176,12 +195,12 @@ def render(cid, key, out_dir, quality=84):
         if y >= floor_y and cfg.get('floor', True):
             t = (y - floor_y) / max(1, rows - 1 - floor_y); k = (0.85 - 0.70 * min(1, abs(du) * 2.0)) * (1.0 - 0.5 * t)
             if k > 0.03: paint(canvas, mask, '_' if (y - floor_y) % 2 == 0 else '=', x * cw, y * ch, cw, ch, accent * k)
-        elif (x + y) % 2 == 0 and b > 0.06:
+        elif (x + y) % 2 == 0 and b > 0.06 and cfg.get('dots', True):
             paint(canvas, mask, '.' if b < 0.34 else (':' if b < 0.60 else '+'), x * cw, y * ch, cw, ch, accent * (0.10 + 0.52 * b))
     # ---- light: bloom, a wash of the accent so it is never a black void, tears for the glitches, scanlines, vignette
     bloom = st.get('bloom', 1.0); glow = cv2.GaussianBlur(canvas, (0, 0), cw * 0.55) * 0.50 + cv2.GaussianBlur(canvas, (0, 0), cw * 2.6) * 0.42
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32); halo = np.exp(-(((xx / W - 0.5) / 0.50) ** 2 + ((yy / H - cyv) / 0.42) ** 2) * 1.5)
-    img = canvas + glow * bloom + halo[:, :, None] * accent * 0.17
+    img = canvas + glow * bloom + halo[:, :, None] * accent * cfg.get('wash', 0.17)
     if st.get('glitch'):
         g2 = np.random.default_rng(seed(cid, key, 'tear')); out = img.copy(); n = 9 if st['glitch'] == 1 else 13
         for _ in range(n):

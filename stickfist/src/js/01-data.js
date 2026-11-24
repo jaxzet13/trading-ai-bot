@@ -30,17 +30,17 @@ const CARDS = [
   { no: "028", id: "cone",    name: "Cone",    sub: "traffic cone",  rar: "common",   chars: 6432,  val: 9,  tint: "#ffd27a", cap: "caution: confident.",         styles: true },
   { no: "029", id: "tempest", name: "Tempest", sub: "storm",         rar: "uncommon", chars: 7260,  val: 21,  tint: "#a9c9ff", cap: "weather is a choice.",         styles: true },
   { no: "030", id: "surge",   name: "Surge",   sub: "big wave",      rar: "uncommon", chars: 15750, val: 31,  tint: "#9fe8ff", cap: "ride it before it breaks.",    styles: true },
-  { no: "031", id: "kraken",  name: "Kraken",  sub: "tentacles",     rar: "rare",     chars: 28000, val: 233, tint: "#c9a5ff", cap: "it was always down there.",    styles: true },
+  { no: "031", id: "kraken",  name: "Kraken",  sub: "tentacles",     rar: "rare",     chars: 28000, val: 233, tint: "#9fe8d8", cap: "it was always down there.",    styles: true },
   // ---- Moonshot: one launch, five altitudes. The higher the card, the rarer it is.
   { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "common",    chars: 8736,   val: 14,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
   { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "uncommon",  chars: 10080,  val: 35,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
-  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "rare",      chars: 40320,  val:  1134,  tint: "#ff7a6a", cap: "gravity lost the argument.",    styles: true },
+  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "rare",      chars: 40320,  val:  1134,  tint: "#ffb070", cap: "gravity lost the argument.",    styles: true },
   { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "epic",      chars: 123480, val: 1667, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
   { no: "025", set: "ms", id: "luna",     name: "Luna",     sub: "first flag",    rar: "legendary", chars: 448800, val: 4145, tint: "#b8d4ff", cap: "to the moon was never a joke.", styles: true },
   // ---- more Moonshot cards, each at the altitude (and worth) of a card already there
   { no: "032", set: "ms", id: "spark",     name: "Spark",     sub: "sparkler",     rar: "common",   chars: 8736,   val: 16,   tint: "#ffb070", cap: "small things start fires.", styles: true },
-  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 41,   tint: "#a8ffbe", cap: "three. two. one.",           styles: true },
-  { no: "034", set: "ms", id: "booster",   name: "Booster",   sub: "stage split",  rar: "rare",     chars: 40320,  val:  1333, tint: "#ffd27a", cap: "dead weight, dropped.",      styles: true },
+  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 41,   tint: "#ff8a7a", cap: "three. two. one.",           styles: true },
+  { no: "034", set: "ms", id: "booster",   name: "Booster",   sub: "stage split",  rar: "rare",     chars: 40320,  val:  1333, tint: "#ffc98a", cap: "dead weight, dropped.",      styles: true },
   { no: "035", set: "ms", id: "flare",     name: "Flare",     sub: "signal flare", rar: "common",   chars: 8736,   val: 19,   tint: "#ff8a7a", cap: "the sky has been told.",     styles: true },
   { no: "036", set: "ms", id: "bubble",    name: "Bubble",    sub: "fishbowl helmet", rar: "common", chars: 8736,  val: 21,   tint: "#ece7dc", cap: "all systems: smiling.",      styles: true },
   { no: "037", set: "ms", id: "gantry",    name: "Gantry",    sub: "tower arm",    rar: "uncommon", chars: 10080,  val: 47,   tint: "#9fe8ff", cap: "the arm lets go.",           styles: true }

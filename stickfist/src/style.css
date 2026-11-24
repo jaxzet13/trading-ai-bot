@@ -972,3 +972,15 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
   .mbox:not(.slim):not(.rq) .mhead .pricebox { justify-content: center; } .mbox:not(.slim):not(.rq) .mhead .chgs { justify-content: center; }
 }
 .card.v3.sm .hd { justify-content: flex-end; } .card.v3.sm .rr { order: 2; }
+
+/* ---- the pack page's "what next" line, and claiming goals where they were earned ---- */
+.homenext { display: flex; align-items: center; gap: 12px; width: min(420px, 100%); margin: 2px auto 0; padding: 10px 14px; border-radius: 16px; border: 1px solid var(--ln2); background: var(--s1); text-align: left; }
+.homenext[hidden] { display: none; }
+.homenext.rdy { border-color: rgba(59,228,119,.45); background: linear-gradient(100deg, rgba(59,228,119,.16), rgba(59,228,119,.05)); }
+.homenext .hn-main { display: grid; gap: 6px; min-width: 0; flex: 1; } .homenext .hn-main b { font-size: 13.5px; font-weight: 650; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .homenext .hn-main small { font-size: 12px; color: var(--dim); margin-top: -4px; }
+.homenext .gbar { display: block; height: 6px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; } .homenext .gbar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2bbf62, var(--acc)); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.homenext .hn-r { display: grid; justify-items: end; gap: 1px; flex: none; } .homenext .hn-r b { font-size: 14px; font-variant-numeric: tabular-nums; } .homenext .hn-r small { font-size: 11.5px; color: var(--acc); white-space: nowrap; }
+.homenext .hn-ic { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: rgba(59,228,119,.18); color: var(--acc); font-weight: 800; font-size: 14px; }
+.homenext .hn-claim { flex: none; min-height: 38px; padding: 0 14px; font-size: 13.5px; border-radius: 12px; }
+.goalline.claim { display: grid; gap: 10px; justify-items: center; max-width: none; } .goalline.claim .btn { min-height: 44px; padding: 0 18px; font-size: 14.5px; border-radius: 14px; } .goalline.claim .btn b { color: inherit; font-weight: 800; }
+.goalline .claimed { color: var(--acc); font-weight: 700; font-size: 15px; animation: claimpop .45s cubic-bezier(.2,1.4,.4,1); } @keyframes claimpop { from { transform: scale(.7); opacity: 0; } }

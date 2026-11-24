@@ -14,7 +14,7 @@ function movers() { const rows = myMovers(); return { rows, gain: rows.filter(r 
 function fitHomePack() {
   const col = document.querySelector("#homePack"), bt = $("btabs"); if (!col || view !== "home") return; const pc = col.closest(".packcol") || col; pc.style.width = "";
   if (!bt || getComputedStyle(bt).display === "none") return;                                               // only on a phone, where the page must not scroll
-  const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 10, after = ["packmeta", "openBtn", "multiRow", "homeTrust", "homeInvite"].map(id => { const e = id === "packmeta" ? document.querySelector(".packmeta") : $(id); return e && !e.hidden ? e.offsetHeight + 12 : 0; }).reduce((a, b) => a + b, 0);
+  const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 10, after = ["packmeta", "openBtn", "multiRow", "homeTrust", "homeInvite", "homeNext"].map(id => { const e = id === "packmeta" ? document.querySelector(".packmeta") : $(id); return e && !e.hidden ? e.offsetHeight + 12 : 0; }).reduce((a, b) => a + b, 0);
   const ratio = pc.offsetHeight / Math.max(1, pc.offsetWidth) || 1.45, w = Math.max(100, Math.min(300, innerWidth * .74, (bottom - top - after) / ratio)); pc.style.width = Math.floor(w) + "px";
 }
 addEventListener("resize", () => { if (view === "home") fitHomePack(); });
@@ -33,6 +33,7 @@ function renderHome() {
   const hp = $("homePack"); if (hp.dataset.pack !== pk.id) { if (hp._ps) hp._ps.stop(); hp.innerHTML = packHTML(pk); hp.dataset.pack = pk.id; const el = hp.firstChild; tiltPack(el); el.style.cursor = "pointer"; el.onclick = () => openPack(); hp._ps = liveWindow(el, pk); }
   document.body.dataset.pack = pk.id; { const ts = $("tStripe"); if (ts) ts.hidden = !Shop.open(); }
   { const hi = $("homeInvite"), html = homeInviteHTML(); hi.hidden = !html; hi.innerHTML = html; }
+  { const hn = $("homeNext"), html = innerHeight >= 700 || Goals.ready().length ? Goals.homeHTML() : ""; hn.hidden = !html; if (hn.dataset.sig !== html) { hn.dataset.sig = html; hn.innerHTML = html; hn.className = "homenext" + (Goals.ready().length ? " rdy" : ""); } }   // what to aim for next (left out on a short screen unless there is something to claim)
   fitHomePack(); requestAnimationFrame(fitHomePack);
 }
 

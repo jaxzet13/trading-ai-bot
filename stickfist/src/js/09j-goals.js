@@ -39,5 +39,14 @@ const Goals = (() => {
   function badge() {}                                                                      // no badge dots anywhere: a finished goal waits quietly on the Me page and in the pack result
   // the closest goal you haven't finished, for a one-line nudge after a pack
   function next() { const g = LIST.filter(g => !claimed(g) && !done(g) && !g.x).sort((a, b) => b.v() / b.n - a.v() / a.n)[0]; return g ? { g, left: g.n - Math.floor(g.v()) } : null; }
-  return { html, claim, toggle, badge, ready, next, LIST };
+  // every finished goal at once, from wherever you are (the pack result, the pack page): the reward lands where it was earned
+  function claimAll() { const rd = ready(); if (!rd.length) return 0; let n = 0; rd.forEach(g => { got()[g.id] = Date.now(); n += g.r; }); state.freePacks += n; save(); renderChips(); Snd.level(); buzz([30, 40, 30, 40, 60]); return n; }
+  // the pack page's one line about what to aim for: a finished goal to claim, or the closest one and how far it is
+  function homeHTML() {
+    const rd = ready(), tot = rd.reduce((a, g) => a + g.r, 0), nx = next();
+    if (rd.length) return `<span class="hn-ic ok" aria-hidden="true">✓</span><span class="hn-main"><b>${rd.length > 1 ? rd.length + " goals done" : esc(rd[0].t)}</b><small>${rd.length > 1 ? "Free packs waiting" : "Goal done"}</small></span><button class="btn solid free hn-claim" id="homeClaim">Claim +${tot} pack${tot > 1 ? "s" : ""}</button>`;
+    if (!nx) return ""; const v = Math.floor(nx.g.v()), pc = Math.max(.03, Math.min(1, v / nx.g.n));
+    return `<span class="hn-main"><b>Next: ${esc(nx.g.t)}</b><span class="gbar" role="img" aria-label="${v} of ${nx.g.n}"><i style="width:${(pc * 100).toFixed(1)}%"></i></span></span><span class="hn-r"><b>${v}/${nx.g.n}</b><small>+${nx.g.r} free pack${nx.g.r > 1 ? "s" : ""}</small></span>`;
+  }
+  return { html, claim, claimAll, homeHTML, toggle, badge, ready, next, LIST };
 })();

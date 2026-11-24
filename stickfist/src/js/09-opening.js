@@ -152,7 +152,8 @@ const againLabel = pk => (openN() > 1 && maxN(pk) >= 2) ? (() => { const k = Mat
 function goalLine() {
   const nw = SS && SS.fresh ? SS.fresh.size : 0, rd = Goals.ready().length, nx = Goals.next(), parts = [];
   if (nw) parts.push(`<b>${nw} new card${nw > 1 ? "s" : ""}</b> for your collection`);
-  if (rd) parts.push(`<b>${rd} goal${rd > 1 ? "s" : ""} done</b>: claim ${rd > 1 ? "them" : "it"} on Me`); else if (nx && nx.left <= 5) parts.push(`${nx.left} more to “${esc(nx.g.t)}” (+${nx.g.r} free pack${nx.g.r > 1 ? "s" : ""})`);
+  if (rd) { const tot = Goals.ready().reduce((a, g) => a + g.r, 0); return `<div class="goalline claim" id="goalLine">${nw ? `<span><b>${nw} new card${nw > 1 ? "s" : ""}</b> for your collection</span>` : ""}<button class="btn solid free" id="sumClaim"><b>${rd} goal${rd > 1 ? "s" : ""} done</b>&nbsp;· claim +${tot} free pack${tot > 1 ? "s" : ""}</button></div>`; }
+  if (0) parts.push(""); else if (nx && nx.left <= 5) parts.push(`${nx.left} more to “${esc(nx.g.t)}” (+${nx.g.r} free pack${nx.g.r > 1 ? "s" : ""})`);
   return parts.length ? `<p class="goalline">${parts.join(" · ")}</p>` : "";
 }
 function summary() {
