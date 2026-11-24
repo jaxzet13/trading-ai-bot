@@ -41,7 +41,29 @@ const Ref = (() => {
   return { sync, activated, vanity, copy, share, link, info: () => info, text, last: () => last, incoming };
 })();
 
-const BONUS_AT = [[5, 2], [10, 3], [25, 5]], MAX_FRIENDS = 30;
+const BONUS_AT = [[5, 2], [10, 3], [25, 5]], MAX_FRIENDS = 30, REWARD_MAX = BONUS_AT[BONUS_AT.length - 1][0];
+// the rewards bar: a track that fills with every friend, milestone nodes that light up, and a free-pack count that climbs
+function rewardBarHTML(i, compact) {
+  const invited = Math.min(REWARD_MAX, i.invited || 0), fill = invited / REWARD_MAX * 100, next = BONUS_AT.find(([n]) => n > i.invited);
+  const nodes = BONUS_AT.map(([n, b]) => `<div class="rb-node${i.invited >= n ? " hit" : ""}" style="left:${(n / REWARD_MAX * 100).toFixed(1)}%" data-at="${(n / REWARD_MAX * 100).toFixed(1)}"><span class="rb-dot"></span><i>+${b}</i><em>${n}</em></div>`).join("");
+  const note = next ? `<b>${next[0] - i.invited}</b> more friend${next[0] - i.invited > 1 ? "s" : ""} unlocks <b>+${next[1]} bonus packs</b>` : `Every bonus unlocked — thank you!`;
+  return `<div class="rwbar${compact ? " compact" : ""}" data-fill="${fill.toFixed(1)}" data-earned="${i.earned || 0}" data-invited="${i.invited || 0}">
+    <div class="rb-head"><div class="rb-count"><b data-rc>0</b><span>free packs earned</span></div><div class="rb-friends"><b>${i.invited || 0}</b><span>friends joined</span></div></div>
+    <div class="rb-track"><div class="rb-glow"></div><div class="rb-fill" style="width:0%"><span class="rb-head-dot"></span></div>${nodes}</div>
+    <p class="rb-note">${note}</p></div>`;
+}
+// fill the bar and count the number up, popping each milestone as the fill reaches it (TikTok-style, but the reward is free packs)
+function playRewardBars() {
+  document.querySelectorAll(".rwbar").forEach(bar => {
+    if (bar.dataset.played) return; bar.dataset.played = "1";
+    const fill = +bar.dataset.fill || 0, earned = +bar.dataset.earned || 0, fillEl = bar.querySelector(".rb-fill"), num = bar.querySelector("[data-rc]"), nodes = [...bar.querySelectorAll(".rb-node")];
+    if (!fillEl) return;
+    if (reduced) { fillEl.style.width = fill + "%"; if (num) num.textContent = earned; nodes.forEach(n => { if (+n.dataset.at <= fill + .01) n.classList.add("lit"); }); return; }
+    requestAnimationFrame(() => { fillEl.style.transition = "width 1.1s cubic-bezier(.3,1,.4,1)"; fillEl.style.width = fill + "%"; });
+    if (num) countTo(num, 0, earned, n => String(n), 1100);
+    nodes.forEach(n => { const at = +n.dataset.at; if (at <= fill + .01) setTimeout(() => { n.classList.add("lit"); if (n.classList.contains("hit")) { Snd.claim && Snd.claim(); buzz([20, 30, 40]); } }, 1100 * (at / Math.max(1, fill)) + 120); });
+  });
+}
 const GIFT = `<svg class="gift" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8M2 7h20v5H2zM12 21V7M12 7S10.5 3 8 3 5 5.5 7 7h5zM12 7s1.5-4 4-4 3 2.5 1 4h-5z"/></svg>`;
 function inviteBarHTML() {
   const i = Ref.info(); return `<a class="invitelink" href="#/invite"><b>Invite a friend, get a free pack.</b> They get one too.</a>${i && i.invited ? ` <span class="faint">${i.invited} friend${i.invited > 1 ? "s" : ""} so far</span>` : ""}`;
@@ -59,8 +81,8 @@ function inviteHeroHTML() {
   return `<div class="invhero2">
     <div class="ih-head">${GIFT}<div><span class="ih-badge">Free packs</span><h3>Invite friends, get packs</h3></div></div>
     <p class="ih-sub">Send your link. Your friend gets a free pack the moment they join — and you get one when they open it. It's the main free way to get packs.</p>
+    ${API.on && i ? rewardBarHTML(i, true) : `<div class="ih-stats"><div><b>1</b><span>pack per friend</span></div><div><b>+2</b><span>at 5 friends</span></div><div><b>+5</b><span>at 25</span></div></div>`}
     ${action}
-    <div class="ih-stats"><div><b>${joined}</b><span>friends joined</span></div><div><b>${earned}</b><span>packs earned</span></div>${next ? `<div><b>${next[0] - i.invited}</b><span>to +${next[1]} bonus</span></div>` : `<div><b>+2</b><span>at 5 friends</span></div>`}</div>
   </div>`;
 }
 function renderInvite() {
@@ -74,13 +96,13 @@ function renderInvite() {
       <button class="btn solid big" id="shareLink">Share your link</button>
       <div class="linkrow"><input id="invLink" class="linkbox" readonly value="${esc(u)}" aria-label="Your invite link" onfocus="this.select()"><button class="btn" id="copyLink">Copy</button></div></div>
     <div class="invsteps"><div class="istep"><span>1</span>Send your link to a friend.</div><div class="istep"><span>2</span>They join and get a free pack.</div><div class="istep"><span>3</span>They open it — you get one too.</div></div>
-    <div class="invstats"><div><span class="label">friends joined</span><b>${i.joined}</b></div><div><span class="label">opened a pack</span><b>${i.invited}</b></div><div><span class="label">packs you've earned</span><b>${i.earned}</b></div>${i.credits ? `<div class="ready"><span class="label">waiting for you</span><b>${i.credits}</b></div>` : ""}</div>
-    <div class="invbonus"><div class="row" style="justify-content:space-between"><span class="label">Bonus packs</span>${next ? `<span class="small">${i.invited} of ${next[0]} friends</span>` : `<span class="small">all bonuses earned</span>`}</div>
-      ${next ? `<div class="gbar"><i style="width:${(i.invited / next[0] * 100).toFixed(0)}%"></i></div><p class="small" style="margin-top:8px">At ${next[0]} friends you get <b>+${next[1]} bonus packs</b> on top. Tiers: 5 → +2, 10 → +3, 25 → +5.</p>` : `<p class="small">You've earned every bonus. Thank you.</p>`}</div>
+    ${rewardBarHTML(i)}
+    ${i.credits ? `<p class="small invready">${i.credits} free pack${i.credits > 1 ? "s" : ""} waiting — open the app to collect ${i.credits > 1 ? "them" : "it"}.</p>` : ""}
     <form id="vanityForm" autocomplete="off"><span class="label">Make the link yours</span>
       <div class="row"><input id="vanityIn" placeholder="${i.activated ? "YOURNAME" : "open a pack first"}" maxlength="16" spellcheck="false" value="${esc(typed)}" ${i.activated ? "" : "disabled"} style="text-transform:uppercase;min-width:0;flex:1"><button class="btn" type="submit" ${i.activated ? "" : "disabled"}>claim</button></div>
       <div class="small" id="vanityMsg">${i.activated ? "3 to 16 letters or numbers. One change a day. Creators: put your name here and share the link." : "You can pick your own code once you've opened your first pack."}</div></form>
     <p class="small">Rewards are free packs of play-money cards and have no cash value. One reward per friend, up to ${MAX_FRIENDS} friends, and we check for abuse, so invites from the same person or device don't count.</p></div>`;
+  playRewardBars();
 }
 
 /* ---- settings on the Me page ---- */

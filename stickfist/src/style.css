@@ -866,3 +866,28 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .buym .finep { margin: -4px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--faint); } .buym .finep a { color: var(--dim); text-decoration: underline; text-underline-offset: 2px; }
 .buym .btn.ghost { justify-self: center; }
 @media (max-width: 400px) { .amtgrid { gap: 6px; } .amtchip { padding: 11px 6px; } .amtchip b { font-size: 16px; } }
+
+/* ---- the rewards bar: fills with every friend, milestones light up, the pack count climbs ---- */
+.rwbar { padding: 16px 16px 18px; border-radius: 18px; border: 1px solid rgba(59,228,119,.3); background: radial-gradient(130% 120% at 0% 0%, rgba(59,228,119,.14), transparent 60%), linear-gradient(180deg, var(--s2), var(--s1)); box-shadow: var(--sh); }
+.rwbar.compact { padding: 14px; margin-bottom: 14px; }
+.rb-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
+.rb-count b { display: block; font-size: 38px; font-weight: 900; letter-spacing: -.04em; line-height: 1; color: var(--acc); text-shadow: 0 0 22px rgba(59,228,119,.5); font-variant-numeric: tabular-nums; }
+.rb-count span { font-size: 12px; color: var(--dim); font-weight: 600; }
+.rb-friends { text-align: right; } .rb-friends b { display: block; font-size: 20px; font-weight: 800; letter-spacing: -.02em; } .rb-friends span { font-size: 11px; color: var(--dim); }
+.rb-track { position: relative; height: 12px; margin: 26px 6px 0; border-radius: 999px; background: var(--s3); box-shadow: inset 0 1px 3px rgba(0,0,0,.6); overflow: visible; }
+.rb-fill { position: relative; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2bd46a, var(--acc2)); box-shadow: 0 0 16px rgba(59,228,119,.65); min-width: 12px; }
+.rb-fill::after { content: ""; position: absolute; inset: 0; border-radius: 999px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); background-size: 60% 100%; background-repeat: no-repeat; animation: rbShine 2.2s linear infinite; }
+@keyframes rbShine { from { background-position: -60% 0; } to { background-position: 160% 0; } }
+.rb-head-dot { position: absolute; right: -5px; top: 50%; width: 16px; height: 16px; margin-top: -8px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px 2px var(--acc), 0 0 22px 6px rgba(59,228,119,.6); }
+.rb-glow { position: absolute; inset: -40% 0; border-radius: 999px; pointer-events: none; }
+.rb-node { position: absolute; top: 50%; transform: translate(-50%, -50%); display: grid; justify-items: center; }
+.rb-node .rb-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--s3); border: 2px solid var(--ln3); box-shadow: 0 2px 6px rgba(0,0,0,.5); transition: all .3s; }
+.rb-node i { position: absolute; bottom: 22px; font-style: normal; font-size: 12px; font-weight: 800; color: var(--dim); white-space: nowrap; transition: color .3s; }
+.rb-node em { position: absolute; top: 22px; font-style: normal; font-size: 10px; font-weight: 700; color: var(--faint); }
+.rb-node.lit .rb-dot { background: var(--acc); border-color: #fff; box-shadow: 0 0 10px 2px var(--acc), 0 0 24px 6px rgba(59,228,119,.55); }
+.rb-node.lit i { color: var(--acc); }
+.rb-node.lit.hit { animation: rbPop .5s cubic-bezier(.2,1.4,.4,1); }
+@keyframes rbPop { 30% { transform: translate(-50%, -50%) scale(1.5); } }
+.rb-note { margin: 24px 0 0; text-align: center; font-size: 13.5px; color: var(--dim); } .rb-note b { color: var(--acc); font-weight: 800; }
+.invready { text-align: center; color: var(--acc); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .rb-fill::after, .rb-node.lit.hit { animation: none; } }
