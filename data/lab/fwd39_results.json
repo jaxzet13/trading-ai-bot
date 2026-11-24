@@ -1,18 +1,18 @@
 {
- "generated": 1795474893,
+ "generated": 1795482568,
  "fwd_start": 1795353300,
  "frozen_at": 1795351587,
- "days": 1.41,
+ "days": 1.5,
  "markets": {
-  "KXBTC15M": 134,
-  "KXETH15M": 134,
-  "KXSOL15M": 134,
-  "KXXRP15M": 134,
-  "KXHYPE15M": 134,
-  "KXBNB15M": 134,
-  "KXNEAR15M": 134,
-  "KXDOGE15M": 134,
-  "KXZEC15M": 134
+  "KXBTC15M": 143,
+  "KXETH15M": 143,
+  "KXSOL15M": 143,
+  "KXXRP15M": 143,
+  "KXHYPE15M": 143,
+  "KXBNB15M": 143,
+  "KXNEAR15M": 143,
+  "KXDOGE15M": 143,
+  "KXZEC15M": 143
  },
  "n_candidates": 214,
  "bar_t": 3.5,
@@ -22,24 +22,24 @@
   "alpha": 0.05
  },
  "traded": 204,
- "profitable": 122,
- "traded10": 137,
- "profitable10": 85,
+ "profitable": 117,
+ "traded10": 139,
+ "profitable10": 84,
  "passed": 0,
  "by_scope": {
   "ALL": {
    "n": 32,
    "traded": 25,
    "profitable": 14,
-   "best_t": 1.01,
+   "best_t": 0.84,
    "median_pnl": 0.41
   },
   "KXETH15M": {
    "n": 12,
    "traded": 12,
-   "profitable": 4,
-   "best_t": 0.57,
-   "median_pnl": -0.365
+   "profitable": 3,
+   "best_t": 0.4,
+   "median_pnl": -0.585
   },
   "KXHYPE15M": {
    "n": 6,
@@ -53,20 +53,20 @@
    "traded": 46,
    "profitable": 41,
    "best_t": 2.6,
-   "median_pnl": 1.525
+   "median_pnl": 1.58
   },
   "KXSOL15M": {
    "n": 15,
    "traded": 15,
-   "profitable": 3,
-   "best_t": 0.28,
-   "median_pnl": -0.37
+   "profitable": 0,
+   "best_t": 0.0,
+   "median_pnl": -1.06
   },
   "KXXRP15M": {
    "n": 47,
    "traded": 45,
-   "profitable": 27,
-   "best_t": 0.75,
+   "profitable": 26,
+   "best_t": 0.7,
    "median_pnl": 0.34
   },
   "KXZEC15M": {
@@ -74,16 +74,16 @@
    "traded": 56,
    "profitable": 33,
    "best_t": 1.32,
-   "median_pnl": 0.195
+   "median_pnl": 0.2
   }
  },
  "by_family": {
   "fv_drift": {
    "n": 12,
    "traded": 12,
-   "profitable": 4,
-   "best_t": 0.57,
-   "median_pnl": -0.365
+   "profitable": 3,
+   "best_t": 0.4,
+   "median_pnl": -0.585
   },
   "fv_dyn": {
    "n": 24,
@@ -109,23 +109,23 @@
   "fv_lag": {
    "n": 25,
    "traded": 24,
-   "profitable": 7,
-   "best_t": 0.53,
-   "median_pnl": -0.425
+   "profitable": 6,
+   "best_t": 0.67,
+   "median_pnl": -0.505
   },
   "fv_liq": {
    "n": 14,
    "traded": 14,
    "profitable": 12,
-   "best_t": 1.01,
-   "median_pnl": 1.51
+   "best_t": 0.84,
+   "median_pnl": 1.375
   },
   "fv_prev": {
    "n": 2,
    "traded": 2,
    "profitable": 2,
-   "best_t": 0.34,
-   "median_pnl": 0.495
+   "best_t": 0.36,
+   "median_pnl": 0.665
   },
   "fv_ref": {
    "n": 20,
@@ -139,21 +139,21 @@
    "traded": 21,
    "profitable": 12,
    "best_t": 0.94,
-   "median_pnl": 0.06
+   "median_pnl": 0.18
   },
   "fv_session": {
    "n": 6,
    "traded": 6,
    "profitable": 5,
-   "best_t": 0.95,
-   "median_pnl": 1.225
+   "best_t": 1.15,
+   "median_pnl": 1.675
   },
   "fv_shape": {
    "n": 4,
    "traded": 4,
    "profitable": 0,
-   "best_t": -0.14,
-   "median_pnl": -0.95
+   "best_t": -0.45,
+   "median_pnl": -1.585
   },
   "fv_tau": {
    "n": 46,
@@ -172,9 +172,9 @@
   "sized": {
    "n": 10,
    "traded": 10,
-   "profitable": 3,
-   "best_t": 0.28,
-   "median_pnl": -0.22
+   "profitable": 0,
+   "best_t": -0.27,
+   "median_pnl": -1.045
   }
  },
  "top": [
@@ -388,29 +388,6 @@
    "status": "open"
   },
   {
-   "id": "fv_ref:KXNEAR15M:e39.190",
-   "family": "fv_ref",
-   "scope": "KXNEAR15M",
-   "rank": 190,
-   "params": {
-    "start": 4,
-    "end": 13,
-    "edge": 0.13,
-    "band": "20-80",
-    "vol": "60",
-    "vm": 1.55
-   },
-   "t_before": 0.66,
-   "placed": 66,
-   "filled": 51,
-   "pnl": 4.47,
-   "t": 1.26,
-   "win_rate": 0.431,
-   "days_up": 1,
-   "days": 2,
-   "status": "open"
-  },
-  {
    "id": "fv_ref:KXZEC15M:e39.17",
    "family": "fv_ref",
    "scope": "KXZEC15M",
@@ -457,29 +434,6 @@
    "status": "open"
   },
   {
-   "id": "fv_ref:KXNEAR15M:e39.171",
-   "family": "fv_ref",
-   "scope": "KXNEAR15M",
-   "rank": 171,
-   "params": {
-    "start": 4,
-    "end": 12,
-    "edge": 0.13,
-    "band": "20-80",
-    "vol": "blend",
-    "vm": 1.6
-   },
-   "t_before": 1.05,
-   "placed": 62,
-   "filled": 45,
-   "pnl": 4.07,
-   "t": 1.2,
-   "win_rate": 0.422,
-   "days_up": 1,
-   "days": 2,
-   "status": "open"
-  },
-  {
    "id": "fv_tau:KXNEAR15M:e39.113",
    "family": "fv_tau",
    "scope": "KXNEAR15M",
@@ -498,6 +452,98 @@
    "pnl": 2.47,
    "t": 1.19,
    "win_rate": 0.533,
+   "days_up": 1,
+   "days": 2,
+   "status": "open"
+  },
+  {
+   "id": "fv_ref:KXNEAR15M:e39.190",
+   "family": "fv_ref",
+   "scope": "KXNEAR15M",
+   "rank": 190,
+   "params": {
+    "start": 4,
+    "end": 13,
+    "edge": 0.13,
+    "band": "20-80",
+    "vol": "60",
+    "vm": 1.55
+   },
+   "t_before": 0.66,
+   "placed": 70,
+   "filled": 52,
+   "pnl": 4.15,
+   "t": 1.16,
+   "win_rate": 0.423,
+   "days_up": 1,
+   "days": 2,
+   "status": "open"
+  },
+  {
+   "id": "fv_session:KXNEAR15M:e39.88",
+   "family": "fv_session",
+   "scope": "KXNEAR15M",
+   "rank": 88,
+   "params": {
+    "start": 4,
+    "end": 12,
+    "edge": 0.1,
+    "band": "20-80",
+    "sess": "asia",
+    "vm": 1.15
+   },
+   "t_before": 2.22,
+   "placed": 22,
+   "filled": 14,
+   "pnl": 2.64,
+   "t": 1.15,
+   "win_rate": 0.5,
+   "days_up": 2,
+   "days": 2,
+   "status": "open"
+  },
+  {
+   "id": "fv_session:KXNEAR15M:e39.136",
+   "family": "fv_session",
+   "scope": "KXNEAR15M",
+   "rank": 136,
+   "params": {
+    "start": 5,
+    "end": 11,
+    "edge": 0.11,
+    "band": "25-75",
+    "sess": "asia",
+    "vm": 1.2
+   },
+   "t_before": 1.65,
+   "placed": 20,
+   "filled": 14,
+   "pnl": 2.09,
+   "t": 1.11,
+   "win_rate": 0.571,
+   "days_up": 2,
+   "days": 2,
+   "status": "open"
+  },
+  {
+   "id": "fv_ref:KXNEAR15M:e39.171",
+   "family": "fv_ref",
+   "scope": "KXNEAR15M",
+   "rank": 171,
+   "params": {
+    "start": 4,
+    "end": 12,
+    "edge": 0.13,
+    "band": "20-80",
+    "vol": "blend",
+    "vm": 1.6
+   },
+   "t_before": 1.05,
+   "placed": 66,
+   "filled": 46,
+   "pnl": 3.75,
+   "t": 1.1,
+   "win_rate": 0.413,
    "days_up": 1,
    "days": 2,
    "status": "open"
@@ -528,54 +574,6 @@
    "status": "open"
   },
   {
-   "id": "fv_ref:KXNEAR15M:e39.189",
-   "family": "fv_ref",
-   "scope": "KXNEAR15M",
-   "rank": 189,
-   "params": {
-    "start": 4,
-    "end": 12,
-    "edge": 0.13,
-    "band": "20-80",
-    "vol": "60",
-    "vm": 1.55
-   },
-   "t_before": 0.67,
-   "placed": 64,
-   "filled": 50,
-   "pnl": 3.78,
-   "t": 1.08,
-   "win_rate": 0.42,
-   "days_up": 1,
-   "days": 2,
-   "status": "open"
-  },
-  {
-   "id": "fv_liq:ALL:e39.145",
-   "family": "fv_liq",
-   "scope": "ALL",
-   "rank": 145,
-   "params": {
-    "start": 7,
-    "end": 11,
-    "edge": 0.1,
-    "band": "05-95",
-    "max_spr": 0.01,
-    "quote": "stale",
-    "min_vol": 1,
-    "vm": 1.05
-   },
-   "t_before": 1.54,
-   "placed": 27,
-   "filled": 17,
-   "pnl": 3.9,
-   "t": 1.01,
-   "win_rate": 0.294,
-   "days_up": 1,
-   "days": 2,
-   "status": "open"
-  },
-  {
    "id": "fv_ref:KXZEC15M:e39.32",
    "family": "fv_ref",
    "scope": "KXZEC15M",
@@ -595,6 +593,29 @@
    "t": 0.99,
    "win_rate": 0.56,
    "days_up": 2,
+   "days": 2,
+   "status": "open"
+  },
+  {
+   "id": "fv_ref:KXNEAR15M:e39.189",
+   "family": "fv_ref",
+   "scope": "KXNEAR15M",
+   "rank": 189,
+   "params": {
+    "start": 4,
+    "end": 12,
+    "edge": 0.13,
+    "band": "20-80",
+    "vol": "60",
+    "vm": 1.55
+   },
+   "t_before": 0.67,
+   "placed": 68,
+   "filled": 51,
+   "pnl": 3.46,
+   "t": 0.98,
+   "win_rate": 0.412,
+   "days_up": 1,
    "days": 2,
    "status": "open"
   },
@@ -621,29 +642,6 @@
    "win_rate": 0.56,
    "days_up": 2,
    "days": 2,
-   "status": "open"
-  },
-  {
-   "id": "fv_session:KXNEAR15M:e39.88",
-   "family": "fv_session",
-   "scope": "KXNEAR15M",
-   "rank": 88,
-   "params": {
-    "start": 4,
-    "end": 12,
-    "edge": 0.1,
-    "band": "20-80",
-    "sess": "asia",
-    "vm": 1.15
-   },
-   "t_before": 2.22,
-   "placed": 21,
-   "filled": 13,
-   "pnl": 2.19,
-   "t": 0.95,
-   "win_rate": 0.462,
-   "days_up": 1,
-   "days": 1,
    "status": "open"
   },
   {
@@ -716,26 +714,26 @@
    "status": "open"
   },
   {
-   "id": "fv_session:KXNEAR15M:e39.136",
+   "id": "fv_session:KXNEAR15M:e39.159",
    "family": "fv_session",
    "scope": "KXNEAR15M",
-   "rank": 136,
+   "rank": 159,
    "params": {
     "start": 5,
-    "end": 11,
-    "edge": 0.11,
-    "band": "25-75",
+    "end": 13,
+    "edge": 0.1,
+    "band": "20-80",
     "sess": "asia",
-    "vm": 1.2
+    "vm": 1.3
    },
-   "t_before": 1.65,
-   "placed": 19,
-   "filled": 13,
-   "pnl": 1.64,
-   "t": 0.89,
-   "win_rate": 0.538,
-   "days_up": 1,
-   "days": 1,
+   "t_before": 1.16,
+   "placed": 22,
+   "filled": 15,
+   "pnl": 1.75,
+   "t": 0.9,
+   "win_rate": 0.533,
+   "days_up": 2,
+   "days": 2,
    "status": "open"
   },
   {
@@ -808,6 +806,75 @@
    "status": "open"
   },
   {
+   "id": "fv_season:KXZEC15M:e39.35",
+   "family": "fv_season",
+   "scope": "KXZEC15M",
+   "rank": 35,
+   "params": {
+    "start": 7,
+    "end": 11,
+    "edge": 0.1,
+    "band": "20-80",
+    "vol": "tod_ewma60",
+    "vm": 0.7
+   },
+   "t_before": 3.49,
+   "placed": 39,
+   "filled": 24,
+   "pnl": 1.9,
+   "t": 0.81,
+   "win_rate": 0.667,
+   "days_up": 1,
+   "days": 2,
+   "status": "open"
+  },
+  {
+   "id": "fv_session:KXNEAR15M:e39.71",
+   "family": "fv_session",
+   "scope": "KXNEAR15M",
+   "rank": 71,
+   "params": {
+    "start": 4,
+    "end": 11,
+    "edge": 0.1,
+    "band": "25-75",
+    "sess": "asia",
+    "vm": 1.25
+   },
+   "t_before": 2.48,
+   "placed": 22,
+   "filled": 16,
+   "pnl": 1.6,
+   "t": 0.79,
+   "win_rate": 0.5,
+   "days_up": 2,
+   "days": 2,
+   "status": "open"
+  },
+  {
+   "id": "fv_season:KXZEC15M:e39.52",
+   "family": "fv_season",
+   "scope": "KXZEC15M",
+   "rank": 52,
+   "params": {
+    "start": 3,
+    "end": 10,
+    "edge": 0.1,
+    "band": "20-80",
+    "vol": "tod_ewma60",
+    "vm": 0.7
+   },
+   "t_before": 2.84,
+   "placed": 59,
+   "filled": 27,
+   "pnl": 1.89,
+   "t": 0.78,
+   "win_rate": 0.667,
+   "days_up": 1,
+   "days": 2,
+   "status": "open"
+  },
+  {
    "id": "fv_liq:ALL:e39.139",
    "family": "fv_liq",
    "scope": "ALL",
@@ -833,25 +900,73 @@
    "status": "open"
   },
   {
-   "id": "fv_tau:KXXRP15M:e39.201",
-   "family": "fv_tau",
-   "scope": "KXXRP15M",
-   "rank": 201,
+   "id": "fv_liq:ALL:e39.145",
+   "family": "fv_liq",
+   "scope": "ALL",
+   "rank": 145,
    "params": {
     "start": 7,
-    "end": 12,
+    "end": 11,
+    "edge": 0.1,
+    "band": "05-95",
+    "max_spr": 0.01,
+    "quote": "stale",
+    "min_vol": 1,
+    "vm": 1.05
+   },
+   "t_before": 1.54,
+   "placed": 29,
+   "filled": 19,
+   "pnl": 3.01,
+   "t": 0.76,
+   "win_rate": 0.263,
+   "days_up": 1,
+   "days": 3,
+   "status": "open"
+  },
+  {
+   "id": "fv_season:KXZEC15M:e39.42",
+   "family": "fv_season",
+   "scope": "KXZEC15M",
+   "rank": 42,
+   "params": {
+    "start": 7,
+    "end": 11,
     "edge": 0.09,
-    "band": "25-75",
-    "tau_adj": 0.67,
+    "band": "20-80",
+    "vol": "tod_ewma60",
+    "vm": 0.7
+   },
+   "t_before": 3.33,
+   "placed": 45,
+   "filled": 24,
+   "pnl": 1.9,
+   "t": 0.75,
+   "win_rate": 0.667,
+   "days_up": 1,
+   "days": 2,
+   "status": "open"
+  },
+  {
+   "id": "fv_session:KXNEAR15M:e39.158",
+   "family": "fv_session",
+   "scope": "KXNEAR15M",
+   "rank": 158,
+   "params": {
+    "start": 4,
+    "end": 12,
+    "edge": 0.07,
+    "band": "20-80",
+    "sess": "asia",
     "vm": 1.25
    },
-   "t_before": 0.49,
-   "placed": 40,
-   "filled": 31,
-   "pnl": 1.97,
+   "t_before": 1.23,
+   "placed": 26,
+   "filled": 15,
+   "pnl": 1.49,
    "t": 0.75,
-   "win_rate": 0.387,
-   "days_up": 1,
+   "win_rate": 0.467,
+   "days_up": 2,
    "days": 2,
    "status": "open"
   },
@@ -879,29 +994,6 @@
    "status": "open"
   },
   {
-   "id": "fv_season:KXZEC15M:e39.35",
-   "family": "fv_season",
-   "scope": "KXZEC15M",
-   "rank": 35,
-   "params": {
-    "start": 7,
-    "end": 11,
-    "edge": 0.1,
-    "band": "20-80",
-    "vol": "tod_ewma60",
-    "vm": 0.7
-   },
-   "t_before": 3.49,
-   "placed": 38,
-   "filled": 23,
-   "pnl": 1.72,
-   "t": 0.74,
-   "win_rate": 0.652,
-   "days_up": 1,
-   "days": 2,
-   "status": "open"
-  },
-  {
    "id": "fv_season:KXZEC15M:e39.7",
    "family": "fv_season",
    "scope": "KXZEC15M",
@@ -920,29 +1012,6 @@
    "pnl": 1.47,
    "t": 0.74,
    "win_rate": 0.471,
-   "days_up": 2,
-   "days": 2,
-   "status": "open"
-  },
-  {
-   "id": "fv_season:KXZEC15M:e39.21",
-   "family": "fv_season",
-   "scope": "KXZEC15M",
-   "rank": 21,
-   "params": {
-    "start": 2,
-    "end": 12,
-    "edge": 0.1,
-    "band": "25-75",
-    "vol": "tod_ewma60",
-    "vm": 1.0
-   },
-   "t_before": 4.02,
-   "placed": 42,
-   "filled": 22,
-   "pnl": 1.74,
-   "t": 0.73,
-   "win_rate": 0.5,
    "days_up": 2,
    "days": 2,
    "status": "open"
@@ -1019,97 +1088,26 @@
    "status": "open"
   },
   {
-   "id": "fv_liq:ALL:e39.160",
-   "family": "fv_liq",
-   "scope": "ALL",
-   "rank": 160,
-   "params": {
-    "start": 5,
-    "end": 11,
-    "edge": 0.11,
-    "band": "05-95",
-    "max_spr": 0.01,
-    "quote": "stale",
-    "min_vol": 1,
-    "vm": 1.1
-   },
-   "t_before": 1.15,
-   "placed": 31,
-   "filled": 20,
-   "pnl": 2.87,
-   "t": 0.72,
-   "win_rate": 0.25,
-   "days_up": 1,
-   "days": 2,
-   "status": "open"
-  },
-  {
-   "id": "fv_season:KXZEC15M:e39.24",
-   "family": "fv_season",
-   "scope": "KXZEC15M",
-   "rank": 24,
-   "params": {
-    "start": 2,
-    "end": 13,
-    "edge": 0.1,
-    "band": "25-75",
-    "vol": "tod_ewma60",
-    "vm": 1.0
-   },
-   "t_before": 3.88,
-   "placed": 48,
-   "filled": 25,
-   "pnl": 1.82,
-   "t": 0.72,
-   "win_rate": 0.48,
-   "days_up": 2,
-   "days": 2,
-   "status": "open"
-  },
-  {
-   "id": "fv_season:KXZEC15M:e39.52",
-   "family": "fv_season",
-   "scope": "KXZEC15M",
-   "rank": 52,
-   "params": {
-    "start": 3,
-    "end": 10,
-    "edge": 0.1,
-    "band": "20-80",
-    "vol": "tod_ewma60",
-    "vm": 0.7
-   },
-   "t_before": 2.84,
-   "placed": 58,
-   "filled": 26,
-   "pnl": 1.71,
-   "t": 0.7,
-   "win_rate": 0.654,
-   "days_up": 1,
-   "days": 2,
-   "status": "open"
-  },
-  {
-   "id": "fv_season:KXZEC15M:e39.42",
-   "family": "fv_season",
-   "scope": "KXZEC15M",
-   "rank": 42,
+   "id": "fv_tau:KXXRP15M:e39.201",
+   "family": "fv_tau",
+   "scope": "KXXRP15M",
+   "rank": 201,
    "params": {
     "start": 7,
-    "end": 11,
+    "end": 12,
     "edge": 0.09,
-    "band": "20-80",
-    "vol": "tod_ewma60",
-    "vm": 0.7
+    "band": "25-75",
+    "tau_adj": 0.67,
+    "vm": 1.25
    },
-   "t_before": 3.33,
-   "placed": 44,
-   "filled": 23,
-   "pnl": 1.72,
-   "t": 0.68,
-   "win_rate": 0.652,
-   "days_up": 1,
-   "days": 2,
+   "t_before": 0.49,
+   "placed": 43,
+   "filled": 34,
+   "pnl": 1.93,
+   "t": 0.7,
+   "win_rate": 0.382,
+   "days_up": 2,
+   "days": 3,
    "status": "open"
   },
   {
@@ -1138,26 +1136,26 @@
    "status": "open"
   },
   {
-   "id": "fv_session:KXNEAR15M:e39.159",
-   "family": "fv_session",
-   "scope": "KXNEAR15M",
-   "rank": 159,
+   "id": "fv_season:KXZEC15M:e39.49",
+   "family": "fv_season",
+   "scope": "KXZEC15M",
+   "rank": 49,
    "params": {
-    "start": 5,
-    "end": 13,
-    "edge": 0.1,
+    "start": 7,
+    "end": 11,
+    "edge": 0.11,
     "band": "20-80",
-    "sess": "asia",
-    "vm": 1.3
+    "vol": "tod_ewma60",
+    "vm": 0.8
    },
-   "t_before": 1.16,
-   "placed": 21,
-   "filled": 14,
-   "pnl": 1.3,
+   "t_before": 2.95,
+   "placed": 22,
+   "filled": 15,
+   "pnl": 1.25,
    "t": 0.68,
-   "win_rate": 0.5,
-   "days_up": 1,
-   "days": 1,
+   "win_rate": 0.6,
+   "days_up": 2,
+   "days": 2,
    "status": "open"
   },
   {
@@ -1278,96 +1276,26 @@
    "status": "open"
   },
   {
-   "id": "fv_session:KXNEAR15M:e39.71",
-   "family": "fv_session",
-   "scope": "KXNEAR15M",
-   "rank": 71,
-   "params": {
-    "start": 4,
-    "end": 11,
-    "edge": 0.1,
-    "band": "25-75",
-    "sess": "asia",
-    "vm": 1.25
-   },
-   "t_before": 2.48,
-   "placed": 21,
-   "filled": 15,
-   "pnl": 1.15,
-   "t": 0.58,
-   "win_rate": 0.467,
-   "days_up": 1,
-   "days": 1,
-   "status": "open"
-  },
-  {
-   "id": "fv_season:KXZEC15M:e39.49",
+   "id": "fv_season:KXZEC15M:e39.21",
    "family": "fv_season",
    "scope": "KXZEC15M",
-   "rank": 49,
+   "rank": 21,
    "params": {
-    "start": 7,
-    "end": 11,
-    "edge": 0.11,
-    "band": "20-80",
+    "start": 2,
+    "end": 12,
+    "edge": 0.1,
+    "band": "25-75",
     "vol": "tod_ewma60",
-    "vm": 0.8
+    "vm": 1.0
    },
-   "t_before": 2.95,
-   "placed": 21,
-   "filled": 14,
-   "pnl": 1.07,
-   "t": 0.58,
-   "win_rate": 0.571,
-   "days_up": 2,
-   "days": 2,
-   "status": "open"
-  },
-  {
-   "id": "fv_drift:KXETH15M:e39.89",
-   "family": "fv_drift",
-   "scope": "KXETH15M",
-   "rank": 89,
-   "params": {
-    "start": 3,
-    "end": 13,
-    "edge": 0.2,
-    "band": "25-75",
-    "L": 15,
-    "a": -0.25,
-    "vm": 1.05
-   },
-   "t_before": 2.21,
-   "placed": 16,
-   "filled": 14,
-   "pnl": 1.09,
+   "t_before": 4.02,
+   "placed": 43,
+   "filled": 23,
+   "pnl": 1.39,
    "t": 0.57,
-   "win_rate": 0.429,
-   "days_up": 1,
-   "days": 2,
-   "status": "open"
-  },
-  {
-   "id": "fv_tau:KXXRP15M:e39.212",
-   "family": "fv_tau",
-   "scope": "KXXRP15M",
-   "rank": 212,
-   "params": {
-    "start": 6,
-    "end": 11,
-    "edge": 0.09,
-    "band": "25-75",
-    "tau_adj": 0.67,
-    "vm": 1.25
-   },
-   "t_before": 0.22,
-   "placed": 42,
-   "filled": 34,
-   "pnl": 1.49,
-   "t": 0.54,
-   "win_rate": 0.382,
-   "days_up": 1,
-   "days": 2,
+   "win_rate": 0.478,
+   "days_up": 2,
+   "days": 3,
    "status": "open"
   },
   {
@@ -1394,51 +1322,26 @@
    "status": "open"
   },
   {
-   "id": "fv_session:KXNEAR15M:e39.158",
-   "family": "fv_session",
-   "scope": "KXNEAR15M",
-   "rank": 158,
+   "id": "fv_season:KXZEC15M:e39.24",
+   "family": "fv_season",
+   "scope": "KXZEC15M",
+   "rank": 24,
    "params": {
-    "start": 4,
-    "end": 12,
-    "edge": 0.07,
-    "band": "20-80",
-    "sess": "asia",
-    "vm": 1.25
-   },
-   "t_before": 1.23,
-   "placed": 25,
-   "filled": 14,
-   "pnl": 1.04,
-   "t": 0.53,
-   "win_rate": 0.429,
-   "days_up": 1,
-   "days": 1,
-   "status": "open"
-  },
-  {
-   "id": "fv_liq:ALL:e39.184",
-   "family": "fv_liq",
-   "scope": "ALL",
-   "rank": 184,
-   "params": {
-    "start": 6,
-    "end": 11,
+    "start": 2,
+    "end": 13,
     "edge": 0.1,
-    "band": "05-95",
-    "max_spr": 0.02,
-    "quote": "stale",
-    "min_vol": 1,
+    "band": "25-75",
+    "vol": "tod_ewma60",
     "vm": 1.0
    },
-   "t_before": 0.78,
-   "placed": 34,
-   "filled": 17,
-   "pnl": 1.88,
-   "t": 0.52,
-   "win_rate": 0.235,
-   "days_up": 1,
-   "days": 2,
+   "t_before": 3.88,
+   "placed": 50,
+   "filled": 27,
+   "pnl": 1.29,
+   "t": 0.51,
+   "win_rate": 0.444,
+   "days_up": 2,
+   "days": 3,
    "status": "open"
   },
   {
@@ -1513,6 +1416,29 @@
    "status": "open"
   },
   {
+   "id": "fv_tau:KXXRP15M:e39.212",
+   "family": "fv_tau",
+   "scope": "KXXRP15M",
+   "rank": 212,
+   "params": {
+    "start": 6,
+    "end": 11,
+    "edge": 0.09,
+    "band": "25-75",
+    "tau_adj": 0.67,
+    "vm": 1.25
+   },
+   "t_before": 0.22,
+   "placed": 45,
+   "filled": 37,
+   "pnl": 1.45,
+   "t": 0.5,
+   "win_rate": 0.378,
+   "days_up": 2,
+   "days": 3,
+   "status": "open"
+  },
+  {
    "id": "fv_ref:KXNEAR15M:e39.96",
    "family": "fv_ref",
    "scope": "KXNEAR15M",
@@ -1559,31 +1485,102 @@
    "status": "open"
   },
   {
-   "id": "fv_liq:ALL:e39.153",
+   "id": "fv_liq:ALL:e39.160",
    "family": "fv_liq",
    "scope": "ALL",
-   "rank": 153,
+   "rank": 160,
    "params": {
     "start": 5,
     "end": 11,
-    "edge": 0.12,
+    "edge": 0.11,
     "band": "05-95",
     "max_spr": 0.01,
     "quote": "stale",
     "min_vol": 1,
     "vm": 1.1
    },
-   "t_before": 1.33,
-   "placed": 25,
-   "filled": 15,
-   "pnl": 1.67,
-   "t": 0.47,
-   "win_rate": 0.2,
+   "t_before": 1.15,
+   "placed": 34,
+   "filled": 23,
+   "pnl": 1.82,
+   "t": 0.45,
+   "win_rate": 0.217,
+   "days_up": 1,
+   "days": 3,
+   "status": "open"
+  },
+  {
+   "id": "fv_liq:ALL:e39.184",
+   "family": "fv_liq",
+   "scope": "ALL",
+   "rank": 184,
+   "params": {
+    "start": 6,
+    "end": 11,
+    "edge": 0.1,
+    "band": "05-95",
+    "max_spr": 0.02,
+    "quote": "stale",
+    "min_vol": 1,
+    "vm": 1.0
+   },
+   "t_before": 0.78,
+   "placed": 35,
+   "filled": 18,
+   "pnl": 1.61,
+   "t": 0.44,
+   "win_rate": 0.222,
+   "days_up": 1,
+   "days": 2,
+   "status": "open"
+  },
+  {
+   "id": "fv_ref:KXNEAR15M:e39.188",
+   "family": "fv_ref",
+   "scope": "KXNEAR15M",
+   "rank": 188,
+   "params": {
+    "start": 3,
+    "end": 10,
+    "edge": 0.18,
+    "band": "20-80",
+    "vol": "60",
+    "vm": 1.3
+   },
+   "t_before": 0.68,
+   "placed": 28,
+   "filled": 21,
+   "pnl": 0.97,
+   "t": 0.44,
+   "win_rate": 0.381,
+   "days_up": 1,
+   "days": 2,
+   "status": "open"
+  },
+  {
+   "id": "fv_tau:KXNEAR15M:e39.183",
+   "family": "fv_tau",
+   "scope": "KXNEAR15M",
+   "rank": 183,
+   "params": {
+    "start": 2,
+    "end": 10,
+    "edge": 0.18,
+    "band": "20-80",
+    "tau_adj": -0.5,
+    "vm": 1.25
+   },
+   "t_before": 0.79,
+   "placed": 28,
+   "filled": 21,
+   "pnl": 0.97,
+   "t": 0.44,
+   "win_rate": 0.381,
    "days_up": 1,
    "days": 2,
    "status": "open"
   }
  ],
  "selection": "Evolved from the 40 strongest strategies of all earlier batches on their own forward days: parameter steps, crossovers and moves to other coins, screened on the history and the forward days so far at real-money scoring (profitable in both, >= 100 history and >= 20 forward trades), best 300 by t-stat. The forward days so far were used to breed them, so only days after the freeze count as their test.",
- "runtime_s": 11
+ "runtime_s": 5
 }
