@@ -14,10 +14,11 @@ hours 4 dollars loss and you stop it, this is only for the tennis arbitrage not 
 It never touches the crypto bot: separate process, separate log, its own positions.
 
 AUTO mode (python -m tennis auto; account holder, Nov 24: "instead of arbitrage ... a regular tennis auto better
-that has consistent profitability"): the same code, but it bets ONLY strategies that passed their forward test
-(50+ bets on matches that started after they were frozen, t >= 2.5), re-reads that list every 10 minutes, runs
-until stopped (touch STOP_TENNIS_AUTO), keeps its own log (data/tennis/auto_log.jsonl) and stops new bets once
-its realized P&L minus open cost would reach -MAX_LOSS. Until something passes it places no bets.
+that has consistent profitability", then "start them with real money with the same 5 dollar stop loss"): the same
+code, betting the strategies that passed their forward test (50+ bets on new matches, t >= 2.5) or, until one
+does, the top AUTO_N of the newest frozen batch; re-reads that list every 10 minutes, runs until stopped (touch
+STOP_TENNIS_AUTO), keeps its own log (data/tennis/auto_log.jsonl) and stops new bets once its realized P&L minus
+open cost would reach -AUTO_MAX_LOSS.
 """
 from __future__ import annotations
 
@@ -36,7 +37,9 @@ LOG = DATA / "real_test_log.jsonl"
 STOP = ROOT / "STOP_TENNIS_REAL"
 RUN_S = 2 * 3600
 MAX_LOSS = 4.0
+AUTO_MAX_LOSS = 5.0              # account holder, Nov 24: "start them with real money with the same 5 dollar stop loss"
 TOP_N = 3
+AUTO_N = 5
 SLACK_C = 2
 
 
@@ -53,8 +56,10 @@ def _events():
 
 def strategies(auto=False):
     if auto:
+        # strategies that passed the forward test if any; until then the top AUTO_N of the newest frozen batch
+        # (the leaderboard's best that also made money on the hold-out third), as the account holder asked
         strats, passed = paper._strategies()
-        return strats if passed else []
+        return strats if passed else strats[:AUTO_N]
     bs = sorted((DATA / "forward").glob("batch_*.json"))
     return json.loads(bs[-1].read_text())["strategies"][:TOP_N] if bs else []
 
@@ -105,9 +110,9 @@ def realized_and_open(client):
 
 
 def run(log=print, auto=False):
-    global LOG, STOP
+    global LOG, STOP, MAX_LOSS
     if auto:
-        LOG, STOP = DATA / "auto_log.jsonl", ROOT / "STOP_TENNIS_AUTO"
+        LOG, STOP, MAX_LOSS = DATA / "auto_log.jsonl", ROOT / "STOP_TENNIS_AUTO", AUTO_MAX_LOSS
     from kalshi15m import real as KR
     client = KR.KalshiAPI.from_env(KR.PROD)
     strats = strategies(auto)
@@ -118,7 +123,10 @@ def run(log=print, auto=False):
           "balance_crypto": crypto, "run_s": None if auto else RUN_S, "max_loss": MAX_LOSS})
     log(f"tennis {'auto-better' if auto else 'real test'}: {len(strats)} strategies, balance ${total:.2f} "
         f"(crypto shard ${crypto:.2f}), stop at -${MAX_LOSS:.2f}")
-    if not auto:
+    if auto:
+        notify.post("🎾 Tennis auto-better started", [f"{len(strats)} strategies · 1 contract a bet · stops at −${MAX_LOSS:.0f}",
+                                                      *[lab_desc(s) for s in strats]], notify.GREEN)
+    else:
         notify.post("🎾 Real-money test started", [f"Top {len(strats)} strategies · 1 contract a bet · 2 hours · stops at −${MAX_LOSS:.0f}",
                                                    *[lab_desc(s) for s in strats]])
     done = {(e["ticker"], e["strategy"]) for e in _events() if e.get("event") in ("order", "skip_limit")}
