@@ -54,11 +54,13 @@ const Ref = (() => {
 const BONUS_AT = [[5, 2], [10, 3], [25, 5]], MAX_FRIENDS = 30, REWARD_MAX = BONUS_AT[BONUS_AT.length - 1][0];
 // the rewards bar: a track that fills with every friend, milestone nodes that light up, and a free-pack count that climbs
 function rewardBarHTML(i, compact) {
-  const invited = Math.min(REWARD_MAX, i.invited || 0), fill = invited / REWARD_MAX * 100, next = BONUS_AT.find(([n]) => n > i.invited);
-  const nodes = BONUS_AT.map(([n, b]) => `<div class="rb-node${i.invited >= n ? " hit" : ""}" style="left:${(n / REWARD_MAX * 100).toFixed(1)}%" data-at="${(n / REWARD_MAX * 100).toFixed(1)}"><span class="rb-dot"></span><i>+${b}</i><em>${n}</em></div>`).join("");
-  const note = next ? `<b>${next[0] - i.invited}</b> more friend${next[0] - i.invited > 1 ? "s" : ""} unlocks <b>+${next[1]} bonus packs</b>` : `Every bonus unlocked — thank you!`;
+  const invited = Math.min(REWARD_MAX, i.invited || 0), fill = invited / REWARD_MAX * 100, next = BONUS_AT.find(([n]) => n > i.invited), waiting = Math.max(0, (i.joined || 0) - (i.invited || 0));
+  const nodes = BONUS_AT.map(([n, b]) => `<div class="rb-node${i.invited >= n ? " hit" : ""}" style="left:${(n / REWARD_MAX * 100).toFixed(1)}%" data-at="${(n / REWARD_MAX * 100).toFixed(1)}"><span class="rb-dot"></span><i>+${b} bonus</i><em>${n}</em></div>`).join("");
+  const note = next ? `Bonus on top: <b>${next[0] - i.invited}</b> more friend${next[0] - i.invited > 1 ? "s" : ""} for <b>+${next[1]} extra packs</b>` : `Every bonus unlocked — thank you!`;
   return `<div class="rwbar${compact ? " compact" : ""}" data-fill="${fill.toFixed(1)}" data-earned="${i.earned || 0}" data-invited="${i.invited || 0}">
-    <div class="rb-head"><div class="rb-count"><b data-rc>0</b><span>free packs earned</span></div><div class="rb-friends"><b>${i.invited || 0}</b><span>friends joined</span></div></div>
+    <div class="rb-head"><div class="rb-count"><b data-rc>0</b><span>free packs earned</span></div><div class="rb-friends"><b>${i.joined || 0}</b><span>friend${(i.joined || 0) === 1 ? "" : "s"} joined</span></div></div>
+    <div class="rb-rule"><b>1 friend = 1 free pack</b><span>yours the moment they open their first pack</span></div>
+    ${waiting ? `<p class="rb-wait"><b>${waiting}</b> friend${waiting > 1 ? "s have" : " has"} joined but not opened a pack yet. Your pack lands when they do.</p>` : ""}
     <div class="rb-track"><div class="rb-glow"></div><div class="rb-fill" style="width:0%"><span class="rb-head-dot"></span></div>${nodes}</div>
     <p class="rb-note">${note}</p></div>`;
 }

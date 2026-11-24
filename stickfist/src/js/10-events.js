@@ -73,7 +73,7 @@ document.addEventListener("click", e => {
     case "tipX": state.tg = state.tg || {}; state.tg.a2hs = 1; persist(); renderProfile(); break;
     case "hMore": History.toggle(); break;
     case "aboutBtn": aboutModal(); break;
-    case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); Ref.sync(); break;
+    case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; Ref.sync(); break;
   }
 });
 document.addEventListener("change", e => { if (e.target.id === "rqAge") { const b = $("rqPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "rqQty") Sale.qty(); if (e.target.id === "shopAge") { const b = $("shopPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "shopQty" || e.target.id === "shopPack") Shop.qty(); if (e.target.id === "mSort") { MKF.sort = e.target.value; renderMarket(); } if (e.target.id === "cSort") { CF.sort = e.target.value; renderCollection(); } if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });

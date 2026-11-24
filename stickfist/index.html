@@ -914,6 +914,12 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 @media (prefers-reduced-motion: reduce) { .rb-fill::after, .rb-node.lit.hit { animation: none; } }
 
 #codeForm { display: grid; gap: 8px; padding: 14px 16px; border-radius: 16px; background: var(--s1); border: 1px solid var(--ln); } .invby { text-align: center; } .invby b { color: var(--acc); }
+
+.rb-rule { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: -6px 0 4px; padding: 10px 12px; border-radius: 12px; background: rgba(59,228,119,.1); border: 1px solid rgba(59,228,119,.22); }
+.rb-rule b { color: var(--acc); font-size: 15px; font-weight: 800; letter-spacing: -.01em; white-space: nowrap; } .rb-rule span { color: var(--dim); font-size: 12.5px; }
+.rb-wait { margin: 8px 0 0; font-size: 13px; color: var(--dim); line-height: 1.45; } .rb-wait b { color: var(--ink); }
+.rb-node i { font-size: 10.5px; }
+.rb-track .rb-node:last-child i { right: -9px; }
 </style>
 </head>
 <body>
@@ -3325,11 +3331,13 @@ const Ref = (() => {
 const BONUS_AT = [[5, 2], [10, 3], [25, 5]], MAX_FRIENDS = 30, REWARD_MAX = BONUS_AT[BONUS_AT.length - 1][0];
 // the rewards bar: a track that fills with every friend, milestone nodes that light up, and a free-pack count that climbs
 function rewardBarHTML(i, compact) {
-  const invited = Math.min(REWARD_MAX, i.invited || 0), fill = invited / REWARD_MAX * 100, next = BONUS_AT.find(([n]) => n > i.invited);
-  const nodes = BONUS_AT.map(([n, b]) => `<div class="rb-node${i.invited >= n ? " hit" : ""}" style="left:${(n / REWARD_MAX * 100).toFixed(1)}%" data-at="${(n / REWARD_MAX * 100).toFixed(1)}"><span class="rb-dot"></span><i>+${b}</i><em>${n}</em></div>`).join("");
-  const note = next ? `<b>${next[0] - i.invited}</b> more friend${next[0] - i.invited > 1 ? "s" : ""} unlocks <b>+${next[1]} bonus packs</b>` : `Every bonus unlocked — thank you!`;
+  const invited = Math.min(REWARD_MAX, i.invited || 0), fill = invited / REWARD_MAX * 100, next = BONUS_AT.find(([n]) => n > i.invited), waiting = Math.max(0, (i.joined || 0) - (i.invited || 0));
+  const nodes = BONUS_AT.map(([n, b]) => `<div class="rb-node${i.invited >= n ? " hit" : ""}" style="left:${(n / REWARD_MAX * 100).toFixed(1)}%" data-at="${(n / REWARD_MAX * 100).toFixed(1)}"><span class="rb-dot"></span><i>+${b} bonus</i><em>${n}</em></div>`).join("");
+  const note = next ? `Bonus on top: <b>${next[0] - i.invited}</b> more friend${next[0] - i.invited > 1 ? "s" : ""} for <b>+${next[1]} extra packs</b>` : `Every bonus unlocked — thank you!`;
   return `<div class="rwbar${compact ? " compact" : ""}" data-fill="${fill.toFixed(1)}" data-earned="${i.earned || 0}" data-invited="${i.invited || 0}">
-    <div class="rb-head"><div class="rb-count"><b data-rc>0</b><span>free packs earned</span></div><div class="rb-friends"><b>${i.invited || 0}</b><span>friends joined</span></div></div>
+    <div class="rb-head"><div class="rb-count"><b data-rc>0</b><span>free packs earned</span></div><div class="rb-friends"><b>${i.joined || 0}</b><span>friend${(i.joined || 0) === 1 ? "" : "s"} joined</span></div></div>
+    <div class="rb-rule"><b>1 friend = 1 free pack</b><span>yours the moment they open their first pack</span></div>
+    ${waiting ? `<p class="rb-wait"><b>${waiting}</b> friend${waiting > 1 ? "s have" : " has"} joined but not opened a pack yet. Your pack lands when they do.</p>` : ""}
     <div class="rb-track"><div class="rb-glow"></div><div class="rb-fill" style="width:0%"><span class="rb-head-dot"></span></div>${nodes}</div>
     <p class="rb-note">${note}</p></div>`;
 }
@@ -3986,7 +3994,7 @@ document.addEventListener("click", e => {
     case "tipX": state.tg = state.tg || {}; state.tg.a2hs = 1; persist(); renderProfile(); break;
     case "hMore": History.toggle(); break;
     case "aboutBtn": aboutModal(); break;
-    case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; setTimeout(() => Cut.maybeIntro(), 300); Ref.sync(); break;
+    case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; Ref.sync(); break;
   }
 });
 document.addEventListener("change", e => { if (e.target.id === "rqAge") { const b = $("rqPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "rqQty") Sale.qty(); if (e.target.id === "shopAge") { const b = $("shopPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "shopQty" || e.target.id === "shopPack") Shop.qty(); if (e.target.id === "mSort") { MKF.sort = e.target.value; renderMarket(); } if (e.target.id === "cSort") { CF.sort = e.target.value; renderCollection(); } if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
@@ -4060,13 +4068,13 @@ function coinBurst(from, n) {
    ========================================================================== */
 // (when you were last here is kept for the market catch-up only; nothing welcomes you back with a summary)
 awaySince = state.lastSeen || 0; MK.advance(); logWorth(); state.lastSeen = Date.now(); persist(); renderBal(); renderChips(); if (Sale.ret() && location.hash !== "#/limited") location.hash = "#/limited"; route(); renderTape(); Goals.badge(); Sale.load(); Shop.load(); Shop.back();
-if (!state.ageOK) $("gate").hidden = false; else setTimeout(() => Cut.maybeIntro(), 400);
+if (!state.ageOK) $("gate").hidden = false;                 // no intro film: the first thing you see is your free pack
 // the market moves every 20 seconds; redraw whatever is on screen when it does
 let lastTick = MK.tick();
 // the market is live: every number on screen is redrawn once a second, in place, and the once-a-round jobs run when a new round of trading lands
 setInterval(() => { MK.advance(); if (MK.tick() !== lastTick) { lastTick = MK.tick(); logWorth(); persist(); renderTape(); } refreshLive(); habitTick(); }, 1000);
 document.addEventListener("visibilitychange", () => { state.lastSeen = Date.now(); persist(); });
-Ref.sync(); setInterval(Ref.sync, 60000); document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - Ref.last() > 20000) Ref.sync(); });
+Ref.sync(); setInterval(Ref.sync, 60000); setInterval(() => { if (!document.hidden && (view === "invite" || view === "profile")) Ref.sync(); }, 12000); document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - Ref.last() > 20000) Ref.sync(); });
 tickLive(); setInterval(tickLive, 1000);
 setTimeout(() => CARDS.forEach(c => loadImg(imgOf(c))), 700);   // warm the pictures so a reveal never waits on one
 
