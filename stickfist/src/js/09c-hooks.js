@@ -5,7 +5,7 @@
 let tapeAt = 0;
 function renderTape() {
   const el = $("tapeIn"); if (!el || (el.firstChild && Date.now() - tapeAt < 60000)) return; tapeAt = Date.now();
-  const mv = movers().rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24)), fd = MK.feed(6), items = [], rn = MK.runs();
+  const mv = movers().rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24)).slice(0, 12), fd = [], items = [], rn = { up: [] };
   const tk = (cls, a, b) => `<span class="tk ${cls}"><b>${a}</b> ${b}</span>`;
   if (rn.up[0]) items.push(tk("up", "BEST RUN THIS WEEK", `${esc(rn.up[0].c.name.toUpperCase())} ▲ ${pctShort(rn.up[0].up)}`));
   for (let i = 0; i < Math.max(mv.length, fd.length); i++) {

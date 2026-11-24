@@ -32,20 +32,17 @@
 
   <!-- MARKET -->
   <section class="view" id="v-market">
-    <div class="page-head"><a class="back" href="#/profile">‹ Me</a><h1 class="ttl">Market</h1><p>Every card has a price that moves every 20 seconds. The prices come from simulated AI traders, not real people, and everyone sees the same ones. Sell any card whenever you like.</p><p class="live"></p></div>
-    <div id="mHero"></div>
+    <div class="page-head"><a class="back" href="#/profile">‹ Me</a><h1 class="ttl">Movers</h1><p>Every copy you hold has a value of its own. Simulated AI buyers trade each copy separately, so two copies of the same card can go opposite ways.</p></div>
     <div id="mPulse"></div>
-    <div class="sechead"><h3>What's moving</h3><div id="mSeg"></div></div>
-    <div class="hscroll" id="mMovers"></div>
-    <div class="sechead"><h3>All cards</h3></div>
     <div class="filters" id="mFilters"></div>
     <div class="clist" id="mList"></div>
-    <details class="more big"><summary>What the AI traders are doing (simulated)</summary>
-      <div class="trades" id="mTrades"></div>
-      <div class="two" id="mFlips" style="margin-top:26px"></div>
-      <p class="small" id="mFlipNote" style="margin-top:6px"></p>
-    </details>
-    <p class="small" style="margin:18px 0 44px">Selling pays the price minus 10%. <a class="linkbtn" href="#/odds">How the market works</a></p>
+    <details class="more big" id="mHow"><summary>How values work</summary><ul class="plain">
+      <li>A card always comes out of the pack at the same value: its starting value, times its style if it has one.</li>
+      <li>From then on that copy is yours alone. Simulated AI buyers (bots, not people) trade it around the clock. Its value drifts, rushes up when buyers pile in, and drops when they dump it. Rushes fade over a few days.</li>
+      <li>Buyers aren't random. Small details of a copy make them keener or cooler, and each copy is judged on its own. Nobody tells you which details matter: that's the part you learn.</li>
+      <li>On average a copy drifts a little down while you hold it, so holding everything forever is not a plan. Some copies climb a long way. Selling pays 90% of the value.</li>
+      <li>All of this is play money with no cash value.</li></ul></details>
+    <p class="small" style="margin:18px 0 44px">Selling pays the value minus 10%.</p>
   </section>
 
   <!-- PROFILE -->
@@ -59,7 +56,7 @@
     <p class="small" id="pNote"></p>
     <h3 class="sec">History</h3>
     <div id="pHist"></div>
-    <h3 class="sec" id="pMktH">Market</h3>
+    <h3 class="sec" id="pMktH">Moving now</h3>
     <div class="pmkt" id="pMkt"></div>
     <div class="plinks" id="pLinks"></div>
     <details class="more big" id="pMore"><summary>Limits and settings</summary><div id="pLimits" style="margin:16px 0 28px"></div><div id="pSettings"></div></details>

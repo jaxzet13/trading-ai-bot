@@ -12,8 +12,8 @@ const save = () => { logWorth(true); persist(); };
 const boughtOf = id => (state.paid && state.paid[id]) || 0, boughtAll = () => Object.values(state.paid || {}).reduce((a, n) => a + n, 0);       // packs you paid for, per pack and in all
 function startOver() { const keep = { ageOK: state.ageOK, seenIntro: state.seenIntro, uid: state.uid, ref: state.ref, mute: state.mute, fair: state.fair, paid: state.paid, paidSeen: state.paidSeen }; state = Object.assign(fresh(), keep); save(); }
 
-// what a copy is worth right now: the card's live market price, times its style multiple
-const valueOf = c => Math.max(.5, MK.price(BY_NO[c.no]) * (c.fx ? STYLES[c.fx].x : 1));   // in cents, live, not rounded
+// what a copy is worth right now: its own value, set by the simulated buyers trading that one copy (see Val)
+const valueOf = c => Val.now(c);                                                           // in units, live, not rounded
 const sellOf = c => Math.floor(valueOf(c) * SELLBACK);                    // selling pays the price minus 10%
 const costOf = c => c.cost != null ? c.cost : valueOf(c);                 // what a copy cost you, or was worth the moment you pulled it
 const gainOf = c => valueOf(c) / Math.max(1, costOf(c)) - 1;
@@ -23,7 +23,7 @@ const gainOf = c => valueOf(c) / Math.max(1, costOf(c)) - 1;
    While the app is closed nothing in your wallet can change, so the gap is filled in from the market's own price path. Nothing on the profile is made up. */
 const holdingsValue = () => state.vault.reduce((a, c) => a + valueOf(c), 0);
 const netWorth = () => state.coins + holdingsValue();
-const valueAgo = (c, ticks) => Math.max(.5, MK.price(BY_NO[c.no], ticks) * (c.fx ? STYLES[c.fx].x : 1));
+const valueAgo = (c, ticks) => Val.at(c, Date.now() - ticks * MK.TICK, true);
 function logWorth(force) {
   const h = state.hist, t = Date.now(), last = h[h.length - 1]; if (last && !force && t - last[0] < 15000) return;
   if (last && t - last[0] > 12 * 60000 && state.vault.length) for (let ts = Math.max(last[0] + 6e5, t - 7 * 864e5); ts < t - 3e5; ts += 6e5) { const ago = Math.round((t - ts) / MK.TICK); h.push([ts, state.coins + state.vault.reduce((a, c) => a + valueAgo(c, ago), 0), state.s.added]); }
@@ -73,8 +73,8 @@ const _base = {}; const baseEV = pk => _base[pk.id] || (_base[pk.id] = evOf(c =>
 const RTP_CEIL = .95;                                                                                   // a pack is never allowed to return more than 95% on average, whatever the cards are doing
 const _ps = {};
 function packStats(pk) {
-  pk = pk || curPack(); const t = MK.tick(); if (_ps[pk.id] && _ps[pk.id].t === t) return _ps[pk.id];
-  const val = card => MK.tickPrice(card), ev = evOf(val, pk), price = Math.max(clamp(Math.round(pk.price * ev / baseEV(pk)), pk.min, pk.max), Math.ceil(ev / RTP_CEIL)), cap = price * 3, dist = packDist(val, cap, pk);
+  pk = pk || curPack(); const t = 0; if (_ps[pk.id]) return _ps[pk.id];                          // every card leaves the pack at its set value, so the pack's numbers never move
+  const val = card => card.val, ev = evOf(val, pk), price = Math.max(clamp(Math.round(pk.price * ev / baseEV(pk)), pk.min, pk.max), Math.ceil(ev / RTP_CEIL)), cap = price * 3, dist = packDist(val, cap, pk);
   let hit = 0, acc = 0, median = cap; for (let i = price; i <= cap; i++) hit += dist[i]; for (let i = 0; i <= cap; i++) { acc += dist[i]; if (acc >= .5) { median = i; break; } }
   return (_ps[pk.id] = { t, ev, hit, median, rtp: ev / price, price, pk });
 }

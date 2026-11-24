@@ -14,31 +14,16 @@ const selectHTML = (id, opts, cur, label) => `<label class="sortsel"><span>${lab
 // one card on one line: picture, name, a line of its last day, price, change
 const cardRow = (c, o) => `<button class="crow${o.nospark ? " nospark" : ""}" data-card="${c.no}">${thumb(c, o.fx)}<span class="cmain"><b class="nm">${esc(c.name)}</b><span class="sub">${rdot(c)}${o.sub}</span></span>${o.nospark ? "" : `<span class="spark">${o.s ? sparkSVG(o.s) : ""}</span>`}<span class="cval"><b>${o.price}</b>${o.pill}</span></button>`;
 
-/* ---- the market ---- */
+/* ---- movers: every copy you hold, by how it is moving ---- */
 const MKF = { show: "all", set: "all", sort: "move", dir: "up" };
 function renderMarket() {
-  const mv = movers(), rows = mv.rows, n = rows.length, rn = MK.runs(), held = new Set(state.vault.map(c => c.no)); renderHero(rows, rn);
-  const idx = k => rows.reduce((a, r) => a + r.s[k] / r.c.val, 0) / n * 100, iNow = idx(23), iWas = idx(0), upN = rows.filter(r => r.p24 > .0005).length;
-  const heat = rows.slice().sort((a, b) => b.p24 - a.p24).map(r => `<i class="${r.p24 > .0005 ? "up" : r.p24 < -.0005 ? "dn" : "fl"}" style="--a:${(.35 + Math.min(1, Math.abs(r.p24) / .6) * .65).toFixed(2)}" title="${esc(r.c.name)} ${pctShort(r.p24)}"></i>`).join("");
-  const hold = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0);
-  $("mPulse").live = `<div class="pulse"><div class="pa"><span class="label">Market index</span><div class="pbig"><b class="num">${iNow.toFixed(1)}</b>${pill(iNow / iWas - 1)}</div><span class="small">The average price of all ${n} cards today. 100 means every card is at its starting price.</span></div>
-    <div class="pb">${sparkSVG(Array.from({ length: 24 }, (_, k) => idx(k)), true)}</div>
-    <div class="pc"><span class="label">Going up today</span><div class="pbig"><b>${upN}</b><span class="small">of ${n} cards</span></div><div class="heat" role="img" aria-label="${upN} of ${n} cards are up today">${heat}</div></div></div>
-    ${state.vault.length ? `<a class="yours" href="#/profile"><span>Your cards are worth</span><b>${moneyS(hold)}</b>${pill(hold / Math.max(1, basis) - 1)}<span class="go">see them ›</span></a>` : `<a class="yours" href="#/"><span>You don't hold any cards yet</span><b>Open a pack</b><span class="go">›</span></a>`}`;
-  // what is moving
-  const dirUp = MKF.dir === "up", mover = rows.filter(r => dirUp ? r.p24 > .005 : r.p24 < -.005).sort((a, b) => dirUp ? b.p24 - a.p24 : a.p24 - b.p24).slice(0, 6);
-  $("mSeg").live = seg("m", "dir", [["up", "Rising"], ["dn", "Falling"]], MKF.dir);
-  $("mMovers").live = mover.map(r => `<button class="mvc" data-card="${r.c.no}"><span class="mvimg" style="--rc:${RAR[r.c.rar].col}"><img src="${imgOf(r.c, "", true)}" alt="" loading="lazy" draggable="false">${pill(r.p24)}</span><b class="nm">${esc(r.c.name)}</b><span class="mvp">${moneyS(r.now)}</span>${sparkSVG(r.s)}</button>`).join("") || `<p class="small" style="padding:6px 2px">Nothing is ${dirUp ? "up" : "down"} right now.</p>`;
-  // every card
-  $("mFilters").live = seg("m", "show", [["all", "All"], ["up", "Going up"], ["down", "Going down"], ["mine", "Mine"]], MKF.show) + seg("m", "set", [["all", "All packs"], ...Object.keys(SETS).map(k => [k, SETS[k].name])], MKF.set) + selectHTML("mSort", [["move", "Biggest move"], ["price", "Highest price"], ["rare", "Rarest"]], MKF.sort, "Sort");
-  let list = rows.filter(r => (MKF.set === "all" || r.c.set === MKF.set) && (MKF.show === "all" || (MKF.show === "up" && r.p24 > .0005) || (MKF.show === "down" && r.p24 < -.0005) || (MKF.show === "mine" && held.has(r.c.no))));
-  list.sort(MKF.sort === "price" ? (a, b) => b.now - a.now : MKF.sort === "rare" ? (a, b) => RAR[b.c.rar].tier - RAR[a.c.rar].tier || b.now - a.now : (a, b) => Math.abs(b.p24) - Math.abs(a.p24));
-  $("mList").live = list.map(r => { const own = copiesOf(r.c.no).length; return cardRow(r.c, { s: r.s, price: moneyS(r.now), pill: pill(r.p24), sub: `${rarLabel(r.c)}${own ? ` · <span class="own">you have ×${own}</span>` : `<span class="setn"> · ${esc(SETS[r.c.set].name)}</span>`}` }); }).join("") || `<p class="small" style="padding:14px 2px">No cards match. Try another filter.</p>`;
-  // for the curious
-  const fl = MK.flips();
-  $("mFlips").live = `<div><h3 class="sec">Best trades · this week</h3>${fl.best.map(flipRow).join("")}</div><div><h3 class="sec">Worst trades · this week</h3>${fl.worst.map(flipRow).join("")}</div>`;
-  $("mFlipNote").textContent = `Simulated traders, worked out from the real price path and after the 10% selling fee. ${fl.won} of the last ${fl.n} sold for more than they got.`;
-  $("mTrades").live = MK.botFeed(8).map(t => `<div class="trade"><span class="who">${t.name}</span><span>${t.buy ? "bought" : "sold"} ${usd(t.usd)} of ${esc(t.card.name)}</span><span class="dim">at ${money(t.price)}</span><span class="${t.buy ? "up" : "dn"}">${t.buy ? "▲ buy" : "▼ sell"}</span><span class="faint">${agoText(t.ago)}</span></div>`).join("");
+  const rows = myMovers(), n = rows.length, up = rows.filter(r => r.p24 > .0005).length, hold = holdingsValue(), was = rows.reduce((a, r) => a + r.was, 0);
+  $("mPulse").live = n ? `<div class="pulse"><div class="pa"><span class="label">Your cards today</span><div class="pbig"><b class="num">${moneyR(hold)}</b>${pill(was ? hold / was - 1 : 0)}</div><span class="small">${up} of ${n} cop${n === 1 ? "y is" : "ies are"} up in the last 24 hours.</span></div></div>`
+    : `<a class="yours" href="#/"><span>You don't hold any cards yet</span><b>Open a pack</b><span class="go">›</span></a>`;
+  $("mFilters").live = n ? seg("m", "show", [["all", "All"], ["up", "Rising"], ["down", "Falling"]], MKF.show) + selectHTML("mSort", [["move", "Biggest move"], ["price", "Highest value"], ["new", "Newest"]], MKF.sort, "Sort") : "";
+  let list = rows.filter(r => MKF.show === "all" || (MKF.show === "up" && r.p24 > .0005) || (MKF.show === "down" && r.p24 < -.0005));
+  list.sort(MKF.sort === "price" ? (a, b) => b.now - a.now : MKF.sort === "new" ? (a, b) => (b.copy.t || 0) - (a.copy.t || 0) : (a, b) => Math.abs(b.p24) - Math.abs(a.p24));
+  $("mList").live = list.map(r => cardRow(r.c, { fx: r.copy.fx, s: r.s, price: moneyR(r.now), pill: pill(r.p24), sub: `#${r.copy.serial} · ${esc(String(r.copy.code || "").slice(-4))}${r.copy.fx ? " · " + esc(STYLES[r.copy.fx].name) : ""}` })).join("") || (n ? `<p class="small" style="padding:18px 0">Nothing here right now.</p>` : "");
 }
 
 /* ---- the collection ---- */
@@ -58,7 +43,7 @@ function renderCollection() {
   const up = upCopies(), upSum = up.reduce((a, c) => a + sellOf(c), 0);
   $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + (up.length ? `<button class="btn" id="sellUp">sell the ${up.length} that ${up.length === 1 ? "is" : "are"} up · ${money(upSum)}</button>` : "") + (state.vault.length ? (() => { const sum = state.vault.reduce((a, c) => a + sellOf(c), 0), armed = sellAllAt && Date.now() - sellAllAt < 4000; return `<button class="btn ghost" id="sellAll">${armed ? "tap again to sell all" : "sell all"} ${state.vault.length} · ${money(sum)}</button>`; })() : "") + (ex.length || up.length || state.vault.length ? `<span class="small">${ex.length ? "Extras keep your best copy of every card. " : ""}You can undo a sale for a few seconds.</span>` : "");
   $("cFilters").live = seg("c", "show", [["all", "All"], ["found", "Found"], ["missing", "Missing"]], CF.show) + selectHTML("cSort", [["num", "Number"], ["rare", "Rarest first"], ["value", "Most valuable"], ["new", "Newest"]], CF.sort, "Sort") + seg("c", "set", [["all", "All packs"], ...Object.keys(SETS).map(k => [k, SETS[k].name])], CF.set);
-  const val = c => { const b = copiesOf(c.no)[0]; return b ? valueOf(b) : MK.price(c); }, cmp = { num: (a, b) => +a.no - +b.no, rare: (a, b) => RAR[b.rar].tier - RAR[a.rar].tier || +a.no - +b.no, value: (a, b) => val(b) - val(a), new: (a, b) => ((copiesOf(b.no)[0] || { t: 0 }).t) - ((copiesOf(a.no)[0] || { t: 0 }).t) || +a.no - +b.no }[CF.sort];
+  const val = c => { const b = copiesOf(c.no)[0]; return b ? valueOf(b) : c.val; }, cmp = { num: (a, b) => +a.no - +b.no, rare: (a, b) => RAR[b.rar].tier - RAR[a.rar].tier || +a.no - +b.no, value: (a, b) => val(b) - val(a), new: (a, b) => ((copiesOf(b.no)[0] || { t: 0 }).t) - ((copiesOf(a.no)[0] || { t: 0 }).t) || +a.no - +b.no }[CF.sort];
   const tile = c => {
     const cs = copiesOf(c.no), best = cs[0], pk2 = packOf(c);
     return `<div class="ctw"><button class="ctile${best ? "" : " miss"}" data-card="${c.no}" aria-label="${esc(c.name)}"><span class="cimg">${cardHTML(best || { no: c.no }, { sm: true, locked: !best, thumb: true })}${best ? `<span class="cb n">×${cs.length}</span>` : ""}${best && best.fx ? `<span class="cb fx">${STYLES[best.fx].name}</span>` : ""}</span>
