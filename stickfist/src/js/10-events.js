@@ -12,7 +12,6 @@ document.addEventListener("click", e => {
   if (t.dataset.pack) { if (PACK_BY[t.dataset.pack] && state.pack !== t.dataset.pack) { state.pack = t.dataset.pack; persist(); Snd.click(); renderHome(); } return; }
   if (t.dataset.opack) { oddsPack = t.dataset.opack; renderOdds(true); return; }
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
-  if (t.dataset.undo) { undoSale(); return; }
   if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.many) { state.openN = +t.dataset.many || 1; persist(); Snd.click(); if (view === "home") renderHome(); return; }
   if (t.dataset.qsell) { quickSell(t.dataset.qsell); return; }
@@ -20,7 +19,7 @@ document.addEventListener("click", e => {
   if (t.dataset.sell) {
     const c = state.vault.find(x => x.uid === t.dataset.sell), rec = c ? receiptOf(c, true) : null;
     const g = sell([t.dataset.sell]); if (!g) return; soldToast(null, g);
-    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view, true); if (rec && rec.rise > REPLAY_MIN) Share.open(rec); return;
+    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view, true); return;
   }
   if (/^sum/.test(t.id) && SS && performance.now() - SS.sumAt < 500) return;
   switch (t.id) {
@@ -53,7 +52,7 @@ document.addEventListener("click", e => {
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
     case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else if (Shop.has(pk.id)) setTimeout(() => Shop.modal(pk.id), 200); else location.hash = "#/invite"; break; }
     case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { soldToast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`, g); renderCollection(); } break; }
-    case "sellAll": {                                                      // sell everything: the first tap asks, the second sells, and the sale can be undone for a few seconds
+    case "sellAll": {                                                      // sell everything: the first tap asks, the second sells (sales are final)
       const all = state.vault.slice(); if (!all.length) break;
       if (!(sellAllAt && Date.now() - sellAllAt < 4000)) { sellAllAt = Date.now(); renderCollection(); clearTimeout(sellAllT); sellAllT = setTimeout(() => { sellAllAt = 0; if (view === "collection") renderCollection(); }, 4000); break; }
       sellAllAt = 0; clearTimeout(sellAllT); const g = sell(all.map(c => c.uid)); if (g) { soldToast(`Sold all ${all.length} cards for ${money(g)}`, g); renderCollection(); } break; }

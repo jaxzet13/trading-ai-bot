@@ -1664,14 +1664,7 @@ function sell(uids) {
   if (g) { state.coins += g; state.s.sold += g; state.s.realized += realized; lastSale = { copies, g, realized, at: Date.now() }; save(); renderBal(true); Snd.sell(); buzz([25, 35, 25]); }
   return g;
 }
-const soldToast = (msg, g) => toast(msg || "Sold for " + money(g), { key: "undo", label: "Undo" });
-// the sale is reversed exactly: the cards come back as they were and the money goes back. Only the last sale, only for a few seconds, and only if the money is still there.
-function undoSale() {
-  const s = lastSale; if (!s || Date.now() - s.at > 9000) { toast("Too late to undo that."); return; }
-  if (state.coins < s.g) { toast("You've already spent that money, so it can't be undone."); return; }
-  lastSale = null; state.vault.push(...s.copies); state.coins -= s.g; state.s.sold -= s.g; state.s.realized -= s.realized; save(); renderBal(true); show(view, true); if (modalNo && !$("modal").hidden) cardModal(modalNo, true);
-  toast(s.copies.length > 1 ? `Put ${s.copies.length} cards back` : "Put it back in your cards"); Snd.click();
-}
+const soldToast = (msg, g) => toast(msg || "Sold for " + money(g));                        // a sale is final: no undo
 // the copy a quick sell gives up: your only copy, or the cheapest of several (so the best one stays)
 const quickCopy = no => { const cs = copiesOf(no); return cs.length ? cs[cs.length - 1] : null; };
 const quickLabel = no => { const c = quickCopy(no); return c ? `Sell${copiesOf(no).length > 1 ? " extra" : ""} · ${moneyS(sellOf(c))}` : ""; };
@@ -1681,7 +1674,7 @@ const sellBtn = no => copiesOf(no).length ? `<button class="sellq" data-qsell="$
 const REPLAY_MIN = .5, replayable = c => gainOf(c) > REPLAY_MIN;
 function quickSell(no) {
   const c = quickCopy(no); if (!c) return; const rec = receiptOf(c, true), g = sell([c.uid]); if (!g) return;
-  soldToast("Sold " + BY_NO[no].name + " for " + money(g), g); if (!$("modal").hidden) closeModal(); show(view, true); if (rec.rise > REPLAY_MIN) Share.open(rec);
+  soldToast("Sold " + BY_NO[no].name + " for " + money(g), g); if (!$("modal").hidden) closeModal(); show(view, true);      // selling never opens the replay
 }
 
 /* ============================================================================
@@ -1727,7 +1720,7 @@ function renderCollection() {
     <div class="stat"><span class="label">Styles found</span><div class="sbig"><b>${fx}</b><span>of ${FX_ALL}</span></div><div class="bar"><i style="width:${fx / FX_ALL * 100}%"></i></div></div>
     <div class="stat go"><span class="label">Next ${esc(pk.name)} pack</span><div class="sbig"><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span>a new card</span></div><button class="btn small solid" data-open>${state.freePacks ? "open free pack" : "open pack"}</button></div>`;
   const up = upCopies(), upSum = up.reduce((a, c) => a + sellOf(c), 0);
-  $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + (up.length ? `<button class="btn" id="sellUp">sell the ${up.length} that ${up.length === 1 ? "is" : "are"} up · ${money(upSum)}</button>` : "") + (state.vault.length ? (() => { const sum = state.vault.reduce((a, c) => a + sellOf(c), 0), armed = sellAllAt && Date.now() - sellAllAt < 4000; return `<button class="btn ghost" id="sellAll">${armed ? "tap again to sell all" : "sell all"} ${state.vault.length} · ${money(sum)}</button>`; })() : "") + (ex.length || up.length || state.vault.length ? `<span class="small">${ex.length ? "Extras keep your best copy of every card. " : ""}You can undo a sale for a few seconds.</span>` : "");
+  $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + (up.length ? `<button class="btn" id="sellUp">sell the ${up.length} that ${up.length === 1 ? "is" : "are"} up · ${money(upSum)}</button>` : "") + (state.vault.length ? (() => { const sum = state.vault.reduce((a, c) => a + sellOf(c), 0), armed = sellAllAt && Date.now() - sellAllAt < 4000; return `<button class="btn ghost" id="sellAll">${armed ? "tap again to sell all" : "sell all"} ${state.vault.length} · ${money(sum)}</button>`; })() : "") + (ex.length || up.length || state.vault.length ? `<span class="small">${ex.length ? "Extras keep your best copy of every card. " : ""}Sales are final.</span>` : "");
   $("cFilters").live = seg("c", "show", [["all", "All"], ["found", "Found"], ["missing", "Missing"]], CF.show) + selectHTML("cSort", [["num", "Number"], ["rare", "Rarest first"], ["value", "Most valuable"], ["new", "Newest"]], CF.sort, "Sort") + seg("c", "set", [["all", "All packs"], ...Object.keys(SETS).map(k => [k, SETS[k].name])], CF.set);
   const val = c => { const b = copiesOf(c.no)[0]; return b ? valueOf(b) : c.val; }, cmp = { num: (a, b) => +a.no - +b.no, rare: (a, b) => RAR[b.rar].tier - RAR[a.rar].tier || +a.no - +b.no, value: (a, b) => val(b) - val(a), new: (a, b) => ((copiesOf(b.no)[0] || { t: 0 }).t) - ((copiesOf(a.no)[0] || { t: 0 }).t) || +a.no - +b.no }[CF.sort];
   const tile = c => {
@@ -3355,7 +3348,6 @@ document.addEventListener("click", e => {
   if (t.dataset.pack) { if (PACK_BY[t.dataset.pack] && state.pack !== t.dataset.pack) { state.pack = t.dataset.pack; persist(); Snd.click(); renderHome(); } return; }
   if (t.dataset.opack) { oddsPack = t.dataset.opack; renderOdds(true); return; }
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
-  if (t.dataset.undo) { undoSale(); return; }
   if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.many) { state.openN = +t.dataset.many || 1; persist(); Snd.click(); if (view === "home") renderHome(); return; }
   if (t.dataset.qsell) { quickSell(t.dataset.qsell); return; }
@@ -3363,7 +3355,7 @@ document.addEventListener("click", e => {
   if (t.dataset.sell) {
     const c = state.vault.find(x => x.uid === t.dataset.sell), rec = c ? receiptOf(c, true) : null;
     const g = sell([t.dataset.sell]); if (!g) return; soldToast(null, g);
-    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view, true); if (rec && rec.rise > REPLAY_MIN) Share.open(rec); return;
+    if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view, true); return;
   }
   if (/^sum/.test(t.id) && SS && performance.now() - SS.sumAt < 500) return;
   switch (t.id) {
@@ -3396,7 +3388,7 @@ document.addEventListener("click", e => {
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
     case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else if (Shop.has(pk.id)) setTimeout(() => Shop.modal(pk.id), 200); else location.hash = "#/invite"; break; }
     case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { soldToast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`, g); renderCollection(); } break; }
-    case "sellAll": {                                                      // sell everything: the first tap asks, the second sells, and the sale can be undone for a few seconds
+    case "sellAll": {                                                      // sell everything: the first tap asks, the second sells (sales are final)
       const all = state.vault.slice(); if (!all.length) break;
       if (!(sellAllAt && Date.now() - sellAllAt < 4000)) { sellAllAt = Date.now(); renderCollection(); clearTimeout(sellAllT); sellAllT = setTimeout(() => { sellAllAt = 0; if (view === "collection") renderCollection(); }, 4000); break; }
       sellAllAt = 0; clearTimeout(sellAllT); const g = sell(all.map(c => c.uid)); if (g) { soldToast(`Sold all ${all.length} cards for ${money(g)}`, g); renderCollection(); } break; }

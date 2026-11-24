@@ -125,14 +125,7 @@ function sell(uids) {
   if (g) { state.coins += g; state.s.sold += g; state.s.realized += realized; lastSale = { copies, g, realized, at: Date.now() }; save(); renderBal(true); Snd.sell(); buzz([25, 35, 25]); }
   return g;
 }
-const soldToast = (msg, g) => toast(msg || "Sold for " + money(g), { key: "undo", label: "Undo" });
-// the sale is reversed exactly: the cards come back as they were and the money goes back. Only the last sale, only for a few seconds, and only if the money is still there.
-function undoSale() {
-  const s = lastSale; if (!s || Date.now() - s.at > 9000) { toast("Too late to undo that."); return; }
-  if (state.coins < s.g) { toast("You've already spent that money, so it can't be undone."); return; }
-  lastSale = null; state.vault.push(...s.copies); state.coins -= s.g; state.s.sold -= s.g; state.s.realized -= s.realized; save(); renderBal(true); show(view, true); if (modalNo && !$("modal").hidden) cardModal(modalNo, true);
-  toast(s.copies.length > 1 ? `Put ${s.copies.length} cards back` : "Put it back in your cards"); Snd.click();
-}
+const soldToast = (msg, g) => toast(msg || "Sold for " + money(g));                        // a sale is final: no undo
 // the copy a quick sell gives up: your only copy, or the cheapest of several (so the best one stays)
 const quickCopy = no => { const cs = copiesOf(no); return cs.length ? cs[cs.length - 1] : null; };
 const quickLabel = no => { const c = quickCopy(no); return c ? `Sell${copiesOf(no).length > 1 ? " extra" : ""} · ${moneyS(sellOf(c))}` : ""; };
@@ -142,5 +135,5 @@ const sellBtn = no => copiesOf(no).length ? `<button class="sellq" data-qsell="$
 const REPLAY_MIN = .5, replayable = c => gainOf(c) > REPLAY_MIN;
 function quickSell(no) {
   const c = quickCopy(no); if (!c) return; const rec = receiptOf(c, true), g = sell([c.uid]); if (!g) return;
-  soldToast("Sold " + BY_NO[no].name + " for " + money(g), g); if (!$("modal").hidden) closeModal(); show(view, true); if (rec.rise > REPLAY_MIN) Share.open(rec);
+  soldToast("Sold " + BY_NO[no].name + " for " + money(g), g); if (!$("modal").hidden) closeModal(); show(view, true);      // selling never opens the replay
 }
