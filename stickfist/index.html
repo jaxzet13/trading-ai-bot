@@ -872,6 +872,21 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 #vanityForm { display: grid; gap: 8px; }
 /* the quiet nudge under a pack result */
 .invnudge { width: 100%; max-width: 360px; margin: 10px auto 0; gap: 8px; color: var(--acc); background: rgba(59,228,119,.08); border-color: rgba(59,228,119,.25); } .invnudge .gift { width: 16px; height: 16px; }
+
+/* ---- add money: a quick, tempting amount picker (no second age gate — 18+ is confirmed at the app's gate) ---- */
+.minfo.buym { gap: 16px; }
+.buym h2 { font-size: 28px; font-weight: 800; letter-spacing: -.03em; }
+.buyline { margin: -6px 0 0; color: var(--dim); font-size: 14px; line-height: 1.5; } .buyline b { color: var(--ink); }
+.amtgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.amtchip { display: grid; gap: 1px; align-content: center; padding: 13px 8px; border-radius: 15px; border: 1px solid var(--ln2); background: var(--s1); color: var(--ink); text-align: center; }
+.amtchip b { font-size: 18px; font-weight: 800; letter-spacing: -.02em; } .amtchip small { font-size: 11.5px; color: var(--dim); }
+.amtchip:active { transform: scale(.96); }
+.amtchip.on { border-color: var(--acc); background: linear-gradient(180deg, rgba(59,228,119,.16), rgba(59,228,119,.05)); box-shadow: 0 0 0 1px var(--acc) inset, 0 8px 24px -12px rgba(59,228,119,.7); }
+.amtchip.on small { color: var(--acc); }
+.buym .btn.solid.big { width: 100%; }
+.buym .finep { margin: -4px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--faint); } .buym .finep a { color: var(--dim); text-decoration: underline; text-underline-offset: 2px; }
+.buym .btn.ghost { justify-self: center; }
+@media (max-width: 400px) { .amtgrid { gap: 6px; } .amtchip { padding: 11px 6px; } .amtchip b { font-size: 16px; } }
 </style>
 </head>
 <body>
@@ -3613,22 +3628,27 @@ const Shop = (() => {
   }
   const chosen = () => { const s = $("shopPack"); return s ? s.value : cash() ? "cash" : curPack().id; }, count = () => { const q = $("shopQty"); return q ? +q.value || 1 : 1; };
   const total = () => rmoney(price(chosen()) * count());
-  function qty() { const b = $("shopPay"); if (b && !b.dataset.busy) b.textContent = "Pay " + total(); const e = $("shopEach"); if (e) e.textContent = rmoney(price(chosen())) + " per pack"; }
+  function qty() { const b = $("shopPay"); if (b && !b.dataset.busy) b.textContent = cash() ? `Add ${total()} · open ${packsFor(count())} pack${packsFor(count()) === 1 ? "" : "s"}` : "Pay " + total(); const e = $("shopEach"); if (e) e.textContent = rmoney(price(chosen())) + " per pack"; }
+  // pick an amount: update the hidden value, the chips and the button
+  function setAmt(n) { const q = $("shopQty"); if (!q) return; q.value = n; document.querySelectorAll("#shopAmts .amtchip").forEach(c => { const on = +c.dataset.addamt === n; c.classList.toggle("on", on); c.setAttribute("aria-pressed", on); }); qty(); buzz(8); }
   const AMOUNTS = [1, 2, 3, 5, 10, 15, 25];
+  // how many packs an amount of play money buys, at the pack in front of you — the honest, tangible reason to add more
+  const packsFor = n => Math.max(1, Math.floor(n * (price("cash") || 100) / 100 * UNIT / Math.max(1, packPrice(curPack()))));
   function cashModal(w) {
     want = w || want;                                               // real money adds play money to the balance, $1.00 for each dollar: no bonuses, no bundles
     const room = Math.max(0, Math.floor(((cfg.cap || 0) - (cfg.spentToday || 0)) / (price("cash") || 100))), opts = AMOUNTS.filter(n => n <= Math.min(cfg.maxQty || 25, room));
     if (!opts.length) { openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Daily limit reached</h2></div><p class="dim">You've added the most you can today (${rmoney(cfg.cap || 0)}). It resets tomorrow (UTC).</p><div class="row"><button class="btn" data-close>ok</button></div></div>`, true); return; }
-    const need = want && PACK_BY[want] ? Math.max(1, Math.ceil((packPrice(PACK_BY[want]) - state.coins) / UNIT)) : 0, pick = opts.find(n => n >= need) || opts[opts.length - 1];
-    openModal(`<div class="minfo"><div><span class="label">real money</span><h2>Add money</h2></div>
-      <p class="dim">Real money adds <b>play money</b> to your balance: $1.00 for every $1.00 you pay, with no bonuses. You spend it on packs. Packs are random, and the odds are on the <a href="#/odds" data-close>odds page</a>. <b>Play money and cards have no cash value, and nothing in STIXX can be cashed out.</b> The prices you see in the game are simulated.</p>
-      <div class="rqbuyh"><label class="rqqty" style="justify-items:start"><span class="small">Add</span><select id="shopQty" aria-label="How much to add">${opts.map(n => `<option value="${n}"${n === pick ? " selected" : ""}>${rmoney(n * (price("cash") || 100))}</option>`).join("")}</select></label></div>
-      <p class="small" style="margin:-6px 0 0">Your balance is ${money(state.coins)} now.</p>
-      <label class="rqage"><input type="checkbox" id="shopAge"><span>I'm 18 or older, I understand the packs are random, and I'm spending real money.</span></label>
-      <button class="btn solid big" id="shopPay" disabled>Pay ${rmoney(pick * (price("cash") || 100))}</button>
+    // what to pre-select: enough for the pack you came to open, or a sensible middle amount — never the biggest
+    const need = want && PACK_BY[want] ? Math.max(1, Math.ceil((packPrice(PACK_BY[want]) - state.coins) / UNIT)) : 0;
+    const pick = need ? (opts.find(n => n >= need) || opts[opts.length - 1]) : (opts.includes(5) ? 5 : opts[Math.min(opts.length - 1, Math.max(0, Math.ceil(opts.length / 2) - 1))]);
+    openModal(`<div class="minfo buym"><div><span class="label">add play money</span><h2>Add money</h2></div>
+      <p class="buyline">Open more packs. <b>$1 adds $1</b> of play money — no cash value, nothing is cashed out.</p>
+      <div class="amtgrid" id="shopAmts">${opts.map(n => `<button type="button" class="amtchip${n === pick ? " on" : ""}" data-addamt="${n}" aria-pressed="${n === pick}"><b>${rmoney(n * 100)}</b><small>${packsFor(n)} pack${packsFor(n) === 1 ? "" : "s"}</small></button>`).join("")}</div>
+      <input type="hidden" id="shopQty" value="${pick}">
+      <button class="btn solid big" id="shopPay">Add ${rmoney(pick * 100)} · open ${packsFor(pick)} pack${packsFor(pick) === 1 ? "" : "s"}</button>
       <div class="trust"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Secure checkout by <b>Stripe</b></span><span class="pays">Apple Pay · Google Pay · Card</span></div>
-      <p class="small">Apple Pay, Google Pay or card, on Stripe's secure page. STIXX never sees your card. You are only charged after you confirm there. There is a limit of ${rmoney(cfg.cap || 0)} a day${cfg.spentToday > 0 ? ` (you have used ${rmoney(cfg.spentToday)} today)` : ""}. <a href="${esc(cfg.terms || "#")}" target="_blank" rel="noopener">Terms and refunds</a>.</p>
-      <div class="row"><button class="btn ghost" data-close>not now</button></div></div>`, true);
+      <p class="finep">18+ · Stripe's secure page, STIXX never sees your card · ${rmoney(cfg.cap || 0)}/day limit${cfg.spentToday > 0 ? ` (${rmoney(cfg.spentToday)} used)` : ""} · <a href="${esc(cfg.terms || "#")}" target="_blank" rel="noopener">Terms</a></p>
+      <button class="btn ghost" data-close>not now</button></div>`, true);
   }
   function modal(w) {
     if (cash()) { cashModal(w); return; } want = w || null;
@@ -3638,8 +3658,7 @@ const Shop = (() => {
       <div class="rqbuyh"><label class="rqqty" style="justify-items:start"><span class="small">Pack</span><select id="shopPack" aria-label="Which pack">${ids.map(id => `<option value="${id}"${id === cur ? " selected" : ""}>${esc(PACK_BY[id].name)} · ${rmoney(price(id))}</option>`).join("")}</select></label>
         <label class="rqqty"><span class="small">How many</span><select id="shopQty" aria-label="How many packs">${Array.from({ length: cfg.maxQty || 1 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}</select></label></div>
       <p class="small" style="margin:-6px 0 0"><b id="shopEach">${rmoney(price(cur))} per pack</b> · one flat price: no bundles, no discounts</p>
-      <label class="rqage"><input type="checkbox" id="shopAge"><span>I'm 18 or older, I understand the packs are random, and I'm spending real money.</span></label>
-      <button class="btn solid big" id="shopPay" disabled>Pay ${rmoney(price(cur))}</button>
+      <button class="btn solid big" id="shopPay">Pay ${rmoney(price(cur))}</button>
       <p class="small">Apple Pay, Google Pay or card, on Stripe's secure page. STIXX never sees your card. You are only charged after you confirm there. There is a limit of ${rmoney(cfg.cap || 0)} a day${cfg.spentToday > 0 ? ` (you have used ${rmoney(cfg.spentToday)} today)` : ""}. <a href="${esc(cfg.terms || "#")}" target="_blank" rel="noopener">Terms and refunds</a>.</p>
       <div class="row"><button class="btn ghost" data-close>not now</button></div></div>`, true);
   }
@@ -3651,7 +3670,7 @@ const Shop = (() => {
   const PEND = "stixx-pending-pay", setPending = sid => { try { localStorage.setItem(PEND, JSON.stringify({ sid, t: Date.now(), want })); } catch (e) {} }, getPending = () => { try { const p = JSON.parse(localStorage.getItem(PEND) || "null"); return p && Date.now() - p.t < 36e5 ? p : null; } catch (e) { return null; } }, clearPending = () => { try { localStorage.removeItem(PEND); } catch (e) {} };
   function drop() { if (ec) { try { ec.destroy(); } catch (e) {} ec = null; } }
   async function pay() {
-    const age = $("shopAge") && $("shopAge").checked, b = $("shopPay"); if (!age || !b || b.dataset.busy) return;
+    const b = $("shopPay"); if (!state.ageOK || !b || b.dataset.busy) return;      // 18+ was confirmed at the age gate when the app opened; no second checkbox
     b.dataset.busy = 1; b.disabled = true; b.textContent = "Opening checkout…";
     const S = cfg.pk ? loadStripe() : Promise.resolve(null);                                              // fetch Stripe's script while the session is made
     const r = await API.post("shop/checkout", { uid: state.uid, pack: chosen(), qty: count(), age: true, embedded: !!cfg.pk });
@@ -3660,7 +3679,7 @@ const Shop = (() => {
       const r2 = await API.post("shop/checkout", { uid: state.uid, pack: chosen(), qty: count(), age: true });      // the script didn't load: use Stripe's page instead
       if (r2 && r2.url) { setPending(r2.sid); location.href = r2.url; return; }
     } else if (r && typeof r.url === "string" && /^https:\/\//.test(r.url)) { setPending(r.sid); location.href = r.url; return; }
-    delete b.dataset.busy; b.disabled = !($("shopAge") && $("shopAge").checked); qty(); toast((r && r.error) || "Couldn't reach the server. You have not been charged.");
+    delete b.dataset.busy; b.disabled = false; qty(); toast((r && r.error) || "Couldn't reach the server. You have not been charged.");
   }
   async function mountEmbedded(Stripe, r) {
     drop(); const st = Stripe(cfg.pk); setPending(r.sid);
@@ -3692,7 +3711,7 @@ const Shop = (() => {
   }
   // a payment started before the app was closed or sent to Stripe's page: when you come back to the app, finish it
   function resume() { const p = getPending(); if (!p || !p.sid || ec) return; if (p.want) want = p.want; pendingT = setTimeout(() => API.get("shop/order?sid=" + encodeURIComponent(p.sid)).then(r => { if (r && r.ok) finish(p.sid, true); }), 150); }
-  addEventListener("pageshow", e => { if (e.persisted) { const b = $("shopPay"); if (b) { delete b.dataset.busy; b.disabled = !($("shopAge") && $("shopAge").checked); qty(); } } resume(); });
+  addEventListener("pageshow", e => { if (e.persisted) { const b = $("shopPay"); if (b) { delete b.dataset.busy; b.disabled = false; qty(); } } resume(); });
   document.addEventListener("visibilitychange", () => { if (!document.hidden) resume(); });
   const done = (title, text, button) => openModal(`<div class="minfo"><div><span class="label">real money</span><h2>${esc(title)}</h2></div><p class="dim" id="shopDoneTxt">${esc(text)}</p><div class="row">${button ? `<button class="btn solid" id="shopOpen">open a pack</button>` : ""}<button class="btn ${button ? "ghost" : "solid"}" data-close>${button ? "later" : "ok"}</button></div></div>`, true);
   // back from Stripe: wait until the server has confirmed the payment, then collect the packs
@@ -3701,7 +3720,7 @@ const Shop = (() => {
     const p = getPending(); if (p && p.want) want = p.want; finish(ret.sid || (p && p.sid), true);
   }
 
-  return { load, open, has, cash, price, modal, pay, qty, back, drop, cfg: () => cfg };
+  return { load, open, has, cash, price, modal, pay, qty, setAmt, back, drop, cfg: () => cfg };
 })();
 
 /* ---- the one place that says what is and isn't real money, so no line in the game is ever wrong about it ---- */
@@ -3844,6 +3863,7 @@ document.addEventListener("click", e => {
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
+  if (t.dataset.addamt) { Shop.setAmt(+t.dataset.addamt); return; }
   if (t.dataset.prange) { pRange = +t.dataset.prange === 168 ? 168 : 24; renderProfile(); return; }
   if (t.dataset.many) { state.openN = +t.dataset.many || 1; persist(); Snd.click(); if (view === "home") renderHome(); return; }
   if (t.dataset.qsell) { quickSell(t.dataset.qsell); return; }

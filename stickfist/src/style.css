@@ -851,3 +851,18 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 #vanityForm { display: grid; gap: 8px; }
 /* the quiet nudge under a pack result */
 .invnudge { width: 100%; max-width: 360px; margin: 10px auto 0; gap: 8px; color: var(--acc); background: rgba(59,228,119,.08); border-color: rgba(59,228,119,.25); } .invnudge .gift { width: 16px; height: 16px; }
+
+/* ---- add money: a quick, tempting amount picker (no second age gate — 18+ is confirmed at the app's gate) ---- */
+.minfo.buym { gap: 16px; }
+.buym h2 { font-size: 28px; font-weight: 800; letter-spacing: -.03em; }
+.buyline { margin: -6px 0 0; color: var(--dim); font-size: 14px; line-height: 1.5; } .buyline b { color: var(--ink); }
+.amtgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.amtchip { display: grid; gap: 1px; align-content: center; padding: 13px 8px; border-radius: 15px; border: 1px solid var(--ln2); background: var(--s1); color: var(--ink); text-align: center; }
+.amtchip b { font-size: 18px; font-weight: 800; letter-spacing: -.02em; } .amtchip small { font-size: 11.5px; color: var(--dim); }
+.amtchip:active { transform: scale(.96); }
+.amtchip.on { border-color: var(--acc); background: linear-gradient(180deg, rgba(59,228,119,.16), rgba(59,228,119,.05)); box-shadow: 0 0 0 1px var(--acc) inset, 0 8px 24px -12px rgba(59,228,119,.7); }
+.amtchip.on small { color: var(--acc); }
+.buym .btn.solid.big { width: 100%; }
+.buym .finep { margin: -4px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--faint); } .buym .finep a { color: var(--dim); text-decoration: underline; text-underline-offset: 2px; }
+.buym .btn.ghost { justify-self: center; }
+@media (max-width: 400px) { .amtgrid { gap: 6px; } .amtchip { padding: 11px 6px; } .amtchip b { font-size: 16px; } }
