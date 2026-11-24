@@ -674,6 +674,11 @@ class Runner:
         t0 = time.time()
         try:
             self.engine.prepare()
+            from . import golden_live as GL
+            if any(GL.RULES[rid]["kind"] == "edge" for rid in self.golden_ids) and getattr(self.engine, "use_ref", False):
+                # the edge model also reads the reference coin (BTC; ETH for BTC): load its history now, not
+                # inside the first decision minute
+                (self.engine.ref_engine or GL.engine("KXETH15M" if self.series == "KXBTC15M" else "KXBTC15M")).prepare()
             self.out(f"  {self.series}: spot history ready ({time.time() - t0:.1f}s)")
         except (requests.RequestException, OSError, ValueError) as e:
             self.out(f"  {self.series}: spot history not ready ({e}); will retry each minute")
@@ -733,6 +738,12 @@ class Runner:
                  f"lag={lag}s" + (f" ({'synthetic' if obs.get('synthetic') else 'candle'} bar, quote {t_spot - t_quote:.2f}s"
                                   f" + spot {obs.get('engine_s', 0):.2f}s)" if self.golden else ""))
         if self.golden:
+            if any(rid.startswith("edge:") for rid in self.golden_ids):       # what the edge model sees this minute
+                from . import edge as EDGE
+                ev = EDGE.live_eval(self.series, self.P, minute)
+                self.out("    edge model: " + ("no reading (a feature or quote is missing)" if ev is None else
+                         f"P(yes) {ev['p_yes']:.3f}, net edge YES {100 * ev['edge_yes']:+.1f}c / NO {100 * ev['edge_no']:+.1f}c"
+                         + ("" if ev["live"] else " (coin not live)")))
             self.manage_exit(minute, obs, lag, age)
             if self.cur not in self.traded:
                 sigs = self.engine.signals(self.P, minute, self.golden_ids)
@@ -783,6 +794,14 @@ class Runner:
                 from . import golden_live as GL
                 stake, kel = GL.sized_stake(signal.rule, signal.q, price, stake)
                 base.update(kelly=round(kel, 6), stake=round(stake, 4), norm=GL.RULES[signal.rule]["norm"])
+            elif signal.kind == "edge":
+                # the edge model sizes its own bets: a fraction of the Kelly stake for its predicted edge, on the
+                # crypto balance (limits.edge_kelly / edge_haircut; the hour-of-day multiplier does not apply)
+                from . import edge as EDGE
+                bal = self.crypto_balance if self.crypto_balance is not None else self.L["stake_usd"] / 0.03
+                stake = EDGE.stake_usd(bal, signal.q, price, self.L.get("edge_kelly", EDGE.KELLY),
+                                       self.L.get("edge_haircut", EDGE.HAIRCUT))
+                base.update(edge=round(signal.q - price - EDGE.fee(price), 6), stake=round(stake, 4))
         why = self.blocked()
         if why is None and signal is not None:
             why = self.rule_paused(signal.rule)
@@ -1346,6 +1365,9 @@ def load_config(path=CONFIG) -> dict:
                                                  or isinstance(lim["max_entries_per_window_side"], bool)
                                                  or lim["max_entries_per_window_side"] < 1):
         raise Stop(f"{path}: max_entries_per_window_side must be an integer >= 1", EXIT_CONFIG)
+    for k in ("edge_kelly", "edge_haircut"):
+        if k in lim and (not num(lim[k]) or not 0 < lim[k] <= 1):
+            raise Stop(f"{path}: {k} must be in (0, 1]", EXIT_CONFIG)
     for k in ("max_total_open_risk_usd", "max_total_daily_loss_usd", "max_window_cost_usd"):
         if k in lim and (not isinstance(lim[k], (int, float)) or isinstance(lim[k], bool) or lim[k] <= 0):
             raise Stop(f"{path}: {k} must be a positive number", EXIT_CONFIG)

@@ -58,6 +58,8 @@ def main():
     fl.add_argument("args", nargs="*", help="pick [WORKERS] | score [no-download]")
     ev = sub.add_parser("evolve", help="breed new strategies from the forward-test leaders, screen and freeze them for a fresh forward test; loop runs 24/7 (see evolve.py)")
     ev.add_argument("args", nargs="*", help="once [WORKERS] | loop [WORKERS] | board")
+    ed = sub.add_parser("edge", help="the pooled edge model: train | walk (honest walk-forward scorecard) | loop (24/7 refit) | status (see edge.py)")
+    ed.add_argument("args", nargs="*")
     ro = sub.add_parser("rotate", help="which strategies should trade real money: walk-forward test of the rotation policy, apply only if it beats the current set (see rotate.py)")
     ro.add_argument("args", nargs="*", help="[apply]")
     dc = sub.add_parser("discord", help="post every real-money bet and result to a Discord channel, live (see discord_feed.py)")
@@ -139,6 +141,9 @@ def main():
     elif a.cmd == "evolve":
         from . import evolve
         evolve.main(a.args)
+    elif a.cmd == "edge":
+        from . import edge
+        raise SystemExit(edge.main(a.args))
     elif a.cmd == "rotate":
         from . import rotate
         rotate.main(a.args)

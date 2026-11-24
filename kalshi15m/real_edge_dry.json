@@ -1,0 +1,92 @@
+{
+  "_note": "DRY RUN (no orders, no key): the edge model (kalshi15m/edge.py) on the 7 alt coins, to check the live path before real money.",
+  "series": [
+    "KXZEC15M",
+    "KXXRP15M",
+    "KXNEAR15M",
+    "KXSOL15M",
+    "KXDOGE15M",
+    "KXHYPE15M",
+    "KXBNB15M"
+  ],
+  "execution": "taker",
+  "poll": "minute",
+  "golden_rules": [
+    {
+      "id": "edge:KXZEC15M",
+      "family": "edge",
+      "scope": "KXZEC15M",
+      "t": 0.0,
+      "params": {}
+    },
+    {
+      "id": "edge:KXXRP15M",
+      "family": "edge",
+      "scope": "KXXRP15M",
+      "t": 0.0,
+      "params": {}
+    },
+    {
+      "id": "edge:KXNEAR15M",
+      "family": "edge",
+      "scope": "KXNEAR15M",
+      "t": 0.0,
+      "params": {}
+    },
+    {
+      "id": "edge:KXSOL15M",
+      "family": "edge",
+      "scope": "KXSOL15M",
+      "t": 0.0,
+      "params": {}
+    },
+    {
+      "id": "edge:KXDOGE15M",
+      "family": "edge",
+      "scope": "KXDOGE15M",
+      "t": 0.0,
+      "params": {}
+    },
+    {
+      "id": "edge:KXHYPE15M",
+      "family": "edge",
+      "scope": "KXHYPE15M",
+      "t": 0.0,
+      "params": {}
+    },
+    {
+      "id": "edge:KXBNB15M",
+      "family": "edge",
+      "scope": "KXBNB15M",
+      "t": 0.0,
+      "params": {}
+    }
+  ],
+  "golden_priority": "config",
+  "log": "data/kalshi15m/real_edge_dry_log.jsonl",
+  "limits": {
+    "stake_usd": 0.75,
+    "max_contracts_per_order": 30,
+    "max_daily_loss_usd": 1000.0,
+    "max_trades_per_day": 40,
+    "max_open_positions": 1,
+    "min_balance_usd": 4.0,
+    "max_price": 0.95,
+    "min_price": 0.03,
+    "max_data_age_s": 5.0,
+    "max_decision_lag_s": 5.0,
+    "walk_cents": 5,
+    "walk_keep_edge": 0.08,
+    "max_total_open_risk_usd": 9.0,
+    "max_total_daily_loss_usd": 1000.0,
+    "min_balance_counts_open_bets": true,
+    "max_window_cost_usd": 9.0,
+    "max_entries_per_window_side": 3,
+    "min_one_contract_max_usd": 1.0,
+    "drawdown_peak_usd": 25.17,
+    "stake_pct_of_balance": 0.03,
+    "stake_usd_min": 0.75,
+    "edge_kelly": 0.3,
+    "edge_haircut": 0.6
+  }
+}

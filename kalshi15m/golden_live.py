@@ -189,7 +189,14 @@ _EVOLVED_PATH = Path(__file__).resolve().parent / "evolved_rules.json"
 EVOLVED = json.loads(_EVOLVED_PATH.read_text())["rules"] if _EVOLVED_PATH.exists() else []
 for _r in EVOLVED:
     _r["kind"] = lab3.FAMILIES[_r["family"]]["kind"]
-ORDER = EXTRA + GOLDEN + SINGLE + EVOLVED                     # best first
+# The edge model (kalshi15m/edge.py, Nov 24): one pooled, walk-forward-tested model instead of rules picked off a
+# leaderboard. One pseudo-rule per coin; its thresholds, coefficients and the list of coins allowed to trade live
+# are in kalshi15m/edge_model.json, refit by `python -m kalshi15m edge loop`. Ranked last, so configs that mix it
+# with older rules keep their order.
+from . import edge as _edge  # noqa: E402
+EDGE = [{"id": f"edge:{s}", "family": "edge", "scope": s, "t": 0.0, "kind": "edge",
+         "params": {}} for s in ALL9]                 # thresholds and coefficients live in edge_model.json
+ORDER = EXTRA + GOLDEN + SINGLE + EVOLVED + EDGE              # best first
 RULES = {r["id"]: r for r in ORDER}
 PRIORITY = {r["id"]: i for i, r in enumerate(ORDER)}
 
@@ -292,8 +299,14 @@ class GoldenEngine:
 
     def __init__(self, series: str, history: pd.DataFrame | None = None, fetch_candles=None, fetch_ticker=None,
                  clock=time.time, sleep=time.sleep, data_dir: Path | None = DATA_DIR, persist: bool = True,
-                 max_candle_lag_s: float = MAX_CANDLE_LAG_S, stream="auto"):
+                 max_candle_lag_s: float = MAX_CANDLE_LAG_S, stream="auto", use_ref=None, ref_engine=None):
         self.series, self.product = series, SERIES[series]
+        # reference-coin features (ref_*): on with the real network feeds, off for engines built on fakes unless
+        # a ref_engine is given
+        self.use_ref = (fetch_candles is None and fetch_ticker is None) if use_ref is None else bool(use_ref)
+        self.ref_engine = ref_engine
+        if ref_engine is not None:
+            self.use_ref = True
         # Coinbase trade stream (kalshi15m.streams): exact 1-minute bars at decision time. Only with the real
         # network feeds (tests pass fakes) and unless KALSHI15M_NO_STREAMS is set.
         if stream == "auto":
@@ -649,8 +662,7 @@ class GoldenEngine:
         lc_now = at(sp.lc, bar)
         for L in (1, 2, 3, 5, 10, 15):
             f[f"r{L}"] = lc_now - at(sp.lc, bar - 60 * L)
-        for k in ("ref_r1", "ref_r2", "ref_r3", "ref_r5", "ref_v60", "ref_z"):
-            f[k] = np.nan                                  # BTC/ETH reference: not used by any golden rule
+        f.update(self._ref_features(open_ts, minute))      # BTC (ETH for BTC) reference: used by the edge model
         day = open_ts // 86400
         f["tod_ratio"] = float(self._tod_day(day)[(open_ts - day * 86400) // 900, j])
         samples = self._emp_samples(day)
@@ -667,6 +679,36 @@ class GoldenEngine:
                         v = 1 - np.searchsorted(s, -z, side="right") / len(s)
                 f[f"emp{lb}_{vm}"] = float(v)
         return f
+
+    def _ref_features(self, open_ts, minute):
+        """lab3.add_features' ref_* columns from the reference coin's own engine (BTC; ETH for BTC), brought up
+        to the same decision minute. NaN when references are off (use_ref False: tests, old runs) or the
+        reference feed fails, so rules that need them simply do not fire."""
+        out = {k: np.nan for k in ("ref_r1", "ref_r2", "ref_r3", "ref_r5", "ref_v60", "ref_z")}
+        if not self.use_ref:
+            return out
+        try:
+            ref = self.ref_engine or engine("KXETH15M" if self.series == "KXBTC15M" else "KXBTC15M")
+            if not ref.ready:
+                ref.prepare()
+            T = open_ts + 60 * minute
+            if not ref._lock.acquire(timeout=4):       # never wait on another coin's engine for long
+                return out
+            try:
+                ref._ensure(T, None)
+                sp = ref.sp
+                bar = T - 60
+                at = lambda arr, ts: float(sp.at(arr, np.array([ts]))[0])
+                rl = at(sp.lc, bar)
+                for L in (1, 2, 3, 5):
+                    out[f"ref_r{L}"] = rl - at(sp.lc, bar - 60 * L)
+                out["ref_v60"] = at(sp.v60, bar)
+                out["ref_z"] = (rl - at(sp.lc, open_ts - 60)) / (out["ref_v60"] * math.sqrt(minute))
+            finally:
+                ref._lock.release()
+        except (requests.RequestException, ValueError, KeyError, IndexError, TypeError):
+            return {k: np.nan for k in out}
+        return out
 
     # --- the per-minute call
     def update(self, P: dict, open_ts: int, minute: int, spot_now: float | None = None) -> dict:
@@ -726,6 +768,13 @@ def _ctx(P):
 
 def _signal(ctx, rule_id, P, minute):
     r = RULES[rule_id]
+    if r["family"] == "edge":            # the pooled model: fires whenever its net edge clears the threshold now
+        s = _edge.live_signal(r["scope"], P, minute)
+        if s is None:
+            return None
+        p = np.full((1, 14), np.nan)
+        p[0, minute - 1] = s["p_yes"]
+        return Signal(rule_id, s["side"], s["price"], minute, s["q"], p, PRIORITY[rule_id])
     if lab3.FAMILIES[r["family"]]["needs_ref"]:
         raise ValueError(f"{rule_id}: needs BTC/ETH reference columns, not supported live")
     side, mins, p = lab3.signal(ctx, r["family"], r["params"])

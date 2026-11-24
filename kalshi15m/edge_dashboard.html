@@ -1,0 +1,213 @@
+<title>Kalshi 15m Backtest Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* layout: one scan column - status and four numbers first, then the test evidence, then the real-money record */
+:root{
+  --page:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#8a8983; --line:#e4e3de;
+  --series:#2a78d6; --series-soft:#cde2fb; --good:#0ca30c; --bad:#d03b3b; --good-ink:#006300; --bad-ink:#a32222;
+  --chip:#eef0ee; --f-head:"Space Grotesk","Inter",system-ui,sans-serif; --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --page:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#8f8e86; --line:#33332f;
+  --series:#3987e5; --series-soft:#184f95; --good:#0ca30c; --bad:#e66767; --good-ink:#4fc84f; --bad-ink:#f08a8a; --chip:#262624; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --page:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#8f8e86; --line:#33332f;
+  --series:#3987e5; --series-soft:#184f95; --good:#0ca30c; --bad:#e66767; --good-ink:#4fc84f; --bad-ink:#f08a8a; --chip:#262624; color-scheme:dark }
+body{background:var(--page);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1040px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:34px}
+h1,h2{font-family:var(--f-head);font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:28px;letter-spacing:-.01em} h2{font-size:20px}
+p{margin:0;max-width:68ch;color:var(--ink2)}
+.eyebrow{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.head{display:flex;flex-direction:column;gap:10px}
+.status{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;color:var(--ink2);font-size:13.5px}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:3px 10px;border-radius:999px;background:var(--chip);font-weight:600;font-size:12.5px;color:var(--ink)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)} .pill.on .dot{background:var(--good)} .pill.off .dot{background:var(--bad)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi b{font-family:var(--f-head);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi span{font-size:12.5px;color:var(--ink2)} .kpi small{font-size:12px;color:var(--muted)}
+.pos{color:var(--good-ink)} .neg{color:var(--bad-ink)}
+section{display:flex;flex-direction:column;gap:14px}
+.sh{display:flex;flex-direction:column;gap:6px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.card h3{margin:0;font-size:14px;font-weight:600}
+.card ul{margin:0;padding-left:18px;color:var(--ink2);display:flex;flex-direction:column;gap:6px}
+.stats{display:flex;flex-wrap:wrap;gap:8px 26px}
+.stats div{display:flex;flex-direction:column} .stats b{font-family:var(--f-head);font-size:19px;font-variant-numeric:tabular-nums} .stats span{font-size:12px;color:var(--ink2)}
+.chart{position:relative;width:100%} .chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:var(--f-body);font-size:11px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--page);font-size:12px;padding:5px 8px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-110%);font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto} table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap} th:first-child,td:first-child{text-align:left}
+th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.chipx{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--chip);color:var(--ink2)} .chipx.live{background:var(--series-soft);color:var(--ink)}
+.foot{font-size:12.5px;color:var(--muted)}
+@media (max-width:760px){ .kpis{grid-template-columns:repeat(2,minmax(0,1fr))} .two{grid-template-columns:minmax(0,1fr)} h1{font-size:24px} }
+</style>
+<div class="wrap">
+  <header class="head">
+    <div class="eyebrow">Kalshi 15-minute crypto markets · real money</div>
+    <h1>One tested model instead of thousands of rules</h1>
+    <div class="status"><span class="pill" id="runPill"><i class="dot"></i><span id="runText">—</span></span><span id="liveCoins"></span><span id="updated"></span></div>
+  </header>
+
+  <div class="kpis" id="kpis"></div>
+
+  <section>
+    <div class="sh"><div class="eyebrow">What changed on Nov 24</div><h2>Why the old approach stalled, and what replaced it</h2></div>
+    <div class="two">
+      <div class="card"><h3>What the review of every stored market found</h3><ul id="found"></ul></div>
+      <div class="card"><h3>How the bot trades now</h3><ul id="now"></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><div class="eyebrow">The evidence</div><h2>The model's record on days it never trained on</h2>
+      <p id="walkIntro"></p></div>
+    <div class="card"><div class="stats" id="walkStats"></div>
+      <h3>Running profit, 1 contract a bet</h3><div class="chart" id="cumChart"></div>
+      <h3>Each day's result</h3><div class="chart" id="dayChart"></div></div>
+    <div class="two">
+      <div class="card"><h3>By coin</h3><div class="tablewrap"><table id="coinTable"></table></div>
+        <p class="foot">A coin trades live only while its own record on unseen days is good. The others keep being scored and switch on if theirs becomes good.</p></div>
+      <div class="card"><h3>When the model says the price is wrong, is it?</h3><div class="tablewrap"><table id="calTable"></table></div>
+        <p class="foot">Each row groups every moment the model disagreed with Kalshi's price by that much, on unseen days, and shows how far off the price really was.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><div class="eyebrow">Real money</div><h2>Every real bet since Nov 12</h2><p id="realIntro"></p></div>
+    <div class="card"><h3>Running real profit</h3><div class="chart" id="realChart"></div></div>
+    <div class="card"><h3>Latest bets</h3><div class="tablewrap"><table id="betTable"></table></div></div>
+  </section>
+
+  <section>
+    <div class="sh"><div class="eyebrow">Tennis</div><h2>Tennis auto-better</h2><p id="tennis"></p></div>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</div>
+<script>
+const D = /*DATA*/null;
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const usd = (v, sign) => (v < 0 ? '−$' : (sign ? '+$' : '$')) + Math.abs(v).toFixed(2);
+  const cents = (v) => (v < 0 ? '−' : '+') + Math.abs(v).toFixed(1) + '¢';
+  const cls = (v) => v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+  const el = (tag, html, c) => { const e = document.createElement(tag); if (c) e.className = c; e.innerHTML = html; return e; };
+  if (!D) return;
+  const W = D.walk, L = W.live, R = D.real;
+  $('runPill').classList.add(R.running ? 'on' : 'off');
+  $('runText').textContent = R.running ? 'Bot running' : 'Bot not running';
+  $('liveCoins').textContent = 'Trading: ' + W.live_coins.map((c) => c.slice(2, -3)).join(', ');
+  $('updated').textContent = 'Updated ' + D.updated;
+  const k = $('kpis');
+  const kpi = (label, value, note, c) => k.appendChild(el('div', `<span>${label}</span><b class="${c || ''}">${value}</b><small>${note}</small>`, 'kpi'));
+  kpi('Crypto balance', R.balance == null ? '—' : usd(R.balance), 'New bets stop below $4');
+  kpi('Real profit since Nov 12', usd(R.all.pnl, true), R.all.bets + ' bets, all systems', cls(R.all.pnl));
+  kpi('New model, real money', R.edge.bets ? usd(R.edge.pnl, true) : '$0.00', R.edge.bets ? R.edge.bets + ' bets · ' + cents(100 * R.edge.pnl / Math.max(R.edge.contracts, 1)) + ' a contract' : 'No settled bets yet', cls(R.edge.pnl));
+  kpi('Test result, unseen days', cents(L.cents_per_bet) + ' a bet', L.per_day + ' bets a day · ' + L.days_up + ' of ' + L.days + ' days up', cls(L.cents_per_bet));
+  [`Kalshi's prices are almost exactly right on average: a side priced 35¢ wins about 35% of the time. Across 1.6 million price checks the old "fair value" rules did not beat the market before fees.`,
+   `The old system's ${D.old.bets} real bets made ${usd(D.old.pnl, true)}. That is within what luck alone produces, and almost all of it came from three days. Fees took ${usd(D.old.fees)}.`,
+   `Picking the best of thousands of rules mostly picks lucky ones. That is why results kept flattening out after each change.`,
+   `A few effects are real and small: prices lag the coin's own last 5 to 10 minutes, and overreact to Bitcoin's move and to the previous 15 minutes.`
+  ].forEach((t) => $('found').appendChild(el('li', t)));
+  [`One model combines those effects. It starts from Kalshi's own price and only disagrees when the evidence does.`,
+   `It bets only when its predicted edge is at least ${Math.round(100 * W.thr)}¢ after Kalshi's fee, between minutes ${W.start} and ${W.end} of a market, once per market.`,
+   `Bet size follows the size of the mispricing and the balance (a fraction of the Kelly stake). The night ×2 and day ×0.5 multipliers are gone: the data does not support them.`,
+   `It refits every 3 hours on the newest ${D.model.days} days and is re-tested on days it never saw before anything it learns is used.`
+  ].forEach((t) => $('now').appendChild(el('li', t)));
+  $('walkIntro').textContent = `${W.test_days} days (${W.first_test_day} to ${W.last_test_day}). For every day, the model was fitted only on earlier days, then bet that day at the prices actually quoted, paying Kalshi's fee. Expect real results to be lower than a test, and expect losing days: ${L.days - L.days_up} of ${L.days} here.`;
+  const st = $('walkStats');
+  [['Bets a day', L.per_day], ['Profit a bet', cents(L.cents_per_bet)], ['A day, 1 contract', usd(L.usd_per_day, true)], ['Days up', L.days_up + ' / ' + L.days],
+   ['Worst day', usd(L.worst_day, true)], ['Deepest dip', usd(-L.max_drawdown, true)], ['Win rate', Math.round(100 * L.win_rate) + '%'], ['Average price', Math.round(100 * L.avg_price) + '¢']
+  ].forEach(([a, b]) => st.appendChild(el('div', `<b>${b}</b><span>${a}</span>`)));
+
+  // ---- charts (one scale each; hover shows the exact value)
+  const NS = 'http://www.w3.org/2000/svg';
+  const svgEl = (t, a) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  function frame(box, vals, h) {
+    box.innerHTML = '';
+    const Wd = 960, H = h, m = { l: 46, r: 12, t: 8, b: 22 };
+    const svg = svgEl('svg', { viewBox: `0 0 ${Wd} ${H}`, role: 'img' });
+    let lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
+    if (hi === lo) hi = lo + 1;
+    const pad = (hi - lo) * 0.06; lo -= pad; hi += pad;
+    const y = (v) => m.t + (H - m.t - m.b) * (1 - (v - lo) / (hi - lo));
+    const step = (() => { const raw = (hi - lo) / 4, p = Math.pow(10, Math.floor(Math.log10(raw))); return [1, 2, 5, 10].map((s) => s * p).find((s) => s >= raw); })();
+    for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) {
+      svg.appendChild(svgEl('line', { x1: m.l, x2: Wd - m.r, y1: y(v), y2: y(v), stroke: 'var(--line)', 'stroke-width': Math.abs(v) < 1e-9 ? 1.5 : 1 }));
+      const t = svgEl('text', { x: m.l - 6, y: y(v) + 4, 'text-anchor': 'end' }); t.textContent = (v < 0 ? '−$' : '$') + Math.abs(v).toFixed(step < 1 ? 1 : 0); svg.appendChild(t);
+    }
+    box.appendChild(svg);
+    const tip = el('div', '', 'tip'); tip.hidden = true; box.appendChild(tip);
+    return { svg, Wd, H, m, y, tip };
+  }
+  function hover(f, box, n, xOf, textOf) {
+    const hit = svgEl('rect', { x: f.m.l, y: 0, width: f.Wd - f.m.l - f.m.r, height: f.H, fill: 'transparent' });
+    const cross = svgEl('line', { y1: f.m.t, y2: f.H - f.m.b, stroke: 'var(--muted)', 'stroke-width': 1, visibility: 'hidden' });
+    f.svg.appendChild(cross); f.svg.appendChild(hit);
+    const move = (ev) => {
+      const r = f.svg.getBoundingClientRect(), px = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left) / r.width * f.Wd;
+      let i = 0, best = 1e9; for (let k = 0; k < n; k++) { const d = Math.abs(xOf(k) - px); if (d < best) { best = d; i = k; } }
+      cross.setAttribute('x1', xOf(i)); cross.setAttribute('x2', xOf(i)); cross.setAttribute('visibility', 'visible');
+      f.tip.hidden = false; f.tip.textContent = textOf(i);
+      f.tip.style.left = Math.min(Math.max(xOf(i) / f.Wd * r.width, 70), r.width - 70) + 'px'; f.tip.style.top = (f.m.t / f.H * r.height + 6) + 'px';
+    };
+    const out = () => { f.tip.hidden = true; cross.setAttribute('visibility', 'hidden'); };
+    hit.addEventListener('mousemove', move); hit.addEventListener('touchstart', move, { passive: true }); hit.addEventListener('touchmove', move, { passive: true });
+    hit.addEventListener('mouseleave', out); hit.addEventListener('touchend', out);
+  }
+  function lineChart(box, pts, labels, marker) {
+    const vals = pts.map((p) => p.v), f = frame(box, vals, 240), n = pts.length;
+    const x = (i) => f.m.l + (f.Wd - f.m.l - f.m.r) * (n > 1 ? i / (n - 1) : 0.5);
+    const d = pts.map((p, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + f.y(p.v).toFixed(1)).join(' ');
+    f.svg.appendChild(svgEl('path', { d: d + ` L${x(n - 1)} ${f.y(0)} L${x(0)} ${f.y(0)} Z`, fill: 'var(--series)', 'fill-opacity': 0.08, stroke: 'none' }));
+    f.svg.appendChild(svgEl('path', { d, fill: 'none', stroke: 'var(--series)', 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+    f.svg.appendChild(svgEl('circle', { cx: x(n - 1), cy: f.y(vals[n - 1]), r: 4, fill: 'var(--series)', stroke: 'var(--surface)', 'stroke-width': 2 }));
+    if (marker != null && marker >= 0 && marker < n) {
+      f.svg.appendChild(svgEl('line', { x1: x(marker), x2: x(marker), y1: f.m.t, y2: f.H - f.m.b, stroke: 'var(--ink2)', 'stroke-width': 1, 'stroke-dasharray': '4 4' }));
+      const t = svgEl('text', { x: x(marker) - 6, y: f.m.t + 10, 'text-anchor': 'end' }); t.textContent = 'new model starts'; f.svg.appendChild(t);
+    }
+    [0, Math.floor((n - 1) / 2), n - 1].forEach((i, k) => { const t = svgEl('text', { x: x(i), y: f.H - 5, 'text-anchor': k === 0 ? 'start' : k === 2 ? 'end' : 'middle' }); t.textContent = labels[i]; f.svg.appendChild(t); });
+    hover(f, box, n, x, (i) => labels[i] + ' · ' + usd(vals[i], true) + (pts[i].note ? ' · ' + pts[i].note : ''));
+  }
+  function barChart(box, days) {
+    const vals = days.map((d) => d.pnl), f = frame(box, vals, 200), n = days.length;
+    const bw = (f.Wd - f.m.l - f.m.r) / n, x = (i) => f.m.l + bw * (i + 0.5);
+    days.forEach((d, i) => {
+      const y0 = f.y(0), y1 = f.y(d.pnl), h = Math.max(Math.abs(y1 - y0), 1);
+      f.svg.appendChild(svgEl('rect', { x: x(i) - Math.max(bw / 2 - 1, 1), y: Math.min(y0, y1), width: Math.max(bw - 2, 2), height: h, rx: Math.min(3, h / 2), fill: d.pnl >= 0 ? 'var(--good)' : 'var(--bad)' }));
+    });
+    [0, Math.floor((n - 1) / 2), n - 1].forEach((i, k) => { const t = svgEl('text', { x: x(i), y: f.H - 5, 'text-anchor': k === 0 ? 'start' : k === 2 ? 'end' : 'middle' }); t.textContent = days[i].day.slice(5); f.svg.appendChild(t); });
+    hover(f, box, n, x, (i) => days[i].day.slice(5) + ' · ' + usd(days[i].pnl, true) + ' · ' + days[i].bets + ' bets');
+  }
+  let c = 0; const cum = W.daily.map((d) => ({ v: (c += d.pnl), note: d.bets + ' bets' }));
+  lineChart($('cumChart'), cum, W.daily.map((d) => d.day.slice(5)));
+  barChart($('dayChart'), W.daily);
+
+  const ct = $('coinTable');
+  ct.appendChild(el('tr', '<th>Coin</th><th>Status</th><th>Bets a day</th><th>Profit a bet</th><th>Days up</th>'));
+  Object.entries(W.per_coin).sort((a, b) => b[1].t - a[1].t).forEach(([cn, s]) => {
+    const live = W.live_coins.includes(cn);
+    ct.appendChild(el('tr', `<td>${cn.slice(2, -3)}</td><td><span class="chipx ${live ? 'live' : ''}">${live ? 'Live' : 'Watching'}</span></td><td>${s.per_day}</td><td class="${cls(s.cents_per_bet)}">${cents(s.cents_per_bet)}</td><td>${s.days_up} / ${s.days}</td>`));
+  });
+  const cal = $('calTable');
+  cal.appendChild(el('tr', '<th>Model said off by</th><th>Really off by</th><th>Moments</th>'));
+  W.calibration.forEach((r) => cal.appendChild(el('tr', `<td>${cents(r.predicted_c)}</td><td>${cents(r.actual_c)}</td><td>${r.n.toLocaleString()}</td>`)));
+
+  $('realIntro').textContent = R.edge.bets
+    ? `The dashed line marks the switch to the new model (${D.switched}). Before it: ${D.old.bets} bets by the old rules. Since: ${R.edge.bets} bets, ${usd(R.edge.pnl, true)}. A few dozen bets cannot confirm or reject a 3 to 5¢ edge; a few hundred start to.`
+    : `The dashed line will mark the switch to the new model (${D.switched}). The old rules made ${usd(D.old.pnl, true)} over ${D.old.bets} bets.`;
+  if (R.curve.length) lineChart($('realChart'), R.curve.map((p) => ({ v: p.cum, note: p.n + ' bets' })), R.curve.map((p) => p.label), R.switch_index);
+  const bt = $('betTable');
+  bt.appendChild(el('tr', '<th>Time (UTC)</th><th>Coin</th><th>Side</th><th>Price</th><th>Contracts</th><th>Predicted edge</th><th>Result</th>'));
+  R.recent.forEach((b) => bt.appendChild(el('tr', `<td>${b.time}</td><td>${b.coin}</td><td>${b.side.toUpperCase()}</td><td>${Math.round(100 * b.price)}¢</td><td>${b.n}</td><td>${b.edge == null ? '—' : cents(100 * b.edge)}</td><td class="${b.pnl == null ? '' : cls(b.pnl)}">${b.pnl == null ? 'open' : usd(b.pnl, true)}</td>`)));
+  const T = D.tennis;
+  $('tennis').textContent = T ? `${T.real_bets} real bets at 1 contract: ${T.real_won} won, ${usd(T.real_pnl, true)}${T.real_open ? ', ' + T.real_open + ' open' : ''}. The same pooled test on ${T.markets.toLocaleString()} tennis markets found Kalshi's tennis prices well calibrated: paying the ask has no proven edge, and the one persistent pattern (Challenger favourites priced 80 to 95¢ win about 2 to 3¢ more often than priced) is cancelled by the spread. It only pays if bets are placed as resting bids instead of paying the ask, which is the next thing to build and test.` : 'No tennis data.';
+  $('foot').textContent = `Model fitted ${D.model.trained} on ${D.model.rows.toLocaleString()} price rows. Test figures use 1 contract a bet at the quoted ask (real fills since Nov 12 averaged 0.3¢ better than that ask). Nothing here is a promise: the edge is a few cents a bet and single days swing by dollars.`;
+})();
+</script>
