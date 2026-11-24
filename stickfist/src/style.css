@@ -645,7 +645,7 @@ h1.ttl { font-weight: 800; letter-spacing: -.03em; }
 a.back { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px 0 8px; margin-left: -8px; border-radius: 999px; color: var(--dim); font-weight: 600; font-size: 14px; } a.back:active { background: var(--s2); }
 
 /* ---- brand ---- */
-.mark { width: 26px; height: 26px; flex: none; filter: drop-shadow(0 4px 10px rgba(59,228,119,.35)); }
+.mark { width: 28px; height: 28px; flex: none; }
 .logo { display: inline-flex; align-items: center; gap: 9px; font-weight: 800; letter-spacing: .14em; font-size: 15px; }
 .glogo { display: inline-flex; align-items: center; gap: 10px; padding-left: 0; } .glogo .mark { width: 34px; height: 34px; }
 footer .flogo { display: inline-flex; align-items: center; gap: 8px; } footer .flogo .mark { width: 20px; height: 20px; filter: none; }
@@ -789,3 +789,32 @@ footer { border-top: 1px solid var(--ln); background: rgba(255,255,255,.012); } 
 .days i.on { background: linear-gradient(180deg, var(--acc2), var(--acc)); color: #04130a; border-color: transparent; box-shadow: 0 6px 16px -8px rgba(59,228,119,.8); }
 .days i.bonus:not(.on) { border-style: dashed; border-color: rgba(59,228,119,.45); color: var(--acc); }
 .pall { display: block; width: 100%; padding: 14px 0 12px; text-align: center; border-bottom: 1px solid var(--ln); color: var(--acc); }
+
+/* the balance sits dead centre in its pill */
+#bal, .wallet .bal { display: inline-flex; align-items: center; justify-content: center; line-height: 1; text-align: center; transform-origin: center; font-variant-numeric: tabular-nums; }
+
+/* ---- ripping the pack ---- */
+.st-pack { touch-action: none; -webkit-user-select: none; user-select: none; }
+.st-pack .cutp.rtop { animation: none; z-index: 4; will-change: transform, clip-path; filter: brightness(1.12); }
+.st-pack .cutp { will-change: clip-path; }
+.ripin { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, transparent 2%, color-mix(in srgb, var(--rip, #fff) 55%, transparent) 14%, color-mix(in srgb, var(--rip, #fff) 90%, #fff) 18%); opacity: calc(.35 + var(--rp, 0) * .65); }
+.ripglow { position: absolute; z-index: 5; height: 3px; margin-top: -1px; border-radius: 3px; background: #fff; box-shadow: 0 0 10px 2px #fff, 0 0 34px 8px var(--rip, #fff), 0 -14px 50px 10px color-mix(in srgb, var(--rip, #fff) 55%, transparent); opacity: 0; pointer-events: none; }
+.ripglow.flash { animation: ripFlash .5s ease-out forwards; } @keyframes ripFlash { 20% { box-shadow: 0 0 24px 8px #fff, 0 0 90px 30px var(--rip, #fff), 0 -40px 120px 40px var(--rip, #fff); } 100% { opacity: 0; } }
+.ripspark { position: absolute; z-index: 6; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff; box-shadow: 0 0 14px 5px #fff, 0 0 38px 14px var(--rip, #fff); opacity: 0; pointer-events: none; }
+.ripbeam { position: absolute; z-index: 0; left: 6%; right: 6%; bottom: 84%; height: 90vh; pointer-events: none; transform-origin: 50% 100%; background: linear-gradient(0deg, color-mix(in srgb, var(--rip, #fff) 70%, transparent), transparent 85%); filter: blur(14px); animation: ripBeam .9s ease-out forwards; }
+@keyframes ripBeam { from { transform: scaleY(0) scaleX(.6); opacity: 1; } 35% { transform: scaleY(1) scaleX(1); opacity: .9; } to { transform: scaleY(1.1) scaleX(1.25); opacity: 0; } }
+.ripguide { position: absolute; z-index: 7; left: 5%; right: 5%; top: 14.5%; height: 0; pointer-events: none; }
+.ripguide i { position: absolute; left: 0; right: 0; top: 0; border-top: 2px dashed rgba(255,255,255,.55); animation: guideDash 1.2s linear infinite; -webkit-mask-image: linear-gradient(90deg, #000, #000 60%, transparent); mask-image: linear-gradient(90deg, #000, #000 60%, transparent); }
+.ripguide span { position: absolute; left: 0; top: -13px; padding: 4px 9px; border-radius: 999px; background: #fff; color: #07080a; font: 700 11px/1.2 Inter, system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; animation: guideNudge 1.5s cubic-bezier(.5,0,.3,1) infinite; box-shadow: 0 6px 18px -4px rgba(0,0,0,.8); }
+.ripguide span::after { content: " →"; }
+@keyframes guideNudge { 0% { transform: translateX(0); opacity: 0; } 15% { opacity: 1; } 70% { transform: translateX(min(46vw, 180px)); opacity: 1; } 100% { transform: translateX(min(52vw, 200px)); opacity: 0; } }
+@keyframes guideDash { to { background-position: 16px 0; } }
+@media (prefers-reduced-motion: reduce) { .ripguide span { animation: none; } .ripbeam { display: none; } }
+.st-pack.drop { transition: transform .6s cubic-bezier(.5,0,.75,0), opacity .5s; }
+/* cards come up out of the pack, and a revealed one is lit in its own colour */
+.sc.rise { transform: translateY(46%) scale(.8); opacity: 0; } .sc { transition: transform .46s cubic-bezier(.2, 1.25, .35, 1), opacity .3s; touch-action: none; }
+.sc.lit .card { box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc, #fff) 55%, transparent), 0 0 70px -10px var(--rc, #fff), 0 30px 60px -30px #000; }
+.sc.gone { transition: transform .42s cubic-bezier(.3, .6, .4, 1), opacity .38s; }
+.vchip { position: fixed; left: 0; top: 0; z-index: 12; padding: 6px 12px; border-radius: 999px; background: #07080a; color: var(--ink); border: 1px solid color-mix(in srgb, var(--rc, #fff) 70%, transparent); box-shadow: 0 0 22px -4px var(--rc, #fff); font: 800 15px/1 Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; pointer-events: none; white-space: nowrap; will-change: transform; }
+.meter.hit .mbar { animation: meterHit .34s cubic-bezier(.2, .9, .3, 1.4); } @keyframes meterHit { 35% { transform: scaleY(2.1); filter: brightness(1.6); } }
+.meter .mbar i { transition: width .5s cubic-bezier(.2, .8, .2, 1); }

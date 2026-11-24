@@ -6,6 +6,14 @@ let SS = null, SS_PRICE = 0, opening = false; const stage = $("stage"), hint = t
 // a long name in big block letters must never run off a narrow screen: shrink its pixel size until it fits
 function fitName(el) { const go = () => { const room = Math.min(innerWidth, (el.parentNode && el.parentNode.clientWidth) || innerWidth) - 24, w = el.scrollWidth; if (w > room && w) { const px = parseFloat(getComputedStyle(el).getPropertyValue("--px")) || 8; el.style.setProperty("--px", Math.max(2, Math.floor(px * room / w * 10) / 10) + "px"); } }; go(); requestAnimationFrame(go); }
 function meterInit(start) { const m = $("stMeter"), ref = SS.refAll || SS.ref; SS.got = start || 0; SS.paidBack = false; m.hidden = false; m.classList.remove("paid"); $("stMeterFill").style.width = Math.min(100, SS.got / Math.max(1, ref) * 100) + "%"; $("stMeterTxt").textContent = `${money(SS.got)} of ${money(ref)}`; SS.paidBack = SS.got >= ref; m.classList.toggle("paid", SS.paidBack); m.setAttribute("aria-label", `Your cards so far sell for ${money(SS.got)}; the pack cost ${money(ref)}`); }
+// what a card sells for leaves the card as a chip and drops into the meter; the meter moves when it lands
+function valueChip(el, c) {
+  const bar = $("stMeter"); if (reduced || !bar || bar.hidden) { meterAdd(c); return; }
+  const a = el.getBoundingClientRect(), b = bar.getBoundingClientRect(), chip = document.createElement("span"), mine = SS; chip.className = "vchip"; chip.textContent = "+" + money(sellOf(c)); chip.style.setProperty("--rc", getComputedStyle(el).getPropertyValue("--rc") || "#fff"); stage.appendChild(chip);
+  const x0 = a.left + a.width / 2, y0 = a.top + a.height * .5, x1 = b.left + b.width / 2, y1 = b.top;
+  chip.animate([{ transform: `translate(${x0}px, ${y0}px) translate(-50%, -50%) scale(.5)`, opacity: 0 }, { transform: `translate(${x0}px, ${y0 - 26}px) translate(-50%, -50%) scale(1.15)`, opacity: 1, offset: .3 }, { transform: `translate(${x0}px, ${y0 - 30}px) translate(-50%, -50%) scale(1)`, opacity: 1, offset: .55 }, { transform: `translate(${x1}px, ${y1}px) translate(-50%, -50%) scale(.6)`, opacity: .2 }], { duration: 620, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" }).onfinish = () => { chip.remove(); if (SS === mine && SS.phase === "stack") { Snd.chip(); bar.classList.remove("hit"); void bar.offsetWidth; bar.classList.add("hit"); } };
+  meterAdd(c);
+}
 function meterAdd(c) {
   const m = $("stMeter"), ref = SS.refAll || SS.ref; SS.got += sellOf(c); const f = Math.min(1, SS.got / Math.max(1, ref)); $("stMeterFill").style.width = (f * 100) + "%"; $("stMeterTxt").textContent = `${money(SS.got)} of ${money(ref)}`; m.setAttribute("aria-label", `Your cards so far sell for ${money(SS.got)}; the pack cost ${money(ref)}`);
   if (!SS.paidBack && SS.got >= ref) { SS.paidBack = true; m.classList.add("paid"); Snd.paid(); buzz([18, 24, 36]); }
@@ -27,20 +35,64 @@ async function openPack(pack) {
   let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS !== mine) return;
   if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else if (bought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
   state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); History.log(pk, 1, free || bought ? 0 : price, price, items); SS_PRICE = price; { noteFound(); const seenNo = new Set(); mine.fresh = new Set(items.filter(c => { const nw = !state.found[c.no] && !seenNo.has(c.no); seenNo.add(c.no); return nw; }).map(c => c.uid)); } state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
-  mine.items = items; mine.phase = "pack"; hint("Tap the pack to tear it open"); $("stPack").addEventListener("click", tear);
+  mine.items = items; mine.phase = "pack"; hint("Swipe across the top to rip it open"); Rip.arm();
 }
-async function tear() {
-  if (!SS || SS.phase !== "pack") return; SS.phase = "tearing"; hint(""); Snd.tear(); buzz(35); const wrap = $("stPack"), pk = wrap.querySelector(".pk");
-  let snap = ""; try { snap = pk.querySelector("canvas.scr").toDataURL("image/png"); } catch (e) {} if (SS.ps) SS.ps.stop();
-  const dir = rand() < .5 ? 1 : -1, A = 13 + rand() * 6, B = 13 + rand() * 6, top = pk.cloneNode(true), bot = pk.cloneNode(true); freezeScreen(top, snap); freezeScreen(bot, snap);
-  top.classList.add("cutp", "top"); bot.classList.add("cutp"); top.style.setProperty("--dx", dir);
-  top.style.clipPath = `polygon(-6% -6%, 106% -6%, 106% ${B}%, -6% ${A}%)`; bot.style.clipPath = `polygon(-6% ${A}%, 106% ${B}%, 106% 106%, -6% 106%)`;
-  pk.style.visibility = "hidden"; wrap.append(bot, top);
-  const line = document.createElement("div"); line.className = "cutline"; line.style.top = ((A + B) / 2) + "%"; line.style.transform = `rotate(${(B - A) / 3}deg)`; wrap.appendChild(line);
-  const r = wrap.getBoundingClientRect(); for (let i = 0; i <= 16; i++) { const k = i / 16; FX.burst(r.left + r.width * k, r.top + r.height * (A + (B - A) * k) / 100, 3, ["#ffffff", "#c9c5bb", "#8d897f"], 300 + Math.random() * 300); }
-  stage.animate([{ transform: "translate(0,0)" }, { transform: "translate(-5px,3px)" }, { transform: "translate(4px,-3px)" }, { transform: "translate(0,0)" }], { duration: 220 });
-  await sleep(300); buildStack(); await sleep(260); wrap.classList.add("drop"); await sleep(420); SS.phase = "stack"; meterInit(); focusTop();
-}
+/* ---- ripping the pack. Drag across the top and the foil tears right under your finger: it lifts away from the tear, light spills out of the gap
+        (in the colour of the best card inside), paper flies, and each notch can be felt and heard. Let go past halfway and it finishes itself; a plain tap
+        rips it for you. Then the strip is thrown clear and the cards come up out of the pack one by one. ---- */
+const Rip = (() => {
+  let R = null;
+  const yAt = (R, x) => { const k = Math.max(0, Math.min(24, x / 100 * 24)), i = Math.floor(k), f = k - i; return R.jag[i] + ((R.jag[Math.min(24, i + 1)]) - R.jag[i]) * f; };
+  function build() {                                                                // made on the first touch, so the pack's own animation runs until then
+    const wrap = $("stPack"), pk = wrap.querySelector(".pk"); let snap = ""; try { snap = pk.querySelector("canvas.scr").toDataURL("image/png"); } catch (e) {} if (SS.ps) SS.ps.stop();
+    const A = 13 + rand() * 4, jag = Array.from({ length: 25 }, (_, i) => A + (i % 2 ? 1 : -1) * (.35 + rand() * .9)), top = pk.cloneNode(true), bot = pk.cloneNode(true); freezeScreen(top, snap); freezeScreen(bot, snap);
+    top.classList.add("cutp", "rtop"); bot.classList.add("cutp"); pk.style.visibility = "hidden";
+    const best = SS.items.map(c => RAR[BY_NO[c.no].rar]).sort((a, b) => b.tier - a.tier)[0], col = best && best.tier >= 2 ? best.col : "#fff3d6";
+    const inside = document.createElement("div"); inside.className = "ripin"; const glow = document.createElement("div"); glow.className = "ripglow"; const spark = document.createElement("div"); spark.className = "ripspark";
+    wrap.style.setProperty("--rip", col); wrap.append(inside, bot, top, glow, spark); const g = wrap.querySelector(".ripguide"); if (g) g.remove();
+    Object.assign(R, { built: true, top, bot, glow, spark, inside, A, jag, col });
+  }
+  function draw(p) {
+    if (!R.built) return; R.p = p; const d = R.dir, x0 = d > 0 ? 0 : 100 - p * 100, x1 = d > 0 ? p * 100 : 100, hx = d > 0 ? x1 : x0, pts = [];
+    for (let i = 0; i <= 24; i++) { const x = i / 24 * 100; if (x > x0 && x < x1) pts.push([x, R.jag[i]]); }
+    const edge = [[x0, yAt(R, x0)], ...pts, [x1, yAt(R, x1)]], P = a => a.map(([x, y]) => `${x.toFixed(2)}% ${y.toFixed(2)}%`).join(", ");
+    R.top.style.clipPath = p <= 0 ? "polygon(0 0, 0 0, 0 0)" : `polygon(${P([[x0 - (d > 0 ? 6 : 0), -6], [x1 + (d > 0 ? 0 : 6), -6], ...edge.slice().reverse()])})`;
+    R.bot.style.clipPath = d > 0 ? `polygon(${P([[-6, yAt(R, 0)], ...edge.slice(1), [x1, -6], [106, -6], [106, 106], [-6, 106]])})` : `polygon(${P([[-6, -6], [x0, -6], ...edge.slice(0, -1), [106, yAt(R, 100)], [106, 106], [-6, 106]])})`;
+    R.inside.style.clipPath = `polygon(${P([[x0, -6], [x1, -6], [x1, R.A + 3], [x0, R.A + 3]])})`;
+    R.top.style.transformOrigin = `${hx}% ${yAt(R, hx)}%`; R.top.style.transform = `rotate(${(d * (5 + 13 * p)).toFixed(2)}deg) translateY(${(-3 - 5 * p).toFixed(1)}px)`;
+    R.glow.style.left = x0 + "%"; R.glow.style.width = (x1 - x0) + "%"; R.glow.style.top = R.A + "%"; R.glow.style.opacity = p > 0 ? 1 : 0;
+    R.spark.style.left = hx + "%"; R.spark.style.top = yAt(R, hx) + "%"; R.spark.style.opacity = p > 0 && p < 1 ? 1 : 0;
+    R.wrap.style.setProperty("--rp", p.toFixed(3));
+    const n = Math.floor(p * 18); if (n !== R.tick) { R.tick = n; if (p > 0) { buzz(6); Snd.rip(p); const r = R.wrap.getBoundingClientRect(); FX.burst(r.left + r.width * hx / 100, r.top + r.height * yAt(R, hx) / 100, 4, ["#ffffff", R.col, "#c9c5bb"], 220 + p * 260); } }
+  }
+  function glide(to, ms) { return new Promise(res => { const from = R.p, t0 = performance.now(); (function step(now) { if (!R || !R.built) return res(); const k = Math.min(1, (now - t0) / Math.max(1, ms)); draw(from + (to - from) * (1 - Math.pow(1 - k, 2))); if (k < 1) requestAnimationFrame(step); else res(); })(t0); }); }
+  async function finish() {
+    if (!SS || R.done) return; R.done = true; SS.phase = "tearing"; hint(""); const { wrap, top, col } = R, d = R.dir, r = wrap.getBoundingClientRect();
+    draw(1); Snd.tear(); buzz([20, 30, 70]); R.glow.classList.add("flash");
+    top.animate([{ transform: top.style.transform, opacity: 1 }, { transform: `translate(${d * 55}%, -85%) rotate(${d * 48}deg)`, opacity: 0 }], { duration: 620, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" });
+    for (let i = 0; i <= 18; i++) FX.burst(r.left + r.width * i / 18, r.top + r.height * R.A / 100, 5, ["#ffffff", col, "#c9c5bb"], 320 + Math.random() * 380);
+    const beam = document.createElement("div"); beam.className = "ripbeam"; wrap.appendChild(beam);
+    stage.animate([{ transform: "translate(0,0)" }, { transform: "translate(-6px,4px)" }, { transform: "translate(5px,-4px)" }, { transform: "translate(-2px,2px)" }, { transform: "translate(0,0)" }], { duration: 260 });
+    await sleep(220); if (!SS || SS.phase !== "tearing") return; buildStack(); SS.items.forEach((_, i) => setTimeout(() => { if (SS && SS.phase !== "summary") { Snd.rise(i); buzz(7); } }, 60 + i * 70));
+    await sleep(240); wrap.classList.add("drop"); await sleep(380); if (!SS || SS.phase !== "tearing") return; SS.phase = "stack"; meterInit(); focusTop();
+  }
+  function arm() {
+    const wrap = $("stPack"); if (!wrap) return; R = { wrap, p: 0, dir: 1, tick: 0, built: false, done: false, live: false, x: 0, moved: 0 };
+    const g = document.createElement("div"); g.className = "ripguide"; g.innerHTML = `<i></i><span>swipe</span>`; wrap.appendChild(g);
+    wrap.addEventListener("pointerdown", e => { if (!SS || SS.phase !== "pack" || R.done || R.busy) return; R.live = true; R.x = e.clientX; R.moved = 0; R.set = false; try { wrap.setPointerCapture(e.pointerId); } catch (x) {} });
+    wrap.addEventListener("pointermove", e => {
+      if (!R.live || R.done) return; const dx = e.clientX - R.x; R.moved = Math.max(R.moved, Math.abs(dx)); if (!R.set) { if (Math.abs(dx) < 7) return; R.set = true; R.dir = dx > 0 ? 1 : -1; if (!R.built) build(); }
+      const p = Math.max(0, Math.min(1, dx * R.dir / (wrap.getBoundingClientRect().width * .8))); draw(p); if (p >= 1) { R.live = false; finish(); }
+    });
+    const up = async () => { if (!R.live || R.done) return; R.live = false; if (R.moved < 7) return; R.busy = true; if (R.p > .45) { await glide(1, 150); finish(); } else { await glide(0, 180); R.busy = false; } };      // a tap falls through to the click below
+    wrap.addEventListener("pointerup", up); wrap.addEventListener("pointercancel", up);
+    wrap.addEventListener("click", e => { e.stopPropagation(); if (R.moved < 7) tear(); });
+  }
+  // a tap, or skip: the pack rips itself, left to right
+  async function auto() { if (!SS || SS.phase !== "pack" || !R || R.done || R.busy) return; R.busy = true; R.dir = 1; if (!R.built) build(); await glide(1, 190); finish(); }
+  return { arm, auto };
+})();
+function tear() { Rip.auto(); }
 function buildStack() {
   const st = $("stStack"); st.innerHTML = SS.items.map((c, i) => `<div class="sc rise" data-i="${i}" style="z-index:${50 - i};--rot:${i ? ((rand() - .5) * 5).toFixed(1) : 0}deg;--ox:${i * 2}px;--oy:${i * 3}px">${cardHTML(c)}</div>`).join("");
   SS.veils = SS.items.map((c, i) => { const v = new Veil(st.children[i].querySelector(".card"), BY_NO[c.no].rar); v.frame(); return v; });
@@ -48,14 +100,14 @@ function buildStack() {
 }
 const scEl = i => $("stStack") && $("stStack").querySelector(`.sc[data-i="${i}"]`);
 function focusTop() {
-  const el = scEl(SS.idx); if (!el) return; el.classList.add("top"); SS.veils[SS.idx].idle(); SS.veils[SS.idx].frame(); el.onclick = advance;
+  const el = scEl(SS.idx); if (!el) return; el.classList.add("top"); SS.veils[SS.idx].idle(); SS.veils[SS.idx].frame(); el.onclick = e => { if (el._drag) { el._drag = false; e.stopPropagation(); return; } advance(); }; armFling(el);
   $("stCount").textContent = `${meter(SS.idx + 1, SS.items.length)} card ${SS.idx + 1} of ${SS.items.length}`; hint("Tap the card to reveal it");
 }
 async function advance() {
   if (!SS || SS.busy) return; if (SS.phase === "pack") { tear(); return; } if (SS.phase !== "stack") return;
   const el = scEl(SS.idx); if (!el) return; SS.busy = true; const c = SS.items[SS.idx], card = BY_NO[c.no];
   if (!el.dataset.rev) {
-    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); meterAdd(c); SS.busy = false; hint(SS.idx < SS.items.length - 1 ? "Tap for the next card" : "Tap to see what you got");
+    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); el.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col); el.classList.add("lit"); if (!reduced) el.animate([{ scale: "1" }, { scale: "1.06" }, { scale: "1" }], { duration: 300, easing: "cubic-bezier(.2,.9,.3,1.3)" }); valueChip(el, c); SS.busy = false; hint(SS.idx < SS.items.length - 1 ? "Tap for the next card" : "Tap to see what you got");
     if (valueOf(c) < SMALL && RAR[card.rar].tier <= 1 && SS.n < 2 && at < SS.items.length - 1) setTimeout(() => { if (SS && SS.idx === at && !SS.busy && SS.phase === "stack") advance(); }, 750);       // a card worth next to nothing moves on by itself; anything that matters waits for you
   }
   else { await dismiss(el, c); SS.busy = false; }
@@ -74,8 +126,21 @@ async function reveal(el, c, card, R, v) {
   t.innerHTML = `<div class="rw">${SS.fresh && SS.fresh.has(c.uid) ? `<span class="newtag">new</span> ` : ""}${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b> <span class="dim">· ${Val.watching(c)} AI buyers watching</span></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
   { const nm = t.querySelector(".nm"); nm.style.removeProperty("--px"); blockReveal(nm, card.name, 480); fitName(nm); } t.classList.remove("in"); void t.offsetWidth; t.classList.add("in");
 }
-async function dismiss(el, c) {
-  const dir = rand() < .5 ? -1 : 1; el.onclick = null; el.classList.remove("top"); el.classList.add("gone"); el.style.transform = `translate(${dir * 110}vw, -40px) rotate(${dir * 30}deg)`; el.style.opacity = "0";
+// once a card is face up, drag it and let go: it leaves the way you threw it (a tap still sends it off)
+function armFling(el) {
+  let st = null;
+  el.addEventListener("pointerdown", e => { if (!SS || SS.busy || SS.phase !== "stack" || !el.dataset.rev || !el.classList.contains("top")) return; st = { x: e.clientX, y: e.clientY, t: performance.now(), dx: 0, dy: 0, drag: false }; try { el.setPointerCapture(e.pointerId); } catch (x) {} });
+  el.addEventListener("pointermove", e => { if (!st) return; st.dx = e.clientX - st.x; st.dy = e.clientY - st.y; if (!st.drag && Math.hypot(st.dx, st.dy) > 9) { st.drag = true; el.style.transition = "none"; } if (st.drag) el.style.transform = `translate(${st.dx}px, ${st.dy}px) rotate(${(st.dx / 14).toFixed(1)}deg)`; });
+  const up = async () => {
+    if (!st) return; const s = st; st = null; if (!s.drag) return; el._drag = true; setTimeout(() => { el._drag = false; }, 60);
+    const dist = Math.hypot(s.dx, s.dy), v = dist / Math.max(1, performance.now() - s.t); el.style.transition = "";
+    if ((dist > 80 || (v > .6 && dist > 30)) && SS && !SS.busy && SS.phase === "stack") { SS.busy = true; Snd.whoosh(); buzz(10); await dismiss(el, SS.items[SS.idx], [s.dx / dist, s.dy / dist]); if (SS) SS.busy = false; }
+    else el.style.transform = "";
+  };
+  el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
+}
+async function dismiss(el, c, vec) {
+  const dir = vec ? (vec[0] >= 0 ? 1 : -1) : rand() < .5 ? -1 : 1; el.onclick = null; el.classList.remove("top"); el.classList.add("gone"); el.style.transform = vec ? `translate(${(vec[0] * 120).toFixed(0)}vw, ${(vec[1] * 120).toFixed(0)}vh) rotate(${dir * 34}deg)` : `translate(${dir * 110}vw, -40px) rotate(${dir * 30}deg)`; el.style.opacity = "0";
   const m = document.createElement("div"); m.className = "mini"; m.innerHTML = cardHTML(c, { sm: true }); $("stTray").appendChild(m); $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   SS.idx++; await sleep(260); if (SS.idx >= SS.items.length) summary(); else focusTop();
 }

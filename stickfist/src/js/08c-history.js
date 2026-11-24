@@ -45,7 +45,8 @@ const History = (() => {
     for (let y = 30; y < H; y += 34) { let row = ""; for (let x = 0; x < 64; x++) { sd = (sd * 16807) % 2147483647; row += chs[sd % chs.length]; } g.fillText(row, 14, y); }
     g.textAlign = "center"; g.textBaseline = "alphabetic";
     // header
-    { const mx = W / 2 - 150, my = 100, k = 60 / 28; g.fillStyle = "#3be477"; g.beginPath(); g.roundRect(mx, my, 60, 60, 16); g.fill(); g.fillStyle = "#04130a"; for (const [x, y, w, h] of [[10, 6, 11, 3.2], [7, 9.2, 3.2, 3.2], [10, 12.4, 8, 3.2], [17.8, 15.6, 3.2, 3.2], [7, 18.8, 11, 3.2]]) g.fillRect(mx + x * k, my + y * k, w * k, h * k);
+    { const mx = W / 2 - 150, my = 100, k = 60 / 28; g.fillStyle = "#000"; g.strokeStyle = "rgba(255,255,255,.2)"; g.lineWidth = 2; g.beginPath(); g.roundRect(mx, my, 60, 60, 16); g.fill(); g.stroke();
+      g.fillStyle = "#fff"; g.beginPath(); g.arc(mx + 14 * k, my + 5.9 * k, 1.6 * k, 0, 7); g.fill(); g.strokeStyle = "#fff"; g.lineWidth = 1.8 * k; g.lineCap = "round"; g.beginPath(); g.moveTo(mx + 8.2 * k, my + 9.8 * k); g.lineTo(mx + 19.8 * k, my + 21.4 * k); g.moveTo(mx + 19.8 * k, my + 9.8 * k); g.lineTo(mx + 8.2 * k, my + 21.4 * k); g.stroke();
       g.textAlign = "left"; g.fillStyle = "#f5f3ee"; g.font = F(800, 50); g.letterSpacing = "12px"; g.fillText("STIXX", mx + 82, 148); g.letterSpacing = "0px"; g.textAlign = "center"; }
     g.fillStyle = "#9a968b"; g.font = F(500, 34); g.fillText(o.title || "my collection", W / 2, 215);
     // the big number

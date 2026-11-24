@@ -22,7 +22,7 @@ class PackScreen {
   status(now, s) { const v = "> " + s + " " + SPIN[Math.floor(now / 110) % 4]; if (v !== this.el.stat._s) { this.el.stat._s = v; this.el.stat.textContent = v; } const mt = meter((Math.floor(now / 380) % 5) + 1, 5); if (mt !== this.el.meter._s) { this.el.meter._s = mt; this.el.meter.textContent = mt; } }
   col(r, g, b) { const k = (r >> 4) << 8 | (g >> 4) << 4 | b >> 4; let v = this.cache.get(k); if (!v) { v = `rgb(${(r >> 4) * 17},${(g >> 4) * 17},${(b >> 4) * 17})`; this.cache.set(k, v); } return v; }
   frame(now) {
-    this.fit(); if (!this.w) return; const { cols, rows, w: W, h: H, g } = this, t = (now - this.t0) / 1000;
+    this.fit(); if (!this.w) return; const { cols, rows, w: W, h: H, g } = this, t = Math.max(0, (now - this.t0) / 1000);
     g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over"; g.shadowBlur = 0; g.fillStyle = "#000"; g.fillRect(0, 0, cols, rows);
     g.setTransform(cols / W, 0, 0, rows / H, 0, 0);                                      // paint in the pack's own pixels; the small canvas averages them into cells
     if (this.pack.id === "ms") this.launch(g, t, W, H); else this.print(g, t, W, H);

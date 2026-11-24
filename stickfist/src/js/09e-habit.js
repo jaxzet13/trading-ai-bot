@@ -31,6 +31,10 @@ const Snd = (() => {
     claim(big) { if (!ready()) return; [0, 2, 4, big ? 6 : 5].forEach((k, i) => tone(NOTE[k], .4, "triangle", .13, i * .08)); },
     level() { if (!ready()) return; [0, 2, 4, 6, 7].forEach((k, i) => tone(NOTE[k], .5, "triangle", .12, i * .09)); },
     click() { if (!ready()) return; tone(900, .05, "sine", .07); },
+    rip(p) { if (!ready()) return; hiss(.07, .22, 0, 1500 + p * 3500, 7000 + p * 6000); },                                   // one notch of the pack tearing: brighter the further it has gone
+    rise(i) { if (!ready()) return; tone(380 + i * 70, .07, "triangle", .09); hiss(.05, .06, 0, 2000, 8000); },               // a card coming up out of the pack
+    whoosh() { if (!ready()) return; hiss(.2, .12, 0, 500, 3200); },                                                           // a card flicked away
+    chip() { if (!ready()) return; tone(1318.5, .07, "sine", .07); tone(1975.5, .1, "sine", .05, .04); },                     // a card's value landing in the meter
     paid() { if (!ready()) return; [0, 2, 4].forEach((k, i) => tone(NOTE[k + 1], .28, "triangle", .11, i * .07)); },           // the cards you have turned over have reached what the pack cost
     machine(n) {                                                // the dealing machine: a short whir, a run of ticks as the cards come out, and a thunk when the stack lands
       if (!ready()) return; hiss(1.0, .16, 0, 500, 4200); tone(70, 1.1, "sawtooth", .06, 0, 170);
