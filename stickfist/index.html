@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>STIXX: ASCII card packs</title>
-<meta name="description" content="Open free packs of ASCII trading cards, watch their prices move like memecoins, and sell when you think they are at the top. Play money only. 18+.">
+<meta name="description" content="Collectible trading cards drawn entirely in text. Open a free pack every day, collect all 28 cards and trade them with the AI buyers. Free to play, play money only. 18+.">
 <meta name="theme-color" content="#07080a">
 <meta name="stixx-api" content="">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="STIXX">
 <meta property="og:title" content="STIXX: ASCII card packs">
-<meta property="og:description" content="Open free packs of ASCII trading cards, watch their prices move like memecoins, and sell when you think they are at the top. Play money only. 18+.">
+<meta property="og:description" content="Collectible trading cards drawn entirely in text. Open a free pack every day, collect all 28 cards and trade them with the AI buyers. Free to play, play money only. 18+.">
 <meta property="og:image" content="og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='7.5' fill='%23000'/%3E%3Ccircle cx='14' cy='5.9' r='1.7' fill='%23fff'/%3E%3Cpath d='M8.2 9.8 19.8 21.4M19.8 9.8 8.2 21.4' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -790,12 +790,21 @@ p.facts { display: block; }
 /* ---- the gate ---- */
 .gate { background: radial-gradient(110% 55% at 50% 0%, rgba(59,228,119,.16), transparent 60%), var(--bg); grid-template-columns: minmax(0, 1fr); }
 .gatebox { width: 100%; max-width: 400px; justify-self: center; }
-.gatebox .art { display: none; }
+.gate { overflow-y: auto; }
+.gfan { position: relative; width: 100%; height: 172px; margin: 2px 0 26px; }
+.gfan img { position: absolute; left: 50%; bottom: 0; width: 112px; height: auto; border-radius: 9px; border: 1px solid rgba(255,255,255,.16); background: #000; box-shadow: 0 14px 30px rgba(0,0,0,.6); transform-origin: 50% 120%; }
+.gfan img:nth-child(1) { transform: translateX(-50%) rotate(-14deg) translateX(-58px); }
+.gfan img:nth-child(2) { transform: translateX(-50%) rotate(14deg) translateX(58px); }
+.gfan img:nth-child(3) { width: 128px; transform: translateX(-50%); border-color: rgba(255,200,110,.5); box-shadow: 0 16px 34px rgba(0,0,0,.65), 0 0 38px rgba(255,170,60,.28); animation: gfloat 5s ease-in-out infinite; }
+@keyframes gfloat { 50% { transform: translateX(-50%) translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .gfan img:nth-child(3) { animation: none; } }
+.gttl { text-wrap: balance; } .gfine { text-wrap: balance; max-width: 40ch; }
 .gttl { font-size: 32px; font-weight: 800; letter-spacing: -.035em; }
 .gpoints { list-style: none; margin: 2px 0 4px; padding: 0; display: grid; gap: 9px; width: 100%; text-align: left; }
 .gpoints li { position: relative; padding: 0 0 0 30px; font-size: 14.5px; color: var(--ink); line-height: 1.4; }
 .gpoints li::before { content: ""; position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 50%; background: rgba(59,228,119,.15) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233be477' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12.500 4 4 8-9'/%3E%3C/svg%3E") center / 13px no-repeat; }
 .gatebox label.gcheck { background: var(--s1); border-color: var(--ln2); border-radius: 16px; }
+@media (max-height: 640px) { .gpoints { display: none; } .gttl { font-size: 26px; } .gatebox { gap: 12px; } .gfan { height: 118px; margin-bottom: 14px; } .gfan img { width: 76px; } .gfan img:nth-child(3) { width: 88px; } .gfan img:nth-child(1) { transform: translateX(-50%) rotate(-14deg) translateX(-40px); } .gfan img:nth-child(2) { transform: translateX(-50%) rotate(14deg) translateX(40px); } }
 
 /* ---- footer ---- */
 footer { border-top: 1px solid var(--ln); background: rgba(255,255,255,.012); } footer .fnote .lock { color: var(--acc); }
@@ -1059,16 +1068,13 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 <div class="gate" id="gate" hidden>
   <div class="gatebox">
     <div class="glogo" aria-label="STIXX"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect x=".5" y=".5" width="27" height="27" rx="7.5" fill="#000" stroke="rgba(255,255,255,.18)"/><circle cx="14" cy="5.900" r="1.550" fill="#fff"/><path d="M8.200 9.800 19.800 21.400M19.800 9.800 8.200 21.400" fill="none" stroke="#fff" stroke-width="1.700" stroke-linecap="round"/></svg><span>STIXX</span></div>
-    <pre class="art" aria-hidden="true">  .---.
- ( o o )
-  \ ~ /
- --'-'--</pre>
-    <h1 class="gttl">Card packs made of text</h1>
-    <p class="dim gsub">Open a pack, pull cards, and watch what the AI buyers do with them. <span id="gateMoney">Everything here is play money: nothing is ever charged, and nothing can be cashed out.</span></p>
-    <ul class="gpoints"><li>Free to play: a free pack now, and one every day</li><li>Odds published, every pack provably fair</li><li>Play money with no cash value · 18+</li></ul>
-    <label class="gcheck" for="ageOK"><input type="checkbox" id="ageOK"><span>I'm 18 or older and I understand it's play money.</span></label>
-    <button class="btn solid big" id="gateGo" disabled>enter</button>
-    <p class="small faint gfine">18+ only. No sign-up, no card, nothing to download.</p>
+    <div class="gfan" aria-hidden="true"><img src="cards/s/bubble.jpg" alt="" width="360" height="437"><img src="cards/s/kraken.jpg" alt="" width="360" height="437"><img src="cards/s/umbra.jpg" alt="" width="360" height="437"></div>
+    <h1 class="gttl">Collectible cards, drawn in text</h1>
+    <p class="dim gsub">Open packs, collect all 28 cards, and trade them with the AI buyers.</p>
+    <ul class="gpoints"><li>A free pack right now, and another every day</li><li>Odds published, every pack provably fair</li><li>No sign-up, no card, nothing to download</li></ul>
+    <label class="gcheck" for="ageOK"><input type="checkbox" id="ageOK"><span>I'm 18 or older</span></label>
+    <button class="btn solid big" id="gateGo" disabled>get my free pack</button>
+    <p class="small faint gfine" id="gateMoney">Everything here is play money: nothing is ever charged, and nothing can be cashed out.</p>
   </div>
 </div>
 
@@ -1091,9 +1097,9 @@ const RAR = {
 };
 // val is in units of play money, 500 to the dollar (see UNIT). chars is the exact number printed on the card.
 const CARDS = [
-  { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "common",    chars: 2772,   val: 4,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
-  { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "common",    chars: 2816,   val: 5,    tint: "#a8ffbe", cap: "it is a colander. it works.", styles: true },
-  { no: "004", id: "rook",    name: "Rook",    sub: "pool noodle", rar: "common",   chars: 2816,   val: 6,    tint: "#a8ffbe", cap: "reach: floppy.", styles: true },
+  { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "common",    chars: 6432,   val: 4,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
+  { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "common",    chars: 6432,   val: 5,    tint: "#a8ffbe", cap: "it is a colander. it works.", styles: true },
+  { no: "004", id: "rook",    name: "Rook",    sub: "pool noodle", rar: "common",   chars: 6432,   val: 6,    tint: "#a8ffbe", cap: "reach: floppy.", styles: true },
   { no: "012", id: "orbit",   name: "Orbit",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 17,    tint: "#a9c9ff", cap: "already read the ending.", styles: true },
   { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "uncommon",  chars: 15750,  val: 25,    tint: "#ece7dc", cap: "gone before the cape lands.", styles: true },
   { no: "018", id: "null",    name: "Null",    sub: "star",       rar: "rare",      chars: 29260,  val: 292,   tint: "#a9c9ff", cap: "not on any record.", styles: true },
@@ -1103,24 +1109,24 @@ const CARDS = [
   { no: "015", id: "reaper",  name: "Reaper",  sub: "ember",      rar: "mythic",    chars: 701000, val: 7250, tint: "#ffc87a", cap: "", styles: true },
   { no: "020", id: "umbra",   name: "Umbra",   sub: "eclipse",    rar: "secret",    chars: 1578000, val: 15625, tint: "#ffb54a", cap: "the sun blinked first.", styles: true },
   // ---- more First Print cards (same worth as the card each one shares a rarity with, so what a pack returns and how often it pays are unchanged; they only make the packs less repetitive)
-  { no: "026", id: "mop",     name: "Mop",     sub: "bucket helmet", rar: "common",   chars: 2816,  val: 7,  tint: "#a8ffbe", cap: "swab the deck.",              styles: true },
-  { no: "027", id: "pan",     name: "Pan",     sub: "frying pan",    rar: "common",   chars: 2816,  val: 8,  tint: "#ece7dc", cap: "it's a frying pan. it counts.", styles: true },
-  { no: "028", id: "cone",    name: "Cone",    sub: "traffic cone",  rar: "common",   chars: 2816,  val: 9,  tint: "#ffd27a", cap: "caution: confident.",         styles: true },
+  { no: "026", id: "mop",     name: "Mop",     sub: "bucket helmet", rar: "common",   chars: 6432,  val: 7,  tint: "#a8ffbe", cap: "swab the deck.",              styles: true },
+  { no: "027", id: "pan",     name: "Pan",     sub: "frying pan",    rar: "common",   chars: 6432,  val: 8,  tint: "#ece7dc", cap: "it's a frying pan. it counts.", styles: true },
+  { no: "028", id: "cone",    name: "Cone",    sub: "traffic cone",  rar: "common",   chars: 6432,  val: 9,  tint: "#ffd27a", cap: "caution: confident.",         styles: true },
   { no: "029", id: "tempest", name: "Tempest", sub: "storm",         rar: "uncommon", chars: 7260,  val: 21,  tint: "#a9c9ff", cap: "weather is a choice.",         styles: true },
   { no: "030", id: "surge",   name: "Surge",   sub: "big wave",      rar: "uncommon", chars: 15750, val: 31,  tint: "#9fe8ff", cap: "ride it before it breaks.",    styles: true },
   { no: "031", id: "kraken",  name: "Kraken",  sub: "tentacles",     rar: "rare",     chars: 28000, val: 233, tint: "#c9a5ff", cap: "it was always down there.",    styles: true },
   // ---- Moonshot: one launch, five altitudes. The higher the card, the rarer it is.
-  { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "common",    chars: 3600,   val: 14,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
+  { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "common",    chars: 8736,   val: 14,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
   { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "uncommon",  chars: 10080,  val: 35,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
   { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "rare",      chars: 40320,  val:  1134,  tint: "#ff7a6a", cap: "gravity lost the argument.",    styles: true },
   { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "epic",      chars: 123480, val: 1667, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
   { no: "025", set: "ms", id: "luna",     name: "Luna",     sub: "first flag",    rar: "legendary", chars: 448800, val: 4145, tint: "#b8d4ff", cap: "to the moon was never a joke.", styles: true },
   // ---- more Moonshot cards, each at the altitude (and worth) of a card already there
-  { no: "032", set: "ms", id: "spark",     name: "Spark",     sub: "sparkler",     rar: "common",   chars: 3600,   val: 16,   tint: "#ffb070", cap: "small things start fires.", styles: true },
+  { no: "032", set: "ms", id: "spark",     name: "Spark",     sub: "sparkler",     rar: "common",   chars: 8736,   val: 16,   tint: "#ffb070", cap: "small things start fires.", styles: true },
   { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 41,   tint: "#a8ffbe", cap: "three. two. one.",           styles: true },
   { no: "034", set: "ms", id: "booster",   name: "Booster",   sub: "stage split",  rar: "rare",     chars: 40320,  val:  1333, tint: "#ffd27a", cap: "dead weight, dropped.",      styles: true },
-  { no: "035", set: "ms", id: "flare",     name: "Flare",     sub: "signal flare", rar: "common",   chars: 3600,   val: 19,   tint: "#ff8a7a", cap: "the sky has been told.",     styles: true },
-  { no: "036", set: "ms", id: "bubble",    name: "Bubble",    sub: "fishbowl helmet", rar: "common", chars: 3600,  val: 21,   tint: "#ece7dc", cap: "all systems: smiling.",      styles: true },
+  { no: "035", set: "ms", id: "flare",     name: "Flare",     sub: "signal flare", rar: "common",   chars: 8736,   val: 19,   tint: "#ff8a7a", cap: "the sky has been told.",     styles: true },
+  { no: "036", set: "ms", id: "bubble",    name: "Bubble",    sub: "fishbowl helmet", rar: "common", chars: 8736,  val: 21,   tint: "#ece7dc", cap: "all systems: smiling.",      styles: true },
   { no: "037", set: "ms", id: "gantry",    name: "Gantry",    sub: "tower arm",    rar: "uncommon", chars: 10080,  val: 47,   tint: "#9fe8ff", cap: "the arm lets go.",           styles: true }
 ];
 // the sets: the two letters a copy id starts with, and what the set is called

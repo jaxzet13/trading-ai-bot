@@ -12,6 +12,10 @@ Every style of a card uses the SAME grid (cols x rows), so every style prints ex
 Cards 3-5 (orbit, null, shogun) were drawn on a taller cell (aspect 2.0) than ascii2's default 1.73; that is what makes their
 7,260 / 29,260 / 31,970 add up, so the variants use the same cell shape.
 
+NOTE: the ten COMMONS (stitch, brick, rook, mop, pan, cone, fuse, spark, flare, bubble) and PHANTOM are no longer drawn here. Every look of those
+cards, the plain one included, comes from ../commons-redo/render.py (more characters, fitted to the shape, colour, a lit backdrop).
+Running this script for a common would put the old, sparse look back.
+
 usage:
     python style_all.py                          # all 10 cards x 12 styles into ../../cards   (a few minutes for the small ones,
                                                  #  reaper and umbra take a long time: 0.7M and 1.6M characters per image)
