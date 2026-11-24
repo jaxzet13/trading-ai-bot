@@ -123,7 +123,7 @@ const routes = {
   },
   "POST /api/fair/draws": (b, ip) => {                                      // several packs in one request: the same HMAC, the next nonces in order
     const u = getUser(b.uid, ip, false); if (!u) return [404, { error: "unknown" }]; const cs = String(b.cs || "").replace(/[^\w.-]/g, "").slice(0, 24); if (!cs) return [400, { error: "no client seed" }];
-    const k = Math.max(1, Math.min(10, Math.floor(+b.n) || 1)), draws = []; for (let i = 0; i < k; i++) { const n = u.nonce++; draws.push({ nonce: n, digest: crypto.createHmac("sha256", u.seed).update(`${cs}:${n}`).digest("hex") }); } touch();
+    const k = Math.max(1, Math.min(25, Math.floor(+b.n) || 1)), draws = []; for (let i = 0; i < k; i++) { const n = u.nonce++; draws.push({ nonce: n, digest: crypto.createHmac("sha256", u.seed).update(`${cs}:${n}`).digest("hex") }); } touch();
     return { draws, commit: sha(u.seed), epoch: u.epoch };
   },
   "POST /api/fair/rotate": (b, ip) => {

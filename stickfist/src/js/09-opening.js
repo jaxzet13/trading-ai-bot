@@ -171,11 +171,11 @@ function closeStage() { if (SS && SS.phase === "wait") return; Machine.stop(); $
 
 /* ---- several packs at once. Every pack is drawn, charged and counted exactly like a single pack (same odds, same daily limit); only the show is shorter: cards worth less than $0.50
    are not revealed one by one, they are totalled on the result, and nothing is sold or hidden: they are in your collection and in the sums. ---- */
-const SMALL = UNIT / 2, MANY = [1, 3, 5, 10];                                                          // "small" is under $0.50 (UNIT units are a dollar)
+const SMALL = UNIT / 4, MANY = [1, 3, 5, 10, 25];                                                          // "small" is under $0.50 (UNIT units are a dollar)
 const openN = () => MANY.includes(state.openN) ? state.openN : 1;
 function maxN(pk) {                                                                                     // how many of this pack could be opened right now: free ones, ones you bought, then what the balance covers, never past the daily limit
-  const price = Math.max(1, packPrice(pk)), have = state.freePacks + boughtOf(pk.id) + Math.floor(state.coins / price), l = state.lim, room = l && l.packs ? Math.max(0, l.packs - packsToday()) : 10;
-  return Math.max(0, Math.min(10, have, room));
+  const price = Math.max(1, packPrice(pk)), have = state.freePacks + boughtOf(pk.id) + Math.floor(state.coins / price), l = state.lim, room = l && l.packs ? Math.max(0, l.packs - packsToday()) : 25;
+  return Math.max(0, Math.min(25, have, room));
 }
 async function openMany(pk, n) {
   if (SS || opening) return; const price = packPrice(pk); opening = true;

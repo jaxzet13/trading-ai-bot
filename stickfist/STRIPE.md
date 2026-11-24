@@ -125,6 +125,9 @@ This is separate from the server's key. Claude can't take payments or hold your 
 
 ## How the packs are priced (and why the break-even rate didn't change)
 
+> **Latest (values halved, Nov 2026).** Every card's starting value was halved so people can play further on less, and the packs re-tuned: **First Print $0.52, break-even 44%, ~90% return; Moonshot $1.45, break-even 39%, ~95% return.** Moonshot stays a high-variance pack (rare big hits), so its break-even can't reach 44% without the house paying out more than it takes — that is a property of the payout shape, not a price you can set. The starting balance is now **$1.00**. Pack prices are fixed (each card leaves the pack at its set value), not floating — the market sections below describe the earlier design. You can open up to **25 packs at once**. The rest of this doc predates these changes.
+
+
 First Print is $1.00 and Moonshot is $3.00. To get there without touching the odds, the game's play money was **redenominated**: one dollar is now 500 units (it was 100 cents), so a unit is a fifth of a cent, and Moonshot's card values were scaled by the same factor as its price. Every pack has the same cards at the same odds, worth the same share of the price, so the return and the chance of selling back at least what a pack cost are unchanged. Measured from the app's own maths at base prices:
 
 | Pack | Price before | Price now | Returns on average | Chance of selling back at least the price | Middle pack |

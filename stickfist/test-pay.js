@@ -196,7 +196,7 @@ function start(env, dataName) {
   { const fu = crypto.randomBytes(8).toString("hex"); await call(Q, "POST", "/api/hello", { uid: fu });
     const d1 = await call(Q, "POST", "/api/fair/draws", { uid: fu, cs: "ABC", n: 4 }), d2 = await call(Q, "POST", "/api/fair/draw", { uid: fu, cs: "ABC" });
     ok(d1.json.draws.length === 4 && d1.json.draws.map(x => x.nonce).join() === "0,1,2,3" && /^[0-9a-f]{64}$/.test(d1.json.commit) && d2.json.nonce === 4, "a batch of 4 draws takes the next 4 numbers in order, and a single draw after it continues at 4");
-    ok((await call(Q, "POST", "/api/fair/draws", { uid: fu, cs: "ABC", n: 99 })).json.draws.length === 10, "a batch is capped at 10"); ok((await call(Q, "POST", "/api/fair/draws", { uid: "deadbeefdeadbeef", cs: "ABC", n: 2 })).status === 404, "and an unknown player gets nothing"); }
+    ok((await call(Q, "POST", "/api/fair/draws", { uid: fu, cs: "ABC", n: 99 })).json.draws.length === 25, "a batch is capped at 25"); ok((await call(Q, "POST", "/api/fair/draws", { uid: "deadbeefdeadbeef", cs: "ABC", n: 2 })).status === 404, "and an unknown player gets nothing"); }
   // a payment the webhook never reported: the server asks Stripe itself
   const uid3 = crypto.randomBytes(8).toString("hex"); await call(Q, "POST", "/api/hello", { uid: uid3 });
   r = await call(Q, "POST", "/api/shop/checkout", { uid: uid3, pack: "fp", qty: 2, age: true }); const sid4 = r.json.url.split("/").pop();
