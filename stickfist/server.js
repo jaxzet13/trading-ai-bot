@@ -23,7 +23,7 @@ const http = require("http"), fs = require("fs"), path = require("path"), crypto
 
 const PORT = +process.env.PORT || 8080, DATA_FILE = path.resolve(process.env.DATA_FILE || path.join(__dirname, "data", "stixx.json")), STATIC = path.resolve(process.env.STATIC_DIR || __dirname);
 const TRUST_PROXY = process.env.TRUST_PROXY === "1", ADMIN_TOKEN = process.env.ADMIN_TOKEN || "", CORS = process.env.CORS_ORIGIN || "*";
-const MAX_FRIENDS = 30, BONUS_AT = { 5: 2, 10: 3, 25: 5 }, SAME_NET_MAX = 2, HELLOS_PER_HOUR = 40, CALLS_PER_MIN = 240;
+const MAX_FRIENDS = 30, BONUS_AT = { 5: 2, 10: 3, 25: 5 }, SAME_NET_MAX = 5, HELLOS_PER_HOUR = 40, CALLS_PER_MIN = 240;
 const ALPHA = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const RESERVED = new Set(["STIXX", "ADMIN", "ROOT", "TEST", "NULL", "FREE", "SUPPORT", "MOD", "STAFF", "OFFICIAL", "TEAM", "HELP", "API", "NONE", "UNDEFINED"].concat((process.env.BLOCKED_CODES || "").toUpperCase().split(",").filter(Boolean)));
 const OFFENSIVE = ["FUCK", "SHIT", "CUNT", "NAZI", "RAPE", "NIGGER", "NIGGA", "FAGGOT", "RETARD", "HITLER", "KKK"];
@@ -64,6 +64,25 @@ function getUser(uid, ip, create, ref) {
   return u;
 }
 
+// the friend has opened a pack: the person who invited them earns theirs (once per friend, up to the cap, and a few per shared network)
+function creditReferrer(u) {
+  const r = u.by && db.users[db.codes[u.by]]; if (!r || u.credited || (r.invited || 0) >= MAX_FRIENDS) return false;
+  const sameNet = Object.values(db.users).filter(x => x.by === r.code && x.credited && x.net === u.net).length;           // one household can't mint endless rewards
+  if (u.net === r.net && sameNet >= SAME_NET_MAX) return false;
+  u.credited = 1; r.invited = (r.invited || 0) + 1; const g = 1 + (BONUS_AT[r.invited] || 0); r.credits += g; r.earned = (r.earned || 0) + g; r.pending = (r.pending || 0) + 1;
+  const d = db.day[dayKey()] = db.day[dayKey()] || { new: 0, ref: 0, active: 0, refActive: 0 }; d.refActive++; return true;
+}
+// A code can also be attached after the fact: someone who already had the app (or plays from the Home Screen, which a link never reaches) enters a friend's code.
+// Once per player, never your own code, never the person you invited (no trading codes back and forth).
+function attachRef(u, uid, ref) {
+  if (u.by || !ref) return false; const rid = db.codes[normCode(ref)], r = rid && db.users[rid];
+  if (!r || rid === uid || r.by === u.code || (r.joined || 0) >= 500) return false;
+  u.by = r.code; u.welcome = 1; u.credits = (u.credits || 0) + 1; r.joined = (r.joined || 0) + 1;
+  const d = db.day[dayKey()] = db.day[dayKey()] || { new: 0, ref: 0, active: 0, refActive: 0 }; d.ref++;
+  if (u.active) creditReferrer(u);                                                                    // they have already opened a pack, so the inviter's pack is due now
+  touch(); return true;
+}
+
 /* ---- the API ---- */
 const routes = {
   "GET /api/health": () => ({ ok: true, v: 1 }),
@@ -71,7 +90,7 @@ const routes = {
   "POST /api/hello": (b, ip) => {
     if (!validUid(b.uid)) return [400, { error: "bad id" }];
     if (!db.users[b.uid] && limited("hello:" + ip, HELLOS_PER_HOUR, 3.6e6)) return [429, { error: "slow down" }];
-    const u = getUser(b.uid, ip, true, b.ref), k = dayKey();
+    const existed = !!db.users[b.uid], u = getUser(b.uid, ip, true, b.ref), k = dayKey(); if (existed && b.ref) attachRef(u, b.uid, b.ref);
     if (u.last !== k) { u.last = k; (u.days = u.days || []).push(k); if (u.days.length > 60) u.days.shift(); const d = db.day[k] = db.day[k] || { new: 0, ref: 0, active: 0, refActive: 0 }; d.dau = (d.dau || 0) + 1; touch(); }
     return publicInfo(u);
   },
@@ -85,13 +104,7 @@ const routes = {
     const u = getUser(b.uid, ip, false); if (!u) return [404, { error: "unknown" }];
     if (!u.active) {
       u.active = Date.now(); const d = db.day[dayKey()] = db.day[dayKey()] || { new: 0, ref: 0, active: 0, refActive: 0 }; d.active++;
-      const r = u.by && db.users[db.codes[u.by]];
-      if (r && !u.credited && (r.invited || 0) < MAX_FRIENDS) {
-        const sameNet = Object.values(db.users).filter(x => x.by === r.code && x.credited && x.net === u.net).length;           // one household can't mint endless rewards
-        if (u.net !== r.net || sameNet < SAME_NET_MAX) {
-          u.credited = 1; r.invited = (r.invited || 0) + 1; let g = 1 + (BONUS_AT[r.invited] || 0); r.credits += g; r.earned = (r.earned || 0) + g; r.pending = (r.pending || 0) + 1; d.refActive++;
-        }
-      }
+      creditReferrer(u);
       touch();
     }
     return { ok: true };

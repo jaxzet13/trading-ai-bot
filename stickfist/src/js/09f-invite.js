@@ -9,17 +9,27 @@ const Ref = (() => {
   const incoming = (() => {                                                // ?ref=CODE on the link a friend sent; picked up once, then the address bar is tidied
     try { const p = new URLSearchParams(location.search); if (!p.has("ref")) return ""; const r = (p.get("ref") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 16); p.delete("ref"); history.replaceState(null, "", location.pathname + (p.toString() ? "?" + p : "") + location.hash); return r; } catch (e) { return ""; }
   })();
-  if (incoming && !state.ref.by && !state.s.packs) { state.ref.by = incoming; persist(); }
+  if (incoming && !state.ref.by) { state.ref.by = incoming; persist(); }
   const link = code => location.origin + location.pathname.replace(/index\.html$/, "") + "?ref=" + code;
   const text = "Free ASCII card packs. Open one on STIXX, play money only:";
   async function sync() {
-    if (!API.on || busy || !state.ageOK) return; busy = true;
+    if (!API.on || busy || !state.ageOK) return; busy = true; const before = JSON.stringify(info);
     try {
       const r = await API.post("hello", { uid: state.uid, ref: state.ref.by }); if (!r || !r.code) return; info = r; last = Date.now(); state.ref.code = r.code; state.ref.n = r.invited; Fair.adopt(r.fair);
       applyPaid(r.paid);
-      if (r.credits > 0) { const c = await API.post("claim", { uid: state.uid }); if (c && c.packs > 0) { state.freePacks += c.packs; persist(); renderChips(); const r2 = await API.post("hello", { uid: state.uid, ref: state.ref.by }); if (r2 && r2.code) info = r2; if (view === "home") renderHome(); } }
+      if (r.credits > 0) { const c = await API.post("claim", { uid: state.uid }); if (c && c.packs > 0) { state.freePacks += c.packs; persist(); renderChips(); const r2 = await API.post("hello", { uid: state.uid, ref: state.ref.by }); if (r2 && r2.code) info = r2; if (view === "home") renderHome(); gotPacks(c); } }
       if (state.s.packs > 0 && !r.activated) activated();
-    } finally { busy = false; if (view === "invite" && $("modal").hidden) renderInvite(); }
+    } finally { busy = false; if (view === "invite" && $("modal").hidden && JSON.stringify(info) !== before) renderInvite(); }      // only redraw when something changed, so typing a code is never wiped
+  }
+  // say what just arrived: the pack for joining on a friend's invite, or the packs friends earned you
+  function gotPacks(c) { const fr = c.friends || 0, w = c.welcome || 0; Snd.claim(fr > 1); buzz([30, 40, 30]); toast(fr ? `${fr > 1 ? fr + " friends" : "A friend"} joined: +${c.packs - w} free pack${c.packs - w > 1 ? "s" : ""}${w ? " (and 1 for joining)" : ""}` : w ? "Your free pack for joining on a friend's invite is here" : `+${c.packs} free pack${c.packs > 1 ? "s" : ""}`); if (view === "profile") { pInviteSig = ""; renderProfile(); } }
+  // type a friend's code by hand: for anyone who already had the app, or who plays from the Home Screen where a link never lands
+  async function enter(raw) {
+    const code = String(raw).toUpperCase().replace(/[^A-Z0-9]/g, ""), msg = $("codeMsg"), say = (t, bad) => { if (msg) { msg.className = "small" + (bad ? " bad" : ""); msg.textContent = t; } };
+    if (code.length < 3) { say("Type your friend's code.", true); return; } if (info && code === info.code) { say("That's your own code. Enter a friend's.", true); return; }
+    say("Checking…"); const r = await API.post("hello", { uid: state.uid, ref: code });
+    if (r && r.by === code) { info = r; state.ref.by = code; persist(); if (r.credits > 0) { const c = await API.post("claim", { uid: state.uid }); if (c && c.packs > 0) { state.freePacks += c.packs; persist(); renderChips(); info = Object.assign({}, r, { credits: 0 }); gotPacks(c); } } if (state.s.packs > 0) activated(); renderInvite(); return; }
+    say(r && r.by ? "You've already joined with a friend's code." : r && r.code ? "That code didn't work. Check it and try again." : "Couldn't reach the server. Try again in a moment.", true);
   }
   const activated = () => { if (!API.on || state.ref.act) return; API.post("active", { uid: state.uid }).then(r => { if (r && r.ok) { state.ref.act = 1; persist(); setTimeout(sync, 400); } }); };
   async function vanity(raw) {
@@ -38,7 +48,7 @@ const Ref = (() => {
     API.post("event", { uid: state.uid, name: "inviteShare" }); if (navigator.share) { try { await navigator.share({ title: "STIXX", text, url: u }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
     copy();
   }
-  return { sync, activated, vanity, copy, share, link, info: () => info, text, last: () => last, incoming };
+  return { sync, activated, vanity, enter, copy, share, link, info: () => info, text, last: () => last, incoming };
 })();
 
 const BONUS_AT = [[5, 2], [10, 3], [25, 5]], MAX_FRIENDS = 30, REWARD_MAX = BONUS_AT[BONUS_AT.length - 1][0];
@@ -90,7 +100,7 @@ function renderInvite() {
   const i = Ref.info();
   if (!API.on) { $("iBody").innerHTML = `<div class="inv"><p class="dim" style="text-align:center">Invites switch on when the beta goes live. Here is how they work:</p><div class="invsteps"><div class="istep"><span>1</span>You get a link that ends in your own code.</div><div class="istep"><span>2</span>A friend who opens it gets a free pack as soon as they join.</div><div class="istep"><span>3</span>When they open it, you get a free pack too. Every 5 friends adds bonus packs.</div></div><p class="small">This copy of STIXX isn't connected to the beta server, so it can't count invites or hand out rewards, and it won't pretend to.</p></div>`; return; }
   if (!i) { $("iBody").innerHTML = `<p class="small">Getting your link…</p>`; Ref.sync(); return; }
-  const next = BONUS_AT.find(([n]) => n > i.invited), u = Ref.link(i.code), typed = document.activeElement && document.activeElement.id === "vanityIn" ? document.activeElement.value : "";
+  const next = BONUS_AT.find(([n]) => n > i.invited), u = Ref.link(i.code), typed = document.activeElement && document.activeElement.id === "vanityIn" ? document.activeElement.value : "", typedCode = $("codeIn") ? $("codeIn").value : "";
   $("iBody").innerHTML = `<div class="inv">
     <div class="invbig">${GIFT}<h2>You both get a free pack</h2><p>Share your link. The moment a friend joins, they get a free pack — and when they open it, so do you.</p>
       <button class="btn solid big" id="shareLink">Share your link</button>
@@ -98,6 +108,9 @@ function renderInvite() {
     <div class="invsteps"><div class="istep"><span>1</span>Send your link to a friend.</div><div class="istep"><span>2</span>They join and get a free pack.</div><div class="istep"><span>3</span>They open it — you get one too.</div></div>
     ${rewardBarHTML(i)}
     ${i.credits ? `<p class="small invready">${i.credits} free pack${i.credits > 1 ? "s" : ""} waiting — open the app to collect ${i.credits > 1 ? "them" : "it"}.</p>` : ""}
+    ${i.by ? `<p class="small invby">You joined on <b>${esc(i.by)}</b>'s invite.</p>` : `<form id="codeForm" autocomplete="off"><span class="label">Got a friend's code?</span>
+      <div class="row"><input id="codeIn" placeholder="THEIR CODE" value="${esc(typedCode)}" maxlength="16" spellcheck="false" autocapitalize="characters" style="text-transform:uppercase;min-width:0;flex:1"><button class="btn" type="submit">apply</button></div>
+      <div class="small" id="codeMsg">Enter it and you both get a free pack. It's the bit after <b>?ref=</b> in their link.</div></form>`}
     <form id="vanityForm" autocomplete="off"><span class="label">Make the link yours</span>
       <div class="row"><input id="vanityIn" placeholder="${i.activated ? "YOURNAME" : "open a pack first"}" maxlength="16" spellcheck="false" value="${esc(typed)}" ${i.activated ? "" : "disabled"} style="text-transform:uppercase;min-width:0;flex:1"><button class="btn" type="submit" ${i.activated ? "" : "disabled"}>claim</button></div>
       <div class="small" id="vanityMsg">${i.activated ? "3 to 16 letters or numbers. One change a day. Creators: put your name here and share the link." : "You can pick your own code once you've opened your first pack."}</div></form>
