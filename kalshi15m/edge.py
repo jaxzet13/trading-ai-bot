@@ -457,6 +457,62 @@ def real_record(log_path=REAL_LOG, now=None):
             "switched_ts": first_edge}
 
 
+FILLQ = ROOT / "data" / "kalshi15m" / "edge_fill_quality.json"
+
+
+def fill_quality(log_path=REAL_LOG, fetch=None):
+    """Does the real bot get the prices the scorecard assumes? For every order the model sent: was it filled, at
+    what price against the quoted ask, and - for orders that did NOT fill - what the bet would have paid at the
+    quoted price (the market's result from Kalshi, cached). Missing mostly winners while filling mostly losers
+    (adverse selection) would make the live edge smaller than the test's; this measures it."""
+    import requests
+    cache = json.loads(FILLQ.read_text()).get("results", {}) if FILLQ.exists() else {}
+
+    def result(tk):
+        if tk in cache:
+            return cache[tk]
+        try:
+            m = (fetch or (lambda t: requests.get(f"https://external-api.kalshi.com/trade-api/v2/markets/{t}", timeout=10).json()))(tk)
+            r = (m.get("market") or {}).get("result")
+        except (requests.RequestException, ValueError):
+            return None
+        if r in ("yes", "no"):
+            cache[tk] = r
+        return cache.get(tk)
+
+    ev = [json.loads(ln) for ln in open(log_path) if ln.strip()] if Path(log_path).exists() else []
+    intent, rows = {}, []
+    for e in ev:
+        k, tk = e.get("event"), e.get("ticker")
+        if k == "order_intent" and str(e.get("rule", "")).startswith("edge:"):
+            intent[tk] = e
+        elif k == "fill" and tk in intent:
+            i = intent.pop(tk)
+            n = e.get("n") or 0
+            row = {"ticker": tk, "ts": i["ts"], "side": i["side"], "quoted": i["price"], "edge": i.get("edge"),
+                   "filled": n > 0, "fill_price": e.get("avg_price") if n > 0 else None}
+            r = result(tk) if i.get("close_ts", 0) + 120 < time.time() else None
+            if r:
+                win = 1.0 if r == i["side"] else 0.0
+                row["at_quote_pnl"] = round(win - i["price"] - fee(i["price"]), 4)       # what the scorecard assumes
+                if n > 0:
+                    row["real_pnl"] = round(win - row["fill_price"] - fee(row["fill_price"]), 4)
+            rows.append(row)
+    f = [r for r in rows if r["filled"]]
+    u = [r for r in rows if not r["filled"]]
+    mean = lambda xs: round(100 * sum(xs) / len(xs), 2) if xs else None
+    out = {"updated": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime()), "orders": len(rows), "filled": len(f),
+           "fill_rate": round(len(f) / len(rows), 3) if rows else None,
+           "fill_minus_quote_c": mean([r["fill_price"] - r["quoted"] for r in f]),
+           "filled_real_c": mean([r["real_pnl"] for r in f if "real_pnl" in r]),
+           "filled_at_quote_c": mean([r["at_quote_pnl"] for r in f if "at_quote_pnl" in r]),
+           "unfilled_would_have_c": mean([r["at_quote_pnl"] for r in u if "at_quote_pnl" in r]),
+           "all_at_quote_c": mean([r["at_quote_pnl"] for r in rows if "at_quote_pnl" in r]),
+           "unfilled_settled": sum(1 for r in u if "at_quote_pnl" in r), "results": cache}
+    FILLQ.write_text(json.dumps(out, indent=1))
+    return out
+
+
 def report(log=print):
     """Write dashboard/index.html (the page published as the crypto dashboard) from the scorecard, the model and
     the real-money log."""
@@ -471,7 +527,12 @@ def report(log=print):
         tennis["markets"] = lg[-1]["markets"] if lg else 0
     except (OSError, ValueError, KeyError, IndexError):
         pass
-    data = {"updated": time.strftime("%b %d %H:%M UTC", time.gmtime()), "walk": w,
+    try:
+        fq = {k: v for k, v in fill_quality().items() if k != "results"}
+    except Exception as e:
+        log(f"  fill quality failed: {e!r}")
+        fq = None
+    data = {"updated": time.strftime("%b %d %H:%M UTC", time.gmtime()), "walk": w, "fills": fq,
             "model": {k: m[k] for k in ("trained", "rows", "days", "data_to")},
             "real": {k: r[k] for k in ("running", "balance", "all", "edge", "curve", "switch_index", "recent")},
             "old": r["old"], "tennis": tennis,

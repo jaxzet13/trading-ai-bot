@@ -81,6 +81,8 @@ th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu
   <section>
     <div class="sh"><div class="eyebrow">Real money</div><h2>Every real bet since Nov 12</h2><p id="realIntro"></p></div>
     <div class="card"><h3>Running real profit</h3><div class="chart" id="realChart"></div></div>
+    <div class="card"><h3>Is the bot getting the prices the test assumes?</h3><div class="stats" id="fillStats"></div>
+      <p class="foot" id="fillNote"></p></div>
     <div class="card"><h3>Latest bets</h3><div class="tablewrap"><table id="betTable"></table></div></div>
   </section>
 
@@ -203,6 +205,14 @@ const D = /*DATA*/null;
     ? `The dashed line marks the switch to the new model (${D.switched}). Before it: ${D.old.bets} bets by the old rules. Since: ${R.edge.bets} bets, ${usd(R.edge.pnl, true)}. A few dozen bets cannot confirm or reject a 3 to 5¢ edge; a few hundred start to.`
     : `The dashed line will mark the switch to the new model (${D.switched}). The old rules made ${usd(D.old.pnl, true)} over ${D.old.bets} bets.`;
   if (R.curve.length) lineChart($('realChart'), R.curve.map((p) => ({ v: p.cum, note: p.n + ' bets' })), R.curve.map((p) => p.label), R.switch_index);
+  const F = D.fills, fs = $('fillStats');
+  if (F && F.orders) {
+    const c2 = (v) => v == null ? '—' : cents(v);
+    [['Orders sent by the model', F.orders], ['Filled', F.filled + ' (' + Math.round(100 * F.fill_rate) + '%)'], ['Fill price vs quoted', c2(F.fill_minus_quote_c)],
+     ['Filled bets, a contract', c2(F.filled_real_c)], ['Unfilled would have made', c2(F.unfilled_would_have_c)]
+    ].forEach(([a, b]) => fs.appendChild(el('div', `<b>${b}</b><span>${a}</span>`)));
+    $('fillNote').textContent = 'The test assumes every order fills at the quoted price. Orders that miss because the price ran away are often the ones that would have won, so this compares the bets that filled with the ones that did not. It needs a few hundred orders to mean anything.';
+  } else { fs.appendChild(el('div', '<b>—</b><span>No model orders yet</span>')); }
   const bt = $('betTable');
   bt.appendChild(el('tr', '<th>Time (UTC)</th><th>Coin</th><th>Side</th><th>Price</th><th>Contracts</th><th>Predicted edge</th><th>Result</th>'));
   R.recent.forEach((b) => bt.appendChild(el('tr', `<td>${b.time}</td><td>${b.coin}</td><td>${b.side.toUpperCase()}</td><td>${Math.round(100 * b.price)}¢</td><td>${b.n}</td><td>${b.edge == null ? '—' : cents(100 * b.edge)}</td><td class="${b.pnl == null ? '' : cls(b.pnl)}">${b.pnl == null ? 'open' : usd(b.pnl, true)}</td>`)));
