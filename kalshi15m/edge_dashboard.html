@@ -202,7 +202,7 @@ const D = /*DATA*/null;
   W.calibration.forEach((r) => cal.appendChild(el('tr', `<td>${cents(r.predicted_c)}</td><td>${cents(r.actual_c)}</td><td>${r.n.toLocaleString()}</td>`)));
 
   $('realIntro').textContent = R.edge.bets
-    ? `The dashed line marks the switch to the new model (${D.switched}). Before it: ${D.old.bets} bets by the old rules. Since: ${R.edge.bets} bets, ${usd(R.edge.pnl, true)}. A few dozen bets cannot confirm or reject a 3 to 5¢ edge; a few hundred start to.`
+    ? `The dashed line marks the switch to the new model (${D.switched}). Before it: ${D.old.bets} bets by the old rules. Since: ${R.edge.bets} bets by the model, ${usd(R.edge.pnl, true)}` + (R.restored && R.restored.bets ? `, and ${R.restored.bets} bets by the two old rules put back on Nov 25 (ZEC and SOL), ${usd(R.restored.pnl, true)}` : `; two old rules (ZEC and SOL) were put back next to it on Nov 25`) + `. A few dozen bets cannot confirm or reject a 3 to 5¢ edge; a few hundred start to.`
     : `The dashed line will mark the switch to the new model (${D.switched}). The old rules made ${usd(D.old.pnl, true)} over ${D.old.bets} bets.`;
   if (R.curve.length) lineChart($('realChart'), R.curve.map((p) => ({ v: p.cum, note: p.n + ' bets' })), R.curve.map((p) => p.label), R.switch_index);
   const F = D.fills, fs = $('fillStats');

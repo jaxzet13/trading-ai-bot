@@ -453,7 +453,10 @@ def real_record(log_path=REAL_LOG, now=None):
                "price": b["price"], "n": b["n"], "edge": b["edge"], "pnl": None if b["pnl"] is None else round(b["pnl"], 2)}
               for b in bets[-25:]][::-1]
     return {"running": _runner_alive(), "balance": bal, "all": tot(done), "edge": tot([b for b in done if is_edge(b)]),
-            "old": tot([b for b in done if not is_edge(b)]), "curve": curve, "switch_index": sw, "recent": recent,
+            # old rules before the switch, and the old rules put back next to the model on Nov 25 (bets since)
+            "old": tot([b for b in done if not is_edge(b) and not (first_edge and b["ts"] >= first_edge)]),
+            "restored": tot([b for b in done if not is_edge(b) and first_edge and b["ts"] >= first_edge]),
+            "curve": curve, "switch_index": sw, "recent": recent,
             "switched_ts": first_edge}
 
 
