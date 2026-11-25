@@ -44,6 +44,14 @@ function saveNow() { try { fs.mkdirSync(path.dirname(DATA_FILE), { recursive: tr
 process.on("SIGTERM", () => { dirty = true; try { fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true }); fs.writeFileSync(DATA_FILE, JSON.stringify(db)); } catch (e) {} process.exit(0); });
 process.on("SIGINT", () => process.emit("SIGTERM"));
 
+/* ---- the game's own tables (what each pack holds, at what weight), read from the same file the page is built from ---- */
+let GAME = null;
+try { const f = [path.join(__dirname, "data.js"), path.join(__dirname, "src", "js", "01-data.js")].find(x => fs.existsSync(x)); if (f) GAME = new Function(fs.readFileSync(f, "utf8") + "; return { RAR, CARDS, PACKS };")(); } catch (e) { console.error("game tables not loaded: the live feed is off (" + e.message + ")"); }
+const pickU = (list, u) => { let t = 0; for (const [, w] of list) t += w; let r = u * t; for (const [id, w] of list) { if ((r -= w) < 0) return id; } return list[list.length - 1][0]; };   // the page's own weighted pick
+const noteDraw = (u, n, digest) => { (u.dr = u.dr || []).push([n, digest, u.epoch, 0]); if (u.dr.length > 200) u.dr.splice(0, u.dr.length - 200); };                                // the last draws handed to a player: number, digest, seed epoch, reported yet
+// how a player is named in the feed: the first two letters of their email name, or of their id if they have no account. Never the whole thing.
+function nameOf(uid) { const a = Object.values(db.accts || {}).find(x => x.uid === uid), base = a ? String(a.email).split("@")[0].replace(/[^a-z0-9]/gi, "") : ""; return base.length >= 2 ? base.slice(0, 2).toLowerCase() + "•••" : "player " + String(uid).slice(0, 4); }
+
 /* ---- helpers ---- */
 const sha = s => crypto.createHash("sha256").update(s).digest("hex");
 const validUid = u => typeof u === "string" && /^[a-f0-9]{16,64}$/.test(u);
@@ -170,12 +178,12 @@ const routes = {
   // provably fair draws
   "POST /api/fair/draw": (b, ip) => {
     const u = getUser(b.uid, ip, false); if (!u) return [404, { error: "unknown" }]; const cs = String(b.cs || "").replace(/[^\w.-]/g, "").slice(0, 24); if (!cs) return [400, { error: "no client seed" }];
-    const n = u.nonce++, digest = crypto.createHmac("sha256", u.seed).update(`${cs}:${n}`).digest("hex"); touch();
+    const n = u.nonce++, digest = crypto.createHmac("sha256", u.seed).update(`${cs}:${n}`).digest("hex"); noteDraw(u, n, digest); touch();
     return { nonce: n, digest, commit: sha(u.seed), epoch: u.epoch };
   },
   "POST /api/fair/draws": (b, ip) => {                                      // several packs in one request: the same HMAC, the next nonces in order
     const u = getUser(b.uid, ip, false); if (!u) return [404, { error: "unknown" }]; const cs = String(b.cs || "").replace(/[^\w.-]/g, "").slice(0, 24); if (!cs) return [400, { error: "no client seed" }];
-    const k = Math.max(1, Math.min(25, Math.floor(+b.n) || 1)), draws = []; for (let i = 0; i < k; i++) { const n = u.nonce++; draws.push({ nonce: n, digest: crypto.createHmac("sha256", u.seed).update(`${cs}:${n}`).digest("hex") }); } touch();
+    const k = Math.max(1, Math.min(25, Math.floor(+b.n) || 1)), draws = []; for (let i = 0; i < k; i++) { const n = u.nonce++, digest = crypto.createHmac("sha256", u.seed).update(`${cs}:${n}`).digest("hex"); draws.push({ nonce: n, digest }); noteDraw(u, n, digest); } touch();
     return { draws, commit: sha(u.seed), epoch: u.epoch };
   },
   "POST /api/fair/rotate": (b, ip) => {
@@ -183,6 +191,21 @@ const routes = {
     const old = u.seed, epoch = u.epoch; u.seed = crypto.randomBytes(32).toString("hex"); u.nonce = 0; u.epoch++; touch();
     return { seed: old, epoch, next: u.epoch, commit: sha(u.seed) };
   },
+  /* ---- the live feed: hits real players pull ----
+     The page says which of its draws was a hit; the server does not take its word for the card. It kept the draw it handed out, so it
+     re-draws the card itself from the game's own tables and only lists it if it really is a legendary or better. Each draw can be
+     reported once. (For a single pack the player chooses one of five face-down cards from the one draw, so the position they report
+     is theirs to say; whichever it is, the card listed is one that draw really held.) Names are never shown whole. */
+  "POST /api/fair/hit": (b, ip) => {
+    const u = getUser(b.uid, ip, false); if (!u || !GAME) return [404, { error: "unknown" }]; if (limited("hit:" + ip, 120, 3.6e6)) return [429, { error: "slow down" }];
+    const d = (u.dr || []).find(x => x[0] === +b.n && x[2] === u.epoch); if (!d || d[3]) return { ok: false }; d[3] = 1;
+    const pk = GAME.PACKS.find(p => p.id === b.pack); if (!pk) return { ok: false };
+    const five = +b.of === 5, i = five ? Math.max(0, Math.min(4, Math.floor(+b.k) || 0)) : 0, uval = parseInt(d[1].slice(i * 8, i * 8 + 8), 16) / 4294967296, id = pickU(pk.slots[0], uval), card = GAME.CARDS.find(c => c.id === id); touch();
+    if (!card || GAME.RAR[card.rar].tier < 4) return { ok: true, hit: false };
+    db.feed = db.feed || []; db.found = db.found || {}; db.feed.push({ t: Date.now(), who: nameOf(b.uid), id, pack: pk.id }); if (db.feed.length > 300) db.feed.splice(0, db.feed.length - 300); db.found[id] = (db.found[id] || 0) + 1;
+    return { ok: true, hit: true };
+  },
+  "GET /api/feed": () => { const f = db.feed || [], t = Date.now(); return { feed: f.slice(-40).reverse(), found: db.found || {}, day: f.filter(x => t - x.t < 864e5).length, on: !!GAME }; },
   "GET /api/stats": (_b, _ip, q) => {
     if (!ADMIN_TOKEN || q.get("token") !== ADMIN_TOKEN) return [403, { error: "no" }];
     const us = Object.values(db.users), days = Object.keys(db.day).sort().slice(-30).map(k => Object.assign({ day: k }, db.day[k]));
