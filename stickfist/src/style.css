@@ -1028,3 +1028,25 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 /* nothing in the pack opening can make it wider than the screen: a long row of turned-over cards is clipped, it does not push the stack off to the side */
 .stage { grid-template-columns: minmax(0, 1fr); } .st-foot { min-width: 0; max-width: 100vw; } .st-foot .tray { max-width: 100%; overflow: hidden; justify-content: center; }
 .st-foot { grid-template-columns: minmax(0, 1fr); }
+
+/* ---- sell or hold: two pills under every card ---- */
+.pills { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(420px, calc(100vw - 32px)); margin: 2px auto 0; } .pills[hidden] { display: none; }
+.pills.in .pill { animation: pillin .34s cubic-bezier(.2,1.5,.4,1) both; } .pills.in .pill.hold { animation-delay: .05s; } @keyframes pillin { from { transform: translateY(18px) scale(.9); opacity: 0; } }
+.pill { position: relative; display: grid; gap: 1px; justify-items: center; align-content: center; min-height: 64px; padding: 8px 10px; border-radius: 999px; border: 0; color: #fff; font: inherit; cursor: pointer; overflow: hidden; -webkit-tap-highlight-color: transparent; transition: transform .12s, filter .2s, box-shadow .25s; }
+.pill small { font-size: 11.5px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; opacity: .85; } .pill b { font-size: 17px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill.hold b { font-size: 13.5px; font-weight: 650; }
+.pill::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,0) 46%); pointer-events: none; }   /* the gloss of a capsule */
+.pill.sell { background: linear-gradient(180deg, #ff5a52, #c81e2c); box-shadow: 0 10px 26px -10px rgba(255,60,60,.7), inset 0 -3px 0 rgba(0,0,0,.22); }
+.pill.hold { background: linear-gradient(180deg, #4d9bff, #1b4fd0); box-shadow: 0 10px 26px -10px rgba(60,130,255,.7), inset 0 -3px 0 rgba(0,0,0,.22); }
+.pill:active { transform: scale(.95); filter: brightness(1.15); } .pill.hit { animation: pillhit .32s ease-out; } @keyframes pillhit { 30% { transform: scale(1.08); filter: brightness(1.5); } }
+.pills.keep .pill.sell { filter: saturate(.55) brightness(.8); }                                  /* a rare card: holding is the lit choice */
+.pills.keep .pill.hold { box-shadow: 0 0 0 2px rgba(255,255,255,.55), 0 0 34px -2px #4d9bff, 0 10px 26px -10px rgba(60,130,255,.7), inset 0 -3px 0 rgba(0,0,0,.22); animation: holdpulse 1.5s ease-in-out infinite; }
+.pills.keep.in .pill.hold { animation: pillin .34s cubic-bezier(.2,1.5,.4,1) .05s both, holdpulse 1.5s ease-in-out .4s infinite; } @keyframes holdpulse { 50% { box-shadow: 0 0 0 2px rgba(255,255,255,.8), 0 0 48px 2px #4d9bff, 0 10px 26px -10px rgba(60,130,255,.7), inset 0 -3px 0 rgba(0,0,0,.22); } }
+@media (prefers-reduced-motion: reduce) { .pills .pill { animation: none !important; } }
+/* ---- the result, cut down: one number, sold and holding, the next pack ---- */
+.sum.v2 { display: grid; gap: 18px; justify-items: center; text-align: center; width: min(460px, 100%); margin: 0 auto; }
+.end-top { display: grid; gap: 8px; justify-items: center; } .end-num .bx { --px: 9px; } .end-num.up { color: var(--acc); } .end-num.dn { color: var(--ink); } .end-line { font-size: 15px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.end-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; } .end-split .es { display: grid; gap: 2px; padding: 12px 10px; border-radius: 18px; background: var(--s1); border: 1px solid var(--ln2); }
+.end-split small { font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; } .end-split b { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.end-split .sold small { color: #ff7a72; } .end-split .held small { color: #6fb0ff; }
+.end-acts { display: grid; gap: 10px; width: 100%; } .end-acts .btn.big { width: 100%; min-height: 58px; } .end-acts .row { gap: 8px; flex-wrap: wrap; }

@@ -167,7 +167,7 @@ class Resolve {
   }
   play(ms, onProg, onPass) {
     const all = [6, 8, 11, 15, 21, 29, 40, 55, 76], n = Math.min(all.length, 8 + Math.min(1, this.tier)), cols = all.slice(0, n), wts = cols.map(c => Math.pow(c, .35)), tot = wts.reduce((a, b) => a + b, 0), ctx = this.ctx, bx = this.bx;
-    let acc = 0; const spans = wts.map(w => { const s = [acc / tot, (acc + w) / tot]; acc += w; return s; }), grids = cols.map(c => this.grid(c)), t0 = performance.now(), FADE = 280; let si = -1, ptr = 0, live = [], cut = null;
+    let acc = 0; const spans = wts.map(w => { const s = [acc / tot, (acc + w) / tot]; acc += w; return s; }), grids = cols.map(c => this.grid(c)), t0 = performance.now(), FADE = 170; let si = -1, ptr = 0, live = [], cut = null;
     const font = g => { const f = `700 ${Math.max(4, g.ch * .98).toFixed(1)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; [ctx, bx].forEach(c => { c.font = f; c.textAlign = "center"; c.textBaseline = "middle"; }); };
     const finish = g => { live.forEach(i => this.put(bx, g, i, 1)); live = []; for (; ptr < g.N; ptr++) this.put(bx, g, g.idx[ptr], 1); };                         // whatever of a pass is still coming in settles before the next one starts
     return new Promise(res => { const step = now => {

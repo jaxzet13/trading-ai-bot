@@ -1049,6 +1049,28 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 /* nothing in the pack opening can make it wider than the screen: a long row of turned-over cards is clipped, it does not push the stack off to the side */
 .stage { grid-template-columns: minmax(0, 1fr); } .st-foot { min-width: 0; max-width: 100vw; } .st-foot .tray { max-width: 100%; overflow: hidden; justify-content: center; }
 .st-foot { grid-template-columns: minmax(0, 1fr); }
+
+/* ---- sell or hold: two pills under every card ---- */
+.pills { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(420px, calc(100vw - 32px)); margin: 2px auto 0; } .pills[hidden] { display: none; }
+.pills.in .pill { animation: pillin .34s cubic-bezier(.2,1.5,.4,1) both; } .pills.in .pill.hold { animation-delay: .05s; } @keyframes pillin { from { transform: translateY(18px) scale(.9); opacity: 0; } }
+.pill { position: relative; display: grid; gap: 1px; justify-items: center; align-content: center; min-height: 64px; padding: 8px 10px; border-radius: 999px; border: 0; color: #fff; font: inherit; cursor: pointer; overflow: hidden; -webkit-tap-highlight-color: transparent; transition: transform .12s, filter .2s, box-shadow .25s; }
+.pill small { font-size: 11.5px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; opacity: .85; } .pill b { font-size: 17px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill.hold b { font-size: 13.5px; font-weight: 650; }
+.pill::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,0) 46%); pointer-events: none; }   /* the gloss of a capsule */
+.pill.sell { background: linear-gradient(180deg, #ff5a52, #c81e2c); box-shadow: 0 10px 26px -10px rgba(255,60,60,.7), inset 0 -3px 0 rgba(0,0,0,.22); }
+.pill.hold { background: linear-gradient(180deg, #4d9bff, #1b4fd0); box-shadow: 0 10px 26px -10px rgba(60,130,255,.7), inset 0 -3px 0 rgba(0,0,0,.22); }
+.pill:active { transform: scale(.95); filter: brightness(1.15); } .pill.hit { animation: pillhit .32s ease-out; } @keyframes pillhit { 30% { transform: scale(1.08); filter: brightness(1.5); } }
+.pills.keep .pill.sell { filter: saturate(.55) brightness(.8); }                                  /* a rare card: holding is the lit choice */
+.pills.keep .pill.hold { box-shadow: 0 0 0 2px rgba(255,255,255,.55), 0 0 34px -2px #4d9bff, 0 10px 26px -10px rgba(60,130,255,.7), inset 0 -3px 0 rgba(0,0,0,.22); animation: holdpulse 1.5s ease-in-out infinite; }
+.pills.keep.in .pill.hold { animation: pillin .34s cubic-bezier(.2,1.5,.4,1) .05s both, holdpulse 1.5s ease-in-out .4s infinite; } @keyframes holdpulse { 50% { box-shadow: 0 0 0 2px rgba(255,255,255,.8), 0 0 48px 2px #4d9bff, 0 10px 26px -10px rgba(60,130,255,.7), inset 0 -3px 0 rgba(0,0,0,.22); } }
+@media (prefers-reduced-motion: reduce) { .pills .pill { animation: none !important; } }
+/* ---- the result, cut down: one number, sold and holding, the next pack ---- */
+.sum.v2 { display: grid; gap: 18px; justify-items: center; text-align: center; width: min(460px, 100%); margin: 0 auto; }
+.end-top { display: grid; gap: 8px; justify-items: center; } .end-num .bx { --px: 9px; } .end-num.up { color: var(--acc); } .end-num.dn { color: var(--ink); } .end-line { font-size: 15px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.end-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; } .end-split .es { display: grid; gap: 2px; padding: 12px 10px; border-radius: 18px; background: var(--s1); border: 1px solid var(--ln2); }
+.end-split small { font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; } .end-split b { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.end-split .sold small { color: #ff7a72; } .end-split .held small { color: #6fb0ff; }
+.end-acts { display: grid; gap: 10px; width: 100%; } .end-acts .btn.big { width: 100%; min-height: 58px; } .end-acts .row { gap: 8px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
@@ -1168,7 +1190,7 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
   <canvas id="fx"></canvas>
   <div class="st-bar"><span class="pn" id="stName"></span><span class="st-count" id="stCount"></span><button class="btn small ghost" id="stSkip">skip</button></div>
   <div class="st-center"><div class="st-title" id="stTitle"></div><div class="st-box" id="stBox"></div></div>
-  <div class="st-foot"><div class="meter" id="stMeter" hidden role="img"><div class="mbar"><i id="stMeterFill"></i></div><span id="stMeterTxt"></span></div><div class="st-hint" id="stHint"></div><div class="tray" id="stTray"></div></div>
+  <div class="st-foot"><div class="meter" id="stMeter" hidden role="img"><div class="mbar"><i id="stMeterFill"></i></div><span id="stMeterTxt"></span></div><div class="st-hint" id="stHint"></div><div class="pills" id="stPills" hidden><button class="pill sell" id="pillSell" type="button"></button><button class="pill hold" id="pillHold" type="button"></button></div><div class="tray" id="stTray"></div></div>
   <div class="summary" id="stSummary" hidden></div>
 </div>
 
@@ -2056,7 +2078,7 @@ class Resolve {
   }
   play(ms, onProg, onPass) {
     const all = [6, 8, 11, 15, 21, 29, 40, 55, 76], n = Math.min(all.length, 8 + Math.min(1, this.tier)), cols = all.slice(0, n), wts = cols.map(c => Math.pow(c, .35)), tot = wts.reduce((a, b) => a + b, 0), ctx = this.ctx, bx = this.bx;
-    let acc = 0; const spans = wts.map(w => { const s = [acc / tot, (acc + w) / tot]; acc += w; return s; }), grids = cols.map(c => this.grid(c)), t0 = performance.now(), FADE = 280; let si = -1, ptr = 0, live = [], cut = null;
+    let acc = 0; const spans = wts.map(w => { const s = [acc / tot, (acc + w) / tot]; acc += w; return s; }), grids = cols.map(c => this.grid(c)), t0 = performance.now(), FADE = 170; let si = -1, ptr = 0, live = [], cut = null;
     const font = g => { const f = `700 ${Math.max(4, g.ch * .98).toFixed(1)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; [ctx, bx].forEach(c => { c.font = f; c.textAlign = "center"; c.textBaseline = "middle"; }); };
     const finish = g => { live.forEach(i => this.put(bx, g, i, 1)); live = []; for (; ptr < g.N; ptr++) this.put(bx, g, g.idx[ptr], 1); };                         // whatever of a pass is still coming in settles before the next one starts
     return new Promise(res => { const step = now => {
@@ -2664,17 +2686,33 @@ function buildStack() {
 const scEl = i => $("stStack") && $("stStack").querySelector(`.sc[data-i="${i}"]`);
 function focusTop() {
   const el = scEl(SS.idx); if (!el) return; el.classList.add("top"); SS.veils[SS.idx].idle(); SS.veils[SS.idx].frame(); el.onclick = e => { if (el._drag) { el._drag = false; e.stopPropagation(); return; } advance(); }; armFling(el);
-  $("stCount").textContent = `${cmeter(SS.idx + 1, SS.items.length)} card ${SS.idx + 1} of ${SS.items.length}`; hint("Tap the card to reveal it");
+  $("stCount").textContent = `${cmeter(SS.idx + 1, SS.items.length)} card ${SS.idx + 1} of ${SS.items.length}`; hint(""); hidePills();
+  const at = SS.idx, mine = SS; setTimeout(() => { if (SS === mine && SS.idx === at && !SS.busy && SS.phase === "stack" && !el.dataset.rev) advance(); }, at ? 160 : 420);   // each card turns itself over: what you do is choose
+}
+/* ---- sell or hold: the one choice you make about every card ----
+   Two pills under a card once it is face up. Red sells it now for what it shows. Blue holds it: it goes to your collection, where
+   its value keeps moving. For a rare card, a styled copy, or one worth at least the pack, the blue pill is the lit one. */
+function hidePills() { const p = $("stPills"); if (p) p.hidden = true; }
+function showPills(c, card) {
+  const p = $("stPills"), keep = RAR[card.rar].tier >= 2 || !!c.fx || sellOf(c) >= SS.ref, w = Val.watching(c); p.className = "pills" + (keep ? " keep" : ""); p.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col);
+  $("pillSell").innerHTML = `<small>sell</small><b>+${money(sellOf(c))}</b>`; $("pillHold").innerHTML = `<small>hold</small><b>${w} buyer${w === 1 ? "" : "s"} watching</b>`;
+  p.hidden = false; p.classList.remove("in"); void p.offsetWidth; p.classList.add("in");
+}
+async function decide(kind, vec) {
+  if (!SS || SS.busy || SS.phase !== "stack") return; const el = scEl(SS.idx); if (!el || !el.dataset.rev || !el.classList.contains("lit")) return; SS.busy = true;
+  const c = SS.items[SS.idx], pill = $(kind === "sell" ? "pillSell" : "pillHold"), r = pill.getBoundingClientRect(), mid = [r.left + r.width / 2, r.top + r.height / 2]; pill.classList.add("hit"); setTimeout(() => pill.classList.remove("hit"), 320);
+  if (kind === "sell") { const g = sell([c.uid]); SS.soldG = (SS.soldG || 0) + g; SS.soldN = (SS.soldN || 0) + 1; FX.burst(mid[0], mid[1], 26, ["#ff5d5d", "#ffd0c8", "#fff"], 420); await dismiss(el, c, vec || [0, 1], true); }
+  else { Snd.chip(); buzz(12); FX.burst(mid[0], mid[1], 22, ["#5aa2ff", "#cfe3ff", "#fff"], 380); await dismiss(el, c, vec || [0, -1]); }
+  if (SS) SS.busy = false;
 }
 async function advance() {
   if (SS && SS.busy && SS.rs) { SS.rs.rush(); return; }                                    // a tap while a card is still forming finishes it now
   if (!SS || SS.busy) return; if (SS.phase === "pack") { tear(); return; } if (SS.phase !== "stack") return;
   const el = scEl(SS.idx); if (!el) return; SS.busy = true; const c = SS.items[SS.idx], card = BY_NO[c.no];
   if (!el.dataset.rev) {
-    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); el.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col); el.classList.add("lit"); if (!reduced) el.animate([{ scale: "1" }, { scale: "1.06" }, { scale: "1" }], { duration: 300, easing: "cubic-bezier(.2,.9,.3,1.3)" }); valueChip(el, c); SS.busy = false; hint(SS.idx < SS.items.length - 1 ? "Tap for the next card" : "Tap to see what you got");
-    if (valueOf(c) < SMALL && RAR[card.rar].tier <= 1 && SS.n < 2 && at < SS.items.length - 1) setTimeout(() => { if (SS && SS.idx === at && !SS.busy && SS.phase === "stack") advance(); }, 750);       // a card worth next to nothing moves on by itself; anything that matters waits for you
+    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); el.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col); el.classList.add("lit"); if (!reduced) el.animate([{ scale: "1" }, { scale: "1.06" }, { scale: "1" }], { duration: 300, easing: "cubic-bezier(.2,.9,.3,1.3)" }); valueChip(el, c); SS.busy = false; hint(""); if (SS && SS.idx === at) showPills(c, card);
   }
-  else { await dismiss(el, c); SS.busy = false; }
+  else { SS.busy = false; await decide("hold"); }                                         // a tap on a card that is face up holds it
 }
 async function reveal(el, c, card, R, v) {
   // How big the moment is follows the rarity, or what this copy really sells for next to what the pack costs, whichever is bigger. A styled copy of a plain card can be worth more than a rare one.
@@ -2688,8 +2726,8 @@ async function reveal(el, c, card, R, v) {
   if (okPic) {
     el.classList.add("loading"); tt.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col); tt.className = "st-title loading";
     tt.innerHTML = `<div class="rw">forming · <b id="ldN">0</b> characters</div><div class="vl">worth <b id="ldV">${money(0)}</b></div>`; const ldN = $("ldN"), ldV = $("ldV");
-    await v.scatter().play(200);
-    SS.rs = rs; await rs.play([950, 1200, 1600, 2100, 2600, 3100, 3800][T], p => { const e = Math.pow(p, 1.7); ldN.textContent = fmt(Math.round(card.chars * e)); ldV.textContent = money(worth * e); },
+    await v.scatter().play(130);
+    SS.rs = rs; await rs.play([420, 520, 700, 950, 1250, 1550, 1900][T], p => { const e = Math.pow(p, 1.7); ldN.textContent = fmt(Math.round(card.chars * e)); ldV.textContent = money(worth * e); },
       (k, n) => { if (k % 2 === 0) { Snd.rise(k / 2); buzz(6); } });                 // a soft tick as it sharpens; no shaking and nothing thrown while it forms
     SS.rs = null; el.classList.remove("loading"); tt.className = "st-title";
   } else await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
@@ -2709,14 +2747,14 @@ function armFling(el) {
   const up = async () => {
     if (!st) return; const s = st; st = null; if (!s.drag) return; el._drag = true; setTimeout(() => { el._drag = false; }, 60);
     const dist = Math.hypot(s.dx, s.dy), v = dist / Math.max(1, performance.now() - s.t); el.style.transition = "";
-    if ((dist > 80 || (v > .6 && dist > 30)) && SS && !SS.busy && SS.phase === "stack") { SS.busy = true; Snd.whoosh(); buzz(10); await dismiss(el, SS.items[SS.idx], [s.dx / dist, s.dy / dist]); if (SS) SS.busy = false; }
+    if ((dist > 80 || (v > .6 && dist > 30)) && SS && !SS.busy && SS.phase === "stack") { Snd.whoosh(); await decide("hold", [s.dx / dist, s.dy / dist]); }
     else el.style.transform = "";
   };
   el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
 }
-async function dismiss(el, c, vec) {
-  const dir = vec ? (vec[0] >= 0 ? 1 : -1) : rand() < .5 ? -1 : 1; el.onclick = null; el.classList.remove("top"); el.classList.add("gone"); el.style.transform = vec ? `translate(${(vec[0] * 120).toFixed(0)}vw, ${(vec[1] * 120).toFixed(0)}vh) rotate(${dir * 34}deg)` : `translate(${dir * 110}vw, -40px) rotate(${dir * 30}deg)`; el.style.opacity = "0";
-  const m = document.createElement("div"); m.className = "mini"; m.innerHTML = cardHTML(c, { sm: true }); $("stTray").appendChild(m); $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
+async function dismiss(el, c, vec, sold) {
+  hidePills(); const dir = vec ? (vec[0] >= 0 ? 1 : -1) : rand() < .5 ? -1 : 1; el.onclick = null; el.classList.remove("top"); el.classList.add("gone"); el.style.transform = vec ? `translate(${(vec[0] * 120).toFixed(0)}vw, ${(vec[1] * 120).toFixed(0)}vh) rotate(${dir * 34}deg)` : `translate(${dir * 110}vw, -40px) rotate(${dir * 30}deg)`; el.style.opacity = "0";
+  if (!sold) { const m = document.createElement("div"); m.className = "mini"; m.innerHTML = cardHTML(c, { sm: true }); $("stTray").appendChild(m); } $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";   // the row under the stack is what you are holding
   SS.idx++; await sleep(260); if (SS.idx >= SS.items.length) summary(); else focusTop();
 }
 function skipAll() { if (!SS || SS.phase === "summary") return; if (SS.phase === "wait") { Machine.stop(); return; } Machine.stop(); SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
@@ -2731,16 +2769,25 @@ function goalLine() {
   if (0) parts.push(""); else if (nx && nx.left <= 5) parts.push(`${nx.left} more to “${esc(nx.g.t)}” (+${nx.g.r} free pack${nx.g.r > 1 ? "s" : ""})`);
   return parts.length ? `<p class="goalline">${parts.join(" · ")}</p>` : "";
 }
+// The result, straight to the point: what you sold, what you are holding, and the next pack.
+function endHTML(o) {
+  const net = o.back - o.paid, pk = SS.pack;
+  return `<div class="sum v2"><div class="end-top"><div class="label">${esc(o.title)}</div>
+      <div class="end-num ${o.paid ? (net >= 0 ? "up" : "dn") : "up"}"><div class="bx" role="img" aria-label="${money(o.back)}">${blockSVG(money(o.back))}</div></div>
+      <div class="end-line">${o.paid ? `for ${money(o.paid)}` : "free"}${o.x >= 2 && o.paid ? ` · ${o.x >= 10 ? Math.round(o.x) : o.x.toFixed(1)}×` : ""}</div></div>
+    <div class="end-split"><div class="es sold"><small>sold</small><b>${money(o.soldG)}</b></div><div class="es held"><small>holding${o.held.length ? " · " + o.held.length : ""}</small><b>${money(o.heldV)}</b></div></div>
+    ${o.fan}
+    ${Goals.ready().length ? goalLine() : ""}
+    <div class="end-acts"><button class="btn solid big" id="sumAgain">${againLabel(pk)}</button>
+      <div class="row" style="justify-content:center">${o.held.length ? `<button class="btn" id="sumSell">sell what I held · ${money(o.heldSell)}</button>` : ""}<button class="btn ghost" id="sumKeep">done</button>${o.share ? `<button class="btn ghost" id="sumClip">share</button>` : ""}</div></div></div>`;
+}
+const inVault = c => state.vault.some(v => v.uid === c.uid);
 function summary() {
-  $("stMeter").hidden = true; if (SS.n > 1) { multiSummary(); return; }
-  SS.phase = "summary"; const items = SS.items, back = items.reduce((a, c) => a + sellOf(c), 0), net = back - SS_PRICE, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
-  const best = items.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no];
+  $("stMeter").hidden = true; hidePills(); if (SS.n > 1) { multiSummary(); return; }
+  SS.phase = "summary"; const items = SS.items, held = items.filter(inVault), soldG = SS.soldG || 0, heldSell = held.reduce((a, c) => a + sellOf(c), 0), heldV = held.reduce((a, c) => a + valueOf(c), 0), back = soldG + heldSell, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
-  $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(back)}">${blockSVG(money(back))}</div><span class="dim" style="font-size:13px">of cards you can sell</span></div>
-    <div class="net ${net >= 0 ? "up" : "dn"}">${SS.free ? `A free pack. Its cards sell for ${money(back)}.` : SS.bought ? `A pack you bought. Its cards sell for ${money(back)} of play money.` : `You paid ${money(SS_PRICE)} and got ${money(back)} of cards: ${net >= 0 ? "+" : "−"}${money(Math.abs(net))}.`}${x >= 2 ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div><div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${rarLabel(bc)}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div></div>
-    <div class="fan">${items.map(c => `<div class="${SS.fresh && SS.fresh.has(c.uid) ? "isnew" : ""}">${cardHTML(c, { sm: true })}</div>`).join("")}</div>
-    ${goalLine()}
-    <div class="row acts" style="justify-content:center">${sellNext(back)}<button class="btn" id="sumSell">sell all · ${money(back)}</button><button class="btn" id="sumKeep">keep all</button><button class="btn" id="sumClip">share this pull</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div>${invNudge()}</div>`;
+  $("stSummary").innerHTML = endHTML({ title: SS.pack.name, back, paid: SS.free || SS.bought ? 0 : SS_PRICE, x, soldG, held, heldV, heldSell, share: true,
+    fan: held.length ? `<div class="fan">${held.map(c => `<div class="${SS.fresh && SS.fresh.has(c.uid) ? "isnew" : ""}">${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : "" });
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
 // one quiet line under a pack result: the free way to get another
@@ -2775,18 +2822,12 @@ async function openMany(pk, n) {
 }
 
 function multiSummary() {
-  SS.phase = "summary"; const all = SS.all, hi = SS.items, lo = all.filter(c => valueOf(c) < SMALL), back = all.reduce((a, c) => a + sellOf(c), 0), loBack = lo.reduce((a, c) => a + sellOf(c), 0), paid = SS.paid, net = back - paid, x = back / Math.max(1, SS.refAll), won = back >= SS.refAll;
-  const best = all.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no], sign = net >= 0 ? "+" : "−", spent = SS.n - SS.freeN - SS.boughtN;
-  const top = new Set(hi.map(c => c.uid)), rest = all.filter(c => !top.has(c.uid)), restBack = rest.reduce((a, c) => a + sellOf(c), 0), groups = {}; rest.forEach(c => { const k = c.no + "|" + (c.fx || ""); (groups[k] = groups[k] || []).push(c); });   // everything you did not turn over, one picture per card with how many you got
+  SS.phase = "summary"; const all = SS.all, held = all.filter(inVault), soldG = SS.soldG || 0, heldSell = held.reduce((a, c) => a + sellOf(c), 0), heldV = held.reduce((a, c) => a + valueOf(c), 0), back = soldG + heldSell, x = back / Math.max(1, SS.refAll), won = back >= SS.refAll;
+  const top = held.slice().sort((a, b) => valueOf(b) - valueOf(a)).slice(0, 4), topSet = new Set(top.map(c => c.uid)), groups = {}; held.filter(c => !topSet.has(c.uid)).forEach(c => { const k = c.no + "|" + (c.fx || ""); (groups[k] = groups[k] || []).push(c); });   // the best of what you hold as cards, the rest as one picture per card with how many
   const smallFan = Object.values(groups).sort((a, b) => valueOf(b[0]) - valueOf(a[0]) || b.length - a.length).map(g => `<div class="gc">${cardHTML(g[0], { sm: true })}<b class="gn">×${g.length}</b></div>`).join("");
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
-  $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${SS.n} × ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(back)}">${blockSVG(money(back))}</div><span class="dim" style="font-size:13px">of cards you can sell</span></div>
-    <div class="net ${net >= 0 ? "up" : "dn"}">${spent ? `You paid ${money(paid)} for ${spent} pack${spent > 1 ? "s" : ""}${SS.n - spent ? ` (${SS.n - spent} free)` : ""} and got ${money(back)} of cards: <span style="white-space:nowrap">${sign}${money(Math.abs(net))}</span>.` : `${SS.n} free packs. Their cards sell for ${money(back)}.`}${x >= 2 && spent ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div>
-    <div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${rarLabel(bc)}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div>
-    ${rest.length ? `<div class="small dim" style="margin-top:10px">Your ${hi.length} best cards are on top. The other ${rest.length} (${money(restBack)} to sell in all) are in your collection too, shown under them:</div>` : ""}</div>
-    ${hi.length ? `<div class="fan">${hi.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : `<div class="small dim">Nothing worth ${money(SMALL)} or more this time.</div>`}
-    ${rest.length ? `<div class="fan small">${smallFan}</div>` : ""}
-    <div class="row acts" style="justify-content:center">${sellNext(back)}<button class="btn" id="sumSell">sell all · ${money(back)}</button>${lo.length ? `<button class="btn" id="sumSellSmall">sell the small ones · ${money(loBack)}</button>` : ""}<button class="btn" id="sumKeep">keep all</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div>${invNudge()}</div>`;
+  $("stSummary").innerHTML = endHTML({ title: `${SS.n} × ${SS.pack.name}`, back, paid: SS.paid, x, soldG, held, heldV, heldSell, share: false,
+    fan: (top.length ? `<div class="fan">${top.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : "") + (smallFan ? `<div class="fan small">${smallFan}</div>` : "") });
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
 
@@ -4351,6 +4392,8 @@ document.addEventListener("click", e => {
     case "claimOpen": closeModal(); openPack(); break;
     case "muteBtn": state.mute = !state.mute; persist(); renderChips(); if (!state.mute) Snd.click(); break;
     case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
+    case "pillSell": decide("sell"); break;
+    case "pillHold": decide("hold"); break;
     case "sumSell": { const g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
     case "sumSellAgain": { const pk = SS.pack, g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); setTimeout(() => openPack(pk), 300); break; }
     case "sumSellSmall": { const g = sell((SS.all || []).filter(c => valueOf(c) < SMALL).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
