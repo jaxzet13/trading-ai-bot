@@ -3174,12 +3174,14 @@ async function reveal(el, c, card, R, v) {
   c.t = Date.now();                                                                        // its price starts moving when it is turned over, not while it sat face down: every card is first seen at its set value
   const x = sellOf(c) / Math.max(1, SS.ref), T = momentOf(c);
   const ms = reduced ? 10 : [650, 850, 1300, 1900, 2700, 3500, 5200][T], rect = el.getBoundingClientRect(), mid = [rect.left + rect.width / 2, rect.top + rect.height / 2]; hint(""); $("stTitle").innerHTML = ""; stage.style.setProperty("--rc", R.col);
-  if (SS.n < 2 && x >= 2 && Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); await Cut.play(card.id); }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest, but only for a copy that sells for at least what the pack cost. A card that barely gives anything gets no film (it is still there to watch from its card window)
   // The back comes off, then the picture prints in: a few big characters first, then finer and finer passes, longer for a rarer card.
   // While it does, the count of characters and what the card is worth climb together at the top.
   const cardEl = el.querySelector(".card"), rs = reduced ? null : new Resolve(cardEl, R.tier, c.fx ? STYLE_TINT[c.fx] : R.tier ? R.col : "#cfd3da"), okPic = rs ? await rs.ready() : false, worth = valueOf(c), tt = $("stTitle");
   if (rs && !okPic) rs.drop();
+  // The order of a good card's moment: first the climb tells you how rare it is, then its film plays, then the card itself forms.
   if (T >= 3) await climb(el, card, c);
+  if (SS.n < 2 && x >= 2 && Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); $("stTitle").innerHTML = ""; await Cut.play(card.id); if (!SS) return; }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest, but only for a copy that sells for at least what the pack cost. A card that barely gives anything gets no film (it is still there to watch from its card window)
+  c.t = Date.now();                                                                        // and its price starts from here, so the card is first seen at its set value even after a film
   if (okPic) {
     el.classList.add("loading"); tt.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col); tt.className = "st-title loading";
     tt.innerHTML = `<div class="rw">forming · <b id="ldN">0</b> characters</div><div class="vl">worth <b id="ldV">${money(0)}</b></div>`; const ldN = $("ldN"), ldV = $("ldV");
