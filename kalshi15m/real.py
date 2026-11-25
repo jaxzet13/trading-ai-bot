@@ -860,9 +860,12 @@ class Runner:
         bk = getattr(self.mapi, "books", None)
         if bk is not None:
             try:
-                qn = bk.as_of(tk, self.clock())
+                # as_of() only vouches for times the stream has already passed: ask as of its newest message
+                t_bk = min(self.clock(), bk.last_msg)
+                qn = bk.as_of(tk, t_bk) if self.clock() - t_bk < 3 else None
                 if qn is not None:
                     base["send_yes_bid"], base["send_yes_ask"] = qn[0], qn[2]
+                    base["send_book_age_s"] = round(self.clock() - t_bk, 3)
             except Exception:
                 pass
         coid = str(uuid.uuid4())
