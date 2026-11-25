@@ -139,15 +139,39 @@ async function advance() {
   }
   else { SS.busy = false; await decide("hold"); }                                         // a tap on a card that is face up holds it
 }
+// How big a card's moment is follows its rarity, or what this copy really sells for next to what the pack costs, whichever is bigger. A styled copy of a plain card can be worth more than a rare one.
+const momentOf = c => { const x = sellOf(c) / Math.max(1, SS.ref); return Math.max(RAR[BY_NO[c.no].rar].tier, x >= 10 ? 5 : x >= 4 ? 4 : x >= 2 ? 3 : 0); };
+const isHit = c => momentOf(c) >= 4;                                                      // legendary or better, or a copy that sells for four packs
+/* ---- the build-up to a good card ----
+   Before the back comes off, a good card climbs the ladder a step at a time: Rare, Epic, Legendary... each step a thump, a
+   brighter glow and a higher note, until it reaches what it is. It only ever climbs to its real rarity and never shows one
+   above it, so the longer it goes the better the card, and nothing is teased that you did not get. A copy that is a hit for
+   what it sells for (a styled copy of a plain card) climbs in multiples of the pack instead. */
+async function climb(el, card, c) {
+  if (reduced) return; const order = Object.keys(RAR), top = order.indexOf(card.rar), x = sellOf(c) / Math.max(1, SS.ref); let steps = [];
+  for (let i = 2; i <= top; i++) steps.push([RAR[order[i]].name, RAR[order[i]].col]);
+  if (steps.length < 2) { const col = c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col; steps = [2, 4, 10, 25, 50, 100].filter(m => x >= m).map(m => [m + "× the pack", col]); }
+  if (!steps.length) return; const tt = $("stTitle"), mine = SS; el.classList.add("climbing"); stage.classList.add("hush"); hint("");
+  for (let i = 0; i < steps.length; i++) {
+    if (SS !== mine || SS.phase === "summary") break; const [name, col] = steps[i], last = i === steps.length - 1;
+    el.style.setProperty("--cc", col); stage.style.setProperty("--rc", col); tt.className = "st-title climb"; tt.style.setProperty("--rc", col);
+    tt.innerHTML = `<div class="cl-n">${esc(name)}</div><div class="cl-d">${steps.slice(0, i + 1).map(s => `<i style="--c:${s[1]}"></i>`).join("")}</div>`;
+    el.classList.remove("thump"); void el.offsetWidth; el.classList.add("thump"); Snd.climb(i, last); buzz(last ? [30, 30, 60] : 10 + Math.min(30, i * 4));
+    const r = el.getBoundingClientRect(); FX.burst(r.left + r.width / 2, r.top + r.height / 2, 10 + i * 8, [col, "#fff"], 260 + i * 50);
+    await sleep(Math.max(150, 340 - i * 22) + (last ? 260 : 0));
+  }
+  el.classList.remove("climbing", "thump"); stage.classList.remove("hush");
+}
 async function reveal(el, c, card, R, v) {
-  // How big the moment is follows the rarity, or what this copy really sells for next to what the pack costs, whichever is bigger. A styled copy of a plain card can be worth more than a rare one.
-  const x = sellOf(c) / Math.max(1, SS.ref), T = Math.max(R.tier, x >= 10 ? 5 : x >= 4 ? 4 : x >= 2 ? 3 : 0);
+  c.t = Date.now();                                                                        // its price starts moving when it is turned over, not while it sat face down: every card is first seen at its set value
+  const x = sellOf(c) / Math.max(1, SS.ref), T = momentOf(c);
   const ms = reduced ? 10 : [650, 850, 1300, 1900, 2700, 3500, 5200][T], rect = el.getBoundingClientRect(), mid = [rect.left + rect.width / 2, rect.top + rect.height / 2]; hint(""); $("stTitle").innerHTML = ""; stage.style.setProperty("--rc", R.col);
   if (SS.n < 2 && x >= 2 && Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); await Cut.play(card.id); }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest, but only for a copy that sells for at least what the pack cost. A card that barely gives anything gets no film (it is still there to watch from its card window)
   // The back comes off, then the picture prints in: a few big characters first, then finer and finer passes, longer for a rarer card.
   // While it does, the count of characters and what the card is worth climb together at the top.
   const cardEl = el.querySelector(".card"), rs = reduced ? null : new Resolve(cardEl, R.tier, c.fx ? STYLE_TINT[c.fx] : R.tier ? R.col : "#cfd3da"), okPic = rs ? await rs.ready() : false, worth = valueOf(c), tt = $("stTitle");
   if (rs && !okPic) rs.drop();
+  if (T >= 3) await climb(el, card, c);
   if (okPic) {
     el.classList.add("loading"); tt.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col); tt.className = "st-title loading";
     tt.innerHTML = `<div class="rw">forming · <b id="ldN">0</b> characters</div><div class="vl">worth <b id="ldV">${money(0)}</b></div>`; const ldN = $("ldN"), ldV = $("ldV");
@@ -160,9 +184,14 @@ async function reveal(el, c, card, R, v) {
   FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][T], T >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + T * 130);
   if (T >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + T * 14, [R.col, "#fff"]);
   if (T >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
+  if (T >= 4 && !reduced) {                                                              // a hit: the stage jolts, light turns behind the card, and a second wave goes out as its worth lands
+    stage.classList.remove("quake"); void stage.offsetWidth; stage.classList.add("quake"); setTimeout(() => stage.classList.remove("quake"), 520);
+    const ry = document.createElement("i"); ry.className = "rays"; ry.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col); el.insertBefore(ry, el.firstChild); el.classList.add("hit");
+    const mine = SS; setTimeout(() => { if (SS === mine && SS.phase === "stack") { FX.burst(mid[0], mid[1], 120 + T * 40, [R.col, "#fff", "#ffe9a8"], 620); Snd.paid(); buzz([20, 30, 40]); } }, 420);
+  }
   const t = $("stTitle"); t.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col);
-  t.innerHTML = `<div class="rw">${SS.fresh && SS.fresh.has(c.uid) ? `<span class="newtag">new</span> ` : ""}${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b> <span class="dim">· ${Val.watching(c)} AI buyers watching</span></div>${x >= 2 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
-  { const nm = t.querySelector(".nm"); nm.style.removeProperty("--px"); blockReveal(nm, card.name, 480); fitName(nm); } t.classList.remove("in"); void t.offsetWidth; t.classList.add("in");
+  t.innerHTML = `<div class="rw">${SS.fresh && SS.fresh.has(c.uid) ? `<span class="newtag">new</span> ` : ""}${T >= 3 ? `<b class="rn">${esc(R.name)}</b>` : ""}${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b> ${T >= 3 && x >= 2 ? `<span class="xm">${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack</span>` : `<span class="dim">· ${Val.watching(c)} AI buyers watching</span>`}</div>${x >= 2 && T < 3 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
+  { const nm = t.querySelector(".nm"); nm.style.removeProperty("--px"); blockReveal(nm, card.name, 480); fitName(nm); } t.className = "st-title" + (T >= 4 ? " hit" : T >= 3 ? " good" : ""); void t.offsetWidth; t.classList.add("in");
 }
 // once a card is face up, drag it and let go: it leaves the way you threw it (a tap still sends it off)
 function armFling(el) {
@@ -204,11 +233,11 @@ function endHTML(o) {
     <div class="end-split"><div class="es sold"><small>sold</small><b>${money(o.soldG)}</b></div><div class="es held"><small>holding${o.held.length ? " · " + o.held.length : ""}</small><b>${money(o.heldV)}</b></div></div>
     <div class="end-cards">${o.fan}${goalLine()}</div>
     <div class="end-acts"><button class="btn solid big" id="sumAgain">${againLabel(pk)}</button>
-      <div class="row" style="justify-content:center">${o.held.length ? `<button class="btn" id="sumSell">sell what I held · ${money(o.heldSell)}</button>` : ""}<button class="btn ghost" id="sumKeep">done</button>${o.share ? `<button class="btn ghost" id="sumClip">share</button>` : ""}${typeof API !== "undefined" && API.on ? `<button class="btn ghost" id="sumInvite">invite · free pack</button>` : ""}</div></div></div>`;
+      <div class="row" style="justify-content:center">${o.rest ? `<button class="btn" id="sumSellRest">keep the hits · sell the rest · ${money(o.rest)}</button>` : ""}${o.held.length ? `<button class="btn" id="sumSell">${o.rest ? "sell all" : "sell what I held"} · ${money(o.heldSell)}</button>` : ""}<button class="btn ghost" id="sumKeep">done</button>${o.share ? `<button class="btn ghost" id="sumClip">share</button>` : ""}${typeof API !== "undefined" && API.on ? `<button class="btn ghost" id="sumInvite">invite · free pack</button>` : ""}</div></div></div>`;
 }
 const inVault = c => state.vault.some(v => v.uid === c.uid);
 function summary() {
-  $("stMeter").hidden = true; hidePills(); { const r = $("stRail"), dk = $("stDeck"); if (r) r.remove(); if (dk) dk.remove(); } if (SS.n > 1) { multiSummary(); return; }
+  save(); $("stMeter").hidden = true; hidePills(); { const r = $("stRail"), dk = $("stDeck"); if (r) r.remove(); if (dk) dk.remove(); } if (SS.n > 1) { multiSummary(); return; }
   SS.phase = "summary"; const items = SS.items, held = items.filter(inVault), soldG = SS.soldG || 0, heldSell = held.reduce((a, c) => a + sellOf(c), 0), heldV = held.reduce((a, c) => a + valueOf(c), 0), back = soldG + heldSell, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   $("stSummary").innerHTML = endHTML({ title: SS.pack.name, back, paid: SS.free || SS.bought ? 0 : SS_PRICE, bought: SS.bought, x, soldG, held, heldV, heldSell, share: true,
@@ -247,38 +276,64 @@ async function openMany(pk, n) {
   if (!pool.length) { summary(); return; } meterInit(0); dealRail();
 }
 
-/* ---- the deal: many packs become a row of face-down cards, and you choose which one to turn over ----
-   The cards you bought are spread out of a deck into a row you scroll with your thumb. The one in the middle is the one in your
-   hand: tap it and it comes up, turns over, and you sell or hold it; then you are back at the row to pick the next.
-   Every back is the same and the row is in no order, so nothing gives a card away. They are all yours already: what you choose
-   is the order, and "skip" takes you to the result with the rest held, unopened. */
+/* ---- the deal ----
+   One pack: five face-down cards in a row you scroll with your thumb; the one in the middle is the one in your hand, and the
+   one you tap is the card you get.
+   Several packs: the cards are dealt into the same row and the row turns itself over, left to right, a card every fifth of a
+   second, each one's sale price dropping into the meter. Nothing to tap. It stops only for a hit (legendary or better, or a
+   copy that sells for four packs): that card comes up, builds, forms in full, and you sell or hold it; then the row runs on.
+   Everything else is held, and the result has one button to keep the hits and sell the rest. A tap speeds the row up, and
+   "skip" goes straight to the result. Every back is the same and the row is in no order, so nothing gives a card away. */
 let railBackImg = "";
 function railBackURL() { if (!railBackImg) { try { railBackImg = Veil.prototype.drawBack.call({ col: "#cfd3da", tier: 0 }, 300, 420, 2).toDataURL("image/jpeg", .86); } catch (e) {} } return railBackImg; }
 function dealRail() {
   const box = $("stBox"), deck = $("stDeck"), r = document.createElement("div"); box.style.setProperty("--back", `url(${railBackURL()})`); r.className = "rail"; r.id = "stRail"; r.setAttribute("role", "listbox"); r.setAttribute("aria-label", "Your cards, face down");
   r.innerHTML = SS.pool.map(c => `<button class="rc" type="button" role="option" data-u="${c.uid}" aria-label="A face-down card"><i class="rcb"></i></button>`).join(""); box.appendChild(r);
-  const els = [...r.children], n = els.length, mid = els[Math.floor((n - 1) / 2)]; r.scrollLeft = mid.offsetLeft + mid.offsetWidth / 2 - r.clientWidth / 2; railPaint(true);
+  const auto = !SS.ticket, els = [...r.children], n = els.length, m0 = auto ? 0 : Math.floor((n - 1) / 2), mid = els[m0]; SS.auto = auto; SS.fast = false; if (auto) r.classList.add('auto'); r.scrollLeft = mid.offsetLeft + mid.offsetWidth / 2 - r.clientWidth / 2; railPaint(true);
   if (!reduced) { const cx = r.scrollLeft + r.clientWidth / 2, gap = Math.min(70, 900 / n);                       // out of the deck: every card starts in the middle and slides to its place, the near ones first
-    els.map((el, i) => [el, Math.abs(i - Math.floor((n - 1) / 2))]).forEach(([el, d]) => { const dx = cx - (el.offsetLeft + el.offsetWidth / 2);
+    els.map((el, i) => [el, Math.abs(i - m0)]).forEach(([el, d]) => { const dx = cx - (el.offsetLeft + el.offsetWidth / 2);
       el.animate([{ transform: `translate(${dx.toFixed(0)}px, -26px) rotate(${((rand() - .5) * 14).toFixed(1)}deg) scale(.92)` }, { transform: "none" }], { duration: 520, delay: d * gap, easing: "cubic-bezier(.2, .9, .25, 1.12)", fill: "backwards" });
       if (d < 7) setTimeout(() => { if (SS && $("stRail") === r) { Snd.rise(d); buzz(5); } }, d * gap); }); }
   if (deck) deck.remove();
   if (!SS.ticket) [...new Set(SS.pool.map(c => imgOf(BY_NO[c.no], c.fx)))].forEach(loadImg);                      // fetched while you choose, so a card never waits on its picture
   let raf = 0; r.addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; railPaint(); }); }, { passive: true });
-  r.addEventListener("click", e => { const el = e.target.closest(".rc"); if (el) { e.stopPropagation(); pickRail(el); } });
-  SS.phase = "pick"; railCount();
+  r.addEventListener("click", e => { const el = e.target.closest(".rc"); if (el) { e.stopPropagation(); if (SS.auto) { SS.fast = true; hint(""); } else pickRail(el); } });
+  SS.phase = "pick"; railCount(); if (auto) railRun();
+}
+// a row scrolled by the run, not by a thumb: a short glide to the next card
+function railGo(r, el, ms) { const to = el.offsetLeft + el.offsetWidth / 2 - r.clientWidth / 2, from = r.scrollLeft, t0 = performance.now(); if (reduced || ms < 20) { r.scrollLeft = to; return; } const step = now => { const k = Math.min(1, (now - t0) / ms); r.scrollLeft = from + (to - from) * (1 - Math.pow(1 - k, 3)); if (k < 1 && r.isConnected) requestAnimationFrame(step); }; requestAnimationFrame(step); }
+function flipInPlace(el, c, T) {
+  c.t = Date.now(); const card = BY_NO[c.no], col = c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col, good = sellOf(c) >= SS.ref; SS.pool = SS.pool.filter(x => x !== c);
+  el.classList.add("up"); if (good) el.classList.add("good"); if (T >= 3) el.classList.add("big"); el.style.setProperty("--rc", col); el.setAttribute("aria-label", `${card.name}, ${money(sellOf(c))}`);
+  el.innerHTML = `<i class="rcb"></i><span class="rcf">${cardHTML(c, { sm: true })}</span><b class="rcv">${money(sellOf(c))}</b>`;
+  meterAdd(c); Snd.rise(Math.min(9, 1 + T * 2 + (good ? 1 : 0))); buzz(T >= 3 ? [14, 20, 22] : 5); if (good) Snd.chip();
+  if (T >= 3) { const a = el.getBoundingClientRect(); FX.burst(a.left + a.width / 2, a.top + a.height / 2, 46, [col, "#fff"], 420); Snd.reveal(2); }
+  $("stCount").textContent = SS.pool.length ? `${SS.pool.length} left` : "";
+}
+async function railRun() {
+  const mine = SS, r = $("stRail"), alive = () => SS === mine && SS.phase !== "summary" && $("stRail") === r; if (!r) return; hint("tap to go faster");
+  await sleep(reduced ? 0 : 620); const els = [...r.children];
+  for (const el of els) {
+    if (!alive()) return; const c = SS.pool.find(x => x.uid === el.dataset.u); if (!c) continue; const T = momentOf(c);
+    railGo(r, el, SS.fast ? 60 : 150);
+    if (T >= 4) {                                                                        // a hit stops the row: it comes up, builds, forms in full, and you choose
+      await sleep(reduced ? 0 : SS.fast ? 140 : 300); if (!alive()) return; railPaint(true); hint("");
+      await new Promise(res => { mine.resume = res; pickRail(el, true); }); if (!alive()) return; if (SS.pool.length) hint(SS.fast ? "" : "tap to go faster");
+    } else { await sleep(reduced ? 0 : SS.fast ? 30 : 70); if (!alive()) return; flipInPlace(el, c, T); await sleep(reduced ? 0 : SS.fast ? (T >= 3 ? 260 : 60) : T >= 3 ? 520 : 150); }
+  }
+  if (!alive()) return; hint(""); await sleep(reduced ? 0 : 520); if (alive()) summary();
 }
 // the row as you scroll it: the card in the middle is full size and lit, the others fall back; a tick as each one passes
 function railPaint(quiet) {
   const r = $("stRail"); if (!r || !SS) return; const mid = r.scrollLeft + r.clientWidth / 2; let best = null, bd = 1e9;
   for (const el of r.children) { const c = el.offsetLeft + el.offsetWidth / 2, d = Math.abs(c - mid), k = d / el.offsetWidth; el.style.setProperty("--s", Math.max(.7, 1.06 - k * .26).toFixed(3)); el.style.setProperty("--o", Math.max(.38, 1 - k * .38).toFixed(2)); if (d < bd) { bd = d; best = el; } }
-  if (best && best !== SS.railMid) { if (SS.railMid) SS.railMid.classList.remove("mid"); best.classList.add("mid"); if (!quiet && SS.phase === "pick") { Snd.click(); buzz(4); } SS.railMid = best; }
+  if (best && best !== SS.railMid) { if (SS.railMid) SS.railMid.classList.remove("mid"); best.classList.add("mid"); if (!quiet && SS.phase === "pick" && !SS.auto) { Snd.click(); buzz(4); } SS.railMid = best; }
 }
-function railCount() { const n = SS.pool.length; if (SS.ticket) { $("stCount").textContent = ""; hint("pick your card"); return; } $("stCount").textContent = `${n} left`; hint(n > 1 ? "scroll · tap a card" : ""); }
+function railCount() { const n = SS.pool.length; if (SS.ticket) { $("stCount").textContent = ""; hint("pick your card"); return; } $("stCount").textContent = `${n} left`; }
 function railStep(dir) { const r = $("stRail"); if (!r || !SS || SS.phase !== "pick" || !SS.railMid) return; const el = dir > 0 ? SS.railMid.nextElementSibling : SS.railMid.previousElementSibling; if (el) r.scrollTo({ left: el.offsetLeft + el.offsetWidth / 2 - r.clientWidth / 2, behavior: "smooth" }); }
-async function pickRail(el) {
-  if (!SS || SS.phase !== "pick" || SS.busy) return; const r = $("stRail"); el = el || SS.railMid; if (!r || !el) return;
-  if (el !== SS.railMid) { r.scrollTo({ left: el.offsetLeft + el.offsetWidth / 2 - r.clientWidth / 2, behavior: "smooth" }); return; }      // a card off to the side comes to the middle first
+async function pickRail(el, run) {
+  if (!SS || SS.phase !== "pick" || SS.busy || (SS.auto && !run)) return; const r = $("stRail"); el = el || SS.railMid; if (!r || !el) return;
+  if (el !== SS.railMid && !run) { r.scrollTo({ left: el.offsetLeft + el.offsetWidth / 2 - r.clientWidth / 2, behavior: "smooth" }); return; }      // a card off to the side comes to the middle first
   let c = SS.pool.find(x => x.uid === el.dataset.u); if (!c) return; if (SS.ticket) { c = takePick(c.slot); SS.pool = []; if (!c) return; } else SS.pool = SS.pool.filter(x => x !== c);
   SS.phase = "stack"; SS.busy = true; hint(""); $("stCount").textContent = SS.pool.length ? `${SS.pool.length} left` : "";
   el.classList.add("picked"); Snd.whoosh(); buzz(12); await sleep(reduced ? 0 : 170); if (!SS || $("stRail") !== r) return; r.classList.add("away"); el.remove(); SS.railMid = null;
@@ -288,6 +343,7 @@ async function pickRail(el) {
 }
 function railReturn() {
   const r = $("stRail"); setTimeout(() => { const st = $("stStack"); if (st) st.querySelectorAll(".sc.gone").forEach(e => e.remove()); }, 500);
+  if (SS.auto) { SS.phase = "pick"; if (r) { r.classList.remove("away"); railPaint(true); } const go = SS.resume; SS.resume = null; if (go) go(); return; }      // the row runs on from where it stopped
   if (!r || !SS.pool.length) { summary(); return; } SS.phase = "pick"; r.classList.remove("away"); railPaint(true); railCount();
   if (SS.pool.length === 1 && !SS.ticket) { const mine = SS; setTimeout(() => { if (SS === mine && SS.phase === "pick") pickRail(); }, 380); }                     // the last one needs no choosing
 }
@@ -297,7 +353,8 @@ function multiSummary() {
   const top = held.slice().sort((a, b) => valueOf(b) - valueOf(a)).slice(0, 4), topSet = new Set(top.map(c => c.uid)), groups = {}; held.filter(c => !topSet.has(c.uid)).forEach(c => { const k = c.no + "|" + (c.fx || ""); (groups[k] = groups[k] || []).push(c); });   // the best of what you hold as cards, the rest as one picture per card with how many
   const smallFan = Object.values(groups).sort((a, b) => valueOf(b[0]) - valueOf(a[0]) || b.length - a.length).map(g => `<div class="gc">${cardHTML(g[0], { sm: true })}<b class="gn">×${g.length}</b></div>`).join("");
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
-  $("stSummary").innerHTML = endHTML({ title: `${SS.n} × ${SS.pack.name}`, back, paid: SS.paid, x, soldG, held, heldV, heldSell, share: false,
+  const hits = held.filter(isHit), rest = hits.length && hits.length < held.length ? held.filter(c => !isHit(c)).reduce((a, c) => a + sellOf(c), 0) : 0;
+  $("stSummary").innerHTML = endHTML({ title: `${SS.n} × ${SS.pack.name}`, back, paid: SS.paid, x, soldG, held, heldV, heldSell, rest, share: false,
     fan: (top.length ? `<div class="fan">${top.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : "") + (smallFan ? `<div class="fan small">${smallFan}</div>` : "") });
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }

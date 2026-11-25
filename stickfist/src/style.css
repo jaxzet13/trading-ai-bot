@@ -1163,3 +1163,32 @@ details.ptile[open] > summary { border-bottom: 1px solid var(--ln); grid-templat
 .ptile:active { transform: scale(.985); } details.ptile[open]:active { transform: none; }
 #v-profile #pAcct .acctbox { margin: 0 0 10px; padding: 12px 14px; border-radius: 18px; background: none; border-color: var(--ln); } #v-profile #pAcct .acctbox:not(.test) .ac-who small { display: none; } #v-profile #pAcct .acctbox .ac-who b { font-size: 14px; font-weight: 600; }
 #v-profile #pAcct .acctbox.test { background: linear-gradient(100deg, rgba(255,200,90,.10), rgba(255,200,90,.02)); }
+
+/* ---- a good card's build-up and payoff ---- */
+.sc.climbing { animation: climbShake .11s linear infinite; } .sc.climbing.thump { animation: climbShake .11s linear infinite, climbThump .34s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes climbShake { 25% { translate: -2px 1px; } 75% { translate: 2px -1px; } } @keyframes climbThump { from { scale: 1.1; } }
+.sc.climbing::after { content: ""; position: absolute; inset: -2px; z-index: 5; border-radius: 5% / 3.57%; pointer-events: none; box-shadow: 0 0 0 2px var(--cc, #fff), 0 0 70px 4px var(--cc, #fff), inset 0 0 46px -6px var(--cc, #fff); transition: box-shadow .18s; }
+.stage.hush .st-bar, .stage.hush #stTray { opacity: .2; transition: opacity .25s; } .stage .st-bar, .stage #stTray { transition: opacity .4s; }
+.stage.hush::before { opacity: 1 !important; }
+.st-title.climb { align-content: end; gap: 10px; } .cl-n { font: 900 30px/1 Inter, system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: var(--rc, #fff); text-shadow: 0 0 34px var(--rc, #fff); animation: clIn .3s cubic-bezier(.2, 1.7, .4, 1) both; }
+@keyframes clIn { from { transform: scale(1.7); opacity: 0; } }
+.cl-d { display: flex; justify-content: center; gap: 5px; } .cl-d i { width: 16px; height: 5px; border-radius: 3px; background: var(--c); box-shadow: 0 0 10px var(--c); }
+.stage.quake .st-box { animation: quake .5s cubic-bezier(.36, .07, .19, .97); } @keyframes quake { 10%, 90% { translate: -2px 0; } 20%, 80% { translate: 5px -2px; } 30%, 50%, 70% { translate: -9px 3px; } 40%, 60% { translate: 9px -3px; } }
+.sc > .rays { position: absolute; left: 50%; top: 50%; width: 260%; aspect-ratio: 1; z-index: -1; pointer-events: none; translate: -50% -50%; border-radius: 50%; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--rc, #fff) 50%, transparent) 0 5deg, transparent 5deg 15deg); -webkit-mask: radial-gradient(closest-side, #000 22%, transparent 78%); mask: radial-gradient(closest-side, #000 22%, transparent 78%); animation: raysIn .7s cubic-bezier(.2, .9, .3, 1) both, raysSpin 16s linear infinite; }
+@keyframes raysIn { from { opacity: 0; scale: .4; } } @keyframes raysSpin { to { rotate: 360deg; } }
+.sc.gone > .rays { opacity: 0; transition: opacity .2s; }
+.st-title .rn { display: inline-block; margin-right: 10px; vertical-align: -2px; font: 900 22px/1 Inter, system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: var(--rc, #fff); text-shadow: 0 0 26px color-mix(in srgb, var(--rc, #fff) 80%, transparent); }
+.st-title.hit .rn { font-size: 26px; } .st-title.hit .vl b { font-size: 30px; font-weight: 800; letter-spacing: -.03em; color: #fff; text-shadow: 0 0 22px color-mix(in srgb, var(--rc, #fff) 70%, transparent); }
+.st-title .vl .xm { display: inline-block; margin: 0 0 0 6px; padding: 4px 11px; border-radius: 999px; vertical-align: 4px; background: var(--rc, #fff); color: #05060a; font-size: 13.5px; font-weight: 800; animation: xmPop .5s .4s cubic-bezier(.2, 1.7, .4, 1) both; }
+@keyframes xmPop { from { transform: scale(.3); opacity: 0; } }
+/* ---- several packs: the row turns itself over ---- */
+.rail.auto { scroll-snap-type: none; } .rail.auto .rc { cursor: default; }
+.rc.up { position: relative; } .rc.up .rcb { animation: rcOut .16s ease-in forwards; } @keyframes rcOut { to { rotate: y 90deg; opacity: 0; } }
+.rcf { position: absolute; inset: 0; display: block; transform: scale(var(--s, .8)); opacity: var(--o, .6); border-radius: 5% / 3.57%; box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc, #888) 60%, transparent), 0 0 30px -10px var(--rc, #888), 0 18px 34px -18px #000; animation: rcIn .26s .12s cubic-bezier(.2, 1.4, .4, 1) backwards; transition: transform .14s ease-out, opacity .14s; }
+@keyframes rcIn { from { rotate: y -90deg; opacity: 0; } }
+.rcf > .card { width: 100%; pointer-events: none; }
+.rc.big .rcf { box-shadow: 0 0 0 2px var(--rc), 0 0 60px -6px var(--rc), 0 18px 34px -18px #000; }
+.rcv { position: absolute; left: 50%; top: calc(50% + (var(--rw) * .7) * var(--s, .8) + 8px); translate: -50% 0; font: 700 12.5px "JetBrains Mono", ui-monospace, monospace; color: var(--dim); opacity: var(--o, .6); white-space: nowrap; animation: rcvIn .3s .2s both; } .rc.good .rcv { color: #3be477; }
+@keyframes rcvIn { from { opacity: 0; translate: -50% 8px; } }
+@media (prefers-reduced-motion: reduce) { .sc > .rays, .rc.up .rcb, .rcf, .rcv { animation: none; } .rc.up .rcb { opacity: 0; } }
+.stage:has(.st-title.hit) #stMeter, .stage:has(.st-title.climb) #stMeter { opacity: 0; transition: opacity .2s; }

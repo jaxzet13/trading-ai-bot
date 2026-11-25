@@ -60,6 +60,7 @@ document.addEventListener("click", e => {
     case "pillHold": decide("hold"); break;
     case "sumSell": { const g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
     case "sumSellAgain": { const pk = SS.pack, g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); setTimeout(() => openPack(pk), 300); break; }
+    case "sumSellRest": { const g = sell((SS.all || []).filter(c => inVault(c) && !isHit(c)).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
     case "sumSellSmall": { const g = sell((SS.all || []).filter(c => valueOf(c) < SMALL).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
     case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else if (Shop.has(pk.id)) setTimeout(() => Shop.modal(pk.id), 200); else location.hash = "#/invite"; break; }
@@ -98,5 +99,5 @@ document.addEventListener("keydown", e => {
   if ((k === " " || k === "Enter") && view === "home" && $("modal").hidden && $("share").hidden && $("gate").hidden && !e.repeat && !/^(BUTTON|INPUT|SELECT|A|SUMMARY)$/.test(e.target.tagName)) { e.preventDefault(); openPack(); }
 });
 // while cards are being revealed a tap anywhere on the stage goes on to the next one (the card itself still works), so a thumb never has to aim
-stage.addEventListener("click", e => { if (SS && SS.phase === "stack" && !e.target.closest("button, a, .summary, .st-bar")) advance(); });
+stage.addEventListener("click", e => { if (SS && SS.auto && SS.phase === "pick" && !e.target.closest("button:not(.rc), a, .summary, .st-bar")) { SS.fast = true; hint(""); return; } if (SS && SS.phase === "stack" && !e.target.closest("button, a, .summary, .st-bar")) advance(); });
 window.addEventListener("hashchange", route);
