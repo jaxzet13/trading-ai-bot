@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prop Strategy Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a lab notebook. Verdict tiles, then firm-by-firm value, the strategy leaderboard, per-firm drill-down, portfolios, and the evidence. */
+:root {
+  --bg: #0b0c10; --panel: #14161c; --panel-2: #1a1d25; --line: #262a35; --line-2: #343a48;
+  --fg: #eef0f5; --fg-2: #b7bcc9; --fg-3: #7d8496;
+  --accent: #5598e7; --up: #1baf7a; --down: #e66767; --warn: #c98500; --violet: #9085e9;
+  --up-soft: rgba(27,175,122,.15); --down-soft: rgba(230,103,103,.15); --acc-soft: rgba(85,152,231,.15);
+  --font-ui: "Manrope", "Segoe UI", system-ui, sans-serif; --font-mono: "JetBrains Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #f4f5f8; --panel: #ffffff; --panel-2: #eff1f5; --line: #e0e3ea; --line-2: #c8cdd8; --fg: #12141a; --fg-2: #4a505e; --fg-3: #7a8092;
+  --accent: #2a78d6; --up: #0f9a68; --down: #d64545; --warn: #b87400; --violet: #6250d6; color-scheme: light; } }
+:root[data-theme="light"] { --bg: #f4f5f8; --panel: #ffffff; --panel-2: #eff1f5; --line: #e0e3ea; --line-2: #c8cdd8; --fg: #12141a; --fg-2: #4a505e; --fg-3: #7a8092;
+  --accent: #2a78d6; --up: #0f9a68; --down: #d64545; --warn: #b87400; --violet: #6250d6; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14.5px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+header { padding-block: 28px 4px; display: flex; flex-direction: column; gap: 6px; }
+.eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-3); font-weight: 700; }
+h1 { margin: 0; font-size: clamp(26px, 4vw, 36px); font-weight: 800; letter-spacing: -.02em; }
+h2 { margin: 0; font-size: 17px; font-weight: 800; }
+p { margin: 0; color: var(--fg-2); max-width: 78ch; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.hint { font-size: 12.5px; color: var(--fg-3); max-width: 90ch; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.tile { background: var(--panel-2); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile .k { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-3); font-weight: 700; }
+.tile .v { font-family: var(--font-mono); font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile .s { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-3); }
+.pos { color: var(--up); } .neg { color: var(--down); }
+.tablewrap { overflow-x: auto; min-width: 0; }
+table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; vertical-align: top; }
+th { color: var(--fg-3); font-weight: 500; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+th:first-child, td:first-child { text-align: left; }
+td.desc { white-space: normal; min-width: 280px; max-width: 460px; text-align: left; font-family: var(--font-ui); font-size: 13px; color: var(--fg); }
+td.desc small { display: block; color: var(--fg-3); font-size: 11.5px; }
+tr.hl td { background: var(--acc-soft); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; font-family: var(--font-ui); }
+.pill.ok { background: var(--up-soft); color: var(--up); } .pill.no { background: var(--down-soft); color: var(--down); } .pill.mid { background: var(--acc-soft); color: var(--accent); }
+select { background: var(--panel-2); color: var(--fg); border: 1px solid var(--line-2); border-radius: 6px; padding: 6px 9px; font: inherit; font-size: 13px; }
+select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.chart { width: 100%; height: 260px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; } .grid2 > * { min-width: 0; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+ul { margin: 0; padding-left: 18px; color: var(--fg-2); display: flex; flex-direction: column; gap: 5px; max-width: 90ch; }
+ul strong { color: var(--fg); }
+footer { color: var(--fg-3); font-size: 12px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Mass strategy search · scored on real prop-firm rules · judged on unseen data</div>
+    <h1>Prop Strategy Lab</h1>
+    <p id="lede"></p>
+  </header>
+
+  <section class="panel">
+    <div class="head"><h2>The search, in numbers</h2><span class="hint" id="periods"></span></div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section class="panel">
+    <div class="head"><h2>What each firm is worth</h2><span class="hint">Expected dollars per evaluation bought, on 2024 to 2026 data the search never saw. "No edge" is a coin-flip entry with the best trade shape and sizing for that firm: what the rules alone are worth. Sizing and strategy were chosen on 2022 to 2023.</span></div>
+    <div class="tablewrap"><table id="firms"></table></div>
+  </section>
+
+  <section class="panel">
+    <div class="head"><h2>Strategy leaderboard</h2><span class="hint">Ranked by value across firms on the validation years. Edge columns are average R per trade after costs. The test columns are the honest ones.</span></div>
+    <div class="tablewrap"><table id="board"></table></div>
+  </section>
+
+  <section class="panel">
+    <div class="head"><h2>Best strategies for one firm</h2><select id="firmsel" aria-label="Firm"></select></div>
+    <p class="hint" id="firmnote"></p>
+    <div class="tablewrap"><table id="perfirm"></table></div>
+  </section>
+
+  <section class="panel">
+    <div class="head"><h2>Portfolios: several strategies on one account</h2><span class="hint">Built greedily on the validation years: start from the best single strategy for the firm, add another only if it raises expected value. More trades per week means faster passes.</span></div>
+    <div class="tablewrap"><table id="ports"></table></div>
+  </section>
+
+  <section class="panel">
+    <div class="head"><h2>The evidence</h2></div>
+    <div class="grid2">
+      <div><div class="chart" id="thist"></div><p class="hint" id="thint"></p></div>
+      <div class="tablewrap"><table id="fams"></table></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>How to read this, and what it does not prove</h2>
+    <ul id="notes"></ul>
+  </section>
+  <footer>Simulation on historical 1-minute data with conservative costs. Firm rules simplified from public sources, November 2026; verify before paying. Not financial advice.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.6.0/echarts.min.js"></script>
+<script src="data.js"></script>
+<script>
+(function () {
+  const D = window.LAB_DATA; const $ = id => document.getElementById(id);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const money = v => (v < 0 ? '-$' : '$') + Math.abs(Math.round(v)).toLocaleString();
+  const pct = (v, d = 0) => (v * 100).toFixed(d) + '%';
+  const r3 = v => (v >= 0 ? '+' : '') + v.toFixed(3);
+  const cls = v => v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+  const F = D.funnel, T = D.test_of_candidates;
+  const firmNames = Object.keys(D.firms);
+
+  $('lede').textContent = `${F.tested.toLocaleString()} rule-based day-trading strategies across ${Object.keys(D.instruments).length} markets, each simulated on 1-minute data with costs, then run through ${firmNames.length} prop-firm rule sets: evaluation, funded phase and payouts. Strategies were chosen on 2016 to 2023 and are reported on 2024 to 2026.`;
+  $('periods').textContent = `train ${D.periods.train} · validate ${D.periods.valid} · test ${D.periods.test}`;
+  $('tiles').innerHTML = [
+    ['Strategies tested', F.tested.toLocaleString(), 'entry rule × exit rule × market × session'],
+    ['Passed training filter', F.train_pass.toLocaleString(), `${pct(F.train_pass / F.tested, 2)} of all (t ≥ 2, profit factor ≥ 1.05)`],
+    ['Still positive in validation', F.valid_pass.toLocaleString(), `${D.n_candidates.toLocaleString()} distinct after removing duplicates`],
+    ['Positive on unseen test years', pct(T.share_positive), `of the ${T.n.toLocaleString()} survivors; a coin flip would be about 35% after costs`, T.share_positive > 0.5 ? 'pos' : 'neg'],
+    ['Average edge of survivors', r3(T.mean_r) + 'R', `test; was ${r3(T.mean_r_valid)}R in validation, ${r3(T.mean_r_train)}R in training`, cls(T.mean_r)],
+  ].map(([k, v, s, c]) => `<div class="tile"><span class="k">${k}</span><span class="v ${c || ''}">${v}</span><span class="s">${s}</span></div>`).join('');
+
+  // firms table
+  const portBy = Object.fromEntries(D.portfolios.map(p => [p.firm, p]));
+  const shape = n => `stop ×${n.shape[0]}, ` + (n.shape[1] ? `target ${n.shape[1]}R` : 'no target');
+  const firmRows = firmNames.map(fn => {
+    const f = D.firms[fn], n = f.null, b = (D.per_firm[fn] || [])[0], p = portBy[fn];
+    return { fn, f, n, b, p, best: Math.max(n.test.ev, b ? b.test.ev : -1e9, p ? p.pick.test.ev : -1e9) };
+  }).sort((a, b) => b.best - a.best);
+  $('firms').innerHTML = `<thead><tr><th>Firm</th><th>Cost to try</th><th>No edge: pass</th><th>No edge: value</th><th>Best strategy: pass</th><th>Days to pass</th><th>Paid out if funded</th><th>Best strategy: value</th><th>Portfolio: value</th><th>Verdict</th></tr></thead><tbody>` +
+    firmRows.map(({ fn, f, n, b, p }) => {
+      const cost = f.fee + f.fee_monthly + f.activation;
+      const bv = b ? b.test.ev : null, pv = p ? p.pick.test.ev : null;
+      const top = Math.max(n.test.ev, bv ?? -1e9, pv ?? -1e9);
+      const verdict = top > cost * 0.5 ? '<span class="pill ok">worth it</span>' : top > 0 ? '<span class="pill mid">marginal</span>' : '<span class="pill no">avoid</span>';
+      return `<tr><td>${fn}<br><span class="hint" style="white-space:normal;display:block;max-width:340px;font-family:var(--font-ui)">${f.note}</span></td><td>${money(f.fee + f.activation)}${f.fee_monthly ? ' + ' + money(f.fee_monthly) + '/mo' : ''}</td><td>${pct(n.test.pass)}</td><td class="${cls(n.test.ev)}">${money(n.test.ev)}</td><td>${b ? pct(b.test.pass) : '–'}</td><td>${b ? Math.round(b.test.median_days) : '–'}</td><td>${b ? money(b.test.paid_if_funded) : '–'}</td><td class="${cls(bv ?? 0)}"><b>${bv == null ? '–' : money(bv)}</b></td><td class="${cls(pv ?? 0)}">${pv == null ? '–' : money(pv)}</td><td>${verdict}</td></tr>`;
+    }).join('') + '</tbody>';
+
+  // leaderboard
+  $('board').innerHTML = `<thead><tr><th>#</th><th>Strategy</th><th>Trades / yr</th><th>Edge train</th><th>Edge valid</th><th>Edge test</th><th>Win test</th><th>PF test</th><th>Firms + (valid)</th><th>Firms + (test)</th><th>Best firm on test</th></tr></thead><tbody>` +
+    D.leaderboard.slice(0, 30).map((c, i) => {
+      const bf = Object.entries(c.firms).filter(([k, v]) => v).sort((a, b) => b[1].valid.ev - a[1].valid.ev)[0];
+      const [a, b] = c.desc.split(' · ').length > 2 ? [c.desc.split(' · ').slice(0, 2).join(' · '), c.desc.split(' · ').slice(2).join(' · ')] : [c.desc, ''];
+      return `<tr><td>${i + 1}</td><td class="desc">${a}<small>${b}</small></td><td>${Math.round(c.test.n / 2.87)}</td><td>${r3(c.train.mean)}</td><td>${r3(c.valid.mean)}</td><td class="${cls(c.test.mean)}"><b>${r3(c.test.mean)}</b></td><td>${pct(c.test.win)}</td><td>${c.test.pf.toFixed(2)}</td><td>${c.firms_ok_valid}/${firmNames.length}</td><td class="${c.firms_ok_test >= firmNames.length / 2 ? 'pos' : ''}">${c.firms_ok_test}/${firmNames.length}</td><td style="white-space:normal;text-align:left">${bf ? `${bf[0]}: ${money(bf[1].test.ev)}, pass ${pct(bf[1].test.pass)} in ${Math.round(bf[1].test.median_days)}d` : '–'}</td></tr>`;
+    }).join('') + '</tbody>';
+
+  // per firm
+  $('firmsel').innerHTML = firmRows.map(r => `<option>${r.fn}</option>`).join('');
+  function renderFirm() {
+    const fn = $('firmsel').value, rows = D.per_firm[fn] || [], f = D.firms[fn];
+    $('firmnote').textContent = f.note + ` Zero-edge baseline here: ${money(f.null.test.ev)} per attempt with ${shape(f.null)} at ${f.null.fe}× the drawdown per trade.`;
+    $('perfirm').innerHTML = `<thead><tr><th>Strategy</th><th>Eval risk</th><th>Funded risk</th><th>Valid: pass</th><th>Valid: value</th><th>Test: pass</th><th>Test: days</th><th>Test: got a payout</th><th>Test: paid if funded</th><th>Test: value</th></tr></thead><tbody>` +
+      rows.map((r, i) => { const [a, b] = [r.desc.split(' · ').slice(0, 2).join(' · '), r.desc.split(' · ').slice(2).join(' · ')];
+        return `<tr class="${i === 0 ? 'hl' : ''}"><td class="desc">${a}<small>${b}</small></td><td>${r.fe}× DD</td><td>${r.ff}× DD</td><td>${pct(r.valid.pass)}</td><td class="${cls(r.valid.ev)}">${money(r.valid.ev)}</td><td>${pct(r.test.pass)}</td><td>${Math.round(r.test.median_days)}</td><td>${pct(r.test.p_payout)}</td><td>${money(r.test.paid_if_funded)}</td><td class="${cls(r.test.ev)}"><b>${money(r.test.ev)}</b></td></tr>`; }).join('') + '</tbody>';
+  }
+  $('firmsel').addEventListener('change', renderFirm); renderFirm();
+
+  // portfolios
+  $('ports').innerHTML = `<thead><tr><th>Firm</th><th>Strategies combined</th><th>Eval / funded risk</th><th>Valid: value</th><th>Test: pass</th><th>Test: days</th><th>Test: paid if funded</th><th>Test: value</th><th>vs best single (test)</th></tr></thead><tbody>` +
+    D.portfolios.slice().sort((a, b) => b.pick.test.ev - a.pick.test.ev).map(p => { const single = p.path[0].test_ev;
+      return `<tr><td>${p.firm}</td><td class="desc">${p.members.map((m, i) => `<small style="color:var(--fg-2)">${i + 1}. ${m}</small>`).join('')}</td><td>${p.pick.fe}× / ${p.pick.ff}×</td><td class="${cls(p.pick.valid.ev)}">${money(p.pick.valid.ev)}</td><td>${pct(p.pick.test.pass)}</td><td>${Math.round(p.pick.test.median_days)}</td><td>${money(p.pick.test.paid_if_funded)}</td><td class="${cls(p.pick.test.ev)}"><b>${money(p.pick.test.ev)}</b></td><td>${p.members.length > 1 ? money(p.pick.test.ev - single) : 'single'}</td></tr>`; }).join('') + '</tbody>';
+
+  // evidence
+  const H = D.t_hist, mids = H.edges.slice(0, -1).map((e, i) => ((e + H.edges[i + 1]) / 2).toFixed(1));
+  const ch = echarts.init($('thist'));
+  ch.setOption({ animation: false, textStyle: { fontFamily: css('--font-mono'), color: css('--fg-2') }, grid: { left: 56, right: 12, top: 16, bottom: 40 },
+    tooltip: { trigger: 'axis', backgroundColor: css('--panel-2'), borderColor: css('--line-2'), textStyle: { color: css('--fg'), fontSize: 12 }, formatter: ps => `t-stat about ${ps[0].name}<br>${ps[0].value.toLocaleString()} strategies` },
+    xAxis: { type: 'category', data: mids, name: 'training t-statistic of average R (clipped)', nameLocation: 'middle', nameGap: 26, nameTextStyle: { color: css('--fg-3'), fontSize: 11 }, axisLabel: { color: css('--fg-3'), fontSize: 10 }, axisLine: { lineStyle: { color: css('--line-2') } }, axisTick: { show: false } },
+    yAxis: { type: 'value', axisLabel: { color: css('--fg-3'), fontSize: 10, formatter: v => v >= 1000 ? (v / 1000) + 'k' : v }, splitLine: { lineStyle: { color: css('--line') } } },
+    series: [{ type: 'bar', data: H.counts.map((c, i) => ({ value: c, itemStyle: { color: +mids[i] >= 2 ? css('--up') : +mids[i] < 0 ? css('--down') : css('--fg-3'), borderRadius: [3, 3, 0, 0] } })), barCategoryGap: '12%' }] });
+  window.addEventListener('resize', () => ch.resize());
+  $('thint').textContent = `Where all tested strategies land in training. The median is ${H.median.toFixed(1)}: after costs, the typical rule loses. Only ${pct(H.share_gt2, 2)} clear t = 2, against 2.3% expected from pure noise around zero, so costs sink most ideas before luck can lift them.`;
+  $('fams').innerHTML = `<thead><tr><th>Entry family</th><th>Tested</th><th>Passed training</th><th>Held in validation</th></tr></thead><tbody>` +
+    Object.entries(D.families).sort((a, b) => b[1][2] - a[1][2]).map(([k, v]) => `<tr><td>${k.replace(/_/g, ' ')}</td><td>${v[0].toLocaleString()}</td><td>${v[1].toLocaleString()}</td><td class="${v[2] ? 'pos' : ''}">${v[2].toLocaleString()}</td></tr>`).join('') + '</tbody>';
+
+  $('notes').innerHTML = [
+    `<strong>Three periods, never mixed.</strong> A strategy is filtered on ${D.periods.train}, must stay positive on ${D.periods.valid}, and the firm, sizing and ranking are also chosen there. ${D.periods.test} is only reported.`,
+    `<strong>Value per attempt</strong> = chance to pass × (payouts in the first ${D.sizing.horizon_days} funded trading days after the split − activation) + any fee refund − fees. Days to pass are calendar days.`,
+    `<strong>Sizing is part of the search.</strong> Evaluation risk per trade is ${D.sizing.eval.join(', ')} × the drawdown; funded risk is ${D.sizing.funded.join(', ')} ×. Futures accounts trade whole micro contracts up to the position cap; CFD accounts respect leverage.`,
+    `<strong>Costs are conservative</strong> (for example ${D.instruments.NAS100.cost} points per round trip on the Nasdaq, plus extra slippage on stops), and stops closer than 8 costs are widened. Inside a minute the stop is assumed to fill before the target.`,
+    `<strong>The "no edge" column matters.</strong> A funded account pays you a share of upswings and charges you nothing for downswings, so some rule sets are worth money to a coin flip. Where that number is negative, only a real edge helps.`,
+    `<strong>Testing ${F.tested.toLocaleString()} ideas guarantees lucky winners.</strong> That is why the test column exists. Survivors usually keep some of their edge, rarely all of it. Expect live results below the test numbers.`,
+    `<strong>Firm rules here are simplified</strong> and collected from public sources in November 2026. Payout mechanics, consistency rules and fees change. Verify a firm's current rules before paying for an evaluation.`,
+    `<strong>Data:</strong> HistData.com 1-minute bid quotes for index, metal and currency CFDs, 2016 to November 2026, with timestamps aligned to New York time by matching each market's own volatility pattern.`,
+  ].map(x => `<li>${x}</li>`).join('');
+})();
+</script>
+</body>
+</html>
