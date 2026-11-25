@@ -68,16 +68,18 @@ const Fair = (() => {
   // One pack as a choice of `k` face-down cards. The single draw is read as k numbers, one per card, each picked from the pack's table in the
   // same way, so every one of them has exactly the published odds. Nothing is made until you choose: take(i) gives you card i, and the log
   // keeps which one you took (k, of), so the draw can be checked against the seed like any other.
+  // a legendary or better goes on the live feed: the server is told which draw it was, re-draws it itself, and lists it only if it checks out
+  const tell = (mode, pk, n, k, of, card) => { if (mode === "server" && RAR[BY_NO[card.no].rar].tier >= 4) API.post("fair/hit", { uid: state.uid, n, k, of, pack: pk.id }).then(() => { if (typeof Live !== "undefined") Live.pull(true); }); };
   const cardAt = (pk, hex, of, i) => BY_ID[pickU(pk.slots[0], digestU(hex, of)[i])];
   function ticket(pk, f, hex, nonce, epoch, mode, commit, of) {
     let done = false;
     // warm(): fetch the pictures the five could be, in no order that says which is where, so the one you pick is ready the moment you pick it
     return { of, get done() { return done; }, warm() { [...new Set(Array.from({ length: of }, (_, i) => cardAt(pk, hex, of, i).id))].sort().forEach(id => loadImg(imgOf(BY_ID[id]))); }, take(i) { if (done) return null; done = true; i = Math.max(0, Math.min(of - 1, i | 0)); const card = mint(cardAt(pk, hex, of, i));
-      f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: [BY_NO[card.no].id], k: i, of, t: Date.now() }); if (f.log.length > LOG) f.log.shift(); return card; } };
+      f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: [BY_NO[card.no].id], k: i, of, t: Date.now() }); if (f.log.length > LOG) f.log.shift(); tell(mode, pk, nonce, i, of, card); return card; } };
   }
   function settle(pk, f, hex, nonce, epoch, mode, commit) {
     const items = pullPack(pk, digestU(hex, pk.slots.length));
-    f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: items.map(c => BY_NO[c.no].id), t: Date.now() }); if (f.log.length > LOG) f.log.shift();
+    f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: items.map(c => BY_NO[c.no].id), t: Date.now() }); if (f.log.length > LOG) f.log.shift(); if (items[0]) tell(mode, pk, nonce, 0, 0, items[0]);
     return items;
   }
   // the cards for n packs with one request to the server (the same draws, in order, as n single requests would give)

@@ -2,7 +2,7 @@
    7. PAGES: pack, market, collection, odds
    ========================================================================== */
 // two tabs: the pack, and you (your money, your cards, the market); the other pages hang off those two
-const VIEWS = ["home", "market", "profile", "collection", "odds", "invite", "limited"], TAB_OF = { home: "home", odds: "home", limited: "home", profile: "profile", market: "profile", collection: "profile", invite: "profile" }; let view = "home", modalNo = null, oddsPack = "";
+const VIEWS = ["home", "live", "market", "profile", "collection", "odds", "invite", "limited"], TAB_OF = { live: "live", home: "home", odds: "home", limited: "home", profile: "profile", market: "profile", collection: "profile", invite: "profile" }; let view = "home", modalNo = null, oddsPack = "";
 const copiesOf = no => state.vault.filter(c => c.no === no).sort((a, b) => valueOf(b) - valueOf(a));
 function renderBal(anim) { const el = $("bal"), from = +(el.dataset.v || state.coins); el.dataset.v = state.coins; if (anim) countTo(el, from, state.coins, money); else el.textContent = money(state.coins); if (typeof renderBroke === "function") renderBroke(); }
 
@@ -150,12 +150,12 @@ function show(v, keep) {
   if (v !== "profile" && pSel) { pSel = null; pSelAsk = 0; } if (v !== "profile") document.body.classList.remove("picking");                                                  // keep: draw the page again where you are (after selling, say) instead of jumping back to the top
   view = VIEWS.includes(v) ? v : "home"; document.body.classList.toggle("on-home", view === "home");
   if (view === "odds") oddsKey = ""; VIEWS.forEach(x => $("v-" + x).classList.toggle("on", x === view)); document.querySelectorAll("#tabs a, #btabs a").forEach(a => a.classList.toggle("on", a.dataset.v === (TAB_OF[view] || view)));
-  ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds, invite: renderInvite, limited: renderLimited })[view](); if (!keep) scrollTo(0, 0);
+  ({ home: renderHome, live: Live.render, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds, invite: renderInvite, limited: renderLimited })[view](); if (!keep) scrollTo(0, 0);
 }
 function route() { const h = location.hash.replace(/^#\/?/, ""); show(h === "vault" || h === "index" ? "collection" : h || "home"); }
 // the market moved: redraw whatever is on screen without jumping the page
 function refreshLive() {
-  if (SS || !$("share").hidden || !$("cut").hidden || view === "invite" || view === "limited") return; ({ home: renderHome, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds })[view]();
+  if (SS || !$("share").hidden || !$("cut").hidden || view === "invite" || view === "limited") return; ({ home: renderHome, live: Live.render, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds })[view]();
   if (modalNo && !$("modal").hidden) cardModal(modalNo, true);   // updated in place: the buttons you are pressing stay where they are
   if (typeof Tick !== "undefined") Tick.scan();
 }
