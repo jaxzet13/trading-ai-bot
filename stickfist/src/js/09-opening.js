@@ -102,7 +102,7 @@ function buildStack() {
 const scEl = i => $("stStack") && $("stStack").querySelector(`.sc[data-i="${i}"]`);
 function focusTop() {
   const el = scEl(SS.idx); if (!el) return; el.classList.add("top"); SS.veils[SS.idx].idle(); SS.veils[SS.idx].frame(); el.onclick = e => { if (el._drag) { el._drag = false; e.stopPropagation(); return; } advance(); }; armFling(el);
-  $("stCount").textContent = `${cmeter(SS.idx + 1, SS.items.length)} card ${SS.idx + 1} of ${SS.items.length}`; hint(""); hidePills();
+  $("stCount").textContent = SS.items.length > 1 ? `${cmeter(SS.idx + 1, SS.items.length)} card ${SS.idx + 1} of ${SS.items.length}` : ""; hint(""); hidePills();   // one card needs no counter
   const at = SS.idx, mine = SS; setTimeout(() => { if (SS === mine && SS.idx === at && !SS.busy && SS.phase === "stack" && !el.dataset.rev) advance(); }, at ? 160 : 420);   // each card turns itself over: what you do is choose
 }
 /* ---- sell or hold: the one choice you make about every card ----

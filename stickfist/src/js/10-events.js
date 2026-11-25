@@ -15,11 +15,6 @@ document.addEventListener("click", e => {
   if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
   if (t.dataset.testmoney) { Acct.testMoney(+t.dataset.testmoney); return; }
-  if (t.dataset.forge) {                                                                   // spares are spent for good, so it takes a second tap
-    const no = t.dataset.forge, i = Forge.info(BY_NO[no]); if (!i || !i.ok) return;
-    if (!t.dataset.armed) { t.dataset.armed = 1; t.textContent = `tap again: uses ${i.n} spare cards`; setTimeout(() => { if (t.isConnected) { delete t.dataset.armed; t.textContent = `forge ${BY_NO[no].name}`; } }, 3500); return; }
-    const r = t.getBoundingClientRect(), copy = Forge.make(no); if (!copy) return; Snd.level(); buzz([30, 40, 30, 40, 60]); FX.burst(r.left + r.width / 2, r.top + r.height / 2, 60, [RAR[BY_NO[no].rar].col, "#fff"], 420);
-    cardModal(no); $("mbox").scrollTop = 0; toast(`Forged: ${BY_NO[no].name}`); renderBal(); if (view === "profile") renderProfile(); if (view === "collection" && typeof renderCollection === "function") renderCollection(); return; }
   if (t.id === "sumClaim" || t.id === "homeClaim") {                                       // finished goals pay out right where you are, and the next button already says "open a free pack"
     const r = t.getBoundingClientRect(), n = Goals.claimAll(); if (!n) return;
     if (typeof FX !== "undefined" && FX.burst) FX.burst(r.left + r.width / 2, r.top + r.height / 2, 18, ["#3be477", "#fff"], 320);

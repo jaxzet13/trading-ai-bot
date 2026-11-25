@@ -1013,17 +1013,6 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .st-bar .pn, .st-bar .st-count { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .st-bar .pn { flex: 0 1 auto; } .st-bar .st-count { flex: 1 1 auto; text-align: center; } .st-bar #stSkip { flex: none; }
 .st-bar { min-width: 0; width: 100%; max-width: 100vw; box-sizing: border-box; }
 
-/* ---- the forge: spare cards become the card you are after ---- */
-.forge { display: grid; gap: 10px; padding: 16px; border-radius: 18px; border: 1px solid var(--ln2); background: var(--s1); }
-.forge.rdy { border-color: rgba(59,228,119,.45); background: linear-gradient(100deg, rgba(59,228,119,.13), rgba(59,228,119,.03)); }
-.forge .fg-top { display: flex; justify-content: space-between; align-items: baseline; } .forge .fg-top b { font-variant-numeric: tabular-nums; font-size: 15px; }
-.forge .gbar, .fg-row .gbar { display: block; height: 6px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; } .forge .gbar i, .fg-row .gbar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2bbf62, var(--acc)); }
-.forge p { margin: 0; color: var(--dim); } .forge p b { color: var(--ink); } .forge .btn { min-height: 46px; } .forge .btn[disabled] { opacity: .6; }
-.fg-lead { margin: -4px 0 10px; color: var(--dim); } .fg-list { display: grid; gap: 8px; }
-.fg-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px 10px 10px; border-radius: 16px; border: 1px solid var(--ln2); background: var(--s1); color: inherit; text-align: left; font: inherit; }
-.fg-row.rdy { border-color: rgba(59,228,119,.45); } .fg-row img { width: 40px; height: 49px; object-fit: cover; border-radius: 6px; flex: none; background: #000; }
-.fg-row .fg-main { display: grid; gap: 5px; flex: 1; min-width: 0; } .fg-row .fg-main b { font-size: 14.5px; } .fg-row small { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .fg-row.rdy small { color: var(--acc); }
-.fg-row .fg-go { flex: none; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 
 /* nothing in the pack opening can make it wider than the screen: a long row of turned-over cards is clipped, it does not push the stack off to the side */
 .stage { grid-template-columns: minmax(0, 1fr); } .st-foot { min-width: 0; max-width: 100vw; } .st-foot .tray { max-width: 100%; overflow: hidden; justify-content: center; }
