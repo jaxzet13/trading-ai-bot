@@ -70,6 +70,8 @@ CARDS.update({
     'titan':     dict(G(330, 220), src='new25/sources/titan.png',     view=(0.5, 0.50, 0.82), accent=(140, 180, 255), text='it knelt first.'),
     'console':   dict(G(128, 86),  src='new25/sources/console.png',   view=(0.5, 0.48, 0.82), accent=(110, 255, 140), text='all stations: go.'),
     'suit':      dict(G(124, 84),  src='new25/sources/suit.png',      view=(0.5, 0.50, 0.82), accent=(150, 210, 255), text='one size fits nobody.'),
+    'mars':      dict(G(420, 280), src='new25/sources/mars.png',      view=(0.5, 0.50, 0.86), accent=(255, 130, 80),  text='second flag. first footprint.'),
+    'horizon':   dict(G(520, 346), src='new25/sources/horizon.png',   view=(0.5, 0.50, 0.86), accent=(255, 200, 100), text='nothing leaves. you looked anyway.', gain=1.15),
 })
 # key (the app's style key), how it is drawn, its colour (dark end, bright end), extras
 STYLES = {

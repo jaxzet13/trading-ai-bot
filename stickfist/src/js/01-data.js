@@ -41,25 +41,27 @@ const CARDS = [
   { no: "030", id: "surge",   name: "Surge",   sub: "big wave",      rar: "rare", chars: 15750, val: 294,  tint: "#9fe8ff", cap: "ride it before it breaks.",    styles: true },
   { no: "031", id: "kraken",  name: "Kraken",  sub: "tentacles",     rar: "epic",     chars: 28000, val: 350, tint: "#9fe8d8", cap: "it was always down there.",    styles: true },
   // ---- Moonshot: one launch, five altitudes. The higher the card, the rarer it is.
-  { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "uncommon",  chars: 8736,   val: 182,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
+  { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "uncommon",  chars: 8736,   val: 155,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
   { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "rare",  chars: 10080,  val: 810,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
-  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "mythic",      chars: 40320,  val:  2600,  tint: "#ffb070", cap: "gravity lost the argument.",    styles: true },
+  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "mythic",      chars: 40320,  val:  2400,  tint: "#ffb070", cap: "gravity lost the argument.",    styles: true },
   { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "divine",      chars: 123480, val: 9000, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
   { no: "025", set: "ms", id: "luna",     name: "Luna",     sub: "first flag",    rar: "celestial", chars: 448800, val: 17500, tint: "#b8d4ff", cap: "to the moon was never a joke.", styles: true },
   // ---- more Moonshot cards, each at the altitude (and worth) of a card already there
   { no: "032", set: "ms", id: "spark",     name: "Spark",     sub: "sparkler",     rar: "uncommon", chars: 8736,   val: 425,   tint: "#ffb070", cap: "small things start fires.", styles: true },
-  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 190,   tint: "#ff8a7a", cap: "three. two. one.",           styles: true },
+  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 163,   tint: "#ff8a7a", cap: "three. two. one.",           styles: true },
   { no: "034", set: "ms", id: "booster",   name: "Booster",   sub: "stage split",  rar: "exotic",     chars: 40320,  val:  5000, tint: "#ffc98a", cap: "dead weight, dropped.",      styles: true },
   { no: "035", set: "ms", id: "flare",     name: "Flare",     sub: "signal flare", rar: "uncommon", chars: 8736,   val: 445,   tint: "#ff8a7a", cap: "the sky has been told.",     styles: true },
   { no: "036", set: "ms", id: "bubble",    name: "Bubble",    sub: "fishbowl helmet", rar: "uncommon", chars: 8736,  val: 465,   tint: "#ece7dc", cap: "all systems: smiling.",      styles: true },
-  { no: "037", set: "ms", id: "gantry",    name: "Gantry",    sub: "tower arm",    rar: "legendary", chars: 10080,  val: 1500,   tint: "#9fe8ff", cap: "the arm lets go.",           styles: true }
+  { no: "037", set: "ms", id: "gantry",    name: "Gantry",    sub: "tower arm",    rar: "legendary", chars: 10080,  val: 1400,   tint: "#9fe8ff", cap: "the arm lets go.",           styles: true }
   ,
   // ---- new designs (2026-11)
   { no: "038", id: "colossus",  name: "Colossus",  sub: "buried head",  rar: "legendary", chars: 29400, val: 460, tint: "#ffcf8a", cap: "it was here before the sand.", styles: true },
   { no: "039", id: "leviathan", name: "Leviathan", sub: "sky whale",    rar: "mythic", chars: 30912, val: 700, tint: "#8ad8ff", cap: "the sky has tides too.",       styles: true },
   { no: "040", id: "titan",     name: "Titan",     sub: "storm giant",  rar: "cosmic", chars: 72600, val: 3600, tint: "#a9c9ff", cap: "it knelt first.",              styles: true },
   { no: "041", set: "ms", id: "console", name: "Console", sub: "mission control", rar: "rare", chars: 11008, val: 840, tint: "#a8ffbe", cap: "all stations: go.",     styles: true },
-  { no: "042", set: "ms", id: "suit",    name: "Suit",    sub: "suit up",         rar: "epic", chars: 10416, val: 1000, tint: "#b8d4ff", cap: "one size fits nobody.", styles: true }
+  { no: "042", set: "ms", id: "suit",    name: "Suit",    sub: "suit up",         rar: "epic", chars: 10416, val: 950, tint: "#b8d4ff", cap: "one size fits nobody.", styles: true },
+  { no: "043", set: "ms", id: "mars",    name: "Mars",    sub: "second flag",   rar: "ascended", chars: 117600, val: 37500,  tint: "#ff9a6a", cap: "second flag. first footprint.",     styles: true },
+  { no: "044", set: "ms", id: "horizon", name: "Horizon", sub: "event horizon", rar: "secret",   chars: 179920, val: 100000, tint: "#ffd27a", cap: "nothing leaves. you looked anyway.", styles: true }
 ];
 // the sets: the two letters a copy id starts with, and what the set is called
 const SETS = { fp: { code: "IS", name: "First Print" }, ms: { code: "MS", name: "Moonshot" } };
@@ -88,10 +90,10 @@ const PACKS = [
       [["stitch", 21.5804], ["brick", 18.3434], ["orbit", 15.5919], ["tempest", 10.6579], ["surge", 9.5921], ["phantom", 7.3684], ["kraken", 6.6316], ["colossus", 6.25], ["leviathan", 2], ["null", 1], ["shogun", 0.5], ["ronin", 0.25], ["titan", 0.125], ["grimm", 0.0625], ["reaper", 0.0313], ["umbra", 0.0156]]
     ] },
   { id: "ms", set: "ms", name: "Moonshot", blurb: "One launch and what happens on the way up: a lit fuse, the pad, a rocket on its plume, a flag on the Moon. The higher the card, the rarer it is.", price: 726, min: 375, max: 7500, n: 1,
-    order: ["fuse", "countdown", "ignition", "console", "suit", "gantry", "liftoff", "booster", "apogee", "luna"],
+    order: ["fuse", "countdown", "ignition", "console", "suit", "gantry", "liftoff", "booster", "apogee", "luna", "mars", "horizon"],
     slotNames: ["The card: a rare or better in 45 packs out of 100. From Legendary up, each rarity is about half as likely as the one before"],
     slots: [
-      [["fuse", 30.1351], ["countdown", 25.6149], ["ignition", 13.2895], ["console", 11.9605], ["suit", 9], ["gantry", 6.25], ["liftoff", 2], ["booster", 1], ["apogee", 0.5], ["luna", 0.25]]
+      [["fuse", 29.9716], ["countdown", 25.4759], ["ignition", 13.4211], ["console", 12.0789], ["suit", 9], ["gantry", 6.25], ["liftoff", 2], ["booster", 1], ["apogee", 0.5], ["luna", 0.25], ["mars", 0.04], ["horizon", 0.0125]]
     ] }
 ];
 // A card that no pack holds any more is retired: copies people already have keep their worth and can still be sold, but it is no longer counted, chased or shown as missing.
