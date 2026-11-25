@@ -50,4 +50,4 @@ trade tape: the ask an order meets `delay` seconds after the minute is read off 
 * Without the order-book stream the old ask + 2c limit is used.
 
 Not done: deciding earlier than 0.5 s after the minute. The spot bar is already final 0.03 s after the minute
-(72 of 72 product-minutes measured), so it is possible, but with re-pricing the tape shows no gain from it.
+(225 of 225 product-minutes measured), so it is possible, but with re-pricing the tape shows no gain from it.
