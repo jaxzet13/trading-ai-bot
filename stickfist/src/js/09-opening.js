@@ -117,7 +117,18 @@ async function reveal(el, c, card, R, v) {
   const x = sellOf(c) / Math.max(1, SS.ref), T = Math.max(R.tier, x >= 10 ? 5 : x >= 4 ? 4 : x >= 2 ? 3 : 0);
   const ms = reduced ? 10 : [650, 850, 1300, 1900, 2700, 3500, 5200][T], rect = el.getBoundingClientRect(), mid = [rect.left + rect.width / 2, rect.top + rect.height / 2]; hint(""); $("stTitle").innerHTML = ""; stage.style.setProperty("--rc", R.col);
   if (SS.n < 2 && x >= 2 && Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); await Cut.play(card.id); }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest, but only for a copy that sells for at least what the pack cost. A card that barely gives anything gets no film (it is still there to watch from its card window)
-  await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
+  // The back comes off, then the picture prints in: a few big characters first, then finer and finer passes, longer for a rarer card.
+  // While it does, the count of characters and what the card is worth climb together at the top.
+  const cardEl = el.querySelector(".card"), rs = reduced ? null : new Resolve(cardEl, R.tier, c.fx ? STYLE_TINT[c.fx] : R.tier ? R.col : "#cfd3da"), okPic = rs ? await rs.ready() : false, worth = valueOf(c), tt = $("stTitle");
+  if (rs && !okPic) rs.drop();
+  if (okPic) {
+    el.classList.add("loading"); tt.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col); tt.className = "st-title loading";
+    tt.innerHTML = `<div class="rw">printing · <b id="ldN">0</b> characters</div><div class="vl">worth <b id="ldV">${money(0)}</b></div>`; const ldN = $("ldN"), ldV = $("ldV");
+    await v.play(240);
+    await rs.play([1100, 1400, 1900, 2500, 3300, 4100, 5600][T], p => { const e = Math.pow(p, 1.7); ldN.textContent = fmt(Math.round(card.chars * e)); ldV.textContent = money(worth * e); },
+      (k, n) => { Snd.rise(k); buzz(8); if (k && T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 110 + T * 30); FX.burst(mid[0], mid[1], 5 + T * 3, [R.col, "#fff"], 240 + T * 50); } });
+    el.classList.remove("loading"); tt.className = "st-title";
+  } else await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
   Snd.reveal(T); if (T >= 2) buzz(T >= 5 ? [40, 30, 60, 30, 90] : T >= 3 ? [30, 25, 50] : [25]);
   FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][T], T >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + T * 130);
   if (T >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + T * 14, [R.col, "#fff"]);

@@ -1020,6 +1020,15 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .acctbox.test { border-color: rgba(255,200,90,.45); background: linear-gradient(100deg, rgba(255,200,90,.12), rgba(255,200,90,.03)); flex-wrap: wrap; } .acctbox.test .label { color: #ffc85a; }
 .ac-money { display: flex; gap: 8px; } .ac-money .btn { min-height: 40px; padding: 0 14px; font-variant-numeric: tabular-nums; }
 #pAcct:not(:empty) { margin-bottom: 14px; }
+
+/* ---- the reveal: the picture printing in, and the worth climbing with it ---- */
+.card .pic canvas.resolve { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; display: block; }
+.sc .card.v3 .hd, .sc .card.v3 .strip { transition: opacity .35s ease-out, transform .45s cubic-bezier(.2,1.3,.4,1); }
+.sc.loading .card.v3 .hd, .sc.loading .card.v3 .strip { opacity: 0; transform: translateY(6px); transition: none; }      /* the name stays hidden until the picture is in */
+.sc.loading .card.v3 { box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 0 44px -12px var(--rc, #fff), 0 30px 60px -30px #000; }
+.st-title.loading { align-content: end; gap: 2px; } .st-title.loading .rw { color: var(--dim); font-weight: 500; font-size: 13px; letter-spacing: .02em; } .st-title.loading .rw b { color: var(--ink); font-variant-numeric: tabular-nums; font-family: "JetBrains Mono", ui-monospace, monospace; font-weight: 700; }
+.st-title.loading .vl { font-size: 15px; } .st-title.loading .vl b { display: inline-block; min-width: 3.2ch; font-size: 34px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; color: #fff; text-shadow: 0 0 22px color-mix(in srgb, var(--rc, #fff) 70%, transparent); vertical-align: -4px; margin-left: 6px; }
+.st-title:not(.loading) .vl b { display: inline-block; animation: worthpop .5s cubic-bezier(.2,1.6,.4,1) both; } @keyframes worthpop { from { transform: scale(1.45); color: #fff; } }
 </style>
 </head>
 <body>
@@ -1990,6 +1999,51 @@ class Veil {
   drop() { this.live = false; this.cv.remove(); }
 }
 
+/* ---- the reveal: the picture prints in, from a few big characters to the real thing ----
+   A canvas over the card's picture. It is drawn in passes: each pass sweeps down the card and redraws it in a finer grid of
+   coloured characters taken from the picture itself (8 across, then 13, 21, 34 ...), with a band of scrambling type at the
+   front of the sweep. A rarer card gets more passes and more time. After the last pass the canvas fades and the real picture
+   is underneath. play() reports how far along it is, so the count of characters and the card's worth can climb with it. */
+const RV_RAMP = ".,:;-=+*xo%#&@", RV_NOISE = "01#%&@$*+=<>/\\";
+class Resolve {
+  constructor(card, tier, col) {
+    this.pic = card.querySelector(".pic"); this.img = this.pic.querySelector("img"); this.tier = tier; this.col = col; this.cv = document.createElement("canvas"); this.cv.className = "resolve";
+    const w = this.pic.clientWidth, h = this.pic.clientHeight, d = Math.min(devicePixelRatio || 1, 2); this.w = w; this.h = h; this.cv.width = Math.round(w * d); this.cv.height = Math.round(h * d);
+    this.ctx = this.cv.getContext("2d"); this.ctx.setTransform(d, 0, 0, d, 0, 0); this.ctx.fillStyle = "#020203"; this.ctx.fillRect(0, 0, w, h); this.pic.appendChild(this.cv);
+  }
+  // the picture has to be loaded and readable; if it is not, the caller falls back to showing it at once
+  async ready() {
+    try { if (!this.img.complete || !this.img.naturalWidth) await Promise.race([this.img.decode(), new Promise((_, no) => setTimeout(no, 1800))]); const t = document.createElement("canvas"); t.width = t.height = 2; const x = t.getContext("2d"); x.drawImage(this.img, 0, 0, 2, 2); x.getImageData(0, 0, 1, 1); return this.w > 0; } catch (e) { return false; }
+  }
+  grid(cols) {                                                                             // the picture at `cols` characters across: one colour per character
+    const cw = this.w / cols, ch = cw * 1.7, rows = Math.ceil(this.h / ch), t = document.createElement("canvas"); t.width = cols; t.height = rows; const x = t.getContext("2d");
+    const iw = this.img.naturalWidth, ih = this.img.naturalHeight, s = Math.max(this.w / iw, this.h / ih), sw = this.w / s, sh = this.h / s;
+    x.drawImage(this.img, (iw - sw) / 2, (ih - sh) / 2, sw, Math.min(ih, sh * rows * ch / this.h), 0, 0, cols, rows); return { cols, rows, cw, ch, d: x.getImageData(0, 0, cols, rows).data };
+  }
+  cell(g, c, r, noise) {
+    const ctx = this.ctx, i = (r * g.cols + c) * 4, R = g.d[i], G = g.d[i + 1], B = g.d[i + 2], m = Math.max(R, G, B), x = c * g.cw, y = r * g.ch; ctx.fillStyle = "#020203"; ctx.fillRect(x, y, g.cw + .7, g.ch + .7);
+    if (noise) { ctx.fillStyle = Math.random() < .35 ? this.col : "rgba(255,255,255,.9)"; ctx.fillText(RV_NOISE[(Math.random() * RV_NOISE.length) | 0], x + g.cw / 2, y + g.ch / 2); return; }
+    if (m < 16) return; const l = m / 255, k = (.62 + .38 * l) * 255 / m; ctx.fillStyle = `rgb(${R * .28 | 0},${G * .28 | 0},${B * .28 | 0})`; ctx.fillRect(x, y, g.cw + .7, g.ch + .7);   // a dim block of the colour under the character, so the picture has a body
+    ctx.fillStyle = `rgb(${Math.min(255, R * k) | 0},${Math.min(255, G * k) | 0},${Math.min(255, B * k) | 0})`; ctx.fillText(RV_RAMP[Math.min(RV_RAMP.length - 1, (Math.pow(l, .8) * RV_RAMP.length) | 0)], x + g.cw / 2, y + g.ch / 2);
+  }
+  play(ms, onProg, onPass) {
+    const all = [8, 13, 21, 34, 55, 89, 128], n = Math.min(all.length, 5 + Math.min(2, this.tier)), cols = all.slice(0, n), wts = cols.map(c => Math.sqrt(c)), tot = wts.reduce((a, b) => a + b, 0), ctx = this.ctx;
+    let acc = 0; const spans = wts.map(w => { const s = [acc / tot, (acc + w) / tot]; acc += w; return s; }), grids = cols.map(c => this.grid(c)), t0 = performance.now(), FADE = 340; let si = -1, last = -1;
+    const font = g => { ctx.font = `700 ${Math.max(4, g.ch * .98).toFixed(1)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; };
+    const rows = (g, a, b, front, band) => { for (let r = Math.max(0, a); r <= Math.min(g.rows - 1, b); r++) for (let c = 0; c < g.cols; c++) this.cell(g, c, r, front >= 0 && r > front - band); };
+    return new Promise(res => { const step = now => {
+      const p = Math.min(1, (now - t0) / ms); let k = spans.findIndex(s => p < s[1]); if (k < 0) k = n - 1;
+      if (k !== si) { if (si >= 0) rows(grids[si], last - 3, grids[si].rows - 1, -1, 0); si = k; last = -1; font(grids[k]); if (onPass) onPass(k, n); }                   // the pass before is finished off, the next one starts at the top
+      const g = grids[k], q = (p - spans[k][0]) / (spans[k][1] - spans[k][0]), band = Math.max(1, Math.round(g.rows * .1)), front = Math.floor(q * (g.rows + band));
+      rows(g, last - band, front, front, band); last = front;
+      if (front < g.rows) { ctx.fillStyle = this.col; ctx.globalAlpha = .9; ctx.fillRect(0, (front + 1) * g.ch - 2, this.w, 2); ctx.globalAlpha = 1; }                       // the line the type is being laid down on
+      if (onProg) onProg(p);
+      if (p < 1) requestAnimationFrame(step); else { rows(g, 0, g.rows - 1, -1, 0); this.cv.style.transition = `opacity ${FADE}ms ease-out`; this.cv.style.opacity = "0"; setTimeout(() => this.cv.remove(), FADE + 40); res(); }
+    }; requestAnimationFrame(step); });
+  }
+  drop() { this.cv.remove(); }
+}
+
 /* ---- characters thrown around the stage ---- */
 const FX = (() => {
   const cv = $("fx"), c = cv.getContext("2d"); let parts = [], raf = 0, last = 0;
@@ -2578,7 +2632,18 @@ async function reveal(el, c, card, R, v) {
   const x = sellOf(c) / Math.max(1, SS.ref), T = Math.max(R.tier, x >= 10 ? 5 : x >= 4 ? 4 : x >= 2 ? 3 : 0);
   const ms = reduced ? 10 : [650, 850, 1300, 1900, 2700, 3500, 5200][T], rect = el.getBoundingClientRect(), mid = [rect.left + rect.width / 2, rect.top + rect.height / 2]; hint(""); $("stTitle").innerHTML = ""; stage.style.setProperty("--rc", R.col);
   if (SS.n < 2 && x >= 2 && Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); await Cut.play(card.id); }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest, but only for a copy that sells for at least what the pack cost. A card that barely gives anything gets no film (it is still there to watch from its card window)
-  await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
+  // The back comes off, then the picture prints in: a few big characters first, then finer and finer passes, longer for a rarer card.
+  // While it does, the count of characters and what the card is worth climb together at the top.
+  const cardEl = el.querySelector(".card"), rs = reduced ? null : new Resolve(cardEl, R.tier, c.fx ? STYLE_TINT[c.fx] : R.tier ? R.col : "#cfd3da"), okPic = rs ? await rs.ready() : false, worth = valueOf(c), tt = $("stTitle");
+  if (rs && !okPic) rs.drop();
+  if (okPic) {
+    el.classList.add("loading"); tt.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col); tt.className = "st-title loading";
+    tt.innerHTML = `<div class="rw">printing · <b id="ldN">0</b> characters</div><div class="vl">worth <b id="ldV">${money(0)}</b></div>`; const ldN = $("ldN"), ldV = $("ldV");
+    await v.play(240);
+    await rs.play([1100, 1400, 1900, 2500, 3300, 4100, 5600][T], p => { const e = Math.pow(p, 1.7); ldN.textContent = fmt(Math.round(card.chars * e)); ldV.textContent = money(worth * e); },
+      (k, n) => { Snd.rise(k); buzz(8); if (k && T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 110 + T * 30); FX.burst(mid[0], mid[1], 5 + T * 3, [R.col, "#fff"], 240 + T * 50); } });
+    el.classList.remove("loading"); tt.className = "st-title";
+  } else await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
   Snd.reveal(T); if (T >= 2) buzz(T >= 5 ? [40, 30, 60, 30, 90] : T >= 3 ? [30, 25, 50] : [25]);
   FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][T], T >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + T * 130);
   if (T >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + T * 14, [R.col, "#fff"]);

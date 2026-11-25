@@ -999,3 +999,12 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .acctbox.test { border-color: rgba(255,200,90,.45); background: linear-gradient(100deg, rgba(255,200,90,.12), rgba(255,200,90,.03)); flex-wrap: wrap; } .acctbox.test .label { color: #ffc85a; }
 .ac-money { display: flex; gap: 8px; } .ac-money .btn { min-height: 40px; padding: 0 14px; font-variant-numeric: tabular-nums; }
 #pAcct:not(:empty) { margin-bottom: 14px; }
+
+/* ---- the reveal: the picture printing in, and the worth climbing with it ---- */
+.card .pic canvas.resolve { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; display: block; }
+.sc .card.v3 .hd, .sc .card.v3 .strip { transition: opacity .35s ease-out, transform .45s cubic-bezier(.2,1.3,.4,1); }
+.sc.loading .card.v3 .hd, .sc.loading .card.v3 .strip { opacity: 0; transform: translateY(6px); transition: none; }      /* the name stays hidden until the picture is in */
+.sc.loading .card.v3 { box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 0 44px -12px var(--rc, #fff), 0 30px 60px -30px #000; }
+.st-title.loading { align-content: end; gap: 2px; } .st-title.loading .rw { color: var(--dim); font-weight: 500; font-size: 13px; letter-spacing: .02em; } .st-title.loading .rw b { color: var(--ink); font-variant-numeric: tabular-nums; font-family: "JetBrains Mono", ui-monospace, monospace; font-weight: 700; }
+.st-title.loading .vl { font-size: 15px; } .st-title.loading .vl b { display: inline-block; min-width: 3.2ch; font-size: 34px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; color: #fff; text-shadow: 0 0 22px color-mix(in srgb, var(--rc, #fff) 70%, transparent); vertical-align: -4px; margin-left: 6px; }
+.st-title:not(.loading) .vl b { display: inline-block; animation: worthpop .5s cubic-bezier(.2,1.6,.4,1) both; } @keyframes worthpop { from { transform: scale(1.45); color: #fff; } }
