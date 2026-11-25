@@ -1071,6 +1071,13 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .end-split small { font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; } .end-split b { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .end-split .sold small { color: #ff7a72; } .end-split .held small { color: #6fb0ff; }
 .end-acts { display: grid; gap: 10px; width: 100%; } .end-acts .btn.big { width: 100%; min-height: 58px; } .end-acts .row { gap: 8px; flex-wrap: wrap; }
+
+/* the result fits the screen whatever it holds: the cards scroll in the middle, the number stays on top and the buttons at the bottom */
+.summary { overflow: hidden; padding: 16px 16px 0; } .summary > .sum.v2 { margin: 0 auto; height: 100%; display: flex; flex-direction: column; gap: 14px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+.sum.v2 > .end-top, .sum.v2 > .end-split, .sum.v2 > .end-acts { flex: none; } .sum.v2 > .end-cards { flex: 1 1 auto; min-height: 0; width: 100%; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; display: grid; gap: 12px; align-content: center; justify-items: center; }
+.sum.v2 .end-cards:empty { display: none; } .end-line b { font-weight: 700; } .end-line.up b { color: var(--acc); } .end-line.dn b { color: #ff8a80; }
+@media (max-height: 640px) { .end-num .bx { --px: 6px; } .sum.v2 { gap: 10px; } .end-split .es { padding: 8px 10px; } .end-split b { font-size: 17px; } .end-acts .btn.big { min-height: 50px; } .end-acts .row .btn { min-height: 38px; padding: 0 12px; font-size: 13.5px; } }
+.sum.v2 > .end-cards { display: flex; flex-direction: column; align-items: center; } .sum.v2 > .end-cards > :first-child { margin-top: auto; } .sum.v2 > .end-cards > :last-child { margin-bottom: auto; }   /* centred when there is room, from the top when the cards overflow (so the first row is never cut off) */
 </style>
 </head>
 <body>
@@ -2781,10 +2788,9 @@ function endHTML(o) {
   const net = o.back - o.paid, pk = SS.pack;
   return `<div class="sum v2"><div class="end-top"><div class="label">${esc(o.title)}</div>
       <div class="end-num ${o.paid ? (net >= 0 ? "up" : "dn") : "up"}"><div class="bx" role="img" aria-label="${money(o.back)}">${blockSVG(money(o.back))}</div></div>
-      <div class="end-line">${o.paid ? `for ${money(o.paid)}` : o.bought ? "a pack you bought · play money" : "free"}${o.x >= 2 && o.paid ? ` · ${o.x >= 10 ? Math.round(o.x) : o.x.toFixed(1)}×` : ""}</div></div>
+      <div class="end-line ${o.paid ? (net >= 0 ? "up" : "dn") : ""}">${o.paid ? `for ${money(o.paid)} · <b>${net >= 0 ? "+" : "−"}${money(Math.abs(net))}</b>` : o.bought ? "a pack you bought · play money" : "free"}${o.x >= 2 && o.paid ? ` · ${o.x >= 10 ? Math.round(o.x) : o.x.toFixed(1)}×` : ""}</div></div>
     <div class="end-split"><div class="es sold"><small>sold</small><b>${money(o.soldG)}</b></div><div class="es held"><small>holding${o.held.length ? " · " + o.held.length : ""}</small><b>${money(o.heldV)}</b></div></div>
-    ${o.fan}
-    ${goalLine()}
+    <div class="end-cards">${o.fan}${goalLine()}</div>
     <div class="end-acts"><button class="btn solid big" id="sumAgain">${againLabel(pk)}</button>
       <div class="row" style="justify-content:center">${o.held.length ? `<button class="btn" id="sumSell">sell what I held · ${money(o.heldSell)}</button>` : ""}<button class="btn ghost" id="sumKeep">done</button>${o.share ? `<button class="btn ghost" id="sumClip">share</button>` : ""}${typeof API !== "undefined" && API.on ? `<button class="btn ghost" id="sumInvite">invite · free pack</button>` : ""}</div></div></div>`;
 }
