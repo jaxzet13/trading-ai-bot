@@ -482,15 +482,21 @@ def fill_quality(log_path=REAL_LOG, fetch=None):
 
     ev = [json.loads(ln) for ln in open(log_path) if ln.strip()] if Path(log_path).exists() else []
     intent, rows = {}, []
+    dropped = repriced = 0          # since orders are re-priced on the live book at send time (real.reprice)
     for e in ev:
         k, tk = e.get("event"), e.get("ticker")
+        if k == "signal_skipped" and str(e.get("rule", "")).startswith("edge:") and any(
+                w in str(e.get("reason", "")) for w in ("edge after the price moved", "the ask moved", "at send time")):
+            dropped += 1
         if k == "order_intent" and str(e.get("rule", "")).startswith("edge:"):
+            repriced += int("exec_price" in e)
             intent[tk] = e
         elif k == "fill" and tk in intent:
             i = intent.pop(tk)
             n = e.get("n") or 0
             row = {"ticker": tk, "ts": i["ts"], "side": i["side"], "quoted": i["price"], "edge": i.get("edge"),
-                   "filled": n > 0, "fill_price": e.get("avg_price") if n > 0 else None}
+                   "filled": n > 0, "fill_price": e.get("avg_price") if n > 0 else None,
+                   "repriced": "exec_price" in i}
             sb, sa = i.get("send_yes_bid"), i.get("send_yes_ask")
             if sb is not None and sa is not None and sb > 0 and sa < 1:      # ask of our side when the order went out
                 row["moved"] = round((sa if i["side"] == "yes" else 1 - sb) - i["price"], 4)
@@ -518,7 +524,11 @@ def fill_quality(log_path=REAL_LOG, fetch=None):
            "moved_unfilled_c": mean([r["moved"] for r in u if "moved" in r]),
            "unfilled_within_1c": sum(1 for r in u if "moved" in r and r["moved"] <= 0.0101),
            "unfilled_within_2c": sum(1 for r in u if "moved" in r and r["moved"] <= 0.0201),
-           "unfilled_moved_known": sum(1 for r in u if "moved" in r), "results": cache}
+           "unfilled_moved_known": sum(1 for r in u if "moved" in r),
+           # orders priced on the live book at send time, and signals dropped there because the edge was gone
+           "repriced_orders": repriced, "dropped_at_send": dropped,
+           "repriced_filled": sum(1 for r in f if r.get("repriced")),
+           "repriced_sent": sum(1 for r in rows if r.get("repriced")), "results": cache}
     FILLQ.write_text(json.dumps(out, indent=1))
     return out
 

@@ -174,6 +174,8 @@ class KalshiAPI:
         self.http = session or requests.Session()
         self.clock, self.sleep, self.timeout = clock, sleep, timeout
         self._bal_lock, self._bal_hit = threading.Lock(), None
+        self._warm_lock, self._warm_at = threading.Lock(), 0.0
+        self.keep_warm = False           # main() turns it on for real runs: Runner.wait_minute calls warm()
         if key_id and key_path:
             self.key = load_private_key(key_path)
 
@@ -208,6 +210,24 @@ class KalshiAPI:
         if r.status_code >= 400:
             raise ApiError(r.status_code, r.text)
         return r.json() if r.content else {}
+
+    def warm(self, n: int = 3, max_age: float = 20.0):
+        """Keep n pooled HTTPS connections to Kalshi open (n small requests at once, in the background; at most
+        once per max_age seconds whoever calls). An order sent on an idle client pays a fresh TLS handshake, about
+        0.3 s through the session proxy; on a connection used seconds ago it takes about 0.04 s."""
+        with self._warm_lock:
+            if self.clock() - self._warm_at < max_age:
+                return False
+            self._warm_at = self.clock()
+
+        def one():
+            try:
+                self.http.request("GET", self.base + API + "/exchange/status", timeout=2.0)
+            except Exception:
+                pass
+        for _ in range(n):
+            threading.Thread(target=one, name="kalshi-warm", daemon=True).start()
+        return True
 
     def get(self, path, params=None, deadline: float | None = None, tries: int = 6):
         """GETs are safe to repeat: back off on 429 / 5xx / network errors."""
@@ -357,6 +377,38 @@ def walk_limit(price: float, q: float, cents: float, keep_edge: float, max_price
     model probability q, whole cents, never above max_price. Returns the quoted price when no walk is allowed."""
     lim = math.floor(min(price + cents / 100, q - keep_edge) * 100 + 1e-9) / 100
     return lim if price < lim <= max_price else price
+
+
+def reprice(price: float, q: float, bid_then: float, bid_now: float, ask_now: float, min_edge: float,
+            max_move: float, slack_cents: float, lo: float, hi: float):
+    """The edge model's bet, re-priced on the book at the moment the order goes out. All prices are of the side being
+    bought: `price` / `bid_then` = its ask / bid when the model decided, `bid_now` / `ask_now` = now.
+
+    The model's probability is the market's own mid plus a correction, so when the mid has moved in the second
+    between decision and order, the probability moves with it (same correction in log-odds). The bet goes ahead at
+    the new ask when its edge after the fee is still >= min_edge; before this, an order that found the ask more
+    than 2c higher simply missed (about one in four, research/fill_study).
+
+    Returns (ask_now, q_now, limit) with limit = ask_now + slack_cents in whole cents (never above hi), or a string
+    saying why the bet is dropped: bad book, the ask moved more than max_move, the ask is outside [lo, hi], or the
+    re-priced edge is below min_edge."""
+    v = (price, q, bid_then, bid_now, ask_now)
+    if not all(isinstance(x, (int, float)) and math.isfinite(x) for x in v):
+        return "no two-sided book at send time"
+    if not (0 < bid_then < price < 1 and 0 < bid_now < ask_now < 1 and 0 < q < 1):
+        return "no two-sided book at send time"
+    if abs(ask_now - price) > max_move + 1e-9:
+        return f"the ask moved {100 * (ask_now - price):+.1f}c since the decision (max {100 * max_move:.0f}c)"
+    if not (lo <= ask_now <= hi):
+        return f"price {ask_now:.3f} outside [{lo}, {hi}] at send time"
+    lg = lambda x: math.log(x / (1 - x))
+    z = lg(q) + lg((bid_now + ask_now) / 2) - lg((bid_then + price) / 2)
+    q_now = 1 / (1 + math.exp(-z))
+    net = q_now - ask_now - 0.07 * ask_now * (1 - ask_now)
+    if net < min_edge - 1e-9:
+        return f"edge after the price moved {100 * net:+.1f}c < {100 * min_edge:.1f}c"
+    lim = math.floor((ask_now + slack_cents / 100) * 100 + 1e-9) / 100
+    return ask_now, q_now, (lim if ask_now < lim <= hi else ask_now)
 
 
 def contracts_for(stake: float, price: float, cap: int) -> int:
@@ -704,10 +756,14 @@ class Runner:
         """Wake 0.5 s after the next minute boundary (bot._wait(poll="minute")), in small steps
         so Ctrl+C and the STOP file are noticed quickly."""
         target = self.clock() + (60 - self.clock() % 60 + 0.5)
+        warmed = self.dry or not getattr(self.api, "keep_warm", False)
         while True:
             left = target - self.clock()
             if left <= 0 or self.halted() or self.stop_path.exists():
                 return
+            if not warmed and left <= 2.5:      # ~2 s before the minute: an order then goes out on an open connection
+                warmed = True
+                self.api.warm()
             self.sleep(min(left, 1.0))
 
     def step(self):
@@ -801,6 +857,29 @@ class Runner:
         tk = self.cur
         base = {"ticker": tk, "minute": minute, "side": side, "price": price, "lag_s": lag, "data_age_s": age,
                 **obs, "yes_ask_size": m.get("yes_ask_size_fp"), "yes_bid_size": m.get("yes_bid_size_fp")}
+        # The live book at the moment the order goes out. The decision used the book at the minute boundary, about a
+        # second earlier, and prices here move several cents in a second.
+        send = self.send_book(tk)
+        if send is not None:
+            base["send_yes_bid"], base["send_yes_ask"], base["send_book_age_s"] = send
+        # Edge-model bets are re-priced on that book (limits.edge_exec_min_edge; see reprice()): the bet goes ahead
+        # at the new ask while its edge after the fee holds, instead of missing whenever the ask moved up.
+        exec_limit = exec_skip = None
+        q_sig = signal.q if signal is not None else None
+        if (signal is not None and signal.kind == "edge" and self.L.get("edge_exec_min_edge")
+                and send is not None and send[2] <= 1.5 and send[0] is not None and send[1] is not None
+                and obs.get("yes_bid") is not None and obs.get("yes_ask") is not None):
+            yes = side == "yes"
+            r = reprice(price, signal.q, obs["yes_bid"] if yes else 1 - obs["yes_ask"],
+                        send[0] if yes else 1 - send[1], send[1] if yes else 1 - send[0],
+                        self.L["edge_exec_min_edge"], self.L.get("edge_exec_max_move", 0.10),
+                        self.L.get("edge_exec_slack_cents", 1), self.L["min_price"], self.L["max_price"])
+            if isinstance(r, str):
+                exec_skip = r
+            else:
+                base["decision_price"] = price                  # "price" stays the quote the model decided on
+                price, q_sig, exec_limit = r
+                base.update(exec_price=round(price, 4), exec_q=round(q_sig, 6))
         stake = self.base_stake()
         if self.L.get("stake_pct_of_balance") or signal is not None:
             base.update(base_stake=round(stake, 4), balance_crypto=self.crypto_balance)
@@ -815,9 +894,11 @@ class Runner:
                 # crypto balance (limits.edge_kelly / edge_haircut; the hour-of-day multiplier does not apply)
                 from . import edge as EDGE
                 bal = self.crypto_balance if self.crypto_balance is not None else self.L["stake_usd"] / 0.03
-                stake = EDGE.stake_usd(bal, signal.q, price, self.L.get("edge_kelly", EDGE.KELLY),
+                stake = EDGE.stake_usd(bal, q_sig, price, self.L.get("edge_kelly", EDGE.KELLY),
                                        self.L.get("edge_haircut", EDGE.HAIRCUT))
-                base.update(edge=round(signal.q - price - EDGE.fee(price), 6), stake=round(stake, 4))
+                base.update(edge=round(signal.q - base["price"] - EDGE.fee(base["price"]), 6), stake=round(stake, 4))
+                if exec_limit is not None:
+                    base["exec_edge"] = round(q_sig - price - EDGE.fee(price), 6)
         why = self.blocked()
         if why is None and signal is not None:
             why = self.rule_paused(signal.rule)
@@ -827,6 +908,8 @@ class Runner:
             why = f"data {age}s old > {self.L['max_data_age_s']}s"
         if why is None and not (self.L["min_price"] <= price <= self.L["max_price"]):
             why = f"price {price} outside [{self.L['min_price']}, {self.L['max_price']}]"
+        if why is None and exec_skip:
+            why = exec_skip
         # walk_cents (default off): thin books often show only a few contracts at the best price. Let the IOC
         # order reach up to walk_cents deeper, but never closer than walk_keep_edge to the rule's model value.
         limit = price
@@ -837,7 +920,10 @@ class Runner:
         is_edge = signal is not None and signal.kind == "edge"
         wc = self.L.get("edge_walk_cents", 0) if is_edge else self.L.get("walk_cents")
         wk = self.L.get("edge_walk_keep_edge", 0.05) if is_edge else self.L.get("walk_keep_edge", 0.06)
-        if signal is not None and wc:
+        if exec_limit is not None:                  # re-priced on the live book: the ask now, plus the slack
+            limit = exec_limit
+            base["limit"] = limit
+        elif signal is not None and wc:
             limit = walk_limit(price, signal.q, wc, wk, self.L["max_price"])
             if limit > price:
                 base["limit"] = limit
@@ -864,19 +950,6 @@ class Runner:
             self.out(f"  signal {side.upper()} @ {price:.3f} skipped: {why}")
             self.log({"event": "signal_skipped", "reason": why, **base})
             return
-        # the live book at the moment the order goes out (the decision used the book at the minute boundary, about
-        # a second earlier): logged only, so the fill tracker can measure how far prices move in that second
-        bk = getattr(self.mapi, "books", None)
-        if bk is not None:
-            try:
-                # as_of() only vouches for times the stream has already passed: ask as of its newest message
-                t_bk = min(self.clock(), bk.last_msg)
-                qn = bk.as_of(tk, t_bk) if self.clock() - t_bk < 3 else None
-                if qn is not None:
-                    base["send_yes_bid"], base["send_yes_ask"] = qn[0], qn[2]
-                    base["send_book_age_s"] = round(self.clock() - t_bk, 3)
-            except Exception:
-                pass
         coid = str(uuid.uuid4())
         body = order_body(tk, side, limit, n, coid)
         # mark the market as traded BEFORE sending, so a crash can never lead to a second order
@@ -895,8 +968,22 @@ class Runner:
             return
         self.log({"event": "order_intent", "n": n, "max_cost": max_cost, "close_ts": open_ts + 900,
                   "client_order_id": coid, "order": body, **base})
-        self.out(f"  >>> BUY {n} {side.upper()} @ {price:.3f} IOC (max ${max_cost:.2f}), {lag}s after the minute")
-        self._place(tk, side, body, n, price)
+        moved = f" (decided at {base['price']:.3f}, re-priced)" if exec_limit is not None and price != base["price"] else ""
+        self.out(f"  >>> BUY {n} {side.upper()} @ {price:.3f}{moved} IOC (max ${max_cost:.2f}), {lag}s after the minute")
+        self._place(tk, side, body, n, limit)
+
+    def send_book(self, tk):
+        """(yes_bid, yes_ask, age in seconds) from the order-book stream right now, or None without a live stream."""
+        bk = getattr(self.mapi, "books", None)
+        if bk is None:
+            return None
+        try:
+            # as_of() only vouches for times the stream has already passed: ask as of its newest message
+            t_bk = min(self.clock(), bk.last_msg)
+            qn = bk.as_of(tk, t_bk) if self.clock() - t_bk < 3 else None
+            return None if qn is None else (qn[0], qn[2], round(self.clock() - t_bk, 3))
+        except Exception:
+            return None
 
     def _place(self, tk, side, body, n, price):
         coid, sent_at = body["client_order_id"], int(self.clock())
@@ -1407,6 +1494,10 @@ def load_config(path=CONFIG) -> dict:
             raise Stop(f"{path}: {k} must be a positive number", EXIT_CONFIG)
     if not 0 <= lim.get("edge_walk_cents", 0) <= 5 or not 0.03 <= lim.get("edge_walk_keep_edge", 0.05) <= 0.5:
         raise Stop(f"{path}: edge_walk_cents must be 0-5 and edge_walk_keep_edge 0.03-0.5", EXIT_CONFIG)
+    if lim.get("edge_exec_min_edge") is not None and not 0.02 <= lim["edge_exec_min_edge"] <= 0.3:
+        raise Stop(f"{path}: edge_exec_min_edge must be 0.02-0.3 (or absent: no re-pricing at send time)", EXIT_CONFIG)
+    if not 0.01 <= lim.get("edge_exec_max_move", 0.10) <= 0.3 or not 0 <= lim.get("edge_exec_slack_cents", 1) <= 3:
+        raise Stop(f"{path}: edge_exec_max_move must be 0.01-0.3 and edge_exec_slack_cents 0-3", EXIT_CONFIG)
     if not 0 <= lim.get("walk_cents", 0) <= 10 or not 0 <= lim.get("walk_keep_edge", 0.06) <= 0.5:
         raise Stop(f"{path}: walk_cents must be 0-10 and walk_keep_edge 0-0.5", EXIT_CONFIG)
     if "golden_rules" in cfg:   # lab3's golden rules, frozen to the exact lab3 params (see golden_live.GOLDEN)
@@ -1545,6 +1636,7 @@ def _main(a) -> int:
         if a.live and not confirm_live():
             print("Confirmation phrase not entered. Not starting.")
             return EXIT_CONFIG
+        api.keep_warm = True
         runner_kw = dict(mode=mode, api=api, log_path=Path(a.log))
         if not os.environ.get("KALSHI15M_NO_STREAMS"):
             from . import streams

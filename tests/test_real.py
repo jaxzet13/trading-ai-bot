@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import base64
 import json
+import time
 import math
 import random
 import sys
@@ -280,6 +281,104 @@ def test_balances_shared_within_max_age():
     clock.t += 11
     fake.balance_cents = 80_00
     assert api.balances(max_age=10.0) == (80.0, 80.0) and n() == 3        # too old: ask again
+
+
+def test_reprice_follows_the_book_and_drops_dead_edges():
+    """An edge bet is re-priced on the book at send time: same log-odds correction on the new mid."""
+    R = lambda *a, **k: real.reprice(*a, **{**dict(min_edge=0.04, max_move=0.10, slack_cents=1, lo=0.03, hi=0.95), **k})
+    ask, q, lim = R(0.50, 0.58, 0.49, 0.49, 0.50)                    # nothing moved: same bet, 1c of slack
+    assert (ask, lim) == (0.50, 0.51) and abs(q - 0.58) < 1e-12
+    ask, q, lim = R(0.50, 0.58, 0.49, 0.53, 0.54)                    # ask up 4c: the model's value moves with the mid
+    assert (ask, lim) == (0.54, 0.55) and 0.61 < q < 0.63
+    assert q - 0.54 - 0.07 * 0.54 * 0.46 >= 0.04
+    ask, q, lim = R(0.50, 0.58, 0.49, 0.45, 0.46)                    # ask down 4c: still a bet, at the lower price
+    assert (ask, lim) == (0.46, 0.47) and 0.53 < q < 0.55
+    assert "edge after the price moved" in R(0.50, 0.58, 0.49, 0.49, 0.56)      # spread widened: edge gone
+    assert "edge after the price moved" in R(0.50, 0.553, 0.49, 0.49, 0.50, min_edge=0.04)   # 3.6c net < 4c
+    assert "the ask moved +12.0c" in R(0.50, 0.58, 0.49, 0.61, 0.62)             # more than max_move
+    assert "the ask moved -11.0c" in R(0.50, 0.58, 0.49, 0.38, 0.39)
+    assert "outside" in R(0.93, 0.99, 0.92, 0.955, 0.96)                        # beyond max_price at send
+    assert R(0.94, 0.999, 0.93, 0.94, 0.95)[2] == 0.95                           # slack never goes above max_price
+    assert R(0.085, 0.16, 0.08, 0.087, 0.092)[2] == 0.10                         # sub-cent ask: limit in whole cents
+    assert R(0.50, 0.58, 0.49, 0.49, 0.50, slack_cents=0)[2] == 0.50
+    for bad in ((0.50, 0.58, 0.49, None, 0.50), (0.50, 0.58, 0.49, 0.49, float("nan")), (0.50, 0.58, 0.49, 0.50, 0.50),
+                (0.50, 0.58, 0.50, 0.49, 0.50), (0.50, 1.0, 0.49, 0.49, 0.50)):
+        assert R(*bad) == "no two-sided book at send time"
+
+
+class FakeBooks:
+    def __init__(self, clock, yes_bid, yes_ask):
+        self.clock, self.q, self.last_msg = clock, (yes_bid, 50.0, yes_ask, 50.0), clock()
+
+    def as_of(self, ticker, t, wait_s=0.0, close_ts=None):
+        return self.q
+
+
+class FakeEdgeSignal:
+    kind, rule = "edge", "edge:KXNEAR15M"
+
+    def __init__(self, q):
+        self.q = q
+
+
+def test_edge_order_goes_out_at_the_live_ask():
+    """The model decided on 0.49/0.50. By send time the book is elsewhere: the order follows it while the edge
+    holds, is dropped (market still open for later minutes) when it does not, and without a live book the old
+    fixed-limit order is sent."""
+    d, clock, fake, kp = setup()
+    cfg = json.loads(json.dumps(CFG))
+    cfg["limits"].update(edge_exec_min_edge=0.04, edge_exec_max_move=0.10, edge_exec_slack_cents=1,
+                         min_one_contract_max_usd=1.0, max_open_positions=5)
+    r = make_runner(d, clock, fake, kp, cfg=cfg)
+    at_minute(clock, T0, 5)
+    m = fake.market_at(clock())
+    r.cur = m["ticker"]
+    r.refresh_balance()
+    obs = {"yes_bid": 0.49, "yes_ask": 0.50, "rule": "edge:KXNEAR15M", "strike": 4.0, "spot": 4.0, "model": 0.5}
+    act = lambda side, price, q: r._act(m, 5, (side, price), dict(obs), 1.0, 0.5, T0, signal=FakeEdgeSignal(q))
+
+    r.mapi.books = FakeBooks(clock, 0.49, 0.56)                      # spread widened: edge gone -> no order
+    act("yes", 0.50, 0.58)
+    assert not fake.posts and r.cur not in r.traded
+    assert "edge after the price moved" in events(r, "signal_skipped")[-1]["reason"]
+
+    r.mapi.books = FakeBooks(clock, 0.53, 0.54)                      # ask up 4c: buy at 0.54, limit 0.55
+    act("yes", 0.50, 0.58)
+    assert fake.posts[-1]["side"] == "bid" and fake.posts[-1]["price"] == "0.5500"
+    oi = events(r, "order_intent")[-1]
+    assert oi["price"] == 0.50 and oi["exec_price"] == 0.54 and oi["limit"] == 0.55 and oi["send_yes_ask"] == 0.54
+    assert 0.61 < oi["exec_q"] < 0.63 and oi["exec_edge"] >= 0.04 and r.cur in r.traded
+
+    # NO side on the next market: decided at no-ask 0.51 (yes bid 0.49); the yes bid has dropped to 0.46 -> no-ask 0.54
+    clock.t = T0 + 900 + 60 * 5 + 0.5
+    m2 = fake.market_at(clock())
+    r.cur = m2["ticker"]
+    r.mapi.books = FakeBooks(clock, 0.46, 0.47)
+    r._act(m2, 5, ("no", 0.51), dict(obs), 1.0, 0.5, T0 + 900, signal=FakeEdgeSignal(0.59))
+    assert fake.posts[-1]["side"] == "ask" and fake.posts[-1]["price"] == "0.4500"      # NO at up to 0.55 = yes 0.45
+    assert events(r, "order_intent")[-1]["exec_price"] == 0.54
+
+    # no order-book stream: the order is priced as before (the decision quote)
+    clock.t = T0 + 1800 + 60 * 5 + 0.5
+    m3 = fake.market_at(clock())
+    r.cur = m3["ticker"]
+    r.mapi.books = None
+    r._act(m3, 5, ("yes", 0.50), dict(obs), 1.0, 0.5, T0 + 1800, signal=FakeEdgeSignal(0.58))
+    assert fake.posts[-1]["price"] == "0.5000" and "exec_price" not in events(r, "order_intent")[-1]
+
+
+def test_warm_opens_connections_at_most_once_per_interval():
+    d, clock, fake, kp = setup()
+    api = real.KalshiAPI("https://fake", "kid", str(kp), session=fake, clock=clock, sleep=clock.sleep)
+    n = lambda: sum(1 for c in fake.calls if c[1].endswith("/exchange/status"))
+    assert api.warm(n=3) is True and api.warm(n=3) is False           # the second caller in the same minute skips
+    for _ in range(200):
+        if n() == 3:
+            break
+        time.sleep(0.01)
+    assert n() == 3
+    clock.t += 30
+    assert api.warm(n=2) is True
 
 
 def test_order_body_fields_and_units():
