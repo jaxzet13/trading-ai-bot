@@ -1,6 +1,6 @@
 /* ---- the pack screen: the window in the pack plays the pack's own ASCII scene, not its cards (what is inside stays a surprise until you open it).
-        Each scene is painted as a small picture first (light, shading, colour), then every cell of the grid becomes the character whose ink matches
-        that cell's brightness, in that cell's colour. That is what gives the scene real depth instead of a few hand-placed symbols.
+        Each scene is painted sharp, at the screen's own resolution (light, shading, colour). Then the same picture is read back as a grid, and every
+        cell gets the character whose ink matches its brightness, laid over the picture as a light grain: clean from a step back, made of text up close.
         First Print is a print run: over a slow sunburst the STIXX figure and name are printed under a glowing print head, catch a shine, then the sheet runs again.
         Moonshot is a launch: a shaded rocket on a flickering flame climbs through moving stars, the Moon glowing in the corner. ---- */
 const SPIN = "|/-\\";
@@ -9,7 +9,7 @@ class PackScreen {
   constructor(pk, pack) {
     this.pk = pk; this.pack = pack || PACKS[0]; this.cv = pk.querySelector("canvas.scr"); this.ctx = this.cv.getContext("2d");
     this.el = { stat: pk.querySelector(".r-stat"), name: pk.querySelector(".r-name"), sub: pk.querySelector(".r-sub"), meter: pk.querySelector(".r-meter") };
-    this.on = false; this.last = 0; this.t0 = performance.now(); this.off = document.createElement("canvas"); this.g = this.off.getContext("2d", { willReadFrequently: true }); this.cache = new Map(); this.layer = document.createElement("canvas"); this.lc = this.layer.getContext("2d");
+    this.on = false; this.last = 0; this.t0 = performance.now(); this.off = document.createElement("canvas"); this.g = this.off.getContext("2d", { willReadFrequently: true }); this.cache = new Map(); this.hi = document.createElement("canvas"); this.hg = this.hi.getContext("2d"); this.layer = document.createElement("canvas"); this.lc = this.layer.getContext("2d");
     const n = LIVE.filter(c => c.set === this.pack.set).length;
     scramble(this.el.name, this.pack.name.toUpperCase(), 520); this.el.sub.textContent = `${n} cards · one in every pack`;
   }
@@ -17,23 +17,26 @@ class PackScreen {
     const dpr = Math.min(devicePixelRatio || 1, 2), w = this.cv.clientWidth, h = this.cv.clientHeight; if (!w || !h) return;
     if (this.cv.width !== Math.round(w * dpr) || this.cv.height !== Math.round(h * dpr)) { this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr); }
     this.dpr = dpr; this.w = w; this.h = h; this.cols = Math.max(48, Math.round(w / 3.1)); const cw = w / this.cols; this.rows = Math.max(30, Math.round(h / (cw * 1.62)));
-    if (this.off.width !== this.cols || this.off.height !== this.rows) { this.off.width = this.layer.width = this.cols; this.off.height = this.layer.height = this.rows; }
+    if (this.off.width !== this.cols || this.off.height !== this.rows) { this.off.width = this.cols; this.off.height = this.rows; }
+    if (this.hi.width !== this.cv.width || this.hi.height !== this.cv.height) { this.hi.width = this.layer.width = this.cv.width; this.hi.height = this.layer.height = this.cv.height; }
   }
   status(now, s) { const v = "> " + s + " " + SPIN[Math.floor(now / 110) % 4]; if (v !== this.el.stat._s) { this.el.stat._s = v; this.el.stat.textContent = v; } const mt = meter((Math.floor(now / 380) % 5) + 1, 5); if (mt !== this.el.meter._s) { this.el.meter._s = mt; this.el.meter.textContent = mt; } }
   col(r, g, b) { const k = (r >> 4) << 8 | (g >> 4) << 4 | b >> 4; let v = this.cache.get(k); if (!v) { v = `rgb(${(r >> 4) * 17},${(g >> 4) * 17},${(b >> 4) * 17})`; this.cache.set(k, v); } return v; }
   frame(now) {
-    this.fit(); if (!this.w) return; const { cols, rows, w: W, h: H, g } = this, t = Math.max(0, (now - this.t0) / 1000);
-    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over"; g.shadowBlur = 0; g.fillStyle = "#000"; g.fillRect(0, 0, cols, rows);
-    g.setTransform(cols / W, 0, 0, rows / H, 0, 0);                                      // paint in the pack's own pixels; the small canvas averages them into cells
+    this.fit(); if (!this.w) return; const { cols, rows, w: W, h: H } = this, g = this.hg, t = Math.max(0, (now - this.t0) / 1000);
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over"; g.shadowBlur = 0; g.fillStyle = "#030304"; g.fillRect(0, 0, this.hi.width, this.hi.height);
+    g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);                                     // paint in the pack's own pixels, sharp
     if (this.pack.id === "ms") this.launch(g, t, W, H); else this.print(g, t, W, H);
-    const d = g.getImageData(0, 0, cols, rows).data, c = this.ctx, cw = W / cols, ch = H / rows, N = PS_RAMP.length - 1;
-    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.fillStyle = "#030304"; c.fillRect(0, 0, W, H); c.save(); c.globalAlpha = .5; c.imageSmoothingEnabled = true; c.imageSmoothingQuality = "high"; c.drawImage(this.off, 0, 0, W, H); c.restore();   // the picture glows softly under its own characters
+    const c = this.ctx, sm = this.g; c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.drawImage(this.hi, 0, 0);
+    sm.setTransform(1, 0, 0, 1, 0, 0); sm.imageSmoothingEnabled = true; sm.drawImage(this.hi, 0, 0, cols, rows);                 // the same picture, read back as a grid of cells
+    const d = sm.getImageData(0, 0, cols, rows).data, cw = W / cols, ch = H / rows, N = PS_RAMP.length - 1;
+    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.globalAlpha = .34; c.globalCompositeOperation = "overlay";
     c.font = `700 ${(cw / .6).toFixed(2)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; c.textAlign = "center"; c.textBaseline = "middle";
     for (let y = 0, k = 0; y < rows; y++) for (let x = 0; x < cols; x++, k += 4) {
-      const r = d[k], gg = d[k + 1], b = d[k + 2], l = (r * .299 + gg * .587 + b * .114) / 255; if (l < .06) continue;
-      const m = Math.max(r, gg, b) || 1, s = Math.min(1, .5 + l * .9), boost = 255 / m * s;                 // vivid colour, dimmer where the picture is dark
-      c.fillStyle = this.col(Math.min(255, r * boost), Math.min(255, gg * boost), Math.min(255, b * boost)); c.fillText(PS_RAMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);
+      const r = d[k], gg = d[k + 1], b = d[k + 2], l = (r * .299 + gg * .587 + b * .114) / 255; if (l < .05) continue;
+      c.fillStyle = l > .55 ? "#000" : "#fff"; c.fillText(PS_RAMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);          // dark type on the light parts, light type on the dark: a grain, not a mask
     }
+    c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
   }
   print(g, t, W, H) {                                                                    // First Print: the logo prints under a glowing head, shines, then the sheet runs again
     const CYC = 6.4, u = t % CYC, head = u < 2.6 ? (u / 2.6) * (H + 20) - 10 : H + 40, fade = u > 5.8 ? 1 - (u - 5.8) / .6 : 1, run = Math.floor(t / CYC);
@@ -46,7 +49,7 @@ class PackScreen {
     { const ex = W / 2, ey = H * .385, rot = t * .1; g.save(); g.translate(ex, ey); for (let k = 0; k < 24; k++) { const a = rot + k * Math.PI / 12; g.fillStyle = k % 2 ? "rgba(255,176,72,.26)" : "rgba(214,96,36,.13)"; g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, H, a, a + Math.PI / 12); g.closePath(); g.fill(); }
       const core = g.createRadialGradient(0, 0, 0, 0, 0, W * .5); core.addColorStop(0, "rgba(255,214,140,.5)"); core.addColorStop(.45, "rgba(255,150,60,.16)"); core.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = core; g.fillRect(-W, -H, W * 2, H * 2);
       const edge = g.createRadialGradient(0, 0, W * .35, 0, 0, H * .78); edge.addColorStop(0, "rgba(0,0,0,0)"); edge.addColorStop(1, "rgba(0,0,0,.92)"); g.fillStyle = edge; g.fillRect(-W, -H, W * 2, H * 2); g.restore(); }
-    const G0 = g, Lc = this.lc; Lc.setTransform(1, 0, 0, 1, 0, 0); Lc.clearRect(0, 0, this.cols, this.rows); Lc.setTransform(this.cols / W, 0, 0, this.rows / H, 0, 0); g = Lc;     // the ink goes on its own clear layer, so the shine only lights the ink
+    const G0 = g, Lc = this.lc; Lc.setTransform(1, 0, 0, 1, 0, 0); Lc.clearRect(0, 0, this.layer.width, this.layer.height); Lc.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); g = Lc;     // the ink goes on its own clear layer, so the shine only lights the ink
     g.save(); g.beginPath(); g.rect(0, 0, W, Math.max(0, head)); g.clip(); g.globalAlpha = fade;
     const cx = W / 2, cy = H * .77, fs = fit("STIXX", 900, W * .8, H * .2);
     { const un = W * .38 / 11.6, ox = cx - 14 * un, oy = H * .385 - 14.6 * un, ink = g.createLinearGradient(0, oy + 4 * un, 0, oy + 22 * un); ink.addColorStop(0, "#ffffff"); ink.addColorStop(.6, "#f3ecdc"); ink.addColorStop(1, "#c9bfa8");   // the figure from the logo: a head over a cross

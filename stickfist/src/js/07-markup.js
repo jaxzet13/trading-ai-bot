@@ -18,6 +18,6 @@ function liveWindow(pk, pack) { const ps = new PackScreen(pk, pack); ps.fit(); p
 // a snapshot of the animation so a torn half still shows the picture it had
 function freezeScreen(el, src) { const cv = el.querySelector("canvas.scr"); if (!cv) return; const img = new Image(); img.className = "scr"; img.src = src; cv.replaceWith(img); }
 function tiltPack(pk) {
-  pk.addEventListener("pointermove", e => { const r = pk.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; pk.style.setProperty("--ry", (x * 16).toFixed(1) + "deg"); pk.style.setProperty("--rx", (-y * 12).toFixed(1) + "deg"); pk.style.setProperty("--sx", (50 + x * 80).toFixed(0) + "%"); });
-  pk.addEventListener("pointerleave", () => { pk.style.setProperty("--ry", "0deg"); pk.style.setProperty("--rx", "0deg"); });
+  pk.addEventListener("pointermove", e => { pk.classList.add("held"); const r = pk.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; pk.style.setProperty("--ry", (x * 16).toFixed(1) + "deg"); pk.style.setProperty("--rx", (-y * 12).toFixed(1) + "deg"); pk.style.setProperty("--sx", (50 + x * 80).toFixed(0) + "%"); });
+  const drop = () => { pk.classList.remove("held"); pk.style.removeProperty("--ry"); pk.style.removeProperty("--rx"); }; pk.addEventListener("pointerleave", drop); pk.addEventListener("pointerup", drop); pk.addEventListener("pointercancel", drop);
 }

@@ -16,6 +16,8 @@ document.addEventListener("click", e => {
   if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
   if (t.dataset.testmoney) { Acct.testMoney(+t.dataset.testmoney); return; }
   if (t.dataset.tf) { Chart.setTf(+t.dataset.tf); return; }
+  if (t.dataset.prng != null) { pRng = +t.dataset.prng || 0; buzz(4); renderProfile(); return; }
+  if (t.dataset.pgear) { const m = $("pMore"); m.open = true; m.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); return; }
   if (t.id === "sumClaim" || t.id === "homeClaim") {                                       // finished goals pay out right where you are, and the next button already says "open a free pack"
     const r = t.getBoundingClientRect(), n = Goals.claimAll(); if (!n) return;
     if (typeof FX !== "undefined" && FX.burst) FX.burst(r.left + r.width / 2, r.top + r.height / 2, 18, ["#3be477", "#fff"], 320);

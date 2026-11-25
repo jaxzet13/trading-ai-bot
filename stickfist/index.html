@@ -1213,6 +1213,73 @@ details.ptile[open] > summary { border-bottom: 1px solid var(--ln); grid-templat
 @keyframes rcvIn { from { opacity: 0; translate: -50% 8px; } }
 @media (prefers-reduced-motion: reduce) { .sc > .rays, .rc.up .rcb, .rcf, .rcv { animation: none; } .rc.up .rcb { opacity: 0; } }
 .stage:has(.st-title.hit) #stMeter, .stage:has(.st-title.climb) #stMeter { opacity: 0; transition: opacity .2s; }
+
+/* ---- the pack page, cleaned up: a glossy pack, how many, one button worth pressing ---- */
+@property --ry { syntax: "<angle>"; inherits: true; initial-value: 0deg; } @property --rx { syntax: "<angle>"; inherits: true; initial-value: 0deg; }
+@media (prefers-reduced-motion: no-preference) { #homePack .pk:not(.held) { animation: packSway 7s ease-in-out infinite; } }
+@keyframes packSway { 0%, 100% { --ry: -7deg; --rx: 1.5deg; } 50% { --ry: 7deg; --rx: -1.5deg; } }
+#homePack .pk { border-radius: 18px; border-color: rgba(255,255,255,.2); background: linear-gradient(160deg, #15161b 0%, #07080b 46%, #101116 100%); box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.22) inset, 0 40px 70px -34px #000, 0 0 90px -30px var(--halo2, rgba(59,228,119,.5)); touch-action: pan-y; }
+#homePack .pk .crimp { color: rgba(255,255,255,.2); border-color: rgba(255,255,255,.08); }
+#homePack .pk .win { width: 91%; margin-top: 2.6cqw; border: 0; border-radius: 3cqw; box-shadow: 0 0 0 1px rgba(255,255,255,.1), 0 1px 0 rgba(255,255,255,.18) inset; }
+#homePack .pk .readout { flex: 1; align-content: center; justify-items: center; text-align: center; padding: 0 6%; gap: .8cqw; }
+#homePack .pk .r-stat, #homePack .pk .r-meter { display: none; }
+#homePack .pk .r-name { font: 800 6.4cqw/1 Inter, system-ui, sans-serif; letter-spacing: .3em; margin-right: -.3em; color: #f5f2ea; min-height: 0; } #homePack .pk.pk-ms .r-name { color: #ffd9a8; }
+#homePack .pk .r-sub { font: 500 3.3cqw/1.2 Inter, system-ui, sans-serif; letter-spacing: .04em; color: rgba(255,255,255,.5); }
+#homePack::after { border-radius: 18px; background: linear-gradient(112deg, transparent 40%, rgba(255,255,255,.2) 50%, transparent 60%) 130% 0 / 260% 100% no-repeat; }
+.packtabs .ptab { transition: background .2s, color .2s; }
+/* how many: one control, not five loose chips */
+.multi { gap: 0; padding: 3px; border-radius: 14px; background: var(--s1); border: 1px solid var(--ln); } .multi[hidden] { display: none; }
+.multi .seg1, body.on-home .multi .seg1 { min-width: 54px; min-height: 32px; border: 0; border-radius: 11px; background: none; color: var(--dim); font-weight: 700; } .multi .seg1.on, body.on-home .multi .seg1.on { background: #f5f2ea; color: #08090b; box-shadow: 0 6px 14px -8px #000; }
+/* the button */
+#openBtn { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 12px; width: min(420px, 100%); height: 62px; min-height: 0; padding: 0 18px; border: 0; border-radius: 21px; color: #03170b; font-size: 19px; font-weight: 800; letter-spacing: -.01em;
+  background: linear-gradient(180deg, #7dffab 0%, #3be477 46%, #22c55e 100%); box-shadow: 0 1px 0 rgba(255,255,255,.65) inset, 0 -3px 0 rgba(0,0,0,.14) inset, 0 16px 34px -12px rgba(59,228,119,.75), 0 0 0 1px rgba(4,40,18,.6); transition: transform .12s cubic-bezier(.2,.8,.2,1), filter .12s, box-shadow .12s; }
+body.on-home #openBtn { height: 62px; margin: 0; }
+#openBtn::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%) 160% 0 / 250% 100% no-repeat; pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) { #openBtn::after { animation: obShine 3.4s ease-in-out infinite; } #openBtn { animation: obGlow 2.6s ease-in-out infinite; } }
+@keyframes obShine { 0%, 45% { background-position: 160% 0; } 100% { background-position: -160% 0; } }
+@keyframes obGlow { 50% { box-shadow: 0 1px 0 rgba(255,255,255,.65) inset, 0 -3px 0 rgba(0,0,0,.14) inset, 0 20px 46px -10px rgba(59,228,119,.95), 0 0 0 1px rgba(4,40,18,.6); } }
+#openBtn:active { transform: translateY(2px) scale(.975); filter: brightness(.94); animation: none; box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 6px 14px -8px rgba(59,228,119,.7), 0 0 0 1px rgba(4,40,18,.6); }
+#openBtn .ob-t { display: inline-block; } #openBtn .ob-t::first-letter { text-transform: uppercase; } #openBtn .ob-d { font-size: 0; }
+#openBtn .ob-p { display: inline-block; padding: 6px 12px; border-radius: 12px; background: rgba(3,30,14,.9); color: #8dffb6; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0; }
+#openBtn.free { background: linear-gradient(180deg, #fff3c4 0%, #ffd66b 46%, #f5b83d 100%); color: #241800; box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 -3px 0 rgba(0,0,0,.12) inset, 0 16px 34px -12px rgba(255,200,90,.7), 0 0 0 1px rgba(60,40,0,.6); animation: none; } #openBtn.free .ob-p { background: rgba(40,26,0,.88); color: #ffe39a; }
+.hometrust { align-items: center; gap: 10px; font-size: 11.5px; color: var(--dim); } .hfacts { font-weight: 600; font-variant-numeric: tabular-nums; color: color-mix(in srgb, var(--ink) 72%, transparent); }
+@media (max-width: 760px) {
+  body.on-home .home { gap: 9px; } body.on-home .multi { order: 1; gap: 0; } body.on-home #openBtn { order: 2; } body.on-home .hometrust { order: 3; gap: 10px; } body.on-home .home > :not(.packtabs):not(.homenext):not(.packcol):not(.multi):not(#openBtn):not(.hometrust) { order: 4; }
+  body.on-home .tchip { font-size: 11.5px; } body.on-home .tchip svg { display: none; } body.on-home .tchip { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255,255,255,.25); }
+}
+@media (max-width: 380px) { .hfacts { display: none; } }
+
+/* ---- Me, second pass: who you are, a real chart, and your cards as cards ---- */
+#v-profile .page-head { display: none; }
+.ptop { display: flex; align-items: center; gap: 12px; margin: 4px 0 18px; }
+.pt-av { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; font: 800 19px Inter, system-ui, sans-serif; color: #04130a; background: conic-gradient(from 210deg, #3be477, #8dffb6, #7ab8ff, #3be477); box-shadow: 0 0 0 2px #05060a, 0 0 0 3px rgba(59,228,119,.5), 0 10px 24px -10px rgba(59,228,119,.7); }
+.pt-who { flex: 1; min-width: 0; display: grid; gap: 3px; } .pt-who b { font-size: 17px; font-weight: 800; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .pt-who small { font-size: 12.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pt-who small i { font-style: normal; font-weight: 800; color: #04130a; background: var(--acc); border-radius: 6px; padding: 1px 6px; margin-right: 3px; font-size: 11px; }
+.pt-xp { display: block; height: 4px; margin-top: 3px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; } .pt-xp i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2bbf62, var(--acc)); }
+.pt-gear { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; border: 1px solid var(--ln); background: var(--s1); color: var(--ink); cursor: pointer; } .pt-gear svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; }
+.pf2 { --pc: #3be477; --pcr: 59,228,119; display: grid; gap: 6px; margin: 0 0 18px; } .pf2.neg { --pc: #ff6b6b; --pcr: 255,107,107; }
+.pf2 .label { font-size: 12px; letter-spacing: .14em; } .pf2 .bignum { font-size: clamp(44px, 13.5vw, 60px); font-weight: 800; letter-spacing: -.05em; line-height: 1; }
+.pf2 .pf-pill { color: #04130a; background: var(--pc); } .pf2.neg .pf-pill { color: #fff; background: #d83a3a; }
+.pf-chart { position: relative; height: 128px; margin: 8px -16px 0; } .pf-chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.pf-chart .l { fill: none; stroke: var(--pc); stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 9px rgba(var(--pcr), .85)); } .pf-chart .b { stroke: rgba(255,255,255,.14); stroke-width: 1; stroke-dasharray: 2 5; vector-effect: non-scaling-stroke; fill: none; }
+.pf-chart .g0 { stop-color: var(--pc); stop-opacity: .3; } .pf-chart .g1 { stop-color: var(--pc); stop-opacity: 0; }
+.pf-dot { position: absolute; right: -1px; width: 10px; height: 10px; margin: -5px -5px 0 0; border-radius: 50%; background: var(--pc); box-shadow: 0 0 0 4px rgba(var(--pcr), .22), 0 0 16px 2px rgba(var(--pcr), .9); } @media (prefers-reduced-motion: no-preference) { .pf-dot { animation: pfDot 1.4s ease-out infinite; } } @keyframes pfDot { 70%, 100% { box-shadow: 0 0 0 12px rgba(var(--pcr), 0), 0 0 16px 2px rgba(var(--pcr), .9); } }
+.pf-rng { display: flex; justify-content: center; gap: 4px; margin-top: 4px; } .pf-rng button { min-width: 54px; min-height: 32px; border: 0; border-radius: 10px; background: none; color: var(--dim); font: 700 12.5px Inter, system-ui, sans-serif; letter-spacing: .04em; cursor: pointer; -webkit-tap-highlight-color: transparent; } .pf-rng button.on { background: rgba(var(--pcr), .16); color: var(--pc); }
+.pf-stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 12px; border-radius: 18px; border: 1px solid var(--ln); background: var(--s1); } .pf-stats > div { display: grid; gap: 3px; padding: 12px 12px; min-width: 0; } .pf-stats > div + div { border-left: 1px solid var(--ln); }
+.pf-stats small { font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); white-space: nowrap; } .pf-stats b { font-size: 16px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#pTable { padding: 0; border: 0; background: none; } #pTable:empty { display: none; }
+.pgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; } @media (min-width: 700px) { .pgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.hc { display: grid; gap: 6px; min-width: 0; } .hc-main { display: grid; gap: 5px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.hc-img { position: relative; display: block; aspect-ratio: 360 / 437; border-radius: 12px; overflow: hidden; background: #0a0b0e; box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc, #555) 55%, #1a1c22), 0 14px 24px -16px color-mix(in srgb, var(--rc, #000) 70%, #000); } .hc-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.hc.run .hc-img { box-shadow: 0 0 0 2px #3be477, 0 0 26px -2px rgba(59,228,119,.8); }
+.hc-n { position: absolute; left: 5px; top: 5px; padding: 2px 6px; border-radius: 7px; background: rgba(5,6,10,.82); color: #fff; font: 800 11px Inter, system-ui, sans-serif; backdrop-filter: blur(4px); }
+.hc-pct { position: absolute; right: 5px; bottom: 5px; padding: 2px 6px; border-radius: 7px; font: 800 11px Inter, system-ui, sans-serif; font-style: normal; font-variant-numeric: tabular-nums; background: rgba(5,6,10,.82); color: var(--dim); backdrop-filter: blur(4px); } .hc-pct.up { color: #04130a; background: #3be477; } .hc-pct.dn { color: #fff; background: #d83a3a; }
+.hc-run { position: absolute; left: 5px; bottom: 5px; padding: 2px 6px; border-radius: 7px; font: 800 9.5px Inter, system-ui, sans-serif; font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: #04130a; background: #3be477; }
+.hc-nm { display: grid; min-width: 0; } .hc-nm b { font-size: 13.5px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .hc-nm small { font-size: 11.5px; color: color-mix(in srgb, var(--rc, #888) 65%, #c9cdd6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hc-px { font-size: 15px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.hc-sell { min-height: 34px; padding: 0 4px; border-radius: 11px; border: 1px solid var(--ln2); background: var(--s2); color: var(--ink); font: 700 12px Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; } .hc-sell:active, .hc-main:active .hc-img { transform: scale(.97); }
+#pTable .pall { display: block; width: 100%; margin-top: 12px; min-height: 46px; border-radius: 14px; border: 1px solid var(--ln); background: var(--s1); text-align: center; }
+#v-profile { overflow-x: clip; } .pf-dot { right: 4px; }
 </style>
 </head>
 <body>
@@ -1239,7 +1306,7 @@ details.ptile[open] > summary { border-bottom: 1px solid var(--ln); grid-templat
       <div class="multi" id="multiRow" role="group" aria-label="How many packs to open at once" hidden></div>
       <div class="homenext" id="homeNext" hidden></div>
       <a class="homeinvite" id="homeInvite" href="#/invite" hidden></a>
-      <div class="hometrust" id="homeTrust"><button class="tchip" id="fairBtn3" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.500 6v6c0 4.500 3.200 7.800 7.500 9 4.300-1.200 7.500-4.500 7.500-9V6z"/><path d="m9 12 2.200 2.200L15.500 10"/></svg>Provably fair</button><a class="tchip" href="#/odds"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Odds</a><span class="tchip" id="tStripe" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Stripe</span></div>
+      <div class="hometrust" id="homeTrust"><span class="hfacts" id="homeFacts"></span><button class="tchip" id="fairBtn3" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.500 6v6c0 4.500 3.200 7.800 7.500 9 4.300-1.200 7.500-4.500 7.500-9V6z"/><path d="m9 12 2.200 2.200L15.500 10"/></svg>Provably fair</button><a class="tchip" href="#/odds"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Odds</a><span class="tchip" id="tStripe" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Stripe</span></div>
       <p class="buyrow" id="buyRow" hidden><button class="btn solid" id="buyBtn">Buy packs</button></p>
       <p class="small blurb" id="packBlurb"></p>
       <ol class="steps" id="how" hidden><li><b>1</b> Open a pack</li><li><b>2</b> Watch your cards' prices move</li><li><b>3</b> Sell when it's high</li></ol>
@@ -1269,6 +1336,7 @@ details.ptile[open] > summary { border-bottom: 1px solid var(--ln); grid-templat
   <!-- PROFILE -->
   <section class="view" id="v-profile">
     <div class="page-head"><h1 class="ttl">Me</h1><p class="live"></p></div>
+    <div id="pTop"></div>
     <div id="pWorth"></div>
     <div id="pLive"></div>
     <h3 class="sec" id="pCardsH">Your cards</h3>
@@ -1276,7 +1344,7 @@ details.ptile[open] > summary { border-bottom: 1px solid var(--ln); grid-templat
     <div id="pNote"></div>
     <div class="ptiles">
       <a class="ptile t-coll" href="#/collection"><i class="pt-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="11" height="15" rx="2"/><path d="M9 21h9a2 2 0 0 0 2-2V8"/></svg></i><b>Collection</b><small id="pCollSub"></small><span class="pt-bar"><i id="pCollBar"></i></span></a>
-      <details class="ptile t-goal"><summary><i class="pt-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg></i><b>Goals</b><small id="pGoalsSub"></small></summary><div class="pt-body"><div id="pRank"></div><div id="pGoals"></div></div></details>
+      <details class="ptile t-goal"><summary><i class="pt-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg></i><b>Goals</b><small id="pGoalsSub"></small></summary><div class="pt-body"><div id="pGoals"></div></div></details>
       <details class="ptile t-inv"><summary><i class="pt-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.500 20c.6-3.600 3.200-5.500 6.500-5.500s5.900 1.900 6.500 5.500M18 7v6M15 10h6"/></svg></i><b>Invite</b><small id="pInvSub"></small></summary><div class="pt-body"><div id="pInvite"></div></div></details>
       <details class="ptile t-hist"><summary><i class="pt-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.500"/><path d="M12 7.500V12l3 2"/></svg></i><b>History</b><small id="pHistSub"></small></summary><div class="pt-body"><div id="pHist"></div><p class="small" id="pStats"></p>
         <button class="btn pshare" id="pShare" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span id="pShareTxt">Share my stats</span></button></div></details>
@@ -2141,8 +2209,8 @@ const pctHTML = p => `<span class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"
 const meter = (i, n) => "[" + fill("█", i) + fill("░", n - i) + "]";
 
 /* ---- the pack screen: the window in the pack plays the pack's own ASCII scene, not its cards (what is inside stays a surprise until you open it).
-        Each scene is painted as a small picture first (light, shading, colour), then every cell of the grid becomes the character whose ink matches
-        that cell's brightness, in that cell's colour. That is what gives the scene real depth instead of a few hand-placed symbols.
+        Each scene is painted sharp, at the screen's own resolution (light, shading, colour). Then the same picture is read back as a grid, and every
+        cell gets the character whose ink matches its brightness, laid over the picture as a light grain: clean from a step back, made of text up close.
         First Print is a print run: over a slow sunburst the STIXX figure and name are printed under a glowing print head, catch a shine, then the sheet runs again.
         Moonshot is a launch: a shaded rocket on a flickering flame climbs through moving stars, the Moon glowing in the corner. ---- */
 const SPIN = "|/-\\";
@@ -2151,7 +2219,7 @@ class PackScreen {
   constructor(pk, pack) {
     this.pk = pk; this.pack = pack || PACKS[0]; this.cv = pk.querySelector("canvas.scr"); this.ctx = this.cv.getContext("2d");
     this.el = { stat: pk.querySelector(".r-stat"), name: pk.querySelector(".r-name"), sub: pk.querySelector(".r-sub"), meter: pk.querySelector(".r-meter") };
-    this.on = false; this.last = 0; this.t0 = performance.now(); this.off = document.createElement("canvas"); this.g = this.off.getContext("2d", { willReadFrequently: true }); this.cache = new Map(); this.layer = document.createElement("canvas"); this.lc = this.layer.getContext("2d");
+    this.on = false; this.last = 0; this.t0 = performance.now(); this.off = document.createElement("canvas"); this.g = this.off.getContext("2d", { willReadFrequently: true }); this.cache = new Map(); this.hi = document.createElement("canvas"); this.hg = this.hi.getContext("2d"); this.layer = document.createElement("canvas"); this.lc = this.layer.getContext("2d");
     const n = LIVE.filter(c => c.set === this.pack.set).length;
     scramble(this.el.name, this.pack.name.toUpperCase(), 520); this.el.sub.textContent = `${n} cards · one in every pack`;
   }
@@ -2159,23 +2227,26 @@ class PackScreen {
     const dpr = Math.min(devicePixelRatio || 1, 2), w = this.cv.clientWidth, h = this.cv.clientHeight; if (!w || !h) return;
     if (this.cv.width !== Math.round(w * dpr) || this.cv.height !== Math.round(h * dpr)) { this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr); }
     this.dpr = dpr; this.w = w; this.h = h; this.cols = Math.max(48, Math.round(w / 3.1)); const cw = w / this.cols; this.rows = Math.max(30, Math.round(h / (cw * 1.62)));
-    if (this.off.width !== this.cols || this.off.height !== this.rows) { this.off.width = this.layer.width = this.cols; this.off.height = this.layer.height = this.rows; }
+    if (this.off.width !== this.cols || this.off.height !== this.rows) { this.off.width = this.cols; this.off.height = this.rows; }
+    if (this.hi.width !== this.cv.width || this.hi.height !== this.cv.height) { this.hi.width = this.layer.width = this.cv.width; this.hi.height = this.layer.height = this.cv.height; }
   }
   status(now, s) { const v = "> " + s + " " + SPIN[Math.floor(now / 110) % 4]; if (v !== this.el.stat._s) { this.el.stat._s = v; this.el.stat.textContent = v; } const mt = meter((Math.floor(now / 380) % 5) + 1, 5); if (mt !== this.el.meter._s) { this.el.meter._s = mt; this.el.meter.textContent = mt; } }
   col(r, g, b) { const k = (r >> 4) << 8 | (g >> 4) << 4 | b >> 4; let v = this.cache.get(k); if (!v) { v = `rgb(${(r >> 4) * 17},${(g >> 4) * 17},${(b >> 4) * 17})`; this.cache.set(k, v); } return v; }
   frame(now) {
-    this.fit(); if (!this.w) return; const { cols, rows, w: W, h: H, g } = this, t = Math.max(0, (now - this.t0) / 1000);
-    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over"; g.shadowBlur = 0; g.fillStyle = "#000"; g.fillRect(0, 0, cols, rows);
-    g.setTransform(cols / W, 0, 0, rows / H, 0, 0);                                      // paint in the pack's own pixels; the small canvas averages them into cells
+    this.fit(); if (!this.w) return; const { cols, rows, w: W, h: H } = this, g = this.hg, t = Math.max(0, (now - this.t0) / 1000);
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over"; g.shadowBlur = 0; g.fillStyle = "#030304"; g.fillRect(0, 0, this.hi.width, this.hi.height);
+    g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);                                     // paint in the pack's own pixels, sharp
     if (this.pack.id === "ms") this.launch(g, t, W, H); else this.print(g, t, W, H);
-    const d = g.getImageData(0, 0, cols, rows).data, c = this.ctx, cw = W / cols, ch = H / rows, N = PS_RAMP.length - 1;
-    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.fillStyle = "#030304"; c.fillRect(0, 0, W, H); c.save(); c.globalAlpha = .5; c.imageSmoothingEnabled = true; c.imageSmoothingQuality = "high"; c.drawImage(this.off, 0, 0, W, H); c.restore();   // the picture glows softly under its own characters
+    const c = this.ctx, sm = this.g; c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.drawImage(this.hi, 0, 0);
+    sm.setTransform(1, 0, 0, 1, 0, 0); sm.imageSmoothingEnabled = true; sm.drawImage(this.hi, 0, 0, cols, rows);                 // the same picture, read back as a grid of cells
+    const d = sm.getImageData(0, 0, cols, rows).data, cw = W / cols, ch = H / rows, N = PS_RAMP.length - 1;
+    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.globalAlpha = .34; c.globalCompositeOperation = "overlay";
     c.font = `700 ${(cw / .6).toFixed(2)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; c.textAlign = "center"; c.textBaseline = "middle";
     for (let y = 0, k = 0; y < rows; y++) for (let x = 0; x < cols; x++, k += 4) {
-      const r = d[k], gg = d[k + 1], b = d[k + 2], l = (r * .299 + gg * .587 + b * .114) / 255; if (l < .06) continue;
-      const m = Math.max(r, gg, b) || 1, s = Math.min(1, .5 + l * .9), boost = 255 / m * s;                 // vivid colour, dimmer where the picture is dark
-      c.fillStyle = this.col(Math.min(255, r * boost), Math.min(255, gg * boost), Math.min(255, b * boost)); c.fillText(PS_RAMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);
+      const r = d[k], gg = d[k + 1], b = d[k + 2], l = (r * .299 + gg * .587 + b * .114) / 255; if (l < .05) continue;
+      c.fillStyle = l > .55 ? "#000" : "#fff"; c.fillText(PS_RAMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);          // dark type on the light parts, light type on the dark: a grain, not a mask
     }
+    c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
   }
   print(g, t, W, H) {                                                                    // First Print: the logo prints under a glowing head, shines, then the sheet runs again
     const CYC = 6.4, u = t % CYC, head = u < 2.6 ? (u / 2.6) * (H + 20) - 10 : H + 40, fade = u > 5.8 ? 1 - (u - 5.8) / .6 : 1, run = Math.floor(t / CYC);
@@ -2188,7 +2259,7 @@ class PackScreen {
     { const ex = W / 2, ey = H * .385, rot = t * .1; g.save(); g.translate(ex, ey); for (let k = 0; k < 24; k++) { const a = rot + k * Math.PI / 12; g.fillStyle = k % 2 ? "rgba(255,176,72,.26)" : "rgba(214,96,36,.13)"; g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, H, a, a + Math.PI / 12); g.closePath(); g.fill(); }
       const core = g.createRadialGradient(0, 0, 0, 0, 0, W * .5); core.addColorStop(0, "rgba(255,214,140,.5)"); core.addColorStop(.45, "rgba(255,150,60,.16)"); core.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = core; g.fillRect(-W, -H, W * 2, H * 2);
       const edge = g.createRadialGradient(0, 0, W * .35, 0, 0, H * .78); edge.addColorStop(0, "rgba(0,0,0,0)"); edge.addColorStop(1, "rgba(0,0,0,.92)"); g.fillStyle = edge; g.fillRect(-W, -H, W * 2, H * 2); g.restore(); }
-    const G0 = g, Lc = this.lc; Lc.setTransform(1, 0, 0, 1, 0, 0); Lc.clearRect(0, 0, this.cols, this.rows); Lc.setTransform(this.cols / W, 0, 0, this.rows / H, 0, 0); g = Lc;     // the ink goes on its own clear layer, so the shine only lights the ink
+    const G0 = g, Lc = this.lc; Lc.setTransform(1, 0, 0, 1, 0, 0); Lc.clearRect(0, 0, this.layer.width, this.layer.height); Lc.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); g = Lc;     // the ink goes on its own clear layer, so the shine only lights the ink
     g.save(); g.beginPath(); g.rect(0, 0, W, Math.max(0, head)); g.clip(); g.globalAlpha = fade;
     const cx = W / 2, cy = H * .77, fs = fit("STIXX", 900, W * .8, H * .2);
     { const un = W * .38 / 11.6, ox = cx - 14 * un, oy = H * .385 - 14.6 * un, ink = g.createLinearGradient(0, oy + 4 * un, 0, oy + 22 * un); ink.addColorStop(0, "#ffffff"); ink.addColorStop(.6, "#f3ecdc"); ink.addColorStop(1, "#c9bfa8");   // the figure from the logo: a head over a cross
@@ -2384,8 +2455,8 @@ function liveWindow(pk, pack) { const ps = new PackScreen(pk, pack); ps.fit(); p
 // a snapshot of the animation so a torn half still shows the picture it had
 function freezeScreen(el, src) { const cv = el.querySelector("canvas.scr"); if (!cv) return; const img = new Image(); img.className = "scr"; img.src = src; cv.replaceWith(img); }
 function tiltPack(pk) {
-  pk.addEventListener("pointermove", e => { const r = pk.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; pk.style.setProperty("--ry", (x * 16).toFixed(1) + "deg"); pk.style.setProperty("--rx", (-y * 12).toFixed(1) + "deg"); pk.style.setProperty("--sx", (50 + x * 80).toFixed(0) + "%"); });
-  pk.addEventListener("pointerleave", () => { pk.style.setProperty("--ry", "0deg"); pk.style.setProperty("--rx", "0deg"); });
+  pk.addEventListener("pointermove", e => { pk.classList.add("held"); const r = pk.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; pk.style.setProperty("--ry", (x * 16).toFixed(1) + "deg"); pk.style.setProperty("--rx", (-y * 12).toFixed(1) + "deg"); pk.style.setProperty("--sx", (50 + x * 80).toFixed(0) + "%"); });
+  const drop = () => { pk.classList.remove("held"); pk.style.removeProperty("--ry"); pk.style.removeProperty("--rx"); }; pk.addEventListener("pointerleave", drop); pk.addEventListener("pointerup", drop); pk.addEventListener("pointercancel", drop);
 }
 
 /* ============================================================================
@@ -2417,7 +2488,8 @@ function renderHome() {
   const pk = curPack(), ps = packStats(pk); $("banner").textContent = BANNER.join("\n");
   $("packTabs").live = PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-pack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("");
   $("packName").textContent = pk.name; $("packBlurb").textContent = pk.blurb;
-  const fp = state.freePacks, pp = boughtOf(pk.id); { noteFound(); const inSet = LIVE.filter(c => c.set === pk.set); $("packLine").innerHTML = `${pk.n === 1 ? "1 card" : pk.n + " cards"} · ${money(ps.price)}${state.s.packs ? ` · ${inSet.filter(c => state.found[c.no]).length}/${inSet.length} found` : ""} · <a class="linkbtn" href="#/odds">odds</a>`; } const mk = Math.min(openN(), maxN(pk)), many = mk >= 2; $("openBtn").textContent = many ? `open ${mk} packs${(() => { const c = Math.max(0, mk - fp - pp) * ps.price; return c ? " · " + money(c) : ""; })()}` : fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : pp ? `open a pack you bought${pp > 1 ? " · " + pp + " left" : ""}` : (Shop.cash() && state.coins < ps.price) ? "add money to open a pack" : (Shop.has(pk.id) && state.coins < ps.price) ? `buy a pack · ${rmoney(Shop.price(pk.id))}` : `open pack · ${money(ps.price)}`; $("openBtn").classList.toggle("free", fp > 0 || pp > 0);
+  const fp = state.freePacks, pp = boughtOf(pk.id); { noteFound(); const inSet = LIVE.filter(c => c.set === pk.set); $("packLine").innerHTML = `${pk.n === 1 ? "1 card" : pk.n + " cards"} · ${money(ps.price)}${state.s.packs ? ` · ${inSet.filter(c => state.found[c.no]).length}/${inSet.length} found` : ""} · <a class="linkbtn" href="#/odds">odds</a>`; } const mk = Math.min(openN(), maxN(pk)), many = mk >= 2; const lab = many ? `open ${mk} packs${(() => { const c = Math.max(0, mk - fp - pp) * ps.price; return c ? " · " + money(c) : ""; })()}` : fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : pp ? `open a pack you bought${pp > 1 ? " · " + pp + " left" : ""}` : (Shop.cash() && state.coins < ps.price) ? "add money to open a pack" : (Shop.has(pk.id) && state.coins < ps.price) ? `buy a pack · ${rmoney(Shop.price(pk.id))}` : `open pack · ${money(ps.price)}`; { const i = lab.indexOf(" · "), ob = $("openBtn"), html = i < 0 ? `<span class="ob-t">${esc(lab)}</span>` : `<span class="ob-t">${esc(lab.slice(0, i))}</span><i class="ob-d"> · </i><b class="ob-p">${esc(lab.slice(i + 3))}</b>`; if (ob.dataset.sig !== html) { ob.dataset.sig = html; ob.innerHTML = html; } }   // the words, then what it costs in its own pill; read out, it is still one line ("open pack · $0.52")
+  $("openBtn").classList.toggle("free", fp > 0 || pp > 0); { const top = LIVE.filter(c => c.set === pk.set).reduce((a, c) => Math.max(a, c.val), 0); $("homeFacts").textContent = `Top card ${money(top).replace(/\.00$/, "")} · ${Math.round(ps.hit * 100)}% pay back`; }
   { const r = $("multiRow"), top = maxN(pk), opts = MANY.filter(n => n === 1 || n <= top); r.hidden = opts.length < 2; r.innerHTML = `<span class="small dim ml">open at once</span>` + opts.map(n => `<button type="button" class="seg1${n === Math.min(openN(), top) ? " on" : ""}" data-many="${n}" aria-pressed="${n === Math.min(openN(), top)}" aria-label="${n === 1 ? "one pack" : n + " packs at once"}">×${n}</button>`).join(""); }
   $("buyRow").hidden = !Shop.has(pk.id) || (!fp && !pp && state.coins < ps.price); $("buyBtn").textContent = Shop.cash() ? "Add money" : `Buy packs · ${rmoney(Shop.price(pk.id))} each`;
   $("how").hidden = state.s.packs > 0; $("inviteBar").live = state.s.packs > 0 ? inviteBarHTML() : "";
@@ -2425,7 +2497,8 @@ function renderHome() {
   const mv = movers(); $("hot").live = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
   const bf = null; if (bf) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip this week: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
   $("chase").live = chaseHTML(); $("rqBar").live = "";      // the Requiem pack is for later: not on the pack page for now
-  const hp = $("homePack"); if (hp.dataset.pack !== pk.id) { if (hp._ps) hp._ps.stop(); hp.innerHTML = packHTML(pk); hp.dataset.pack = pk.id; const el = hp.firstChild; tiltPack(el); el.style.cursor = "pointer"; el.onclick = () => openPack(); hp._ps = liveWindow(el, pk); }
+  const hp = $("homePack"); if (hp.dataset.pack !== pk.id) { if (hp._ps) hp._ps.stop(); hp.innerHTML = packHTML(pk); hp.dataset.pack = pk.id; const el = hp.firstChild; tiltPack(el); el.style.cursor = "pointer"; el.onclick = () => { if (hp._swiped) { hp._swiped = false; return; } openPack(); }; hp._ps = liveWindow(el, pk); if (hp._dir) { el.animate([{ translate: `${hp._dir * 60}% 0`, opacity: 0, scale: ".9" }, { translate: "0 0", opacity: 1, scale: "1" }], { duration: 320, easing: "cubic-bezier(.2, .9, .3, 1.1)" }); hp._dir = 0; }
+    if (!hp._sw) { hp._sw = 1; let x0 = null; hp.addEventListener("pointerdown", e => { x0 = e.clientX; }); hp.addEventListener("pointerup", e => { if (x0 == null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) < 46 || PACKS.length < 2) return; const i = PACKS.findIndex(q => q.id === state.pack), nx = PACKS[(i + (dx < 0 ? 1 : -1) + PACKS.length) % PACKS.length]; hp._swiped = true; hp._dir = dx < 0 ? 1 : -1; setTimeout(() => { hp._swiped = false; }, 80); state.pack = nx.id; persist(); Snd.whoosh(); buzz(8); renderHome(); }); } }
   document.body.dataset.pack = pk.id; { const ts = $("tStripe"); if (ts) ts.hidden = !Shop.open(); }
   { const hi = $("homeInvite"), html = homeInviteHTML(); hi.hidden = !html; hi.innerHTML = html; }
   { const hn = $("homeNext"), html = innerHeight >= 700 || Goals.ready().length ? Goals.homeHTML() : ""; hn.hidden = !html; if (hn.dataset.sig !== html) { hn.dataset.sig = html; hn.innerHTML = html; hn.className = "homenext" + (Goals.ready().length ? " rdy" : ""); } }   // what to aim for next (left out on a short screen unless there is something to claim)
@@ -2437,7 +2510,7 @@ const usd = n => n >= 1e9 ? "$" + (n / 1e9).toFixed(2) + "B" : n >= 1e6 ? "$" + 
 const agoText = m => m === 0 ? "just now" : m < 60 ? m + " min ago" : m < 2880 ? Math.floor(m / 60) + "h ago" : Math.floor(m / 1440) + " days ago";
 const whenText = h => h < 2 ? "just now" : h < 48 ? h + " hours ago" : Math.round(h / 24) + " days ago";
 // the profile: your money, live, and every card you hold with its price and profit or loss
-let awaySince = 0, pAll = false, pInviteSig = "";
+let awaySince = 0, pAll = false, pInviteSig = "", pRng = 864e5;
 // what your cards did while the app was closed (this visit only, and only if you were gone a while)
 function awayLine() { if (!awaySince || Date.now() - awaySince < 30 * 60000 || !state.vault.length) return ""; let d = 0; for (const c of state.vault) if ((c.t || 0) < awaySince) d += valueOf(c) - Val.at(c, awaySince, true); const h = (Date.now() - awaySince) / 36e5; return Math.abs(d) < 1 ? "" : `<span>${signR(d, "while you were away " + (h >= 48 ? Math.round(h / 24) + " days" : h >= 1 ? Math.round(h) + "h" : Math.round(h * 60) + " min"))}</span>`; }
 // iPhone only, and only in the browser: how to put it on the Home Screen. Shown until dismissed, never as a pop-up.
@@ -2456,17 +2529,26 @@ function renderProfile() {
   $("pLimits").live = limitsHTML(); $("pSettings").live = settingsHTML(); $("pHist").live = History.html();
   $("pLive").live = Chart.heroHTML(); if (state.vault.length) Chart.start();
   const net = netWorth(), all = profitAll();
-  { const ws = worthSeries(40), up = all >= 0; let art = "";                                              // the card at the top: what you have, what you have made, and the shape of the last day behind it
-    if (ws) { const v = ws.out, lo = Math.min(...v), sp = Math.max(Math.max(...v) - lo, 1), pts = v.map((x, i) => (i * 400 / (v.length - 1)).toFixed(1) + " " + (84 - (x - lo) / sp * 70).toFixed(1)); art = `<svg class="pf-art" viewBox="0 0 400 90" preserveAspectRatio="none" aria-hidden="true"><path class="a" d="M${pts.join(" L")} L400 90 L0 90 Z"/><path class="l" d="M${pts.join(" L")}"/></svg>`; }
-    $("pWorth").live = `<div class="pf ${up ? "pos" : "neg"}">${art}<span class="label">Net worth</span><div class="bignum" role="img" aria-label="${money(net)}" data-tick="net" data-v="${Math.round(net)}">${moneyR(net)}</div>
-      <div class="pf-row"><span class="pf-pill">${up ? "▲" : "▼"} ${moneyR(all)}</span><span class="dim">all time</span>${awayLine()}</div>
-      <div class="pf-split"><div><small>Cash</small><b>${moneyR(state.coins)}</b></div><div><small>Cards</small><b>${moneyR(holdingsValue())}</b></div></div></div>`; }
-  $("pGoals").live = Goals.html(); Goals.badge(); $("pTip").live = tipHTML(); $("pRank").live = rankLine();
+  { // who you are: a rank earned by finding cards and turning up, and the way to the settings
+    const xp = xpOf(), ri = rankIdx(xp), cur = RANKS[ri], nx = RANKS[ri + 1], pc = nx ? (xp - cur[1]) / (nx[1] - cur[1]) : 1, a = Acct.me && Acct.me(), who = a && a.email ? a.email.split("@")[0] : "Player";
+    $("pTop").live = `<div class="ptop"><span class="pt-av" aria-hidden="true">${esc(who[0].toUpperCase())}</span><div class="pt-who"><b>${esc(who)}</b><small><i>Lv ${ri + 1}</i> ${esc(cur[0])}${nx ? ` · ${nx[1] - xp} xp to ${esc(nx[0])}` : ""}</small><span class="pt-xp" role="img" aria-label="${xp} xp"><i style="width:${(pc * 100).toFixed(1)}%"></i></span></div><button class="pt-gear" data-pgear="1" aria-label="Limits and settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button></div>`; }
+  { // what you have, what you have made over the range you picked, and its shape
+    const now = Date.now(), h = state.hist, from = pRng ? now - pRng : (h.length ? h[0][0] : now), gain = pRng ? profitSince(pRng) : all, up = gain >= 0, N = 56, pts = [];
+    let j = 0; for (let i = 0; i < N; i++) { const ts = from + (now - from) * i / (N - 1); while (j + 1 < h.length && h[j + 1][0] <= ts) j++; const e = h[j]; pts.push(e && e[0] <= ts ? e[1] - (e[2] || 0) : h.length ? h[0][1] - (h[0][2] || 0) : net - state.s.added); } pts[N - 1] = net - state.s.added;
+    const mn = Math.min(...pts), mx = Math.max(...pts), sp = Math.max(mx - mn, Math.max(4, Math.abs(net) * .004)), lo = (mn + mx) / 2 - sp / 2,     /* a quiet stretch is a line through the middle, not one stuck to the floor */ X = i => (i * 400 / (N - 1)).toFixed(1), Y = v => (104 - (v - lo) / sp * 88).toFixed(1), d = pts.map((v, i) => X(i) + " " + Y(v)).join(" L"), base = Y(pts[0]);
+    const RNG = [[36e5, "1H"], [864e5, "1D"], [6048e5, "1W"], [0, "All"]], lbl = pRng === 36e5 ? "past hour" : pRng === 864e5 ? "today" : pRng ? "past week" : "all time";
+    $("pWorth").live = `<div class="pf2 ${up ? "pos" : "neg"}"><span class="label">Net worth</span><div class="bignum" role="img" aria-label="${money(net)}" data-tick="net" data-v="${Math.round(net)}">${moneyR(net)}</div>
+      <div class="pf-row"><span class="pf-pill">${up ? "▲" : "▼"} ${moneyR(gain)}</span><span class="dim">${lbl}</span>${awayLine()}</div>
+      <div class="pf-chart"><svg viewBox="0 0 400 112" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pfG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="g0"/><stop offset="1" class="g1"/></linearGradient></defs><path class="b" d="M0 ${base} L400 ${base}"/><path class="a" d="M${d} L400 112 L0 112 Z" fill="url(#pfG)"/><path class="l" d="M${d}"/></svg><i class="pf-dot" style="top:${(Y(pts[N - 1]) / 112 * 100).toFixed(1)}%"></i></div>
+      <div class="pf-rng" role="group" aria-label="Range">${RNG.map(([ms, t]) => `<button data-prng="${ms}" class="${ms === pRng ? "on" : ""}" aria-pressed="${ms === pRng}">${t}</button>`).join("")}</div>
+      <div class="pf-stats"><div><small>Cash</small><b>${moneyR(state.coins)}</b></div><div><small>Cards</small><b>${moneyR(holdingsValue())}</b></div><div><small>Packs opened</small><b>${fmt(state.s.packs)}</b></div></div></div>`; }
+  $("pGoals").live = Goals.html(); Goals.badge(); $("pTip").live = tipHTML();
   { const inf = typeof Ref !== "undefined" ? Ref.info() : null, sig = inf ? [inf.code, inf.joined, inf.invited, inf.earned, inf.credits, API.on].join("|") : "off";   // only rebuild the invite hero (and replay its bar) when the numbers change, not on every live tick
     if (sig !== pInviteSig) { pInviteSig = sig; $("pInvite").live = inviteHeroHTML(); if (typeof playRewardBars === "function") playRewardBars(); } }
   const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), q: quickCopy(c.no), hot: cs.some(x => { const m = Val.moves(x, 6)[0]; return m && m.pct > .15; }), run: cs.some(x => Val.surge(x)) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
-  const shown = pAll ? groups : groups.slice(0, 6);
-  $("pTable").live = groups.length ? shown.map(g => `<div class="mrow"><button class="mmain" data-card="${g.c.no}" aria-label="${esc(g.c.name)}">${thumb(g.c)}<span class="mn"><b>${esc(g.c.name)}${g.run ? ` <i class="rush run">pumping</i>` : g.hot ? ` <i class="rush" title="AI buyers rushed into a copy in the last few hours">buyers in</i>` : ""}</b><small>${g.n > 1 ? `×${g.n} · ` : ""}${g.c.retired ? "Retired" : esc(RAR[g.c.rar].name)}</small></span><span class="mp"><b data-tick="g${g.c.no}" data-v="${g.val.toFixed(2)}">${moneyR(g.val)}</b>${pctR(g.val / Math.max(1, g.cost) - 1)}</span></button><button class="msell" data-qsell="${g.c.no}" aria-label="${esc(quickAria(g.c.no))}">${g.n > 1 ? "Sell 1" : "Sell"}<small>${moneyR(sellOf(g.q))}</small></button></div>`).join("") + (groups.length > 6 ? `<button class="linkbtn plain pall" id="pAllBtn">${pAll ? "Show fewer" : `Show all ${groups.length} cards`}</button>` : "") + `<div class="mtot"><span>All your cards</span><b>${moneyR(holdingsValue())}</b></div>` : "";
+  const shown = pAll ? groups : groups.slice(0, 9);
+  $("pTable").live = groups.length ? `<div class="pgrid">` + shown.map(g => { const top = copiesOf(g.c.no).reduce((a, x) => valueOf(x) > valueOf(a) ? x : a), p = g.val / Math.max(1, g.cost) - 1;
+    return `<div class="hc${g.run ? " run" : ""}" style="--rc:${top.fx ? STYLE_TINT[top.fx] : RAR[g.c.rar].col}"><button class="hc-main" data-card="${g.c.no}" aria-label="${esc(g.c.name)}"><span class="hc-img"><img src="${imgOf(g.c, top.fx, true)}" alt="" loading="lazy" draggable="false">${g.n > 1 ? `<b class="hc-n">×${g.n}</b>` : ""}${g.run ? `<i class="hc-run">pumping</i>` : ""}<i class="hc-pct ${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲" : p < -.0005 ? "▼" : ""} ${Math.abs(p) >= 10 ? "×" + (1 + p).toFixed(0) : Math.round(Math.abs(p) * 100) + "%"}</i></span><span class="hc-nm"><b>${esc(g.c.name)}</b><small>${g.c.retired ? "Retired" : esc(RAR[g.c.rar].name)}</small></span><b class="hc-px" data-tick="g${g.c.no}" data-v="${g.val.toFixed(2)}">${moneyR(g.val)}</b></button><button class="hc-sell" data-qsell="${g.c.no}" aria-label="${esc(quickAria(g.c.no))}">${g.n > 1 ? "Sell 1" : "Sell"} · ${moneyR(sellOf(g.q))}</button></div>`; }).join("") + `</div>` + (groups.length > 9 ? `<button class="linkbtn plain pall" id="pAllBtn">${pAll ? "Show fewer" : `Show all ${groups.length} cards`}</button>` : "") : "";
   $("pCardsH").textContent = groups.length ? `Your cards · ${state.vault.length}` : "Your cards";
   $("pNote").live = groups.length ? "" : `<div class="pempty"><svg class="pe-art" viewBox="0 0 64 88" aria-hidden="true"><rect x="3" y="3" width="58" height="82" rx="7"/><path d="M3 13h58M3 75h58"/><circle cx="32" cy="31" r="4.500" class="f"/><path d="M21 40 43 62M43 40 21 62" class="x"/></svg><b>No cards yet</b><span>Open a pack and your card lands here with a live price.</span><a class="btn solid" href="#/">Open a pack</a></div>`;
   $("pStats").textContent = state.s.packs ? `${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${moneyR(state.s.spent)} spent · ${moneyR(state.s.sold)} back from sales` : "";
@@ -4739,6 +4821,8 @@ document.addEventListener("click", e => {
   if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
   if (t.dataset.testmoney) { Acct.testMoney(+t.dataset.testmoney); return; }
   if (t.dataset.tf) { Chart.setTf(+t.dataset.tf); return; }
+  if (t.dataset.prng != null) { pRng = +t.dataset.prng || 0; buzz(4); renderProfile(); return; }
+  if (t.dataset.pgear) { const m = $("pMore"); m.open = true; m.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); return; }
   if (t.id === "sumClaim" || t.id === "homeClaim") {                                       // finished goals pay out right where you are, and the next button already says "open a free pack"
     const r = t.getBoundingClientRect(), n = Goals.claimAll(); if (!n) return;
     if (typeof FX !== "undefined" && FX.burst) FX.burst(r.left + r.width / 2, r.top + r.height / 2, 18, ["#3be477", "#fff"], 320);
