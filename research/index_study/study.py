@@ -19,7 +19,7 @@ import sys
 import numpy as np
 from scipy.special import expit, logit, ndtr
 
-from common import FAMILY, INDEX, WIN, fee, halves, implied_level, load, tstat, two_sided, yahoo, yahoo_level
+from common import FAMILY, INDEX, WIN, fee, halves, implied_level, load, tstat, two_sided, yahoo
 
 TIMES = [(360, "10:00"), (300, "11:00"), (240, "12:00"), (180, "13:00"), (120, "14:00"), (60, "15:00"),
          (30, "15:30"), (10, "15:50")]                 # minutes before the close, New York clock time
@@ -31,44 +31,41 @@ SERIES = ["KXINX", "KXNASDAQ100", "KXINXU", "KXNASDAQ100U"]
 
 # ---------------------------------------------------------------------------------------------------- data
 def levels(events):
-    """Per index and day: the index level on the minute grid from Yahoo 5-minute bars and from the Kalshi
-    "or above" ladder, each with the per-minute volatility known at that minute."""
-    out = {}
+    """Per source ("yahoo": 5-minute bars; "implied": the 16:00 "or above" ladder of Kalshi itself) and index:
+    {time: level} on the 5-minute grid of the regular session, and {time: per-minute volatility known then}
+    (root mean square of the 5-minute log returns of the previous VOL_DAYS sessions and of today so far)."""
+    lev = {"yahoo": {}, "implied": {}}
+    sig = {"yahoo": {}, "implied": {}}
     for sym in ("GSPC", "NDX"):
+        evs = [e for e in events if INDEX[e["series"]] == sym and FAMILY[e["series"]] == "above" and e["daily"]]
         y5 = yahoo(sym)
-        evs = [e for e in events if INDEX[e["series"]] == sym and FAMILY[e["series"]] == "above"]
-        per = {}
+        Ly, Li, sessions = {}, {}, []
         for e in evs:
             imp = implied_level(e)
-            imp5 = np.full(WIN + 1, np.nan)
-            imp5[WIN % 5::5] = imp[WIN % 5::5]
-            imp5[:WIN - 390] = np.nan                      # regular session only
-            per[e["day"]] = {"yahoo": yahoo_level(y5, e["close"]), "implied": imp5, "implied1": imp,
-                             "exp": e["exp"]}
-        days = sorted(per)
-        for src in ("yahoo", "implied"):
-            sq = {}
-            for d in days:                                   # squared 5-minute log returns, by grid index
-                L = per[d][src]
-                r2 = np.full(WIN + 1, np.nan)
-                idx = np.arange(WIN % 5 + 5, WIN + 1, 5)
-                with np.errstate(invalid="ignore", divide="ignore"):
-                    r2[idx] = np.log(L[idx] / L[idx - 5]) ** 2
-                sq[d] = r2
-            for k, d in enumerate(days):
-                prev = [sq[x] for x in days[max(0, k - VOL_DAYS):k]]
-                past = np.concatenate(prev) if prev else np.array([])
-                n0, s0 = np.isfinite(past).sum(), np.nansum(past)
-                sig = np.full(WIN + 1, np.nan)
-                cn, cs = 0, 0.0
-                for i in range(WIN + 1):
-                    if np.isfinite(sq[d][i]):
-                        cn, cs = cn + 1, cs + sq[d][i]
-                    if n0 + cn >= 60:                        # at least 5 hours of returns
-                        sig[i] = math.sqrt((s0 + cs) / (n0 + cn) / 5.0)   # per-minute volatility
-                per[d]["sig_" + src] = sig
-        out[sym] = per
-    return out
+            ts = [e["close"] - k * 300 for k in range(78, -1, -1)]      # 9:30 .. 16:00 New York
+            sessions.append(ts)
+            for t in ts:
+                if t in y5:
+                    Ly[t] = y5[t]
+                v = imp[WIN - (e["close"] - t) // 60]
+                if np.isfinite(v):
+                    Li[t] = v
+        lev["yahoo"][sym], lev["implied"][sym] = Ly, Li
+        for src, L in (("yahoo", Ly), ("implied", Li)):
+            S, hist = {}, []                                 # hist: squared returns of earlier sessions
+            for ts in sessions:
+                today = []
+                base = [x for h in hist[-VOL_DAYS:] for x in h]
+                for a, b in zip(ts[:-1], ts[1:]):
+                    if a in L and b in L:
+                        today.append(math.log(L[b] / L[a]) ** 2)
+                    n = len(base) + len(today)
+                    if n >= 60:
+                        S[b] = math.sqrt((sum(base) + sum(today)) / n / 5.0)
+                if today:
+                    hist.append(today)
+            sig[src][sym] = S
+    return lev, sig
 
 
 def model_p(S, sig, mins, floor, cap):
@@ -79,29 +76,27 @@ def model_p(S, sig, mins, floor, cap):
     return hi - lo
 
 
-def rows(events, lev):
+def rows(events, lev, sig):
     out = []
     for e in events:
         sym, fam = INDEX[e["series"]], FAMILY[e["series"]]
-        L = lev[sym].get(e["day"])
         for m in e["markets"]:
             ok = two_sided(m["bid"], m["ask"])
             for mins, label in TIMES:
                 i = WIN - mins
-                if not ok[i]:
+                if not ok[i] or (not e["daily"] and mins > 60):       # hourly events: the last hour only
                     continue
-                r = {"sym": sym, "fam": fam, "day": e["day"], "tk": m["tk"], "mins": mins, "bid": m["bid"][i],
-                     "ask": m["ask"][i], "v": m["v"], "volume": m["volume"],
-                     "dist": ((m["floor"] if m["floor"] is not None else m["cap"]) / e["exp"] - 1) if e["exp"] else np.nan}
+                t = e["close"] - mins * 60
+                r = {"sym": sym, "fam": fam if e["daily"] else "hourly", "day": e["day"], "tk": m["tk"],
+                     "mins": mins, "bid": m["bid"][i], "ask": m["ask"][i], "v": m["v"], "volume": m["volume"]}
                 for src in ("yahoo", "implied"):
-                    S = L[src][i] if L else np.nan
-                    sig = L["sig_" + src][i] if L else np.nan
-                    good = np.isfinite(S) and np.isfinite(sig) and sig > 0
-                    r["p_" + src] = model_p(S, sig, mins, m["floor"], m["cap"]) if good else np.nan
+                    S, sg = lev[src][sym].get(t), sig[src][sym].get(t)
+                    good = S is not None and sg is not None and sg > 0
+                    r["p_" + src] = model_p(S, sg, mins, m["floor"], m["cap"]) if good else np.nan
                     for lag in (5, 15, 60):
-                        S0 = L[src][i - lag] if L else np.nan
-                        r[f"mom{lag}_{src}"] = (math.log(S / S0) / (sig * math.sqrt(lag))
-                                                if good and np.isfinite(S0) else np.nan)
+                        S0 = lev[src][sym].get(t - lag * 60)
+                        r[f"mom{lag}_{src}"] = (math.log(S / S0) / (sg * math.sqrt(lag))
+                                                if good and S0 is not None else np.nan)
                 out.append(r)
     R = {k: np.array([r[k] for r in out]) for k in out[0]}
     R["mid"] = (R["bid"] + R["ask"]) / 2
@@ -367,43 +362,45 @@ def ladder_checks(events):
 
 # ---------------------------------------------------------------------------------------------------- main
 def main():
-    events = [e for s in SERIES for e in load(s)]
+    events = [e for s in SERIES for e in load(s, hourly=None)]
     for s in SERIES:
-        ev = [e for e in events if e["series"] == s]
-        if ev:
-            print(f"{s}: {len(ev)} days {ev[0]['event'].split('-')[1][:7]}..{ev[-1]['event'].split('-')[1][:7]}, "
-                  f"{sum(len(e['markets']) for e in ev)} markets, mean volume {np.mean([sum(m['volume'] for m in e['markets']) for e in ev]):,.0f} "
-                  f"contracts a day (median {np.median([sum(m['volume'] for m in e['markets']) for e in ev]):,.0f})")
-    lev = levels(events)
+        for daily in (True, False):
+            ev = [e for e in events if e["series"] == s and e["daily"] == daily]
+            if ev:
+                vols = [sum(m["volume"] for m in e["markets"]) for e in ev]
+                print(f"{s} {'16:00 events' if daily else 'hourly events'}: {len(ev)} events on {len({e['day'] for e in ev})} days "
+                      f"{ev[0]['event'].split('-')[1][:7]}..{ev[-1]['event'].split('-')[1][:7]}, "
+                      f"{sum(len(e['markets']) for e in ev)} markets, volume per event mean {np.mean(vols):,.0f} "
+                      f"median {np.median(vols):,.0f} contracts")
+    lev, sig = levels(events)
     for sym in ("GSPC", "NDX"):
-        ds, ny = [], 0
-        for d, L in lev[sym].items():
-            k = np.isfinite(L["yahoo"]) & np.isfinite(L["implied"])
-            ny += np.isfinite(L["yahoo"]).any()
-            if k.any():
-                ds.append(np.abs(L["implied"][k] / L["yahoo"][k] - 1))
-        if ds:
-            ds = np.concatenate(ds)
-            print(f"{sym}: Yahoo 5-minute level on {ny} of {len(lev[sym])} days; Kalshi-implied level vs Yahoo: "
-                  f"median |difference| {1e4 * np.median(ds):.1f} bp, 95% {1e4 * np.percentile(ds, 95):.1f} bp")
-    R = rows(events, lev)
+        Ly, Li = lev["yahoo"][sym], lev["implied"][sym]
+        ds = np.array([abs(Li[t] / Ly[t] - 1) for t in Li if t in Ly])
+        print(f"{sym}: Yahoo 5-minute level on {len({t // 86400 for t in Ly})} days, Kalshi-implied level on "
+              f"{len({t // 86400 for t in Li})} days; implied vs Yahoo: median |difference| {1e4 * np.median(ds):.1f} bp, "
+              f"95% {1e4 * np.percentile(ds, 95):.1f} bp")
+    R = rows(events, lev, sig)
     print(f"{len(R['v'])} market x time rows with a two-sided quote")
+    daily = [e for e in events if e["daily"]]
 
     print("\n=== a. calibration ===")
-    for fam in ("above", "range"):
+    for fam in ("above", "hourly", "range"):
         for sym in ("GSPC", "NDX"):
-            calibration(R, f"{fam} / {sym}, all decision times", (R["fam"] == fam) & (R["sym"] == sym))
-        calibration_by_time(R, f"{fam}, both indices", R["fam"] == fam)
-    calibration(R, "above, both indices, 10:00-13:00", (R["fam"] == "above") & (R["mins"] >= 180))
-    calibration(R, "above, both indices, 14:00-15:50", (R["fam"] == "above") & (R["mins"] < 180))
+            if ((R["fam"] == fam) & (R["sym"] == sym)).sum() > 100:
+                calibration(R, f"{fam} / {sym}, all decision times", (R["fam"] == fam) & (R["sym"] == sym))
+        if (R["fam"] == fam).sum() > 100:
+            calibration(R, f"{fam}, both indices, all decision times", R["fam"] == fam)
+            calibration_by_time(R, f"{fam}, both indices", R["fam"] == fam)
+    calibration(R, "above (16:00), both indices, 10:00-13:00", (R["fam"] == "above") & (R["mins"] >= 180))
+    calibration(R, "above (16:00), both indices, 14:00-15:50", (R["fam"] == "above") & (R["mins"] < 180))
 
     print("\n=== b / c. fair-value model and momentum ===")
-    for src in ("yahoo", "implied"):
-        fair_value(R, src, "above")
-    fair_value(R, "yahoo", "range")
+    for fam, src in (("above", "yahoo"), ("above", "implied"), ("hourly", "yahoo"), ("range", "yahoo")):
+        if (R["fam"] == fam).sum() > 100:
+            fair_value(R, src, fam)
 
-    bracket_sums(events)
-    ladder_checks(events)
+    bracket_sums(daily)
+    ladder_checks(daily)
 
 
 if __name__ == "__main__":

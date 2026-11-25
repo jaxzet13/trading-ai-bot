@@ -10,7 +10,6 @@ DATA = "data/index"
 WIN = 450                                   # minutes before the close that were downloaded
 INDEX = {"KXINX": "GSPC", "KXINXU": "GSPC", "KXNASDAQ100": "NDX", "KXNASDAQ100U": "NDX"}
 FAMILY = {"KXINX": "range", "KXNASDAQ100": "range", "KXINXU": "above", "KXNASDAQ100U": "above"}
-STALE = 10                                  # a quote is carried forward at most this many minutes
 
 
 def fee(p):
@@ -34,35 +33,43 @@ def halves(pnl, day, alldays):
 
 
 def grid(bars, close):
-    """bid / ask arrays on the minute grid: index i = minutes after (close - WIN), i = WIN is the close itself."""
+    """bid / ask arrays on the minute grid: index i = minutes after (close - WIN), i = WIN is the close itself.
+    Kalshi only returns a bar for minutes in which the book or the tape changed, so the last quote is carried
+    forward (also from before the window: the download starts 18 hours before the close)."""
     bid, ask, vol = np.full(WIN + 1, np.nan), np.full(WIN + 1, np.nan), np.zeros(WIN + 1)
-    age = np.full(WIN + 1, 10 ** 6)
     t0 = close - WIN * 60
+    seed = None
     for r in bars:
         i = (r[0] - t0) // 60
-        if 0 <= i <= WIN:
+        if i < 0:
+            seed = r
+        elif i <= WIN:
             bid[i] = np.nan if r[1] is None else r[1]
             ask[i] = np.nan if r[2] is None else r[2]
             vol[i] = r[5] or 0
-            age[i] = 0
-    for i in range(1, WIN + 1):                 # carry the last quote forward, at most STALE minutes
-        if age[i] > 0 and age[i - 1] < STALE:
-            bid[i], ask[i], age[i] = bid[i - 1], ask[i - 1], age[i - 1] + 1
+    if seed is not None and np.isnan(bid[0]) and np.isnan(ask[0]):
+        bid[0] = np.nan if seed[1] is None else seed[1]
+        ask[0] = np.nan if seed[2] is None else seed[2]
+    for i in range(1, WIN + 1):
+        if np.isnan(bid[i]) and np.isnan(ask[i]):
+            bid[i], ask[i] = bid[i - 1], ask[i - 1]
     return bid, ask, vol
 
 
-def load(series):
-    """Events of one series: {day, close, exp, series, markets: [{tk, floor, cap, type, v, volume, bid, ask, vol}]}"""
+def load(series, hourly=False):
+    """Events of one series: {day, close, exp, series, markets: [{tk, floor, cap, type, v, volume, bid, ask, vol}]}
+    hourly=False: the 16:00 New York events; True: the 10:00..15:00 events; None: all."""
     ev = {}
     path = f"{DATA}/{series}.jsonl"
     if not os.path.exists(path):
         return []
     for ln in open(path):
         m = json.loads(ln)
-        if m["result"] not in ("yes", "no") or not m["event"].endswith("H1600"):
+        if m["result"] not in ("yes", "no") or (hourly is not None and hourly == m["event"].endswith("H1600")):
             continue
         e = ev.setdefault(m["event"], {"event": m["event"], "day": m["close"] // 86400, "close": m["close"],
-                                       "exp": m["exp"], "series": series, "markets": []})
+                                       "exp": m["exp"], "series": series, "markets": [],
+                                       "daily": m["event"].endswith("H1600")})
         bid, ask, vol = grid(m["bars"], m["close"])
         e["markets"].append({"tk": m["ticker"], "floor": m["floor"], "cap": m["cap"], "type": m["type"],
                              "v": 1.0 if m["result"] == "yes" else 0.0, "volume": m["volume"] or 0,
@@ -103,21 +110,9 @@ def implied_level(event):
 
 
 def yahoo(sym, interval="5m"):
+    """Yahoo index bars as {time the bar ENDED (unix s): close}: the level known at that time."""
     path = f"{DATA}/yahoo_{sym}_{interval}.json"
     if not os.path.exists(path):
         return {}
-    return {int(k): v[3] for k, v in json.load(open(path)).items()}       # bar start ts -> close
-
-
-def yahoo_level(bars5, close):
-    """Yahoo index level on the minute grid, known at that minute: the close of the 5-minute bar that ENDED
-    at or before it (only filled on 5-minute boundaries of the regular session)."""
-    out = np.full(WIN + 1, np.nan)
-    t0 = close - WIN * 60
-    for i in range(WIN + 1):
-        t = t0 + i * 60
-        if (close - t) % 300 == 0 and close - t <= 385 * 60:
-            v = bars5.get(t - 300)
-            if v is not None:
-                out[i] = v
-    return out
+    step = 300 if interval == "5m" else 60
+    return {int(k) + step: v[3] for k, v in json.load(open(path)).items()}

@@ -3,20 +3,25 @@
 Read-only public market data, no keys. Rerunnable: everything is appended / cached, markets already stored are
 skipped.
 
-    python3 research/index_study/download.py [days=90] [--hourly] [--minvol=10]
+    python3 research/index_study/download.py [days=90] [--hourly] [--minvol=10] [--hourly-minvol=100]
+                                             [--live-only] [--no-yahoo]
 
 Series
   KXINX, KXNASDAQ100       "range" ladders: 28 brackets + 2 tails per day, settle at the 16:00 New York close.
-                           Every market of every event is stored (needed for the bracket-sum test).
+                           Every market of every event is stored (needed for the bracket-sum test); for days
+                           older than Kalshi's historical cutoff only the brackets that traded.
   KXINXU, KXNASDAQ100U     "X or above" ladders (5 / 10 point strikes). One event per hour 10:00..16:00 New York.
-                           Only the 16:00 event is stored unless --hourly; only markets with volume >= minvol.
+                           Only the 16:00 event is stored unless --hourly; only markets with volume >= minvol
+                           (hourly events: >= hourly-minvol). --live-only skips days older than Kalshi's
+                           historical cutoff (those cost one request per market).
 
 Output (data/index/, not in git)
   meta_<series>.jsonl      one line per settled market seen in the listing (no bars)
   <series>.jsonl           one line per market: ticker, event, series, close (unix s), open, type, floor, cap,
                            result, value (settlement $), exp (index value at expiry), volume,
                            bars [[minute end ts, yes bid close, yes ask close, bid low, ask high, volume], ...]
-                           for the 18 hours before the close (only minutes with a change)
+                           from 18 / 9 / 4 hours before the close (range / 16:00 above / hourly above);
+                           only minutes in which something changed
   yahoo_<symbol>_<interval>.json   ^GSPC and ^NDX, 5-minute bars (60 days) and 1-minute bars (30 days)
 
 Markets settled before Kalshi's "historical cutoff" are read from /historical/markets and
@@ -34,11 +39,13 @@ BASE = "https://api.elections.kalshi.com/trade-api/v2"
 OUT = "data/index"
 RANGE = ["KXINX", "KXNASDAQ100"]
 ABOVE = ["KXINXU", "KXNASDAQ100U"]
-WINDOW_S = 18 * 3600                    # quotes from 18 hours before the close (a bar exists only for minutes
-                                         # in which the book or the tape changed; quotes persist in between)
-BATCH = 16                               # tickers per batch request (limit: 10,000 candles a request)
-GAP = 1.2                                # seconds between requests. 2.5 requests a second drew HTTP 429 within
-                                         # minutes (the live bot shares the network), so go slowly.
+# Kalshi returns a bar only for minutes in which the book or the tape changed (quotes persist in between), and at
+# most 10,000 bars per batch request. Window before the close and tickers per request, by kind of market:
+PLAN = {"range": (18 * 3600, 8),         # quiet far brackets: reach back to the previous evening for a first quote
+        "above": (9 * 3600, 18),         # 16:00 "or above" strikes
+        "hourly": (4 * 3600, 40)}        # 10:00..15:00 "or above" strikes
+OLD_MINVOL = 50                          # 'or above' markets older than the historical cutoff: volume >= 50
+GAP = 0.7                                # seconds between candlestick requests, see polite()
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 
 S = requests.Session()
@@ -47,23 +54,47 @@ GAP_NOW = [GAP]
 _last = [0.0]
 
 
-def get(path, params=None, tries=7):
+def polite():
+    """Candlestick requests draw on a token bucket (600 tokens, 50 a request, 200 a second back) that the live
+    bot's own quote reads share. So: never in the seconds around a minute boundary (when the bot reads), at most
+    one a second, and a pause to refill whenever the bucket runs low (the tennis learner
+    and the other collectors draw on it too)."""
+    while True:
+        now = time.time()
+        sec = now % 60
+        if sec < 6:
+            time.sleep(6 - sec)
+        elif sec > 54:
+            time.sleep(66 - sec)
+        elif now < _last[0] + GAP_NOW[0]:
+            time.sleep(_last[0] + GAP_NOW[0] - now)
+        else:
+            return
+
+
+def get(path, params=None, tries=8):
+    candle = "candlesticks" in path
     for i in range(tries):
-        w = _last[0] + GAP_NOW[0] - time.time()
-        if w > 0:
-            time.sleep(w)
+        if candle:
+            polite()
+        else:
+            time.sleep(max(0.0, _last[0] + 0.5 - time.time()))
         _last[0] = time.time()
         try:
-            r = S.get(BASE + path, params=params, timeout=30)
+            r = S.get(BASE + path, params=params, timeout=60)
+            left, reset = r.headers.get("x-ratelimit-remaining"), r.headers.get("x-ratelimit-reset")
+            if candle and left is not None and float(left) < 150:
+                time.sleep(float(reset or 2) + 0.2)            # let the bucket refill before the next one
             if r.status_code == 429:
                 STATS["429"] += 1
-                GAP_NOW[0] = min(GAP_NOW[0] * 1.25, 4.0)       # slow down for the rest of the run
-                time.sleep(15 * (i + 1))
+                time.sleep(float(reset or 3) + 1)
                 continue
             if r.status_code == 404:
                 return None
             r.raise_for_status()
             return r.json()
+        except requests.HTTPError:
+            raise
         except requests.RequestException:
             if i == tries - 1:
                 raise
@@ -143,9 +174,14 @@ def _rows(cands):
     return rows
 
 
+def kind(m):
+    return "range" if m["series"] in RANGE else "above" if m["event"].endswith("H1600") else "hourly"
+
+
 def bars_batch(ms):
-    """Live markets of one event, up to BATCH tickers in one request (GET /markets/candlesticks)."""
+    """Live markets of one event in one request (GET /markets/candlesticks)."""
     close = ms[0]["close"]
+    WINDOW_S = PLAN[kind(ms[0])][0]
     d = get("/markets/candlesticks", {"market_tickers": ",".join(m["ticker"] for m in ms),
                                       "start_ts": close - WINDOW_S, "end_ts": close, "period_interval": 1})
     got = {x["market_ticker"]: _rows(x.get("candlesticks")) for x in (d or {}).get("markets", [])}
@@ -154,7 +190,7 @@ def bars_batch(ms):
 
 def bars_one(m):
     """A market older than the historical cutoff (one request each; the batch endpoint does not serve them)."""
-    q = {"start_ts": m["close"] - WINDOW_S, "end_ts": m["close"], "period_interval": 1}
+    q = {"start_ts": m["close"] - PLAN[kind(m)][0], "end_ts": m["close"], "period_interval": 1}
     d = get(f"/historical/markets/{m['ticker']}/candlesticks", q)
     if d is None:
         d = get(f"/series/{m['series']}/markets/{m['ticker']}/candlesticks", q)
@@ -198,6 +234,8 @@ def main():
     days = int(args[0]) if args else 90
     hourly = "--hourly" in sys.argv
     minvol = next((float(a.split("=")[1]) for a in sys.argv if a.startswith("--minvol=")), 10.0)
+    hourly_minvol = next((float(a.split("=")[1]) for a in sys.argv if a.startswith("--hourly-minvol=")), 100.0)
+    live_only = "--live-only" in sys.argv
     log = lambda s: print(time.strftime("%H:%M:%S"), s, flush=True)
     os.makedirs(OUT, exist_ok=True)
     if "--no-yahoo" not in sys.argv:
@@ -208,7 +246,12 @@ def main():
     for s in RANGE + ABOVE:
         ms = listing(s, since, cutoff, log)
         if s in ABOVE:
-            ms = [m for m in ms if (m["volume"] or 0) >= minvol and (hourly or m["event"].endswith("H1600"))]
+            ms = [m for m in ms if (m["volume"] or 0) >= (minvol if m["event"].endswith("H1600") else hourly_minvol)
+                  and (hourly or m["event"].endswith("H1600"))]
+        if live_only:
+            ms = [m for m in ms if m["close"] >= cutoff]
+        # older than the cutoff = one request per market: only the traded ones (no bracket sums for those days)
+        ms = [m for m in ms if m["close"] >= cutoff or (m["volume"] or 0) >= (OLD_MINVOL if s in ABOVE else 1)]
         have = set()
         if os.path.exists(f"{OUT}/{s}.jsonl"):
             have = {json.loads(ln)["ticker"] for ln in open(f"{OUT}/{s}.jsonl")}
@@ -219,7 +262,7 @@ def main():
     groups, cur = [], []
     for m in todo:                              # live markets: batches within one event; old ones: singly
         live = m["close"] >= cutoff
-        if cur and (not live or len(cur) >= BATCH or cur[0]["event"] != m["event"] or cur[0]["close"] < cutoff):
+        if cur and (not live or len(cur) >= PLAN[kind(cur[0])][1] or cur[0]["event"] != m["event"] or cur[0]["close"] < cutoff):
             groups.append(cur)
             cur = []
         cur.append(m)
@@ -228,13 +271,20 @@ def main():
             cur = []
     if cur:
         groups.append(cur)
-    log(f"{len(todo)} markets to download in {len(groups)} requests (~{len(groups) * (GAP + 0.3) / 60:.0f} min)")
+    log(f"{len(todo)} markets to download in {len(groups)} requests (~{len(groups) * 1.5 / 60:.0f} min)")
     done = 0
     for n, g in enumerate(groups):
         try:
-            bs = bars_batch(g) if g[0]["close"] >= cutoff else [bars_one(g[0])]
+            if g[0]["close"] < cutoff:
+                bs = [bars_one(g[0])]
+            else:
+                try:
+                    bs = bars_batch(g)
+                except requests.HTTPError:                  # more than 10,000 candles: ask in halves
+                    h = len(g) // 2
+                    bs = bars_batch(g[:h]) + bars_batch(g[h:]) if h else [[]]
         except Exception as e:
-            log(f"  {g[0]['ticker']}: {e!r}")
+            log(f"  {g[0]['ticker']}: {e!r}"[:300])
             continue
         for m, b in zip(g, bs):
             files[m["series"]].write(json.dumps(dict(m, bars=b), separators=(",", ":")) + "\n")
