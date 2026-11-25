@@ -317,7 +317,7 @@ const Cut = (() => {
       let t0 = performance.now(), raf = 0, ended = false; stopLive = () => { ended = true; cancelAnimationFrame(raf); document.removeEventListener("keydown", onKey, true); };
       const finish = () => { if (ended) return; ended = true; cancelAnimationFrame(raf); document.removeEventListener("keydown", onKey, true); wrap.style.opacity = 0; setTimeout(() => { wrap.hidden = true; busy = false; res(); }, 260); };
       const onKey = e => { if (e.key === "Escape" || e.key === " " || e.key === "Enter") { e.preventDefault(); e.stopPropagation(); skip(); } };
-      const skip = () => { t0 = performance.now() - sc.dur * 1000 + 220; }; wrap.onclick = e => { e.stopPropagation(); skip(); }; document.addEventListener("keydown", onKey, true);
+      let skipped = false; const skip = () => { if (skipped) return; skipped = true; t0 = performance.now() - sc.dur * 1000 + 220; };   // one skip: tapping again and again must not keep pushing the end back wrap.onclick = e => { e.stopPropagation(); skip(); }; document.addEventListener("keydown", onKey, true);
       const render = t => {
         ctx.fillStyle = "#030304"; ctx.fillRect(0, 0, W, H); ctx.font = `700 ${fs}px ${FONT}`; ctx.textBaseline = "top"; ov.length = 0; tx.length = 0; g._f = 0;
         const pal0 = sc.pals[0]; let last = "";
