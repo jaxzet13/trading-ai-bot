@@ -193,8 +193,8 @@ const FX = (() => {
   const cv = $("fx"), c = cv.getContext("2d"); let parts = [], rings = [], raf = 0, last = 0;
   const fit = () => { const d = Math.min(devicePixelRatio || 1, 2), w = cv.clientWidth, h = cv.clientHeight; if (cv.width !== Math.round(w * d)) { cv.width = Math.round(w * d); cv.height = Math.round(h * d); } c.setTransform(d, 0, 0, d, 0, 0); return [w, h]; };
   function loop(now) {
-    const dt = Math.min(.05, (now - last) / 1000); last = now; const [w, h] = fit(); c.clearRect(0, 0, w, h); c.globalCompositeOperation = "lighter"; c.lineCap = "round";
-    for (const r of rings) { r.l -= dt; r.r += r.v * dt; r.v *= .93; const a = clamp(r.l / r.m, 0, 1); c.globalAlpha = a * a * .7; c.strokeStyle = r.col; c.lineWidth = 1.5 + 10 * a; c.beginPath(); c.arc(r.x, r.y, r.r, 0, 6.2832); c.stroke(); c.globalAlpha = a * a * .5; c.strokeStyle = "#fff"; c.lineWidth = 1.2; c.stroke(); }
+    const dt = clamp((now - last) / 1000, 0, .05); last = now; const [w, h] = fit(); c.clearRect(0, 0, w, h); c.globalCompositeOperation = "lighter"; c.lineCap = "round";   // never negative: the first frame's clock can sit a hair before the moment the burst was asked for
+    for (const r of rings) { r.l -= dt; r.r += r.v * dt; r.v *= .93; const a = clamp(r.l / r.m, 0, 1); c.globalAlpha = a * a * .7; c.strokeStyle = r.col; c.lineWidth = 1.5 + 10 * a; c.beginPath(); c.arc(r.x, r.y, Math.max(0, r.r), 0, 6.2832); c.stroke(); c.globalAlpha = a * a * .5; c.strokeStyle = "#fff"; c.lineWidth = 1.2; c.stroke(); }
     for (const p of parts) {
       p.vx *= p.dr; p.vy = p.vy * p.dr + p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.l -= dt; const a = clamp(p.l / p.m * 1.5, 0, 1) * (.75 + .25 * Math.sin(p.l * 40 + p.s)), tx = p.x - p.vx * .045, ty = p.y - p.vy * .045, wd = p.s * .16;
       c.globalAlpha = a * .32; c.strokeStyle = p.col; c.lineWidth = wd * 3.2; c.beginPath(); c.moveTo(tx, ty); c.lineTo(p.x, p.y); c.stroke();                // its glow
