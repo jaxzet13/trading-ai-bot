@@ -206,24 +206,24 @@ async function openMany(pk, n) {
     state.s.packs++; state.s.spent += cost; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); state.vault.push(...got); items.push(...got); packs++;
   }
   History.log(pk, packs, paid, price * packs, items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
-  const hi = items.filter(c => valueOf(c) >= SMALL).sort((a, b) => valueOf(a) - valueOf(b)); SS_PRICE = paid;
+  const hi = items.slice().sort((a, b) => valueOf(b) - valueOf(a)).slice(0, 4).reverse(), shown = new Set(hi.map(c => c.uid)); SS_PRICE = paid;      // however many packs, you turn over your four best cards, the best one last; the rest are on the result
   Object.assign(mine, { items: hi, all: items, phase: "machine", free: freeN === packs, refAll: price * packs, paid, freeN, boughtN, n: packs });
   await anim; if (SS !== mine || mine.phase === "summary") return; mine.phase = "stack";
-  if (!hi.length) { summary(); return; } meterInit(items.filter(c => valueOf(c) < SMALL).reduce((a, c) => a + sellOf(c), 0)); buildStack(); await sleep(400); focusTop();
+  if (!hi.length) { summary(); return; } meterInit(items.filter(c => !shown.has(c.uid)).reduce((a, c) => a + sellOf(c), 0)); buildStack(); await sleep(400); focusTop();
 }
 
 function multiSummary() {
   SS.phase = "summary"; const all = SS.all, hi = SS.items, lo = all.filter(c => valueOf(c) < SMALL), back = all.reduce((a, c) => a + sellOf(c), 0), loBack = lo.reduce((a, c) => a + sellOf(c), 0), paid = SS.paid, net = back - paid, x = back / Math.max(1, SS.refAll), won = back >= SS.refAll;
   const best = all.slice().sort((a, b) => valueOf(b) - valueOf(a))[0], bc = BY_NO[best.no], sign = net >= 0 ? "+" : "−", spent = SS.n - SS.freeN - SS.boughtN;
-  const groups = {}; lo.forEach(c => { (groups[c.no] = groups[c.no] || []).push(c); });                       // the small ones, one picture per card with how many you got
-  const smallFan = Object.values(groups).sort((a, b) => b.length - a.length).map(g => `<div class="gc">${cardHTML(g[0], { sm: true })}<b class="gn">×${g.length}</b></div>`).join("");
+  const top = new Set(hi.map(c => c.uid)), rest = all.filter(c => !top.has(c.uid)), restBack = rest.reduce((a, c) => a + sellOf(c), 0), groups = {}; rest.forEach(c => { const k = c.no + "|" + (c.fx || ""); (groups[k] = groups[k] || []).push(c); });   // everything you did not turn over, one picture per card with how many you got
+  const smallFan = Object.values(groups).sort((a, b) => valueOf(b[0]) - valueOf(a[0]) || b.length - a.length).map(g => `<div class="gc">${cardHTML(g[0], { sm: true })}<b class="gn">×${g.length}</b></div>`).join("");
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   $("stSummary").innerHTML = `<div class="sum"><div><div class="label">You opened ${SS.n} × ${esc(SS.pack.name)}</div><div class="big" style="margin:14px 0"><div class="bx" role="img" aria-label="${money(back)}">${blockSVG(money(back))}</div><span class="dim" style="font-size:13px">of cards you can sell</span></div>
     <div class="net ${net >= 0 ? "up" : "dn"}">${spent ? `You paid ${money(paid)} for ${spent} pack${spent > 1 ? "s" : ""}${SS.n - spent ? ` (${SS.n - spent} free)` : ""} and got ${money(back)} of cards: <span style="white-space:nowrap">${sign}${money(Math.abs(net))}</span>.` : `${SS.n} free packs. Their cards sell for ${money(back)}.`}${x >= 2 && spent ? ` That is ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price.` : ""}</div>
     <div class="small" style="margin-top:4px">Best card: ${esc(bc.name)}, ${rarLabel(bc)}${best.fx ? " · " + STYLES[best.fx].name : ""}.</div>
-    ${lo.length ? `<div class="small dim" style="margin-top:10px">${lo.length} card${lo.length > 1 ? "s" : ""} worth under ${money(SMALL)} ${lo.length > 1 ? "were" : "was"} skipped past (${money(loBack)} to sell in all). They're all in your collection, shown here:</div>` : ""}</div>
+    ${rest.length ? `<div class="small dim" style="margin-top:10px">Your ${hi.length} best cards are on top. The other ${rest.length} (${money(restBack)} to sell in all) are in your collection too, shown under them:</div>` : ""}</div>
     ${hi.length ? `<div class="fan">${hi.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : `<div class="small dim">Nothing worth ${money(SMALL)} or more this time.</div>`}
-    ${lo.length ? `<div class="fan small">${smallFan}</div>` : ""}
+    ${rest.length ? `<div class="fan small">${smallFan}</div>` : ""}
     <div class="row acts" style="justify-content:center">${sellNext(back)}<button class="btn" id="sumSell">sell all · ${money(back)}</button>${lo.length ? `<button class="btn" id="sumSellSmall">sell the small ones · ${money(loBack)}</button>` : ""}<button class="btn" id="sumKeep">keep all</button><button class="btn ghost" id="sumAgain">${againLabel(SS.pack)}</button></div>${invNudge()}</div>`;
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
