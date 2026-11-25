@@ -233,6 +233,15 @@ class Signal:
         return iter((self.side, self.price, self.p))
 
 
+_REF_POOL = __import__("concurrent.futures").futures.ThreadPoolExecutor(max_workers=4, thread_name_prefix="golden-ref")
+
+
+def _ensure_ref(ref, T):
+    """Bring a reference engine up to minute T (first caller fetches; the others find it done)."""
+    with ref._lock:
+        ref._ensure(T, None)
+
+
 class StaleData(requests.RequestException):
     """The spot feed is too old to trade on (treated like a network error by the runners)."""
 
@@ -722,8 +731,20 @@ class GoldenEngine:
         j = minute - 1
         T = int(open_ts) + 60 * int(minute)
         t0 = time.perf_counter()
+        # bring the reference coin (BTC; ETH for BTC) up to this minute at the same time as this coin, not after
+        # it: its Coinbase requests take ~0.35 s and every 0.1 s before the order goes out is price drift
+        ref_fut = None
+        if self.use_ref:
+            ref = self.ref_engine or engine("KXETH15M" if self.series == "KXBTC15M" else "KXBTC15M")
+            if ref.ready and ref._T < T:
+                ref_fut = _REF_POOL.submit(_ensure_ref, ref, T)
         with self._lock:
             info = dict(self._ensure(T, spot_now))
+            if ref_fut is not None:
+                try:
+                    ref_fut.result(timeout=4)
+                except Exception:                    # _ref_features retries inline and falls back to NaN
+                    pass
             f = self.features(open_ts, minute, float(P["strike"][0, j]))
         for k, v in f.items():
             if k not in P:
