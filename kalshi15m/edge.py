@@ -491,6 +491,9 @@ def fill_quality(log_path=REAL_LOG, fetch=None):
             n = e.get("n") or 0
             row = {"ticker": tk, "ts": i["ts"], "side": i["side"], "quoted": i["price"], "edge": i.get("edge"),
                    "filled": n > 0, "fill_price": e.get("avg_price") if n > 0 else None}
+            sb, sa = i.get("send_yes_bid"), i.get("send_yes_ask")
+            if sb is not None and sa is not None and sb > 0 and sa < 1:      # ask of our side when the order went out
+                row["moved"] = round((sa if i["side"] == "yes" else 1 - sb) - i["price"], 4)
             r = result(tk) if i.get("close_ts", 0) + 120 < time.time() else None
             if r:
                 win = 1.0 if r == i["side"] else 0.0
@@ -508,7 +511,14 @@ def fill_quality(log_path=REAL_LOG, fetch=None):
            "filled_at_quote_c": mean([r["at_quote_pnl"] for r in f if "at_quote_pnl" in r]),
            "unfilled_would_have_c": mean([r["at_quote_pnl"] for r in u if "at_quote_pnl" in r]),
            "all_at_quote_c": mean([r["at_quote_pnl"] for r in rows if "at_quote_pnl" in r]),
-           "unfilled_settled": sum(1 for r in u if "at_quote_pnl" in r), "results": cache}
+           "unfilled_settled": sum(1 for r in u if "at_quote_pnl" in r),
+           # how far our side's ask had moved by the time the order went out (orders logged with the send-time book)
+           "moved_known": sum(1 for r in rows if "moved" in r),
+           "moved_filled_c": mean([r["moved"] for r in f if "moved" in r]),
+           "moved_unfilled_c": mean([r["moved"] for r in u if "moved" in r]),
+           "unfilled_within_1c": sum(1 for r in u if "moved" in r and r["moved"] <= 0.0101),
+           "unfilled_within_2c": sum(1 for r in u if "moved" in r and r["moved"] <= 0.0201),
+           "unfilled_moved_known": sum(1 for r in u if "moved" in r), "results": cache}
     FILLQ.write_text(json.dumps(out, indent=1))
     return out
 

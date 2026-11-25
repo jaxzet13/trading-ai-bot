@@ -843,6 +843,16 @@ class Runner:
             self.out(f"  signal {side.upper()} @ {price:.3f} skipped: {why}")
             self.log({"event": "signal_skipped", "reason": why, **base})
             return
+        # the live book at the moment the order goes out (the decision used the book at the minute boundary, about
+        # a second earlier): logged only, so the fill tracker can measure how far prices move in that second
+        bk = getattr(self.mapi, "books", None)
+        if bk is not None:
+            try:
+                qn = bk.as_of(tk, self.clock())
+                if qn is not None:
+                    base["send_yes_bid"], base["send_yes_ask"] = qn[0], qn[2]
+            except Exception:
+                pass
         coid = str(uuid.uuid4())
         body = order_body(tk, side, limit, n, coid)
         # mark the market as traded BEFORE sending, so a crash can never lead to a second order
