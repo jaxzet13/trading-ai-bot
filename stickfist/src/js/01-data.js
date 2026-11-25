@@ -55,13 +55,13 @@ const CARDS = [
   { no: "037", set: "ms", id: "gantry",    name: "Gantry",    sub: "tower arm",    rar: "legendary", chars: 10080,  val: 1400,   tint: "#9fe8ff", cap: "the arm lets go.",           styles: true }
   ,
   // ---- new designs (2026-11)
-  { no: "038", id: "colossus",  name: "Colossus",  sub: "buried head",  rar: "legendary", chars: 29400, val: 460, tint: "#ffcf8a", cap: "it was here before the sand.", styles: true },
+  { no: "038", id: "colossus",  name: "Colossus",  sub: "buried head",  rar: "legendary", chars: 29400, val: 460, tint: "#ece7dc", cap: "it was here before the sand.", styles: true },
   { no: "039", id: "leviathan", name: "Leviathan", sub: "sky whale",    rar: "mythic", chars: 30912, val: 700, tint: "#8ad8ff", cap: "the sky has tides too.",       styles: true },
-  { no: "040", id: "titan",     name: "Titan",     sub: "storm giant",  rar: "cosmic", chars: 72600, val: 3600, tint: "#a9c9ff", cap: "it knelt first.",              styles: true },
-  { no: "041", set: "ms", id: "console", name: "Console", sub: "mission control", rar: "rare", chars: 11008, val: 840, tint: "#a8ffbe", cap: "all stations: go.",     styles: true },
-  { no: "042", set: "ms", id: "suit",    name: "Suit",    sub: "suit up",         rar: "epic", chars: 10416, val: 950, tint: "#b8d4ff", cap: "one size fits nobody.", styles: true },
-  { no: "043", set: "ms", id: "mars",    name: "Mars",    sub: "second flag",   rar: "ascended", chars: 117600, val: 37500,  tint: "#ff9a6a", cap: "second flag. first footprint.",     styles: true },
-  { no: "044", set: "ms", id: "horizon", name: "Horizon", sub: "event horizon", rar: "secret",   chars: 179920, val: 100000, tint: "#ffd27a", cap: "nothing leaves. you looked anyway.", styles: true }
+  { no: "040", id: "titan",     name: "Titan",     sub: "storm giant",  rar: "cosmic", chars: 72600, val: 3600, tint: "#e6ecff", cap: "it knelt first.",              styles: true },
+  { no: "041", set: "ms", id: "console", name: "Console", sub: "mission control", rar: "rare", chars: 11008, val: 840, tint: "#9fc4ff", cap: "all stations: go.",     styles: true },
+  { no: "042", set: "ms", id: "suit",    name: "Suit",    sub: "suit up",         rar: "epic", chars: 10416, val: 950, tint: "#ece7dc", cap: "one size fits nobody.", styles: true },
+  { no: "043", set: "ms", id: "mars",    name: "Mars",    sub: "second flag",   rar: "ascended", chars: 117600, val: 37500,  tint: "#ffb08a", cap: "second flag. first footprint.",     styles: true },
+  { no: "044", set: "ms", id: "horizon", name: "Horizon", sub: "event horizon", rar: "secret",   chars: 179920, val: 100000, tint: "#e8e6ff", cap: "nothing leaves. you looked anyway.", styles: true }
 ];
 // the sets: the two letters a copy id starts with, and what the set is called
 const SETS = { fp: { code: "IS", name: "First Print" }, ms: { code: "MS", name: "Moonshot" } };

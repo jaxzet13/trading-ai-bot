@@ -63,15 +63,16 @@ CARDS.update({
     'booster':   dict(G(240, 168), src='more-cards/sources/booster.jpg',   view=(0.5, 0.50, 0.97), accent=(255, 180, 90),  text='dead weight, dropped.'),
     'apogee':    dict(G(420, 294), src='moonshot/sources/apogee.jpg',      view=(0.5, 0.46, 0.90), accent=(110, 200, 255), text='the top is quiet.'),
 })
-# ---- new designs (2026-11): generated illustrations, drawn the same way as the full-colour scenes above
+# ---- new designs (2026-11): generated illustrations, first re-treated by ../new25/restyle.py in the looks of ../STYLE.md (grain, two-tone,
+# duotone, glitch), then drawn the same way as the full-colour scenes above
 CARDS.update({
-    'colossus':  dict(G(210, 140), src='new25/sources/colossus.png',  view=(0.5, 0.50, 0.82), accent=(255, 190, 90),  text='it was here before the sand.'),
-    'leviathan': dict(G(224, 138), src='new25/sources/leviathan.png', view=(0.5, 0.48, 0.82), accent=(90, 200, 255),  text='the sky has tides too.'),
-    'titan':     dict(G(330, 220), src='new25/sources/titan.png',     view=(0.5, 0.50, 0.82), accent=(140, 180, 255), text='it knelt first.'),
-    'console':   dict(G(128, 86),  src='new25/sources/console.png',   view=(0.5, 0.48, 0.82), accent=(110, 255, 140), text='all stations: go.'),
-    'suit':      dict(G(124, 84),  src='new25/sources/suit.png',      view=(0.5, 0.50, 0.82), accent=(150, 210, 255), text='one size fits nobody.'),
-    'mars':      dict(G(420, 280), src='new25/sources/mars.png',      view=(0.5, 0.50, 0.86), accent=(255, 130, 80),  text='second flag. first footprint.'),
-    'horizon':   dict(G(520, 346), src='new25/sources/horizon.png',   view=(0.5, 0.50, 0.86), accent=(255, 200, 100), text='nothing leaves. you looked anyway.', gain=1.15),
+    'colossus':  dict(G(210, 140), src='new25/styled/colossus.png',  view=(0.5, 0.50, 0.82), accent=(255, 190, 90),  text='it was here before the sand.'),
+    'leviathan': dict(G(224, 138), src='new25/styled/leviathan.png', view=(0.5, 0.48, 0.82), accent=(90, 200, 255),  text='the sky has tides too.'),
+    'titan':     dict(G(330, 220), src='new25/styled/titan.png',     view=(0.5, 0.50, 0.82), accent=(140, 180, 255), text='it knelt first.'),
+    'console':   dict(G(128, 86),  src='new25/styled/console.png',   view=(0.5, 0.48, 0.82), accent=(110, 255, 140), text='all stations: go.'),
+    'suit':      dict(G(124, 84),  src='new25/styled/suit.png',      view=(0.5, 0.50, 0.82), accent=(150, 210, 255), text='one size fits nobody.'),
+    'mars':      dict(G(420, 280), src='new25/styled/mars.png',      view=(0.5, 0.50, 0.86), accent=(255, 130, 80),  text='second flag. first footprint.'),
+    'horizon':   dict(G(520, 346), src='new25/styled/horizon.png',   view=(0.5, 0.50, 0.86), accent=(255, 200, 100), text='nothing leaves. you looked anyway.', gain=1.15),
 })
 # key (the app's style key), how it is drawn, its colour (dark end, bright end), extras
 STYLES = {
