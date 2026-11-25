@@ -6,7 +6,7 @@
    A tester account (the server decides which) gets a button that adds play money, for trying things out.
    ========================================================================== */
 const Acct = (() => {
-  let accounts = API.on, mode = "signup", busy = false, pushT = 0, lastPush = "";
+  let accounts = API.on, checking = API.on, mode = "signup", busy = false, pushT = 0, lastPush = "";   // checking: the server has not yet said whether it has accounts, so the button waits (a moment) rather than guess
   const me = () => state.acct || null, need = () => accounts && !me();
   const say = m => { const e = $("acErr"); if (!e) return; e.hidden = !m; e.textContent = m || ""; };
   // the first screen in its three shapes: no accounts (a tick box), sign up (email, password, tick box), log in (email, password)
@@ -17,7 +17,7 @@ const Acct = (() => {
     if (ttl && accounts && state.ageOK && !login) ttl.textContent = "Make a free account to keep your cards: it takes ten seconds and you only do it once.";
     $("acPw").autocomplete = login ? "current-password" : "new-password"; $("acPw").placeholder = login ? "Password" : "Password (6 or more characters)";
     sw.textContent = login ? "New here? Make an account" : "I already have an account"; if (state.ageOK && $("ageOK")) $("ageOK").checked = true;
-    go.textContent = busy ? "one moment…" : login ? "log in" : accounts ? "create account · get my free pack" : "get my free pack"; go.disabled = busy || (!login && !$("ageOK").checked);
+    go.textContent = busy ? "one moment…" : login ? "log in" : accounts ? "create account · get my free pack" : "get my free pack"; go.disabled = busy || checking || (!login && !$("ageOK").checked);
   }
   const flip = () => { mode = mode === "login" ? "signup" : "login"; say(""); paint(); const e = $("acEmail"); if (e && !e.value) e.focus(); };
   function done() { $("gate").hidden = true; renderChips(); if (typeof Ref !== "undefined") Ref.sync(); if (view === "profile") renderProfile(); }
@@ -44,10 +44,10 @@ const Acct = (() => {
     const a = me(); if (!a || !API.on) return; const b = body(); if (b === lastPush) return; lastPush = b;
     const r = await API.raw("save", { token: a.token, state: b }, leaving); if (r.status === 401) signedOut(); else if (r.status !== 200) lastPush = "";
   }
-  const dirty = () => { if (!me()) return; clearTimeout(pushT); pushT = setTimeout(push, 4000); };
+  const dirty = () => { if (!me() || pushT) return; pushT = setTimeout(() => { pushT = 0; push(); }, 4000); };          // at most 4 seconds behind, however often the game is saved
   function signedOut() { state.acct = null; persist(); mode = "login"; paint(); $("gate").hidden = false; say("You were signed out. Log in to carry on."); }
   async function logout() {
-    const a = me(); if (!a) return; clearTimeout(pushT); await push(); await API.raw("logout", { token: a.token });
+    const a = me(); if (!a) return; clearTimeout(pushT); pushT = 0; await push(); await API.raw("logout", { token: a.token });
     onPersist = null; state = fresh(); persist(); location.hash = "#/"; location.reload();          // the game is on the server; this device forgets it
   }
   function testMoney(d) { if (!me() || !me().tester) return; state.coins += d * UNIT; state.s.added = (state.s.added || 0) + d * UNIT; save(); renderBal(); if (view === "profile") renderProfile(); if (view === "home") renderHome(); toast(`+${money(d * UNIT)} test money`); buzz(20); }
@@ -62,10 +62,10 @@ const Acct = (() => {
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") push(true); });
     const f = $("gateForm"); if (f) f.addEventListener("submit", e => { e.preventDefault(); go(); });
     if (!API.on) return;
-    const h = await API.raw("health"); if (h.status && !(h.data && h.data.accounts)) { accounts = false; paint(); return; }   // a server without accounts: the plain first screen
+    const h = await API.raw("health"); checking = false; if (h.status && !(h.data && h.data.accounts)) { accounts = false; paint(); return; } paint();   // a server without accounts: the plain first screen
     if (!h.status && state.ageOK && !me()) return;                                           // can't tell yet (the server is waking up): don't lock out someone already playing
     if (need()) { paint(); $("gate").hidden = false; return; }
     const a = me(); if (a) { const r = await API.raw("me", { token: a.token }); if (r.status === 401) signedOut(); else if (r.status === 200 && r.data && !!r.data.tester !== !!a.tester) { a.tester = !!r.data.tester; persist(); if (view === "profile") renderProfile(); } }
   }
-  return { start, go, flip, logout, testMoney, html, me, on: () => accounts };
+  return { start, go, flip, paint, logout, testMoney, html, me, on: () => accounts };
 })();

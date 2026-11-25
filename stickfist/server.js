@@ -90,7 +90,7 @@ function attachRef(u, uid, ref) {
    A tester is an account that may hand itself play money (the page shows the button): listed by a hash of the email, so no
    address sits in the code, plus any in TESTER_EMAILS. Emails are not verified, so a tester should sign up before telling anyone. */
 const TESTERS = new Set(["9852081f1f1dbdde0505fcd932398a4f1569d5cb091567f4decfc4a14740970b"].concat((process.env.TESTER_EMAILS || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean).map(s => crypto.createHash("sha256").update(s).digest("hex"))));
-const SAVES = path.join(path.dirname(DATA_FILE), "saves"), MAX_SAVE = 600000;
+const SAVES = path.join(path.dirname(DATA_FILE), "saves"), MAX_SAVE = 600000, ACCOUNTS = process.env.ACCOUNTS !== "off";   // ACCOUNTS=off: no sign-up, the game is kept in the browser as before
 const normEmail = e => String(e || "").trim().toLowerCase().slice(0, 254), validEmail = e => /^[^\s@]{1,64}@[^\s@.]+(\.[^\s@.]+)+$/.test(e);
 const pwHash = (pw, salt) => crypto.scryptSync(String(pw), salt, 32).toString("hex");
 const sessOf = token => { if (typeof token !== "string" || token.length < 32 || token.length > 128) return null; const s = db.sess[sha(token)], a = s && db.accts[s.a]; return a ? { a, id: s.a } : null; };
@@ -98,9 +98,9 @@ const newSession = id => { const token = crypto.randomBytes(32).toString("hex");
 const acctInfo = (a, id) => ({ email: a.email, uid: a.uid, tester: TESTERS.has(id), savedAt: a.savedAt || 0 });
 const readSave = id => { try { return fs.readFileSync(path.join(SAVES, id + ".json"), "utf8"); } catch (e) { return null; } };
 const routes = {
-  "GET /api/health": () => ({ ok: true, v: 1, accounts: true }),
+  "GET /api/health": () => ({ ok: true, v: 1, accounts: ACCOUNTS }),
   "POST /api/signup": (b, ip) => {
-    const email = normEmail(b.email), id = sha(email);
+    const email = normEmail(b.email), id = sha(email); if (!ACCOUNTS) return [404, { error: "not found" }];
     if (!validEmail(email)) return [400, { error: "email" }];
     if (typeof b.pw !== "string" || b.pw.length < 6 || b.pw.length > 200) return [400, { error: "password" }];
     if (limited("signup:" + ip, 12, 3.6e6)) return [429, { error: "slow down" }];
