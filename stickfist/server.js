@@ -45,8 +45,11 @@ process.on("SIGTERM", () => { dirty = true; try { fs.mkdirSync(path.dirname(DATA
 process.on("SIGINT", () => process.emit("SIGTERM"));
 
 /* ---- the game's own tables (what each pack holds, at what weight), read from the same file the page is built from ---- */
-let GAME = null;
-try { const f = [path.join(__dirname, "data.js"), path.join(__dirname, "src", "js", "01-data.js")].find(x => fs.existsSync(x)); if (f) GAME = new Function(fs.readFileSync(f, "utf8") + "; return { RAR, CARDS, PACKS };")(); } catch (e) { console.error("game tables not loaded: the live feed is off (" + e.message + ")"); }
+let GAME = null, mkVal = null;
+try { const f = [path.join(__dirname, "data.js"), path.join(__dirname, "src", "js", "01-data.js")].find(x => fs.existsSync(x)); if (f) GAME = new Function(fs.readFileSync(f, "utf8") + "; return { RAR, CARDS, PACKS, STYLES, BY_NO };")(); } catch (e) { console.error("game tables not loaded: the live feed is off (" + e.message + ")"); }
+// the page's own price engine (what a copy is worth at any moment), so a reported sale can be priced here too. A fresh one per check: it keeps what it works out, and the server should not.
+try { const f = [path.join(__dirname, "value.js"), path.join(__dirname, "src", "js", "04d-value.js")].find(x => fs.existsSync(x)); if (f && GAME) mkVal = new Function("BY_NO", "STYLES", "RAR", "fnv", fs.readFileSync(f, "utf8") + "; return Val;"); } catch (e) { console.error("price engine not loaded: flips are off (" + e.message + ")"); }
+const fnv = str => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h >>> 0; };
 const pickU = (list, u) => { let t = 0; for (const [, w] of list) t += w; let r = u * t; for (const [id, w] of list) { if ((r -= w) < 0) return id; } return list[list.length - 1][0]; };   // the page's own weighted pick
 const noteDraw = (u, n, digest) => { (u.dr = u.dr || []).push([n, digest, u.epoch, 0]); if (u.dr.length > 200) u.dr.splice(0, u.dr.length - 200); };                                // the last draws handed to a player: number, digest, seed epoch, reported yet
 // how a player is named in the feed: the first two letters of their email name, or of their id if they have no account. Never the whole thing.
@@ -205,7 +208,24 @@ const routes = {
     db.feed = db.feed || []; db.found = db.found || {}; db.feed.push({ t: Date.now(), who: nameOf(b.uid), id, pack: pk.id }); if (db.feed.length > 300) db.feed.splice(0, db.feed.length - 300); db.found[id] = (db.found[id] || 0) + 1;
     return { ok: true, hit: true };
   },
-  "GET /api/feed": () => { const f = db.feed || [], t = Date.now(); return { feed: f.slice(-40).reverse(), found: db.found || {}, day: f.filter(x => t - x.t < 864e5).length, on: !!GAME }; },
+  /* ---- flips: a card sold for much more than it came out of the pack at ----
+     The page sends the copy it sold and what it got. The server prices that copy itself, with the game's own price engine, over the
+     last few seconds, and lists the sale only if the price really was that high: a sale is never listed for more than the engine
+     says the copy was worth. It must have at least half again its starting value and fifty cents of gain to count, and a copy is
+     listed once. (The copy's details come from the player's own game, as everything about a collection does; what is checked here
+     is that such a copy was really worth that, then.) */
+  "POST /api/flip": (b, ip) => {
+    const u = getUser(b.uid, ip, false), c = b.c || {}; if (!u || !GAME || !mkVal) return [404, { error: "unknown" }]; if (limited("flip:" + ip, 60, 3.6e6)) return [429, { error: "slow down" }];
+    const card = GAME.BY_NO[String(c.no)], now = Date.now(), t = +c.t, got = Math.floor(+b.got), code = String(c.code || ""), cu = String(c.uid || ""), fx = String(c.fx || "");
+    if (!card || (fx && !GAME.STYLES[fx]) || !/^[A-Z0-9-]{6,40}$/.test(code) || !/^[\w-]{4,48}$/.test(cu) || !(t > now - 400 * 864e5 && t < now + 6e4) || !(got > 0)) return { ok: false };
+    db.flips = db.flips || []; if (db.flips.some(x => x.code === code)) return { ok: false };
+    let hi = 0, start = 0; try { const V = mkVal(GAME.BY_NO, GAME.STYLES, GAME.RAR, fnv), copy = { no: card.no, code, uid: cu, serial: Math.max(1, Math.floor(+c.serial) || 1), fx, t }; start = V.startOf(copy); for (let s = 0; s <= 12; s += .5) hi = Math.max(hi, Math.floor(V.at(copy, now - s * 1000) * .9)); } catch (e) { return { ok: false }; }
+    if (got > hi * 1.01 || got < start * 1.5 || got - start < 250) return { ok: true, listed: false };                    // more than it was worth, or not much of a flip
+    db.flips.push({ t: now, who: nameOf(b.uid), id: card.id, fx, code, from: Math.round(start), to: got, held: Math.round((now - t) / 1000) }); if (db.flips.length > 400) db.flips.splice(0, db.flips.length - 400); touch();
+    return { ok: true, listed: true };
+  },
+  "GET /api/feed": () => { const f = db.feed || [], t = Date.now(), fl = (db.flips || []).filter(x => t - x.t < 7 * 864e5).sort((a, b) => (b.to - b.from) - (a.to - a.from)).slice(0, 8).map(x => ({ t: x.t, who: x.who, id: x.id, fx: x.fx, from: x.from, to: x.to, held: x.held }));
+    return { feed: f.slice(-40).reverse(), found: db.found || {}, day: f.filter(x => t - x.t < 864e5).length, flips: fl, on: !!GAME }; },
   "GET /api/stats": (_b, _ip, q) => {
     if (!ADMIN_TOKEN || q.get("token") !== ADMIN_TOKEN) return [403, { error: "no" }];
     const us = Object.values(db.users), days = Object.keys(db.day).sort().slice(-30).map(k => Object.assign({ day: k }, db.day[k]));

@@ -29,5 +29,19 @@ server.listen(0, async () => { const port = server.address().port, P = (p, b) =>
   ok(r5.hit === true && f2.feed[0].id === cardOf("ms", one.digest, pos).id && f2.feed[0].pack === "ms" && /^player cdcd$/.test(f2.feed[0].who), "a pick of five is checked at the position taken; a player without an account is 'player' and four characters of an id");
   // a new seed: old draws can no longer be claimed
   const d2 = (await P("fair/draw", { uid, cs: "TEST" })).j; await P("fair/rotate", { uid }); ok((await P("fair/hit", { uid, n: d2.nonce, of: 0, k: 0, pack: "fp" })).j.ok === false, "after the seed is rotated, a draw from the old seed is not accepted");
+  // ---- flips ----
+  const fnv = str => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h >>> 0; };
+  const G2 = new Function(fs.readFileSync(path.join(__dirname, "src", "js", "01-data.js"), "utf8") + "; return { RAR, STYLES, BY_NO, BY_ID };")(), V = new Function("BY_NO", "STYLES", "RAR", "fnv", fs.readFileSync(path.join(__dirname, "src", "js", "04d-value.js"), "utf8") + "; return Val;")(G2.BY_NO, G2.STYLES, G2.RAR, fnv);
+  const mkCopy = (id, i, ageS) => ({ no: G2.BY_ID[id].no, code: "IS0" + G2.BY_ID[id].no.slice(-2) + "-" + String(100000 + i) + "-TEST", uid: "copy" + i, serial: i + 1, fx: "", t: Date.now() - ageS * 1000 });
+  const sellAt = c => Math.floor(V.at(c, Date.now()) * .9);
+  // look through copies pulled a few minutes ago for one that has really run, and one that has not
+  let up = null, flat = null; for (let i = 0; i < 6000 && !(up && flat); i++) { const c = mkCopy("grimm", i, 200 + (i % 7) * 40), s = sellAt(c), st0 = V.startOf(c); if (!up && s >= st0 * 1.8 && Math.abs(V.at(c, Date.now() - 6000) / V.at(c, Date.now()) - 1) < .05) up = c; if (!flat && s < st0 * 1.1 && s > st0 * .5) flat = c; }
+  ok(up && flat, "found a copy whose price has run (by the game's own price engine) and one whose price has not");
+  const gotUp = sellAt(up), r1 = (await P("flip", { uid, c: up, got: gotUp })).j, f3 = (await P("feed")).j;
+  ok(r1.listed === true && f3.flips.length === 1 && f3.flips[0].id === "grimm" && f3.flips[0].from === Math.round(V.startOf(up)) && Math.abs(f3.flips[0].to - gotUp) <= 1 && f3.flips[0].who === "jo•••" && !JSON.stringify(f3.flips).includes(up.code), "a real flip is listed with what it came out at, what it sold for, and a masked name (" + (gotUp / V.startOf(up)).toFixed(1) + "x)");
+  ok((await P("flip", { uid, c: up, got: gotUp })).j.ok === false && (await P("feed")).j.flips.length === 1, "the same copy is listed once");
+  ok((await P("flip", { uid, c: flat, got: sellAt(flat) })).j.listed === false, "a sale that is not much of a gain is not a flip");
+  const lie = mkCopy("grimm", 9001, 300); ok((await P("flip", { uid, c: lie, got: Math.floor(V.startOf(lie) * 40) })).j.listed === false && (await P("feed")).j.flips.length === 1, "a sale claimed for far more than the copy was worth is not listed");
+  ok((await P("flip", { uid, c: Object.assign({}, up, { no: "999", code: "IS099-000001-TEST" }), got: 99999 })).j.ok === false && (await P("flip", { uid: "ee".repeat(8), c: up, got: gotUp })).status === 404, "an unknown card, or a player the server has never seen, is refused");
   console.log(fails ? fails + " failed" : "all passed"); server.close(); process.exit(fails ? 1 : 0);
 });

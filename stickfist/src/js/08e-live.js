@@ -2,7 +2,8 @@
    8e. LIVE. The third tab: what other players are pulling, as it happens.
    Everything on it is real. The feed is the hits (a legendary or better) that players actually pulled, kept by the server,
    which re-draws each one itself before listing it (see /api/fair/hit in server.js); nothing here is made up, padded or
-   replayed. Under it, the rarest cards of each pack with how many times each has ever been found, and whether you have it.
+   replayed. "Biggest flips" are sales: a card sold for much more than it came out of the pack at, ranked by the money gained;
+   the server prices the copy itself before listing one (see /api/flip). Under it, the rarest cards of each pack with how many times each has ever been found, and whether you have it.
    Players are named by two letters and dots, never by their email.
    It is here to make you want the cards, and it does that with true things only: the odds on it are the published odds,
    and they are the same for everyone. With no server (a preview, a file) there is no feed to show, and the page says so
@@ -30,13 +31,16 @@ const Live = (() => {
       <span class="lv-v">${money(hc.val)}</span><small class="lv-w">${top ? `pulled by <b>${esc(top.who)}</b> · ${ago(top.t)}` : n ? foundS(n) + " so far" : API.on ? "it is in the pack right now" : ""}${mine ? " · you have it" : ""}</small></span></button>`;
     const stat = data ? `<div class="lv-stat"><div><b>${fmt(data.day || 0)}</b><small>hits today</small></div><div><b>${day.length ? money(BY_ID[top.id].val).replace(/\\.00$/, "") : "–"}</b><small>biggest today</small></div><div><b>${fmt(Object.values(data.found || {}).reduce((a, b) => a + b, 0))}</b><small>hits ever</small></div></div>` : "";
     const rows = feed.slice(0, 10).map(e => { const c = BY_ID[e.id], r = RAR[c.rar], fresh = e.t > seen && seen > 0; return `<button class="lv-row${fresh ? " new" : ""}" data-card="${c.no}" style="--rc:${r.col}"><span class="thumb"><img src="${imgOf(c, "", true)}" alt="" loading="lazy" draggable="false"></span><span class="lv-rt"><b><i>${esc(e.who)}</i> pulled ${esc(c.name)}</b><small><em>${esc(r.name)}</em> · ${odds(c)} · ${money(c.val)}</small></span><time>${ago(e.t)}</time></button>`; }).join("");
+    const held = sec => sec < 90 ? Math.max(1, Math.round(sec)) + "s" : sec < 5400 ? Math.round(sec / 60) + " min" : sec < 172800 ? Math.round(sec / 3600) + "h" : Math.round(sec / 86400) + " days";
+    const flips = (data && data.flips ? data.flips.filter(e => BY_ID[e.id]) : []).slice(0, 5).map((e, i) => { const c = BY_ID[e.id], r = RAR[c.rar], x = e.to / Math.max(1, e.from); return `<button class="lv-row flip" data-card="${c.no}" style="--rc:${r.col}"><span class="thumb"><img src="${imgOf(c, e.fx || "", true)}" alt="" loading="lazy" draggable="false"></span><span class="lv-rt"><b><i>${esc(e.who)}</i> flipped ${esc(c.name)}</b><small>${money(e.from)} → <em>${money(e.to)}</em> · ×${x >= 10 ? Math.round(x) : x.toFixed(1)} · held ${held(e.held)}</small></span><span class="lv-gain">+${money(e.to - e.from)}<time>${ago(e.t)}</time></span></button>`; }).join("");
     const list = !API.on ? `<p class="lv-none">The live feed needs the game's server, and this copy is running without one. Nothing is shown rather than something made up.</p>` : !data ? `<p class="lv-none">Loading…</p>` : rows || `<p class="lv-none">No hits yet. The next legendary anyone pulls shows up here, yours included.</p>`;
     const tiles = chase().map(c => { const r = RAR[c.rar], k = found(c.id), have = copiesOf(c.no).length; return `<button class="lv-tile${have ? " have" : ""}" data-card="${c.no}" style="--rc:${r.col}"><span class="lv-ti"><img src="${imgOf(c, "", true)}" alt="" loading="lazy" draggable="false"><i class="lv-own">${have ? "yours" : "not yet"}</i></span><b>${esc(c.name)}</b><small><em>${esc(r.name)}</em> · ${odds(c)}</small><span class="lv-tv">${money(c.val)}</span><small class="lv-f">${foundS(k)}</small></button>`; }).join("");
     el.live = `<div class="lv-top"><h1 class="ttl">Live</h1><span class="lv-live"><i></i>real pulls, as they happen</span></div>${hero}${stat}
+      ${flips ? `<h3 class="sec">Biggest flips this week</h3><div class="lv-feed">${flips}</div>` : ""}
       <h3 class="sec">Just pulled</h3><div class="lv-feed">${list}</div>
       <h3 class="sec">Still out there</h3><div class="lv-grid">${tiles}</div>
       <a class="btn solid lv-go" href="#/">Open a pack</a>
-      <p class="small lv-fine">Every pull listed here was made by a player and checked by the server before it was listed. Everyone gets the same odds, and most packs do not hold one of these. <a class="linkbtn" href="#/odds">See the odds</a></p>`;
+      <p class="small lv-fine">Every pull and every flip listed here was made by a player and checked by the server before it was listed. Most cards lose value while they are held; these are the ones that did not. Everyone gets the same odds, and most packs do not hold one of these. <a class="linkbtn" href="#/odds">See the odds</a></p>`;
     if (feed.length) seen = Math.max(seen, feed[0].t);
   }
   function start() { pull(true); if (!timer) timer = setInterval(() => { if (view === "live" && !document.hidden) pull(); }, 10000); }

@@ -182,8 +182,9 @@ function cardModal(no, keep) {
 let lastSale = null;
 function sell(uids) {
   let g = 0, realized = 0; const copies = [];
-  for (const u of uids) { const c = state.vault.find(x => x.uid === u); if (c) { g += sellOf(c); realized += sellOf(c) - costOf(c); state.s.bestX = Math.max(state.s.bestX || 0, sellOf(c) / Math.max(1, Val.startOf(c))); copies.push(c);
+  for (const u of uids) { const c = state.vault.find(x => x.uid === u); if (c) { c._got = sellOf(c); g += c._got; realized += c._got - costOf(c); state.s.bestX = Math.max(state.s.bestX || 0, sellOf(c) / Math.max(1, Val.startOf(c))); copies.push(c);
       (state.sold = state.sold || []).unshift({ uid: c.uid, no: c.no, code: c.code, serial: c.serial, fx: c.fx || "", t: c.t, cost: costOf(c), ts: Date.now(), at: valueOf(c), got: sellOf(c) }); if (state.sold.length > 60) state.sold.length = 60;                                                          /* the copy lives on as a record: where you got it, where you sold it, and what it did next */ state.vault = state.vault.filter(x => x !== c); } }
+  if (g && API.on) copies.map(c => ({ c, got: Math.floor(c._got), start: Val.startOf(c) })).filter(x => x.got >= x.start * 1.5 && x.got - x.start >= 250).sort((a, b) => (b.got - b.start) - (a.got - a.start)).slice(0, 3).forEach(x => API.post("flip", { uid: state.uid, c: { no: x.c.no, code: x.c.code, uid: x.c.uid, serial: x.c.serial, fx: x.c.fx || "", t: x.c.t }, got: x.got }).then(() => { if (typeof Live !== "undefined") Live.pull(true); }));   // a real flip goes on the Live tab: the server prices the copy itself before listing it
   if (g) { state.coins += g; state.s.sold += g; state.s.realized += realized; state.s.nSold = (state.s.nSold || 0) + copies.length; lastSale = { copies, g, realized, at: Date.now() }; save(); renderBal(true); Snd.sell(); buzz([25, 35, 25]); if (typeof coinBurst === "function") coinBurst(lastTap, 3 + Math.min(6, copies.length)); Goals.badge(); }
   return g;
 }
