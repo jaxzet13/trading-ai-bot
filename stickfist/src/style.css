@@ -1021,13 +1021,13 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 /* ---- sell or hold: two pills under every card ---- */
 .pills { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(420px, calc(100vw - 32px)); margin: 2px auto 0; } .pills[hidden] { display: none; }
 .pills.in .pill { animation: pillin .34s cubic-bezier(.2,1.5,.4,1) both; } .pills.in .pill.hold { animation-delay: .05s; } @keyframes pillin { from { transform: translateY(18px) scale(.9); opacity: 0; } }
-.pill { position: relative; display: grid; gap: 1px; justify-items: center; align-content: center; min-height: 64px; padding: 8px 10px; border-radius: 999px; border: 0; color: #fff; font: inherit; cursor: pointer; overflow: hidden; -webkit-tap-highlight-color: transparent; transition: transform .12s, filter .2s, box-shadow .25s; }
-.pill small { font-size: 11.5px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; opacity: .85; } .pill b { font-size: 17px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.pill.hold b { font-size: 13.5px; font-weight: 650; }
-.pill::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,0) 46%); pointer-events: none; }   /* the gloss of a capsule */
-.pill.sell { background: linear-gradient(180deg, #ff5a52, #c81e2c); box-shadow: 0 10px 26px -10px rgba(255,60,60,.7), inset 0 -3px 0 rgba(0,0,0,.22); }
-.pill.hold { background: linear-gradient(180deg, #4d9bff, #1b4fd0); box-shadow: 0 10px 26px -10px rgba(60,130,255,.7), inset 0 -3px 0 rgba(0,0,0,.22); }
-.pill:active { transform: scale(.95); filter: brightness(1.15); } .pill.hit { animation: pillhit .32s ease-out; } @keyframes pillhit { 30% { transform: scale(1.08); filter: brightness(1.5); } }
+.pills .pill { position: relative; display: grid; gap: 1px; justify-items: center; align-content: center; min-height: 64px; padding: 8px 10px; border-radius: 999px; border: 0; color: #fff; font: inherit; cursor: pointer; overflow: hidden; -webkit-tap-highlight-color: transparent; transition: transform .12s, filter .2s, box-shadow .25s; }
+.pills .pill small { font-size: 11.5px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; opacity: .85; } .pills .pill b { font-size: 17px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pills .pill.hold b { font-size: 13.5px; font-weight: 650; }
+.pills .pill::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,0) 46%); pointer-events: none; }   /* the gloss of a capsule */
+.pills .pill.sell { background: linear-gradient(180deg, #ff5a52, #c81e2c); box-shadow: 0 10px 26px -10px rgba(255,60,60,.7), inset 0 -3px 0 rgba(0,0,0,.22); }
+.pills .pill.hold { background: linear-gradient(180deg, #4d9bff, #1b4fd0); box-shadow: 0 10px 26px -10px rgba(60,130,255,.7), inset 0 -3px 0 rgba(0,0,0,.22); }
+.pills .pill:active { transform: scale(.95); filter: brightness(1.15); } .pills .pill.hit { animation: pillhit .32s ease-out; } @keyframes pillhit { 30% { transform: scale(1.08); filter: brightness(1.5); } }
 .pills.keep .pill.sell { filter: none; }                                  /* a rare card: holding is the lit choice */
 .pills.keep .pill.hold { box-shadow: 0 0 0 2px rgba(255,255,255,.55), 0 0 34px -2px #4d9bff, 0 10px 26px -10px rgba(60,130,255,.7), inset 0 -3px 0 rgba(0,0,0,.22); animation: holdpulse 1.5s ease-in-out infinite; }
 .pills.keep.in .pill.hold { animation: pillin .34s cubic-bezier(.2,1.5,.4,1) .05s both, holdpulse 1.5s ease-in-out .4s infinite; } @keyframes holdpulse { 50% { box-shadow: 0 0 0 2px rgba(255,255,255,.8), 0 0 48px 2px #4d9bff, 0 10px 26px -10px rgba(60,130,255,.7), inset 0 -3px 0 rgba(0,0,0,.22); } }
@@ -1276,8 +1276,8 @@ body.on-home #openBtn { height: 62px; margin: 0; }
 .st-worth b { font: 800 44px/1 Inter, system-ui, sans-serif; letter-spacing: -.045em; font-variant-numeric: tabular-nums; color: #fff; text-shadow: 0 0 28px color-mix(in srgb, var(--rc, #fff) 60%, transparent); } .st-worth b.done { animation: swDone .45s cubic-bezier(.2, 1.7, .4, 1); } @keyframes swDone { 30% { transform: scale(1.14); } }
 .st-worth .xm { align-self: center; padding: 6px 12px; border-radius: 999px; background: var(--rc, #fff); color: #05060a; font: 800 13.5px/1 Inter, system-ui, sans-serif; box-shadow: 0 8px 20px -8px var(--rc, #fff); animation: xmPop .5s .7s cubic-bezier(.2, 1.7, .4, 1) both; }
 .st-worth.in { animation: pillin .4s cubic-bezier(.2, 1.4, .4, 1) both; }
-.pill.sell { background: linear-gradient(180deg, #ff6259, #d2222f 60%, #a9131f); } .pill.hold { background: linear-gradient(180deg, #5aa5ff, #2460e0 60%, #1740b4); }
-.pill { min-height: 66px; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 -3px 0 rgba(0,0,0,.25) inset, 0 14px 28px -14px #000; } .pill small { opacity: .9; }
+.pills .pill.sell { background: linear-gradient(180deg, #ff6259, #d2222f 60%, #a9131f); } .pills .pill.hold { background: linear-gradient(180deg, #5aa5ff, #2460e0 60%, #1740b4); }
+.pills .pill { min-height: 66px; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 -3px 0 rgba(0,0,0,.25) inset, 0 14px 28px -14px #000; } .pills .pill small { opacity: .9; }
 @media (prefers-reduced-motion: reduce) { .st-title .nm.clean span, .st-worth .xm { animation: none; } }
 
 /* ---- selling many at once ---- */
@@ -1296,3 +1296,5 @@ body.on-home #openBtn { height: 62px; margin: 0; }
 .sb-go.ask { background: #fff; color: #b3121f; animation: sbAsk .5s cubic-bezier(.2, 1.6, .4, 1); } @keyframes sbAsk { from { transform: scale(.9); } }
 body.picking .btabs { display: none !important; } body.picking #v-profile { padding-bottom: 96px; }
 #pTable { overflow: visible; border-radius: 0; } .pgrid { padding: 3px; margin: -3px; }
+/* a good card's picture, alive: a canvas over the picture, drawn from it */
+.card .pic canvas.alive { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .6s ease-out; pointer-events: none; } .card .pic canvas.alive.on { opacity: 1; }

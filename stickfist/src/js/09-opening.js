@@ -135,7 +135,7 @@ async function advance() {
   if (!SS || SS.busy) return; if (SS.phase === "pack") { tear(); return; } if (SS.phase === "pick") { pickRail(); return; } if (SS.phase !== "stack") return;
   const el = scEl(SS.idx); if (!el) return; SS.busy = true; const c = SS.items[SS.idx], card = BY_NO[c.no];
   if (!el.dataset.rev) {
-    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); el.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col); el.classList.add("lit"); if (!reduced) el.animate([{ scale: "1" }, { scale: "1.06" }, { scale: "1" }], { duration: 300, easing: "cubic-bezier(.2,.9,.3,1.3)" }); valueChip(el, c); SS.busy = false; hint(""); if (SS && SS.idx === at) showPills(c, card);
+    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); el.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col); el.classList.add("lit"); if (!reduced) el.animate([{ scale: "1" }, { scale: "1.06" }, { scale: "1" }], { duration: 300, easing: "cubic-bezier(.2,.9,.3,1.3)" }); valueChip(el, c); SS.busy = false; hint(""); if (SS && SS.idx === at) showPills(c, card); Alive.on(el.querySelector(".card"), c);
   }
   else { SS.busy = false; await decide("hold"); }                                         // a tap on a card that is face up holds it
 }
