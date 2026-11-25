@@ -124,6 +124,7 @@ class Veil {
     }
     ctx.globalAlpha = 1;
   }
+  scatter() { for (let i = 0; i < this.thr.length; i++) this.thr[i] = Math.random(); return this; }     // come off all over at once, not from the top down
   idle() { this.live = true; const loop = () => { if (!this.live || this.p >= 0) return; this.frame(); setTimeout(() => requestAnimationFrame(loop), 70); }; loop(); }
   play(ms, onBeat) {
     this.live = false; const t0 = performance.now(); let beat = 0;
@@ -132,46 +133,57 @@ class Veil {
   drop() { this.live = false; this.cv.remove(); }
 }
 
-/* ---- the reveal: the picture prints in, from a few big characters to the real thing ----
-   A canvas over the card's picture. It is drawn in passes: each pass sweeps down the card and redraws it in a finer grid of
-   coloured characters taken from the picture itself (8 across, then 13, 21, 34 ...), with a band of scrambling type at the
-   front of the sweep. A rarer card gets more passes and more time. After the last pass the canvas fades and the real picture
-   is underneath. play() reports how far along it is, so the count of characters and the card's worth can climb with it. */
+/* ---- the reveal: the picture forms out of loose characters, from a few big ones to the real thing ----
+   A canvas over the card's picture. Nothing sweeps across it: in each pass the characters turn up all over the card at once,
+   the bright parts of the picture a little ahead of the rest. A character starts as a pale, scrambling glyph drifting in from
+   nearby and settles into its place, its shape and its colour. Then the next pass forms over it in a finer grid (8 across,
+   then 13, 21, 34, 55, 89), so the picture goes from a handful of big letters to nearly the real thing, and the canvas fades
+   to the real picture underneath. A rarer card gets a finer last pass and more time. play() reports how far along it is, so
+   the count of characters and the card's worth can climb with it.
+   Settled characters are stamped once onto a second canvas and only the ones still forming are drawn each frame. */
 const RV_RAMP = ".,:;-=+*xo%#&@", RV_NOISE = "01#%&@$*+=<>/\\";
 class Resolve {
   constructor(card, tier, col) {
     this.pic = card.querySelector(".pic"); this.img = this.pic.querySelector("img"); this.tier = tier; this.col = col; this.cv = document.createElement("canvas"); this.cv.className = "resolve";
     const w = this.pic.clientWidth, h = this.pic.clientHeight, d = Math.min(devicePixelRatio || 1, 2); this.w = w; this.h = h; this.cv.width = Math.round(w * d); this.cv.height = Math.round(h * d);
     this.ctx = this.cv.getContext("2d"); this.ctx.setTransform(d, 0, 0, d, 0, 0); this.ctx.fillStyle = "#020203"; this.ctx.fillRect(0, 0, w, h); this.pic.appendChild(this.cv);
+    this.base = document.createElement("canvas"); this.base.width = this.cv.width; this.base.height = this.cv.height; this.bx = this.base.getContext("2d"); this.bx.setTransform(d, 0, 0, d, 0, 0); this.bx.fillStyle = "#020203"; this.bx.fillRect(0, 0, w, h);
   }
   // the picture has to be loaded and readable; if it is not, the caller falls back to showing it at once
   async ready() {
     try { if (!this.img.complete || !this.img.naturalWidth) await Promise.race([this.img.decode(), new Promise((_, no) => setTimeout(no, 1800))]); const t = document.createElement("canvas"); t.width = t.height = 2; const x = t.getContext("2d"); x.drawImage(this.img, 0, 0, 2, 2); x.getImageData(0, 0, 1, 1); return this.w > 0; } catch (e) { return false; }
   }
-  grid(cols) {                                                                             // the picture at `cols` characters across: one colour per character
+  grid(cols) {                                                                             // the picture at `cols` characters across: one colour per character, and the order they turn up in
     const cw = this.w / cols, ch = cw * 1.7, rows = Math.ceil(this.h / ch), t = document.createElement("canvas"); t.width = cols; t.height = rows; const x = t.getContext("2d");
     const iw = this.img.naturalWidth, ih = this.img.naturalHeight, s = Math.max(this.w / iw, this.h / ih), sw = this.w / s, sh = this.h / s;
-    x.drawImage(this.img, (iw - sw) / 2, (ih - sh) / 2, sw, Math.min(ih, sh * rows * ch / this.h), 0, 0, cols, rows); return { cols, rows, cw, ch, d: x.getImageData(0, 0, cols, rows).data };
+    x.drawImage(this.img, (iw - sw) / 2, (ih - sh) / 2, sw, Math.min(ih, sh * rows * ch / this.h), 0, 0, cols, rows); const d = x.getImageData(0, 0, cols, rows).data, N = cols * rows;
+    const ord = new Float32Array(N), off = new Float32Array(N * 2), idx = Array.from({ length: N }, (_, i) => i), far = cols <= 34 ? 2.4 : 0;
+    for (let i = 0; i < N; i++) { const m = Math.max(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]) / 255, a = Math.random() * 6.283, v = (.4 + Math.random() * .6) * far * cw; ord[i] = .74 * Math.random() + .26 * (1 - m); off[i * 2] = Math.cos(a) * v; off[i * 2 + 1] = Math.sin(a) * v; }
+    idx.sort((a, b) => ord[a] - ord[b]); return { cols, rows, cw, ch, d, N, ord, off, idx, lead: cols <= 34 ? .68 : .86 };
   }
-  cell(g, c, r, noise) {
-    const ctx = this.ctx, i = (r * g.cols + c) * 4, R = g.d[i], G = g.d[i + 1], B = g.d[i + 2], m = Math.max(R, G, B), x = c * g.cw, y = r * g.ch; ctx.fillStyle = "#020203"; ctx.fillRect(x, y, g.cw + .7, g.ch + .7);
-    if (noise) { ctx.fillStyle = Math.random() < .35 ? this.col : "rgba(255,255,255,.9)"; ctx.fillText(RV_NOISE[(Math.random() * RV_NOISE.length) | 0], x + g.cw / 2, y + g.ch / 2); return; }
-    if (m < 16) return; const l = m / 255, k = (.62 + .38 * l) * 255 / m; ctx.fillStyle = `rgb(${R * .28 | 0},${G * .28 | 0},${B * .28 | 0})`; ctx.fillRect(x, y, g.cw + .7, g.ch + .7);   // a dim block of the colour under the character, so the picture has a body
-    ctx.fillStyle = `rgb(${Math.min(255, R * k) | 0},${Math.min(255, G * k) | 0},${Math.min(255, B * k) | 0})`; ctx.fillText(RV_RAMP[Math.min(RV_RAMP.length - 1, (Math.pow(l, .8) * RV_RAMP.length) | 0)], x + g.cw / 2, y + g.ch / 2);
+  ink(g, i) { const R = g.d[i * 4], G = g.d[i * 4 + 1], B = g.d[i * 4 + 2], m = Math.max(R, G, B); if (m < 16) return null; const l = m / 255, k = (.62 + .38 * l) * 255 / m; return { body: `rgb(${R * .28 | 0},${G * .28 | 0},${B * .28 | 0})`, col: `rgb(${Math.min(255, R * k) | 0},${Math.min(255, G * k) | 0},${Math.min(255, B * k) | 0})`, ch: RV_RAMP[Math.min(RV_RAMP.length - 1, (Math.pow(l, .8) * RV_RAMP.length) | 0)] }; }
+  stamp(g, i) {                                                                            // a character that has settled: drawn once, for good
+    const b = this.bx, x = (i % g.cols) * g.cw, y = ((i / g.cols) | 0) * g.ch, k = this.ink(g, i); b.fillStyle = "#020203"; b.fillRect(x, y, g.cw + .7, g.ch + .7); if (!k) return;
+    b.fillStyle = k.body; b.fillRect(x, y, g.cw + .7, g.ch + .7); b.fillStyle = k.col; b.fillText(k.ch, x + g.cw / 2, y + g.ch / 2);
+  }
+  forming(g, i, e) {                                                                       // a character on its way in: pale and scrambling at first, drifting to its place, then its own shape and colour
+    const c = this.ctx, k = this.ink(g, i), z = 1 - e, pull = z * z * z, x = (i % g.cols) * g.cw + g.cw / 2 + g.off[i * 2] * pull, y = ((i / g.cols) | 0) * g.ch + g.ch / 2 + g.off[i * 2 + 1] * pull, loose = e < .62;
+    c.globalAlpha = Math.min(1, .15 + e * 1.5); c.fillStyle = loose ? (i % 3 ? "#ffffff" : this.col) : k.col; c.fillText(loose ? RV_NOISE[(Math.random() * RV_NOISE.length) | 0] : k.ch, x, y);
   }
   play(ms, onProg, onPass) {
-    const all = [8, 13, 21, 34, 55, 89, 128], n = Math.min(all.length, 5 + Math.min(2, this.tier)), cols = all.slice(0, n), wts = cols.map(c => Math.sqrt(c)), tot = wts.reduce((a, b) => a + b, 0), ctx = this.ctx;
-    let acc = 0; const spans = wts.map(w => { const s = [acc / tot, (acc + w) / tot]; acc += w; return s; }), grids = cols.map(c => this.grid(c)), t0 = performance.now(), FADE = 340; let si = -1, last = -1;
-    const font = g => { ctx.font = `700 ${Math.max(4, g.ch * .98).toFixed(1)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; };
-    const rows = (g, a, b, front, band) => { for (let r = Math.max(0, a); r <= Math.min(g.rows - 1, b); r++) for (let c = 0; c < g.cols; c++) this.cell(g, c, r, front >= 0 && r > front - band); };
+    const all = [8, 13, 21, 34, 55, 89], n = Math.min(all.length, 5 + Math.min(1, this.tier)), cols = all.slice(0, n), wts = cols.map(c => Math.sqrt(c)), tot = wts.reduce((a, b) => a + b, 0), ctx = this.ctx, bx = this.bx;
+    let acc = 0; const spans = wts.map(w => { const s = [acc / tot, (acc + w) / tot]; acc += w; return s; }), grids = cols.map(c => this.grid(c)), t0 = performance.now(), FADE = 360; let si = -1, ptr = 0, live = [];
+    const font = g => { const f = `700 ${Math.max(4, g.ch * .98).toFixed(1)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; [ctx, bx].forEach(c => { c.font = f; c.textAlign = "center"; c.textBaseline = "middle"; }); };
+    const finish = g => { live.forEach(i => this.stamp(g, i)); live = []; for (; ptr < g.N; ptr++) this.stamp(g, g.idx[ptr]); };                                  // whatever of a pass is still loose settles before the next one starts
     return new Promise(res => { const step = now => {
       const p = Math.min(1, (now - t0) / ms); let k = spans.findIndex(s => p < s[1]); if (k < 0) k = n - 1;
-      if (k !== si) { if (si >= 0) rows(grids[si], last - 3, grids[si].rows - 1, -1, 0); si = k; last = -1; font(grids[k]); if (onPass) onPass(k, n); }                   // the pass before is finished off, the next one starts at the top
-      const g = grids[k], q = (p - spans[k][0]) / (spans[k][1] - spans[k][0]), band = Math.max(1, Math.round(g.rows * .1)), front = Math.floor(q * (g.rows + band));
-      rows(g, last - band, front, front, band); last = front;
-      if (front < g.rows) { ctx.fillStyle = this.col; ctx.globalAlpha = .9; ctx.fillRect(0, (front + 1) * g.ch - 2, this.w, 2); ctx.globalAlpha = 1; }                       // the line the type is being laid down on
+      if (k !== si) { if (si >= 0) finish(grids[si]); si = k; ptr = 0; font(grids[k]); if (onPass) onPass(k, n); }
+      const g = grids[k], q = (p - spans[k][0]) / (spans[k][1] - spans[k][0]), D = 1 - g.lead;
+      while (ptr < g.N && g.ord[g.idx[ptr]] * g.lead <= q) { const i = g.idx[ptr++]; if (this.ink(g, i)) live.push(i); else this.stamp(g, i); }                  // the next characters start forming (a dark one just clears its spot)
+      const keep = []; for (const i of live) { if ((q - g.ord[i] * g.lead) / D >= 1) this.stamp(g, i); else keep.push(i); } live = keep;
+      ctx.globalAlpha = 1; ctx.drawImage(this.base, 0, 0, this.w, this.h); for (const i of live) this.forming(g, i, Math.max(0, (q - g.ord[i] * g.lead) / D)); ctx.globalAlpha = 1;
       if (onProg) onProg(p);
-      if (p < 1) requestAnimationFrame(step); else { rows(g, 0, g.rows - 1, -1, 0); this.cv.style.transition = `opacity ${FADE}ms ease-out`; this.cv.style.opacity = "0"; setTimeout(() => this.cv.remove(), FADE + 40); res(); }
+      if (p < 1) requestAnimationFrame(step); else { finish(g); ctx.drawImage(this.base, 0, 0, this.w, this.h); this.cv.style.transition = `opacity ${FADE}ms ease-out`; this.cv.style.opacity = "0"; setTimeout(() => this.cv.remove(), FADE + 40); res(); }
     }; requestAnimationFrame(step); });
   }
   drop() { this.cv.remove(); }

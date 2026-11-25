@@ -123,8 +123,8 @@ async function reveal(el, c, card, R, v) {
   if (rs && !okPic) rs.drop();
   if (okPic) {
     el.classList.add("loading"); tt.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col); tt.className = "st-title loading";
-    tt.innerHTML = `<div class="rw">printing · <b id="ldN">0</b> characters</div><div class="vl">worth <b id="ldV">${money(0)}</b></div>`; const ldN = $("ldN"), ldV = $("ldV");
-    await v.play(240);
+    tt.innerHTML = `<div class="rw">forming · <b id="ldN">0</b> characters</div><div class="vl">worth <b id="ldV">${money(0)}</b></div>`; const ldN = $("ldN"), ldV = $("ldV");
+    await v.scatter().play(300);
     await rs.play([1100, 1400, 1900, 2500, 3300, 4100, 5600][T], p => { const e = Math.pow(p, 1.7); ldN.textContent = fmt(Math.round(card.chars * e)); ldV.textContent = money(worth * e); },
       (k, n) => { Snd.rise(k); buzz(8); if (k && T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 110 + T * 30); FX.burst(mid[0], mid[1], 5 + T * 3, [R.col, "#fff"], 240 + T * 50); } });
     el.classList.remove("loading"); tt.className = "st-title";
