@@ -83,13 +83,13 @@ const PACKS = [
   // One card a pack. A pack pays for itself when its card sells for at least the price: 45 packs in 100. The uncommons sell for
   // less than the pack; rares and epics for a little more; then the ladder: one card per rarity, each about half as likely and
   // worth about half as much again as the one below it. A legendary or better is 1 pack in 10.
-  { id: "fp", set: "fp", cover: "umbra", name: "First Print", blurb: "Stick figures made of text, from a frog in a hat to a total eclipse.", price: 259, min: 130, max: 2500, n: 1,
+  { id: "fp", set: "fp", name: "First Print", blurb: "Stick figures made of text, from a frog in a hat to a total eclipse.", price: 259, min: 130, max: 2500, n: 1,
     order: ["stitch", "brick", "orbit", "tempest", "surge", "phantom", "kraken", "colossus", "leviathan", "null", "shogun", "ronin", "titan", "grimm", "reaper", "umbra"],
     slotNames: ["The card: a rare or better in 45 packs out of 100. From Legendary up, each rarity is about half as likely as the one before"],
     slots: [
       [["stitch", 21.5804], ["brick", 18.3434], ["orbit", 15.5919], ["tempest", 10.6579], ["surge", 9.5921], ["phantom", 7.3684], ["kraken", 6.6316], ["colossus", 6.25], ["leviathan", 2], ["null", 1], ["shogun", 0.5], ["ronin", 0.25], ["titan", 0.125], ["grimm", 0.0625], ["reaper", 0.0313], ["umbra", 0.0156]]
     ] },
-  { id: "ms", set: "ms", cover: "horizon", name: "Moonshot", blurb: "One launch and what happens on the way up: a lit fuse, the pad, a rocket on its plume, a flag on the Moon. The higher the card, the rarer it is.", price: 726, min: 375, max: 7500, n: 1,
+  { id: "ms", set: "ms", name: "Moonshot", blurb: "One launch and what happens on the way up: a lit fuse, the pad, a rocket on its plume, a flag on the Moon. The higher the card, the rarer it is.", price: 726, min: 375, max: 7500, n: 1,
     order: ["fuse", "countdown", "ignition", "console", "suit", "gantry", "liftoff", "booster", "apogee", "luna", "mars", "horizon"],
     slotNames: ["The card: a rare or better in 45 packs out of 100. From Legendary up, each rarity is about half as likely as the one before"],
     slots: [
