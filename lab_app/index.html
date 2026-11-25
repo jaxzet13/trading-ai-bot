@@ -74,7 +74,7 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; }
   </section>
 
   <section class="panel">
-    <div class="head"><h2>What each firm is worth</h2><span class="hint">Expected dollars per evaluation bought, on 2024 to 2026 data the search never saw. "No edge" is a coin-flip entry with the best trade shape and sizing for that firm: what the rules alone are worth. Sizing and strategy were chosen on 2022 to 2023.</span></div>
+    <div class="head"><h2>What each firm is worth</h2><span class="hint">Expected dollars per evaluation bought, on 2024 to 2026 data the search never saw. "No edge" is a coin-flip entry with the best trade shape and sizing for that firm: what the rules alone are worth. "Top validation pick" is the single strategy that looked best on 2022 to 2023, which mostly turns out to be luck. "Portfolio" is the family mix described below.</span></div>
     <div class="tablewrap"><table id="firms"></table></div>
   </section>
 
@@ -90,8 +90,13 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; }
   </section>
 
   <section class="panel">
-    <div class="head"><h2>Portfolios: several strategies on one account</h2><span class="hint">Built greedily on the validation years: start from the best single strategy for the firm, add another only if it raises expected value. More trades per week means faster passes.</span></div>
+    <div class="head"><h2>Portfolios: several strategies on one account</h2><span class="hint">The robust way to use the search. Take the strongest representative from each strategy family that produced several survivors, biggest families first. How many families to combine is chosen per firm on the validation years. This avoids betting on one lucky winner.</span></div>
     <div class="tablewrap"><table id="ports"></table></div>
+  </section>
+
+  <section class="panel">
+    <div class="head"><h2>Which strategy families held up</h2><span class="hint">Families with at least three survivors. Average edge per trade across the family in each period. A family that stays positive on the test years is a real effect, not one lucky parameter set.</span></div>
+    <div class="tablewrap"><table id="clus"></table></div>
   </section>
 
   <section class="panel">
@@ -128,7 +133,7 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; }
     ['Strategies tested', F.tested.toLocaleString(), 'entry rule × exit rule × market × session'],
     ['Passed training filter', F.train_pass.toLocaleString(), `${pct(F.train_pass / F.tested, 2)} of all (t ≥ 2, profit factor ≥ 1.05)`],
     ['Still positive in validation', F.valid_pass.toLocaleString(), `${D.n_candidates.toLocaleString()} distinct after removing duplicates`],
-    ['Positive on unseen test years', pct(T.share_positive), `of the ${T.n.toLocaleString()} survivors; a coin flip would be about 35% after costs`, T.share_positive > 0.5 ? 'pos' : 'neg'],
+    ['Positive on unseen test years', pct(T.share_positive), `of the ${T.n.toLocaleString()} survivors, on data the search never saw`, T.share_positive > 0.5 ? 'pos' : 'neg'],
     ['Average edge of survivors', r3(T.mean_r) + 'R', `test; was ${r3(T.mean_r_valid)}R in validation, ${r3(T.mean_r_train)}R in training`, cls(T.mean_r)],
   ].map(([k, v, s, c]) => `<div class="tile"><span class="k">${k}</span><span class="v ${c || ''}">${v}</span><span class="s">${s}</span></div>`).join('');
 
@@ -137,20 +142,20 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; }
   const shape = n => `stop ×${n.shape[0]}, ` + (n.shape[1] ? `target ${n.shape[1]}R` : 'no target');
   const firmRows = firmNames.map(fn => {
     const f = D.firms[fn], n = f.null, b = (D.per_firm[fn] || [])[0], p = portBy[fn];
-    return { fn, f, n, b, p, best: Math.max(n.test.ev, b ? b.test.ev : -1e9, p ? p.pick.test.ev : -1e9) };
+    return { fn, f, n, b, p, best: p ? p.pick.test.ev : n.test.ev };
   }).sort((a, b) => b.best - a.best);
-  $('firms').innerHTML = `<thead><tr><th>Firm</th><th>Cost to try</th><th>No edge: pass</th><th>No edge: value</th><th>Best strategy: pass</th><th>Days to pass</th><th>Paid out if funded</th><th>Best strategy: value</th><th>Portfolio: value</th><th>Verdict</th></tr></thead><tbody>` +
+  $('firms').innerHTML = `<thead><tr><th>Firm</th><th>Cost to try</th><th>No edge: pass</th><th>No edge: value</th><th>Top validation pick: value</th><th>Portfolio: pass</th><th>Days to pass</th><th>Paid out if funded</th><th>Portfolio: value</th><th>Verdict</th></tr></thead><tbody>` +
     firmRows.map(({ fn, f, n, b, p }) => {
       const cost = f.fee + f.fee_monthly + f.activation;
       const bv = b ? b.test.ev : null, pv = p ? p.pick.test.ev : null;
       const top = Math.max(n.test.ev, bv ?? -1e9, pv ?? -1e9);
-      const verdict = top > cost * 0.5 ? '<span class="pill ok">worth it</span>' : top > 0 ? '<span class="pill mid">marginal</span>' : '<span class="pill no">avoid</span>';
-      return `<tr><td>${fn}<br><span class="hint" style="white-space:normal;display:block;max-width:340px;font-family:var(--font-ui)">${f.note}</span></td><td>${money(f.fee + f.activation)}${f.fee_monthly ? ' + ' + money(f.fee_monthly) + '/mo' : ''}</td><td>${pct(n.test.pass)}</td><td class="${cls(n.test.ev)}">${money(n.test.ev)}</td><td>${b ? pct(b.test.pass) : '–'}</td><td>${b ? Math.round(b.test.median_days) : '–'}</td><td>${b ? money(b.test.paid_if_funded) : '–'}</td><td class="${cls(bv ?? 0)}"><b>${bv == null ? '–' : money(bv)}</b></td><td class="${cls(pv ?? 0)}">${pv == null ? '–' : money(pv)}</td><td>${verdict}</td></tr>`;
+      const vv = pv ?? top; const verdict = vv > cost * 0.5 ? '<span class="pill ok">worth it</span>' : vv > 0 ? '<span class="pill mid">marginal</span>' : '<span class="pill no">avoid</span>';
+      return `<tr><td>${fn}<br><span class="hint" style="white-space:normal;display:block;max-width:340px;font-family:var(--font-ui)">${f.note}</span></td><td>${money(f.fee + f.activation)}${f.fee_monthly ? ' + ' + money(f.fee_monthly) + '/mo' : ''}</td><td>${pct(n.test.pass)}</td><td class="${cls(n.test.ev)}">${money(n.test.ev)}</td><td class="${cls(bv ?? 0)}">${bv == null ? '–' : money(bv)}</td><td>${p ? pct(p.pick.test.pass) : '–'}</td><td>${p ? Math.round(p.pick.test.median_days) : '–'}</td><td>${p ? money(p.pick.test.paid_if_funded) : '–'}</td><td class="${cls(pv ?? 0)}"><b>${pv == null ? '–' : money(pv)}</b></td><td>${verdict}</td></tr>`;
     }).join('') + '</tbody>';
 
   // leaderboard
   $('board').innerHTML = `<thead><tr><th>#</th><th>Strategy</th><th>Trades / yr</th><th>Edge train</th><th>Edge valid</th><th>Edge test</th><th>Win test</th><th>PF test</th><th>Firms + (valid)</th><th>Firms + (test)</th><th>Best firm on test</th></tr></thead><tbody>` +
-    D.leaderboard.slice(0, 30).map((c, i) => {
+    D.leaderboard.slice(0, 12).map((c, i) => {
       const bf = Object.entries(c.firms).filter(([k, v]) => v).sort((a, b) => b[1].valid.ev - a[1].valid.ev)[0];
       const [a, b] = c.desc.split(' · ').length > 2 ? [c.desc.split(' · ').slice(0, 2).join(' · '), c.desc.split(' · ').slice(2).join(' · ')] : [c.desc, ''];
       return `<tr><td>${i + 1}</td><td class="desc">${a}<small>${b}</small></td><td>${Math.round(c.test.n / 2.87)}</td><td>${r3(c.train.mean)}</td><td>${r3(c.valid.mean)}</td><td class="${cls(c.test.mean)}"><b>${r3(c.test.mean)}</b></td><td>${pct(c.test.win)}</td><td>${c.test.pf.toFixed(2)}</td><td>${c.firms_ok_valid}/${firmNames.length}</td><td class="${c.firms_ok_test >= firmNames.length / 2 ? 'pos' : ''}">${c.firms_ok_test}/${firmNames.length}</td><td style="white-space:normal;text-align:left">${bf ? `${bf[0]}: ${money(bf[1].test.ev)}, pass ${pct(bf[1].test.pass)} in ${Math.round(bf[1].test.median_days)}d` : '–'}</td></tr>`;
@@ -168,9 +173,12 @@ footer { color: var(--fg-3); font-size: 12px; text-align: center; }
   $('firmsel').addEventListener('change', renderFirm); renderFirm();
 
   // portfolios
-  $('ports').innerHTML = `<thead><tr><th>Firm</th><th>Strategies combined</th><th>Eval / funded risk</th><th>Valid: value</th><th>Test: pass</th><th>Test: days</th><th>Test: paid if funded</th><th>Test: value</th><th>vs best single (test)</th></tr></thead><tbody>` +
+  $('ports').innerHTML = `<thead><tr><th>Firm</th><th>Strategies combined</th><th>Eval / funded risk</th><th>Valid: value</th><th>Test: pass</th><th>Test: days</th><th>Test: paid if funded</th><th>Test: value</th><th>vs one strategy alone (test)</th></tr></thead><tbody>` +
     D.portfolios.slice().sort((a, b) => b.pick.test.ev - a.pick.test.ev).map(p => { const single = p.path[0].test_ev;
       return `<tr><td>${p.firm}</td><td class="desc">${p.members.map((m, i) => `<small style="color:var(--fg-2)">${i + 1}. ${m}</small>`).join('')}</td><td>${p.pick.fe}× / ${p.pick.ff}×</td><td class="${cls(p.pick.valid.ev)}">${money(p.pick.valid.ev)}</td><td>${pct(p.pick.test.pass)}</td><td>${Math.round(p.pick.test.median_days)}</td><td>${money(p.pick.test.paid_if_funded)}</td><td class="${cls(p.pick.test.ev)}"><b>${money(p.pick.test.ev)}</b></td><td>${p.members.length > 1 ? money(p.pick.test.ev - single) : 'single'}</td></tr>`; }).join('') + '</tbody>';
+
+  $('clus').innerHTML = `<thead><tr><th>Family</th><th>Survivors</th><th>Edge train</th><th>Edge valid</th><th>Edge test</th><th>Positive on test</th><th>Held up</th></tr></thead><tbody>` +
+    D.clusters.map(c => `<tr><td class="desc">${c.inst} ${c.sess} · ${c.family.replace(/_/g, ' ')}<small>strongest: ${c.rep.split(' · ').slice(1).join(' · ')}</small></td><td>${c.survivors}</td><td>${r3(c.mean_r_train)}</td><td>${r3(c.mean_r_valid)}</td><td class="${cls(c.mean_r_test)}"><b>${r3(c.mean_r_test)}</b></td><td>${pct(c.share_pos_test)}</td><td>${c.mean_r_test > 0.03 ? '<span class="pill ok">yes</span>' : c.mean_r_test > 0 ? '<span class="pill mid">barely</span>' : '<span class="pill no">no</span>'}</td></tr>`).join('') + '</tbody>';
 
   // evidence
   const H = D.t_hist, mids = H.edges.slice(0, -1).map((e, i) => ((e + H.edges[i + 1]) / 2).toFixed(1));

@@ -154,15 +154,32 @@ def run() -> dict:
         rows = sorted([c for c in cands if c["firms"][fn]], key=lambda c: -c["firms"][fn]["valid"]["ev"])[:8]
         per_firm[fn] = [{"desc": c["desc"], "inst": c["inst"], "train": c["train"], "valid_r": c["valid"], "test_r": c["test"], **c["firms"][fn]} for c in rows]
 
-    # portfolios
-    top_for_tabs = ranked[:25]
-    tabs = {id(c): trade_table(c) for c in top_for_tabs}
+    # portfolios: one or two representatives from each strategy family that produced several survivors.
+    # Families are ordered by how many survivors they have (a lone survivor is more likely luck); representatives are the
+    # ones with the strongest combined train + valid evidence. How many families to use is chosen per firm on VALID.
+    clusters: dict = {}
+    for c in cands:  # cands is sorted by train t + valid t
+        clusters.setdefault((c["inst"], c["sess"], c["spec"]["family"]), []).append(c)
+    fams = sorted([v for v in clusters.values() if len(v) >= 3], key=lambda v: -len(v))
+    cluster_rows = [{"inst": v[0]["inst"], "sess": v[0]["sess"], "family": v[0]["spec"]["family"], "survivors": len(v), "rep": v[0]["desc"],
+                     "mean_r_train": float(np.mean([y["train"]["mean"] for y in v])), "mean_r_valid": float(np.mean([y["valid"]["mean"] for y in v])),
+                     "mean_r_test": float(np.mean([y["test"]["mean"] for y in v])), "share_pos_test": float(np.mean([y["test"]["mean"] > 0 for y in v]))} for v in fams]
+    ladder = []
+    for k in range(1, len(fams) + 1):
+        for top in (1, 2):
+            mem = [y for v in fams[:k] for y in v[:top]]
+            sv, st = score_stream([trade_table(y) for y in mem])
+            ladder.append((k, top, mem, sv, st))
     ports = []
-    for fn in FIRM_NAMES:
-        fr = sorted([c for c in top_for_tabs if c["firms"][fn]], key=lambda c: -c["firms"][fn]["valid"]["ev"])
-        p = build_portfolio(fn, fr, tabs)
-        if p:
-            ports.append(p)
+    for a, fn in enumerate(FIRM_NAMES):
+        rows = [(k, top, mem, pick(sv[a], st[a])) for k, top, mem, sv, st in ladder]
+        rows = [r for r in rows if r[3]]
+        if not rows:
+            continue
+        k, top, mem, best = max(rows, key=lambda r: r[3]["valid"]["ev"])
+        ports.append({"firm": fn, "members": [c["desc"] for c in mem], "families": k, "per_family": top, "pick": best,
+                      "path": [{"families": r[0], "per_family": r[1], "n": len(r[2]), "valid_ev": r[3]["valid"]["ev"], "test_ev": r[3]["test"]["ev"],
+                                "test_pass": r[3]["test"]["pass"], "test_days": r[3]["test"]["median_days"]} for r in rows]})
 
     tt = raw["t_train"]
     tv = raw["t_valid_given_train"]
@@ -184,7 +201,7 @@ def run() -> dict:
         "leaderboard": [{"desc": c["desc"], "inst": c["inst"], "sess": c["sess"], "family": c["spec"]["family"], "train": c["train"], "valid": c["valid"],
                          "test": c["test"], "score_valid": c["score_valid"], "firms_ok_valid": c["firms_ok_valid"], "firms_ok_test": c["firms_ok_test"],
                          "firms": c["firms"]} for c in ranked[:60]],
-        "per_firm": per_firm, "portfolios": ports,
+        "per_firm": per_firm, "portfolios": ports, "clusters": cluster_rows,
         "instruments": {n: {"cost": i.cost, "micro": i.micro} for n, i in D.INSTRUMENTS.items()},
     }
     OUT.mkdir(parents=True, exist_ok=True)
@@ -209,4 +226,4 @@ if __name__ == "__main__":
             print(f"  {fn:26s} VALID EV ${r['valid']['ev']:7.0f} | TEST pass {r['test']['pass']*100:4.0f}% days {r['test']['median_days']:4.0f} EV ${r['test']['ev']:7.0f} | {r['desc'][:90]}")
     print("\nPORTFOLIOS")
     for p in s["portfolios"]:
-        print(f"  {p['firm']:26s} {len(p['members'])} strategies: VALID EV ${p['pick']['valid']['ev']:7.0f} | TEST pass {p['pick']['test']['pass']*100:4.0f}% days {p['pick']['test']['median_days']:4.0f} EV ${p['pick']['test']['ev']:7.0f}")
+        print(f"  {p['firm']:26s} {p['families']} families x{p['per_family']}: VALID EV ${p['pick']['valid']['ev']:7.0f} | TEST pass {p['pick']['test']['pass']*100:4.0f}% days {p['pick']['test']['median_days']:4.0f} EV ${p['pick']['test']['ev']:7.0f}")
