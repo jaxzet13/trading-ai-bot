@@ -209,9 +209,11 @@ const D = /*DATA*/null;
   if (F && F.orders) {
     const c2 = (v) => v == null ? '—' : cents(v);
     [['Orders sent by the model', F.orders], ['Filled', F.filled + ' (' + Math.round(100 * F.fill_rate) + '%)'], ['Fill price vs quoted', c2(F.fill_minus_quote_c)],
-     ['Filled bets, a contract', c2(F.filled_real_c)], ['Unfilled would have made', c2(F.unfilled_would_have_c)]
+     ['Filled bets, a contract', c2(F.filled_real_c)], ['Unfilled would have made', c2(F.unfilled_would_have_c)],
+     ['Filled since the Nov 25 fix', F.repriced_sent ? F.repriced_filled + ' of ' + F.repriced_sent : 'none yet'],
+     ['Dropped at send (edge gone)', F.dropped_at_send == null ? '—' : F.dropped_at_send]
     ].forEach(([a, b]) => fs.appendChild(el('div', `<b>${b}</b><span>${a}</span>`)));
-    $('fillNote').textContent = 'The test assumes every order fills at the quoted price. Orders that miss because the price ran away are often the ones that would have won, so this compares the bets that filled with the ones that did not. It needs a few hundred orders to mean anything.';
+    $('fillNote').textContent = 'The test assumes every order fills at the quoted price. Until Nov 25 an order carried a fixed price limit and missed whenever the price had moved up in the second before it arrived, about one time in four. Since Nov 25 14:46 UTC the bot re-checks the price at the instant it sends: it buys at the new price while the model still sees at least 4¢ of edge after the fee, and drops the bet otherwise. It needs a few hundred orders to judge.';
   } else { fs.appendChild(el('div', '<b>—</b><span>No model orders yet</span>')); }
   const bt = $('betTable');
   bt.appendChild(el('tr', '<th>Time (UTC)</th><th>Coin</th><th>Side</th><th>Price</th><th>Contracts</th><th>Predicted edge</th><th>Result</th>'));
