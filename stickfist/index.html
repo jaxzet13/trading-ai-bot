@@ -1319,6 +1319,14 @@ body.picking .btabs { display: none !important; } body.picking #v-profile { padd
 #pTable { overflow: visible; border-radius: 0; } .pgrid { padding: 3px; margin: -3px; }
 /* a good card's picture, alive: a canvas over the picture, drawn from it */
 .card .pic canvas.alive { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .6s ease-out; pointer-events: none; } .card .pic canvas.alive.on { opacity: 1; }
+
+/* ---- the opening screen keeps clear of the phone's own status bar and home bar ---- */
+.st-bar { padding-top: calc(14px + env(safe-area-inset-top)); } .st-foot { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+@media (max-width: 400px) { .st-bar { padding-top: calc(12px + env(safe-area-inset-top)); } }
+.st-box { width: min(320px, 72vw, calc((100dvh - 404px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 5 / 7)); --rw: calc(min(320px, 72vw, (100dvh - 404px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 5 / 7) * .64); }
+.st-center { justify-content: safe center; }                                         /* if a tall title ever does not fit, it runs down, never up under the bar */
+.st-title.hit, .st-title.good { min-height: 0; }
+.st-title { flex-shrink: 0; } .st-foot .tray:empty { display: none; }               /* the title keeps its height (squeezed, it spilled up over the bar); an empty row of held cards takes no room, so the choice sits low, by the thumb */
 </style>
 </head>
 <body>
