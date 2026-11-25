@@ -102,7 +102,7 @@ function buildStack() {
 const scEl = i => $("stStack") && $("stStack").querySelector(`.sc[data-i="${i}"]`);
 function focusTop() {
   const el = scEl(SS.idx); if (!el) return; el.classList.add("top"); SS.veils[SS.idx].idle(); SS.veils[SS.idx].frame(); el.onclick = e => { if (el._drag) { el._drag = false; e.stopPropagation(); return; } advance(); }; armFling(el);
-  $("stCount").textContent = SS.items.length > 1 ? `${cmeter(SS.idx + 1, SS.items.length)} card ${SS.idx + 1} of ${SS.items.length}` : ""; hint(""); hidePills();   // one card needs no counter
+  if (!SS.pool) $("stCount").textContent = SS.items.length > 1 ? `${cmeter(SS.idx + 1, SS.items.length)} card ${SS.idx + 1} of ${SS.items.length}` : ""; hint(""); hidePills();   // one card needs no counter
   const at = SS.idx, mine = SS; setTimeout(() => { if (SS === mine && SS.idx === at && !SS.busy && SS.phase === "stack" && !el.dataset.rev) advance(); }, at ? 160 : 420);   // each card turns itself over: what you do is choose
 }
 /* ---- sell or hold: the one choice you make about every card ----
@@ -123,7 +123,7 @@ async function decide(kind, vec) {
 }
 async function advance() {
   if (SS && SS.busy && SS.rs) { SS.rs.rush(); return; }                                    // a tap while a card is still forming finishes it now
-  if (!SS || SS.busy) return; if (SS.phase === "pack") { tear(); return; } if (SS.phase !== "stack") return;
+  if (!SS || SS.busy) return; if (SS.phase === "pack") { tear(); return; } if (SS.phase === "pick") { pickRail(); return; } if (SS.phase !== "stack") return;
   const el = scEl(SS.idx); if (!el) return; SS.busy = true; const c = SS.items[SS.idx], card = BY_NO[c.no];
   if (!el.dataset.rev) {
     el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); el.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col); el.classList.add("lit"); if (!reduced) el.animate([{ scale: "1" }, { scale: "1.06" }, { scale: "1" }], { duration: 300, easing: "cubic-bezier(.2,.9,.3,1.3)" }); valueChip(el, c); SS.busy = false; hint(""); if (SS && SS.idx === at) showPills(c, card);
@@ -171,9 +171,9 @@ function armFling(el) {
 async function dismiss(el, c, vec, sold) {
   hidePills(); const dir = vec ? (vec[0] >= 0 ? 1 : -1) : rand() < .5 ? -1 : 1; el.onclick = null; el.classList.remove("top"); el.classList.add("gone"); el.style.transform = vec ? `translate(${(vec[0] * 120).toFixed(0)}vw, ${(vec[1] * 120).toFixed(0)}vh) rotate(${dir * 34}deg)` : `translate(${dir * 110}vw, -40px) rotate(${dir * 30}deg)`; el.style.opacity = "0";
   if (!sold) { const m = document.createElement("div"); m.className = "mini"; m.innerHTML = cardHTML(c, { sm: true }); $("stTray").appendChild(m); } $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";   // the row under the stack is what you are holding
-  SS.idx++; await sleep(260); if (SS.idx >= SS.items.length) summary(); else focusTop();
+  SS.idx++; await sleep(260); if (SS.pool) { railReturn(); return; } if (SS.idx >= SS.items.length) summary(); else focusTop();
 }
-function skipAll() { if (!SS || SS.phase === "summary") return; if (SS.phase === "wait") { Machine.stop(); return; } Machine.stop(); SS.veils && SS.veils.forEach(v => v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
+function skipAll() { if (!SS || SS.phase === "summary") return; if (SS.phase === "wait") { Machine.stop(); return; } Machine.stop(); SS.veils && SS.veils.forEach(v => v && v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
 // one tap to turn the pack into money and open the next: only offered when the next pack is covered (a free pack, one you bought, or what these cards sell for plus your balance)
 const sellNext = back => { const pk = SS.pack, price = packPrice(pk), ok = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins + back >= price; return ok && back > 0 ? `<button class="btn solid" id="sumSellAgain">sell all · open another</button>` : ""; };
 const againLabel = pk => (openN() > 1 && maxN(pk) >= 2) ? (() => { const k = Math.min(openN(), maxN(pk)), c = Math.max(0, k - state.freePacks - boughtOf(pk.id)) * packPrice(pk); return `open ${k} more${c ? " · " + money(c) : ""}`; })() : state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
@@ -198,7 +198,7 @@ function endHTML(o) {
 }
 const inVault = c => state.vault.some(v => v.uid === c.uid);
 function summary() {
-  $("stMeter").hidden = true; hidePills(); if (SS.n > 1) { multiSummary(); return; }
+  $("stMeter").hidden = true; hidePills(); { const r = $("stRail"), dk = $("stDeck"); if (r) r.remove(); if (dk) dk.remove(); } if (SS.n > 1) { multiSummary(); return; }
   SS.phase = "summary"; const items = SS.items, held = items.filter(inVault), soldG = SS.soldG || 0, heldSell = held.reduce((a, c) => a + sellOf(c), 0), heldV = held.reduce((a, c) => a + valueOf(c), 0), back = soldG + heldSell, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   $("stSummary").innerHTML = endHTML({ title: SS.pack.name, back, paid: SS.free || SS.bought ? 0 : SS_PRICE, bought: SS.bought, x, soldG, held, heldV, heldSell, share: true,
@@ -207,7 +207,7 @@ function summary() {
 }
 // one quiet line under a pack result: the free way to get another
 function invNudge() { return (typeof API !== "undefined" && API.on) ? `<button class="btn ghost invnudge" id="sumInvite">${GIFT} Invite a friend — you both get a free pack</button>` : ""; }
-function closeStage() { if (SS && SS.phase === "wait") return; Machine.stop(); $("stMeter").hidden = true; stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v.drop()); renderBal(); show(view, true); }
+function closeStage() { if (SS && SS.phase === "wait") return; Machine.stop(); $("stMeter").hidden = true; stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v && v.drop()); renderBal(); show(view, true); }
 
 /* ---- several packs at once. Every pack is drawn, charged and counted exactly like a single pack (same odds, same daily limit); only the show is shorter: cards worth less than $0.50
    are not revealed one by one, they are totalled on the result, and nothing is sold or hidden: they are in your collection and in the sums. ---- */
@@ -221,8 +221,9 @@ async function openMany(pk, n) {
   if (SS || opening) return; const price = packPrice(pk); opening = true;
   const mine = SS = { items: [], all: [], idx: 0, phase: "wait", busy: false, pack: pk, free: false, bought: false, ref: price, n };            // the machine starts at once; the draws are fetched in one request while it plays
   $("stName").textContent = `${pk.name} × ${n}`; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title"; $("stHint").textContent = "";
-  $("stBox").innerHTML = `<div class="cstack" id="stStack"></div>`; stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
-  const anim = Machine.play(n, n * pk.n, pk.name); let sets; try { sets = await Fair.nextMany(pk, n); } finally { opening = false; } if (SS !== mine) return;
+  $("stBox").style.setProperty("--back", `url(${railBackURL()})`); $("stBox").innerHTML = `<div class="cstack" id="stStack"></div><div class="deck" id="stDeck" aria-hidden="true"><i></i><i></i><i></i><i></i></div>`; stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
+  $("stCount").textContent = `${n} cards`; buzz([18, 20, 18]); if (!reduced) for (let i = 0; i < 7; i++) setTimeout(() => { if (SS === mine && $("stDeck")) { Snd.click(); buzz(3); } }, i * 90);   // the riffle
+  const anim = sleep(reduced ? 0 : 700); let sets; try { sets = await Fair.nextMany(pk, n); } finally { opening = false; } if (SS !== mine) return;
   let items = [], paid = 0, freeN = 0, boughtN = 0, packs = 0;
   for (const got of sets) {
     const isFree = state.freePacks > 0, isBought = !isFree && boughtOf(pk.id) > 0, cost = isFree || isBought ? 0 : price;
@@ -230,10 +231,53 @@ async function openMany(pk, n) {
     state.s.packs++; state.s.spent += cost; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); state.vault.push(...got); items.push(...got); packs++;
   }
   History.log(pk, packs, paid, price * packs, items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
-  const hi = items.slice().sort((a, b) => valueOf(b) - valueOf(a)).slice(0, 4).reverse(), shown = new Set(hi.map(c => c.uid)); SS_PRICE = paid;      // however many packs, you turn over your four best cards, the best one last; the rest are on the result
-  Object.assign(mine, { items: hi, all: items, phase: "machine", free: freeN === packs, refAll: price * packs, paid, freeN, boughtN, n: packs });
-  await anim; if (SS !== mine || mine.phase === "summary") return; mine.phase = "stack";
-  if (!hi.length) { summary(); return; } meterInit(items.filter(c => !shown.has(c.uid)).reduce((a, c) => a + sellOf(c), 0)); buildStack(); await sleep(400); focusTop();
+  SS_PRICE = paid; const pool = items.slice(); for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }   // laid out in no order: where a card sits says nothing about what it is
+  Object.assign(mine, { items: [], veils: [], pool, all: items, phase: "machine", free: freeN === packs, refAll: price * packs, paid, freeN, boughtN, n: packs });
+  await anim; if (SS !== mine || mine.phase === "summary") return;
+  if (!pool.length) { summary(); return; } meterInit(0); dealRail();
+}
+
+/* ---- the deal: many packs become a row of face-down cards, and you choose which one to turn over ----
+   The cards you bought are spread out of a deck into a row you scroll with your thumb. The one in the middle is the one in your
+   hand: tap it and it comes up, turns over, and you sell or hold it; then you are back at the row to pick the next.
+   Every back is the same and the row is in no order, so nothing gives a card away. They are all yours already: what you choose
+   is the order, and "skip" takes you to the result with the rest held, unopened. */
+let railBackImg = "";
+function railBackURL() { if (!railBackImg) { try { railBackImg = Veil.prototype.drawBack.call({ col: "#cfd3da", tier: 0 }, 300, 420, 2).toDataURL("image/jpeg", .86); } catch (e) {} } return railBackImg; }
+function dealRail() {
+  const box = $("stBox"), deck = $("stDeck"), r = document.createElement("div"); r.className = "rail"; r.id = "stRail"; r.setAttribute("role", "listbox"); r.setAttribute("aria-label", "Your cards, face down");
+  r.innerHTML = SS.pool.map(c => `<button class="rc" type="button" role="option" data-u="${c.uid}" aria-label="A face-down card"><i class="rcb"></i></button>`).join(""); box.appendChild(r);
+  const els = [...r.children], n = els.length, mid = els[Math.floor((n - 1) / 2)]; r.scrollLeft = mid.offsetLeft + mid.offsetWidth / 2 - r.clientWidth / 2; railPaint(true);
+  if (!reduced) { const cx = r.scrollLeft + r.clientWidth / 2, gap = Math.min(70, 900 / n);                       // out of the deck: every card starts in the middle and slides to its place, the near ones first
+    els.map((el, i) => [el, Math.abs(i - Math.floor((n - 1) / 2))]).forEach(([el, d]) => { const dx = cx - (el.offsetLeft + el.offsetWidth / 2);
+      el.animate([{ transform: `translate(${dx.toFixed(0)}px, -26px) rotate(${((rand() - .5) * 14).toFixed(1)}deg) scale(.92)` }, { transform: "none" }], { duration: 520, delay: d * gap, easing: "cubic-bezier(.2, .9, .25, 1.12)", fill: "backwards" });
+      if (d < 7) setTimeout(() => { if (SS && $("stRail") === r) { Snd.rise(d); buzz(5); } }, d * gap); }); }
+  if (deck) deck.remove();
+  let raf = 0; r.addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; railPaint(); }); }, { passive: true });
+  r.addEventListener("click", e => { const el = e.target.closest(".rc"); if (el) { e.stopPropagation(); pickRail(el); } });
+  SS.phase = "pick"; railCount();
+}
+// the row as you scroll it: the card in the middle is full size and lit, the others fall back; a tick as each one passes
+function railPaint(quiet) {
+  const r = $("stRail"); if (!r || !SS) return; const mid = r.scrollLeft + r.clientWidth / 2; let best = null, bd = 1e9;
+  for (const el of r.children) { const c = el.offsetLeft + el.offsetWidth / 2, d = Math.abs(c - mid), k = d / el.offsetWidth; el.style.setProperty("--s", Math.max(.7, 1.06 - k * .26).toFixed(3)); el.style.setProperty("--o", Math.max(.38, 1 - k * .38).toFixed(2)); if (d < bd) { bd = d; best = el; } }
+  if (best && best !== SS.railMid) { if (SS.railMid) SS.railMid.classList.remove("mid"); best.classList.add("mid"); if (!quiet && SS.phase === "pick") { Snd.click(); buzz(4); } SS.railMid = best; }
+}
+function railCount() { const n = SS.pool.length; $("stCount").textContent = `${n} left`; hint(n > 1 ? "scroll · tap a card" : ""); }
+function railStep(dir) { const r = $("stRail"); if (!r || !SS || SS.phase !== "pick" || !SS.railMid) return; const el = dir > 0 ? SS.railMid.nextElementSibling : SS.railMid.previousElementSibling; if (el) r.scrollTo({ left: el.offsetLeft + el.offsetWidth / 2 - r.clientWidth / 2, behavior: "smooth" }); }
+async function pickRail(el) {
+  if (!SS || SS.phase !== "pick" || SS.busy) return; const r = $("stRail"); el = el || SS.railMid; if (!r || !el) return;
+  if (el !== SS.railMid) { r.scrollTo({ left: el.offsetLeft + el.offsetWidth / 2 - r.clientWidth / 2, behavior: "smooth" }); return; }      // a card off to the side comes to the middle first
+  const c = SS.pool.find(x => x.uid === el.dataset.u); if (!c) return; SS.pool = SS.pool.filter(x => x !== c); SS.phase = "stack"; SS.busy = true; hint(""); $("stCount").textContent = SS.pool.length ? `${SS.pool.length} left` : "";
+  el.classList.add("picked"); Snd.whoosh(); buzz(12); await sleep(reduced ? 0 : 170); if (!SS || $("stRail") !== r) return; r.classList.add("away"); el.remove(); SS.railMid = null;
+  SS.items.push(c); const i = SS.items.length - 1, d = document.createElement("div"); d.className = "sc rise"; d.dataset.i = i; d.style.cssText = "z-index:50;--rot:0deg;--ox:0px;--oy:0px"; d.innerHTML = cardHTML(c); $("stStack").appendChild(d);
+  const v = new Veil(d.querySelector(".card"), BY_NO[c.no].rar); v.col = "#cfd3da"; v.back = v.drawBack(v.w, v.h, v.dpr); v.frame(); SS.veils[i] = v; SS.idx = i;                                   // it comes up with the same plain back it had in the row
+  requestAnimationFrame(() => requestAnimationFrame(() => d.classList.remove("rise"))); await sleep(140); if (!SS) return; SS.busy = false; focusTop();
+}
+function railReturn() {
+  const r = $("stRail"); setTimeout(() => { const st = $("stStack"); if (st) st.querySelectorAll(".sc.gone").forEach(e => e.remove()); }, 500);
+  if (!r || !SS.pool.length) { summary(); return; } SS.phase = "pick"; r.classList.remove("away"); railPaint(true); railCount();
+  if (SS.pool.length === 1) { const mine = SS; setTimeout(() => { if (SS === mine && SS.phase === "pick") pickRail(); }, 380); }                     // the last one needs no choosing
 }
 
 function multiSummary() {

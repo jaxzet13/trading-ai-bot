@@ -1051,3 +1051,19 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .end-big { font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: clamp(54px, 17vw, 76px); font-weight: 800; line-height: 1; letter-spacing: -.045em; font-variant-numeric: tabular-nums; animation: endbig .5s cubic-bezier(.2,1.3,.4,1) both; }
 .end-num.up .end-big { color: var(--acc); text-shadow: 0 0 34px rgba(59,228,119,.28); } .end-num.dn .end-big { color: var(--ink); }
 @keyframes endbig { from { transform: scale(.82); opacity: 0; } } @media (max-height: 640px) { .end-big { font-size: 46px; } } @media (prefers-reduced-motion: reduce) { .end-big { animation: none; } }
+
+/* ---- the deal: a deck being shuffled, then a row of face-down cards you scroll and pick from ---- */
+.st-box { --rw: calc(min(320px, 72vw, (100vh - 400px) * 5 / 7) * .64); }   /* a card in the row: small enough that its neighbours show on both sides */
+.deck { position: absolute; inset: 9% 10%; } .deck i { position: absolute; inset: 0; border-radius: 5% / 3.57%; background: #0b0c0f var(--back) center / cover; box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 14px 30px -14px #000; }
+.deck i:nth-child(1) { animation: riffleL .34s ease-in-out infinite alternate; } .deck i:nth-child(2) { animation: riffleR .34s ease-in-out infinite alternate; } .deck i:nth-child(3) { animation: riffleL .34s ease-in-out .17s infinite alternate; } .deck i:nth-child(4) { animation: deckpulse .7s ease-in-out infinite alternate; }
+@keyframes riffleL { to { transform: translateX(-26%) rotate(-7deg); } } @keyframes riffleR { to { transform: translateX(26%) rotate(7deg); } } @keyframes deckpulse { to { box-shadow: 0 0 0 1px rgba(255,255,255,.3), 0 0 46px -6px rgba(140,180,255,.6), 0 14px 30px -14px #000; } }
+.rail { position: absolute; left: 50%; top: 0; z-index: 3; width: 100vw; height: 100%; transform: translateX(-50%); box-sizing: border-box; display: flex; align-items: center; gap: 4px; padding: 0 calc(50vw - var(--rw) / 2);
+  overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-x; overscroll-behavior: contain; transition: opacity .22s ease-out, transform .3s cubic-bezier(.2,.8,.2,1); }
+.rail::-webkit-scrollbar { display: none; } .rail.away { opacity: 0; transform: translateX(-50%) translateY(34px) scale(.94); pointer-events: none; }
+.rc { flex: none; width: var(--rw); aspect-ratio: 5 / 7; padding: 0; border: 0; background: none; scroll-snap-align: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.rcb { display: block; width: 100%; height: 100%; border-radius: 5% / 3.57%; background: #0b0c0f var(--back) center / cover; transform: scale(var(--s, .8)); opacity: var(--o, .6); box-shadow: 0 0 0 1px rgba(255,255,255,.12), 0 18px 34px -18px #000; transition: transform .14s ease-out, opacity .14s, box-shadow .25s; will-change: transform; }
+.rc.mid .rcb { box-shadow: 0 0 0 2px rgba(255,255,255,.62), 0 0 52px -8px rgba(140,180,255,.85), 0 24px 44px -20px #000; animation: rcfloat 2.2s ease-in-out infinite; } @keyframes rcfloat { 50% { translate: 0 -7px; } }
+.rc:active .rcb { transform: scale(calc(var(--s, .8) * .96)); } .rc.picked .rcb { transform: scale(1.14) translateY(-18px); opacity: 1; box-shadow: 0 0 0 2px #fff, 0 0 80px -4px rgba(180,210,255,1), 0 30px 50px -20px #000; transition: transform .17s cubic-bezier(.2,1.4,.4,1), box-shadow .17s; animation: none; }
+.rail::before, .rail::after { content: none; }
+@media (prefers-reduced-motion: reduce) { .deck i, .rc.mid .rcb { animation: none; } }
+.rail { top: -56px; height: calc(100% + 112px); }   /* room above and below for the glow of the card in the middle */

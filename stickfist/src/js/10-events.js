@@ -92,7 +92,7 @@ document.addEventListener("submit", e => { if (e.target.id === "vanityForm") { e
 document.addEventListener("keydown", e => {
   const k = e.key;
   if (k === "Escape" && !$("clip").hidden) { Clip.close(); return; }
-  if (!stage.hidden && SS) { if ((k === " " || k === "Enter") && SS.phase !== "summary") { e.preventDefault(); if (!e.repeat) advance(); } if (k === "Escape") { if (SS.phase === "summary") closeStage(); else skipAll(); } return; }
+  if (!stage.hidden && SS) { if ((k === " " || k === "Enter") && SS.phase !== "summary") { e.preventDefault(); if (!e.repeat) advance(); } if (SS.phase === "pick" && (k === "ArrowRight" || k === "ArrowLeft")) { e.preventDefault(); railStep(k === "ArrowRight" ? 1 : -1); } if (k === "Escape") { if (SS.phase === "summary") closeStage(); else skipAll(); } return; }
   if (k === "Escape" && !$("share").hidden) { Share.close(); return; }
   if (k === "Escape" && !$("modal").hidden) { closeModal(); return; }
   if ((k === " " || k === "Enter") && view === "home" && $("modal").hidden && $("share").hidden && $("gate").hidden && !e.repeat && !/^(BUTTON|INPUT|SELECT|A|SUMMARY)$/.test(e.target.tagName)) { e.preventDefault(); openPack(); }
