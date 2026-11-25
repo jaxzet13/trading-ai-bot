@@ -129,6 +129,28 @@ def calibration(R, title, mask):
               f"{cell(R['no'][k], d, alldays)}")
 
 
+def favourites(R, title, mask):
+    """Direction-neutral view: back the favourite side (YES if mid > 50c, else NO) or the longshot side.
+    If the index drifts one way all favourites on one side of the level lose and those on the other win."""
+    alldays = sorted(set(R["day"][mask]))
+    fav = R["mid"] > 0.5
+    fp = np.maximum(R["mid"], 1 - R["mid"])
+    win = np.where(fav, R["v"], 1 - R["v"])
+    favpnl = np.where(fav, R["yes"], R["no"])
+    lngpnl = np.where(fav, R["no"], R["yes"])
+    print(f"\n{title}: favourite side vs longshot side")
+    print("  favourite's mid      n  favourite wins - mid (t)   buy the favourite after fee [half1/half2]   "
+          "buy the longshot after fee [half1/half2]")
+    for lo, hi in ((0.50, 0.60), (0.60, 0.75), (0.75, 0.90), (0.90, 0.97), (0.50, 0.97)):
+        k = mask & (fp >= lo) & (fp < hi) & (R["mid"] != 0.5)
+        if k.sum() < 30:
+            continue
+        d = R["day"][k]
+        vm = win[k] - fp[k]
+        print(f"  {lo:.2f}-{hi:.2f}     {k.sum():7d}  {100 * vm.mean():+6.2f}c t {tstat(vm, d):+5.2f}        "
+              f"{cell(favpnl[k], d, alldays)}   {cell(lngpnl[k], d, alldays)}")
+
+
 def calibration_by_time(R, title, mask):
     alldays = sorted(set(R["day"][mask]))
     print(f"\n{title}: by time of day (New York), three price bands; value-mid | YES after fee | NO after fee")
@@ -167,10 +189,11 @@ def clip(p, e=0.005):
 
 
 def walk_forward(R, mask, feats):
-    """Fit on all earlier days, score the next day. Returns out-of-sample P(YES) (nan where not scored)."""
+    """Fit on all earlier days, score the next day. Returns out-of-sample P(YES) (nan where not scored).
+    "one" is an intercept: for "or above" contracts that is a bet on the direction of the index."""
     days = sorted(set(R["day"][mask]))
     off = logit(R["mid"])
-    X = np.column_stack([np.ones(len(off))] + [R[f] for f in feats])
+    X = np.column_stack([np.ones(len(off)) if f == "one" else R[f] for f in feats])
     phat = np.full(len(off), np.nan)
     coefs = []
     for k in range(MIN_TRAIN, len(days)):
@@ -236,9 +259,16 @@ def fair_value(R, src, fam="above"):
         k, pnl, yes = bets(R, base, p, thr)
         print(bet_line(R, f"raw model, edge >= {int(thr * 100)}c (all days)", k, pnl, yes, days))
     # walk-forward
-    variants = [("intercept only", []), ("+ model gap (b)", ["gap"]),
-                ("+ gap + momentum (c)", ["gap"] + [f"mom{lag}_{src}" for lag in (5, 15, 60)]),
-                ("momentum only", [f"mom{lag}_{src}" for lag in (5, 15, 60)])]
+    R["lmid"] = logit(R["mid"])
+    mom = [f"mom{lag}_{src}" for lag in (5, 15, 60)]
+    if fam == "range":                # a bracket has no direction: intercept allowed, momentum has no fixed sign
+        variants = [("intercept + logit(mid)", ["one", "lmid"]), ("b: + model gap", ["one", "lmid", "gap"])]
+    else:                             # no intercept: every term changes sign when YES and NO are swapped
+        variants = [("favourite-longshot only: logit(mid)", ["lmid"]),
+                    ("b: logit(mid) + model gap", ["lmid", "gap"]),
+                    ("c: logit(mid) + gap + momentum 5/15/60", ["lmid", "gap"] + mom),
+                    ("momentum only", mom),
+                    ("DIRECTION ONLY (intercept; a bet that the index keeps falling, see text)", ["one"])]
     for name, feats in variants:
         ph, coefs, testdays = walk_forward(R, base, feats)
         te = base & np.isfinite(ph)
@@ -262,9 +292,7 @@ def bracket_sums(events):
     for series in ("KXINX", "KXNASDAQ100"):
         evs = [e for e in events if e["series"] == series]
         costs, proc, sa, sb, nmin, narb_b, narb_s, days_b, days_s, best_b, best_s = [], [], [], [], 0, 0, 0, set(), set(), 9, 0
-        for e in evs:
-            if len(e["markets"]) < 30:
-                continue
+        evs = [e for e in evs if len(e["markets"]) >= 30]        # days for which the whole ladder was downloaded
             B = np.array([m["bid"] for m in e["markets"]])
             A = np.array([m["ask"] for m in e["markets"]])
             for i in range(WIN - 390, WIN - 1):
@@ -289,14 +317,14 @@ def bracket_sums(events):
                     days_s.add(e["day"])
                     best_s = max(best_s, p)
         sa, sb, costs, proc = map(np.array, (sa, sb, costs, proc))
-        print(f"  {series}: {len(evs)} days, {nmin} minutes with all 30 quotes; full set buyable in "
+        print(f"  {series}: {len(evs)} days with the whole ladder, {nmin} minutes with all 30 quotes; full set buyable in "
               f"{np.isfinite(sa).mean():.0%} of them")
         print(f"    sum of asks  mean {np.nanmean(sa):.3f}  5%..95% {np.nanpercentile(sa, 5):.3f}..{np.nanpercentile(sa, 95):.3f}"
               f"   with fees mean {np.nanmean(costs):.3f}  min {np.nanmin(costs):.3f}")
         print(f"    sum of bids  mean {sb.mean():.3f}  5%..95% {np.percentile(sb, 5):.3f}..{np.percentile(sb, 95):.3f}"
               f"   after fees mean {proc.mean():.3f}  max {proc.max():.3f}")
-        print(f"    buy-all cost < $1 after fees: {narb_b} minutes on {len(days_b)} days (best {best_b:.3f});  "
-              f"sell-all > $1 after fees: {narb_s} minutes on {len(days_s)} days (best {best_s:.3f})")
+        print(f"    buy-all cost < $1 after fees: {narb_b} minutes on {len(days_b)} days (lowest cost {np.nanmin(costs):.3f});  "
+              f"sell-all > $1 after fees: {narb_s} minutes on {len(days_s)} days (highest {proc.max():.3f})")
         print(f"    before fees: sum of asks < 1 in {np.nansum(sa < 1 - 1e-9)} minutes, sum of bids > 1 in "
               f"{(sb > 1 + 1e-9).sum()} minutes")
 
@@ -379,6 +407,15 @@ def main():
         print(f"{sym}: Yahoo 5-minute level on {len({t // 86400 for t in Ly})} days, Kalshi-implied level on "
               f"{len({t // 86400 for t in Li})} days; implied vs Yahoo: median |difference| {1e4 * np.median(ds):.1f} bp, "
               f"95% {1e4 * np.percentile(ds, 95):.1f} bp")
+    for sym in ("GSPC", "NDX"):
+        line = f"{sym}: index move from the decision time to the 16:00 close (Yahoo):"
+        cl = {e["close"]: e["exp"] for e in events if INDEX[e["series"]] == sym and e["daily"] and e["exp"]}
+        for mins, label in TIMES[::2]:
+            r = np.array([math.log(x / lev["yahoo"][sym][c - mins * 60]) for c, x in sorted(cl.items())
+                          if c - mins * 60 in lev["yahoo"][sym]])
+            line += (f"  {label}: up on {(r > 0).mean():.0%} of {len(r)} days, mean {1e4 * r.mean():+.0f} bp "
+                     f"(t {r.mean() / r.std(ddof=1) * math.sqrt(len(r)):+.1f})")
+        print(line)
     R = rows(events, lev, sig)
     print(f"{len(R['v'])} market x time rows with a two-sided quote")
     daily = [e for e in events if e["daily"]]
@@ -391,6 +428,9 @@ def main():
         if (R["fam"] == fam).sum() > 100:
             calibration(R, f"{fam}, both indices, all decision times", R["fam"] == fam)
             calibration_by_time(R, f"{fam}, both indices", R["fam"] == fam)
+            if fam != "range":
+                favourites(R, f"{fam}, both indices, all decision times", R["fam"] == fam)
+                favourites(R, f"{fam}, both indices, 60 minutes or less to go", (R["fam"] == fam) & (R["mins"] <= 60))
     calibration(R, "above (16:00), both indices, 10:00-13:00", (R["fam"] == "above") & (R["mins"] >= 180))
     calibration(R, "above (16:00), both indices, 14:00-15:50", (R["fam"] == "above") & (R["mins"] < 180))
 

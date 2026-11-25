@@ -4,7 +4,7 @@ Read-only public market data, no keys. Rerunnable: everything is appended / cach
 skipped.
 
     python3 research/index_study/download.py [days=90] [--hourly] [--minvol=10] [--hourly-minvol=100]
-                                             [--live-only] [--no-yahoo]
+                                             [--live-only] [--no-yahoo] [--range-minvol=0]
 
 Series
   KXINX, KXNASDAQ100       "range" ladders: 28 brackets + 2 tails per day, settle at the 16:00 New York close.
@@ -72,7 +72,7 @@ def polite():
             return
 
 
-def get(path, params=None, tries=8):
+def get(path, params=None, tries=25):
     candle = "candlesticks" in path
     for i in range(tries):
         if candle:
@@ -84,10 +84,10 @@ def get(path, params=None, tries=8):
             r = S.get(BASE + path, params=params, timeout=60)
             left, reset = r.headers.get("x-ratelimit-remaining"), r.headers.get("x-ratelimit-reset")
             if candle and left is not None and float(left) < 150:
-                time.sleep(float(reset or 2) + 0.2)            # let the bucket refill before the next one
+                time.sleep(0.5)                                # let the bucket refill a little
             if r.status_code == 429:
                 STATS["429"] += 1
-                time.sleep(float(reset or 3) + 1)
+                time.sleep(0.7 + 0.3 * i)                      # 200 tokens a second come back; a request costs 50
                 continue
             if r.status_code == 404:
                 return None
@@ -236,6 +236,7 @@ def main():
     minvol = next((float(a.split("=")[1]) for a in sys.argv if a.startswith("--minvol=")), 10.0)
     hourly_minvol = next((float(a.split("=")[1]) for a in sys.argv if a.startswith("--hourly-minvol=")), 100.0)
     live_only = "--live-only" in sys.argv
+    range_minvol = next((float(a.split("=")[1]) for a in sys.argv if a.startswith("--range-minvol=")), 0.0)
     log = lambda s: print(time.strftime("%H:%M:%S"), s, flush=True)
     os.makedirs(OUT, exist_ok=True)
     if "--no-yahoo" not in sys.argv:
@@ -248,6 +249,8 @@ def main():
         if s in ABOVE:
             ms = [m for m in ms if (m["volume"] or 0) >= (minvol if m["event"].endswith("H1600") else hourly_minvol)
                   and (hourly or m["event"].endswith("H1600"))]
+        if s in RANGE:
+            ms = [m for m in ms if (m["volume"] or 0) >= range_minvol]
         if live_only:
             ms = [m for m in ms if m["close"] >= cutoff]
         # older than the cutoff = one request per market: only the traded ones (no bracket sums for those days)
