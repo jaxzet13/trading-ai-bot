@@ -557,7 +557,7 @@ def report(log=print):
         fq = None
     data = {"updated": time.strftime("%b %d %H:%M UTC", time.gmtime()), "walk": w, "fills": fq,
             "model": {k: m[k] for k in ("trained", "rows", "days", "data_to")},
-            "real": {k: r[k] for k in ("running", "balance", "all", "edge", "curve", "switch_index", "recent")},
+            "real": {k: r[k] for k in ("running", "balance", "all", "edge", "restored", "curve", "switch_index", "recent")},
             "old": r["old"], "tennis": tennis,
             "switched": time.strftime("%b %d %H:%M UTC", time.gmtime(r["switched_ts"])) if r["switched_ts"] else "Nov 24"}
     html = (Path(__file__).resolve().parent / "edge_dashboard.html").read_text()
