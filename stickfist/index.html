@@ -3218,16 +3218,16 @@ function flipInPlace(el, c, T) {
 }
 async function railRun() {
   const mine = SS, r = $("stRail"), alive = () => SS === mine && SS.phase !== "summary" && $("stRail") === r; if (!r) return; hint("tap to go faster");
-  await sleep(reduced ? 0 : 620); const els = [...r.children];
+  await sleep(reduced ? 200 : 620); const els = [...r.children];                        // with reduced motion the cards still turn one at a time: only the movement is left out, not the pace
   for (const el of els) {
     if (!alive()) return; const c = SS.pool.find(x => x.uid === el.dataset.u); if (!c) continue; const T = momentOf(c);
     railGo(r, el, SS.fast ? 60 : 150);
     if (T >= 4) {                                                                        // a hit stops the row: it comes up, builds, forms in full, and you choose
-      await sleep(reduced ? 0 : SS.fast ? 140 : 300); if (!alive()) return; railPaint(true); hint("");
+      await sleep(SS.fast ? 140 : 300); if (!alive()) return; railPaint(true); hint("");
       await new Promise(res => { mine.resume = res; pickRail(el, true); }); if (!alive()) return; if (SS.pool.length) hint(SS.fast ? "" : "tap to go faster");
-    } else { await sleep(reduced ? 0 : SS.fast ? 30 : 70); if (!alive()) return; flipInPlace(el, c, T); await sleep(reduced ? 0 : SS.fast ? (T >= 3 ? 260 : 60) : T >= 3 ? 520 : 150); }
+    } else { await sleep(SS.fast ? 30 : 70); if (!alive()) return; flipInPlace(el, c, T); await sleep(SS.fast ? (T >= 3 ? 260 : 60) : T >= 3 ? 520 : 150); }
   }
-  if (!alive()) return; hint(""); await sleep(reduced ? 0 : 520); if (alive()) summary();
+  if (!alive()) return; hint(""); await sleep(520); if (alive()) summary();
 }
 // the row as you scroll it: the card in the middle is full size and lit, the others fall back; a tick as each one passes
 function railPaint(quiet) {
