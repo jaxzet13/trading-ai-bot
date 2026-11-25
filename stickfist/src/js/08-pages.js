@@ -81,7 +81,7 @@ function renderProfile() {
 let oddsKey = "";
 function renderOdds(force) {
   if (!PACK_BY[oddsPack]) oddsPack = state.pack; const key = oddsPack; if (!force && key === oddsKey && $("oBody").firstChild) return; oddsKey = key; const opened = [...document.querySelectorAll("#oBody details")].map(d => d.open); const pk = PACK_BY[oddsPack], ps = packStats(pk), slotName = pk.slotNames;
-  const rows = LIVE.filter(c => c.set === pk.set).sort((a, b) => a.chars - b.chars).map(c => { const p = packP(c.id); return cardRow(c, { nospark: true, price: p >= .1 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p), pill: `<span class="small">${p >= .1 ? "of packs" : "packs"}</span>`, sub: `starts at ${moneyS(c.val)} · ${fmt(c.chars)} characters` }); }).join("");
+  const rows = LIVE.filter(c => c.set === pk.set).sort((a, b) => packP(b.id) - packP(a.id))        /* commonest first, so the list reads as the ladder */.map(c => { const p = packP(c.id); return cardRow(c, { nospark: true, price: p >= .1 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p), pill: `<span class="small">${p >= .1 ? "of packs" : "packs"}</span>`, sub: `<b style="color:${RAR[c.rar].col};font-weight:650">${RAR[c.rar].name}</b> · starts at ${moneyS(c.val)}` }); }).join("");
   const tot = Object.values(STYLES).reduce((a, s) => a + s.p, 0);
   $("oBody").innerHTML = `
     <div class="packtabs" role="tablist" aria-label="Which pack">${PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-opack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("")}</div>

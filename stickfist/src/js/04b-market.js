@@ -33,6 +33,7 @@ const MK = (() => {
   // simulated size of each card's market: market cap at base worth in dollars, and how many times a day the whole cap changes hands
   const MCAP = { stitch: 420e3, brick: 420e3, rook: 420e3, orbit: 650e3, phantom: 2.2e6, null: 9e6, shogun: 15e6, ronin: 26e6, grimm: 70e6, reaper: 180e6, umbra: 420e6, fuse: 450e3, ignition: 1.4e6, liftoff: 11e6, apogee: 38e6, luna: 95e6, mop: 420e3, pan: 420e3, cone: 420e3, tempest: 650e3, surge: 2.2e6, kraken: 15e6, spark: 450e3, countdown: 1.4e6, booster: 11e6, flare: 450e3, bubble: 450e3, gantry: 1.4e6 };
   const TURN = { common: 3, uncommon: 2, rare: 1.2, epic: .8, legendary: .5, mythic: .3, secret: .2 };
+  for (const k in RAR) { const l = RAR[k].like; if (l) { BOT[k] = BOT[l]; SHIFT[k] = SHIFT[l]; TURN[k] = TURN[l]; } }       // the newer rarities trade like the older one they name
   const KIND = ["DegenBot", "MakerBot", "FomoBot", "SniperBot", "WhaleBot"];
   const mix = h => { h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); return h ^ (h >>> 16); };   // a well-mixed 32-bit hash, so different questions asked about the same tick are independent
   const h3 = (a, b, c) => (mix(Math.imul(a, 0x9e3779b1) + mix(Math.imul(b, 0x85ebca77) + mix(c + 0x27d4eb2f))) >>> 0) / 4294967296;
