@@ -190,19 +190,19 @@ function endHTML(o) {
   const net = o.back - o.paid, pk = SS.pack;
   return `<div class="sum v2"><div class="end-top"><div class="label">${esc(o.title)}</div>
       <div class="end-num ${o.paid ? (net >= 0 ? "up" : "dn") : "up"}"><div class="bx" role="img" aria-label="${money(o.back)}">${blockSVG(money(o.back))}</div></div>
-      <div class="end-line">${o.paid ? `for ${money(o.paid)}` : "free"}${o.x >= 2 && o.paid ? ` · ${o.x >= 10 ? Math.round(o.x) : o.x.toFixed(1)}×` : ""}</div></div>
+      <div class="end-line">${o.paid ? `for ${money(o.paid)}` : o.bought ? "a pack you bought · play money" : "free"}${o.x >= 2 && o.paid ? ` · ${o.x >= 10 ? Math.round(o.x) : o.x.toFixed(1)}×` : ""}</div></div>
     <div class="end-split"><div class="es sold"><small>sold</small><b>${money(o.soldG)}</b></div><div class="es held"><small>holding${o.held.length ? " · " + o.held.length : ""}</small><b>${money(o.heldV)}</b></div></div>
     ${o.fan}
-    ${Goals.ready().length ? goalLine() : ""}
+    ${goalLine()}
     <div class="end-acts"><button class="btn solid big" id="sumAgain">${againLabel(pk)}</button>
-      <div class="row" style="justify-content:center">${o.held.length ? `<button class="btn" id="sumSell">sell what I held · ${money(o.heldSell)}</button>` : ""}<button class="btn ghost" id="sumKeep">done</button>${o.share ? `<button class="btn ghost" id="sumClip">share</button>` : ""}</div></div></div>`;
+      <div class="row" style="justify-content:center">${o.held.length ? `<button class="btn" id="sumSell">sell what I held · ${money(o.heldSell)}</button>` : ""}<button class="btn ghost" id="sumKeep">done</button>${o.share ? `<button class="btn ghost" id="sumClip">share</button>` : ""}${typeof API !== "undefined" && API.on ? `<button class="btn ghost" id="sumInvite">invite · free pack</button>` : ""}</div></div></div>`;
 }
 const inVault = c => state.vault.some(v => v.uid === c.uid);
 function summary() {
   $("stMeter").hidden = true; hidePills(); if (SS.n > 1) { multiSummary(); return; }
   SS.phase = "summary"; const items = SS.items, held = items.filter(inVault), soldG = SS.soldG || 0, heldSell = held.reduce((a, c) => a + sellOf(c), 0), heldV = held.reduce((a, c) => a + valueOf(c), 0), back = soldG + heldSell, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
-  $("stSummary").innerHTML = endHTML({ title: SS.pack.name, back, paid: SS.free || SS.bought ? 0 : SS_PRICE, x, soldG, held, heldV, heldSell, share: true,
+  $("stSummary").innerHTML = endHTML({ title: SS.pack.name, back, paid: SS.free || SS.bought ? 0 : SS_PRICE, bought: SS.bought, x, soldG, held, heldV, heldSell, share: true,
     fan: held.length ? `<div class="fan">${held.map(c => `<div class="${SS.fresh && SS.fresh.has(c.uid) ? "isnew" : ""}">${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : "" });
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
