@@ -16,7 +16,7 @@ Output (data/index/, not in git)
   <series>.jsonl           one line per market: ticker, event, series, close (unix s), open, type, floor, cap,
                            result, value (settlement $), exp (index value at expiry), volume,
                            bars [[minute end ts, yes bid close, yes ask close, bid low, ask high, volume], ...]
-                           for the 7.5 hours before the close
+                           for the 18 hours before the close (only minutes with a change)
   yahoo_<symbol>_<interval>.json   ^GSPC and ^NDX, 5-minute bars (60 days) and 1-minute bars (30 days)
 
 Markets settled before Kalshi's "historical cutoff" are read from /historical/markets and
@@ -34,24 +34,31 @@ BASE = "https://api.elections.kalshi.com/trade-api/v2"
 OUT = "data/index"
 RANGE = ["KXINX", "KXNASDAQ100"]
 ABOVE = ["KXINXU", "KXNASDAQ100U"]
-WINDOW_S = int(7.5 * 3600)
-GAP = 0.40                               # seconds between requests (<= 2.5 a second; the live bot shares the network)
+WINDOW_S = 18 * 3600                    # quotes from 18 hours before the close (a bar exists only for minutes
+                                         # in which the book or the tape changed; quotes persist in between)
+BATCH = 16                               # tickers per batch request (limit: 10,000 candles a request)
+GAP = 1.2                                # seconds between requests. 2.5 requests a second drew HTTP 429 within
+                                         # minutes (the live bot shares the network), so go slowly.
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 
 S = requests.Session()
+STATS = {"429": 0}
+GAP_NOW = [GAP]
 _last = [0.0]
 
 
 def get(path, params=None, tries=7):
     for i in range(tries):
-        w = _last[0] + GAP - time.time()
+        w = _last[0] + GAP_NOW[0] - time.time()
         if w > 0:
             time.sleep(w)
         _last[0] = time.time()
         try:
             r = S.get(BASE + path, params=params, timeout=30)
             if r.status_code == 429:
-                time.sleep(5 * (i + 1))
+                STATS["429"] += 1
+                GAP_NOW[0] = min(GAP_NOW[0] * 1.25, 4.0)       # slow down for the rest of the run
+                time.sleep(15 * (i + 1))
                 continue
             if r.status_code == 404:
                 return None
@@ -126,20 +133,32 @@ def listing(series, since, cutoff, log):
     return out
 
 
-def bars(m, cutoff):
-    q = {"start_ts": m["close"] - WINDOW_S, "end_ts": m["close"], "period_interval": 1}
-    d = None
-    if m["close"] >= cutoff:
-        d = get(f"/series/{m['series']}/markets/{m['ticker']}/candlesticks", q)
-    if d is None:
-        d = get(f"/historical/markets/{m['ticker']}/candlesticks", q)
+def _rows(cands):
     rows = []
-    for c in (d or {}).get("candlesticks", []):
+    for c in cands or []:
         a, b = c.get("yes_ask") or {}, c.get("yes_bid") or {}
         g = lambda x, k: fl(x.get(k + "_dollars", x.get(k)))
         rows.append([int(c["end_period_ts"]), g(b, "close"), g(a, "close"), g(b, "low"), g(a, "high"),
                      fl(c.get("volume_fp", c.get("volume"))) or 0])
     return rows
+
+
+def bars_batch(ms):
+    """Live markets of one event, up to BATCH tickers in one request (GET /markets/candlesticks)."""
+    close = ms[0]["close"]
+    d = get("/markets/candlesticks", {"market_tickers": ",".join(m["ticker"] for m in ms),
+                                      "start_ts": close - WINDOW_S, "end_ts": close, "period_interval": 1})
+    got = {x["market_ticker"]: _rows(x.get("candlesticks")) for x in (d or {}).get("markets", [])}
+    return [got.get(m["ticker"], []) for m in ms]
+
+
+def bars_one(m):
+    """A market older than the historical cutoff (one request each; the batch endpoint does not serve them)."""
+    q = {"start_ts": m["close"] - WINDOW_S, "end_ts": m["close"], "period_interval": 1}
+    d = get(f"/historical/markets/{m['ticker']}/candlesticks", q)
+    if d is None:
+        d = get(f"/series/{m['series']}/markets/{m['ticker']}/candlesticks", q)
+    return _rows((d or {}).get("candlesticks"))
 
 
 def yahoo(log):
@@ -196,19 +215,33 @@ def main():
         todo += [m for m in ms if m["ticker"] not in have]
     # newest days first, the 16:00 events before the hourly ones
     todo.sort(key=lambda m: (not m["event"].endswith("H1600"), -m["close"], m["series"], m["ticker"]))
-    log(f"{len(todo)} markets to download (~{len(todo) * (GAP + 0.1) / 60:.0f} min)")
     files = {s: open(f"{OUT}/{s}.jsonl", "a") for s in RANGE + ABOVE}
-    for i, m in enumerate(todo):
+    groups, cur = [], []
+    for m in todo:                              # live markets: batches within one event; old ones: singly
+        live = m["close"] >= cutoff
+        if cur and (not live or len(cur) >= BATCH or cur[0]["event"] != m["event"] or cur[0]["close"] < cutoff):
+            groups.append(cur)
+            cur = []
+        cur.append(m)
+        if not live:
+            groups.append(cur)
+            cur = []
+    if cur:
+        groups.append(cur)
+    log(f"{len(todo)} markets to download in {len(groups)} requests (~{len(groups) * (GAP + 0.3) / 60:.0f} min)")
+    done = 0
+    for n, g in enumerate(groups):
         try:
-            b = bars(m, cutoff)
+            bs = bars_batch(g) if g[0]["close"] >= cutoff else [bars_one(g[0])]
         except Exception as e:
-            log(f"  {m['ticker']}: {e!r}")
+            log(f"  {g[0]['ticker']}: {e!r}")
             continue
-        files[m["series"]].write(json.dumps(dict(m, bars=b), separators=(",", ":")) + "\n")
-        if (i + 1) % 500 == 0:
-            for f in files.values():
-                f.flush()
-            log(f"  {i + 1} / {len(todo)}")
+        for m, b in zip(g, bs):
+            files[m["series"]].write(json.dumps(dict(m, bars=b), separators=(",", ":")) + "\n")
+            files[m["series"]].flush()
+        done += len(g)
+        if (n + 1) % 100 == 0:
+            log(f"  {done} / {len(todo)} markets  (429 answers so far: {STATS['429']}, gap {GAP_NOW[0]:.1f}s)")
     log("done")
 
 
