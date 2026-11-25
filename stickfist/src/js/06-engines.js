@@ -167,11 +167,12 @@ class Resolve {
   }
   play(ms, onProg, onPass) {
     const all = [6, 8, 11, 15, 21, 29, 40, 55, 76], n = Math.min(all.length, 8 + Math.min(1, this.tier)), cols = all.slice(0, n), wts = cols.map(c => Math.pow(c, .35)), tot = wts.reduce((a, b) => a + b, 0), ctx = this.ctx, bx = this.bx;
-    let acc = 0; const spans = wts.map(w => { const s = [acc / tot, (acc + w) / tot]; acc += w; return s; }), grids = cols.map(c => this.grid(c)), t0 = performance.now(), FADE = 420; let si = -1, ptr = 0, live = [];
+    let acc = 0; const spans = wts.map(w => { const s = [acc / tot, (acc + w) / tot]; acc += w; return s; }), grids = cols.map(c => this.grid(c)), t0 = performance.now(), FADE = 280; let si = -1, ptr = 0, live = [], cut = null;
     const font = g => { const f = `700 ${Math.max(4, g.ch * .98).toFixed(1)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; [ctx, bx].forEach(c => { c.font = f; c.textAlign = "center"; c.textBaseline = "middle"; }); };
     const finish = g => { live.forEach(i => this.put(bx, g, i, 1)); live = []; for (; ptr < g.N; ptr++) this.put(bx, g, g.idx[ptr], 1); };                         // whatever of a pass is still coming in settles before the next one starts
     return new Promise(res => { const step = now => {
-      const p = Math.min(1, (now - t0) / ms); let k = spans.findIndex(s => p < s[1]); if (k < 0) k = n - 1;
+      let p = Math.min(1, (now - t0) / ms); if (this.hurry) { if (!cut) cut = { at: now, p }; p = Math.min(1, cut.p + (1 - cut.p) * (now - cut.at) / 220); }   // a tap while it forms: the rest arrives in a fifth of a second
+      let k = spans.findIndex(s => p < s[1]); if (k < 0) k = n - 1;
       if (k !== si) { if (si >= 0) finish(grids[si]); si = k; ptr = 0; font(grids[k]); if (onPass) onPass(k, n); }
       const g = grids[k], q = (p - spans[k][0]) / (spans[k][1] - spans[k][0]), D = 1 - g.lead;
       while (ptr < g.N && g.ord[g.idx[ptr]] * g.lead <= q) { const i = g.idx[ptr++]; if (g.soft) live.push(i); else this.put(bx, g, i, 1); }
@@ -183,6 +184,7 @@ class Resolve {
       if (p < 1) requestAnimationFrame(step); else { finish(g); bx.globalAlpha = 1; ctx.drawImage(this.base, 0, 0, this.w, this.h); this.cv.style.filter = ""; this.cv.style.transition = `opacity ${FADE}ms ease-out`; this.cv.style.opacity = "0"; setTimeout(() => this.cv.remove(), FADE + 40); res(); }
     }; requestAnimationFrame(step); });
   }
+  rush() { this.hurry = true; }
   drop() { this.cv.remove(); }
 }
 

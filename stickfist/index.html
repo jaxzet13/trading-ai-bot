@@ -2034,11 +2034,12 @@ class Resolve {
   }
   play(ms, onProg, onPass) {
     const all = [6, 8, 11, 15, 21, 29, 40, 55, 76], n = Math.min(all.length, 8 + Math.min(1, this.tier)), cols = all.slice(0, n), wts = cols.map(c => Math.pow(c, .35)), tot = wts.reduce((a, b) => a + b, 0), ctx = this.ctx, bx = this.bx;
-    let acc = 0; const spans = wts.map(w => { const s = [acc / tot, (acc + w) / tot]; acc += w; return s; }), grids = cols.map(c => this.grid(c)), t0 = performance.now(), FADE = 420; let si = -1, ptr = 0, live = [];
+    let acc = 0; const spans = wts.map(w => { const s = [acc / tot, (acc + w) / tot]; acc += w; return s; }), grids = cols.map(c => this.grid(c)), t0 = performance.now(), FADE = 280; let si = -1, ptr = 0, live = [], cut = null;
     const font = g => { const f = `700 ${Math.max(4, g.ch * .98).toFixed(1)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; [ctx, bx].forEach(c => { c.font = f; c.textAlign = "center"; c.textBaseline = "middle"; }); };
     const finish = g => { live.forEach(i => this.put(bx, g, i, 1)); live = []; for (; ptr < g.N; ptr++) this.put(bx, g, g.idx[ptr], 1); };                         // whatever of a pass is still coming in settles before the next one starts
     return new Promise(res => { const step = now => {
-      const p = Math.min(1, (now - t0) / ms); let k = spans.findIndex(s => p < s[1]); if (k < 0) k = n - 1;
+      let p = Math.min(1, (now - t0) / ms); if (this.hurry) { if (!cut) cut = { at: now, p }; p = Math.min(1, cut.p + (1 - cut.p) * (now - cut.at) / 220); }   // a tap while it forms: the rest arrives in a fifth of a second
+      let k = spans.findIndex(s => p < s[1]); if (k < 0) k = n - 1;
       if (k !== si) { if (si >= 0) finish(grids[si]); si = k; ptr = 0; font(grids[k]); if (onPass) onPass(k, n); }
       const g = grids[k], q = (p - spans[k][0]) / (spans[k][1] - spans[k][0]), D = 1 - g.lead;
       while (ptr < g.N && g.ord[g.idx[ptr]] * g.lead <= q) { const i = g.idx[ptr++]; if (g.soft) live.push(i); else this.put(bx, g, i, 1); }
@@ -2050,6 +2051,7 @@ class Resolve {
       if (p < 1) requestAnimationFrame(step); else { finish(g); bx.globalAlpha = 1; ctx.drawImage(this.base, 0, 0, this.w, this.h); this.cv.style.filter = ""; this.cv.style.transition = `opacity ${FADE}ms ease-out`; this.cv.style.opacity = "0"; setTimeout(() => this.cv.remove(), FADE + 40); res(); }
     }; requestAnimationFrame(step); });
   }
+  rush() { this.hurry = true; }
   drop() { this.cv.remove(); }
 }
 
@@ -2640,6 +2642,7 @@ function focusTop() {
   $("stCount").textContent = `${meter(SS.idx + 1, SS.items.length)} card ${SS.idx + 1} of ${SS.items.length}`; hint("Tap the card to reveal it");
 }
 async function advance() {
+  if (SS && SS.busy && SS.rs) { SS.rs.rush(); return; }                                    // a tap while a card is still forming finishes it now
   if (!SS || SS.busy) return; if (SS.phase === "pack") { tear(); return; } if (SS.phase !== "stack") return;
   const el = scEl(SS.idx); if (!el) return; SS.busy = true; const c = SS.items[SS.idx], card = BY_NO[c.no];
   if (!el.dataset.rev) {
@@ -2660,10 +2663,10 @@ async function reveal(el, c, card, R, v) {
   if (okPic) {
     el.classList.add("loading"); tt.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col); tt.className = "st-title loading";
     tt.innerHTML = `<div class="rw">forming · <b id="ldN">0</b> characters</div><div class="vl">worth <b id="ldV">${money(0)}</b></div>`; const ldN = $("ldN"), ldV = $("ldV");
-    await v.scatter().play(300);
-    await rs.play([1600, 2000, 2600, 3300, 4100, 4900, 6200][T], p => { const e = Math.pow(p, 1.7); ldN.textContent = fmt(Math.round(card.chars * e)); ldV.textContent = money(worth * e); },
+    await v.scatter().play(200);
+    SS.rs = rs; await rs.play([950, 1200, 1600, 2100, 2600, 3100, 3800][T], p => { const e = Math.pow(p, 1.7); ldN.textContent = fmt(Math.round(card.chars * e)); ldV.textContent = money(worth * e); },
       (k, n) => { if (k % 2 === 0) { Snd.rise(k / 2); buzz(6); } });                 // a soft tick as it sharpens; no shaking and nothing thrown while it forms
-    el.classList.remove("loading"); tt.className = "st-title";
+    SS.rs = null; el.classList.remove("loading"); tt.className = "st-title";
   } else await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
   Snd.reveal(T); if (T >= 2) buzz(T >= 5 ? [40, 30, 60, 30, 90] : T >= 3 ? [30, 25, 50] : [25]);
   FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][T], T >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + T * 130);
