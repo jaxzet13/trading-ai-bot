@@ -1,60 +1,91 @@
 <title>Kalshi 15m Backtest Lab</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Unbounded:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* layout: one scan column - status and four numbers first, then the test evidence, then the real-money record */
+/* layout: a dark scanner. Hero = what the bot looked at vs what it bet on (the dial), then the gates that reject
+   signals, then evidence and the real-money record in one column. One deliberate dark look in every theme. */
 :root{
-  --page:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#8a8983; --line:#e4e3de;
-  --series:#2a78d6; --series-soft:#cde2fb; --good:#0ca30c; --bad:#d03b3b; --good-ink:#006300; --bad-ink:#a32222;
-  --chip:#eef0ee; --f-head:"Space Grotesk","Inter",system-ui,sans-serif; --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+  --page:#14151a; --surface:#1c1e25; --ink:#f4f1ea; --ink2:#b9b6c2; --muted:#7f7d8c; --line:#2d2f3a;
+  --gold:#ffc23d; --gold-soft:#5a4312; --pink:#ff4f8b; --violet:#9b6bff;
+  --series:#ffc23d; --series-soft:#5a4312; --good:#3ddc84; --bad:#ff5d6c; --good-ink:#5fe59b; --bad-ink:#ff8590;
+  --chip:#252733; --f-head:"Unbounded","Space Grotesk",system-ui,sans-serif; --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
 }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --page:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#8f8e86; --line:#33332f;
-  --series:#3987e5; --series-soft:#184f95; --good:#0ca30c; --bad:#e66767; --good-ink:#4fc84f; --bad-ink:#f08a8a; --chip:#262624; color-scheme:dark } }
-:root[data-theme="dark"]{
-  --page:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#8f8e86; --line:#33332f;
-  --series:#3987e5; --series-soft:#184f95; --good:#0ca30c; --bad:#e66767; --good-ink:#4fc84f; --bad-ink:#f08a8a; --chip:#262624; color-scheme:dark }
 body{background:var(--page);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
-.wrap{max-width:1040px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:34px}
-h1,h2{font-family:var(--f-head);font-weight:600;text-wrap:balance;margin:0}
-h1{font-size:28px;letter-spacing:-.01em} h2{font-size:20px}
+.wrap{max-width:1080px;margin:0 auto;padding-block:0 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:38px}
+h1,h2{font-family:var(--f-head);font-weight:800;text-wrap:balance;margin:0;letter-spacing:-.02em}
+h1{font-size:clamp(30px,6.2vw,58px);line-height:1.02} h2{font-size:clamp(20px,3.4vw,30px);line-height:1.1}
 p{margin:0;max-width:68ch;color:var(--ink2)}
-.eyebrow{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.head{display:flex;flex-direction:column;gap:10px}
-.status{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;color:var(--ink2);font-size:13.5px}
-.pill{display:inline-flex;align-items:center;gap:7px;padding:3px 10px;border-radius:999px;background:var(--chip);font-weight:600;font-size:12.5px;color:var(--ink)}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)} .pill.on .dot{background:var(--good)} .pill.off .dot{background:var(--bad)}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.ticker{display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-block:14px 0}
+.ticker b{color:var(--gold);font-weight:600}
+.hero{position:relative;min-height:440px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);align-items:end;gap:18px;padding-block:18px 8px}
+#field{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero-copy{position:relative;display:flex;flex-direction:column;gap:14px;min-width:0}
+.hero-copy p{font-weight:500;color:var(--ink)} .hero-copy p b{color:var(--gold)}
+.dialbox{position:relative;display:flex;justify-content:center;align-self:center;min-width:0}
+.dial{width:min(230px,56vw);aspect-ratio:1;max-width:100%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:radial-gradient(circle at 50% 45%,#232530 0,#191a21 70%);border:2px solid var(--gold);
+  box-shadow:0 0 0 7px #14151a,0 0 0 8px rgba(255,79,139,.55),0 0 46px rgba(255,194,61,.28)}
+.dial b{font-family:var(--f-head);font-weight:800;font-size:clamp(30px,6vw,44px);color:var(--gold);font-variant-numeric:tabular-nums;text-shadow:0 0 22px rgba(255,194,61,.6);line-height:1}
+.dial i{font-style:normal;font-family:var(--f-mono);font-size:10px;letter-spacing:.2em;color:var(--ink2);text-transform:uppercase}
+.dial em{font-style:normal;font-family:var(--f-head);font-weight:800;font-size:22px;color:var(--gold);margin-top:8px;line-height:1}
+.status{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;color:var(--ink2);font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--chip);font-weight:600;font-size:12.5px;color:var(--ink);border:1px solid var(--line)}
+.pill.on{background:var(--gold);color:#1a1405;border-color:var(--gold)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)} .pill.on .dot{background:#1a1405} .pill.off .dot{background:var(--bad)}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
-.kpi b{font-family:var(--f-head);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15}
-.kpi span{font-size:12.5px;color:var(--ink2)} .kpi small{font-size:12px;color:var(--muted)}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi b{font-family:var(--f-head);font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi span{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)} .kpi small{font-size:12px;color:var(--ink2)}
 .pos{color:var(--good-ink)} .neg{color:var(--bad-ink)}
 section{display:flex;flex-direction:column;gap:14px}
-.sh{display:flex;flex-direction:column;gap:6px}
+.sh{display:flex;flex-direction:column;gap:8px}
 .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:10px}
 .card h3{margin:0;font-size:14px;font-weight:600}
 .card ul{margin:0;padding-left:18px;color:var(--ink2);display:flex;flex-direction:column;gap:6px}
 .stats{display:flex;flex-wrap:wrap;gap:8px 26px}
-.stats div{display:flex;flex-direction:column} .stats b{font-family:var(--f-head);font-size:19px;font-variant-numeric:tabular-nums} .stats span{font-size:12px;color:var(--ink2)}
+.stats div{display:flex;flex-direction:column} .stats b{font-family:var(--f-head);font-size:17px;font-weight:800;font-variant-numeric:tabular-nums} .stats span{font-size:12px;color:var(--ink2)}
+.gates{display:flex;flex-direction:column;gap:9px}
+.gate{display:grid;grid-template-columns:minmax(0,210px) minmax(0,1fr) 78px;gap:12px;align-items:center}
+.gate span{font-size:13px;color:var(--ink2);min-width:0} .gate span small{display:block;font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.gate .bar{height:22px;border-radius:5px;background:var(--chip);overflow:hidden}
+.gate .bar i{display:block;height:100%;min-width:3px;border-radius:5px;background:linear-gradient(90deg,var(--violet),var(--pink) 55%,var(--gold))}
+.gate b{font-family:var(--f-head);font-weight:800;font-size:15px;text-align:right;font-variant-numeric:tabular-nums}
 .chart{position:relative;width:100%} .chart svg{display:block;width:100%;height:auto;overflow:visible}
 .chart text{font-family:var(--f-body);font-size:11px;fill:var(--muted);font-variant-numeric:tabular-nums}
 .tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--page);font-size:12px;padding:5px 8px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-110%);font-variant-numeric:tabular-nums}
 .tablewrap{overflow-x:auto} table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
 th,td{text-align:right;padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap} th:first-child,td:first-child{text-align:left}
-th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.chipx{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--chip);color:var(--ink2)} .chipx.live{background:var(--series-soft);color:var(--ink)}
+th{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.chipx{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--chip);color:var(--ink2)} .chipx.live{background:var(--gold);color:#1a1405}
 .foot{font-size:12.5px;color:var(--muted)}
-@media (max-width:760px){ .kpis{grid-template-columns:repeat(2,minmax(0,1fr))} .two{grid-template-columns:minmax(0,1fr)} h1{font-size:24px} }
+@media (max-width:760px){ .kpis{grid-template-columns:repeat(2,minmax(0,1fr))} .two{grid-template-columns:minmax(0,1fr)}
+  .hero{grid-template-columns:minmax(0,1fr);min-height:0} .dialbox{order:-1;padding-block:18px 6px} .gate{grid-template-columns:minmax(0,1fr) 64px} .gate .bar{grid-column:1 / -1;order:3} }
+@media (prefers-reduced-motion:reduce){ #field{display:none} }
 </style>
 <div class="wrap">
-  <header class="head">
-    <div class="eyebrow">Kalshi 15-minute crypto markets · real money</div>
-    <h1>One tested model instead of thousands of rules</h1>
-    <div class="status"><span class="pill" id="runPill"><i class="dot"></i><span id="runText">—</span></span><span id="liveCoins"></span><span id="updated"></span></div>
+  <div class="ticker" id="ticker"></div>
+  <header class="hero">
+    <canvas id="field" aria-hidden="true"></canvas>
+    <div class="hero-copy">
+      <div class="eyebrow">Kalshi 15-minute crypto · real money</div>
+      <h1>This is what our bot sees.</h1>
+      <p id="heroLine"></p>
+      <div class="status"><span class="pill" id="runPill"><i class="dot"></i><span id="runText">—</span></span><span class="pill" id="liveCoins"></span><span class="pill" id="updated"></span></div>
+    </div>
+    <div class="dialbox"><div class="dial"><b id="dialLooks">—</b><i>price checks</i><em id="dialBets">—</em><i>bets</i></div></div>
   </header>
 
   <div class="kpis" id="kpis"></div>
+
+  <section>
+    <div class="sh"><div class="eyebrow">The gates · last 24 hours</div><h2>Most checks die at gate two.</h2>
+      <p>Every minute the bot reads every coin's price. A check only becomes a bet if it passes every gate; nearly all stop where the model finds too little edge.</p></div>
+    <div class="card"><div class="gates" id="gates"></div></div>
+  </section>
 
   <section>
     <div class="sh"><div class="eyebrow">What changed on Nov 24</div><h2>Why the old approach stalled, and what replaced it</h2></div>
@@ -102,6 +133,35 @@ const D = /*DATA*/null;
   const el = (tag, html, c) => { const e = document.createElement(tag); if (c) e.className = c; e.innerHTML = html; return e; };
   if (!D) return;
   const W = D.walk, L = W.live, R = D.real;
+  const F0 = D.funnel || { looks: 0, eligible: 0, edge5: 0, orders: 0, fills: 0 };
+  const num = (v) => Number(v).toLocaleString('en-US');
+  $('dialLooks').textContent = num(F0.looks); $('dialBets').textContent = num(F0.fills);
+  $('heroLine').innerHTML = `Every minute it checks every coin's price against its model, and usually does nothing. Last 24 hours: <b>${num(F0.looks)} checks, ${num(F0.fills)} bets, ${F0.looks ? (100 * F0.fills / F0.looks).toFixed(1) : '0.0'}% taken.</b>`;
+  $('ticker').innerHTML = `<span>Balance <b>${R.balance == null ? '—' : usd(R.balance)}</b></span><span>Since Nov 12 <b>${usd(R.all.pnl, true)}</b></span><span>Model <b>${usd(R.edge.pnl, true)}</b> · ${R.edge.bets} bets</span><span>Test <b>${cents(L.cents_per_bet)}</b> a bet</span><span>Fill rate since fix <b>${D.fills && D.fills.repriced_sent ? D.fills.repriced_filled + '/' + D.fills.repriced_sent : '—'}</b></span>`;
+  [['Gate 1', 'Price checks', F0.looks], ['Gate 2', 'Live coin, minutes 4–13', F0.eligible], ['Gate 3', 'Edge of 5¢ or more after fees', F0.edge5],
+   ['Gate 4', 'Order sent', F0.orders], ['Gate 5', 'Filled', F0.fills]].forEach(([g, label, v]) => {
+    const w = F0.looks ? Math.max(100 * Math.sqrt(v / F0.looks), v ? 1 : 0) : 0;     // square-root scale so the small gates stay visible
+    $('gates').appendChild(el('div', `<span><small>${g}</small>${label}</span><div class="bar"><i style="width:${w.toFixed(1)}%"></i></div><b>${num(v)}</b>`, 'gate'));
+  });
+  $('gates').appendChild(el('p', 'Bar lengths use a square-root scale so the last gates stay visible. Orders include the two restored rules (ZEC and SOL).', 'foot'));
+  (function field() {
+    const c = $('field'); if (!c || !c.getContext || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const g = c.getContext('2d'); let w = 0, h = 0, pts = [];
+    const size = () => { const r = c.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2); w = r.width; h = r.height; c.width = w * d; c.height = h * d; g.setTransform(d, 0, 0, d, 0, 0); };
+    const cols = ['#ff4f8b', '#9b6bff', '#ffc23d'];
+    const seed = () => { pts = Array.from({ length: 70 }, () => ({ x: Math.random() * w, y: Math.random() * h, r: 1 + Math.random() * 2.2, s: .15 + Math.random() * .5, c: cols[Math.floor(Math.random() * 3)], p: Math.random() * 6.3 })); };
+    size(); seed(); addEventListener('resize', () => { size(); seed(); });
+    const draw = (t) => {
+      g.clearRect(0, 0, w, h);
+      const tx = w > 760 ? w * .79 : w * .5, ty = w > 760 ? h * .5 : h * .22;       // the dial: where the beam points
+      const b = g.createLinearGradient(0, 0, tx, ty); b.addColorStop(0, 'rgba(255,194,61,0)'); b.addColorStop(1, 'rgba(255,194,61,.20)');
+      g.fillStyle = b; g.beginPath(); g.moveTo(w * .12, 0); g.lineTo(w * .30, 0); g.lineTo(tx, ty + 8); g.lineTo(tx, ty - 8); g.closePath(); g.fill();
+      pts.forEach((q) => { q.x += q.s; q.y += Math.sin(t / 900 + q.p) * .25; if (q.x > w + 5) { q.x = -5; q.y = Math.random() * h; }
+        g.globalAlpha = .35 + .35 * Math.sin(t / 700 + q.p); g.fillStyle = q.c; g.beginPath(); g.arc(q.x, q.y, q.r, 0, 6.3); g.fill(); });
+      g.globalAlpha = 1; requestAnimationFrame(draw);
+    };
+    requestAnimationFrame(draw);
+  })();
   $('runPill').classList.add(R.running ? 'on' : 'off');
   $('runText').textContent = R.running ? 'Bot running' : 'Bot not running';
   $('liveCoins').textContent = 'Trading: ' + W.live_coins.map((c) => c.slice(2, -3)).join(', ');

@@ -536,6 +536,60 @@ def fill_quality(log_path=REAL_LOG, fetch=None):
     return out
 
 
+CONSOLE = ROOT / "data" / "kalshi15m" / "real_top5_live_console.log"
+
+
+def funnel(console=CONSOLE, log_path=REAL_LOG, hours=24, now=None):
+    """What the live bot looked at in the last `hours` and how little of it became a bet: price checks -> checks
+    the model may bet on (live coin, minutes 4-13) -> edge of 5c or more after the fee -> orders -> fills.
+    Read from the runner's console (one line per coin and minute) and the real-money log."""
+    import re
+    from collections import deque
+    now = now or time.time()
+    n_lines = int(hours * 60 * 7 * 2.4)
+    try:
+        with open(console, errors="replace") as f:
+            lines = list(deque(f, maxlen=n_lines))
+    except OSError:
+        lines = []
+    # the console prints the time of day only: walk back from the end until the clock passes "now" a day earlier
+    tod = time.strftime("%H:%M:%S", time.gmtime(now))
+    cut, wrapped = 0, False
+    for i in range(len(lines) - 1, -1, -1):
+        t = lines[i][:8]
+        if len(t) == 8 and t[2] == ":" and t[5] == ":" and " spot=" in lines[i]:
+            wrapped = wrapped or t > tod
+            if wrapped and t <= tod:
+                cut = i + 1
+                break
+    lines = lines[cut:] if hours == 24 else lines
+    looks = eligible = edge5 = 0
+    minute = None
+    for ln in lines:
+        m = re.search(r" m(\d\d) spot=", ln)
+        if m:
+            looks += 1
+            minute = int(m.group(1))
+            continue
+        if "edge model: P(yes)" in ln and minute is not None:
+            e = re.search(r"YES ([+-][0-9.]+)c / NO ([+-][0-9.]+)c", ln)
+            if e and "(coin not live)" not in ln and START <= minute <= END:
+                eligible += 1
+                edge5 += max(float(e.group(1)), float(e.group(2))) >= 100 * THR - 1e-9
+            minute = None
+    orders = fills = 0
+    if Path(log_path).exists():
+        for ln in open(log_path):
+            if not ln.strip():
+                continue
+            e = json.loads(ln)
+            if e.get("ts", 0) < now - hours * 3600:
+                continue
+            orders += e.get("event") == "order_intent"
+            fills += e.get("event") == "fill" and (e.get("n") or 0) > 0
+    return {"hours": hours, "looks": looks, "eligible": eligible, "edge5": int(edge5), "orders": int(orders), "fills": int(fills)}
+
+
 def report(log=print):
     """Write dashboard/index.html (the page published as the crypto dashboard) from the scorecard, the model and
     the real-money log."""
@@ -558,7 +612,7 @@ def report(log=print):
     data = {"updated": time.strftime("%b %d %H:%M UTC", time.gmtime()), "walk": w, "fills": fq,
             "model": {k: m[k] for k in ("trained", "rows", "days", "data_to")},
             "real": {k: r[k] for k in ("running", "balance", "all", "edge", "restored", "curve", "switch_index", "recent")},
-            "old": r["old"], "tennis": tennis,
+            "old": r["old"], "tennis": tennis, "funnel": funnel(),
             "switched": time.strftime("%b %d %H:%M UTC", time.gmtime(r["switched_ts"])) if r["switched_ts"] else "Nov 24"}
     html = (Path(__file__).resolve().parent / "edge_dashboard.html").read_text()
     assert "/*DATA*/null" in html
