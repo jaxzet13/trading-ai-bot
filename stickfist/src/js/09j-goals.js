@@ -3,14 +3,12 @@
    A goal is finished by playing, never by paying, and nothing here has a timer. Finished goals wait until you claim them.
    ========================================================================== */
 const Goals = (() => {
-  const foundN = () => { noteFound(); return Object.keys(state.found).length; };
+  const foundN = () => { noteFound(); return LIVE.filter(c => state.found[c.no]).length; };          // retired cards don't count: every goal can be reached with what packs hold today
   const LIST = [
     { id: "f5", t: "Find 5 different cards", n: 5, v: foundN, r: 1 },
     { id: "f10", t: "Find 10 different cards", n: 10, v: foundN, r: 1 },
     { id: "f15", t: "Find 15 different cards", n: 15, v: foundN, r: 1 },
-    { id: "f20", t: "Find 20 different cards", n: 20, v: foundN, r: 1 },
-    { id: "f25", t: "Find 25 different cards", n: 25, v: foundN, r: 2 },
-    { id: "fall", t: `Find all ${CARDS.length} cards`, n: CARDS.length, v: foundN, r: 3 },
+    { id: "fall", t: `Find all ${LIVE.length} cards`, n: LIVE.length, v: foundN, r: 3 },
     { id: "p10", t: "Open 10 packs", n: 10, v: () => state.s.packs, r: 1 },
     { id: "p50", t: "Open 50 packs", n: 50, v: () => state.s.packs, r: 1 },
     { id: "p100", t: "Open 100 packs", n: 100, v: () => state.s.packs, r: 2 },

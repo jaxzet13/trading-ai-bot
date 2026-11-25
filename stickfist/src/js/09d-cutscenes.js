@@ -69,7 +69,7 @@ const Cut = (() => {
               if (gr) g.img(gr, x0, y0, cd.tint, al, cl((t - clickAt - .6 - c * .18) / 1.6)); g.frame(x0 - 1, y0 - 1, CW + 2, CH + 2, cd.tint, al * .85);
               g.art([typed(cd.name, t, clickAt + 2.6 + c * .3, 8)], x0 + (CW >> 1) - (cd.name.length >> 1), y0 + CH + 1, INK, al); g.art([typed(cd.rar, t, clickAt + 2.9 + c * .3, 8)], x0 + (CW >> 1) - (cd.rar.length >> 1), y0 + CH + 2, cd.tint, al * .9); });
           }
-          g.text(typed("every pack holds five cards.", t, 8.6, 11), .91, DIM);
+          g.text(typed("every pack holds three cards.", t, 8.6, 11), .91, DIM);
         }
         // ---------- 3. prices move (10.6 - 15.8)
         const a3 = vis(10.7, 16.3, .4); if (a3 > 0) {

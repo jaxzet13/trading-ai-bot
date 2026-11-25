@@ -36,7 +36,7 @@ let sellAllAt = 0, sellAllT = 0;                                                
 function renderCollection() {
   noteFound(); const found = new Set(state.vault.map(c => c.no)), worth = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0), ex = extras(), exSum = ex.reduce((a, c) => a + sellOf(c), 0), fx = Object.keys(state.foundFx).length, pk = curPack(), ch = chaseChance(pk);
   $("cSub").textContent = "Tap a card to see its price and to sell it.";
-  $("cSum").live = `<div class="stat"><span class="label">Cards found</span><div class="sbig"><b>${found.size}</b><span>of ${CARDS.length}</span></div><div class="bar"><i style="width:${found.size / CARDS.length * 100}%"></i></div></div>
+  $("cSum").live = `<div class="stat"><span class="label">Cards found</span><div class="sbig"><b>${LIVE.filter(c => found.has(c.no)).length}</b><span>of ${LIVE.length}</span></div><div class="bar"><i style="width:${LIVE.filter(c => found.has(c.no)).length / LIVE.length * 100}%"></i></div></div>
     <div class="stat"><span class="label">Worth now</span><div class="sbig"><b>${money(worth)}</b></div>${state.vault.length ? `<div class="srow">${pill(worth / Math.max(1, basis) - 1)} <span class="small">since you got them</span></div>` : `<span class="small">Open a pack to start.</span>`}</div>
     <div class="stat"><span class="label">Styles found</span><div class="sbig"><b>${fx}</b><span>of ${FX_ALL}</span></div><div class="bar"><i style="width:${fx / FX_ALL * 100}%"></i></div></div>
     <div class="stat go"><span class="label">Next ${esc(pk.name)} pack</span><div class="sbig"><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span>a new card</span></div><button class="btn small solid" data-open>${state.freePacks ? "open free pack" : "open pack"}</button></div>`;
@@ -51,7 +51,7 @@ function renderCollection() {
       <span class="csub">${best ? `${rdot(c)}${rarLabel(c)}${cs.length > 1 ? ` · ${cs.length} copies` : ""}` : `${rdot(c)}${rarLabel(c)} · ${chanceS(packP(c.id))}`}</span></button>${sellBtn(c.no)}</div>`;
   };
   $("cGrid").live = Object.keys(SETS).filter(k => CF.set === "all" || CF.set === k).map(k => {
-    const all = CARDS.filter(c => c.set === k), got = all.filter(c => found.has(c.no)).length, list = all.filter(c => CF.show === "all" || (CF.show === "found" ? found.has(c.no) : !found.has(c.no))).sort(cmp);
+    const all = CARDS.filter(c => c.set === k && (!c.retired || found.has(c.no))),      /* a retired card shows only if you have it */ got = all.filter(c => found.has(c.no)).length, list = all.filter(c => CF.show === "all" || (CF.show === "found" ? found.has(c.no) : !found.has(c.no))).sort(cmp);
     return `<div class="sethead"><h3>${esc(SETS[k].name)}</h3><span class="small">${got} of ${all.length} found</span><div class="bar slim"><i style="width:${got / all.length * 100}%"></i></div></div>` + (list.length ? `<div class="cgrid">${list.map(tile).join("")}</div>` : `<p class="small" style="padding:6px 2px 22px">${CF.show === "found" ? "You haven't found any of these yet." : "You have every card here."}</p>`);
   }).join("");
 }

@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>STIXX: ASCII card packs</title>
-<meta name="description" content="Collectible trading cards drawn entirely in text. Open a free pack every day, collect all 28 cards and trade them with the AI buyers. Free to play, play money only. 18+.">
+<meta name="description" content="Collectible trading cards drawn entirely in text. Open a free pack every day, collect all 18 cards and trade them with the AI buyers. Free to play, play money only. 18+.">
 <meta name="theme-color" content="#07080a">
 <meta name="stixx-api" content="">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="STIXX">
 <meta property="og:title" content="STIXX: ASCII card packs">
-<meta property="og:description" content="Collectible trading cards drawn entirely in text. Open a free pack every day, collect all 28 cards and trade them with the AI buyers. Free to play, play money only. 18+.">
+<meta property="og:description" content="Collectible trading cards drawn entirely in text. Open a free pack every day, collect all 18 cards and trade them with the AI buyers. Free to play, play money only. 18+.">
 <meta property="og:image" content="og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='7.5' fill='%23000'/%3E%3Ccircle cx='14' cy='5.9' r='1.7' fill='%23fff'/%3E%3Cpath d='M8.2 9.8 19.8 21.4M19.8 9.8 8.2 21.4' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -1189,7 +1189,7 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
     <div class="glogo" aria-label="STIXX"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect x=".5" y=".5" width="27" height="27" rx="7.5" fill="#000" stroke="rgba(255,255,255,.18)"/><circle cx="14" cy="5.900" r="1.550" fill="#fff"/><path d="M8.200 9.800 19.800 21.400M19.800 9.800 8.200 21.400" fill="none" stroke="#fff" stroke-width="1.700" stroke-linecap="round"/></svg><span>STIXX</span></div>
     <div class="gfan" aria-hidden="true"><img src="cards/s/bubble.jpg" alt="" width="360" height="437"><img src="cards/s/kraken.jpg" alt="" width="360" height="437"><img src="cards/s/umbra.jpg" alt="" width="360" height="437"></div>
     <h1 class="gttl">Collectible cards, drawn in text</h1>
-    <p class="dim gsub" id="gateSub">Open packs, collect all 28 cards, and trade them with the AI buyers.</p>
+    <p class="dim gsub" id="gateSub">Open packs, collect all 18 cards, and trade them with the AI buyers.</p>
     <ul class="gpoints"><li>A free pack right now, and another every day</li><li>Odds published, every pack provably fair</li><li id="gNoCard">No sign-up, no card, nothing to download</li></ul>
     <form class="gform" id="gateForm" novalidate hidden><input id="acEmail" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Email" aria-label="Email"><input id="acPw" name="password" type="password" autocomplete="new-password" placeholder="Password (6 or more characters)" aria-label="Password" minlength="6"><p class="gerr" id="acErr" role="alert" hidden></p><button type="submit" hidden tabindex="-1" aria-hidden="true"></button></form>
     <label class="gcheck" for="ageOK"><input type="checkbox" id="ageOK"><span>I'm 18 or older</span></label>
@@ -1221,8 +1221,8 @@ const CARDS = [
   { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "common",    chars: 6432,   val: 4,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
   { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "common",    chars: 6432,   val: 5,    tint: "#a8ffbe", cap: "it is a colander. it works.", styles: true },
   { no: "004", id: "rook",    name: "Rook",    sub: "pool noodle", rar: "common",   chars: 6432,   val: 6,    tint: "#a8ffbe", cap: "reach: floppy.", styles: true },
-  { no: "012", id: "orbit",   name: "Orbit",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 17,    tint: "#a9c9ff", cap: "already read the ending.", styles: true },
-  { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "uncommon",  chars: 15750,  val: 25,    tint: "#ece7dc", cap: "gone before the cape lands.", styles: true },
+  { no: "012", id: "orbit",   name: "Orbit",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 34,    tint: "#a9c9ff", cap: "already read the ending.", styles: true },
+  { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "uncommon",  chars: 15750,  val: 42,    tint: "#ece7dc", cap: "gone before the cape lands.", styles: true },
   { no: "018", id: "null",    name: "Null",    sub: "star",       rar: "rare",      chars: 29260,  val: 292,   tint: "#a9c9ff", cap: "not on any record.", styles: true },
   { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "rare",      chars: 31970,  val: 261,   tint: "#ffd27a", cap: "rents you the air.", styles: true },
   { no: "006", id: "ronin",   name: "Ronin",   sub: "cliff",      rar: "epic",      chars: 71680,  val: 445,   tint: "#ff8ac9", cap: "", styles: true },
@@ -1233,22 +1233,22 @@ const CARDS = [
   { no: "026", id: "mop",     name: "Mop",     sub: "bucket helmet", rar: "common",   chars: 6432,  val: 7,  tint: "#a8ffbe", cap: "swab the deck.",              styles: true },
   { no: "027", id: "pan",     name: "Pan",     sub: "frying pan",    rar: "common",   chars: 6432,  val: 8,  tint: "#ece7dc", cap: "it's a frying pan. it counts.", styles: true },
   { no: "028", id: "cone",    name: "Cone",    sub: "traffic cone",  rar: "common",   chars: 6432,  val: 9,  tint: "#ffd27a", cap: "caution: confident.",         styles: true },
-  { no: "029", id: "tempest", name: "Tempest", sub: "storm",         rar: "uncommon", chars: 7260,  val: 21,  tint: "#a9c9ff", cap: "weather is a choice.",         styles: true },
-  { no: "030", id: "surge",   name: "Surge",   sub: "big wave",      rar: "uncommon", chars: 15750, val: 31,  tint: "#9fe8ff", cap: "ride it before it breaks.",    styles: true },
+  { no: "029", id: "tempest", name: "Tempest", sub: "storm",         rar: "uncommon", chars: 7260,  val: 38,  tint: "#a9c9ff", cap: "weather is a choice.",         styles: true },
+  { no: "030", id: "surge",   name: "Surge",   sub: "big wave",      rar: "uncommon", chars: 15750, val: 46,  tint: "#9fe8ff", cap: "ride it before it breaks.",    styles: true },
   { no: "031", id: "kraken",  name: "Kraken",  sub: "tentacles",     rar: "rare",     chars: 28000, val: 233, tint: "#9fe8d8", cap: "it was always down there.",    styles: true },
   // ---- Moonshot: one launch, five altitudes. The higher the card, the rarer it is.
   { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "common",    chars: 8736,   val: 14,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
-  { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "uncommon",  chars: 10080,  val: 35,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
+  { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "uncommon",  chars: 10080,  val: 65,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
   { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "rare",      chars: 40320,  val:  1134,  tint: "#ffb070", cap: "gravity lost the argument.",    styles: true },
   { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "epic",      chars: 123480, val: 1667, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
   { no: "025", set: "ms", id: "luna",     name: "Luna",     sub: "first flag",    rar: "legendary", chars: 448800, val: 4145, tint: "#b8d4ff", cap: "to the moon was never a joke.", styles: true },
   // ---- more Moonshot cards, each at the altitude (and worth) of a card already there
   { no: "032", set: "ms", id: "spark",     name: "Spark",     sub: "sparkler",     rar: "common",   chars: 8736,   val: 16,   tint: "#ffb070", cap: "small things start fires.", styles: true },
-  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 41,   tint: "#ff8a7a", cap: "three. two. one.",           styles: true },
+  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 270,   tint: "#ff8a7a", cap: "three. two. one.",           styles: true },
   { no: "034", set: "ms", id: "booster",   name: "Booster",   sub: "stage split",  rar: "rare",     chars: 40320,  val:  1333, tint: "#ffc98a", cap: "dead weight, dropped.",      styles: true },
   { no: "035", set: "ms", id: "flare",     name: "Flare",     sub: "signal flare", rar: "common",   chars: 8736,   val: 19,   tint: "#ff8a7a", cap: "the sky has been told.",     styles: true },
   { no: "036", set: "ms", id: "bubble",    name: "Bubble",    sub: "fishbowl helmet", rar: "common", chars: 8736,  val: 21,   tint: "#ece7dc", cap: "all systems: smiling.",      styles: true },
-  { no: "037", set: "ms", id: "gantry",    name: "Gantry",    sub: "tower arm",    rar: "uncommon", chars: 10080,  val: 47,   tint: "#9fe8ff", cap: "the arm lets go.",           styles: true }
+  { no: "037", set: "ms", id: "gantry",    name: "Gantry",    sub: "tower arm",    rar: "uncommon", chars: 10080,  val: 480,   tint: "#9fe8ff", cap: "the arm lets go.",           styles: true }
 ];
 // the sets: the two letters a copy id starts with, and what the set is called
 const SETS = { fp: { code: "IS", name: "First Print" }, ms: { code: "MS", name: "Moonshot" } };
@@ -1267,27 +1267,27 @@ const STYLE_TINT = { "": "#ece7dc", steel: "#aaffbd", dots: "#ffd27a", vhs: "#c9
 /* Each pack holds the cards of one set. A slot is a list of [card id, weight]. The packs are tuned so that each one sells back for at least its cost about 40% of the time (a bit less when the market is hot)
    and returns 93 to 95% on average, never more than 95% (both move with the market, and are worked out live in 04-state.js). */
 const PACKS = [
-  { id: "fp", set: "fp", name: "First Print", blurb: "Stick figures made of text, from a frog in a hat to a total eclipse.", price: 259, min: 130, max: 2500, n: 5,
-    order: ["stitch", "brick", "rook", "mop", "pan", "cone", "orbit", "tempest", "phantom", "surge", "null", "shogun", "kraken", "ronin", "grimm", "reaper", "umbra"],
-    slotNames: ["Card 1: a common", "Card 2: a common", "Card 3: a common, sometimes better", "Card 4: an uncommon or better", "Card 5: the best card in the pack"],
+  { id: "fp", set: "fp", name: "First Print", blurb: "Stick figures made of text, from a galaxy in a jar to a total eclipse.", price: 259, min: 130, max: 2500, n: 3,
+    order: ["orbit", "tempest", "phantom", "surge", "null", "shogun", "kraken", "ronin", "grimm", "reaper", "umbra"],
+    slotNames: ["Card 1: an uncommon", "Card 2: an uncommon", "Card 3: the hit: a rare or better in 4 packs out of 10"],
     slots: [
-      [["stitch", 19.1093], ["brick", 18.0583], ["rook", 17.0651], ["mop", 16.1265], ["pan", 15.2395], ["cone", 14.4014]],
-      [["stitch", 19.1093], ["brick", 18.0583], ["rook", 17.0651], ["mop", 16.1265], ["pan", 15.2395], ["cone", 14.4014]],
-      [["stitch", 17.6637], ["brick", 16.6922], ["rook", 15.7741], ["mop", 14.9065], ["pan", 14.0867], ["cone", 13.3119], ["orbit", 2.0734], ["tempest", 1.9469], ["phantom", 1.8281], ["surge", 1.7166]],
-      [["orbit", 23.8181], ["tempest", 22.3652], ["phantom", 21.0009], ["surge", 19.7198], ["kraken", 5.1015], ["shogun", 4.326], ["null", 3.6685]],
-      [["orbit", 12.2024], ["tempest", 11.4581], ["phantom", 10.7591], ["surge", 10.1028], ["kraken", 21.065], ["shogun", 17.8631], ["null", 15.1479], ["ronin", 1.2264], ["grimm", 0.1489], ["reaper", 0.0175], ["umbra", 0.0088]]
+      [["orbit", 30], ["tempest", 27], ["phantom", 23], ["surge", 20]],
+      [["orbit", 30], ["tempest", 27], ["phantom", 23], ["surge", 20]],
+      [["orbit", 17.1283], ["tempest", 15.4155], ["phantom", 13.1317], ["surge", 11.4189], ["kraken", 15.2], ["shogun", 12.54], ["null", 10.26], ["ronin", 4.2924], ["grimm", 0.5212], ["reaper", 0.0613], ["umbra", 0.0308]]
     ] },
-  { id: "ms", set: "ms", name: "Moonshot", blurb: "One launch and what happens on the way up: a lit fuse on the ground, a rocket on its plume, a flag on the Moon. The higher the card, the rarer it is.", price: 726, min: 375, max: 7500, n: 5,
-    order: ["luna", "fuse", "spark", "flare", "bubble", "liftoff", "booster", "ignition", "countdown", "gantry", "apogee"],
-    slotNames: ["Card 1: a low-altitude card, now and then an Ignition", "Card 2: a low-altitude card, now and then an Ignition", "Card 3: low altitude, sometimes a Liftoff", "Card 4: an Ignition or higher", "Card 5: the best card in the pack"],
+  { id: "ms", set: "ms", name: "Moonshot", blurb: "One launch and what happens on the way up: the pad, a rocket on its plume, a flag on the Moon. The higher the card, the rarer it is.", price: 726, min: 375, max: 7500, n: 3,
+    order: ["luna", "liftoff", "booster", "ignition", "countdown", "gantry", "apogee"],
+    slotNames: ["Card 1: a launch-pad card", "Card 2: a launch-pad card", "Card 3: the hit: now and then a Liftoff or higher"],
     slots: [
-      [["fuse", 28.0102], ["spark", 25.1121], ["flare", 22.5138], ["bubble", 20.1844], ["ignition", 1.4711], ["countdown", 1.3917], ["gantry", 1.3167]],
-      [["fuse", 26.7515], ["spark", 23.9836], ["flare", 21.5021], ["bubble", 19.2773], ["ignition", 2.9866], ["countdown", 2.8256], ["gantry", 2.6732]],
-      [["fuse", 18.332], ["spark", 16.4352], ["flare", 14.7347], ["bubble", 13.2102], ["ignition", 11.4692], ["countdown", 10.8507], ["gantry", 10.2656], ["liftoff", 2.6966], ["booster", 2.0058]],
-      [["fuse", 11.1804], ["spark", 10.0236], ["flare", 8.9865], ["bubble", 8.0567], ["ignition", 17.7373], ["countdown", 16.7809], ["gantry", 15.876], ["liftoff", 5.6534], ["booster", 4.2051], ["apogee", 1.5]],
-      [["fuse", 2.5292], ["spark", 2.2675], ["flare", 2.0329], ["bubble", 1.8225], ["ignition", 22.332], ["countdown", 21.1278], ["gantry", 19.9885], ["liftoff", 13.2896], ["booster", 9.8851], ["apogee", 4.35], ["luna", 0.375]]
+      [["ignition", 55], ["countdown", 30], ["gantry", 15]],
+      [["ignition", 55], ["countdown", 30], ["gantry", 15]],
+      [["ignition", 49.8438], ["countdown", 27.1875], ["gantry", 13.5938], ["liftoff", 3.42], ["booster", 2.58], ["apogee", 3], ["luna", 0.375]]
     ] }
 ];
+// A card that no pack holds any more is retired: copies people already have keep their worth and can still be sold, but it is no longer counted, chased or shown as missing.
+// (The ten commons were retired when packs went from five cards to three: every card in a pack is now worth looking at.)
+{ const live = new Set(); PACKS.forEach(pk => pk.slots.forEach(sl => sl.forEach(([id]) => live.add(id)))); CARDS.forEach(c => { c.retired = !live.has(c.id); }); }
+const LIVE = CARDS.filter(c => !c.retired);
 const PACK_BY = Object.fromEntries(PACKS.map(p => [p.id, p])), packOf = card => PACK_BY[card.set];
 // Play money is counted in units: 500 of them are one dollar, so a unit is a fifth of a cent. First Print costs $1.00 (500 units) and Moonshot $3.00 (1,500), and every card in a pack
 // is worth in proportion, so what a pack returns is unchanged by it. You start with $2.00.
@@ -1894,7 +1894,7 @@ class PackScreen {
     this.pk = pk; this.pack = pack || PACKS[0]; this.cv = pk.querySelector("canvas.scr"); this.ctx = this.cv.getContext("2d");
     this.el = { stat: pk.querySelector(".r-stat"), name: pk.querySelector(".r-name"), sub: pk.querySelector(".r-sub"), meter: pk.querySelector(".r-meter") };
     this.on = false; this.last = 0; this.t0 = performance.now(); this.off = document.createElement("canvas"); this.g = this.off.getContext("2d", { willReadFrequently: true }); this.cache = new Map(); this.layer = document.createElement("canvas"); this.lc = this.layer.getContext("2d");
-    const n = CARDS.filter(c => c.set === this.pack.set).length;
+    const n = LIVE.filter(c => c.set === this.pack.set).length;
     scramble(this.el.name, this.pack.name.toUpperCase(), 520); this.el.sub.textContent = `${n} cards inside · ${this.pack.n} in every pack`;
   }
   fit() {
@@ -2149,7 +2149,7 @@ function renderHome() {
   const pk = curPack(), ps = packStats(pk); $("banner").textContent = BANNER.join("\n");
   $("packTabs").live = PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-pack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("");
   $("packName").textContent = pk.name; $("packBlurb").textContent = pk.blurb;
-  const fp = state.freePacks, pp = boughtOf(pk.id); { noteFound(); const inSet = CARDS.filter(c => c.set === pk.set); $("packLine").innerHTML = `${pk.n} cards · ${money(ps.price)}${state.s.packs ? ` · ${inSet.filter(c => state.found[c.no]).length}/${inSet.length} found` : ""} · <a class="linkbtn" href="#/odds">odds</a>`; } const mk = Math.min(openN(), maxN(pk)), many = mk >= 2; $("openBtn").textContent = many ? `open ${mk} packs${(() => { const c = Math.max(0, mk - fp - pp) * ps.price; return c ? " · " + money(c) : ""; })()}` : fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : pp ? `open a pack you bought${pp > 1 ? " · " + pp + " left" : ""}` : (Shop.cash() && state.coins < ps.price) ? "add money to open a pack" : (Shop.has(pk.id) && state.coins < ps.price) ? `buy a pack · ${rmoney(Shop.price(pk.id))}` : `open pack · ${money(ps.price)}`; $("openBtn").classList.toggle("free", fp > 0 || pp > 0);
+  const fp = state.freePacks, pp = boughtOf(pk.id); { noteFound(); const inSet = LIVE.filter(c => c.set === pk.set); $("packLine").innerHTML = `${pk.n} cards · ${money(ps.price)}${state.s.packs ? ` · ${inSet.filter(c => state.found[c.no]).length}/${inSet.length} found` : ""} · <a class="linkbtn" href="#/odds">odds</a>`; } const mk = Math.min(openN(), maxN(pk)), many = mk >= 2; $("openBtn").textContent = many ? `open ${mk} packs${(() => { const c = Math.max(0, mk - fp - pp) * ps.price; return c ? " · " + money(c) : ""; })()}` : fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : pp ? `open a pack you bought${pp > 1 ? " · " + pp + " left" : ""}` : (Shop.cash() && state.coins < ps.price) ? "add money to open a pack" : (Shop.has(pk.id) && state.coins < ps.price) ? `buy a pack · ${rmoney(Shop.price(pk.id))}` : `open pack · ${money(ps.price)}`; $("openBtn").classList.toggle("free", fp > 0 || pp > 0);
   { const r = $("multiRow"), top = maxN(pk), opts = MANY.filter(n => n === 1 || n <= top); r.hidden = top < 2; r.innerHTML = `<span class="small dim">open at once</span>` + opts.map(n => `<button type="button" class="seg1${n === Math.min(openN(), top) ? " on" : ""}" data-many="${n}" aria-pressed="${n === Math.min(openN(), top)}">${n}</button>`).join(""); }
   $("buyRow").hidden = !Shop.has(pk.id) || (!fp && !pp && state.coins < ps.price); $("buyBtn").textContent = Shop.cash() ? "Add money" : `Buy packs · ${rmoney(Shop.price(pk.id))} each`;
   $("how").hidden = state.s.packs > 0; $("inviteBar").live = state.s.packs > 0 ? inviteBarHTML() : "";
@@ -2203,13 +2203,13 @@ function renderProfile() {
   $("pNote").innerHTML = groups.length ? `Tap a card for its chart. <span class="faint">${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${moneyR(state.s.spent)} spent · ${moneyR(state.s.sold)} back from sales</span>` : `No cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they show up here with a live price.`;
   const rows = movers().rows.slice().sort((a, b) => Math.abs(b.p24) - Math.abs(a.p24)).slice(0, 4); $("pMktH").hidden = !rows.length;
   $("pMkt").live = rows.map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)}<span class="dim">24h</span></button>`).join("");
-  $("pLinks").live = `<a class="linkbtn plain" href="#/collection">All ${CARDS.length} cards · ${found} found ›</a><a class="linkbtn plain" href="#/market">All movers ›</a>`;
+  $("pLinks").live = `<a class="linkbtn plain" href="#/collection">All ${LIVE.length} cards · ${LIVE.filter(c => state.found[c.no]).length} found ›</a><a class="linkbtn plain" href="#/market">All movers ›</a>`;
 }
 
 let oddsKey = "";
 function renderOdds(force) {
   if (!PACK_BY[oddsPack]) oddsPack = state.pack; const key = oddsPack; if (!force && key === oddsKey && $("oBody").firstChild) return; oddsKey = key; const opened = [...document.querySelectorAll("#oBody details")].map(d => d.open); const pk = PACK_BY[oddsPack], ps = packStats(pk), slotName = pk.slotNames;
-  const rows = CARDS.filter(c => c.set === pk.set).sort((a, b) => a.chars - b.chars).map(c => { const p = packP(c.id); return cardRow(c, { nospark: true, price: p >= .1 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p), pill: `<span class="small">${p >= .1 ? "of packs" : "packs"}</span>`, sub: `starts at ${moneyS(c.val)} · ${fmt(c.chars)} characters` }); }).join("");
+  const rows = LIVE.filter(c => c.set === pk.set).sort((a, b) => a.chars - b.chars).map(c => { const p = packP(c.id); return cardRow(c, { nospark: true, price: p >= .1 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p), pill: `<span class="small">${p >= .1 ? "of packs" : "packs"}</span>`, sub: `starts at ${moneyS(c.val)} · ${fmt(c.chars)} characters` }); }).join("");
   const tot = Object.values(STYLES).reduce((a, s) => a + s.p, 0);
   $("oBody").innerHTML = `
     <div class="packtabs" role="tablist" aria-label="Which pack">${PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-opack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("")}</div>
@@ -2321,7 +2321,7 @@ let sellAllAt = 0, sellAllT = 0;                                                
 function renderCollection() {
   noteFound(); const found = new Set(state.vault.map(c => c.no)), worth = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0), ex = extras(), exSum = ex.reduce((a, c) => a + sellOf(c), 0), fx = Object.keys(state.foundFx).length, pk = curPack(), ch = chaseChance(pk);
   $("cSub").textContent = "Tap a card to see its price and to sell it.";
-  $("cSum").live = `<div class="stat"><span class="label">Cards found</span><div class="sbig"><b>${found.size}</b><span>of ${CARDS.length}</span></div><div class="bar"><i style="width:${found.size / CARDS.length * 100}%"></i></div></div>
+  $("cSum").live = `<div class="stat"><span class="label">Cards found</span><div class="sbig"><b>${LIVE.filter(c => found.has(c.no)).length}</b><span>of ${LIVE.length}</span></div><div class="bar"><i style="width:${LIVE.filter(c => found.has(c.no)).length / LIVE.length * 100}%"></i></div></div>
     <div class="stat"><span class="label">Worth now</span><div class="sbig"><b>${money(worth)}</b></div>${state.vault.length ? `<div class="srow">${pill(worth / Math.max(1, basis) - 1)} <span class="small">since you got them</span></div>` : `<span class="small">Open a pack to start.</span>`}</div>
     <div class="stat"><span class="label">Styles found</span><div class="sbig"><b>${fx}</b><span>of ${FX_ALL}</span></div><div class="bar"><i style="width:${fx / FX_ALL * 100}%"></i></div></div>
     <div class="stat go"><span class="label">Next ${esc(pk.name)} pack</span><div class="sbig"><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span>a new card</span></div><button class="btn small solid" data-open>${state.freePacks ? "open free pack" : "open pack"}</button></div>`;
@@ -2336,7 +2336,7 @@ function renderCollection() {
       <span class="csub">${best ? `${rdot(c)}${rarLabel(c)}${cs.length > 1 ? ` · ${cs.length} copies` : ""}` : `${rdot(c)}${rarLabel(c)} · ${chanceS(packP(c.id))}`}</span></button>${sellBtn(c.no)}</div>`;
   };
   $("cGrid").live = Object.keys(SETS).filter(k => CF.set === "all" || CF.set === k).map(k => {
-    const all = CARDS.filter(c => c.set === k), got = all.filter(c => found.has(c.no)).length, list = all.filter(c => CF.show === "all" || (CF.show === "found" ? found.has(c.no) : !found.has(c.no))).sort(cmp);
+    const all = CARDS.filter(c => c.set === k && (!c.retired || found.has(c.no))),      /* a retired card shows only if you have it */ got = all.filter(c => found.has(c.no)).length, list = all.filter(c => CF.show === "all" || (CF.show === "found" ? found.has(c.no) : !found.has(c.no))).sort(cmp);
     return `<div class="sethead"><h3>${esc(SETS[k].name)}</h3><span class="small">${got} of ${all.length} found</span><div class="bar slim"><i style="width:${got / all.length * 100}%"></i></div></div>` + (list.length ? `<div class="cgrid">${list.map(tile).join("")}</div>` : `<p class="small" style="padding:6px 2px 22px">${CF.show === "found" ? "You haven't found any of these yet." : "You have every card here."}</p>`);
   }).join("");
 }
@@ -2536,7 +2536,7 @@ const History = (() => {
       g.fillStyle = "#c9c4b8"; g.font = F(500, 38); g.fillText(`${rarLabel(bc)} · worth ${moneyR(valueOf(best))}`, W / 2, cy + chh + 210);
     }
     // three numbers
-    const cols = [[String(st.packs), "packs opened"], [`${st.found}/${CARDS.length}`, "cards found"], (st.opens >= 3 ? [Math.round(st.hitRate * 100) + "%", "packs that paid off"] : [String(state.vault.length), "cards owned"])];
+    const cols = [[String(st.packs), "packs opened"], [`${Math.min(st.found, LIVE.length)}/${LIVE.length}`, "cards found"], (st.opens >= 3 ? [Math.round(st.hitRate * 100) + "%", "packs that paid off"] : [String(state.vault.length), "cards owned"])];
     cols.forEach(([v, l], i) => { const x = W / 6 + i * W / 3; g.fillStyle = "#ffffff"; g.font = F(800, 64); g.fillText(v, x, 1660); g.fillStyle = "#9a968b"; g.font = F(500, 28); g.fillText(l, x, 1705); });
     g.strokeStyle = "rgba(236,231,220,.14)"; g.lineWidth = 2; g.beginPath(); g.moveTo(90, 1580); g.lineTo(W - 90, 1580); g.stroke();
     g.fillStyle = "#ece7dc"; g.font = F(700, 34); g.fillText(o.host || location.host || "stixx", W / 2, 1810);
@@ -3091,7 +3091,7 @@ const Cut = (() => {
               if (gr) g.img(gr, x0, y0, cd.tint, al, cl((t - clickAt - .6 - c * .18) / 1.6)); g.frame(x0 - 1, y0 - 1, CW + 2, CH + 2, cd.tint, al * .85);
               g.art([typed(cd.name, t, clickAt + 2.6 + c * .3, 8)], x0 + (CW >> 1) - (cd.name.length >> 1), y0 + CH + 1, INK, al); g.art([typed(cd.rar, t, clickAt + 2.9 + c * .3, 8)], x0 + (CW >> 1) - (cd.rar.length >> 1), y0 + CH + 2, cd.tint, al * .9); });
           }
-          g.text(typed("every pack holds five cards.", t, 8.6, 11), .91, DIM);
+          g.text(typed("every pack holds three cards.", t, 8.6, 11), .91, DIM);
         }
         // ---------- 3. prices move (10.6 - 15.8)
         const a3 = vis(10.7, 16.3, .4); if (a3 > 0) {
@@ -3455,7 +3455,7 @@ function renderChips() {
 
 /* ---- rank: earned by finding things and turning up, not by how much you spend or win ---- */
 const RANKS = [["Tourist", 0], ["Paper hands", 60], ["Degen", 150], ["Flipper", 300], ["Diamond hands", 520], ["Whale", 800], ["Legend", 1200]];
-const FX_ALL = CARDS.length * 13;
+const FX_ALL = LIVE.length * 13;
 function noteFound() { for (const c of state.vault) { state.found[c.no] = 1; state.foundFx[c.no + "|" + (c.fx || "")] = 1; } }
 const xpOf = () => { noteFound(); return state.s.packs * 4 + Object.keys(state.found).length * 40 + Object.keys(state.foundFx).length * 12 + state.streak.best * 10; };
 const rankIdx = xp => { let i = 0; RANKS.forEach(([, x], k) => { if (xp >= x) i = k; }); return i; };
@@ -3470,11 +3470,11 @@ function rankHTML() {
 }
 
 /* ---- the collection has holes in it, and you can see them ---- */
-const missingCards = set => { const have = new Set(state.vault.map(c => c.no)); return CARDS.filter(c => !have.has(c.no) && (!set || c.set === set)); };
+const missingCards = set => { const have = new Set(state.vault.map(c => c.no)); return LIVE.filter(c => !have.has(c.no) && (!set || c.set === set)); };
 const chaseChance = pk => { pk = pk || curPack(); const m = missingCards(pk.set); return m.length ? 1 - m.reduce((a, c) => a * (1 - packP(c.id)), 1) : 0; };      // a pack only holds cards of its own set
 function chaseHTML() {
   if (!state.s.packs && !state.vault.length) return "";
-  const pk = curPack(), size = CARDS.filter(c => c.set === pk.set).length, miss = missingCards(pk.set); if (!miss.length) return `<span class="label">${esc(pk.name)}</span><span>You have every ${esc(pk.name)} card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
+  const pk = curPack(), size = LIVE.filter(c => c.set === pk.set).length, miss = missingCards(pk.set); if (!miss.length) return `<span class="label">${esc(pk.name)}</span><span>You have every ${esc(pk.name)} card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
   const rows = miss.slice().sort((a, b) => b.val - a.val).slice(0, 3), hot = null;
   return `<span class="label">still out there in ${esc(pk.name)} · ${size - miss.length} of ${size} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${rarLabel(c)}</span>${money(c.val)} <span class="dim">${chance(packP(c.id))}</span></button>`).join("")
     + (hot && hot.p >= .3 ? `<span class="hotflip"><b>${esc(hot.c.name)}</b> is up ${pctShort(hot.p).slice(1)} in a day and you don't have one. It turns up in ${chance(packP(hot.c.id), packOf(hot.c))}, and a pack costs ${money(packPrice(packOf(hot.c)))}.</span>` : "");
@@ -4120,14 +4120,12 @@ const Machine = (() => {
    A goal is finished by playing, never by paying, and nothing here has a timer. Finished goals wait until you claim them.
    ========================================================================== */
 const Goals = (() => {
-  const foundN = () => { noteFound(); return Object.keys(state.found).length; };
+  const foundN = () => { noteFound(); return LIVE.filter(c => state.found[c.no]).length; };          // retired cards don't count: every goal can be reached with what packs hold today
   const LIST = [
     { id: "f5", t: "Find 5 different cards", n: 5, v: foundN, r: 1 },
     { id: "f10", t: "Find 10 different cards", n: 10, v: foundN, r: 1 },
     { id: "f15", t: "Find 15 different cards", n: 15, v: foundN, r: 1 },
-    { id: "f20", t: "Find 20 different cards", n: 20, v: foundN, r: 1 },
-    { id: "f25", t: "Find 25 different cards", n: 25, v: foundN, r: 2 },
-    { id: "fall", t: `Find all ${CARDS.length} cards`, n: CARDS.length, v: foundN, r: 3 },
+    { id: "fall", t: `Find all ${LIVE.length} cards`, n: LIVE.length, v: foundN, r: 3 },
     { id: "p10", t: "Open 10 packs", n: 10, v: () => state.s.packs, r: 1 },
     { id: "p50", t: "Open 50 packs", n: 50, v: () => state.s.packs, r: 1 },
     { id: "p100", t: "Open 100 packs", n: 100, v: () => state.s.packs, r: 2 },
@@ -4262,7 +4260,8 @@ const Forge = (() => {
     const out = []; for (const m of below(card)) { const cs = state.vault.filter(c => c.no === m.no), plain = cs.filter(c => !c.fx).sort((a, b) => valueOf(b) - valueOf(a)); out.push(...(cs.some(c => c.fx) ? plain : plain.slice(1))); }
     return out.sort((a, b) => valueOf(a) - valueOf(b));
   }
-  const info = card => { const n = need(card); if (!n) return null; const have = spares(card).length, m = below(card); return { n, have, ok: have >= n, rar: RAR[m[0].rar].name, set: SETS[card.set].name }; };
+  const info = card => { const n = need(card); if (!n || card.retired) return null; const have = spares(card).length, m = below(card); if (!have && m.every(c => c.retired)) return null;   // nothing to forge from cards no pack holds any more, unless you still have spares of them
+    return { n, have, ok: have >= n, rar: RAR[m[0].rar].name, set: SETS[card.set].name }; };
   function make(no) {
     const card = BY_NO[no], i = card && info(card); if (!i || !i.ok) return null; const used = spares(card).slice(0, i.n), gone = new Set(used.map(c => c.uid)), paid = used.reduce((a, c) => a + valueOf(c), 0);
     state.vault = state.vault.filter(c => !gone.has(c.uid)); const copy = mint(card, false, null, paid); copy.fx = ""; copy.forged = 1; state.vault.push(copy); state.s.forged = (state.s.forged || 0) + 1; noteFound(); save(); return copy;
@@ -4466,7 +4465,7 @@ setInterval(() => { MK.advance(); if (MK.tick() !== lastTick) { lastTick = MK.ti
 document.addEventListener("visibilitychange", () => { state.lastSeen = Date.now(); persist(); });
 Ref.sync(); setInterval(Ref.sync, 60000); setInterval(() => { if (!document.hidden && (view === "invite" || view === "profile")) Ref.sync(); }, 12000); document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - Ref.last() > 20000) Ref.sync(); });
 tickLive(); setInterval(tickLive, 1000);
-setTimeout(() => CARDS.forEach(c => loadImg(imgOf(c))), 700);   // warm the pictures so a reveal never waits on one
+setTimeout(() => LIVE.forEach(c => loadImg(imgOf(c))), 700);   // warm the pictures so a reveal never waits on one
 
 })();
 </script>

@@ -11,4 +11,4 @@ setInterval(() => { MK.advance(); if (MK.tick() !== lastTick) { lastTick = MK.ti
 document.addEventListener("visibilitychange", () => { state.lastSeen = Date.now(); persist(); });
 Ref.sync(); setInterval(Ref.sync, 60000); setInterval(() => { if (!document.hidden && (view === "invite" || view === "profile")) Ref.sync(); }, 12000); document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - Ref.last() > 20000) Ref.sync(); });
 tickLive(); setInterval(tickLive, 1000);
-setTimeout(() => CARDS.forEach(c => loadImg(imgOf(c))), 700);   // warm the pictures so a reveal never waits on one
+setTimeout(() => LIVE.forEach(c => loadImg(imgOf(c))), 700);   // warm the pictures so a reveal never waits on one

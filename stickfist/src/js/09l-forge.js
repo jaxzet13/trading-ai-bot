@@ -20,7 +20,8 @@ const Forge = (() => {
     const out = []; for (const m of below(card)) { const cs = state.vault.filter(c => c.no === m.no), plain = cs.filter(c => !c.fx).sort((a, b) => valueOf(b) - valueOf(a)); out.push(...(cs.some(c => c.fx) ? plain : plain.slice(1))); }
     return out.sort((a, b) => valueOf(a) - valueOf(b));
   }
-  const info = card => { const n = need(card); if (!n) return null; const have = spares(card).length, m = below(card); return { n, have, ok: have >= n, rar: RAR[m[0].rar].name, set: SETS[card.set].name }; };
+  const info = card => { const n = need(card); if (!n || card.retired) return null; const have = spares(card).length, m = below(card); if (!have && m.every(c => c.retired)) return null;   // nothing to forge from cards no pack holds any more, unless you still have spares of them
+    return { n, have, ok: have >= n, rar: RAR[m[0].rar].name, set: SETS[card.set].name }; };
   function make(no) {
     const card = BY_NO[no], i = card && info(card); if (!i || !i.ok) return null; const used = spares(card).slice(0, i.n), gone = new Set(used.map(c => c.uid)), paid = used.reduce((a, c) => a + valueOf(c), 0);
     state.vault = state.vault.filter(c => !gone.has(c.uid)); const copy = mint(card, false, null, paid); copy.fx = ""; copy.forged = 1; state.vault.push(copy); state.s.forged = (state.s.forged || 0) + 1; noteFound(); save(); return copy;

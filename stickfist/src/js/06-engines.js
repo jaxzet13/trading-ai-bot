@@ -10,7 +10,7 @@ class PackScreen {
     this.pk = pk; this.pack = pack || PACKS[0]; this.cv = pk.querySelector("canvas.scr"); this.ctx = this.cv.getContext("2d");
     this.el = { stat: pk.querySelector(".r-stat"), name: pk.querySelector(".r-name"), sub: pk.querySelector(".r-sub"), meter: pk.querySelector(".r-meter") };
     this.on = false; this.last = 0; this.t0 = performance.now(); this.off = document.createElement("canvas"); this.g = this.off.getContext("2d", { willReadFrequently: true }); this.cache = new Map(); this.layer = document.createElement("canvas"); this.lc = this.layer.getContext("2d");
-    const n = CARDS.filter(c => c.set === this.pack.set).length;
+    const n = LIVE.filter(c => c.set === this.pack.set).length;
     scramble(this.el.name, this.pack.name.toUpperCase(), 520); this.el.sub.textContent = `${n} cards inside · ${this.pack.n} in every pack`;
   }
   fit() {
