@@ -1,5 +1,5 @@
 {
- "updated": "Nov 25 18:00 UTC",
+ "updated": "Nov 25 18:30 UTC",
  "walk": {
   "updated": "2026-11-25 18:00 UTC",
   "thr": 0.05,
@@ -635,22 +635,26 @@
   ]
  },
  "fills": {
-  "updated": "2026-11-25 18:00 UTC",
+  "updated": "2026-11-25 18:30 UTC",
   "orders": 55,
   "filled": 42,
   "fill_rate": 0.764,
   "fill_minus_quote_c": -0.91,
-  "filled_real_c": 4.17,
-  "filled_at_quote_c": 3.4,
+  "filled_real_c": 5.72,
+  "filled_at_quote_c": 4.83,
   "unfilled_would_have_c": 6.95,
-  "all_at_quote_c": 4.25,
+  "all_at_quote_c": 5.33,
   "unfilled_settled": 13,
   "moved_known": 32,
   "moved_filled_c": 0.0,
   "moved_unfilled_c": 4.0,
   "unfilled_within_1c": 0,
   "unfilled_within_2c": 2,
-  "unfilled_moved_known": 4
+  "unfilled_moved_known": 4,
+  "repriced_orders": 11,
+  "dropped_at_send": 0,
+  "repriced_filled": 10,
+  "repriced_sent": 11
  },
  "model": {
   "trained": "2026-11-25 18:00 UTC",
@@ -662,18 +666,25 @@
   "running": true,
   "balance": 24.6052,
   "all": {
-   "bets": 531,
-   "pnl": 23.08,
-   "contracts": 909.0,
-   "fees": 11.81,
-   "wins": 204
+   "bets": 532,
+   "pnl": 24.47,
+   "contracts": 911.0,
+   "fees": 11.84,
+   "wins": 205
   },
   "edge": {
-   "bets": 41,
-   "pnl": 1.26,
-   "contracts": 43.0,
-   "fees": 0.66,
-   "wins": 19
+   "bets": 42,
+   "pnl": 2.65,
+   "contracts": 45.0,
+   "fees": 0.69,
+   "wins": 20
+  },
+  "restored": {
+   "bets": 0,
+   "pnl": 0,
+   "contracts": 0,
+   "fees": 0,
+   "wins": 0
   },
   "curve": [
    {
@@ -2271,6 +2282,12 @@
     "n": 531,
     "ts": 1795627261.24,
     "label": "Nov 25 17:31"
+   },
+   {
+    "cum": 24.47,
+    "n": 532,
+    "ts": 1795629421.013,
+    "label": "Nov 25 18:01"
    }
   ],
   "switch_index": 245,
@@ -2282,7 +2299,7 @@
     "price": 0.29,
     "n": 2.0,
     "edge": 0.10483,
-    "pnl": null
+    "pnl": 1.39
    },
    {
     "time": "Nov 25 17:21",
@@ -2512,9 +2529,17 @@
  "tennis": {
   "real_bets": 14,
   "real_won": 13,
-  "real_pnl": 1.27,
-  "real_open": 1,
-  "markets": 29074
+  "real_pnl": 0.39,
+  "real_open": 0,
+  "markets": 29076
+ },
+ "funnel": {
+  "hours": 24,
+  "looks": 8815,
+  "eligible": 2747,
+  "edge5": 77,
+  "orders": 56,
+  "fills": 43
  },
  "switched": "Nov 24 20:22 UTC"
 }
