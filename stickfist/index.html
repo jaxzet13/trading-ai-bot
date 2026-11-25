@@ -1033,6 +1033,18 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 /* the top line of the pack opening never grows past the screen: the count gives way, skip stays put */
 .st-bar .pn, .st-bar .st-count { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .st-bar .pn { flex: 0 1 auto; } .st-bar .st-count { flex: 1 1 auto; text-align: center; } .st-bar #stSkip { flex: none; }
 .st-bar { min-width: 0; width: 100%; max-width: 100vw; box-sizing: border-box; }
+
+/* ---- the forge: spare cards become the card you are after ---- */
+.forge { display: grid; gap: 10px; padding: 16px; border-radius: 18px; border: 1px solid var(--ln2); background: var(--s1); }
+.forge.rdy { border-color: rgba(59,228,119,.45); background: linear-gradient(100deg, rgba(59,228,119,.13), rgba(59,228,119,.03)); }
+.forge .fg-top { display: flex; justify-content: space-between; align-items: baseline; } .forge .fg-top b { font-variant-numeric: tabular-nums; font-size: 15px; }
+.forge .gbar, .fg-row .gbar { display: block; height: 6px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; } .forge .gbar i, .fg-row .gbar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2bbf62, var(--acc)); }
+.forge p { margin: 0; color: var(--dim); } .forge p b { color: var(--ink); } .forge .btn { min-height: 46px; } .forge .btn[disabled] { opacity: .6; }
+.fg-lead { margin: -4px 0 10px; color: var(--dim); } .fg-list { display: grid; gap: 8px; }
+.fg-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px 10px 10px; border-radius: 16px; border: 1px solid var(--ln2); background: var(--s1); color: inherit; text-align: left; font: inherit; }
+.fg-row.rdy { border-color: rgba(59,228,119,.45); } .fg-row img { width: 40px; height: 49px; object-fit: cover; border-radius: 6px; flex: none; background: #000; }
+.fg-row .fg-main { display: grid; gap: 5px; flex: 1; min-width: 0; } .fg-row .fg-main b { font-size: 14.5px; } .fg-row small { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .fg-row.rdy small { color: var(--acc); }
+.fg-row .fg-go { flex: none; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 </style>
 </head>
 <body>
@@ -1096,6 +1108,7 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
     <button class="btn pshare" id="pShare" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span id="pShareTxt">Share my stats</span></button>
     <h3 class="sec">Goals</h3>
     <div id="pGoals"></div>
+    <div id="pForge"></div>
     <h3 class="sec">Your cards</h3>
     <div class="clist" id="pTable"></div>
     <p class="small" id="pNote"></p>
@@ -2173,6 +2186,7 @@ const moneyR = u => money(Math.abs(u));
 const signR = (u, label) => `<span class="${u > 0 ? "up" : u < 0 ? "dn" : "fl"}">${u > 0 ? "+" : u < 0 ? "−" : ""}${moneyR(u)}</span>${label ? ` <span class="dim">${label}</span>` : ""}`;
 const pctR = p => `<small class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲" : p < -.0005 ? "▼" : "–"} ${Math.abs(p) >= 10 ? "×" + (1 + p).toFixed(0) : Math.round(Math.abs(p) * 100) + "%"}</small>`;
 function renderProfile() {
+  { const pf = $("pForge"), h = Forge.listHTML(); if (pf.dataset.sig !== h) { pf.dataset.sig = h; pf.innerHTML = h; } }
   { const pa = $("pAcct"), h = Acct.html(); if (pa.dataset.sig !== h) { pa.dataset.sig = h; pa.innerHTML = h; } }
   $("pLimits").live = limitsHTML(); $("pSettings").live = settingsHTML(); $("pHist").live = History.html();
   const net = netWorth(), hold = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0), all = profitAll(), d24 = profitSince(864e5), found = new Set(state.vault.map(c => c.no)).size;
@@ -2243,6 +2257,7 @@ function cardModal(no, keep) {
       <div class="pricebox">${best ? `<b data-tick="m${card.no}" data-v="${now.toFixed(2)}">${moneyS(now)}</b><div class="chgs"><span>${pill(Val.pct(best, 24))}<small>today</small></span><span>${pill(gainOf(best))}<small>since you pulled it</small></span></div>` : `<b>${moneyS(card.val)}</b><span class="dim">starting value</span>`}</div></div>
     ${copies}
     ${best ? `<div class="mk"><div class="label">Your best copy · ${hrs >= 168 ? "last 7 days" : "since you pulled it"}</div>${ser.length > 1 && hrs > .05 ? lineChart(ser, { log: true, fmt: moneyS, h: 150 }) : `<p class="small">Just pulled. Its value starts moving now.</p>`}<div class="small">${Val.watching(best)} AI buyers watching${mv ? ` · ${mv.ago ? mv.ago + "h ago" : "this hour"} buyers ${mv.pct > 0 ? "rushed in" : "dumped it"} ${pctShort(mv.pct)}` : ""} · simulated</div></div>` : ""}
+    ${Forge.html(card)}
     <p class="dim facts">${fmt(card.chars)} characters · starts at ${money(card.val)} · turns up in ${chance(p, packOf(card))}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
     ${Cut.has(card.id) ? `<div><button class="btn small" data-cut="${card.id}">▶ ${cs.length ? "Watch" : "Preview"} its cutscene</button></div>` : ""}
     ${styles}</div>`, false, keep);
@@ -4226,6 +4241,50 @@ const Acct = (() => {
 })();
 
 /* ============================================================================
+   8l. THE FORGE. Spare cards become the card you are after.
+   Packs hand out a lot of commons and uncommons. The forge gives them somewhere to go: trade in spare cards of one rarity and
+   get the card you pick from the next rarity up in the same set. So every pack moves you toward a card you chose, even
+   when its best card was not the one you wanted.
+   Kept fair to both sides by three rules:
+   - A spare is a plain extra copy. Styled copies are never used, and you always keep one copy of every card.
+   - The price is set so that even the cheapest spares are worth more, at their starting values, than the card they make
+     (15% more), so the forge never hands out value: selling the spares always pays at least as much as forging.
+   - A forged card is always the plain look. Styles only come out of packs.
+   Nothing here touches what packs contain or their odds.
+   ========================================================================== */
+const Forge = (() => {
+  const tier = c => RAR[c.rar].tier;
+  // the cards one rarity down in the same set (the nearest rarity below that the set has)
+  function below(card) { const lower = CARDS.filter(c => c.set === card.set && tier(c) < tier(card)); if (!lower.length) return []; const t = Math.max(...lower.map(tier)); return lower.filter(c => tier(c) === t); }
+  function need(card) { const m = below(card); return m.length ? Math.ceil(1.15 * card.val / Math.min(...m.map(c => c.val))) : 0; }
+  // your spare copies of those cards, cheapest first
+  function spares(card) {
+    const out = []; for (const m of below(card)) { const cs = state.vault.filter(c => c.no === m.no), plain = cs.filter(c => !c.fx).sort((a, b) => valueOf(b) - valueOf(a)); out.push(...(cs.some(c => c.fx) ? plain : plain.slice(1))); }
+    return out.sort((a, b) => valueOf(a) - valueOf(b));
+  }
+  const info = card => { const n = need(card); if (!n) return null; const have = spares(card).length, m = below(card); return { n, have, ok: have >= n, rar: RAR[m[0].rar].name, set: SETS[card.set].name }; };
+  function make(no) {
+    const card = BY_NO[no], i = card && info(card); if (!i || !i.ok) return null; const used = spares(card).slice(0, i.n), gone = new Set(used.map(c => c.uid)), paid = used.reduce((a, c) => a + valueOf(c), 0);
+    state.vault = state.vault.filter(c => !gone.has(c.uid)); const copy = mint(card, false, null, paid); copy.fx = ""; copy.forged = 1; state.vault.push(copy); state.s.forged = (state.s.forged || 0) + 1; noteFound(); save(); return copy;
+  }
+  // in the card window: what this card costs to forge, how far along you are, and the button
+  function html(card) {
+    const i = info(card); if (!i) return ""; const pc = Math.min(1, i.have / i.n), own = state.vault.some(c => c.no === card.no);
+    return `<div class="forge${i.ok ? " rdy" : ""}"><div class="fg-top"><span class="label">Forge ${own ? "another" : "this card"}</span><b>${Math.min(i.have, i.n)} / ${i.n}</b></div>
+      <div class="gbar" role="img" aria-label="${i.have} of ${i.n} spare cards"><i style="width:${(pc * 100).toFixed(1)}%"></i></div>
+      <p class="small">Trade in <b>${i.n} spare ${esc(i.rar)}</b> cards from ${esc(i.set)} for one ${esc(card.name)}. A spare is a plain extra copy: you always keep one of each, and styled copies are never used.${i.ok ? "" : ` You have ${i.have}.`}</p>
+      <button class="btn ${i.ok ? "solid free" : "ghost"}" data-forge="${card.no}"${i.ok ? "" : " disabled"}>${i.ok ? `forge ${esc(card.name)}` : `${i.n - i.have} more spare${i.n - i.have === 1 ? "" : "s"} to go`}</button></div>`;
+  }
+  // on Me: the cards you are closest to forging, the ones you have never found first
+  function listHTML() {
+    const rows = CARDS.map(c => ({ c, i: info(c) })).filter(r => r.i && r.i.have > 0).map(r => Object.assign(r, { own: state.vault.some(v => v.no === r.c.no), pc: Math.min(1, r.i.have / r.i.n) })).sort((a, b) => (b.i.ok - a.i.ok) || (a.own - b.own) || (b.pc - a.pc) || (b.c.val - a.c.val)).slice(0, 3);
+    if (!rows.length) return "";
+    return `<h3 class="sec">Forge</h3><p class="small fg-lead">Spare cards become the card you are after: trade in extras of one rarity for the card you pick from the next one up.</p><div class="fg-list">${rows.map(r => `<button class="fg-row${r.i.ok ? " rdy" : ""}" data-card="${r.c.no}"><img src="${imgOf(r.c, "", true)}" alt="" loading="lazy"><span class="fg-main"><b>${esc(r.c.name)}</b><span class="gbar"><i style="width:${(r.pc * 100).toFixed(1)}%"></i></span><small>${r.i.ok ? "Ready to forge" : `${r.i.have} of ${r.i.n} spare ${esc(r.i.rar)}s`}${r.own ? "" : " · not found yet"}</small></span><span class="fg-go" style="color:${RAR[r.c.rar].col}">${RAR[r.c.rar].name}</span></button>`).join("")}</div>`;
+  }
+  return { info, make, html, listHTML, need, spares };
+})();
+
+/* ============================================================================
    9. EVENTS
    ========================================================================== */
 document.addEventListener("click", e => {
@@ -4242,6 +4301,11 @@ document.addEventListener("click", e => {
   if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
   if (t.dataset.testmoney) { Acct.testMoney(+t.dataset.testmoney); return; }
+  if (t.dataset.forge) {                                                                   // spares are spent for good, so it takes a second tap
+    const no = t.dataset.forge, i = Forge.info(BY_NO[no]); if (!i || !i.ok) return;
+    if (!t.dataset.armed) { t.dataset.armed = 1; t.textContent = `tap again: uses ${i.n} spare cards`; setTimeout(() => { if (t.isConnected) { delete t.dataset.armed; t.textContent = `forge ${BY_NO[no].name}`; } }, 3500); return; }
+    const r = t.getBoundingClientRect(), copy = Forge.make(no); if (!copy) return; Snd.level(); buzz([30, 40, 30, 40, 60]); FX.burst(r.left + r.width / 2, r.top + r.height / 2, 60, [RAR[BY_NO[no].rar].col, "#fff"], 420);
+    cardModal(no); $("mbox").scrollTop = 0; toast(`Forged: ${BY_NO[no].name}`); renderBal(); if (view === "profile") renderProfile(); if (view === "collection" && typeof renderCollection === "function") renderCollection(); return; }
   if (t.id === "sumClaim" || t.id === "homeClaim") {                                       // finished goals pay out right where you are, and the next button already says "open a free pack"
     const r = t.getBoundingClientRect(), n = Goals.claimAll(); if (!n) return;
     if (typeof FX !== "undefined" && FX.burst) FX.burst(r.left + r.width / 2, r.top + r.height / 2, 18, ["#3be477", "#fff"], 320);
