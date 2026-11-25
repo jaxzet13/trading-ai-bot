@@ -76,7 +76,7 @@ const PACKS = [
     slots: [
       [["ignition", 55], ["countdown", 30], ["gantry", 15]],
       [["ignition", 55], ["countdown", 30], ["gantry", 15]],
-      [["ignition", 49.8438], ["countdown", 27.1875], ["gantry", 13.5938], ["liftoff", 3.42], ["booster", 2.58], ["apogee", 3], ["luna", 0.375]]
+      [["ignition", 49.8438], ["countdown", 27.1875], ["gantry", 13.5938], ["liftoff", 3.6], ["booster", 2.9], ["apogee", 2.5], ["luna", 0.375]]
     ] }
 ];
 // A card that no pack holds any more is retired: copies people already have keep their worth and can still be sold, but it is no longer counted, chased or shown as missing.

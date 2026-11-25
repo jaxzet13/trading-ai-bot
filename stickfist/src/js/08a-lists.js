@@ -7,7 +7,7 @@ const pill = p => { const up = p > .0005, dn = p < -.0005, a = Math.abs(p * 100)
 const rdot = card => `<i class="rd" style="--rc:${RAR[card.rar].col}"></i>`;
 const thumb = (card, fx) => `<span class="thumb" style="--rc:${RAR[card.rar].col}"><img src="${imgOf(card, fx, true)}" alt="" loading="lazy" draggable="false"></span>`;
 // every card has its own rarity: how often it turns up in a pack of its set. No two cards share one.
-const rarLabel = card => chanceS(packP(card.id));
+const rarLabel = card => card.retired ? "Retired · not in packs" : chanceS(packP(card.id));    // a retired card has no odds to show
 const chanceS = p => p >= .1 ? (p * 100).toFixed(1) + "% of packs" : "1 in " + fmt(1 / p) + " packs";
 const seg = (scope, key, opts, cur) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button data-f="${scope}:${key}:${v}" class="${v === cur ? "on" : ""}" aria-pressed="${v === cur}">${l}</button>`).join("")}</div>`;
 const selectHTML = (id, opts, cur, label) => `<label class="sortsel"><span>${label}</span><select id="${id}" aria-label="${label}">${opts.map(([v, l]) => `<option value="${v}"${v === cur ? " selected" : ""}>${l}</option>`).join("")}</select></label>`;

@@ -131,7 +131,7 @@ function cardModal(no, keep) {
     ${copies}
     ${best ? `<div class="mk"><div class="label">Your best copy · ${hrs >= 168 ? "last 7 days" : "since you pulled it"}</div>${ser.length > 1 && hrs > .05 ? lineChart(ser, { log: true, fmt: moneyS, h: 150 }) : `<p class="small">Just pulled. Its value starts moving now.</p>`}<div class="small">${Val.watching(best)} AI buyers watching${mv ? ` · ${mv.ago ? mv.ago + "h ago" : "this hour"} buyers ${mv.pct > 0 ? "rushed in" : "dumped it"} ${pctShort(mv.pct)}` : ""} · simulated</div></div>` : ""}
     ${Forge.html(card)}
-    <p class="dim facts">${fmt(card.chars)} characters · starts at ${money(card.val)} · turns up in ${chance(p, packOf(card))}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
+    <p class="dim facts">${fmt(card.chars)} characters · starts at ${money(card.val)} · ${card.retired ? "retired: no pack holds it any more" : "turns up in " + chance(p, packOf(card))}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
     ${Cut.has(card.id) ? `<div><button class="btn small" data-cut="${card.id}">▶ ${cs.length ? "Watch" : "Preview"} its cutscene</button></div>` : ""}
     ${styles}</div>`, false, keep);
 }

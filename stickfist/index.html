@@ -1281,7 +1281,7 @@ const PACKS = [
     slots: [
       [["ignition", 55], ["countdown", 30], ["gantry", 15]],
       [["ignition", 55], ["countdown", 30], ["gantry", 15]],
-      [["ignition", 49.8438], ["countdown", 27.1875], ["gantry", 13.5938], ["liftoff", 3.42], ["booster", 2.58], ["apogee", 3], ["luna", 0.375]]
+      [["ignition", 49.8438], ["countdown", 27.1875], ["gantry", 13.5938], ["liftoff", 3.6], ["booster", 2.9], ["apogee", 2.5], ["luna", 0.375]]
     ] }
 ];
 // A card that no pack holds any more is retired: copies people already have keep their worth and can still be sold, but it is no longer counted, chased or shown as missing.
@@ -2258,7 +2258,7 @@ function cardModal(no, keep) {
     ${copies}
     ${best ? `<div class="mk"><div class="label">Your best copy · ${hrs >= 168 ? "last 7 days" : "since you pulled it"}</div>${ser.length > 1 && hrs > .05 ? lineChart(ser, { log: true, fmt: moneyS, h: 150 }) : `<p class="small">Just pulled. Its value starts moving now.</p>`}<div class="small">${Val.watching(best)} AI buyers watching${mv ? ` · ${mv.ago ? mv.ago + "h ago" : "this hour"} buyers ${mv.pct > 0 ? "rushed in" : "dumped it"} ${pctShort(mv.pct)}` : ""} · simulated</div></div>` : ""}
     ${Forge.html(card)}
-    <p class="dim facts">${fmt(card.chars)} characters · starts at ${money(card.val)} · turns up in ${chance(p, packOf(card))}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
+    <p class="dim facts">${fmt(card.chars)} characters · starts at ${money(card.val)} · ${card.retired ? "retired: no pack holds it any more" : "turns up in " + chance(p, packOf(card))}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
     ${Cut.has(card.id) ? `<div><button class="btn small" data-cut="${card.id}">▶ ${cs.length ? "Watch" : "Preview"} its cutscene</button></div>` : ""}
     ${styles}</div>`, false, keep);
 }
@@ -2292,7 +2292,7 @@ const pill = p => { const up = p > .0005, dn = p < -.0005, a = Math.abs(p * 100)
 const rdot = card => `<i class="rd" style="--rc:${RAR[card.rar].col}"></i>`;
 const thumb = (card, fx) => `<span class="thumb" style="--rc:${RAR[card.rar].col}"><img src="${imgOf(card, fx, true)}" alt="" loading="lazy" draggable="false"></span>`;
 // every card has its own rarity: how often it turns up in a pack of its set. No two cards share one.
-const rarLabel = card => chanceS(packP(card.id));
+const rarLabel = card => card.retired ? "Retired · not in packs" : chanceS(packP(card.id));    // a retired card has no odds to show
 const chanceS = p => p >= .1 ? (p * 100).toFixed(1) + "% of packs" : "1 in " + fmt(1 / p) + " packs";
 const seg = (scope, key, opts, cur) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button data-f="${scope}:${key}:${v}" class="${v === cur ? "on" : ""}" aria-pressed="${v === cur}">${l}</button>`).join("")}</div>`;
 const selectHTML = (id, opts, cur, label) => `<label class="sortsel"><span>${label}</span><select id="${id}" aria-label="${label}">${opts.map(([v, l]) => `<option value="${v}"${v === cur ? " selected" : ""}>${l}</option>`).join("")}</select></label>`;
