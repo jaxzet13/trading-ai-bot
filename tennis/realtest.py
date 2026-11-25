@@ -39,7 +39,7 @@ RUN_S = 2 * 3600
 MAX_LOSS = 4.0
 AUTO_MAX_LOSS = 5.0              # account holder, Nov 24: "start them with real money with the same 5 dollar stop loss"
 TOP_N = 3
-AUTO_N = 5
+AUTO_N = 50                      # account holder, Nov 25: "use more tennis strategies at once": the whole frozen batch
 SLACK_C = 2
 
 
