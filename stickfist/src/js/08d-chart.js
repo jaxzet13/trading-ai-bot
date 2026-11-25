@@ -8,12 +8,14 @@
    ========================================================================== */
 const Chart = (() => {
   const TF = [[1, "1s"], [5, "5s"], [15, "15s"], [60, "1m"], [300, "5m"], [3600, "1h"]], N = 44, W = 720, H = 430, AX = 96, PT = 16, PB = 26;
-  let tf = 1, timer = 0, pin = "", heroUid = "", heroAt = 0;
+  let tf = 1, timer = 0, heroUid = "", heroAt = 0;
   const px = u => { const a = Math.abs(u) / UNIT, d = a < 1 ? 4 : a < 10 ? 3 : 2; return "$" + a.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };   // more places than elsewhere: the point is to see it move
   const lastSold = no => (state.sold || []).find(r => r.no === no) || null;
   const find = uid => state.vault.find(c => c.uid === uid) || (state.sold || []).find(r => r.uid === uid) || null;
   const ago = ms => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? s + "s ago" : s < 3600 ? Math.round(s / 60) + " min ago" : s < 86400 ? Math.round(s / 3600) + "h ago" : Math.round(s / 86400) + "d ago"; };
-  function html(c) {
+  function html(c, bare) {
+    const tabs = `<div class="tc-tf" role="tablist" aria-label="Candle length">${TF.map(([s, l]) => `<button class="tcb${s === tf ? " on" : ""}" role="tab" aria-selected="${s === tf}" data-tf="${s}">${l}</button>`).join("")}</div>`, cv = `<canvas class="tc-cv" width="${W}" height="${H}" role="img" aria-label="Price chart"></canvas>`;
+    if (bare) return `<div class="tchart" data-uid="${c.uid}">${cv}${tabs}</div>`;                                    // on Me: the picture, and the candle lengths small underneath
     const now = Val.now(c), from = c.ts ? c.at : Val.at(c, c.t), p = now / Math.max(1, from) - 1;
     return `<div class="tchart" data-uid="${c.uid}"><div class="tc-tf" role="tablist" aria-label="Candle length">${TF.map(([s, l]) => `<button class="tcb${s === tf ? " on" : ""}" role="tab" aria-selected="${s === tf}" data-tf="${s}">${l}</button>`).join("")}</div>
       <canvas class="tc-cv" width="${W}" height="${H}" role="img" aria-label="Price chart"></canvas>
@@ -42,11 +44,10 @@ const Chart = (() => {
   }
   /* ---- the live hero on Me ----
      Which copy to show: one that is running right now, else the biggest riser of the last minute. It stays put for a while
-     so the picture does not flick between cards, and a tap on a mover pins that copy until you let it go. */
+     so the picture does not flick between cards. */
   const heat = (c, t) => { const g = Val.surge(c, t); return g ? 10 + g.j * (1 - g.q) : Val.pctSec(c, 60); };
   function hero() {
     const v = state.vault; if (!v.length) return null; const t = Date.now();
-    if (pin) { const c = v.find(x => x.uid === pin); if (c) return c; pin = ""; }
     const cur = v.find(x => x.uid === heroUid), running = cur && Val.surge(cur, t); if (running) { heroAt = t - 12000; return cur; }      // a run is watched to the end, and a little past it
     const ranked = v.map(c => [heat(c, t), c]).sort((a, b) => b[0] - a[0]);
     if (cur && t - heroAt < 20000 && ranked[0][0] < 10) return cur;
@@ -56,25 +57,21 @@ const Chart = (() => {
   const state3 = (g, m1) => g ? "pump" : m1 <= -.08 ? "dump" : "";
   function heroHTML() {
     const c = hero(); if (!c) return ""; const card = BY_NO[c.no], t = Date.now(), g = Val.surge(c, t), m1 = Val.pctSec(c, 60), now = Val.now(c), p = now / Math.max(1, Val.at(c, c.t)) - 1, st = state3(g, m1);
-    const others = state.vault.filter(x => x.uid !== c.uid).map(x => [Val.surge(x, t) ? 9 : 0, Val.pctSec(x, 60), x]).sort((a, b) => b[0] - a[0] || b[1] - a[1]).slice(0, 6);
     return `<div class="lhero ${st}" data-uid="${c.uid}" style="--rc:${RAR[card.rar].col}">
-      <div class="lh-top"><button class="lh-who" data-card="${card.no}" aria-label="${esc(card.name)}">${thumb(card, c.fx)}<span><b>${esc(card.name)}</b><small>${esc(RAR[card.rar].name)}${c.serial ? " · #" + c.serial : ""}</small></span></button><span class="lh-badge" data-lbadge>${st === "pump" ? "pumping" : st === "dump" ? "dumping" : "live"}</span></div>
+      <div class="lh-top"><button class="lh-who" data-card="${card.no}" aria-label="${esc(card.name)}">${thumb(card, c.fx)}<span><b>${esc(card.name)}</b><small>${esc(RAR[card.rar].name)}</small></span></button><span class="lh-badge" data-lbadge>${st === "pump" ? "pumping" : st === "dump" ? "dumping" : "live"}</span></div>
       <div class="lh-px"><b data-lpx>${px(now)}</b><span class="lh-pct ${p >= 0 ? "up" : "dn"}" data-lpct>${p >= 0 ? "▲" : "▼"} ${mult(p).replace(/^[+−]/, "")}</span></div>
-      <div class="lh-sub"><span class="${m1 >= 0 ? "up" : "dn"}" data-lm1>${pctShort(m1)}</span> in the last minute</div>
-      ${html(c)}
-      <div class="lh-act"><button class="btn lh-sell" data-sell="${c.uid}" data-no="${card.no}">Sell <b data-lsell>${money(sellOf(c))}</b></button>${pin ? `<button class="btn lh-auto" data-pin="">Follow the hottest</button>` : ""}</div>
-      ${others.length ? `<div class="lh-mv" role="list" aria-label="Your other movers">${others.map(([s, m, x]) => `<button class="lh-chip${s ? " pump" : ""}" role="listitem" data-pin="${x.uid}">${thumb(BY_NO[x.no], x.fx)}<span><b>${esc(BY_NO[x.no].name)}</b><small class="${m >= 0 ? "up" : "dn"}">${s ? "pumping" : pctShort(m)}</small></span></button>`).join("")}</div>` : ""}</div>`;
+      ${html(c, true)}
+      <button class="btn lh-sell" data-sell="${c.uid}" data-no="${card.no}">Sell <b data-lsell>${money(sellOf(c))}</b></button></div>`;
   }
-  function setPin(uid) { pin = uid || ""; if (pin) { heroUid = pin; heroAt = Date.now(); } buzz(4); if (view === "profile") renderProfile(); }
   // between redraws of the page the hero's numbers keep rolling
   function roll() {
     const box = document.querySelector(".lhero"); if (!box) return; const c = state.vault.find(x => x.uid === box.dataset.uid); if (!c) return;
     const t = Date.now(), now = Val.at(c, t), p = now / Math.max(1, Val.at(c, c.t)) - 1, g = Val.surge(c, t), m1 = Val.pctSec(c, 60), st = state3(g, m1), set = (sel, txt, cls) => { const e = box.querySelector(sel); if (!e) return; if (e.textContent !== txt) e.textContent = txt; if (cls) { e.classList.toggle("up", cls === "up"); e.classList.toggle("dn", cls === "dn"); } };
-    set("[data-lpx]", px(now)); set("[data-lpct]", (p >= 0 ? "▲ " : "▼ ") + mult(p).replace(/^[+−]/, ""), p >= 0 ? "up" : "dn"); set("[data-lm1]", pctShort(m1), m1 >= 0 ? "up" : "dn"); set("[data-lsell]", money(sellOf(c)));
+    set("[data-lpx]", px(now)); set("[data-lpct]", (p >= 0 ? "▲ " : "▼ ") + mult(p).replace(/^[+−]/, ""), p >= 0 ? "up" : "dn"); set("[data-lsell]", money(sellOf(c)));
     set("[data-lbadge]", st === "pump" ? "pumping" : st === "dump" ? "dumping" : "live"); box.classList.toggle("pump", st === "pump"); box.classList.toggle("dump", st === "dump");
   }
   const shown = b => b.offsetParent !== null;
   function draw() { let n = 0; document.querySelectorAll(".tchart").forEach(b => { if (shown(b)) { drawOne(b); n++; } }); roll(); return n; }
   function start() { draw(); if (timer) return; timer = setInterval(() => { if (document.hidden) return; if (!draw()) { clearInterval(timer); timer = 0; } }, 100); }
-  return { html, heroHTML, start, setTf, setPin, lastSold, px };
+  return { html, heroHTML, start, setTf, lastSold, px };
 })();

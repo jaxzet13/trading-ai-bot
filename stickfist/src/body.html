@@ -51,24 +51,21 @@
   <!-- PROFILE -->
   <section class="view" id="v-profile">
     <div class="page-head"><h1 class="ttl">Me</h1><p class="live"></p></div>
+    <div id="pWorth"></div>
     <div id="pLive"></div>
-    <div class="hero-card"><div id="pWorth"></div><div id="pChart" class="pchart"></div></div>
-    <div id="pRank"></div>
-    <div id="pAcct"></div>
-    <div id="pInvite"></div>
-    <button class="btn pshare" id="pShare" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span id="pShareTxt">Share my stats</span></button>
-    <h3 class="sec">Goals</h3>
-    <div id="pGoals"></div>
     <h3 class="sec">Your cards</h3>
     <div class="clist" id="pTable"></div>
     <p class="small" id="pNote"></p>
-    <h3 class="sec">History</h3>
-    <div id="pHist"></div>
-    <h3 class="sec" id="pMktH">Moving now</h3>
-    <div class="pmkt" id="pMkt"></div>
     <div class="plinks" id="pLinks"></div>
+    <div class="pmore">
+      <details class="more big"><summary>Goals</summary><div id="pRank"></div><div id="pGoals"></div></details>
+      <details class="more big"><summary>Invite friends</summary><div id="pInvite"></div></details>
+      <details class="more big"><summary>History</summary><div id="pHist"></div><p class="small" id="pStats"></p>
+        <button class="btn pshare" id="pShare" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span id="pShareTxt">Share my stats</span></button></details>
+      <details class="more big" id="pMore"><summary>Limits and settings</summary><div id="pLimits" style="margin:16px 0 28px"></div><div id="pSettings"></div></details>
+    </div>
+    <div id="pAcct"></div>
     <div id="pTip"></div>
-    <details class="more big" id="pMore"><summary>Limits and settings</summary><div id="pLimits" style="margin:16px 0 28px"></div><div id="pSettings"></div></details>
   </section>
 
   <!-- INVITE -->

@@ -1097,16 +1097,11 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .lh-px { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; } .lh-px b { font: 800 46px/1 Inter, system-ui, sans-serif; letter-spacing: -.045em; font-variant-numeric: tabular-nums; }
 .lh-pct { padding: 5px 10px; border-radius: 10px; font: 800 17px/1 Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; } .lh-pct.up { color: #04130a; background: #3be477; } .lh-pct.dn { color: #fff; background: #d83a3a; }
 .lhero.pump .lh-px b { color: #8dffb6; text-shadow: 0 0 26px rgba(59,228,119,.55); }
-.lh-sub { margin-top: -4px; font-size: 13px; color: var(--dim); font-variant-numeric: tabular-nums; } .lh-sub .up { color: #3be477; font-weight: 700; } .lh-sub .dn { color: #ff7a72; font-weight: 700; }
 .lhero .tchart { padding: 0; border: 0; background: none; border-radius: 0; }
-.lh-act { display: flex; gap: 8px; } .lh-act .btn { flex: 1; min-height: 50px; margin: 0; border-radius: 15px; font-size: 16px; font-weight: 800; } .lh-sell { background: #f5f2ea; color: #0a0a0c; border: 0; } .lh-sell b { font-variant-numeric: tabular-nums; margin-left: 4px; }
-.lh-auto { flex: 0 1 auto !important; padding: 0 14px; background: rgba(255,255,255,.06); color: var(--ink); border: 1px solid var(--ln2); font-size: 13.5px !important; font-weight: 600 !important; }
-.lh-mv { display: flex; gap: 8px; margin: 2px -14px 0; padding: 0 14px 2px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; } .lh-mv::-webkit-scrollbar { display: none; }
-.lh-chip { flex: none; display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 13px; border: 1px solid var(--ln); background: rgba(255,255,255,.04); color: inherit; font: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.lh-chip .thumb { width: 28px; height: 34px; border-radius: 7px; } .lh-chip span { display: grid; } .lh-chip b { font-size: 12.5px; font-weight: 700; white-space: nowrap; } .lh-chip small { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; } .lh-chip small.up { color: #3be477; } .lh-chip small.dn { color: #ff7a72; }
-.lh-chip.pump { border-color: #3be477; background: rgba(59,228,119,.12); } .lh-chip:active { transform: scale(.96); }
-.rspark { width: 52px; height: 24px; flex: none; } .rspark polyline { fill: none; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; } .rspark.up polyline { stroke: #3be477; } .rspark.dn polyline { stroke: #ff6b6b; }
-#pTable .mmain { grid-template-columns: 44px minmax(0, 1fr) auto auto; gap: 10px; }
+.lh-sell { width: 100%; min-height: 50px; margin: 0; border-radius: 15px; border: 0; background: #f5f2ea; color: #0a0a0c; font-size: 16px; font-weight: 800; } .lh-sell b { font-variant-numeric: tabular-nums; margin-left: 4px; }
+.lhero .tc-tf { justify-content: center; gap: 2px; } .lhero .tcb { flex: 0 0 auto; min-height: 30px; padding: 0 12px; background: none; font-size: 12px; } .lhero .tcb.on { background: rgba(255,255,255,.1); color: var(--ink); }
+.worth.slim { display: grid; gap: 4px; margin: 2px 2px 16px; } .worth.slim .label { font-size: 12px; } .worth.slim .bignum { font-size: 40px; font-weight: 800; letter-spacing: -.04em; } .worth.slim .wmeta { font-size: 14px; font-weight: 600; }
+.pmore { display: grid; gap: 8px; margin: 22px 0 18px; } .pmore details.more.big { margin: 0; } .pmore .pshare { margin: 12px 0 16px; } .pmore #pStats { margin: 10px 0 0; }
 .rush.run { background: #3be477; color: #04130a; }
-@media (max-width: 380px) { .lh-px b { font-size: 40px; } #pTable .rspark { width: 40px; } }
+@media (max-width: 380px) { .lh-px b { font-size: 40px; } }
 @media (prefers-reduced-motion: reduce) { .lhero.pump, .lh-badge::before { animation: none; } }
