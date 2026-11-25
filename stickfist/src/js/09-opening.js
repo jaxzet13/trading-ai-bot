@@ -189,7 +189,7 @@ function goalLine() {
 function endHTML(o) {
   const net = o.back - o.paid, pk = SS.pack;
   return `<div class="sum v2"><div class="end-top"><div class="label">${esc(o.title)}</div>
-      <div class="end-num ${o.paid ? (net >= 0 ? "up" : "dn") : "up"}"><div class="bx" role="img" aria-label="${money(o.back)}">${blockSVG(money(o.back))}</div></div>
+      <div class="end-num ${o.paid ? (net >= 0 ? "up" : "dn") : "up"}"><div class="end-big" role="img" aria-label="${money(o.back)}">${money(o.back)}</div></div>
       <div class="end-line ${o.paid ? (net >= 0 ? "up" : "dn") : ""}">${o.paid ? `for ${money(o.paid)} · <b>${net >= 0 ? "+" : "−"}${money(Math.abs(net))}</b>` : o.bought ? "a pack you bought · play money" : "free"}${o.x >= 2 && o.paid ? ` · ${o.x >= 10 ? Math.round(o.x) : o.x.toFixed(1)}×` : ""}</div></div>
     <div class="end-split"><div class="es sold"><small>sold</small><b>${money(o.soldG)}</b></div><div class="es held"><small>holding${o.held.length ? " · " + o.held.length : ""}</small><b>${money(o.heldV)}</b></div></div>
     <div class="end-cards">${o.fan}${goalLine()}</div>

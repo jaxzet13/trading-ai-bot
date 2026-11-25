@@ -1057,3 +1057,8 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .sum.v2 .end-cards:empty { display: none; } .end-line b { font-weight: 700; } .end-line.up b { color: var(--acc); } .end-line.dn b { color: #ff8a80; }
 @media (max-height: 640px) { .end-num .bx { --px: 6px; } .sum.v2 { gap: 10px; } .end-split .es { padding: 8px 10px; } .end-split b { font-size: 17px; } .end-acts .btn.big { min-height: 50px; } .end-acts .row .btn { min-height: 38px; padding: 0 12px; font-size: 13.5px; } }
 .sum.v2 > .end-cards { display: flex; flex-direction: column; align-items: center; } .sum.v2 > .end-cards > :first-child { margin-top: auto; } .sum.v2 > .end-cards > :last-child { margin-bottom: auto; }   /* centred when there is room, from the top when the cards overflow (so the first row is never cut off) */
+
+/* the big number on the result: plain, heavy digits (the block letters are gone from here) */
+.end-big { font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: clamp(54px, 17vw, 76px); font-weight: 800; line-height: 1; letter-spacing: -.045em; font-variant-numeric: tabular-nums; animation: endbig .5s cubic-bezier(.2,1.3,.4,1) both; }
+.end-num.up .end-big { color: var(--acc); text-shadow: 0 0 34px rgba(59,228,119,.28); } .end-num.dn .end-big { color: var(--ink); }
+@keyframes endbig { from { transform: scale(.82); opacity: 0; } } @media (max-height: 640px) { .end-big { font-size: 46px; } } @media (prefers-reduced-motion: reduce) { .end-big { animation: none; } }
