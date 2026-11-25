@@ -33,10 +33,17 @@ async function openPack(pack) {
   $("stBox").innerHTML = `<div class="st-pack enter" id="stPack">${packHTML(pk)}</div><div class="cstack" id="stStack"></div>`;
   hint(""); stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
   const pkEl = $("stPack").firstChild; mine.ps = liveWindow(pkEl, pk); tiltPack(pkEl);
-  let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS !== mine) return;
+  let tk; try { tk = await Fair.offer(pk, PICK); } finally { opening = false; } if (SS !== mine) return;
+  Object.assign(mine, { ticket: tk, price, items: [], veils: [], phase: "pack" }); hint("Swipe across the top to rip it open"); Rip.arm();
+}
+// One pack is a choice: it spills PICK face-down cards and you take one. Each is a real, different card drawn the same way (see Fair.ticket),
+// so whichever you take has the odds on the odds page; the others are never made and never shown. The pack is paid for when you choose.
+const PICK = 5;
+function takePick(i) {
+  const S = SS, tk = S && S.ticket; if (!tk || tk.done) return null; const pk = S.pack, free = S.free, bought = S.bought, price = S.price, items = [tk.take(i)];
   if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else if (bought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
-  state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); History.log(pk, 1, free || bought ? 0 : price, price, items); SS_PRICE = price; { noteFound(); const seenNo = new Set(); mine.fresh = new Set(items.filter(c => { const nw = !state.found[c.no] && !seenNo.has(c.no); seenNo.add(c.no); return nw; }).map(c => c.uid)); } state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
-  mine.items = items; mine.phase = "pack"; hint("Swipe across the top to rip it open"); Rip.arm();
+  state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); History.log(pk, 1, free || bought ? 0 : price, price, items); SS_PRICE = price; { noteFound(); const seenNo = new Set(); S.fresh = new Set(items.filter(c => { const nw = !state.found[c.no] && !seenNo.has(c.no); seenNo.add(c.no); return nw; }).map(c => c.uid)); } state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
+  return items[0];                                                                       // the caller puts it on the stage (or straight into the result, if you skipped)
 }
 /* ---- ripping the pack. Drag across the top and the foil tears right under your finger: it lifts away from the tear, light spills out of the gap
         (in the colour of the best card inside), paper flies, and each notch can be felt and heard. Let go past halfway and it finishes itself; a plain tap
@@ -75,7 +82,7 @@ const Rip = (() => {
     const beam = document.createElement("div"); beam.className = "ripbeam"; wrap.appendChild(beam);
     stage.animate([{ transform: "translate(0,0)" }, { transform: "translate(-6px,4px)" }, { transform: "translate(5px,-4px)" }, { transform: "translate(-2px,2px)" }, { transform: "translate(0,0)" }], { duration: 260 });
     await sleep(220); if (!SS || SS.phase !== "tearing") return; buildStack(); SS.items.forEach((_, i) => setTimeout(() => { if (SS && SS.phase !== "summary") { Snd.rise(i); buzz(7); } }, 60 + i * 70));
-    await sleep(240); wrap.classList.add("drop"); await sleep(380); if (!SS || SS.phase !== "tearing") return; SS.phase = "stack"; meterInit(); focusTop();
+    await sleep(240); wrap.classList.add("drop"); await sleep(380); if (!SS || SS.phase !== "tearing") return; if (SS.ticket) { SS.items = []; SS.veils = []; SS.pool = Array.from({ length: SS.ticket.of }, (_, i) => ({ uid: "pick" + i, slot: i })); const sp = $("stPack"); if (sp) sp.remove(); meterInit(); dealRail(); return; } SS.phase = "stack"; meterInit(); focusTop();
   }
   function arm() {
     const wrap = $("stPack"); if (!wrap) return; R = { wrap, p: 0, dir: 1, tick: 0, built: false, done: false, live: false, x: 0, moved: 0 };
@@ -173,7 +180,8 @@ async function dismiss(el, c, vec, sold) {
   if (!sold) { const m = document.createElement("div"); m.className = "mini"; m.innerHTML = cardHTML(c, { sm: true }); $("stTray").appendChild(m); } $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";   // the row under the stack is what you are holding
   SS.idx++; await sleep(260); if (SS.pool) { railReturn(); return; } if (SS.idx >= SS.items.length) summary(); else focusTop();
 }
-function skipAll() { if (!SS || SS.phase === "summary") return; if (SS.phase === "wait") { Machine.stop(); return; } Machine.stop(); SS.veils && SS.veils.forEach(v => v && v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
+function skipAll() { if (!SS || SS.phase === "summary") return; if (SS.phase === "wait") { Machine.stop(); return; }
+  if (SS.ticket && !SS.ticket.done) { const m = SS.railMid, i = m ? [...m.parentNode.children].indexOf(m) : Math.floor(SS.ticket.of / 2); const c = takePick(i); if (c) SS.items = [c]; SS.pool = []; } Machine.stop(); SS.veils && SS.veils.forEach(v => v && v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
 // one tap to turn the pack into money and open the next: only offered when the next pack is covered (a free pack, one you bought, or what these cards sell for plus your balance)
 const sellNext = back => { const pk = SS.pack, price = packPrice(pk), ok = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins + back >= price; return ok && back > 0 ? `<button class="btn solid" id="sumSellAgain">sell all · open another</button>` : ""; };
 const againLabel = pk => (openN() > 1 && maxN(pk) >= 2) ? (() => { const k = Math.min(openN(), maxN(pk)), c = Math.max(0, k - state.freePacks - boughtOf(pk.id)) * packPrice(pk); return `open ${k} more${c ? " · " + money(c) : ""}`; })() : state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
@@ -202,7 +210,7 @@ function summary() {
   SS.phase = "summary"; const items = SS.items, held = items.filter(inVault), soldG = SS.soldG || 0, heldSell = held.reduce((a, c) => a + sellOf(c), 0), heldV = held.reduce((a, c) => a + valueOf(c), 0), back = soldG + heldSell, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   $("stSummary").innerHTML = endHTML({ title: SS.pack.name, back, paid: SS.free || SS.bought ? 0 : SS_PRICE, bought: SS.bought, x, soldG, held, heldV, heldSell, share: true,
-    fan: held.length ? `<div class="fan">${held.map(c => `<div class="${SS.fresh && SS.fresh.has(c.uid) ? "isnew" : ""}">${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : "" });
+    fan: items.length ? `<div class="fan">${items.map(c => inVault(c) ? `<div class="${SS.fresh && SS.fresh.has(c.uid) ? "isnew" : ""}">${cardHTML(c, { sm: true })}</div>` : `<div class="wassold">${cardHTML(c, { sm: true })}<b class="soldtag">sold</b></div>`).join("")}</div>` : "" });
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
 // one quiet line under a pack result: the free way to get another
@@ -245,7 +253,7 @@ async function openMany(pk, n) {
 let railBackImg = "";
 function railBackURL() { if (!railBackImg) { try { railBackImg = Veil.prototype.drawBack.call({ col: "#cfd3da", tier: 0 }, 300, 420, 2).toDataURL("image/jpeg", .86); } catch (e) {} } return railBackImg; }
 function dealRail() {
-  const box = $("stBox"), deck = $("stDeck"), r = document.createElement("div"); r.className = "rail"; r.id = "stRail"; r.setAttribute("role", "listbox"); r.setAttribute("aria-label", "Your cards, face down");
+  const box = $("stBox"), deck = $("stDeck"), r = document.createElement("div"); box.style.setProperty("--back", `url(${railBackURL()})`); r.className = "rail"; r.id = "stRail"; r.setAttribute("role", "listbox"); r.setAttribute("aria-label", "Your cards, face down");
   r.innerHTML = SS.pool.map(c => `<button class="rc" type="button" role="option" data-u="${c.uid}" aria-label="A face-down card"><i class="rcb"></i></button>`).join(""); box.appendChild(r);
   const els = [...r.children], n = els.length, mid = els[Math.floor((n - 1) / 2)]; r.scrollLeft = mid.offsetLeft + mid.offsetWidth / 2 - r.clientWidth / 2; railPaint(true);
   if (!reduced) { const cx = r.scrollLeft + r.clientWidth / 2, gap = Math.min(70, 900 / n);                       // out of the deck: every card starts in the middle and slides to its place, the near ones first
@@ -263,12 +271,13 @@ function railPaint(quiet) {
   for (const el of r.children) { const c = el.offsetLeft + el.offsetWidth / 2, d = Math.abs(c - mid), k = d / el.offsetWidth; el.style.setProperty("--s", Math.max(.7, 1.06 - k * .26).toFixed(3)); el.style.setProperty("--o", Math.max(.38, 1 - k * .38).toFixed(2)); if (d < bd) { bd = d; best = el; } }
   if (best && best !== SS.railMid) { if (SS.railMid) SS.railMid.classList.remove("mid"); best.classList.add("mid"); if (!quiet && SS.phase === "pick") { Snd.click(); buzz(4); } SS.railMid = best; }
 }
-function railCount() { const n = SS.pool.length; $("stCount").textContent = `${n} left`; hint(n > 1 ? "scroll · tap a card" : ""); }
+function railCount() { const n = SS.pool.length; if (SS.ticket) { $("stCount").textContent = ""; hint("pick your card"); return; } $("stCount").textContent = `${n} left`; hint(n > 1 ? "scroll · tap a card" : ""); }
 function railStep(dir) { const r = $("stRail"); if (!r || !SS || SS.phase !== "pick" || !SS.railMid) return; const el = dir > 0 ? SS.railMid.nextElementSibling : SS.railMid.previousElementSibling; if (el) r.scrollTo({ left: el.offsetLeft + el.offsetWidth / 2 - r.clientWidth / 2, behavior: "smooth" }); }
 async function pickRail(el) {
   if (!SS || SS.phase !== "pick" || SS.busy) return; const r = $("stRail"); el = el || SS.railMid; if (!r || !el) return;
   if (el !== SS.railMid) { r.scrollTo({ left: el.offsetLeft + el.offsetWidth / 2 - r.clientWidth / 2, behavior: "smooth" }); return; }      // a card off to the side comes to the middle first
-  const c = SS.pool.find(x => x.uid === el.dataset.u); if (!c) return; SS.pool = SS.pool.filter(x => x !== c); SS.phase = "stack"; SS.busy = true; hint(""); $("stCount").textContent = SS.pool.length ? `${SS.pool.length} left` : "";
+  let c = SS.pool.find(x => x.uid === el.dataset.u); if (!c) return; if (SS.ticket) { c = takePick(c.slot); SS.pool = []; if (!c) return; } else SS.pool = SS.pool.filter(x => x !== c);
+  SS.phase = "stack"; SS.busy = true; hint(""); $("stCount").textContent = SS.pool.length ? `${SS.pool.length} left` : "";
   el.classList.add("picked"); Snd.whoosh(); buzz(12); await sleep(reduced ? 0 : 170); if (!SS || $("stRail") !== r) return; r.classList.add("away"); el.remove(); SS.railMid = null;
   SS.items.push(c); const i = SS.items.length - 1, d = document.createElement("div"); d.className = "sc rise"; d.dataset.i = i; d.style.cssText = "z-index:50;--rot:0deg;--ox:0px;--oy:0px"; d.innerHTML = cardHTML(c); $("stStack").appendChild(d);
   const v = new Veil(d.querySelector(".card"), BY_NO[c.no].rar); v.col = "#cfd3da"; v.back = v.drawBack(v.w, v.h, v.dpr); v.frame(); SS.veils[i] = v; SS.idx = i;                                   // it comes up with the same plain back it had in the row
@@ -277,7 +286,7 @@ async function pickRail(el) {
 function railReturn() {
   const r = $("stRail"); setTimeout(() => { const st = $("stStack"); if (st) st.querySelectorAll(".sc.gone").forEach(e => e.remove()); }, 500);
   if (!r || !SS.pool.length) { summary(); return; } SS.phase = "pick"; r.classList.remove("away"); railPaint(true); railCount();
-  if (SS.pool.length === 1) { const mine = SS; setTimeout(() => { if (SS === mine && SS.phase === "pick") pickRail(); }, 380); }                     // the last one needs no choosing
+  if (SS.pool.length === 1 && !SS.ticket) { const mine = SS; setTimeout(() => { if (SS === mine && SS.phase === "pick") pickRail(); }, 380); }                     // the last one needs no choosing
 }
 
 function multiSummary() {

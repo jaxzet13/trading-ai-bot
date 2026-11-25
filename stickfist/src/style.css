@@ -1067,3 +1067,8 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .rail::before, .rail::after { content: none; }
 @media (prefers-reduced-motion: reduce) { .deck i, .rc.mid .rcb { animation: none; } }
 .rail { top: -56px; height: calc(100% + 112px); }   /* room above and below for the glow of the card in the middle */
+
+/* the result: clear of the status bar, centred when it is short, and a sold card is still shown (greyed, tagged) */
+.summary { padding-top: calc(16px + env(safe-area-inset-top)); } .summary > .sum.v2 { justify-content: center; }
+.fan > .wassold { position: relative; } .fan > .wassold .card { filter: grayscale(.85) brightness(.5); }
+.soldtag { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%) rotate(-8deg); padding: 3px 10px; border-radius: 8px; border: 2px solid #ff6b63; color: #ff8a80; background: rgba(10,4,4,.72); font-size: 12px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }

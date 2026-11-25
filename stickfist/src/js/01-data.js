@@ -13,8 +13,8 @@ const RAR = {
 };
 // val is in units of play money, 500 to the dollar (see UNIT). chars is the exact number printed on the card.
 const CARDS = [
-  { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "uncommon",  chars: 6432,   val: 71,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
-  { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "uncommon",  chars: 6432,   val: 101,    tint: "#a8ffbe", cap: "it is a colander. it works.", styles: true },
+  { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "uncommon",  chars: 6432,   val: 55,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
+  { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "uncommon",  chars: 6432,   val: 77,    tint: "#a8ffbe", cap: "it is a colander. it works.", styles: true },
   { no: "004", id: "rook",    name: "Rook",    sub: "pool noodle", rar: "uncommon", chars: 6432,   val: 143,    tint: "#a8ffbe", cap: "reach: floppy.", styles: true },
   { no: "012", id: "orbit",   name: "Orbit",   sub: "galaxy",     rar: "rare",  chars: 7260,   val: 290,    tint: "#a9c9ff", cap: "already read the ending.", styles: true },
   { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "epic",  chars: 15750,  val: 420,    tint: "#ece7dc", cap: "gone before the cape lands.", styles: true },
@@ -32,14 +32,14 @@ const CARDS = [
   { no: "030", id: "surge",   name: "Surge",   sub: "big wave",      rar: "rare", chars: 15750, val: 312,  tint: "#9fe8ff", cap: "ride it before it breaks.",    styles: true },
   { no: "031", id: "kraken",  name: "Kraken",  sub: "tentacles",     rar: "epic",     chars: 28000, val: 470, tint: "#9fe8d8", cap: "it was always down there.",    styles: true },
   // ---- Moonshot: one launch, five altitudes. The higher the card, the rarer it is.
-  { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "uncommon",  chars: 8736,   val: 335,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
+  { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "uncommon",  chars: 8736,   val: 209,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
   { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "rare",  chars: 10080,  val: 810,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
   { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "epic",      chars: 40320,  val:  1600,  tint: "#ffb070", cap: "gravity lost the argument.",    styles: true },
-  { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "legendary",      chars: 123480, val: 4200, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
+  { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "legendary",      chars: 123480, val: 5250, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
   { no: "025", set: "ms", id: "luna",     name: "Luna",     sub: "first flag",    rar: "mythic", chars: 448800, val: 12500, tint: "#b8d4ff", cap: "to the moon was never a joke.", styles: true },
   // ---- more Moonshot cards, each at the altitude (and worth) of a card already there
   { no: "032", set: "ms", id: "spark",     name: "Spark",     sub: "sparkler",     rar: "uncommon", chars: 8736,   val: 425,   tint: "#ffb070", cap: "small things start fires.", styles: true },
-  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 343,   tint: "#ff8a7a", cap: "three. two. one.",           styles: true },
+  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 217,   tint: "#ff8a7a", cap: "three. two. one.",           styles: true },
   { no: "034", set: "ms", id: "booster",   name: "Booster",   sub: "stage split",  rar: "epic",     chars: 40320,  val:  2000, tint: "#ffc98a", cap: "dead weight, dropped.",      styles: true },
   { no: "035", set: "ms", id: "flare",     name: "Flare",     sub: "signal flare", rar: "uncommon", chars: 8736,   val: 445,   tint: "#ff8a7a", cap: "the sky has been told.",     styles: true },
   { no: "036", set: "ms", id: "bubble",    name: "Bubble",    sub: "fishbowl helmet", rar: "uncommon", chars: 8736,  val: 465,   tint: "#ece7dc", cap: "all systems: smiling.",      styles: true },
@@ -74,15 +74,15 @@ const PACKS = [
   // the cards worth looking forward to are the ones that differ from pack to pack.
   { id: "fp", set: "fp", name: "First Print", blurb: "Stick figures made of text, from a frog in a hat to a total eclipse.", price: 259, min: 130, max: 2500, n: 1,
     order: ["stitch", "brick", "orbit", "tempest", "surge", "phantom", "kraken", "colossus", "leviathan", "null", "shogun", "ronin", "titan", "grimm", "reaper", "umbra"],
-    slotNames: ["The card: a rare or better in 44 packs out of 100, an epic or better in 1 pack in 6"],
+    slotNames: ["The card: a rare or better in 44 packs out of 100, an epic or better in 1 pack in 8, a legendary in 1 in 33"],
     slots: [
-      [["stitch", 30.9081], ["brick", 26.2719], ["orbit", 9.8708], ["tempest", 8.8838], ["surge", 7.9954], ["phantom", 3.775], ["kraken", 3.2087], ["colossus", 2.7274], ["leviathan", 2.3183], ["null", 1.9706], ["shogun", 0.6276], ["ronin", 0.5335], ["titan", 0.4535], ["grimm", 0.3854], ["reaper", 0.05], ["umbra", 0.02]]
+      [["stitch", 30.5892], ["brick", 26.0008], ["orbit", 11.1624], ["tempest", 10.0461], ["surge", 9.0415], ["phantom", 2.6964], ["kraken", 2.292], ["colossus", 1.9482], ["leviathan", 1.6559], ["null", 1.4075], ["shogun", 0.9414], ["ronin", 0.8002], ["titan", 0.6802], ["grimm", 0.5782], ["reaper", 0.12], ["umbra", 0.04]]
     ] },
   { id: "ms", set: "ms", name: "Moonshot", blurb: "One launch and what happens on the way up: a lit fuse, the pad, a rocket on its plume, a flag on the Moon. The higher the card, the rarer it is.", price: 726, min: 375, max: 7500, n: 1,
     order: ["luna", "fuse", "countdown", "ignition", "console", "suit", "gantry", "liftoff", "booster", "apogee"],
-    slotNames: ["The card: a rare or better in 44 packs out of 100, an epic or better in 1 pack in 8"],
+    slotNames: ["The card: a rare or better in 44 packs out of 100, an epic or better in 1 pack in 8, an Apogee or a Luna in 1 in 43"],
     slots: [
-      [["fuse", 31.2432], ["countdown", 26.5568], ["ignition", 11.0701], ["console", 9.9631], ["suit", 8.9668], ["gantry", 4.276], ["liftoff", 3.6346], ["booster", 3.0894], ["apogee", 1.1], ["luna", 0.1]]
+      [["fuse", 30.6486], ["countdown", 26.0514], ["ignition", 11.4391], ["console", 10.2952], ["suit", 9.2657], ["gantry", 3.8873], ["liftoff", 3.3042], ["booster", 2.8086], ["apogee", 2], ["luna", 0.3]]
     ] }
 ];
 // A card that no pack holds any more is retired: copies people already have keep their worth and can still be sold, but it is no longer counted, chased or shown as missing.

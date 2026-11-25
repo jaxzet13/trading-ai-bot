@@ -56,14 +56,23 @@ const Fair = (() => {
   const F = () => state.fair || (state.fair = { cs: rid(5).toUpperCase(), local: mk(), srv: null, log: [], past: [] });
   const cardsOf = (pk, hex) => digestU(hex, pk.slots.length).map((u, i) => BY_ID[pickU(pk.slots[i], u)]);
   // draw the cards for one pack
-  async function next(pk) {
+  async function next(pk, pick) {
     const f = F(); let hex = "", nonce = 0, epoch = "", mode = "local", commit = "";
     if (API.on) {
       const r = await API.post("fair/draw", { uid: state.uid, cs: f.cs });
       if (r && /^[0-9a-f]{64}$/.test(r.digest || "")) { const seen = f.srv && f.srv.epoch === r.epoch ? f.srv.commit : r.commit; hex = r.digest; nonce = r.nonce; epoch = "S" + r.epoch; mode = "server"; commit = seen; f.srv = { commit: seen, nonce: r.nonce + 1, epoch: r.epoch }; }     // the commitment you were shown before the draw is the one that gets checked
     }
     if (!hex) { const L = f.local; nonce = L.nonce++; epoch = "L" + L.epoch; commit = L.commit; hex = hmacHex(L.seed, `${f.cs}:${nonce}`); }
-    return settle(pk, f, hex, nonce, epoch, mode, commit);
+    return pick ? ticket(pk, f, hex, nonce, epoch, mode, commit, pick) : settle(pk, f, hex, nonce, epoch, mode, commit);
+  }
+  // One pack as a choice of `k` face-down cards. The single draw is read as k numbers, one per card, each picked from the pack's table in the
+  // same way, so every one of them has exactly the published odds. Nothing is made until you choose: take(i) gives you card i, and the log
+  // keeps which one you took (k, of), so the draw can be checked against the seed like any other.
+  const cardAt = (pk, hex, of, i) => BY_ID[pickU(pk.slots[0], digestU(hex, of)[i])];
+  function ticket(pk, f, hex, nonce, epoch, mode, commit, of) {
+    let done = false;
+    return { of, get done() { return done; }, take(i) { if (done) return null; done = true; i = Math.max(0, Math.min(of - 1, i | 0)); const card = mint(cardAt(pk, hex, of, i));
+      f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: [BY_NO[card.no].id], k: i, of, t: Date.now() }); if (f.log.length > LOG) f.log.shift(); return card; } };
   }
   function settle(pk, f, hex, nonce, epoch, mode, commit) {
     const items = pullPack(pk, digestU(hex, pk.slots.length));
@@ -85,7 +94,7 @@ const Fair = (() => {
   // check one logged draw against a revealed seed
   function check(entry, seed) {
     if (!seed) return null; const pk = PACK_BY[entry.pack]; if (!pk) return false;
-    const hex = hmacHex(seed, `${entry.cs}:${entry.n}`), cs = cardsOf(pk, hex).map(c => c.id);
+    const hex = hmacHex(seed, `${entry.cs}:${entry.n}`), cs = entry.of ? [cardAt(pk, hex, entry.of, entry.k).id] : cardsOf(pk, hex).map(c => c.id);
     return sha256hex(seed) === entry.c && hex === entry.d && cs.length === entry.picks.length && cs.every((id, i) => id === entry.picks[i]);
   }
   const seedFor = (f, entry) => { if (entry.mode === "local") { const p = f.past.find(x => x.e === entry.e); return p ? p.seed : entry.e === "L" + f.local.epoch ? f.local.seed : ""; } const p = f.past.find(x => x.e === entry.e); return p ? p.seed : ""; };
@@ -99,5 +108,5 @@ const Fair = (() => {
   }
   const adopt = fi => { const f = F(); if (fi && /^[0-9a-f]{64}$/.test(fi.commit || "") && (!f.srv || f.srv.epoch !== fi.epoch)) f.srv = { commit: fi.commit, nonce: fi.nonce, epoch: fi.epoch }; persist(); };      // the server's commitment, shown before any pack is drawn from it
   const setClientSeed = v => { const s = String(v).replace(/[^\w.-]/g, "").slice(0, 24); if (s) { F().cs = s; persist(); } return F().cs; };
-  return { F, next, nextMany, check, status, rotate, setClientSeed, cardsOf, seedFor, adopt };
+  return { F, next, nextMany, check, status, rotate, setClientSeed, cardsOf, seedFor, adopt , offer: (pk, k) => next(pk, k) };
 })();

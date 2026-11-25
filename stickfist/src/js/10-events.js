@@ -55,7 +55,7 @@ document.addEventListener("click", e => {
     case "claimDaily": { const r = claimDaily(); if (r) dailyModal(r); break; }
     case "claimOpen": closeModal(); openPack(); break;
     case "muteBtn": state.mute = !state.mute; persist(); renderChips(); if (!state.mute) Snd.click(); break;
-    case "stSkip": if (SS) { if (SS.phase === "pack") SS.phase = "stack"; skipAll(); } break;
+    case "stSkip": if (SS) { if (SS.phase === "pack" || SS.phase === "tearing") SS.phase = "stack"; skipAll(); } break;
     case "pillSell": decide("sell"); break;
     case "pillHold": decide("hold"); break;
     case "sumSell": { const g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
