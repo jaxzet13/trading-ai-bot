@@ -39,3 +39,7 @@ App: `lab_app/index.html` (reads the generated `lab_app/data.js`).
 * New ideas go in `signals.py` as a family; rerun search and report.
 * Judge on the family table and the portfolio test column, not on one strategy's validation value.
 * The test window is one 2.9-year period with overlapping attempts. Treat the dollar figures as rough.
+
+## Payout Terminal (paper bot)
+
+`python -m lab.live` trades four frozen NAS100 rules (two biggest surviving families, two representatives each, chosen without the test years) on paper FTMO 2-step 100k and Topstep 50k accounts and writes `terminal/data.js` for `terminal/index.html`. Sessions before `LIVE_FROM` were replayed. HistData lags, so recent days come from the Dukascopy cache in `data/cache/`.

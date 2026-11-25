@@ -1,0 +1,170 @@
+{
+ "strategies": [
+  {
+   "id": "tod-1",
+   "inst": "NAS100",
+   "sess": "ny",
+   "spec": {
+    "family": "tod",
+    "offset_min": 60,
+    "anchor": "prev_close",
+    "min_move_adr": 0.6,
+    "mode": "go",
+    "trend": "ema200",
+    "stop_atr": 1.5
+   },
+   "cfg": [
+    1.0,
+    3.0,
+    0.0,
+    0.0
+   ],
+   "desc": "NAS100 ny \u00b7 tod (offset_min=60, anchor=prev_close, min_move_adr=0.6, mode=go, trend=ema200, stop_atr=1.5) \u00b7 stop x1, target 3R, hold to session end",
+   "train": {
+    "n": 439,
+    "mean": 0.29060999931128495,
+    "t": 3.471384342970305,
+    "pf": 1.4550920862607701,
+    "win": 0.4054669703872437
+   },
+   "valid": {
+    "n": 103,
+    "mean": 0.4526804277763301,
+    "t": 2.512816704222446,
+    "pf": 1.7439260398942829,
+    "win": 0.4174757281553398
+   },
+   "test": {
+    "n": 247,
+    "mean": 0.12239812792475409,
+    "t": 1.1661653245274477,
+    "pf": 1.1851772480256666,
+    "win": 0.3562753036437247
+   }
+  },
+  {
+   "id": "tod-2",
+   "inst": "NAS100",
+   "sess": "ny",
+   "spec": {
+    "family": "tod",
+    "offset_min": 60,
+    "anchor": "prev_close",
+    "min_move_adr": 0.6,
+    "mode": "go",
+    "trend": "none",
+    "stop_atr": 1.5
+   },
+   "cfg": [
+    1.0,
+    3.0,
+    0.0,
+    0.0
+   ],
+   "desc": "NAS100 ny \u00b7 tod (offset_min=60, anchor=prev_close, min_move_adr=0.6, mode=go, trend=none, stop_atr=1.5) \u00b7 stop x1, target 3R, hold to session end",
+   "train": {
+    "n": 447,
+    "mean": 0.2752071938852315,
+    "t": 3.3225065779963567,
+    "pf": 1.4273297496728272,
+    "win": 0.4004474272930649
+   },
+   "valid": {
+    "n": 105,
+    "mean": 0.46241689607301034,
+    "t": 2.5846516947351525,
+    "pf": 1.7619644339927272,
+    "win": 0.41904761904761906
+   },
+   "test": {
+    "n": 257,
+    "mean": 0.10876331624414183,
+    "t": 1.0573526186186128,
+    "pf": 1.1630002994927544,
+    "win": 0.35019455252918286
+   }
+  },
+  {
+   "id": "open_candle-1",
+   "inst": "NAS100",
+   "sess": "ny",
+   "spec": {
+    "family": "open_candle",
+    "candle_min": 30,
+    "rule": "body_gap",
+    "trend": "ema300",
+    "min_body_atr": 1.0,
+    "stop": "atr"
+   },
+   "cfg": [
+    1.0,
+    0.0,
+    1.0,
+    0.0
+   ],
+   "desc": "NAS100 ny \u00b7 open_candle (candle_min=30, rule=body_gap, trend=ema300, min_body_atr=1.0, stop=atr) \u00b7 stop x1, no target, breakeven at 1R, hold to session end",
+   "train": {
+    "n": 432,
+    "mean": 0.2590797080814687,
+    "t": 3.1855751969703117,
+    "pf": 1.5300605293651268,
+    "win": 0.33796296296296297
+   },
+   "valid": {
+    "n": 103,
+    "mean": 0.37048187406098043,
+    "t": 2.4059959808870603,
+    "pf": 1.8665335669799463,
+    "win": 0.42718446601941745
+   },
+   "test": {
+    "n": 181,
+    "mean": 0.19922873733571672,
+    "t": 1.8725729322810907,
+    "pf": 1.4473370007317563,
+    "win": 0.35911602209944754
+   }
+  },
+  {
+   "id": "open_candle-2",
+   "inst": "NAS100",
+   "sess": "ny",
+   "spec": {
+    "family": "open_candle",
+    "candle_min": 30,
+    "rule": "ema12",
+    "trend": "ema300",
+    "min_body_atr": 1.0,
+    "stop": "atr"
+   },
+   "cfg": [
+    1.0,
+    0.0,
+    1.0,
+    0.0
+   ],
+   "desc": "NAS100 ny \u00b7 open_candle (candle_min=30, rule=ema12, trend=ema300, min_body_atr=1.0, stop=atr) \u00b7 stop x1, no target, breakeven at 1R, hold to session end",
+   "train": {
+    "n": 714,
+    "mean": 0.16746641221342765,
+    "t": 2.7383488928524935,
+    "pf": 1.3318685276237745,
+    "win": 0.30952380952380953
+   },
+   "valid": {
+    "n": 172,
+    "mean": 0.31236234076565655,
+    "t": 2.6332110255161996,
+    "pf": 1.7417081770068945,
+    "win": 0.36627906976744184
+   },
+   "test": {
+    "n": 301,
+    "mean": 0.1644177890799724,
+    "t": 2.034187690888035,
+    "pf": 1.3803914524430732,
+    "win": 0.3388704318936877
+   }
+  }
+ ]
+}

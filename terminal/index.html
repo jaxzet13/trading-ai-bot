@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Payout Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root { --bg:#0c0b0a; --panel:#151311; --panel-2:#1d1a17; --line:#2c2823; --fg:#f3ede3; --fg-2:#b9b0a2; --fg-3:#7f776b;
+  --amber:#f5b83d; --up:#35c28a; --down:#ef6b6b; --violet:#a78bfa; --amber-soft:rgba(245,184,61,.14);
+  --display:"Unbounded",system-ui,sans-serif; --mono:"IBM Plex Mono",Menlo,monospace; color-scheme:dark; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#f6f2ea; --panel:#fffdf8; --panel-2:#efe9dd; --line:#ddd4c4; --fg:#1b1814; --fg-2:#574f44; --fg-3:#857c6f;
+  --amber:#b97800; --up:#0f8f5f; --down:#c93c3c; --violet:#6d4fd6; --amber-soft:rgba(185,120,0,.12); color-scheme:light; } }
+:root[data-theme="light"] { --bg:#f6f2ea; --panel:#fffdf8; --panel-2:#efe9dd; --line:#ddd4c4; --fg:#1b1814; --fg-2:#574f44; --fg-3:#857c6f;
+  --amber:#b97800; --up:#0f8f5f; --down:#c93c3c; --violet:#6d4fd6; --amber-soft:rgba(185,120,0,.12); color-scheme:light; }
+:root[data-theme="dark"] { --bg:#0c0b0a; --panel:#151311; --panel-2:#1d1a17; --line:#2c2823; --fg:#f3ede3; --fg-2:#b9b0a2; --fg-3:#7f776b;
+  --amber:#f5b83d; --up:#35c28a; --down:#ef6b6b; --violet:#a78bfa; --amber-soft:rgba(245,184,61,.14); color-scheme:dark; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font-family:var(--mono); font-size:13.5px; line-height:1.5; padding:0 16px 48px; }
+.wrap { max-width:1120px; margin:0 auto; display:flex; flex-direction:column; gap:16px; }
+.ticker { display:flex; flex-wrap:wrap; gap:6px 18px; padding:10px 0; border-bottom:1px solid var(--line); font-size:12px; color:var(--fg-3); text-transform:uppercase; letter-spacing:.06em; }
+.ticker b { color:var(--fg); font-weight:600; }
+.hero { display:grid; grid-template-columns:1.4fr 1fr; gap:20px; align-items:center; padding:14px 0 4px; }
+@media (max-width:760px) { .hero { grid-template-columns:1fr; } }
+h1 { font-family:var(--display); font-weight:800; font-size:clamp(26px,5vw,44px); line-height:1.08; margin:0 0 10px; letter-spacing:-.01em; }
+h1 em { font-style:normal; color:var(--amber); }
+h2 { font-family:var(--display); font-weight:600; font-size:15px; margin:0; }
+p { margin:0; color:var(--fg-2); max-width:70ch; }
+.dial { justify-self:center; width:190px; height:190px; border-radius:50%; border:2px solid var(--amber); box-shadow:0 0 0 8px var(--amber-soft); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+.dial .n { font-family:var(--display); font-size:38px; font-weight:800; color:var(--amber); line-height:1; }
+.dial .l { font-size:10.5px; letter-spacing:.14em; color:var(--fg-3); text-transform:uppercase; }
+.dial .m { font-family:var(--display); font-size:20px; font-weight:600; margin-top:6px; }
+.panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:12px; min-width:0; }
+.head { display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between; align-items:baseline; }
+.hint { color:var(--fg-3); font-size:12px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; } .grid2>* { min-width:0; }
+@media (max-width:860px) { .grid2 { grid-template-columns:1fr; } }
+.kv { display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:8px; }
+.kv div { background:var(--panel-2); border-radius:6px; padding:8px 10px; display:flex; flex-direction:column; }
+.kv span { font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg-3); }
+.kv b { font-size:16px; font-weight:600; font-variant-numeric:tabular-nums; }
+.pos { color:var(--up); } .neg { color:var(--down); } .amb { color:var(--amber); }
+.bar { position:relative; height:10px; background:var(--panel-2); border-radius:999px; overflow:hidden; }
+.bar i { position:absolute; top:0; bottom:0; left:0; background:var(--amber); border-radius:999px; }
+.barlab { display:flex; justify-content:space-between; font-size:11px; color:var(--fg-3); }
+.chart { width:100%; height:200px; }
+.badge { display:inline-block; padding:1px 8px; border-radius:999px; font-size:11px; background:var(--amber-soft); color:var(--amber); }
+.badge.live { background:rgba(53,194,138,.15); color:var(--up); }
+.tablewrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:12.5px; font-variant-numeric:tabular-nums; }
+th,td { padding:6px 8px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap; }
+th { color:var(--fg-3); font-weight:500; font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; }
+th:first-child,td:first-child { text-align:left; }
+td.w { white-space:normal; text-align:left; min-width:240px; color:var(--fg-2); }
+.feed { display:flex; flex-direction:column; gap:4px; font-size:12.5px; }
+.feed div { display:flex; gap:10px; } .feed time { color:var(--fg-3); flex:none; }
+select { background:var(--panel-2); color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:5px 8px; font:inherit; }
+ul { margin:0; padding-left:18px; color:var(--fg-2); display:flex; flex-direction:column; gap:4px; max-width:90ch; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ticker" id="ticker"></div>
+  <section class="hero">
+    <div>
+      <h1>The bot looks every session.<br><em>Mostly it does nothing.</em></h1>
+      <p id="lede"></p>
+    </div>
+    <div class="dial"><span class="n" id="looks"></span><span class="l">looks</span><span class="m" id="trades"></span><span class="l">trades</span></div>
+  </section>
+
+  <div class="grid2" id="accounts"></div>
+
+  <section class="panel">
+    <div class="head"><h2>Session log</h2><span class="hint">One row per New York session. R is the result in units of risk.</span></div>
+    <div class="tablewrap"><table id="days"></table></div>
+  </section>
+
+  <section class="panel">
+    <div class="head"><h2>Every trade</h2><select id="accsel" aria-label="Account"></select></div>
+    <div class="tablewrap"><table id="tlog"></table></div>
+  </section>
+
+  <section class="panel">
+    <div class="head"><h2>The four rules it runs</h2><span class="hint">Frozen. Backtest edge is average R per trade after costs.</span></div>
+    <div class="tablewrap"><table id="strats"></table></div>
+  </section>
+
+  <section class="panel">
+    <h2>Read this before trusting it</h2>
+    <ul id="notes"></ul>
+  </section>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.6.0/echarts.min.js"></script>
+<script src="data.js"></script>
+<script>
+(function () {
+  const D = window.TERMINAL_DATA, $ = id => document.getElementById(id);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const money = v => (v < 0 ? '-$' : '$') + Math.abs(Math.round(v)).toLocaleString();
+  const sgn = v => (v > 0 ? '+' : '') + v.toFixed(2);
+  const cls = v => v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+  const net = D.accounts.reduce((s, a) => s + a.net, 0);
+  $('ticker').innerHTML = [['Paper', 'not real money'], ['Last session', D.last_session], ['Sessions', `${D.sessions} (${D.live_sessions} live)`], ['Result', sgn(D.sum_r) + 'R'],
+    ['Expectancy', sgn(D.expectancy_r) + 'R'], ['Win rate', Math.round(D.win_rate * 100) + '%'], ['PF', D.pf == null ? 'n/a' : D.pf.toFixed(2)], ['Cash net', money(net)]]
+    .map(([k, v]) => `<span>${k} <b>${v}</b></span>`).join('');
+  $('looks').textContent = D.looks; $('trades').textContent = D.trades;
+  $('lede').textContent = `Four Nasdaq rules that survived a search of 5.7 million strategies check each New York session. ${D.looks} looks, ${D.trades} trades, ${(D.trades / Math.max(D.looks, 1) * 100).toFixed(0)}% pull rate. Every trade is sized for two paper prop accounts under their real rules. Sessions before ${D.live_from} were replayed from recorded prices on the day the bot was built; sessions after are logged nightly.`;
+
+  $('accounts').innerHTML = D.accounts.map((a, i) => {
+    const start = a.rules.size, lo = a.floor, hi = a.target ?? start + a.rules.dd, p = Math.max(0, Math.min(1, (a.balance - lo) / (hi - lo)));
+    return `<section class="panel"><div class="head"><h2>${a.name}</h2><span class="badge">${a.status}</span></div>
+      <div class="kv"><div><span>Balance</span><b>${money(a.balance)}</b></div><div><span>Evals bought</span><b>${a.attempts}</b></div><div><span>Passed</span><b class="${a.passed ? 'pos' : ''}">${a.passed}</b></div>
+      <div><span>Fees paid</span><b>${money(a.fees)}</b></div><div><span>Payouts</span><b class="${a.payouts ? 'pos' : ''}">${money(a.payouts)}</b></div><div><span>Cash net</span><b class="${cls(a.net)}">${money(a.net)}</b></div></div>
+      <div><div class="bar"><i style="width:${(p * 100).toFixed(1)}%"></i></div><div class="barlab"><span>lose at ${money(lo)}</span><span>${a.target ? 'pass at ' + money(hi) : 'funded: payouts from profit above ' + money(start)}</span></div></div>
+      <div class="chart" id="ch${i}"></div>
+      <div class="feed">${a.events.slice().reverse().map(e => `<div><time>${e.day.slice(5)}</time><span class="${e.type === 'fail' ? 'neg' : e.type === 'buy' ? '' : 'pos'}">${e.text}</span></div>`).join('')}</div></section>`;
+  }).join('');
+  D.accounts.forEach((a, i) => {
+    const ch = echarts.init($('ch' + i));
+    ch.setOption({ animation: false, grid: { left: 58, right: 10, top: 10, bottom: 24 }, textStyle: { fontFamily: css('--mono') },
+      tooltip: { trigger: 'axis', backgroundColor: css('--panel-2'), borderColor: css('--line'), textStyle: { color: css('--fg'), fontSize: 12 },
+        formatter: ps => { const c = a.curve[ps[0].dataIndex]; return `${c.day} · ${c.phase} #${c.attempt}<br>balance ${money(c.bal)}<br>day ${money(c.pnl)}`; } },
+      xAxis: { type: 'category', data: a.curve.map(c => c.day.slice(5)), axisLabel: { color: css('--fg-3'), fontSize: 10 }, axisLine: { lineStyle: { color: css('--line') } }, axisTick: { show: false } },
+      yAxis: { type: 'value', scale: true, axisLabel: { color: css('--fg-3'), fontSize: 10, formatter: v => (v / 1000).toFixed(1) + 'k' }, splitLine: { lineStyle: { color: css('--line') } } },
+      series: [{ type: 'line', data: a.curve.map(c => c.bal), symbol: 'circle', symbolSize: 5, lineStyle: { color: css('--amber'), width: 2 }, itemStyle: { color: css('--amber') }, areaStyle: { color: css('--amber-soft') } },
+        { type: 'line', data: a.curve.map(c => c.floor), symbol: 'none', step: 'end', lineStyle: { color: css('--down'), width: 1, type: 'dashed' } }] });
+    window.addEventListener('resize', () => ch.resize());
+  });
+
+  $('days').innerHTML = '<thead><tr><th>Session</th><th>Mode</th><th>Looks</th><th>Trades</th><th>Result</th></tr></thead><tbody>' +
+    D.day_log.slice().reverse().map(d => `<tr><td>${d.day}</td><td><span class="badge ${d.live ? 'live' : ''}">${d.live ? 'live' : 'replay'}</span></td><td>${d.looks}</td><td>${d.trades}</td><td class="${cls(d.r)}">${d.trades ? sgn(d.r) + 'R' : 'flat'}</td></tr>`).join('') + '</tbody>';
+
+  $('accsel').innerHTML = D.accounts.map(a => `<option>${a.name}</option>`).join('');
+  const drawT = () => { const a = D.accounts.find(x => x.name === $('accsel').value);
+    $('tlog').innerHTML = '<thead><tr><th>Session</th><th>In</th><th>Out</th><th>Rule</th><th>Side</th><th>Entry</th><th>Size</th><th>Risk</th><th>R</th><th>P&L</th><th>Phase</th></tr></thead><tbody>' +
+      a.trades.slice().reverse().map(t => `<tr><td>${t.day}</td><td>${t.time}</td><td>${t.exit}</td><td>${t.strategy}</td><td>${t.side}</td><td>${t.entry.toLocaleString()}</td><td>${t.size}</td><td>${money(t.risk)}</td><td class="${cls(t.r)}">${sgn(t.r)}</td><td class="${cls(t.pnl)}">${money(t.pnl)}</td><td>${t.phase} #${t.attempt}</td></tr>`).join('') + '</tbody>'; };
+  $('accsel').addEventListener('change', drawT); drawT();
+
+  $('strats').innerHTML = '<thead><tr><th>Rule</th><th>What it does</th><th>Backtest 2016-21</th><th>2022-23</th><th>2024-26</th><th>Paper trades</th><th>Paper result</th></tr></thead><tbody>' +
+    Object.entries(D.strategies).map(([k, s]) => `<tr><td>${k}</td><td class="w">${s.desc.split(' · ').slice(1).join(' · ')}</td><td>${sgn(s.backtest_r.train)}R</td><td>${sgn(s.backtest_r.valid)}R</td><td>${sgn(s.backtest_r.test)}R</td><td>${s.trades}/${s.looks}</td><td class="${cls(s.sum_r)}">${sgn(s.sum_r)}R</td></tr>`).join('') + '</tbody>';
+
+  $('notes').innerHTML = [
+    'This is paper trading on recorded 1-minute prices with conservative costs. No broker is connected and no real order is sent.',
+    `Sessions marked replay happened before the bot existed. The first two weeks of November were also inside the data the search was scored on, so treat them as a demo, not proof.`,
+    'A few weeks is far too short to judge. The backtest edge is about +0.1R to +0.2R per trade, so single weeks swing from big wins to big losses.',
+    'The two rules in each pair are close cousins and often take the same trade. When both fire, the position is effectively double size.',
+    'Prop-firm rules are simplified. A lost account is replaced by a new evaluation the next session and the fee is counted.',
+    'The rules are frozen. They do not get changed because of a losing streak.',
+  ].map(x => `<li>${x}</li>`).join('');
+})();
+</script>
+</body>
+</html>

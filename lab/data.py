@@ -130,6 +130,26 @@ def to_ny(df: pd.DataFrame, clock: str) -> pd.DataFrame:
     return out[["time", "o", "h", "l", "c"]]
 
 
+def _append_recent(name: str, df: pd.DataFrame) -> pd.DataFrame:
+    """HistData lags by days to weeks. For NAS100, append newer days from the Dukascopy cache (nyopen.data) when it has them."""
+    if name != "NAS100":
+        return df
+    try:
+        from nyopen import data as ND
+        m1 = ND.build_m1(verbose=False)
+    except Exception:
+        return df
+    t = pd.to_datetime(m1["time"], utc=True).dt.tz_convert("America/New_York")
+    last = df.time.max().normalize() + pd.Timedelta(days=1)
+    m = (t >= last).to_numpy()
+    if not m.any():
+        return df
+    cols = {c: m1[c].to_numpy()[m] for c in ("open", "high", "low", "close")}
+    extra = pd.DataFrame({"time": t[m].to_numpy(), "o": cols["open"], "h": cols["high"], "l": cols["low"], "c": cols["close"]})
+    extra["time"] = pd.to_datetime(extra["time"], utc=True).dt.tz_convert("America/New_York")
+    return pd.concat([df, extra], ignore_index=True)
+
+
 def build(names: list[str] | None = None) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     for name in names or list(INSTRUMENTS):
@@ -141,6 +161,7 @@ def build(names: list[str] | None = None) -> None:
         raw = pd.concat([_read_zip(p) for p in files], ignore_index=True).drop_duplicates("raw").sort_values("raw")
         clock = detect_clock(raw)
         df = to_ny(raw, clock)
+        df = _append_recent(name, df)
         minute = (df.time.dt.hour * 60 + df.time.dt.minute).to_numpy()
         keep = minute < M
         df, minute = df[keep], minute[keep]
