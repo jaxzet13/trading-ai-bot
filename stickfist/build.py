@@ -26,7 +26,7 @@ RELEASE = '--release' in sys.argv
 API = arg('--api', '/' if RELEASE else '')          # '' = no server: the page runs alone and says invites are off
 URL = arg('--url', '').rstrip('/')
 TITLE = 'STIXX: ASCII card packs'
-DESC = 'Collectible trading cards drawn entirely in text. Open a free pack every day, collect all 18 cards and trade them with the AI buyers. Free to play, play money only. 18+.'
+DESC = 'Collectible trading cards drawn entirely in text. Open a free pack every day, collect all 33 cards and trade them with the AI buyers. Free to play, play money only. 18+.'
 ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='7.5' fill='%23000'/%3E%3Ccircle cx='14' cy='5.9' r='1.7' fill='%23fff'/%3E%3Cpath d='M8.2 9.8 19.8 21.4M19.8 9.8 8.2 21.4' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"
 OG_IMG = (URL + '/' if URL else '') + 'og.png'
 
