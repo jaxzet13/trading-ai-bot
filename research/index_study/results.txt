@@ -1,0 +1,314 @@
+KXINX 16:00 events: 42 events on 42 days 26SEP28..26NOV24, 668 markets, volume per event mean 49,920 median 21,822 contracts
+KXNASDAQ100 16:00 events: 42 events on 42 days 26SEP28..26NOV24, 700 markets, volume per event mean 39,579 median 5,367 contracts
+KXINXU 16:00 events: 42 events on 42 days 26SEP28..26NOV24, 1949 markets, volume per event mean 692,486 median 476,620 contracts
+KXINXU hourly events: 258 events on 43 days 26SEP28..26NOV25, 4317 markets, volume per event mean 218,866 median 166,370 contracts
+KXNASDAQ100U 16:00 events: 43 events on 43 days 26SEP28..26NOV25, 3655 markets, volume per event mean 699,852 median 234,737 contracts
+KXNASDAQ100U hourly events: 258 events on 43 days 26SEP28..26NOV25, 3886 markets, volume per event mean 166,264 median 103,605 contracts
+GSPC: Yahoo 5-minute level on 42 days, Kalshi-implied level on 42 days; implied vs Yahoo: median |difference| 1.5 bp, 95% 6.7 bp
+NDX: Yahoo 5-minute level on 43 days, Kalshi-implied level on 43 days; implied vs Yahoo: median |difference| 2.4 bp, 95% 9.7 bp
+GSPC: index move from the decision time to the 16:00 close (Yahoo):  10:00: up on 36% of 42 days, mean -33 bp (t -2.3)  12:00: up on 38% of 42 days, mean -19 bp (t -2.4)  14:00: up on 48% of 42 days, mean -11 bp (t -2.0)  15:30: up on 40% of 42 days, mean -5 bp (t -1.5)
+NDX: index move from the decision time to the 16:00 close (Yahoo):  10:00: up on 47% of 43 days, mean -39 bp (t -2.0)  12:00: up on 37% of 43 days, mean -20 bp (t -1.5)  14:00: up on 49% of 43 days, mean -11 bp (t -1.5)  15:30: up on 40% of 43 days, mean -3 bp (t -0.8)
+27259 market x time rows with a two-sided quote and volume before the decision time >= {'range': 1, 'above': 50, 'hourly': 300}
+
+=== a. calibration ===
+
+above / GSPC, all decision times   (6423 rows, 1398 markets, 42 days)
+  mid band        n  spread  value-mid (t)      buy YES at ask after fee [half1/half2]   buy NO at bid after fee [half1/half2]
+  0.03-0.10     852   3.0c   -5.05c t -6.92    -6.99c t -7.75 [ -7.2 / -6.9]    +3.28c t +5.48 [ +3.8 / +3.0]
+  0.10-0.25     824   3.2c   -8.24c t -3.61   -10.85c t -4.46 [-11.2 /-10.6]    +5.78c t +2.68 [ +6.2 / +5.5]
+  0.25-0.40     594   3.0c  -11.90c t -2.56   -14.96c t -3.12 [-10.4 /-17.7]    +8.93c t +1.98 [ +4.3 /+11.7]
+  0.40-0.60     746   3.2c  -13.67c t -2.37   -17.01c t -2.89 [-10.5 /-20.7]   +10.35c t +1.82 [ +4.0 /+14.0]
+  0.60-0.75     666   2.9c  -11.53c t -1.65   -14.47c t -2.04 [ -7.5 /-18.5]    +8.52c t +1.23 [ +1.5 /+12.6]
+  0.75-0.90     952   3.2c   -9.50c t -1.60   -11.99c t -1.99 [ -2.3 /-17.9]    +6.86c t +1.18 [ -2.7 /+12.7]
+  0.90-0.97     943   2.9c   -2.52c t -0.79    -4.31c t -1.35 [ -2.5 / -5.7]    +0.55c t +0.17 [ -1.0 / +1.7]
+  0.03-0.97    5577   3.1c   -8.51c t -2.38   -11.04c t -3.00 [ -6.9 /-13.7]    +5.97c t +1.71 [ +1.9 / +8.5]
+
+above / NDX, all decision times   (8291 rows, 2189 markets, 43 days)
+  mid band        n  spread  value-mid (t)      buy YES at ask after fee [half1/half2]   buy NO at bid after fee [half1/half2]
+  0.03-0.10    1294   4.0c   -3.79c t -5.02    -6.31c t -7.34 [ -7.3 / -5.6]    +1.53c t +2.18 [ +2.6 / +0.7]
+  0.10-0.25    1218   5.3c   -5.39c t -1.81    -9.11c t -2.95 [ -9.8 / -8.5]    +1.92c t +0.66 [ +2.7 / +1.2]
+  0.25-0.40     900   7.3c   -8.00c t -1.70   -13.23c t -2.68 [-13.4 /-13.1]    +2.94c t +0.65 [ +2.8 / +3.1]
+  0.40-0.60    1150   8.0c  -11.02c t -2.08   -16.73c t -3.04 [-18.4 /-15.4]    +5.33c t +1.04 [ +6.5 / +4.4]
+  0.60-0.75     875   6.5c  -11.94c t -2.23   -16.61c t -3.07 [-15.6 /-17.6]    +7.11c t +1.33 [ +5.5 / +8.7]
+  0.75-0.90    1091   4.9c   -4.59c t -0.98    -7.91c t -1.68 [ -8.1 / -7.7]    +1.03c t +0.22 [ +1.4 / +0.6]
+  0.90-0.97    1013   3.9c   -1.46c t -0.48    -3.70c t -1.20 [ -4.4 / -2.8]    -1.02c t -0.34 [ -0.1 / -2.1]
+  0.03-0.97    7541   5.6c   -6.40c t -2.09   -10.25c t -3.26 [-10.7 / -9.9]    +2.57c t +0.85 [ +3.0 / +2.2]
+
+above, both indices, all decision times   (14714 rows, 3587 markets, 43 days)
+  mid band        n  spread  value-mid (t)      buy YES at ask after fee [half1/half2]   buy NO at bid after fee [half1/half2]
+  0.03-0.10    2146   3.6c   -4.29c t -7.08    -6.58c t -8.95 [ -7.2 / -6.1]    +2.23c t +4.28 [ +3.0 / +1.7]
+  0.10-0.25    2042   4.4c   -6.54c t -2.55    -9.81c t -3.66 [-10.3 / -9.4]    +3.47c t +1.40 [ +4.0 / +3.1]
+  0.25-0.40    1494   5.6c   -9.55c t -2.17   -13.92c t -3.02 [-12.4 /-15.1]    +5.32c t +1.25 [ +3.3 / +6.9]
+  0.40-0.60    1896   6.1c  -12.07c t -2.32   -16.84c t -3.14 [-15.7 /-17.7]    +7.30c t +1.44 [ +5.6 / +8.5]
+  0.60-0.75    1541   4.9c  -11.76c t -2.13   -15.68c t -2.82 [-12.8 /-18.0]    +7.72c t +1.40 [ +4.1 /+10.6]
+  0.75-0.90    2043   4.1c   -6.87c t -1.46    -9.81c t -2.07 [ -5.9 /-13.1]    +3.75c t +0.80 [ -0.2 / +7.0]
+  0.90-0.97    1956   3.4c   -1.97c t -0.66    -3.99c t -1.34 [ -3.6 / -4.4]    -0.27c t -0.09 [ -0.5 / -0.1]
+  0.03-0.97   13118   4.5c   -7.30c t -2.37   -10.59c t -3.35 [ -9.3 /-11.6]    +4.02c t +1.33 [ +2.6 / +5.2]
+
+above, both indices: by time of day (New York; hourly events: minutes to their own close), three price bands; value-mid | YES after fee | NO after fee
+  10:00 | 0.03-0.25 n   308  -4.7c (t -1.5) Y  -7.8c (t -2.3) N  +2.0c (t +0.6) | 0.25-0.75 n   637 -14.8c (t -2.5) Y -19.0c (t -3.1) N +10.5c (t +1.8) | 0.75-0.97 n   444  -7.3c (t -1.2) Y -10.1c (t -1.6) N  +4.3c (t +0.7)
+  11:00 | 0.03-0.25 n   549  -9.0c (t -5.6) Y -11.9c (t -6.6) N  +6.2c (t +4.3) | 0.25-0.75 n   804 -14.6c (t -2.2) Y -18.6c (t -2.7) N +10.6c (t +1.6) | 0.75-0.97 n   599  -5.9c (t -1.2) Y  -8.2c (t -1.7) N  +3.3c (t +0.7)
+  12:00 | 0.03-0.25 n   671  -6.4c (t -3.2) Y  -9.2c (t -4.4) N  +3.9c (t +2.0) | 0.25-0.75 n   765 -13.0c (t -1.9) Y -16.6c (t -2.4) N  +9.5c (t +1.4) | 0.75-0.97 n   617  -5.6c (t -1.3) Y  -8.0c (t -1.9) N  +3.0c (t +0.7)
+  13:00 | 0.03-0.25 n   705  -5.8c (t -2.4) Y  -8.4c (t -3.4) N  +3.3c (t +1.4) | 0.25-0.75 n   734 -12.6c (t -2.2) Y -16.2c (t -2.7) N  +9.1c (t +1.6) | 0.75-0.97 n   582  -0.9c (t -0.2) Y  -3.2c (t -0.7) N  -1.7c (t -0.4)
+  14:00 | 0.03-0.25 n   612  -6.2c (t -3.0) Y  -8.8c (t -4.1) N  +3.7c (t +1.8) | 0.25-0.75 n   614 -10.0c (t -1.6) Y -14.4c (t -2.2) N  +5.6c (t +0.9) | 0.75-0.97 n   533  -3.7c (t -0.8) Y  -6.2c (t -1.3) N  +1.1c (t +0.2)
+  15:00 | 0.03-0.25 n   561  -2.3c (t -0.8) Y  -4.9c (t -1.7) N  -0.0c (t -0.0) | 0.25-0.75 n   510  -3.9c (t -0.6) Y  -7.5c (t -1.1) N  +0.4c (t +0.1) | 0.75-0.97 n   475  -3.5c (t -0.7) Y  -5.9c (t -1.2) N  +1.0c (t +0.2)
+  15:30 | 0.03-0.25 n   447  -3.3c (t -1.2) Y  -5.8c (t -2.0) N  +1.0c (t +0.4) | 0.25-0.75 n   477  -7.0c (t -1.1) Y -11.1c (t -1.6) N  +3.0c (t +0.5) | 0.75-0.97 n   412  -3.5c (t -0.8) Y  -5.8c (t -1.3) N  +0.9c (t +0.2)
+  15:50 | 0.03-0.25 n   335  -3.7c (t -1.2) Y  -7.1c (t -2.2) N  +0.6c (t +0.2) | 0.25-0.75 n   390  -8.7c (t -1.4) Y -18.8c (t -2.8) N  -1.4c (t -0.2) | 0.75-0.97 n   337  -6.3c (t -1.4) Y  -9.3c (t -2.1) N  +3.0c (t +0.7)
+
+above, both indices, all decision times: favourite side vs longshot side
+  favourite's mid      n  favourite wins - mid (t)   buy the favourite after fee [half1/half2]   buy the longshot after fee [half1/half2]
+  0.50-0.60        1829   -0.10c t -0.11         -4.79c t -5.00 [ -6.8 / -3.3]    -4.62c t -4.34 [ -3.3 / -5.6]
+  0.60-0.75        3034   -1.26c t -0.69         -5.35c t -2.97 [ -5.0 / -5.6]    -2.97c t -1.56 [ -3.8 / -2.3]
+  0.75-0.90        4081   -0.04c t -0.02         -3.05c t -1.47 [ -1.0 / -4.7]    -3.17c t -1.56 [ -5.3 / -1.5]
+  0.90-0.97        3925   +1.19c t +0.83         -0.88c t -0.61 [ -0.5 / -1.2]    -3.48c t -2.41 [ -3.7 / -3.3]
+  0.50-0.97       12869   +0.04c t +0.03         -3.18c t -2.18 [ -2.6 / -3.7]    -3.42c t -2.33 [ -4.2 / -2.8]
+
+above, both indices, 60 minutes or less to go: favourite side vs longshot side
+  favourite's mid      n  favourite wins - mid (t)   buy the favourite after fee [half1/half2]   buy the longshot after fee [half1/half2]
+  0.50-0.60         498   +1.71c t +1.04         -4.52c t -2.37 [ -7.5 / -2.5]    -7.99c t -4.63 [-10.1 / -6.6]
+  0.60-0.75         863   -2.54c t -1.11         -7.64c t -3.41 [ -5.6 / -9.0]    -2.74c t -1.11 [ -8.1 / +0.9]
+  0.75-0.90        1217   -2.61c t -0.91         -5.81c t -2.00 [ -1.5 / -8.7]    -0.79c t -0.28 [ -5.7 / +2.5]
+  0.90-0.97        1285   +1.36c t +0.86         -0.64c t -0.41 [ -1.7 / +0.1]    -3.57c t -2.24 [ -2.5 / -4.3]
+  0.50-0.97        3863   -0.72c t -0.41         -4.33c t -2.51 [ -3.2 / -5.1]    -3.08c t -1.73 [ -5.7 / -1.3]
+
+hourly / GSPC, all decision times   (5439 rows, 3112 markets, 43 days)
+  mid band        n  spread  value-mid (t)      buy YES at ask after fee [half1/half2]   buy NO at bid after fee [half1/half2]
+  0.03-0.10     690   2.5c   +0.20c t +0.15    -1.52c t -1.13 [ -2.9 / -0.7]    -1.76c t -1.37 [ -0.4 / -2.6]
+  0.10-0.25     692   4.2c   +1.12c t +0.53    -2.02c t -0.93 [ -7.9 / +1.9]    -4.06c t -1.96 [ +1.4 / -7.7]
+  0.25-0.40     530   5.7c   -1.86c t -0.64    -6.26c t -2.02 [ -5.8 / -6.6]    -2.39c t -0.86 [ -4.2 / -1.3]
+  0.40-0.60     682   7.1c   +1.18c t +0.36    -4.04c t -1.19 [ -5.8 / -3.0]    -6.40c t -1.93 [ -6.2 / -6.5]
+  0.60-0.75     581   6.6c   -0.63c t -0.17    -5.34c t -1.43 [ -0.7 / -7.7]    -4.23c t -1.17 [ -8.7 / -2.0]
+  0.75-0.90     803   4.6c   -0.66c t -0.28    -3.82c t -1.57 [ -1.5 / -5.3]    -2.70c t -1.14 [ -5.2 / -1.1]
+  0.90-0.97     714   3.1c   +0.76c t +0.64    -1.08c t -0.93 [ +0.1 / -1.9]    -2.78c t -2.28 [ -4.0 / -2.0]
+  0.03-0.97    4692   4.7c   +0.08c t +0.04    -3.29c t -1.67 [ -3.4 / -3.2]    -3.47c t -1.85 [ -3.7 / -3.3]
+
+hourly / NDX, all decision times   (3608 rows, 2328 markets, 43 days)
+  mid band        n  spread  value-mid (t)      buy YES at ask after fee [half1/half2]   buy NO at bid after fee [half1/half2]
+  0.03-0.10     435   4.4c   +2.14c t +1.28    -0.58c t -0.32 [ -2.0 / +1.1]    -4.58c t -2.87 [ -3.0 / -6.4]
+  0.10-0.25     487   7.2c   +2.04c t +0.69    -2.69c t -0.84 [ -4.8 / +0.2]    -6.45c t -2.24 [ -4.6 / -9.0]
+  0.25-0.40     449  12.8c   +0.99c t +0.29    -7.03c t -1.78 [ -8.9 / -4.8]    -8.70c t -2.78 [ -6.4 /-11.4]
+  0.40-0.60     643  15.2c   +1.55c t +0.44    -7.66c t -2.03 [ -7.5 / -7.8]   -10.76c t -3.06 [ -8.8 /-12.9]
+  0.60-0.75     479  12.2c   +1.04c t +0.30    -6.36c t -1.67 [ -6.5 / -6.2]    -8.72c t -2.40 [ -9.8 / -7.2]
+  0.75-0.90     485   6.9c   -1.29c t -0.46    -5.53c t -1.98 [ -6.9 / -3.6]    -3.25c t -1.15 [ -2.1 / -4.9]
+  0.90-0.97     365   4.6c   -2.13c t -0.83    -4.69c t -1.83 [ -2.3 / -7.4]    -0.71c t -0.27 [ -2.9 / +1.8]
+  0.03-0.97    3343   9.5c   +0.73c t +0.34    -5.11c t -2.10 [ -5.8 / -4.3]    -6.57c t -3.21 [ -5.6 / -7.8]
+
+hourly, both indices, all decision times   (9047 rows, 5440 markets, 43 days)
+  mid band        n  spread  value-mid (t)      buy YES at ask after fee [half1/half2]   buy NO at bid after fee [half1/half2]
+  0.03-0.10    1125   3.3c   +0.95c t +0.75    -1.15c t -0.87 [ -2.5 / -0.1]    -2.85c t -2.36 [ -1.6 / -3.8]
+  0.10-0.25    1179   5.4c   +1.50c t +0.74    -2.29c t -1.07 [ -6.3 / +1.3]    -5.05c t -2.60 [ -1.6 / -8.1]
+  0.25-0.40     979   9.0c   -0.56c t -0.20    -6.61c t -2.09 [ -7.5 / -5.9]    -5.29c t -2.05 [ -5.5 / -5.1]
+  0.40-0.60    1325  11.0c   +1.36c t +0.46    -5.80c t -1.83 [ -6.8 / -5.0]    -8.52c t -3.00 [ -7.7 / -9.2]
+  0.60-0.75    1060   9.1c   +0.12c t +0.04    -5.80c t -1.74 [ -4.1 / -7.2]    -6.26c t -2.07 [ -9.4 / -3.8]
+  0.75-0.90    1288   5.4c   -0.90c t -0.44    -4.46c t -2.12 [ -4.1 / -4.8]    -2.91c t -1.43 [ -3.7 / -2.2]
+  0.90-0.97    1079   3.6c   -0.22c t -0.15    -2.30c t -1.55 [ -0.9 / -3.5]    -2.08c t -1.38 [ -3.6 / -0.9]
+  0.03-0.97    8035   6.7c   +0.35c t +0.19    -4.05c t -2.04 [ -4.6 / -3.6]    -4.76c t -2.75 [ -4.7 / -4.8]
+
+hourly, both indices: by time of day (New York; hourly events: minutes to their own close), three price bands; value-mid | YES after fee | NO after fee
+  60 min | 0.03-0.25 n   289  -1.8c (t -0.6) Y  -5.8c (t -1.6) N  -1.9c (t -0.7) | 0.25-0.75 n   624  -5.0c (t -1.1) Y -12.6c (t -2.3) N  -2.5c (t -0.6) | 0.75-0.97 n   395  -1.7c (t -0.6) Y  -5.1c (t -1.7) N  -1.9c (t -0.6)
+  30 min | 0.03-0.25 n  1044  -0.4c (t -0.2) Y  -3.0c (t -1.4) N  -1.9c (t -0.9) | 0.25-0.75 n  1527  -2.6c (t -0.8) Y  -7.3c (t -2.3) N  -2.1c (t -0.6) | 0.75-0.97 n  1045  -1.8c (t -0.8) Y  -4.2c (t -1.8) N  -0.9c (t -0.4)
+  10 min | 0.03-0.25 n   971  +3.9c (t +1.9) Y  +0.8c (t +0.4) N  -6.8c (t -3.4) | 0.25-0.75 n  1213  +7.0c (t +2.5) Y  -1.1c (t -0.3) N -15.1c (t -5.6) | 0.75-0.97 n   927  +1.2c (t +0.6) Y  -1.9c (t -1.0) N  -4.7c (t -2.4)
+
+hourly, both indices, all decision times: favourite side vs longshot side
+  favourite's mid      n  favourite wins - mid (t)   buy the favourite after fee [half1/half2]   buy the longshot after fee [half1/half2]
+  0.50-0.60        1282   -1.00c t -0.90         -7.99c t -6.44 [ -8.4 / -7.7]    -6.06c t -4.71 [ -5.9 / -6.2]
+  0.60-0.75        2038   +0.44c t +0.36         -5.50c t -4.11 [ -4.7 / -6.2]    -6.59c t -4.54 [ -8.6 / -5.0]
+  0.75-0.90        2457   -1.00c t -1.08         -4.59c t -4.77 [ -2.9 / -6.1]    -2.83c t -3.03 [ -5.0 / -0.9]
+  0.90-0.97        2107   -0.60c t -0.67         -2.62c t -3.00 [ -1.3 / -3.7]    -1.64c t -1.77 [ -3.0 / -0.5]
+  0.50-0.97        7884   -0.52c t -0.72         -4.85c t -6.19 [ -3.8 / -5.7]    -4.01c t -4.98 [ -5.5 / -2.7]
+
+hourly, both indices, 60 minutes or less to go: favourite side vs longshot side
+  favourite's mid      n  favourite wins - mid (t)   buy the favourite after fee [half1/half2]   buy the longshot after fee [half1/half2]
+  0.50-0.60        1282   -1.00c t -0.90         -7.99c t -6.44 [ -8.4 / -7.7]    -6.06c t -4.71 [ -5.9 / -6.2]
+  0.60-0.75        2038   +0.44c t +0.36         -5.50c t -4.11 [ -4.7 / -6.2]    -6.59c t -4.54 [ -8.6 / -5.0]
+  0.75-0.90        2457   -1.00c t -1.08         -4.59c t -4.77 [ -2.9 / -6.1]    -2.83c t -3.03 [ -5.0 / -0.9]
+  0.90-0.97        2107   -0.60c t -0.67         -2.62c t -3.00 [ -1.3 / -3.7]    -1.64c t -1.77 [ -3.0 / -0.5]
+  0.50-0.97        7884   -0.52c t -0.72         -4.85c t -6.19 [ -3.8 / -5.7]    -4.01c t -4.98 [ -5.5 / -2.7]
+
+range / GSPC, all decision times   (1817 rows, 354 markets, 42 days)
+  mid band        n  spread  value-mid (t)      buy YES at ask after fee [half1/half2]   buy NO at bid after fee [half1/half2]
+  0.03-0.10     566   3.3c   -1.54c t -1.13    -3.69c t -2.66 [ -3.6 / -3.7]    -0.41c t -0.30 [ -0.3 / -0.5]
+  0.10-0.25     521   4.4c   +0.58c t +0.42    -2.70c t -1.92 [ -3.4 / -2.4]    -3.65c t -2.54 [ -2.8 / -4.1]
+  0.25-0.40     246   4.5c   +3.22c t +0.96    -0.60c t -0.18 [ -1.7 / +0.8]    -6.92c t -2.10 [ -6.1 / -8.0]
+  0.40-0.60     139   4.3c   -2.23c t -0.56    -6.09c t -1.52 [ -1.7 /-12.7]    -1.61c t -0.40 [ -6.1 / +5.1]
+  0.60-0.75      45   4.3c   +2.64c t +0.29    -0.99c t -0.11 [ -3.6 / +2.9]    -6.37c t -0.70 [ -3.6 /-10.5]
+  0.03-0.97    1544   4.0c   -0.14c t -0.47    -3.15c t -8.89 [ -3.1 / -3.2]    -2.70c t -8.52 [ -2.8 / -2.6]
+
+range / NDX, all decision times   (1681 rows, 362 markets, 42 days)
+  mid band        n  spread  value-mid (t)      buy YES at ask after fee [half1/half2]   buy NO at bid after fee [half1/half2]
+  0.03-0.10     588   3.8c   -1.29c t -1.28    -3.66c t -3.43 [ -5.0 / -2.1]    -0.85c t -0.87 [ +0.9 / -2.9]
+  0.10-0.25     551   5.1c   +0.68c t +0.40    -2.91c t -1.77 [ -4.4 / -1.6]    -4.04c t -2.29 [ -2.5 / -5.4]
+  0.25-0.40     223   4.9c   -3.87c t -1.23    -7.88c t -2.49 [ -6.5 / -9.7]    -0.01c t -0.00 [ -1.7 / +2.2]
+  0.40-0.60     102   5.4c   +1.84c t +0.42    -2.58c t -0.58 [ +4.4 /-11.4]    -6.26c t -1.41 [-14.3 / +3.9]
+  0.03-0.97    1511   4.5c   -0.27c t -0.47    -3.50c t -5.85 [ -3.5 / -3.5]    -2.76c t -4.65 [ -2.7 / -2.8]
+
+range, both indices, all decision times   (3498 rows, 716 markets, 42 days)
+  mid band        n  spread  value-mid (t)      buy YES at ask after fee [half1/half2]   buy NO at bid after fee [half1/half2]
+  0.03-0.10    1154   3.6c   -1.41c t -1.53    -3.68c t -3.80 [ -4.4 / -3.0]    -0.64c t -0.71 [ +0.4 / -1.6]
+  0.10-0.25    1072   4.8c   +0.63c t +0.57    -2.81c t -2.53 [ -4.0 / -2.0]    -3.85c t -3.26 [ -2.6 / -4.7]
+  0.25-0.40     469   4.7c   -0.15c t -0.06    -4.06c t -1.48 [ -3.9 / -4.2]    -3.63c t -1.37 [ -4.0 / -3.1]
+  0.40-0.60     241   4.7c   -0.51c t -0.16    -4.60c t -1.43 [ +0.8 /-12.1]    -3.58c t -1.07 [ -9.4 / +4.5]
+  0.60-0.75      73   4.2c   +7.75c t +1.11    +4.16c t +0.60 [ +4.5 / +3.5]   -11.45c t -1.63 [-11.7 /-11.0]
+  0.75-0.90      37   3.9c   -0.51c t -0.07    -3.41c t -0.45 [ -1.5 /-11.7]    -2.55c t -0.34 [ -4.5 / +5.7]
+  0.03-0.97    3055   4.3c   -0.21c t -0.53    -3.32c t -7.87 [ -3.3 / -3.3]    -2.73c t -6.74 [ -2.8 / -2.7]
+
+range, both indices: by time of day (New York; hourly events: minutes to their own close), three price bands; value-mid | YES after fee | NO after fee
+  10:00 | 0.03-0.25 n   348  +0.2c (t +0.2) Y  -3.0c (t -2.4) N  -3.1c (t -2.6) | 0.25-0.75 n    42  -5.9c (t -0.9) Y  -9.4c (t -1.5) N  +2.6c (t +0.4) | 0.75-0.97 n<30                                     
+  11:00 | 0.03-0.25 n   409  -0.0c (t -0.0) Y  -2.7c (t -2.7) N  -2.5c (t -2.6) | 0.25-0.75 n    69  -1.8c (t -0.4) Y  -5.5c (t -1.1) N  -1.7c (t -0.3) | 0.75-0.97 n<30                                     
+  12:00 | 0.03-0.25 n   385  -1.1c (t -1.1) Y  -3.7c (t -3.7) N  -1.4c (t -1.3) | 0.25-0.75 n    88  +2.7c (t +0.6) Y  -0.8c (t -0.2) N  -6.2c (t -1.3) | 0.75-0.97 n<30                                     
+  13:00 | 0.03-0.25 n   335  -1.5c (t -1.2) Y  -4.2c (t -3.2) N  -1.0c (t -0.8) | 0.25-0.75 n   106  +3.0c (t +0.8) Y  -0.7c (t -0.2) N  -6.7c (t -1.7) | 0.75-0.97 n<30                                     
+  14:00 | 0.03-0.25 n   281  +0.3c (t +0.2) Y  -2.7c (t -1.8) N  -3.0c (t -2.0) | 0.25-0.75 n   120  -0.5c (t -0.1) Y  -4.8c (t -1.3) N  -3.7c (t -1.0) | 0.75-0.97 n<30                                     
+  15:00 | 0.03-0.25 n   215  -0.2c (t -0.1) Y  -2.9c (t -1.5) N  -2.3c (t -1.2) | 0.25-0.75 n   133  -0.1c (t -0.0) Y  -3.9c (t -1.3) N  -3.6c (t -1.2) | 0.75-0.97 n<30                                     
+  15:30 | 0.03-0.25 n   148  -0.1c (t -0.1) Y  -3.1c (t -1.1) N  -2.5c (t -1.0) | 0.25-0.75 n   124  -0.2c (t -0.1) Y  -4.5c (t -1.5) N  -4.0c (t -1.3) | 0.75-0.97 n<30                                     
+  15:50 | 0.03-0.25 n   105  -1.0c (t -0.3) Y  -4.0c (t -1.2) N  -1.8c (t -0.6) | 0.25-0.75 n   101  +2.9c (t +1.2) Y  -1.4c (t -0.6) N  -7.0c (t -2.9) | 0.75-0.97 n<30                                     
+
+above (16:00), both indices, 10:00-13:00   (8099 rows, 2912 markets, 43 days)
+  mid band        n  spread  value-mid (t)      buy YES at ask after fee [half1/half2]   buy NO at bid after fee [half1/half2]
+  0.03-0.10    1087   3.8c   -4.89c t -6.48    -7.29c t -7.88 [ -7.4 / -7.2]    +2.73c t +4.32 [ +3.1 / +2.5]
+  0.10-0.25    1146   4.3c   -8.24c t -2.85   -11.45c t -3.80 [ -9.4 /-13.1]    +5.22c t +1.86 [ +3.5 / +6.6]
+  0.25-0.40     880   4.9c  -12.71c t -2.56   -16.74c t -3.23 [-11.6 /-20.9]    +8.81c t +1.83 [ +4.4 /+12.3]
+  0.40-0.60    1137   4.5c  -15.00c t -2.52   -18.99c t -3.10 [-14.8 /-22.0]   +11.01c t +1.90 [ +7.5 /+13.6]
+  0.60-0.75     923   3.9c  -13.16c t -2.14   -16.59c t -2.70 [-12.9 /-19.9]    +9.64c t +1.57 [ +5.9 /+12.9]
+  0.75-0.90    1184   3.9c   -6.92c t -1.29    -9.74c t -1.81 [ -5.5 /-13.7]    +3.93c t +0.73 [ -0.3 / +7.8]
+  0.90-0.97    1058   3.5c   -2.36c t -0.76    -4.43c t -1.44 [ -2.6 / -6.3]    +0.07c t +0.02 [ -1.5 / +1.7]
+  0.03-0.97    7415   4.1c   -8.88c t -2.58   -11.99c t -3.41 [ -8.9 /-14.6]    +5.78c t +1.71 [ +3.0 / +8.1]
+
+above (16:00), both indices, 14:00-15:50   (6615 rows, 2566 markets, 43 days)
+  mid band        n  spread  value-mid (t)      buy YES at ask after fee [half1/half2]   buy NO at bid after fee [half1/half2]
+  0.03-0.10    1059   3.4c   -3.68c t -4.34    -5.85c t -6.27 [ -7.1 / -5.1]    +1.71c t +2.15 [ +3.0 / +0.9]
+  0.10-0.25     896   4.6c   -4.37c t -1.15    -7.72c t -1.98 [-11.5 / -5.1]    +1.24c t +0.33 [ +4.5 / -1.1]
+  0.25-0.40     614   6.6c   -5.02c t -0.92    -9.88c t -1.77 [-13.5 / -7.3]    +0.32c t +0.06 [ +1.6 / -0.6]
+  0.40-0.60     759   8.5c   -7.68c t -1.24   -13.62c t -2.14 [-17.0 /-11.3]    +1.74c t +0.29 [ +2.7 / +1.1]
+  0.60-0.75     618   6.5c   -9.67c t -1.52   -14.33c t -2.24 [-12.5 /-15.6]    +4.85c t +0.77 [ +1.0 / +7.6]
+  0.75-0.90     859   4.5c   -6.81c t -1.31    -9.92c t -1.89 [ -6.5 /-12.4]    +3.50c t +0.68 [ -0.0 / +6.0]
+  0.90-0.97     898   3.3c   -1.51c t -0.47    -3.47c t -1.08 [ -4.9 / -2.2]    -0.66c t -0.20 [ +0.8 / -1.9]
+  0.03-0.97    5703   5.1c   -5.24c t -1.52    -8.77c t -2.49 [ -9.8 / -8.0]    +1.73c t +0.51 [ +2.0 / +1.5]
+
+=== b / c. fair-value model and momentum ===
+
+=== fair-value model, index level from YAHOO, 'above' markets: 11654 rows, 3197 markets, 43 days ===
+  raw normal model: mean |model - mid| 6.0c; log-loss gain over the mid -0.0206 (t -2.86; negative = the market is better)
+  raw model, edge >= 3c (all days)    2047 bets  47.6/day on 43 of 43 days   -2.65c/bet  t -1.35  halves [ -0.0 / -4.6]  YES share 47%  winning days 40%
+  raw model, edge >= 5c (all days)    1567 bets  36.4/day on 42 of 43 days   -3.81c/bet  t -1.87  halves [ -1.4 / -5.6]  YES share 49%  winning days 40%
+
+  walk-forward favourite-longshot only: logit(mid): 8192 rows on 28 test days; last coefficients [0.046]
+    out-of-sample log-loss gain over Kalshi's mid -0.00083  t -0.64  halves [-0.00190 / +0.00009]   (positive = the model adds information)
+    edge after fee >= 3c                   0 bets
+    edge after fee >= 5c                   0 bets
+
+  walk-forward b: logit(mid) + model gap: 8192 rows on 28 test days; last coefficients [0.062, 0.117]
+    out-of-sample log-loss gain over Kalshi's mid -0.00323  t -1.02  halves [-0.00568 / -0.00115]   (positive = the model adds information)
+    edge after fee >= 3c                 124 bets   4.4/day on  8 of 28 days   -4.91c/bet  t -0.62  halves [ -4.1 /-21.6]  YES share 48%  winning days 25%
+    edge after fee >= 5c                  49 bets   1.8/day on  3 of 28 days   -1.86c/bet  t -0.15  halves [ -1.9 / +nan]  YES share 51%  winning days 67%
+
+  walk-forward c: logit(mid) + gap + momentum 5/15/60: 8192 rows on 28 test days; last coefficients [0.056, 0.09, 0.06, -0.254, 0.364]
+    out-of-sample log-loss gain over Kalshi's mid -0.00032  t -0.05  halves [-0.00505 / +0.00372]   (positive = the model adds information)
+    edge after fee >= 3c                 738 bets  26.4/day on 24 of 28 days   +1.69c/bet  t +0.26  halves [ +1.5 / +1.8]  YES share 33%  winning days 50%
+    edge after fee >= 5c                 486 bets  17.4/day on 17 of 28 days   +4.44c/bet  t +0.47  halves [+11.3 / +1.4]  YES share 30%  winning days 59%
+
+  walk-forward momentum only: 8192 rows on 28 test days; last coefficients [0.058, -0.243, 0.363]
+    out-of-sample log-loss gain over Kalshi's mid +0.00350  t +0.52  halves [+0.00169 / +0.00504]   (positive = the model adds information)
+    edge after fee >= 3c                 583 bets  20.8/day on 17 of 28 days   +4.09c/bet  t +0.43  halves [ +5.3 / +3.8]  YES share 25%  winning days 41%
+    edge after fee >= 5c                 393 bets  14.0/day on 15 of 28 days   +4.73c/bet  t +0.37  halves [+11.1 / +3.4]  YES share 24%  winning days 47%
+
+  walk-forward DIRECTION ONLY (intercept; a bet that the index keeps falling, see text): 8192 rows on 28 test days; last coefficients [-0.516]
+    out-of-sample log-loss gain over Kalshi's mid +0.01724  t +0.95  halves [+0.03180 / +0.00480]   (positive = the model adds information)
+    edge after fee >= 3c                1388 bets  49.6/day on 28 of 28 days   +9.54c/bet  t +1.63  halves [+13.4 / +7.1]  YES share 0%  winning days 57%
+    edge after fee >= 5c                1016 bets  36.3/day on 26 of 28 days   +9.35c/bet  t +1.28  halves [+14.6 / +7.3]  YES share 0%  winning days 58%
+
+=== fair-value model, index level from IMPLIED, 'above' markets: 11338 rows, 3165 markets, 43 days ===
+  raw normal model: mean |model - mid| 5.5c; log-loss gain over the mid -0.0221 (t -3.73; negative = the market is better)
+  raw model, edge >= 3c (all days)    1924 bets  44.7/day on 43 of 43 days   -4.06c/bet  t -2.56  halves [ -2.2 / -5.4]  YES share 53%  winning days 37%
+  raw model, edge >= 5c (all days)    1410 bets  32.8/day on 42 of 43 days   -5.24c/bet  t -2.87  halves [ -4.5 / -5.7]  YES share 55%  winning days 31%
+
+  walk-forward favourite-longshot only: logit(mid): 7933 rows on 28 test days; last coefficients [0.046]
+    out-of-sample log-loss gain over Kalshi's mid -0.00088  t -0.69  halves [-0.00202 / +0.00006]   (positive = the model adds information)
+    edge after fee >= 3c                   0 bets
+    edge after fee >= 5c                   0 bets
+
+  walk-forward b: logit(mid) + model gap: 7933 rows on 28 test days; last coefficients [0.045, -0.006]
+    out-of-sample log-loss gain over Kalshi's mid -0.00247  t -1.14  halves [-0.00500 / -0.00039]   (positive = the model adds information)
+    edge after fee >= 3c                  32 bets   1.1/day on  2 of 28 days   -5.17c/bet  t +0.00  halves [ -5.2 / +nan]  YES share 53%  winning days 50%
+    edge after fee >= 5c                  15 bets   0.5/day on  1 of 28 days  -16.53c/bet  t +0.00  halves [-16.5 / +nan]  YES share 60%  winning days 0%
+
+  walk-forward c: logit(mid) + gap + momentum 5/15/60: 7933 rows on 28 test days; last coefficients [0.041, -0.007, 0.079, -0.252, 0.37]
+    out-of-sample log-loss gain over Kalshi's mid +0.00102  t +0.15  halves [-0.00252 / +0.00393]   (positive = the model adds information)
+    edge after fee >= 3c                 598 bets  21.4/day on 18 of 28 days   +1.92c/bet  t +0.22  halves [ +8.1 / +0.1]  YES share 28%  winning days 44%
+    edge after fee >= 5c                 404 bets  14.4/day on 16 of 28 days   +3.74c/bet  t +0.34  halves [+16.1 / +1.3]  YES share 26%  winning days 44%
+
+  walk-forward momentum only: 7933 rows on 28 test days; last coefficients [0.077, -0.244, 0.368]
+    out-of-sample log-loss gain over Kalshi's mid +0.00386  t +0.55  halves [+0.00311 / +0.00449]   (positive = the model adds information)
+    edge after fee >= 3c                 560 bets  20.0/day on 16 of 28 days   +4.41c/bet  t +0.44  halves [+15.3 / +2.1]  YES share 22%  winning days 44%
+    edge after fee >= 5c                 376 bets  13.4/day on 15 of 28 days   +6.87c/bet  t +0.54  halves [+28.7 / +4.1]  YES share 23%  winning days 47%
+
+  walk-forward DIRECTION ONLY (intercept; a bet that the index keeps falling, see text): 7933 rows on 28 test days; last coefficients [-0.504]
+    out-of-sample log-loss gain over Kalshi's mid +0.01627  t +0.92  halves [+0.03061 / +0.00447]   (positive = the model adds information)
+    edge after fee >= 3c                1390 bets  49.6/day on 28 of 28 days   +9.63c/bet  t +1.70  halves [+13.3 / +7.2]  YES share 0%  winning days 61%
+    edge after fee >= 5c                1048 bets  37.4/day on 26 of 28 days   +9.08c/bet  t +1.33  halves [+13.5 / +7.1]  YES share 0%  winning days 58%
+
+=== fair-value model, index level from YAHOO, 'hourly' markets: 4867 rows, 3320 markets, 43 days ===
+  raw normal model: mean |model - mid| 6.5c; log-loss gain over the mid -0.0114 (t -1.67; negative = the market is better)
+  raw model, edge >= 3c (all days)    1436 bets  33.4/day on 43 of 43 days   -0.65c/bet  t -0.46  halves [ -0.4 / -0.9]  YES share 44%  winning days 51%
+  raw model, edge >= 5c (all days)    1047 bets  24.3/day on 42 of 43 days   -1.48c/bet  t -0.88  halves [ -3.8 / +0.4]  YES share 45%  winning days 40%
+
+  walk-forward favourite-longshot only: logit(mid): 3257 rows on 28 test days; last coefficients [-0.015]
+    out-of-sample log-loss gain over Kalshi's mid -0.00163  t -1.73  halves [-0.00272 / -0.00056]   (positive = the model adds information)
+    edge after fee >= 3c                   0 bets
+    edge after fee >= 5c                   0 bets
+
+  walk-forward b: logit(mid) + model gap: 3257 rows on 28 test days; last coefficients [0.02, 0.312]
+    out-of-sample log-loss gain over Kalshi's mid -0.00183  t -0.50  halves [+0.00135 / -0.00494]   (positive = the model adds information)
+    edge after fee >= 3c                 185 bets   6.6/day on 17 of 28 days   -4.01c/bet  t -1.27  halves [ +0.1 /-16.2]  YES share 36%  winning days 41%
+    edge after fee >= 5c                  49 bets   1.8/day on  7 of 28 days   +3.83c/bet  t +0.38  halves [ +9.3 /-44.3]  YES share 22%  winning days 71%
+
+  walk-forward c: logit(mid) + gap + momentum 5/15/60: 3257 rows on 28 test days; last coefficients [0.059, 0.394, 0.043, -0.276, 0.116]
+    out-of-sample log-loss gain over Kalshi's mid +0.00053  t +0.12  halves [-0.00091 / +0.00193]   (positive = the model adds information)
+    edge after fee >= 3c                 319 bets  11.4/day on 22 of 28 days   +1.03c/bet  t +0.32  halves [ -0.4 / +2.8]  YES share 33%  winning days 50%
+    edge after fee >= 5c                 135 bets   4.8/day on 18 of 28 days   -4.26c/bet  t -0.69  halves [ -5.6 / -2.5]  YES share 21%  winning days 44%
+
+  walk-forward momentum only: 3257 rows on 28 test days; last coefficients [0.063, -0.212, 0.119]
+    out-of-sample log-loss gain over Kalshi's mid -0.00057  t -0.25  halves [-0.00295 / +0.00174]   (positive = the model adds information)
+    edge after fee >= 3c                 125 bets   4.5/day on 17 of 28 days   -1.74c/bet  t -0.29  halves [ -2.2 / -1.3]  YES share 28%  winning days 47%
+    edge after fee >= 5c                  53 bets   1.9/day on 11 of 28 days   +6.87c/bet  t +0.70  halves [ +1.3 /+10.8]  YES share 21%  winning days 64%
+
+  walk-forward DIRECTION ONLY (intercept; a bet that the index keeps falling, see text): 3257 rows on 28 test days; last coefficients [-0.111]
+    out-of-sample log-loss gain over Kalshi's mid -0.00077  t -0.57  halves [-0.00032 / -0.00120]   (positive = the model adds information)
+    edge after fee >= 3c                   0 bets
+    edge after fee >= 5c                   0 bets
+
+=== fair-value model, index level from YAHOO, 'range' markets: 2616 rows, 586 markets, 42 days ===
+  raw normal model: mean |model - mid| 5.0c; log-loss gain over the mid -0.0192 (t -2.59; negative = the market is better)
+  raw model, edge >= 3c (all days)     284 bets   6.8/day on 41 of 42 days   -5.16c/bet  t -2.40  halves [ -1.9 / -8.4]  YES share 40%  winning days 41%
+  raw model, edge >= 5c (all days)     204 bets   4.9/day on 39 of 42 days   -8.85c/bet  t -3.52  halves [ -6.8 /-10.7]  YES share 36%  winning days 36%
+
+  walk-forward intercept + logit(mid): 1774 rows on 27 test days; last coefficients [0.079, 0.084]
+    out-of-sample log-loss gain over Kalshi's mid -0.00186  t -1.08  halves [-0.00228 / -0.00148]   (positive = the model adds information)
+    edge after fee >= 3c                  10 bets   0.4/day on  7 of 27 days   -8.52c/bet  t -0.62  halves [ -8.5 / +nan]  YES share 100%  winning days 57%
+    edge after fee >= 5c                   0 bets
+
+  walk-forward b: + model gap: 1774 rows on 27 test days; last coefficients [0.074, 0.082, -0.017]
+    out-of-sample log-loss gain over Kalshi's mid -0.00315  t -1.61  halves [-0.00355 / -0.00280]   (positive = the model adds information)
+    edge after fee >= 3c                  14 bets   0.5/day on  9 of 27 days  -29.00c/bet  t -2.15  halves [-27.3 /-33.2]  YES share 100%  winning days 33%
+    edge after fee >= 5c                   2 bets
+
+=== d. bracket sums of the range events (every minute of the last 390 before the close) ===
+  buy every bracket at the ask (pays exactly $1): cost = sum(ask + fee). Sell every bracket at the bid (= buy every NO): proceeds = sum(bid - fee).
+  KXINX: 11 days with the whole ladder, 3826 minutes with all 30 quotes; full set buyable in 96% of them
+    sum of asks  mean 1.482  5%..95% 1.360..1.630   with fees mean 1.565  min 1.301
+    sum of bids  mean 0.871  5%..95% 0.780..0.970   after fees mean 0.827  max 0.997
+    buy-all cost < $1 after fees: 0 minutes on 0 days (lowest cost 1.301);  sell-all > $1 after fees: 0 minutes on 0 days (highest 0.997)
+    before fees: sum of asks < 1 in 0 minutes, sum of bids > 1 in 0 minutes
+  KXNASDAQ100: 11 days with the whole ladder, 3828 minutes with all 30 quotes; full set buyable in 94% of them
+    sum of asks  mean 1.542  5%..95% 1.390..1.700   with fees mean 1.632  min 1.373
+    sum of bids  mean 0.839  5%..95% 0.710..0.980   after fees mean 0.796  max 0.989
+    buy-all cost < $1 after fees: 0 minutes on 0 days (lowest cost 1.373);  sell-all > $1 after fees: 0 minutes on 0 days (highest 0.989)
+    before fees: sum of asks < 1 in 0 minutes, sum of bids > 1 in 0 minutes
+
+=== d2. 'or above' ladder: a higher strike bid above a lower strike's ask (buy YES low + NO high pays >= $1) ===
+  KXINXU: 83147 neighbouring pairs x 5-minute snapshots, 0 with a locked gain after fees on 0 days (best 0.0c)
+  KXNASDAQ100U: 164608 neighbouring pairs x 5-minute snapshots, 0 with a locked gain after fees on 0 days (best 0.0c)
+
+=== d3. range bracket vs the same range built from two 'or above' strikes (5-minute snapshots) ===
+  synthetic YES of [a, b) = YES above(a) + NO above(b) - $1. Arbitrage if a bracket's bid - fee exceeds the synthetic cost with fees, or the bracket's ask + fee is below what selling the synthetic yields.
+  KXINX vs KXINXU: 13085 bracket x snapshot with all six quotes; mid gap mean +0.32c, sd 1.51c; locked gain after fees in 22 (sell bracket) + 4 (buy bracket) on 14 days (best 5.2c)
+  KXNASDAQ100 vs KXNASDAQ100U: 13489 bracket x snapshot with all six quotes; mid gap mean +0.36c, sd 1.76c; locked gain after fees in 5 (sell bracket) + 4 (buy bracket) on 3 days (best 3.8c)

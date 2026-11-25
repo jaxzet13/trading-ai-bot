@@ -1,6 +1,6 @@
 """Kalshi stock-index markets (S&P 500, Nasdaq-100; 16:00 New York events): is there an edge for a taker?
 
-    python3 research/index_study/study.py            (after download.py; prints every table of the README)
+    python3 research/index_study/study.py [--no-prevol]     (after download.py; prints every table of the README)
 
 Rows: one per market x decision time (minutes before the close) with a two-sided quote.
 Execution: TAKER only. Buy YES at the ask, or buy NO at 1 - bid, plus the fee 0.07 p (1 - p). Settles at 0 / 1.
@@ -27,6 +27,12 @@ BANDS = [(0.03, 0.10), (0.10, 0.25), (0.25, 0.40), (0.40, 0.60), (0.60, 0.75), (
 VOL_DAYS = 5                                           # realised volatility: 5-minute returns of the last 5 sessions
 MIN_TRAIN = 15                                         # walk-forward: first scored day has 15 days before it
 SERIES = ["KXINX", "KXNASDAQ100", "KXINXU", "KXNASDAQ100U"]
+# Liquidity filter known at the decision time: contracts traded in the market BEFORE that minute (within the
+# downloaded window). The thresholds equal the total-volume thresholds of the download, so every market that
+# passes was downloaded: no selection on what happened afterwards. (Selecting on the day's total volume is a
+# look-ahead: a longshot strike gets its volume when the index moves to it. PREVOL=0 shows that biased sample.)
+PREVOL = {"range": 1, "above": 50, "hourly": 300}
+NO_FILTER = "--no-prevol" in sys.argv
 
 
 # ---------------------------------------------------------------------------------------------------- data
@@ -82,13 +88,18 @@ def rows(events, lev, sig):
         sym, fam = INDEX[e["series"]], FAMILY[e["series"]]
         for m in e["markets"]:
             ok = two_sided(m["bid"], m["ask"])
+            cum = np.cumsum(m["vol"])
+            kind = fam if e["daily"] else "hourly"
             for mins, label in TIMES:
                 i = WIN - mins
                 if not ok[i] or (not e["daily"] and mins > 60):       # hourly events: the last hour only
                     continue
+                if not NO_FILTER and cum[i] < PREVOL[kind]:
+                    continue
                 t = e["close"] - mins * 60
                 r = {"sym": sym, "fam": fam if e["daily"] else "hourly", "day": e["day"], "tk": m["tk"],
-                     "mins": mins, "bid": m["bid"][i], "ask": m["ask"][i], "v": m["v"], "volume": m["volume"]}
+                     "mins": mins, "bid": m["bid"][i], "ask": m["ask"][i], "v": m["v"], "volume": m["volume"],
+                     "prevol": cum[i]}
                 for src in ("yahoo", "implied"):
                     S, sg = lev[src][sym].get(t), sig[src][sym].get(t)
                     good = S is not None and sg is not None and sg > 0
@@ -153,9 +164,12 @@ def favourites(R, title, mask):
 
 def calibration_by_time(R, title, mask):
     alldays = sorted(set(R["day"][mask]))
-    print(f"\n{title}: by time of day (New York), three price bands; value-mid | YES after fee | NO after fee")
+    print(f"\n{title}: by time of day (New York; hourly events: minutes to their own close), three price bands; "
+          "value-mid | YES after fee | NO after fee")
     for mins, label in TIMES:
-        line = f"  {label}"
+        if (mask & (R["mins"] == mins)).sum() < 30:
+            continue
+        line = f"  {label}" if "hourly" not in title else f"  {mins:2d} min"
         for lo, hi in ((0.03, 0.25), (0.25, 0.75), (0.75, 0.97)):
             k = mask & (R["mins"] == mins) & (R["mid"] >= lo) & (R["mid"] < hi)
             if k.sum() < 30:
@@ -293,6 +307,7 @@ def bracket_sums(events):
         evs = [e for e in events if e["series"] == series]
         costs, proc, sa, sb, nmin, narb_b, narb_s, days_b, days_s, best_b, best_s = [], [], [], [], 0, 0, 0, set(), set(), 9, 0
         evs = [e for e in evs if len(e["markets"]) >= 30]        # days for which the whole ladder was downloaded
+        for e in evs:
             B = np.array([m["bid"] for m in e["markets"]])
             A = np.array([m["ask"] for m in e["markets"]])
             for i in range(WIN - 390, WIN - 1):
@@ -417,7 +432,9 @@ def main():
                      f"(t {r.mean() / r.std(ddof=1) * math.sqrt(len(r)):+.1f})")
         print(line)
     R = rows(events, lev, sig)
-    print(f"{len(R['v'])} market x time rows with a two-sided quote")
+    print(f"{len(R['v'])} market x time rows with a two-sided quote"
+          + (" (NO liquidity filter: look-ahead selection on total volume)" if NO_FILTER else
+             f" and volume before the decision time >= {PREVOL}"))
     daily = [e for e in events if e["daily"]]
 
     print("\n=== a. calibration ===")
