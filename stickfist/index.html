@@ -1121,8 +1121,6 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .lhero .tchart { padding: 0; border: 0; background: none; border-radius: 0; }
 .lh-sell { width: 100%; min-height: 50px; margin: 0; border-radius: 15px; border: 0; background: #f5f2ea; color: #0a0a0c; font-size: 16px; font-weight: 800; } .lh-sell b { font-variant-numeric: tabular-nums; margin-left: 4px; }
 .lhero .tc-tf { justify-content: center; gap: 2px; } .lhero .tcb { flex: 0 0 auto; min-height: 30px; padding: 0 12px; background: none; font-size: 12px; } .lhero .tcb.on { background: rgba(255,255,255,.1); color: var(--ink); }
-.worth.slim { display: grid; gap: 4px; margin: 2px 2px 16px; } .worth.slim .label { font-size: 12px; } .worth.slim .bignum { font-size: 40px; font-weight: 800; letter-spacing: -.04em; } .worth.slim .wmeta { font-size: 14px; font-weight: 600; }
-.pmore { display: grid; gap: 8px; margin: 22px 0 18px; } .pmore details.more.big { margin: 0; } .pmore .pshare { margin: 12px 0 16px; } .pmore #pStats { margin: 10px 0 0; }
 .rush.run { background: #3be477; color: #04130a; }
 @media (max-width: 380px) { .lh-px b { font-size: 40px; } }
 @media (prefers-reduced-motion: reduce) { .lhero.pump, .lh-badge::before { animation: none; } }
@@ -1156,6 +1154,36 @@ body.on-home::before { background: radial-gradient(95% 52% at 50% 46%, var(--hal
 /* the picture in the pack fills its face */
 .pk .win { width: 90%; margin-top: 3cqw; border-color: rgba(255,255,255,.16); border-radius: 1.6cqw; overflow: hidden; }
 .pk .readout { padding-top: 2.4cqw; }
+
+/* ---- Me, designed: a portfolio card, the live card, your cards, and a grid of tiles ---- */
+#v-profile .page-head { margin-bottom: 10px; }
+.pf { position: relative; display: grid; gap: 6px; padding: 20px 18px 16px; margin: 0 0 14px; border-radius: 26px; overflow: hidden; border: 1px solid rgba(59,228,119,.28); background: radial-gradient(130% 100% at 0% 0%, rgba(59,228,119,.22), transparent 58%), linear-gradient(180deg, #0f1512, #090b0d); box-shadow: 0 24px 50px -30px rgba(59,228,119,.5); }
+.pf.neg { border-color: rgba(255,107,107,.26); background: radial-gradient(130% 100% at 0% 0%, rgba(255,107,107,.17), transparent 58%), linear-gradient(180deg, #151010, #0b0909); box-shadow: 0 24px 50px -30px rgba(255,107,107,.45); }
+.pf > * { position: relative; } .pf .label { font-size: 12px; letter-spacing: .14em; }
+.pf .bignum { font-size: clamp(40px, 12.5vw, 54px); font-weight: 800; letter-spacing: -.045em; line-height: 1; }
+.pf-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 13.5px; } .pf-row > span { display: inline-flex; gap: 5px; }
+.pf-pill { padding: 4px 9px; border-radius: 9px; font-weight: 800; font-variant-numeric: tabular-nums; color: #04130a; background: #3be477; } .pf.neg .pf-pill { color: #fff; background: #d83a3a; }
+.pf-art { position: absolute; left: 0; right: 0; top: auto; bottom: 0; width: 100%; height: 96px; opacity: .4; pointer-events: none; } .pf-art .a { fill: rgba(59,228,119,.16); } .pf-art .l { fill: none; stroke: #3be477; stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; } .pf.neg .pf-art .a { fill: rgba(255,107,107,.13); } .pf.neg .pf-art .l { stroke: #ff6b6b; }
+.pf-split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; } .pf-split > div { display: grid; gap: 2px; padding: 10px 12px; border-radius: 14px; background: rgba(6,8,9,.66); border: 1px solid rgba(255,255,255,.07); backdrop-filter: blur(6px); }
+.pf-split small { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); } .pf-split b { font-size: 18px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+#pNote:empty { display: none; }
+.pempty { display: grid; justify-items: center; gap: 6px; padding: 26px 20px 22px; border-radius: 24px; text-align: center; border: 1px dashed rgba(255,255,255,.16); background: radial-gradient(80% 60% at 50% 0%, rgba(59,228,119,.10), transparent 70%), var(--s1); }
+.pe-art { width: 58px; height: 80px; margin-bottom: 8px; rotate: -6deg; filter: drop-shadow(0 14px 18px rgba(59,228,119,.3)); } .pe-art rect { fill: #0b0d10; stroke: rgba(255,255,255,.3); stroke-width: 1.5; } .pe-art path { fill: none; stroke: rgba(255,255,255,.18); stroke-width: 1.2; } .pe-art .f { fill: #f5f2ea; } .pe-art .x { stroke: #f5f2ea; stroke-width: 5; stroke-linecap: round; }
+.pempty b { font-size: 19px; font-weight: 800; letter-spacing: -.02em; } .pempty span { max-width: 26ch; font-size: 14px; line-height: 1.4; color: var(--dim); } .pempty .btn { margin-top: 12px; min-height: 48px; padding: 0 28px; border-radius: 15px; font-size: 15.5px; font-weight: 800; background: var(--acc); border-color: var(--acc); color: #04130a; }
+.ptiles { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: dense; gap: 10px; margin: 22px 0 16px; }
+.ptile, details.ptile, details.ptile:last-of-type { display: block; min-width: 0; margin: 0; padding: 0; border-radius: 20px; border: 1px solid var(--ln); background: var(--s1); color: inherit; text-decoration: none; --tc: 59,228,119; }
+.ptile.wide, details.ptile[open] { grid-column: 1 / -1; }
+.ptile > summary, a.ptile { display: grid; grid-template-columns: 1fr; align-content: start; gap: 2px; padding: 13px 14px 13px; cursor: pointer; list-style: none; -webkit-tap-highlight-color: transparent; } .ptile > summary::before { content: none !important; } .ptile > summary::-webkit-details-marker { display: none; }
+.ptile.wide > summary { grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; } .ptile.wide > summary .pt-ic { grid-row: 1 / 3; margin: 0; }
+.pt-ic { display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 6px; border-radius: 11px; background: rgba(var(--tc), .14); } .pt-ic svg { width: 19px; height: 19px; fill: none; stroke: rgb(var(--tc)); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.ptile b { font-size: 15.5px; font-weight: 750; letter-spacing: -.01em; } .ptile small { font-size: 12.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ptile small.hot { color: var(--acc); font-weight: 700; }
+details.ptile.t-goal { --tc: 255,196,90; } details.ptile.t-inv { --tc: 120,170,255; } details.ptile.t-hist { --tc: 196,150,255; } details.ptile.t-set { --tc: 170,176,188; } .ptile { text-align: left; } .ptile > summary, a.ptile { justify-items: start; } .ptile .pt-bar { justify-self: stretch; }
+.pt-bar { display: block; height: 5px; margin-top: 7px; border-radius: 5px; background: rgba(255,255,255,.08); overflow: hidden; } .pt-bar i { display: block; height: 100%; border-radius: inherit; background: var(--acc); }
+details.ptile[open] > summary { border-bottom: 1px solid var(--ln); grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; } details.ptile[open] > summary .pt-ic { grid-row: 1 / 3; margin: 0; }
+.pt-body { margin: 0 !important; padding: 14px; } .pt-body .pshare { margin: 12px 0 2px; width: 100%; } .pt-body #pStats { margin: 10px 0 0; } .pt-body .rankline { margin-top: 0; }
+.ptile:active { transform: scale(.985); } details.ptile[open]:active { transform: none; }
+#v-profile #pAcct .acctbox { margin: 0 0 10px; padding: 12px 14px; border-radius: 18px; background: none; border-color: var(--ln); } #v-profile #pAcct .acctbox:not(.test) .ac-who small { display: none; } #v-profile #pAcct .acctbox .ac-who b { font-size: 14px; font-weight: 600; }
+#v-profile #pAcct .acctbox.test { background: linear-gradient(100deg, rgba(255,200,90,.10), rgba(255,200,90,.02)); }
 </style>
 </head>
 <body>
@@ -1214,16 +1242,16 @@ body.on-home::before { background: radial-gradient(95% 52% at 50% 46%, var(--hal
     <div class="page-head"><h1 class="ttl">Me</h1><p class="live"></p></div>
     <div id="pWorth"></div>
     <div id="pLive"></div>
-    <h3 class="sec">Your cards</h3>
+    <h3 class="sec" id="pCardsH">Your cards</h3>
     <div class="clist" id="pTable"></div>
-    <p class="small" id="pNote"></p>
-    <div class="plinks" id="pLinks"></div>
-    <div class="pmore">
-      <details class="more big"><summary>Goals</summary><div id="pRank"></div><div id="pGoals"></div></details>
-      <details class="more big"><summary>Invite friends</summary><div id="pInvite"></div></details>
-      <details class="more big"><summary>History</summary><div id="pHist"></div><p class="small" id="pStats"></p>
-        <button class="btn pshare" id="pShare" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span id="pShareTxt">Share my stats</span></button></details>
-      <details class="more big" id="pMore"><summary>Limits and settings</summary><div id="pLimits" style="margin:16px 0 28px"></div><div id="pSettings"></div></details>
+    <div id="pNote"></div>
+    <div class="ptiles">
+      <a class="ptile t-coll" href="#/collection"><i class="pt-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="11" height="15" rx="2"/><path d="M9 21h9a2 2 0 0 0 2-2V8"/></svg></i><b>Collection</b><small id="pCollSub"></small><span class="pt-bar"><i id="pCollBar"></i></span></a>
+      <details class="ptile t-goal"><summary><i class="pt-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg></i><b>Goals</b><small id="pGoalsSub"></small></summary><div class="pt-body"><div id="pRank"></div><div id="pGoals"></div></div></details>
+      <details class="ptile t-inv"><summary><i class="pt-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.500 20c.6-3.600 3.200-5.500 6.500-5.500s5.900 1.900 6.500 5.500M18 7v6M15 10h6"/></svg></i><b>Invite</b><small id="pInvSub"></small></summary><div class="pt-body"><div id="pInvite"></div></div></details>
+      <details class="ptile t-hist"><summary><i class="pt-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.500"/><path d="M12 7.500V12l3 2"/></svg></i><b>History</b><small id="pHistSub"></small></summary><div class="pt-body"><div id="pHist"></div><p class="small" id="pStats"></p>
+        <button class="btn pshare" id="pShare" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span id="pShareTxt">Share my stats</span></button></div></details>
+      <details class="ptile t-set wide" id="pMore"><summary><i class="pt-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></i><b>Limits and settings</b><small>Spending limits, breaks, sound</small></summary><div class="pt-body"><div id="pLimits" style="margin:6px 0 28px"></div><div id="pSettings"></div></div></details>
     </div>
     <div id="pAcct"></div>
     <div id="pTip"></div>
@@ -2399,16 +2427,23 @@ function renderProfile() {
   $("pLimits").live = limitsHTML(); $("pSettings").live = settingsHTML(); $("pHist").live = History.html();
   $("pLive").live = Chart.heroHTML(); if (state.vault.length) Chart.start();
   const net = netWorth(), all = profitAll();
-  $("pWorth").live = `<div class="worth slim"><span class="label">Net worth</span><div class="bignum" role="img" aria-label="${money(net)}" data-tick="net" data-v="${Math.round(net)}">${moneyR(net)}</div><div class="wmeta"><span>${signR(all, "since you started")}</span>${awayLine()}</div></div>`;
+  { const ws = worthSeries(40), up = all >= 0; let art = "";                                              // the card at the top: what you have, what you have made, and the shape of the last day behind it
+    if (ws) { const v = ws.out, lo = Math.min(...v), sp = Math.max(Math.max(...v) - lo, 1), pts = v.map((x, i) => (i * 400 / (v.length - 1)).toFixed(1) + " " + (84 - (x - lo) / sp * 70).toFixed(1)); art = `<svg class="pf-art" viewBox="0 0 400 90" preserveAspectRatio="none" aria-hidden="true"><path class="a" d="M${pts.join(" L")} L400 90 L0 90 Z"/><path class="l" d="M${pts.join(" L")}"/></svg>`; }
+    $("pWorth").live = `<div class="pf ${up ? "pos" : "neg"}">${art}<span class="label">Net worth</span><div class="bignum" role="img" aria-label="${money(net)}" data-tick="net" data-v="${Math.round(net)}">${moneyR(net)}</div>
+      <div class="pf-row"><span class="pf-pill">${up ? "▲" : "▼"} ${moneyR(all)}</span><span class="dim">all time</span>${awayLine()}</div>
+      <div class="pf-split"><div><small>Cash</small><b>${moneyR(state.coins)}</b></div><div><small>Cards</small><b>${moneyR(holdingsValue())}</b></div></div></div>`; }
   $("pGoals").live = Goals.html(); Goals.badge(); $("pTip").live = tipHTML(); $("pRank").live = rankLine();
   { const inf = typeof Ref !== "undefined" ? Ref.info() : null, sig = inf ? [inf.code, inf.joined, inf.invited, inf.earned, inf.credits, API.on].join("|") : "off";   // only rebuild the invite hero (and replay its bar) when the numbers change, not on every live tick
     if (sig !== pInviteSig) { pInviteSig = sig; $("pInvite").live = inviteHeroHTML(); if (typeof playRewardBars === "function") playRewardBars(); } }
   const groups = CARDS.map(c => { const cs = copiesOf(c.no); if (!cs.length) return null; return { c, n: cs.length, val: cs.reduce((a, x) => a + valueOf(x), 0), cost: cs.reduce((a, x) => a + costOf(x), 0), q: quickCopy(c.no), hot: cs.some(x => { const m = Val.moves(x, 6)[0]; return m && m.pct > .15; }), run: cs.some(x => Val.surge(x)) }; }).filter(Boolean).sort((a, b) => b.val - a.val);
   const shown = pAll ? groups : groups.slice(0, 6);
   $("pTable").live = groups.length ? shown.map(g => `<div class="mrow"><button class="mmain" data-card="${g.c.no}" aria-label="${esc(g.c.name)}">${thumb(g.c)}<span class="mn"><b>${esc(g.c.name)}${g.run ? ` <i class="rush run">pumping</i>` : g.hot ? ` <i class="rush" title="AI buyers rushed into a copy in the last few hours">buyers in</i>` : ""}</b><small>${g.n > 1 ? `×${g.n} · ` : ""}${g.c.retired ? "Retired" : esc(RAR[g.c.rar].name)}</small></span><span class="mp"><b data-tick="g${g.c.no}" data-v="${g.val.toFixed(2)}">${moneyR(g.val)}</b>${pctR(g.val / Math.max(1, g.cost) - 1)}</span></button><button class="msell" data-qsell="${g.c.no}" aria-label="${esc(quickAria(g.c.no))}">${g.n > 1 ? "Sell 1" : "Sell"}<small>${moneyR(sellOf(g.q))}</small></button></div>`).join("") + (groups.length > 6 ? `<button class="linkbtn plain pall" id="pAllBtn">${pAll ? "Show fewer" : `Show all ${groups.length} cards`}</button>` : "") + `<div class="mtot"><span>All your cards</span><b>${moneyR(holdingsValue())}</b></div>` : "";
-  $("pNote").innerHTML = groups.length ? "" : `No cards yet. <a class="linkbtn" href="#/">Open a pack</a> and they show up here with a live price.`;
+  $("pCardsH").textContent = groups.length ? `Your cards · ${state.vault.length}` : "Your cards";
+  $("pNote").live = groups.length ? "" : `<div class="pempty"><svg class="pe-art" viewBox="0 0 64 88" aria-hidden="true"><rect x="3" y="3" width="58" height="82" rx="7"/><path d="M3 13h58M3 75h58"/><circle cx="32" cy="31" r="4.500" class="f"/><path d="M21 40 43 62M43 40 21 62" class="x"/></svg><b>No cards yet</b><span>Open a pack and your card lands here with a live price.</span><a class="btn solid" href="#/">Open a pack</a></div>`;
   $("pStats").textContent = state.s.packs ? `${state.s.packs} pack${state.s.packs === 1 ? "" : "s"} opened · ${moneyR(state.s.spent)} spent · ${moneyR(state.s.sold)} back from sales` : "";
-  $("pLinks").live = `<a class="linkbtn plain" href="#/collection">All ${LIVE.length} cards · ${LIVE.filter(c => state.found[c.no]).length} found ›</a>`;
+  { const found = LIVE.filter(c => state.found[c.no]).length, rdy = Goals.ready().length, got = Object.keys(state.goals || {}).length, inf = typeof Ref !== "undefined" ? Ref.info() : null, set = (id, t, hot) => { const e = $(id); if (e.textContent !== t) e.textContent = t; e.classList.toggle("hot", !!hot); };
+    set("pCollSub", `${found} of ${LIVE.length} found`); $("pCollBar").style.width = (found / LIVE.length * 100).toFixed(1) + "%";
+    set("pGoalsSub", rdy ? `${rdy} to claim` : `${got} of ${Goals.LIST.length} done`, rdy); set("pInvSub", inf && inf.invited ? `${inf.invited} joined` : "Free packs for friends"); set("pHistSub", state.s.packs ? `${fmt(state.s.packs)} pack${state.s.packs === 1 ? "" : "s"} opened` : "Nothing yet"); }
 }
 
 let oddsKey = "";
