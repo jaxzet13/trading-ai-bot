@@ -11,7 +11,7 @@ function cardHTML(copy, o) {
     <div class="l2">${code ? idHTML(code, card.rar) : `<span>No. ${card.no}</span>`}${card.cap ? `<span class="cap">${esc(card.cap)}</span>` : ""}</div></div><i class="sheen"></i></div>`;
 }
 const CRIMPS = { fp: fill("╱╲", 120), ms: fill("△▲", 120) };
-const packHTML = pack => `<div class="pk pk-${pack.id}"><div class="crimp t">${CRIMPS[pack.id]}</div><div class="win"><canvas class="scr"></canvas></div>
+const packHTML = pack => `<div class="pk pk-${pack.id}"><div class="crimp t">${CRIMPS[pack.id]}</div><div class="win"${pack.cover ? ` style="background-image:linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,0) 30%, rgba(0,0,0,0) 58%, rgba(0,0,0,.72)), url(${imgOf(BY_ID[pack.cover])})"` : ""}><canvas class="scr"></canvas></div>
   <div class="readout"><div class="r-stat"></div><div class="r-name"></div><div class="r-sub"></div><div class="r-meter"></div></div><div class="crimp b">${CRIMPS[pack.id]}</div></div>`;
 // the animated picture in the pack
 function liveWindow(pk, pack) { const ps = new PackScreen(pk, pack); ps.fit(); ps.start(); return ps; }

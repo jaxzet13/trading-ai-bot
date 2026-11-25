@@ -2,7 +2,8 @@
         Each scene is painted as a small picture first (light, shading, colour), then every cell of the grid becomes the character whose ink matches
         that cell's brightness, in that cell's colour. That is what gives the scene real depth instead of a few hand-placed symbols.
         First Print is a print run: the logo is printed under a glowing print head, catches a shine, then the sheet runs again.
-        Moonshot is a launch: a shaded rocket on a flickering flame climbs through moving stars, the Moon glowing in the corner. ---- */
+        Moonshot is a launch: a shaded rocket on a flickering flame climbs through moving stars, the Moon glowing in the corner.
+        A pack with a cover card wears that card's picture behind the scene: the scene is then drawn lighter and lower, over the art. ---- */
 const SPIN = "|/-\\";
 const PS_RAMP = " .,:;-=+*xo%#&@";                                                  // ink grows steadily from left to right, so solid shapes read as solid
 class PackScreen {
@@ -11,7 +12,7 @@ class PackScreen {
     this.el = { stat: pk.querySelector(".r-stat"), name: pk.querySelector(".r-name"), sub: pk.querySelector(".r-sub"), meter: pk.querySelector(".r-meter") };
     this.on = false; this.last = 0; this.t0 = performance.now(); this.off = document.createElement("canvas"); this.g = this.off.getContext("2d", { willReadFrequently: true }); this.cache = new Map(); this.layer = document.createElement("canvas"); this.lc = this.layer.getContext("2d");
     const n = LIVE.filter(c => c.set === this.pack.set).length;
-    scramble(this.el.name, this.pack.name.toUpperCase(), 520); this.el.sub.textContent = `${n} cards · one in every pack`;
+    this.art = !!this.pack.cover; scramble(this.el.name, this.pack.name.toUpperCase(), 520); this.el.sub.textContent = this.art ? `on the cover: ${BY_ID[this.pack.cover].name} · ${chanceS(packP(this.pack.cover))}` : `${n} cards · one in every pack`;
   }
   fit() {
     const dpr = Math.min(devicePixelRatio || 1, 2), w = this.cv.clientWidth, h = this.cv.clientHeight; if (!w || !h) return;
@@ -27,7 +28,7 @@ class PackScreen {
     g.setTransform(cols / W, 0, 0, rows / H, 0, 0);                                      // paint in the pack's own pixels; the small canvas averages them into cells
     if (this.pack.id === "ms") this.launch(g, t, W, H); else this.print(g, t, W, H);
     const d = g.getImageData(0, 0, cols, rows).data, c = this.ctx, cw = W / cols, ch = H / rows, N = PS_RAMP.length - 1;
-    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.fillStyle = "#030304"; c.fillRect(0, 0, W, H);
+    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); if (this.art) c.clearRect(0, 0, W, H); else { c.fillStyle = "#030304"; c.fillRect(0, 0, W, H); }
     c.font = `700 ${(cw / .6).toFixed(2)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; c.textAlign = "center"; c.textBaseline = "middle";
     for (let y = 0, k = 0; y < rows; y++) for (let x = 0; x < cols; x++, k += 4) {
       const r = d[k], gg = d[k + 1], b = d[k + 2], l = (r * .299 + gg * .587 + b * .114) / 255; if (l < .06) continue;
@@ -40,17 +41,17 @@ class PackScreen {
     this.status(t * 1000, u < 2.6 ? "printing" : "printed");
     const fit = (txt, wt, maxW, maxS) => { let fs = maxS; g.font = `${wt} ${fs}px "Inter",system-ui,sans-serif`; while (g.measureText(txt).width > maxW && fs > 6) { fs -= 1; g.font = `${wt} ${fs}px "Inter",system-ui,sans-serif`; } return fs; };
     // the sheet: a faint grid of halftone dots, crop marks in the corners
-    g.fillStyle = "#1c1b19"; for (let y = 8; y < H; y += 9) for (let x = 6 + (y / 9 % 2) * 4.5; x < W; x += 9) g.fillRect(x, y, 1.6, 1.6);
+    if (!this.art) { g.fillStyle = "#1c1b19"; for (let y = 8; y < H; y += 9) for (let x = 6 + (y / 9 % 2) * 4.5; x < W; x += 9) g.fillRect(x, y, 1.6, 1.6);
     g.strokeStyle = "#5a574f"; g.lineWidth = 1.4; const cm = 10, L = 14; for (const [x, y, sx, sy] of [[cm, cm, 1, 1], [W - cm, cm, -1, 1], [cm, H - cm, 1, -1], [W - cm, H - cm, -1, -1]]) { g.beginPath(); g.moveTo(x, y + sy * L); g.lineTo(x, y); g.lineTo(x + sx * L, y); g.stroke(); }
-    const glow = g.createRadialGradient(W / 2, H * .45, 0, W / 2, H * .45, W * .7); glow.addColorStop(0, "rgba(120,90,40,.55)"); glow.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = glow; g.fillRect(0, 0, W, H);
+    const glow = g.createRadialGradient(W / 2, H * .45, 0, W / 2, H * .45, W * .7); glow.addColorStop(0, "rgba(120,90,40,.55)"); glow.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = glow; g.fillRect(0, 0, W, H); }
     const G0 = g, Lc = this.lc; Lc.setTransform(1, 0, 0, 1, 0, 0); Lc.clearRect(0, 0, this.cols, this.rows); Lc.setTransform(this.cols / W, 0, 0, this.rows / H, 0, 0); g = Lc;     // the ink goes on its own clear layer, so the shine only lights the ink
     g.save(); g.beginPath(); g.rect(0, 0, W, Math.max(0, head)); g.clip(); g.globalAlpha = fade;
-    const cx = W / 2, cy = H * .44, fs = fit("STIXX", 900, W * .86, H * .4);
+    const cx = W / 2, cy = this.art ? H * .84 : H * .44, fs = fit("STIXX", 900, W * (this.art ? .62 : .86), H * .4);
     g.textAlign = "center"; g.textBaseline = "middle"; g.font = `900 ${fs}px "Inter",system-ui,sans-serif`;
-    const SY = 1.7; g.save(); g.translate(cx, cy); g.scale(1, SY);                              // tall poster lettering
+    const SY = this.art ? 1.25 : 1.7; g.save(); g.translate(cx, cy); g.scale(1, SY);                              // tall poster lettering
     g.fillStyle = "#34312b"; g.fillText("STIXX", fs * .045, fs * .04);                                              // the shadow under the ink
     const gr = g.createLinearGradient(0, -fs / 2, 0, fs / 2); gr.addColorStop(0, "#ffffff"); gr.addColorStop(.6, "#f3ecdc"); gr.addColorStop(1, "#c9bfa8"); g.fillStyle = gr; g.fillText("STIXX", 0, 0); g.restore();
-    const ry = cy + fs * 1.05, rl = g.createLinearGradient(W * .14, 0, W * .86, 0); rl.addColorStop(0, "rgba(255,196,106,0)"); rl.addColorStop(.5, "#ffc46a"); rl.addColorStop(1, "rgba(255,196,106,0)"); g.fillStyle = rl; g.fillRect(W * .14, ry, W * .72, Math.max(3, H * .012));      // a gold rule under the name
+    const ry = cy + fs * (this.art ? .8 : 1.05), rl = g.createLinearGradient(W * .14, 0, W * .86, 0); rl.addColorStop(0, "rgba(255,196,106,0)"); rl.addColorStop(.5, "#ffc46a"); rl.addColorStop(1, "rgba(255,196,106,0)"); g.fillStyle = rl; g.fillRect(W * .14, ry, W * .72, Math.max(3, H * .012));      // a gold rule under the name
         if (u > 3 && u < 4.4) { const p = (u - 3) / 1.4, bx = -W * .4 + p * W * 1.8, sh = g.createLinearGradient(bx - W * .25, 0, bx + W * .25, 0); sh.addColorStop(0, "rgba(255,255,255,0)"); sh.addColorStop(.5, "rgba(255,246,220,.75)"); sh.addColorStop(1, "rgba(255,255,255,0)"); g.globalCompositeOperation = "source-atop"; g.fillStyle = sh; g.fillRect(0, 0, W, H); g.globalCompositeOperation = "source-over"; }
     if (head < H) { const wet = g.createLinearGradient(0, head - 26, 0, head); wet.addColorStop(0, "rgba(255,210,120,0)"); wet.addColorStop(1, "rgba(255,200,110,.55)"); g.globalCompositeOperation = "source-atop"; g.fillStyle = wet; g.fillRect(0, head - 26, W, 26); g.globalCompositeOperation = "source-over"; }
     g.restore(); g = G0; g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(this.layer, 0, 0); g.restore();
@@ -58,14 +59,14 @@ class PackScreen {
   }
   launch(g, t, W, H) {                                                                   // Moonshot: a rocket climbs through moving stars, the Moon in the corner
     this.status(t * 1000, "launching");
-    const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, "#0e1a3e"); sky.addColorStop(.5, "#050816"); sky.addColorStop(1, "#000"); g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    const art = this.art; if (!art) { const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, "#0e1a3e"); sky.addColorStop(.5, "#050816"); sky.addColorStop(1, "#000"); g.fillStyle = sky; g.fillRect(0, 0, W, H); }
     const h3 = (a, b) => { const v = Math.imul(a * 73856093 ^ b * 19349663, 2654435761) >>> 0; return v / 4294967296; };
-    for (let k = 0; k < 70; k++) { const sp = k % 3 === 0 ? 46 : 18, x = h3(k, 1) * W, y = (h3(k, 2) * H + t * sp) % H, tw = .5 + .5 * Math.sin(t * 3 + k), r = k % 3 === 0 ? 1.6 : 1; g.fillStyle = `rgba(235,240,255,${.45 + .55 * tw})`; if (k % 3 === 0) g.fillRect(x - .6, y - r * 3, 1.2, r * 6); else g.fillRect(x, y, r * 1.4, r * 1.4); }
-    const mx = W * .8, my = H * .15, mr = W * .14; g.save(); g.shadowColor = "#a9c4ff"; g.shadowBlur = mr; const mg = g.createRadialGradient(mx - mr * .35, my - mr * .35, mr * .1, mx, my, mr); mg.addColorStop(0, "#ffffff"); mg.addColorStop(1, "#8fa6d6"); g.fillStyle = mg; g.beginPath(); g.arc(mx, my, mr, 0, 7); g.fill(); g.restore();
-    g.fillStyle = "rgba(60,75,120,.55)"; for (const [a, b, r] of [[-.3, -.1, .25], [.3, .25, .2], [.05, .45, .13], [.4, -.35, .12]]) { g.beginPath(); g.arc(mx + a * mr, my + b * mr, r * mr, 0, 7); g.fill(); }
-    const cx = W * .44 + Math.sin(t * 1.3) * W * .01, top = H * .2 + Math.sin(t * 2.2) * H * .012, rw = W * .24, rh = H * .44, base = top + rh;
+    for (let k = 0; k < (art ? 26 : 70); k++) { const sp = k % 3 === 0 ? 46 : 18, x = h3(k, 1) * W, y = (h3(k, 2) * H + t * sp) % H, tw = .5 + .5 * Math.sin(t * 3 + k), r = k % 3 === 0 ? 1.6 : 1; g.fillStyle = `rgba(235,240,255,${.45 + .55 * tw})`; if (k % 3 === 0) g.fillRect(x - .6, y - r * 3, 1.2, r * 6); else g.fillRect(x, y, r * 1.4, r * 1.4); }
+    const mx = W * .8, my = H * .15, mr = art ? 0 : W * .14; if (!art) { g.save(); g.shadowColor = "#a9c4ff"; g.shadowBlur = mr; const mg = g.createRadialGradient(mx - mr * .35, my - mr * .35, mr * .1, mx, my, mr); mg.addColorStop(0, "#ffffff"); mg.addColorStop(1, "#8fa6d6"); g.fillStyle = mg; g.beginPath(); g.arc(mx, my, mr, 0, 7); g.fill(); g.restore();
+    g.fillStyle = "rgba(60,75,120,.55)"; for (const [a, b, r] of [[-.3, -.1, .25], [.3, .25, .2], [.05, .45, .13], [.4, -.35, .12]]) { g.beginPath(); g.arc(mx + a * mr, my + b * mr, r * mr, 0, 7); g.fill(); } }
+    const cx = W * .44 + Math.sin(t * 1.3) * W * .01, top = H * (art ? .55 : .2) + Math.sin(t * 2.2) * H * .012, rw = W * (art ? .15 : .24), rh = H * (art ? .27 : .44), base = top + rh;
     // smoke and flame first, so the rocket sits on top
-    for (let k = 0; k < 16; k++) { const age = (t * .7 + h3(k, 5)) % 1, x = cx + (h3(k, 6) - .5) * W * .9 * age, y = base + rh * .18 + age * (H - base), r = W * (.04 + .1 * age); g.fillStyle = `rgba(150,145,140,${.55 * (1 - age)})`; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+    for (let k = 0; k < 16; k++) { const age = (t * .7 + h3(k, 5)) % 1, x = cx + (h3(k, 6) - .5) * W * .9 * age, y = base + rh * .18 + age * (H - base), r = W * (.04 + .1 * age); g.fillStyle = `rgba(150,145,140,${(art ? .3 : .55) * (1 - age)})`; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
     const fl = rh * (.42 + .1 * Math.sin(t * 31) + .06 * Math.sin(t * 17)), fw = rw * .42; g.save(); g.globalCompositeOperation = "lighter";
     const fg = g.createLinearGradient(0, base, 0, base + fl); fg.addColorStop(0, "#ffffff"); fg.addColorStop(.25, "#ffe28a"); fg.addColorStop(.6, "#ff8a3c"); fg.addColorStop(1, "rgba(255,60,30,0)"); g.fillStyle = fg;
     g.beginPath(); g.moveTo(cx - fw, base); g.quadraticCurveTo(cx - fw * .9, base + fl * .5, cx, base + fl); g.quadraticCurveTo(cx + fw * .9, base + fl * .5, cx + fw, base); g.closePath(); g.fill();

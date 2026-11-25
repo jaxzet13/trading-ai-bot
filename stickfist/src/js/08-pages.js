@@ -12,10 +12,15 @@ function myMovers() { return state.vault.map(copy => { const s = Val.series(copy
 function movers() { const rows = myMovers(); return { rows, gain: rows.filter(r => r.p24 > .005).sort((a, b) => b.p24 - a.p24).slice(0, 3), drop: rows.filter(r => r.p24 < -.005).sort((a, b) => a.p24 - b.p24).slice(0, 3) }; }
 
 function fitHomePack() {
-  const col = document.querySelector("#homePack"), bt = $("btabs"); if (!col || view !== "home") return; const pc = col.closest(".packcol") || col; pc.style.width = "";
-  if (!bt || getComputedStyle(bt).display === "none") return;                                               // only on a phone, where the page must not scroll
-  const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 10, after = ["packmeta", "openBtn", "multiRow", "homeTrust", "homeInvite", "homeNext"].map(id => { const e = id === "packmeta" ? document.querySelector(".packmeta") : $(id); return e && !e.hidden ? e.offsetHeight + 12 : 0; }).reduce((a, b) => a + b, 0);
-  const ratio = pc.offsetHeight / Math.max(1, pc.offsetWidth) || 1.45, w = Math.max(100, Math.min(300, innerWidth * .74, (bottom - top - after) / ratio)); pc.style.width = Math.floor(w) + "px";
+  // On a phone the pack is the page: it takes every bit of height the controls under it leave, up to the full width.
+  const col = document.querySelector("#homePack"), bt = $("btabs"); if (!col || view !== "home") return; const pc = col.closest(".packcol") || col, was = pc.style.width; pc.style.width = "";
+  if (bt && getComputedStyle(bt).display !== "none") {
+    const shown = e => e && !e.hidden && getComputedStyle(e).display !== "none", gap = parseFloat(getComputedStyle(pc.parentNode).rowGap) || 10;
+    const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 8, after = ["openBtn", "multiRow", "homeTrust"].map(id => $(id)).filter(shown).reduce((a, e) => a + e.offsetHeight + gap, 0);
+    pc.style.width = Math.floor(Math.max(120, Math.min(innerWidth - 28, 460, (bottom - top - after) / 1.5))) + "px";
+  }
+  pc.parentNode.style.setProperty("--pt", pc.offsetTop + "px");                                              // where the pack starts: a goal to claim floats over its top edge instead of pushing it down
+  if (pc.style.width !== was && col._ps) col._ps.fit();                                                         // the picture in the pack is redrawn at its new size
 }
 addEventListener("resize", () => { if (view === "home") fitHomePack(); });
 function renderHome() {
@@ -23,7 +28,7 @@ function renderHome() {
   $("packTabs").live = PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-pack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("");
   $("packName").textContent = pk.name; $("packBlurb").textContent = pk.blurb;
   const fp = state.freePacks, pp = boughtOf(pk.id); { noteFound(); const inSet = LIVE.filter(c => c.set === pk.set); $("packLine").innerHTML = `${pk.n === 1 ? "1 card" : pk.n + " cards"} · ${money(ps.price)}${state.s.packs ? ` · ${inSet.filter(c => state.found[c.no]).length}/${inSet.length} found` : ""} · <a class="linkbtn" href="#/odds">odds</a>`; } const mk = Math.min(openN(), maxN(pk)), many = mk >= 2; $("openBtn").textContent = many ? `open ${mk} packs${(() => { const c = Math.max(0, mk - fp - pp) * ps.price; return c ? " · " + money(c) : ""; })()}` : fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : pp ? `open a pack you bought${pp > 1 ? " · " + pp + " left" : ""}` : (Shop.cash() && state.coins < ps.price) ? "add money to open a pack" : (Shop.has(pk.id) && state.coins < ps.price) ? `buy a pack · ${rmoney(Shop.price(pk.id))}` : `open pack · ${money(ps.price)}`; $("openBtn").classList.toggle("free", fp > 0 || pp > 0);
-  { const r = $("multiRow"), top = maxN(pk), opts = MANY.filter(n => n === 1 || n <= top); r.hidden = top < 2; r.innerHTML = `<span class="small dim">open at once</span>` + opts.map(n => `<button type="button" class="seg1${n === Math.min(openN(), top) ? " on" : ""}" data-many="${n}" aria-pressed="${n === Math.min(openN(), top)}">${n}</button>`).join(""); }
+  { const r = $("multiRow"), top = maxN(pk), opts = MANY.filter(n => n === 1 || n <= top); r.hidden = opts.length < 2; r.innerHTML = `<span class="small dim ml">open at once</span>` + opts.map(n => `<button type="button" class="seg1${n === Math.min(openN(), top) ? " on" : ""}" data-many="${n}" aria-pressed="${n === Math.min(openN(), top)}" aria-label="${n === 1 ? "one pack" : n + " packs at once"}">×${n}</button>`).join(""); }
   $("buyRow").hidden = !Shop.has(pk.id) || (!fp && !pp && state.coins < ps.price); $("buyBtn").textContent = Shop.cash() ? "Add money" : `Buy packs · ${rmoney(Shop.price(pk.id))} each`;
   $("how").hidden = state.s.packs > 0; $("inviteBar").live = state.s.packs > 0 ? inviteBarHTML() : "";
   $("honest").live = `<span class="dsk">Every card is a picture made of text: the rarer the card, the more characters it holds. </span>About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
