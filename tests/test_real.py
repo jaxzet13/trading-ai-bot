@@ -367,6 +367,17 @@ def test_edge_order_goes_out_at_the_live_ask():
     assert fake.posts[-1]["price"] == "0.5000" and "exec_price" not in events(r, "order_intent")[-1]
 
 
+def test_fillable_skips_dust_at_the_best_price():
+    """0.01 contracts sit at the best price on both sides: one whole contract trades one level further out."""
+    from kalshi15m import streams
+    bk = streams.KalshiBooks(None, clock=lambda: 100.0)
+    bk.on_message({"type": "orderbook_snapshot", "sid": 1, "seq": 1, "sending_ts_ms": 100000, "msg": {
+        "market_ticker": "T", "yes_dollars_fp": [["0.4900", "0.01"], ["0.4700", "25.00"]],
+        "no_dollars_fp": [["0.5000", "0.01"], ["0.4800", "0.50"], ["0.4700", "40.00"]]}})
+    assert bk.fillable("T", 1.0) == (0.47, 0.53)
+    assert bk.fillable("T", 0.01) == (0.49, 0.5) and bk.fillable("NOPE") is None
+
+
 def test_warm_opens_connections_at_most_once_per_interval():
     d, clock, fake, kp = setup()
     api = real.KalshiAPI("https://fake", "kid", str(kp), session=fake, clock=clock, sleep=clock.sleep)

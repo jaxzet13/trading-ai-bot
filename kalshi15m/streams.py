@@ -299,6 +299,24 @@ class KalshiBooks:
                 return None
             time.sleep(0.02)
 
+    def fillable(self, ticker: str, need: float = 1.0):
+        """(yes_bid, yes_ask) at which `need` contracts can really trade right now, or None. The best price is often
+        a dust order (0.01 contracts): an order priced there fills 0.01 and the rest dies."""
+        with self._lock:
+            b = self.books.get(ticker)
+            if b is None:
+                return None
+
+            def level(side):
+                got = 0.0
+                for px in sorted((p for p, sz in side.items() if sz > 0), reverse=True):
+                    got += side[px]
+                    if got >= need - 1e-9:
+                        return px
+                return None
+            yb, nb = level(b.yes), level(b.no)
+            return (yb, None if nb is None else round(1 - nb, 4))
+
     # ---- feed (also used by tests)
     def on_message(self, m: dict):
         typ, msg = m.get("type"), m.get("msg") or {}

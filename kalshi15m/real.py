@@ -981,7 +981,16 @@ class Runner:
             # as_of() only vouches for times the stream has already passed: ask as of its newest message
             t_bk = min(self.clock(), bk.last_msg)
             qn = bk.as_of(tk, t_bk) if self.clock() - t_bk < 3 else None
-            return None if qn is None else (qn[0], qn[2], round(self.clock() - t_bk, 3))
+            if qn is None:
+                return None
+            yb, ya = qn[0], qn[2]
+            # the best price is sometimes a dust order (0.01 contracts; two real orders on Nov 25 filled 0.01 and
+            # lost the bet): use the prices at which one whole contract can trade
+            fl = getattr(bk, "fillable", None)
+            d = fl(tk, 1.0) if fl else None
+            if d and d[0] is not None and d[1] is not None and yb is not None and ya is not None:
+                yb, ya = min(yb, d[0]), max(ya, d[1])
+            return (yb, ya, round(self.clock() - t_bk, 3))
         except Exception:
             return None
 
