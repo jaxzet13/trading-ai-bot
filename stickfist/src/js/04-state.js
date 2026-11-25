@@ -24,7 +24,7 @@ const gainOf = c => valueOf(c) / Math.max(1, costOf(c)) - 1;
    While the app is closed nothing in your wallet can change, so the gap is filled in from the market's own price path. Nothing on the profile is made up. */
 const holdingsValue = () => state.vault.reduce((a, c) => a + valueOf(c), 0);
 const netWorth = () => state.coins + holdingsValue();
-const valueAgo = (c, ticks) => Val.at(c, Date.now() - ticks * MK.TICK, true);
+const valueAgo = (c, ticks) => Val.at(c, Date.now() - ticks * MK.TICK);
 function logWorth(force) {
   const h = state.hist, t = Date.now(), last = h[h.length - 1]; if (last && !force && t - last[0] < 15000) return;
   if (last && t - last[0] > 12 * 60000 && state.vault.length) for (let ts = Math.max(last[0] + 6e5, t - 7 * 864e5); ts < t - 3e5; ts += 6e5) { const ago = Math.round((t - ts) / MK.TICK); h.push([ts, state.coins + state.vault.reduce((a, c) => a + valueAgo(c, ago), 0), state.s.added]); }

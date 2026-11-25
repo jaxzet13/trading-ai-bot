@@ -34,7 +34,7 @@ async function openPack(pack) {
   hint(""); stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
   const pkEl = $("stPack").firstChild; mine.ps = liveWindow(pkEl, pk); tiltPack(pkEl);
   let tk; try { tk = await Fair.offer(pk, PICK); } finally { opening = false; } if (SS !== mine) return;
-  Object.assign(mine, { ticket: tk, price, items: [], veils: [], phase: "pack" }); hint("Swipe across the top to rip it open"); Rip.arm();
+  Object.assign(mine, { ticket: tk, price, items: [], veils: [], phase: "pack" }); tk.warm(); hint("Swipe across the top to rip it open"); Rip.arm();
 }
 // One pack is a choice: it spills PICK face-down cards and you take one. Each is a real, different card drawn the same way (see Fair.ticket),
 // so whichever you take has the odds on the odds page; the others are never made and never shown. The pack is paid for when you choose.
@@ -115,11 +115,13 @@ function focusTop() {
 /* ---- sell or hold: the one choice you make about every card ----
    Two pills under a card once it is face up. Red sells it now for what it shows. Blue holds it: it goes to your collection, where
    its value keeps moving. For a rare card, a styled copy, or one worth at least the pack, the blue pill is the lit one. */
-function hidePills() { const p = $("stPills"); if (p) p.hidden = true; }
+let pillT = 0;
+function hidePills() { const p = $("stPills"); if (p) p.hidden = true; clearInterval(pillT); pillT = 0; }
 function showPills(c, card) {
   const p = $("stPills"), keep = RAR[card.rar].tier >= 2 || !!c.fx || sellOf(c) >= SS.ref, w = Val.watching(c); p.className = "pills" + (keep ? " keep" : ""); p.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col);
   $("pillSell").innerHTML = `<small>sell</small><b>+${money(sellOf(c))}</b>`; $("pillHold").innerHTML = `<small>hold</small><b>${w} buyer${w === 1 ? "" : "s"} watching</b>`;
   p.hidden = false; p.classList.remove("in"); void p.offsetWidth; p.classList.add("in");
+  clearInterval(pillT); pillT = setInterval(() => { const b = $("pillSell").querySelector("b"); if (!SS || !b || $("stPills").hidden) { clearInterval(pillT); pillT = 0; return; } const txt = "+" + money(sellOf(c)); if (b.textContent !== txt) b.textContent = txt; }, 250);   // the price is moving while you decide: the pill always says what selling pays this instant
 }
 async function decide(kind, vec) {
   if (!SS || SS.busy || SS.phase !== "stack") return; const el = scEl(SS.idx); if (!el || !el.dataset.rev || !el.classList.contains("lit")) return; SS.busy = true;
@@ -261,6 +263,7 @@ function dealRail() {
       el.animate([{ transform: `translate(${dx.toFixed(0)}px, -26px) rotate(${((rand() - .5) * 14).toFixed(1)}deg) scale(.92)` }, { transform: "none" }], { duration: 520, delay: d * gap, easing: "cubic-bezier(.2, .9, .25, 1.12)", fill: "backwards" });
       if (d < 7) setTimeout(() => { if (SS && $("stRail") === r) { Snd.rise(d); buzz(5); } }, d * gap); }); }
   if (deck) deck.remove();
+  if (!SS.ticket) [...new Set(SS.pool.map(c => imgOf(BY_NO[c.no], c.fx)))].forEach(loadImg);                      // fetched while you choose, so a card never waits on its picture
   let raf = 0; r.addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; railPaint(); }); }, { passive: true });
   r.addEventListener("click", e => { const el = e.target.closest(".rc"); if (el) { e.stopPropagation(); pickRail(el); } });
   SS.phase = "pick"; railCount();

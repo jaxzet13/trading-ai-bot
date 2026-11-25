@@ -1072,3 +1072,12 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .summary { padding-top: calc(16px + env(safe-area-inset-top)); } .summary > .sum.v2 { justify-content: center; }
 .fan > .wassold { position: relative; } .fan > .wassold .card { filter: grayscale(.85) brightness(.5); }
 .soldtag { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%) rotate(-8deg); padding: 3px 10px; border-radius: 8px; border: 2px solid #ff6b63; color: #ff8a80; background: rgba(10,4,4,.72); font-size: 12px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+
+/* ---- the trading chart ---- */
+.tchart { display: grid; gap: 10px; padding: 12px; border-radius: 18px; background: #06070b; border: 1px solid var(--ln2); }
+.tc-tf { display: flex; gap: 6px; } .tcb { flex: 1; min-height: 34px; border-radius: 10px; border: 1px solid transparent; background: rgba(255,255,255,.05); color: var(--dim); font: 600 13px "JetBrains Mono", ui-monospace, monospace; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.tcb.on { background: var(--acc); color: #04130a; } .tcb:active { transform: scale(.94); }
+.tc-cv { display: block; width: 100%; height: auto; aspect-ratio: 720 / 430; }
+.tc-foot { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--dim); font-variant-numeric: tabular-nums; } .tc-foot span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.tc-foot i { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font: 800 11px Inter, system-ui, sans-serif; font-style: normal; color: #05060a; } .tc-b i { background: #3be477; } .tc-s i { background: #ff5d5d; }
+.tc-n { font-weight: 700; } .tc-n.up { color: #3be477; } .tc-n.dn { color: #ff7a72; }

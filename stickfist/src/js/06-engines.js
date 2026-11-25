@@ -151,7 +151,7 @@ class Resolve {
   }
   // the picture has to be loaded and readable; if it is not, the caller falls back to showing it at once
   async ready() {
-    try { if (!this.img.complete || !this.img.naturalWidth) await Promise.race([this.img.decode(), new Promise((_, no) => setTimeout(no, 1800))]); const t = document.createElement("canvas"); t.width = t.height = 2; const x = t.getContext("2d"); x.drawImage(this.img, 0, 0, 2, 2); x.getImageData(0, 0, 1, 1); return this.w > 0; } catch (e) { return false; }
+    try { if (!this.img.complete || !this.img.naturalWidth) await Promise.race([this.img.decode(), new Promise((_, no) => setTimeout(no, 900))]); const t = document.createElement("canvas"); t.width = t.height = 2; const x = t.getContext("2d"); x.drawImage(this.img, 0, 0, 2, 2); x.getImageData(0, 0, 1, 1); return this.w > 0; } catch (e) { return false; }
   }
   grid(cols) {                                                                             // the picture at `cols` characters across: one colour per character, and the order they come in
     const cw = this.w / cols, ch = cw * 1.7, rows = Math.ceil(this.h / ch), t = document.createElement("canvas"); t.width = cols; t.height = rows; const x = t.getContext("2d");

@@ -8,7 +8,7 @@
    On average a copy drifts a little down while you hold it, so holding everything is never free money; picking the right ones is.
    ========================================================================== */
 const Val = (() => {
-  const HOUR = 36e5, FINE = 180;                                                          // the path is set hour by hour, with 20-second wiggles inside each hour
+  const HOUR = 36e5;                                                          // the path is set hour by hour, with 20-second wiggles inside each hour
   const LO = Math.log(.04), HI = Math.log(80);                                             // a copy can lose most of its value or go up many times, never to zero or forever
   // how good each picture looks to buyers (hidden): the best-looking art draws more interest
   const LOOK = { stitch: .3, brick: .2, rook: .35, mop: .15, pan: .25, cone: .4, orbit: .55, tempest: .65, phantom: .5, surge: .6, kraken: .9, shogun: .6, null: .45, ronin: .7, grimm: .8, reaper: .85, umbra: 1,
@@ -48,25 +48,46 @@ const Val = (() => {
     }
     return e;
   }
-  // the wiggle inside an hour: a bridge of 20-second steps that starts and ends at zero, so the hourly path is kept exactly
-  const fineC = new Map();
-  function fine(c, e, h, f) {
-    const key = c.uid + ":" + h; let cum = fineC.get(key);
-    if (!cum) { if (fineC.size > 600) fineC.clear(); cum = new Float32Array(FINE + 1); for (let i = 0; i < FINE; i++) cum[i + 1] = cum[i] + gauss(e.p.seed, h * 1000 + i, 5); fineC.set(key, cum); }
-    const k = Math.min(FINE, Math.floor(f * FINE)); return (cum[k] - k / FINE * cum[FINE]) * e.p.sig * .7 / Math.sqrt(FINE);
+  /* ---- the fast layer: second by second, like a coin that has just launched ----
+     On top of the hourly path every copy has a price that never sits still. It is a random walk in the log of the price that
+     starts hot (about 0.6% a second in its first minutes) and settles to about 0.12% a second for good, so a copy moves a few
+     percent in a minute and tens of percent in a day, and now and then one runs many times over.
+     It is a fair walk, not a wave: it has no pull back to where it was, and its average is exactly flat (the log drifts down by
+     half its variance, which is why most copies bleed while a few moon). That matters: with a wave you could wait for the top
+     and beat the selling fee; with a fair walk no way of timing a sale pays on average. Nothing here changes what a pack
+     returns: a card still comes out at its set value.
+     The walk is worked out from the copy and the clock alone (a bridge split in halves down to one second), so any moment of
+     it can be read without storing anything, and it is the same on every reload. */
+  const VA = .0012 * .0012, VB = .006 * .006, VT = 300, LV = 25, SPAN = Math.pow(2, LV);     // variance a second for good, extra at launch, how fast the launch fades (s), and the walk's length (about a year of seconds)
+  const tau = sec => VA * sec + VB * VT * Math.log(1 + sec / VT);                           // how much the walk has varied by `sec` seconds after the pull
+  const walkC = new Map();
+  function walk(seed, n) {
+    if (n <= 0) return 0; if (n >= SPAN) n = SPAN - 1; const key = seed * 4 + n; let hit = walkC.get(key); if (hit !== undefined) return hit;
+    const sd = seed ^ 0x5bd1e995; let lo = 0, hi = SPAN, tl = 0, th = tau(SPAN), wl = 0, wh = gauss(sd, SPAN, 99) * Math.sqrt(th), out = 0, done = false;
+    for (let lv = 0; lv < LV && !done; lv++) { const mid = (lo + hi) / 2, tm = tau(mid), wm = wl + (tm - tl) / (th - tl) * (wh - wl) + Math.sqrt((tm - tl) * (th - tm) / (th - tl)) * gauss(sd, mid, lv);
+      if (n === mid) { out = wm; done = true; } else if (n < mid) { hi = mid; wh = wm; th = tm; } else { lo = mid; wl = wm; tl = tm; } }
+    if (!done) out = wl; if (walkC.size > 60000) walkC.clear(); walkC.set(key, out); return out;
   }
+  function fast(seed, sec) { if (sec <= 0) return 0; const n = Math.floor(sec), f = sec - n, a = walk(seed, n); return (f ? a + (walk(seed, n + 1) - a) * f : a) - tau(sec) / 2; }
   const startOf = c => BY_NO[c.no].val * (c.fx ? STYLES[c.fx].x : 1);                    // what it is worth the moment it comes out of the pack
   function logAt(c, t, rough) {
     const dt = Math.max(0, t - (c.t || t)), h = Math.floor(dt / HOUR), f = dt / HOUR - h, e = path(c, h);
-    return e.x[h] + (e.x[h + 1] - e.x[h]) * f + (rough ? 0 : fine(c, e, h, f));
+    return Math.max(LO, Math.min(HI, e.x[h] + (e.x[h + 1] - e.x[h]) * f + fast(e.p.seed, dt / 1000)));
   }
-  const at = (c, t, rough) => Math.max(.5, startOf(c) * Math.exp(logAt(c, t, rough)));
+  const at = (c, t) => Math.max(.5, startOf(c) * Math.exp(logAt(c, t)));
+  // the last `n` candles of `step` seconds up to now: open, high, low, close (null before the copy existed)
+  function candles(c, step, n, tNow) {
+    const ms = step * 1000, end = Math.ceil(tNow / ms) * ms, t0 = c.t || tNow, k = Math.min(8, Math.max(1, step)), out = [];
+    for (let i = n - 1; i >= 0; i--) { const a0 = end - (i + 1) * ms, b = Math.min(a0 + ms, tNow); if (b <= t0) { out.push(null); continue; } const from = Math.max(a0, t0); let o = at(c, from), hi = o, lo = o, cl = o;
+      for (let q = 1; q <= k; q++) { const v = at(c, from + (b - from) * q / k); if (v > hi) hi = v; if (v < lo) lo = v; cl = v; } out.push({ t: a0, o, h: hi, l: lo, c: cl }); }
+    return out;
+  }
   const now = c => at(c, Date.now());
   const pct = (c, hours) => { const t = Date.now(), from = Math.max(c.t || t, t - hours * HOUR); return from >= t ? 0 : now(c) / at(c, from) - 1; };
-  function series(c, hours, n) { const t = Date.now(), from = Math.max(c.t || t, t - hours * HOUR), out = []; for (let i = 0; i < n; i++) { const ti = from + (t - from) * i / (n - 1); out.push(at(c, ti, i < n - 1 && hours > 6)); } return out; }
+  function series(c, hours, n) { const t = Date.now(), from = Math.max(c.t || t, t - hours * HOUR), out = []; for (let i = 0; i < n; i++) { const ti = from + (t - from) * i / (n - 1); out.push(at(c, ti)); } return out; }
   // what buyers did with this copy lately: their rushes and dumps, newest first
   function moves(c, hours) { const t = Date.now(), dt = t - (c.t || t), h = Math.floor(dt / HOUR); const e = path(c, h); return e.ev.filter(([k]) => k <= h && (h - k) <= hours).map(([k, j]) => ({ ago: h - k, pct: Math.exp(j) - 1 })).reverse(); }
   // how many simulated buyers are watching it right now (flavour, from its interest and its last day)
   const watching = c => { const q = score(c), mo = pct(c, 24); return Math.max(0, Math.round(3 + 9 * Math.max(0, q) + 12 * Math.max(-.3, Math.min(1.5, mo)) + 3 * Math.sin(Date.now() / 9e5 + fnvCopy(c) % 7))); };
-  return { now, at, pct, series, moves, startOf, watching, traits, score, params, K };
+  return { now, at, pct, series, candles, moves, startOf, watching, traits, score, params, K };
 })();

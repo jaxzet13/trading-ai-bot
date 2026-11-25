@@ -71,7 +71,8 @@ const Fair = (() => {
   const cardAt = (pk, hex, of, i) => BY_ID[pickU(pk.slots[0], digestU(hex, of)[i])];
   function ticket(pk, f, hex, nonce, epoch, mode, commit, of) {
     let done = false;
-    return { of, get done() { return done; }, take(i) { if (done) return null; done = true; i = Math.max(0, Math.min(of - 1, i | 0)); const card = mint(cardAt(pk, hex, of, i));
+    // warm(): fetch the pictures the five could be, in no order that says which is where, so the one you pick is ready the moment you pick it
+    return { of, get done() { return done; }, warm() { [...new Set(Array.from({ length: of }, (_, i) => cardAt(pk, hex, of, i).id))].sort().forEach(id => loadImg(imgOf(BY_ID[id]))); }, take(i) { if (done) return null; done = true; i = Math.max(0, Math.min(of - 1, i | 0)); const card = mint(cardAt(pk, hex, of, i));
       f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: [BY_NO[card.no].id], k: i, of, t: Date.now() }); if (f.log.length > LOG) f.log.shift(); return card; } };
   }
   function settle(pk, f, hex, nonce, epoch, mode, commit) {
