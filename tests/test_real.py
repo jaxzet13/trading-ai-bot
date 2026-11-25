@@ -265,6 +265,23 @@ def test_signature_rsa_and_ed25519():
     assert "PRIVATE KEY" not in json.dumps(api.headers("GET", "/trade-api/v2/portfolio/balance"))
 
 
+def test_balances_shared_within_max_age():
+    """Seven coins ask for the balance in the same second at each new window (the endpoint allows 1 a second):
+    max_age lets them share one answer; a plain call (after a fill or a settlement) always asks Kalshi."""
+    d, clock, fake, kp = setup()
+    api = real.KalshiAPI("https://fake", "kid", str(kp), session=fake, clock=clock, sleep=clock.sleep)
+    n = lambda: sum(1 for c in fake.calls if c[1].endswith("/portfolio/balance"))
+    assert api.balances(max_age=10.0) == (100.0, 100.0) and n() == 1
+    clock.t += 3
+    fake.balance_cents = 90_00
+    assert api.balances(max_age=10.0) == (100.0, 100.0) and n() == 1      # shared answer, no new call
+    assert api.balances() == (90.0, 90.0) and n() == 2                    # plain call: always fresh
+    assert api.balances(max_age=10.0) == (90.0, 90.0) and n() == 2        # and the fresh one is what is shared
+    clock.t += 11
+    fake.balance_cents = 80_00
+    assert api.balances(max_age=10.0) == (80.0, 80.0) and n() == 3        # too old: ask again
+
+
 def test_order_body_fields_and_units():
     b = real.order_body("KXNEAR15M-X", "yes", 0.37, 5, "cid")
     assert b == {"ticker": "KXNEAR15M-X", "client_order_id": "cid", "side": "bid", "count": "5", "price": "0.3700",

@@ -173,6 +173,7 @@ class KalshiAPI:
         self.base, self.key_id, self.key = base, key_id, None
         self.http = session or requests.Session()
         self.clock, self.sleep, self.timeout = clock, sleep, timeout
+        self._bal_lock, self._bal_hit = threading.Lock(), None
         if key_id and key_path:
             self.key = load_private_key(key_path)
 
@@ -263,13 +264,21 @@ class KalshiAPI:
         d = self.get("/portfolio/balance")
         return float(d["balance_dollars"]) if d.get("balance_dollars") is not None else d["balance"] / 100
 
-    def balances(self) -> tuple[float, float]:
+    def balances(self, max_age: float = 0.0) -> tuple[float, float]:
         """(total, crypto) in dollars. crypto = exchange shard 2 (balance_breakdown, a dollar string), where
-        crypto markets trade from; the total when the breakdown is absent (subaccount-restricted keys)."""
-        d = self.get("/portfolio/balance")
-        total = float(d["balance_dollars"]) if d.get("balance_dollars") is not None else d["balance"] / 100
-        bd = {int(x["exchange_index"]): float(x["balance"]) for x in d.get("balance_breakdown") or []}
-        return total, bd.get(2, total if not bd else 0.0)
+        crypto markets trade from; the total when the breakdown is absent (subaccount-restricted keys).
+        max_age > 0 reuses an answer any coin's thread got within that many seconds: the balance endpoint has
+        its own 1-per-second bucket, and all coins asking in the same second at each new window got 429s."""
+        with self._bal_lock:
+            hit = self._bal_hit
+            if max_age > 0 and hit and 0 <= self.clock() - hit[0] <= max_age:
+                return hit[1]
+            d = self.get("/portfolio/balance")
+            total = float(d["balance_dollars"]) if d.get("balance_dollars") is not None else d["balance"] / 100
+            bd = {int(x["exchange_index"]): float(x["balance"]) for x in d.get("balance_breakdown") or []}
+            out = (total, bd.get(2, total if not bd else 0.0))
+            self._bal_hit = (self.clock(), out)
+            return out
 
     def positions(self, **params):
         return self.get("/portfolio/positions", params).get("market_positions", [])
@@ -650,7 +659,7 @@ class Runner:
                                    f"exchange.", EXIT_CONFIG) from None
                 except requests.RequestException:
                     pass
-                self.refresh_balance()
+                self.refresh_balance(max_age=10.0)      # all coins start in the same second: share one answer
                 self.reconcile()
             while True:
                 if self.halted():
@@ -715,7 +724,7 @@ class Runner:
         if m["ticker"] != self.cur:
             self.cur, self.P, self.seen = m["ticker"], new_panel(), set()
             if not self.dry:
-                self.refresh_balance()
+                self.refresh_balance(max_age=10.0)      # new window: every coin asks at once; one call serves all
         open_ts = bot._ts(m["open_time"])
         minute = int((self.clock() - open_ts) // 60)
         if minute < 1 or minute > 14 or minute in self.seen:
@@ -1285,12 +1294,12 @@ class Runner:
             return 1.0
         return float(self.L.get("drawdown_brake_factor", 0.5)) if self.equity < self.peak_equity - brake else 1.0
 
-    def refresh_balance(self):
+    def refresh_balance(self, max_age: float = 0.0):
         try:
             # always both: crypto markets trade only from the crypto shard (2), so every money limit (affordability,
             # min balance, take profit) is about that shard, not money parked elsewhere on the account
             try:
-                self.balance, self.crypto_balance = self.api.balances()
+                self.balance, self.crypto_balance = self.api.balances(max_age)
             except (KeyError, ValueError, TypeError) as e:
                 self.out(f"  balance check failed: unexpected answer ({e})")
                 return
