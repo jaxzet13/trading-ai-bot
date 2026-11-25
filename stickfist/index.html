@@ -2000,15 +2000,15 @@ class Veil {
   drop() { this.live = false; this.cv.remove(); }
 }
 
-/* ---- the reveal: the picture forms out of loose characters, from a few big ones to the real thing ----
-   A canvas over the card's picture. Nothing sweeps across it: in each pass the characters turn up all over the card at once,
-   the bright parts of the picture a little ahead of the rest. A character starts as a pale, scrambling glyph drifting in from
-   nearby and settles into its place, its shape and its colour. Then the next pass forms over it in a finer grid (8 across,
-   then 13, 21, 34, 55, 89), so the picture goes from a handful of big letters to nearly the real thing, and the canvas fades
-   to the real picture underneath. A rarer card gets a finer last pass and more time. play() reports how far along it is, so
-   the count of characters and the card's worth can climb with it.
-   Settled characters are stamped once onto a second canvas and only the ones still forming are drawn each frame. */
-const RV_RAMP = ".,:;-=+*xo%#&@", RV_NOISE = "01#%&@$*+=<>/\\";
+/* ---- the reveal: the picture slowly comes into focus, from a few big characters to the real thing ----
+   A canvas over the card's picture. The picture is drawn as coloured characters taken from the picture itself, first in a very
+   coarse grid (6 across) and then in finer and finer ones (8, 11, 15, 21, 29, 40, 55, 76), each only a little finer than the
+   last, so it reads as one slow sharpening and not as steps. Nothing sweeps and nothing flickers: in every pass the new
+   characters come in all over the card in no order, the big early ones fading in, the small late ones simply appearing,
+   and the whole canvas starts soft and dim and pulls into focus as it goes. At the end it fades to the real picture underneath.
+   A rarer card gets a finer last pass and more time. play() reports how far along it is, so the count of characters and
+   the card's worth can climb with it. Settled characters are stamped once onto a second canvas. */
+const RV_RAMP = ".,:;-=+*xo%#&@";
 class Resolve {
   constructor(card, tier, col) {
     this.pic = card.querySelector(".pic"); this.img = this.pic.querySelector("img"); this.tier = tier; this.col = col; this.cv = document.createElement("canvas"); this.cv.className = "resolve";
@@ -2020,56 +2020,65 @@ class Resolve {
   async ready() {
     try { if (!this.img.complete || !this.img.naturalWidth) await Promise.race([this.img.decode(), new Promise((_, no) => setTimeout(no, 1800))]); const t = document.createElement("canvas"); t.width = t.height = 2; const x = t.getContext("2d"); x.drawImage(this.img, 0, 0, 2, 2); x.getImageData(0, 0, 1, 1); return this.w > 0; } catch (e) { return false; }
   }
-  grid(cols) {                                                                             // the picture at `cols` characters across: one colour per character, and the order they turn up in
+  grid(cols) {                                                                             // the picture at `cols` characters across: one colour per character, and the order they come in
     const cw = this.w / cols, ch = cw * 1.7, rows = Math.ceil(this.h / ch), t = document.createElement("canvas"); t.width = cols; t.height = rows; const x = t.getContext("2d");
     const iw = this.img.naturalWidth, ih = this.img.naturalHeight, s = Math.max(this.w / iw, this.h / ih), sw = this.w / s, sh = this.h / s;
     x.drawImage(this.img, (iw - sw) / 2, (ih - sh) / 2, sw, Math.min(ih, sh * rows * ch / this.h), 0, 0, cols, rows); const d = x.getImageData(0, 0, cols, rows).data, N = cols * rows;
-    const ord = new Float32Array(N), off = new Float32Array(N * 2), idx = Array.from({ length: N }, (_, i) => i), far = cols <= 34 ? 2.4 : 0;
-    for (let i = 0; i < N; i++) { const m = Math.max(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]) / 255, a = Math.random() * 6.283, v = (.4 + Math.random() * .6) * far * cw; ord[i] = .74 * Math.random() + .26 * (1 - m); off[i * 2] = Math.cos(a) * v; off[i * 2 + 1] = Math.sin(a) * v; }
-    idx.sort((a, b) => ord[a] - ord[b]); return { cols, rows, cw, ch, d, N, ord, off, idx, lead: cols <= 34 ? .68 : .86 };
+    const ord = new Float32Array(N), idx = Array.from({ length: N }, (_, i) => i); for (let i = 0; i < N; i++) ord[i] = Math.random();
+    idx.sort((a, b) => ord[a] - ord[b]); const soft = cols <= 29; return { cols, rows, cw, ch, d, N, ord, idx, soft, lead: soft ? .5 : 1 };       // the few big characters of an early pass fade in; the many small ones of a late pass just appear
   }
   ink(g, i) { const R = g.d[i * 4], G = g.d[i * 4 + 1], B = g.d[i * 4 + 2], m = Math.max(R, G, B); if (m < 16) return null; const l = m / 255, k = (.62 + .38 * l) * 255 / m; return { body: `rgb(${R * .28 | 0},${G * .28 | 0},${B * .28 | 0})`, col: `rgb(${Math.min(255, R * k) | 0},${Math.min(255, G * k) | 0},${Math.min(255, B * k) | 0})`, ch: RV_RAMP[Math.min(RV_RAMP.length - 1, (Math.pow(l, .8) * RV_RAMP.length) | 0)] }; }
-  stamp(g, i) {                                                                            // a character that has settled: drawn once, for good
-    const b = this.bx, x = (i % g.cols) * g.cw, y = ((i / g.cols) | 0) * g.ch, k = this.ink(g, i); b.fillStyle = "#020203"; b.fillRect(x, y, g.cw + .7, g.ch + .7); if (!k) return;
-    b.fillStyle = k.body; b.fillRect(x, y, g.cw + .7, g.ch + .7); b.fillStyle = k.col; b.fillText(k.ch, x + g.cw / 2, y + g.ch / 2);
-  }
-  forming(g, i, e) {                                                                       // a character on its way in: pale and scrambling at first, drifting to its place, then its own shape and colour
-    const c = this.ctx, k = this.ink(g, i), z = 1 - e, pull = z * z * z, x = (i % g.cols) * g.cw + g.cw / 2 + g.off[i * 2] * pull, y = ((i / g.cols) | 0) * g.ch + g.ch / 2 + g.off[i * 2 + 1] * pull, loose = e < .62;
-    c.globalAlpha = Math.min(1, .15 + e * 1.5); c.fillStyle = loose ? (i % 3 ? "#ffffff" : this.col) : k.col; c.fillText(loose ? RV_NOISE[(Math.random() * RV_NOISE.length) | 0] : k.ch, x, y);
+  put(c, g, i, a) {                                                                        // one character in its place, at strength a
+    const x = (i % g.cols) * g.cw, y = ((i / g.cols) | 0) * g.ch, k = this.ink(g, i); c.globalAlpha = a; c.fillStyle = "#020203"; c.fillRect(x, y, g.cw + .7, g.ch + .7); if (!k) return;
+    c.fillStyle = k.body; c.fillRect(x, y, g.cw + .7, g.ch + .7); c.fillStyle = k.col; c.fillText(k.ch, x + g.cw / 2, y + g.ch / 2);
   }
   play(ms, onProg, onPass) {
-    const all = [8, 13, 21, 34, 55, 89], n = Math.min(all.length, 5 + Math.min(1, this.tier)), cols = all.slice(0, n), wts = cols.map(c => Math.sqrt(c)), tot = wts.reduce((a, b) => a + b, 0), ctx = this.ctx, bx = this.bx;
-    let acc = 0; const spans = wts.map(w => { const s = [acc / tot, (acc + w) / tot]; acc += w; return s; }), grids = cols.map(c => this.grid(c)), t0 = performance.now(), FADE = 360; let si = -1, ptr = 0, live = [];
+    const all = [6, 8, 11, 15, 21, 29, 40, 55, 76], n = Math.min(all.length, 8 + Math.min(1, this.tier)), cols = all.slice(0, n), wts = cols.map(c => Math.pow(c, .35)), tot = wts.reduce((a, b) => a + b, 0), ctx = this.ctx, bx = this.bx;
+    let acc = 0; const spans = wts.map(w => { const s = [acc / tot, (acc + w) / tot]; acc += w; return s; }), grids = cols.map(c => this.grid(c)), t0 = performance.now(), FADE = 420; let si = -1, ptr = 0, live = [];
     const font = g => { const f = `700 ${Math.max(4, g.ch * .98).toFixed(1)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; [ctx, bx].forEach(c => { c.font = f; c.textAlign = "center"; c.textBaseline = "middle"; }); };
-    const finish = g => { live.forEach(i => this.stamp(g, i)); live = []; for (; ptr < g.N; ptr++) this.stamp(g, g.idx[ptr]); };                                  // whatever of a pass is still loose settles before the next one starts
+    const finish = g => { live.forEach(i => this.put(bx, g, i, 1)); live = []; for (; ptr < g.N; ptr++) this.put(bx, g, g.idx[ptr], 1); };                         // whatever of a pass is still coming in settles before the next one starts
     return new Promise(res => { const step = now => {
       const p = Math.min(1, (now - t0) / ms); let k = spans.findIndex(s => p < s[1]); if (k < 0) k = n - 1;
       if (k !== si) { if (si >= 0) finish(grids[si]); si = k; ptr = 0; font(grids[k]); if (onPass) onPass(k, n); }
       const g = grids[k], q = (p - spans[k][0]) / (spans[k][1] - spans[k][0]), D = 1 - g.lead;
-      while (ptr < g.N && g.ord[g.idx[ptr]] * g.lead <= q) { const i = g.idx[ptr++]; if (this.ink(g, i)) live.push(i); else this.stamp(g, i); }                  // the next characters start forming (a dark one just clears its spot)
-      const keep = []; for (const i of live) { if ((q - g.ord[i] * g.lead) / D >= 1) this.stamp(g, i); else keep.push(i); } live = keep;
-      ctx.globalAlpha = 1; ctx.drawImage(this.base, 0, 0, this.w, this.h); for (const i of live) this.forming(g, i, Math.max(0, (q - g.ord[i] * g.lead) / D)); ctx.globalAlpha = 1;
+      while (ptr < g.N && g.ord[g.idx[ptr]] * g.lead <= q) { const i = g.idx[ptr++]; if (g.soft) live.push(i); else this.put(bx, g, i, 1); }
+      if (g.soft) { const keep = []; for (const i of live) { if ((q - g.ord[i] * g.lead) / D >= 1) this.put(bx, g, i, 1); else keep.push(i); } live = keep; }
+      bx.globalAlpha = 1; ctx.globalAlpha = 1; ctx.drawImage(this.base, 0, 0, this.w, this.h);
+      for (const i of live) { const e = Math.max(0, (q - g.ord[i] * g.lead) / D); this.put(ctx, g, i, e * e * (3 - 2 * e)); } ctx.globalAlpha = 1;
+      this.cv.style.filter = p < .97 ? `blur(${(Math.pow(1 - p, 1.6) * 6).toFixed(2)}px) brightness(${(.7 + .3 * p).toFixed(3)})` : "";             // soft and dim at first, pulling into focus
       if (onProg) onProg(p);
-      if (p < 1) requestAnimationFrame(step); else { finish(g); ctx.drawImage(this.base, 0, 0, this.w, this.h); this.cv.style.transition = `opacity ${FADE}ms ease-out`; this.cv.style.opacity = "0"; setTimeout(() => this.cv.remove(), FADE + 40); res(); }
+      if (p < 1) requestAnimationFrame(step); else { finish(g); bx.globalAlpha = 1; ctx.drawImage(this.base, 0, 0, this.w, this.h); this.cv.style.filter = ""; this.cv.style.transition = `opacity ${FADE}ms ease-out`; this.cv.style.opacity = "0"; setTimeout(() => this.cv.remove(), FADE + 40); res(); }
     }; requestAnimationFrame(step); });
   }
   drop() { this.cv.remove(); }
 }
 
-/* ---- characters thrown around the stage ---- */
+/* ---- light thrown around the stage: sparks and a ring, not letters ----
+   A burst is a spray of small glowing streaks (each drawn as its own short trail, added on top of each other so they bloom where
+   they cross) that slow, fall a little and die out, with one ring of light opening from the middle of a big one. */
 const FX = (() => {
-  const cv = $("fx"), c = cv.getContext("2d"); let parts = [], raf = 0, last = 0;
-  const G = ".:-=+*#%@&$", fit = () => { const d = Math.min(devicePixelRatio || 1, 2), w = cv.clientWidth, h = cv.clientHeight; if (cv.width !== Math.round(w * d)) { cv.width = Math.round(w * d); cv.height = Math.round(h * d); } c.setTransform(d, 0, 0, d, 0, 0); return [w, h]; };
+  const cv = $("fx"), c = cv.getContext("2d"); let parts = [], rings = [], raf = 0, last = 0;
+  const fit = () => { const d = Math.min(devicePixelRatio || 1, 2), w = cv.clientWidth, h = cv.clientHeight; if (cv.width !== Math.round(w * d)) { cv.width = Math.round(w * d); cv.height = Math.round(h * d); } c.setTransform(d, 0, 0, d, 0, 0); return [w, h]; };
   function loop(now) {
-    const dt = Math.min(.05, (now - last) / 1000); last = now; const [w, h] = fit(); c.clearRect(0, 0, w, h); c.textAlign = "center"; c.textBaseline = "middle";
-    for (const p of parts) { p.vx *= p.dr; p.vy = p.vy * p.dr + p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.l -= dt; c.globalAlpha = clamp(p.l / p.m * 1.4, 0, 1); c.fillStyle = p.col; c.font = `700 ${p.s}px "JetBrains Mono",monospace`; c.fillText(p.ch, p.x, p.y); }
-    parts = parts.filter(p => p.l > 0); c.globalAlpha = 1; if (parts.length) raf = requestAnimationFrame(loop); else { c.clearRect(0, 0, w, h); raf = 0; }
+    const dt = Math.min(.05, (now - last) / 1000); last = now; const [w, h] = fit(); c.clearRect(0, 0, w, h); c.globalCompositeOperation = "lighter"; c.lineCap = "round";
+    for (const r of rings) { r.l -= dt; r.r += r.v * dt; r.v *= .93; const a = clamp(r.l / r.m, 0, 1); c.globalAlpha = a * a * .7; c.strokeStyle = r.col; c.lineWidth = 1.5 + 10 * a; c.beginPath(); c.arc(r.x, r.y, r.r, 0, 6.2832); c.stroke(); c.globalAlpha = a * a * .5; c.strokeStyle = "#fff"; c.lineWidth = 1.2; c.stroke(); }
+    for (const p of parts) {
+      p.vx *= p.dr; p.vy = p.vy * p.dr + p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.l -= dt; const a = clamp(p.l / p.m * 1.5, 0, 1) * (.75 + .25 * Math.sin(p.l * 40 + p.s)), tx = p.x - p.vx * .045, ty = p.y - p.vy * .045, wd = p.s * .16;
+      c.globalAlpha = a * .32; c.strokeStyle = p.col; c.lineWidth = wd * 3.2; c.beginPath(); c.moveTo(tx, ty); c.lineTo(p.x, p.y); c.stroke();                // its glow
+      c.globalAlpha = a; c.lineWidth = wd; c.beginPath(); c.moveTo(tx, ty); c.lineTo(p.x, p.y); c.stroke();                                                    // the streak
+      c.globalAlpha = a * .9; c.fillStyle = "#fff"; c.beginPath(); c.arc(p.x, p.y, wd * .55, 0, 6.2832); c.fill();                                             // a white-hot head
+    }
+    parts = parts.filter(p => p.l > 0); rings = rings.filter(r => r.l > 0); c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
+    if (parts.length || rings.length) raf = requestAnimationFrame(loop); else { c.clearRect(0, 0, w, h); raf = 0; }
   }
   const kick = () => { if (!raf && !reduced) { last = performance.now(); raf = requestAnimationFrame(loop); } };
   return {
-    burst(x, y, n, cols, speed) { for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, v = speed * (.2 + Math.random() * .9), l = .6 + Math.random() * .9; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 380, dr: .985, l, m: l, s: 11 + Math.random() * 12, col: cols[i % cols.length], ch: G[Math.floor(Math.random() * G.length)] }); } kick(); },
-    rain(x, w, n, cols) { for (let i = 0; i < n; i++) { const l = 1.4 + Math.random(); parts.push({ x: x + (Math.random() - .5) * w, y: -20 - Math.random() * 160, vx: (Math.random() - .5) * 50, vy: 120 + Math.random() * 240, g: 380, dr: .995, l, m: l, s: 10 + Math.random() * 12, col: cols[i % cols.length], ch: G[Math.floor(Math.random() * G.length)] }); } kick(); },
-    clear() { parts = []; }
+    burst(x, y, n, cols, speed) {
+      for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, v = speed * (.25 + Math.random() * Math.random() * 1.1), l = .5 + Math.random() * .9; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - speed * .12, g: 300, dr: .972, l, m: l, s: 9 + Math.random() * 13, col: cols[i % cols.length] }); }
+      if (n >= 12) rings.push({ x, y, r: 8, v: speed * 1.5, l: .55, m: .55, col: cols[0] }); kick();
+    },
+    rain(x, w, n, cols) { for (let i = 0; i < n; i++) { const l = 1.4 + Math.random(); parts.push({ x: x + (Math.random() - .5) * w, y: -20 - Math.random() * 160, vx: (Math.random() - .5) * 50, vy: 120 + Math.random() * 240, g: 380, dr: .995, l, m: l, s: 9 + Math.random() * 12, col: cols[i % cols.length] }); } kick(); },
+    clear() { parts = []; rings = []; }
   };
 })();
 
@@ -2652,8 +2661,8 @@ async function reveal(el, c, card, R, v) {
     el.classList.add("loading"); tt.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col); tt.className = "st-title loading";
     tt.innerHTML = `<div class="rw">forming · <b id="ldN">0</b> characters</div><div class="vl">worth <b id="ldV">${money(0)}</b></div>`; const ldN = $("ldN"), ldV = $("ldV");
     await v.scatter().play(300);
-    await rs.play([1100, 1400, 1900, 2500, 3300, 4100, 5600][T], p => { const e = Math.pow(p, 1.7); ldN.textContent = fmt(Math.round(card.chars * e)); ldV.textContent = money(worth * e); },
-      (k, n) => { Snd.rise(k); buzz(8); if (k && T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 110 + T * 30); FX.burst(mid[0], mid[1], 5 + T * 3, [R.col, "#fff"], 240 + T * 50); } });
+    await rs.play([1600, 2000, 2600, 3300, 4100, 4900, 6200][T], p => { const e = Math.pow(p, 1.7); ldN.textContent = fmt(Math.round(card.chars * e)); ldV.textContent = money(worth * e); },
+      (k, n) => { if (k % 2 === 0) { Snd.rise(k / 2); buzz(6); } });                 // a soft tick as it sharpens; no shaking and nothing thrown while it forms
     el.classList.remove("loading"); tt.className = "st-title";
   } else await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
   Snd.reveal(T); if (T >= 2) buzz(T >= 5 ? [40, 30, 60, 30, 90] : T >= 3 ? [30, 25, 50] : [25]);

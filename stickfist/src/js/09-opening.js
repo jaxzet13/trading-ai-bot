@@ -125,8 +125,8 @@ async function reveal(el, c, card, R, v) {
     el.classList.add("loading"); tt.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col); tt.className = "st-title loading";
     tt.innerHTML = `<div class="rw">forming · <b id="ldN">0</b> characters</div><div class="vl">worth <b id="ldV">${money(0)}</b></div>`; const ldN = $("ldN"), ldV = $("ldV");
     await v.scatter().play(300);
-    await rs.play([1100, 1400, 1900, 2500, 3300, 4100, 5600][T], p => { const e = Math.pow(p, 1.7); ldN.textContent = fmt(Math.round(card.chars * e)); ldV.textContent = money(worth * e); },
-      (k, n) => { Snd.rise(k); buzz(8); if (k && T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 110 + T * 30); FX.burst(mid[0], mid[1], 5 + T * 3, [R.col, "#fff"], 240 + T * 50); } });
+    await rs.play([1600, 2000, 2600, 3300, 4100, 4900, 6200][T], p => { const e = Math.pow(p, 1.7); ldN.textContent = fmt(Math.round(card.chars * e)); ldV.textContent = money(worth * e); },
+      (k, n) => { if (k % 2 === 0) { Snd.rise(k / 2); buzz(6); } });                 // a soft tick as it sharpens; no shaking and nothing thrown while it forms
     el.classList.remove("loading"); tt.className = "st-title";
   } else await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
   Snd.reveal(T); if (T >= 2) buzz(T >= 5 ? [40, 30, 60, 30, 90] : T >= 3 ? [30, 25, 50] : [25]);
