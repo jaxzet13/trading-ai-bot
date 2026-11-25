@@ -343,6 +343,13 @@ def decide(fn, P: dict, params: dict, minute: int):
     return None
 
 
+def walk_limit(price: float, q: float, cents: float, keep_edge: float, max_price: float) -> float:
+    """Highest price an IOC order may pay: up to `cents` above the quoted price, never closer than keep_edge to the
+    model probability q, whole cents, never above max_price. Returns the quoted price when no walk is allowed."""
+    lim = math.floor(min(price + cents / 100, q - keep_edge) * 100 + 1e-9) / 100
+    return lim if price < lim <= max_price else price
+
+
 def contracts_for(stake: float, price: float, cap: int) -> int:
     return min(int(math.floor(stake / price + 1e-9)), int(cap))
 
@@ -814,11 +821,16 @@ class Runner:
         # walk_cents (default off): thin books often show only a few contracts at the best price. Let the IOC
         # order reach up to walk_cents deeper, but never closer than walk_keep_edge to the rule's model value.
         limit = price
-        if signal is not None and self.L.get("walk_cents"):
-            lim2 = min(price + self.L["walk_cents"] / 100, signal.q - self.L.get("walk_keep_edge", 0.06))
-            lim2 = math.floor(lim2 * 100 + 1e-9) / 100
-            if price < lim2 <= self.L["max_price"]:
-                limit = lim2
+        # edge-model bets have their own walk (limits.edge_walk_cents / edge_walk_keep_edge): the decision uses the
+        # book at the minute boundary and the order lands about a second later; 40% of the first 20 orders missed
+        # because the ask had moved up by then. The order may pay up to edge_walk_cents more, never closer than
+        # edge_walk_keep_edge to the model's probability (so its predicted edge after the fee stays >= ~3c).
+        is_edge = signal is not None and signal.kind == "edge"
+        wc = self.L.get("edge_walk_cents", 0) if is_edge else self.L.get("walk_cents")
+        wk = self.L.get("edge_walk_keep_edge", 0.05) if is_edge else self.L.get("walk_keep_edge", 0.06)
+        if signal is not None and wc:
+            limit = walk_limit(price, signal.q, wc, wk, self.L["max_price"])
+            if limit > price:
                 base["limit"] = limit
         n = contracts_for(stake, limit, self.L["max_contracts_per_order"])
         # min_one_contract_max_usd (optional): with tiny stakes a signal can be worth less than one whole
@@ -1381,6 +1393,8 @@ def load_config(path=CONFIG) -> dict:
     for k in ("max_total_open_risk_usd", "max_total_daily_loss_usd", "max_window_cost_usd"):
         if k in lim and (not isinstance(lim[k], (int, float)) or isinstance(lim[k], bool) or lim[k] <= 0):
             raise Stop(f"{path}: {k} must be a positive number", EXIT_CONFIG)
+    if not 0 <= lim.get("edge_walk_cents", 0) <= 5 or not 0.03 <= lim.get("edge_walk_keep_edge", 0.05) <= 0.5:
+        raise Stop(f"{path}: edge_walk_cents must be 0-5 and edge_walk_keep_edge 0.03-0.5", EXIT_CONFIG)
     if not 0 <= lim.get("walk_cents", 0) <= 10 or not 0 <= lim.get("walk_keep_edge", 0.06) <= 0.5:
         raise Stop(f"{path}: walk_cents must be 0-10 and walk_keep_edge 0-0.5", EXIT_CONFIG)
     if "golden_rules" in cfg:   # lab3's golden rules, frozen to the exact lab3 params (see golden_live.GOLDEN)

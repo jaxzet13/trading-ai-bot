@@ -191,3 +191,16 @@ def test_edge_rule_is_registered_for_every_coin_and_ranked_last():
         assert GL.RULES[rid]["kind"] == "edge" and GL.rules_for(s)[-1] == rid
     assert real.golden_frozen()["edge:KXZEC15M"] == {"id": "edge:KXZEC15M", "family": "edge", "scope": "KXZEC15M",
                                                       "t": 0.0, "params": {}}
+
+
+def test_edge_orders_may_pay_a_little_more_but_keep_their_edge():
+    # q 0.57 at a 0.50 ask: +2c allowed (0.57 - 0.05 = 0.52)
+    assert real.walk_limit(0.50, 0.57, 2, 0.05, 0.95) == 0.52
+    # q 0.565: only +1c keeps 5c to the model value
+    assert real.walk_limit(0.50, 0.565, 2, 0.05, 0.95) == 0.51
+    # edge too thin for any walk, or the walk would pass max_price: stay at the quote
+    assert real.walk_limit(0.50, 0.55, 2, 0.05, 0.95) == 0.50
+    assert real.walk_limit(0.94, 0.99, 2, 0.01, 0.95) == 0.94        # 0.96 is past max_price: no walk at all
+    assert real.walk_limit(0.93, 0.99, 2, 0.01, 0.95) == 0.95
+    # the old rules' walk (5c, keep 8c) is unchanged
+    assert real.walk_limit(0.33, 0.50, 5, 0.08, 0.95) == 0.38
