@@ -6,6 +6,8 @@ document.addEventListener("click", e => {
   if (t.hasAttribute("data-open")) { openPack(); return; }
   if (t.hasAttribute("data-close")) { closeModal(); return; }
   if (t.dataset.rq) { rqModal(t.dataset.rq); Snd.click(); return; }
+  if (t.dataset.selcard) { selCard(t.dataset.selcard); return; }
+  if (t.dataset.selq) { selQuick(t.dataset.selq); return; }
   if (t.dataset.card) { cardModal(t.dataset.card); return; }
   if (t.dataset.cut) { closeModal(); Cut.play(t.dataset.cut); return; }
   if (t.dataset.f) { const [sc, k, v] = t.dataset.f.split(":"); if (sc === "m") { MKF[k] = v; renderMarket(); } else { CF[k] = v; renderCollection(); } Snd.click(); return; }
@@ -82,6 +84,8 @@ document.addEventListener("click", e => {
     case "pInviteShare": case "sumInvite": Ref.share(); break;
     case "gMore": Goals.toggle(); break;
     case "pAllBtn": pAll = !pAll; renderProfile(); break;
+    case "pSelBtn": selMode(!pSel); break;
+    case "pSelGo": selGo(); break;
     case "tipX": state.tg = state.tg || {}; state.tg.a2hs = 1; persist(); renderProfile(); break;
     case "hMore": History.toggle(); break;
     case "aboutBtn": aboutModal(); break;

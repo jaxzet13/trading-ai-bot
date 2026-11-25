@@ -54,7 +54,8 @@
     <div id="pTop"></div>
     <div id="pWorth"></div>
     <div id="pLive"></div>
-    <h3 class="sec" id="pCardsH">Your cards</h3>
+    <div class="psec"><h3 class="sec" id="pCardsH">Your cards</h3><button class="psel" id="pSelBtn" type="button" hidden>Sell cards</button></div>
+    <div id="pSelChips"></div>
     <div class="clist" id="pTable"></div>
     <div id="pNote"></div>
     <div class="ptiles">
@@ -106,6 +107,8 @@
   <p class="fnote"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="footMoney">Play money only. Nothing is charged or paid out.</span></p>
   <p class="fnote faint">18+ · © 2026 STIXX</p>
 </div></footer>
+
+<div class="selbar" id="pSelBar" hidden></div>
 
 <!-- opening -->
 <div class="stage" id="stage" hidden tabindex="-1">
