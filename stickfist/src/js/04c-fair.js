@@ -14,7 +14,12 @@ const API = (() => {
     if (!on) return null; const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 7000);
     try { const r = await fetch(base + "/api/" + path, body === undefined ? { signal: ctl.signal } : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: ctl.signal }); if (!r.ok) return null; return await r.json(); } catch (e) { return null; } finally { clearTimeout(t); }
   }
-  return { on, post: (p, b) => call(p, b || {}), get: p => call(p) };
+  // the same call, but the caller gets the status too (0 = the server could not be reached), for the calls where "no" has more than one meaning
+  async function raw(path, body, keep) {
+    if (!on) return { status: 0, data: null }; const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 12000);
+    try { const r = await fetch(base + "/api/" + path, body === undefined ? { signal: ctl.signal } : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: ctl.signal, keepalive: !!keep }); let data = null; try { data = await r.json(); } catch (e) {} return { status: r.status, data }; } catch (e) { return { status: 0, data: null }; } finally { clearTimeout(t); }
+  }
+  return { on, post: (p, b) => call(p, b || {}), get: p => call(p), raw };
 })();
 
 const sha256 = (() => {

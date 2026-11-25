@@ -1005,6 +1005,21 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .homenext .hn-claim { flex: none; min-height: 38px; padding: 0 14px; font-size: 13.5px; border-radius: 12px; }
 .goalline.claim { display: grid; gap: 10px; justify-items: center; max-width: none; } .goalline.claim .btn { min-height: 44px; padding: 0 18px; font-size: 14.5px; border-radius: 14px; } .goalline.claim .btn b { color: inherit; font-weight: 800; }
 .goalline .claimed { color: var(--acc); font-weight: 700; font-size: 15px; animation: claimpop .45s cubic-bezier(.2,1.4,.4,1); } @keyframes claimpop { from { transform: scale(.7); opacity: 0; } }
+
+/* ---- accounts: the two fields on the first screen, and who is signed in on Me ---- */
+.gform { display: grid; gap: 10px; width: 100%; } .gform[hidden] { display: none; }
+.gform input { width: 100%; min-height: 54px; padding: 0 16px; border-radius: 16px; border: 1px solid var(--ln2); background: var(--s1); color: var(--ink); font: inherit; font-size: 16px; outline: none; transition: border-color .15s, box-shadow .15s; -webkit-appearance: none; appearance: none; }
+.gform input::placeholder { color: var(--faint, #6b7078); } .gform input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px rgba(59,228,119,.18); }
+.gerr { margin: 0; font-size: 13.5px; color: #ff8a80; text-align: left; } .gerr[hidden] { display: none; }
+.gswitch { font-size: 14.5px; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; min-height: 40px; } .gswitch[hidden] { display: none; }
+.gate[data-mode="signup"] .gpoints, .gate[data-mode="login"] .gpoints { display: none; }      /* the fields take the list's place, so the button stays on screen */
+.gate[data-mode="login"] .gfan { height: 118px; margin-bottom: 14px; } .gate[data-mode="login"] .gfan img { width: 76px; } .gate[data-mode="login"] .gfan img:nth-child(3) { width: 88px; }
+.gatebox .gcheck[hidden] { display: none; }
+.acctbox { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; margin: 12px 0 0; border-radius: 18px; border: 1px solid var(--ln2); background: var(--s1); }
+.acctbox .ac-who { display: grid; gap: 2px; min-width: 0; } .acctbox .ac-who b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .acctbox .ac-who small { font-size: 12.5px; color: var(--dim); }
+.acctbox.test { border-color: rgba(255,200,90,.45); background: linear-gradient(100deg, rgba(255,200,90,.12), rgba(255,200,90,.03)); flex-wrap: wrap; } .acctbox.test .label { color: #ffc85a; }
+.ac-money { display: flex; gap: 8px; } .ac-money .btn { min-height: 40px; padding: 0 14px; font-variant-numeric: tabular-nums; }
+#pAcct:not(:empty) { margin-bottom: 14px; }
 </style>
 </head>
 <body>
@@ -1063,6 +1078,7 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
     <div class="page-head"><h1 class="ttl">Me</h1><p class="live"></p></div>
     <div class="hero-card"><div id="pWorth"></div><div id="pChart" class="pchart"></div></div>
     <div id="pRank"></div>
+    <div id="pAcct"></div>
     <div id="pInvite"></div>
     <button class="btn pshare" id="pShare" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span id="pShareTxt">Share my stats</span></button>
     <h3 class="sec">Goals</h3>
@@ -1147,10 +1163,12 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
     <div class="glogo" aria-label="STIXX"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect x=".5" y=".5" width="27" height="27" rx="7.5" fill="#000" stroke="rgba(255,255,255,.18)"/><circle cx="14" cy="5.900" r="1.550" fill="#fff"/><path d="M8.200 9.800 19.800 21.400M19.800 9.800 8.200 21.400" fill="none" stroke="#fff" stroke-width="1.700" stroke-linecap="round"/></svg><span>STIXX</span></div>
     <div class="gfan" aria-hidden="true"><img src="cards/s/bubble.jpg" alt="" width="360" height="437"><img src="cards/s/kraken.jpg" alt="" width="360" height="437"><img src="cards/s/umbra.jpg" alt="" width="360" height="437"></div>
     <h1 class="gttl">Collectible cards, drawn in text</h1>
-    <p class="dim gsub">Open packs, collect all 28 cards, and trade them with the AI buyers.</p>
-    <ul class="gpoints"><li>A free pack right now, and another every day</li><li>Odds published, every pack provably fair</li><li>No sign-up, no card, nothing to download</li></ul>
+    <p class="dim gsub" id="gateSub">Open packs, collect all 28 cards, and trade them with the AI buyers.</p>
+    <ul class="gpoints"><li>A free pack right now, and another every day</li><li>Odds published, every pack provably fair</li><li id="gNoCard">No sign-up, no card, nothing to download</li></ul>
+    <form class="gform" id="gateForm" novalidate hidden><input id="acEmail" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Email" aria-label="Email"><input id="acPw" name="password" type="password" autocomplete="new-password" placeholder="Password (6 or more characters)" aria-label="Password" minlength="6"><p class="gerr" id="acErr" role="alert" hidden></p><button type="submit" hidden tabindex="-1" aria-hidden="true"></button></form>
     <label class="gcheck" for="ageOK"><input type="checkbox" id="ageOK"><span>I'm 18 or older</span></label>
     <button class="btn solid big" id="gateGo" disabled>get my free pack</button>
+    <button class="linkbtn gswitch" id="acSwitch" type="button" hidden>I already have an account</button>
     <p class="small faint gfine" id="gateMoney">Everything here is play money: nothing is ever charged, and nothing can be cashed out.</p>
   </div>
 </div>
@@ -1342,12 +1360,13 @@ const KEY = "stixx-first-print-v1";
 const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, pack: "fp", openN: 1, freePacks: 1, paid: {}, paidSeen: {}, uid: rid(16), ref: { code: "", by: "", n: 0, act: 0 }, fair: null, rescueAt: 0, streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], opens: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0, free: 0, bought: 0 } });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); } catch (e) {}
-const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+let onPersist = null;                                                                      // set by the account code: called after every save, so the game can follow to the server
+const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} if (onPersist) onPersist(); };
 const save = () => { logWorth(true); persist(); };
 // a fresh start keeps who you are (age check, sound, your invite code) and nothing else
 // packs you paid for survive a fresh start, along with who you are
 const boughtOf = id => (state.paid && state.paid[id]) || 0, boughtAll = () => Object.values(state.paid || {}).reduce((a, n) => a + n, 0);       // packs you paid for, per pack and in all
-function startOver() { const keep = { ageOK: state.ageOK, seenIntro: state.seenIntro, uid: state.uid, ref: state.ref, mute: state.mute, fair: state.fair, paid: state.paid, paidSeen: state.paidSeen }; state = Object.assign(fresh(), keep); save(); }
+function startOver() { const keep = { acct: state.acct, ageOK: state.ageOK, seenIntro: state.seenIntro, uid: state.uid, ref: state.ref, mute: state.mute, fair: state.fair, paid: state.paid, paidSeen: state.paidSeen }; state = Object.assign(fresh(), keep); save(); }
 
 // what a copy is worth right now: its own value, set by the simulated buyers trading that one copy (see Val)
 const valueOf = c => Val.now(c);                                                           // in units, live, not rounded
@@ -1574,7 +1593,12 @@ const API = (() => {
     if (!on) return null; const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 7000);
     try { const r = await fetch(base + "/api/" + path, body === undefined ? { signal: ctl.signal } : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: ctl.signal }); if (!r.ok) return null; return await r.json(); } catch (e) { return null; } finally { clearTimeout(t); }
   }
-  return { on, post: (p, b) => call(p, b || {}), get: p => call(p) };
+  // the same call, but the caller gets the status too (0 = the server could not be reached), for the calls where "no" has more than one meaning
+  async function raw(path, body, keep) {
+    if (!on) return { status: 0, data: null }; const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 12000);
+    try { const r = await fetch(base + "/api/" + path, body === undefined ? { signal: ctl.signal } : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: ctl.signal, keepalive: !!keep }); let data = null; try { data = await r.json(); } catch (e) {} return { status: r.status, data }; } catch (e) { return { status: 0, data: null }; } finally { clearTimeout(t); }
+  }
+  return { on, post: (p, b) => call(p, b || {}), get: p => call(p), raw };
 })();
 
 const sha256 = (() => {
@@ -2068,6 +2092,7 @@ const moneyR = u => money(Math.abs(u));
 const signR = (u, label) => `<span class="${u > 0 ? "up" : u < 0 ? "dn" : "fl"}">${u > 0 ? "+" : u < 0 ? "−" : ""}${moneyR(u)}</span>${label ? ` <span class="dim">${label}</span>` : ""}`;
 const pctR = p => `<small class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲" : p < -.0005 ? "▼" : "–"} ${Math.abs(p) >= 10 ? "×" + (1 + p).toFixed(0) : Math.round(Math.abs(p) * 100) + "%"}</small>`;
 function renderProfile() {
+  { const pa = $("pAcct"), h = Acct.html(); if (pa.dataset.sig !== h) { pa.dataset.sig = h; pa.innerHTML = h; } }
   $("pLimits").live = limitsHTML(); $("pSettings").live = settingsHTML(); $("pHist").live = History.html();
   const net = netWorth(), hold = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0), all = profitAll(), d24 = profitSince(864e5), found = new Set(state.vault.map(c => c.no)).size;
   $("pWorth").live = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}" data-tick="net" data-v="${Math.round(net)}">${moneyR(net)}</div><div class="wmeta"><span>${signR(all, "since you started")}</span>${Math.abs(d24) >= 5 ? `<span>${signR(d24, "today")}</span>` : ""}${awayLine()}</div></div>
@@ -3506,7 +3531,7 @@ function renderInvite() {
 /* ---- settings on the Me page ---- */
 function settingsHTML() {
   return `<h3 class="sec">More</h3><div class="row" style="margin-bottom:14px"><button class="btn small" data-cut="intro">watch the intro</button><button class="btn small" id="fairBtn2">check your packs</button><button class="btn small" id="aboutBtn">fine print</button></div>
-    <p class="small" style="margin-bottom:10px">Everything is saved in this browser. Clearing your browser data clears your cards.</p><p><button class="linkbtn" id="resetBtn">start over</button></p>`;
+    <p class="small" style="margin-bottom:10px">${Acct.me() ? "Your cards are saved to your account, so they come with you when you log in on another device." : "Everything is saved in this browser. Clearing your browser data clears your cards."}</p><p><button class="linkbtn" id="resetBtn">start over</button></p>`;
 }
 
 /* ---- fair play: the window where a pull can be checked ---- */
@@ -4035,6 +4060,78 @@ const Goals = (() => {
 })();
 
 /* ============================================================================
+   8k. ACCOUNTS. An email and a password, asked for once on the first screen. After that this device stays signed in, and the
+   game is saved to the server as you play, so logging in on another phone brings your cards with you.
+   Accounts exist only where the server has them (it says so on /api/health). With no server, or a server without accounts,
+   the first screen is just the 18+ tick box, as before, and the game is kept in this browser.
+   A tester account (the server decides which) gets a button that adds play money, for trying things out.
+   ========================================================================== */
+const Acct = (() => {
+  let accounts = API.on, mode = "signup", busy = false, pushT = 0, lastPush = "";
+  const me = () => state.acct || null, need = () => accounts && !me();
+  const say = m => { const e = $("acErr"); if (!e) return; e.hidden = !m; e.textContent = m || ""; };
+  // the first screen in its three shapes: no accounts (a tick box), sign up (email, password, tick box), log in (email, password)
+  function paint() {
+    const f = $("gateForm"), sw = $("acSwitch"), chk = document.querySelector("#gate .gcheck"), go = $("gateGo"), fine = $("gNoCard"), ttl = $("gateSub"); if (!f || !go) return;
+    const login = accounts && mode === "login"; f.hidden = !accounts; sw.hidden = !accounts; chk.hidden = login; $("gate").dataset.mode = accounts ? mode : "plain";
+    if (fine) fine.textContent = accounts ? "A free account, no card, nothing to download" : "No sign-up, no card, nothing to download";
+    if (ttl && accounts && state.ageOK && !login) ttl.textContent = "Make a free account to keep your cards: it takes ten seconds and you only do it once.";
+    $("acPw").autocomplete = login ? "current-password" : "new-password"; $("acPw").placeholder = login ? "Password" : "Password (6 or more characters)";
+    sw.textContent = login ? "New here? Make an account" : "I already have an account"; if (state.ageOK && $("ageOK")) $("ageOK").checked = true;
+    go.textContent = busy ? "one moment…" : login ? "log in" : accounts ? "create account · get my free pack" : "get my free pack"; go.disabled = busy || (!login && !$("ageOK").checked);
+  }
+  const flip = () => { mode = mode === "login" ? "signup" : "login"; say(""); paint(); const e = $("acEmail"); if (e && !e.value) e.focus(); };
+  function done() { $("gate").hidden = true; renderChips(); if (typeof Ref !== "undefined") Ref.sync(); if (view === "profile") renderProfile(); }
+  async function go() {
+    if (!accounts) { state.ageOK = true; save(); done(); return; }
+    if (busy) return; const email = $("acEmail").value.trim(), pw = $("acPw").value;
+    if (!/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email)) { say("Type your email address."); $("acEmail").focus(); return; }
+    if (pw.length < 6) { say(mode === "login" ? "Type your password." : "Pick a password with 6 or more characters."); $("acPw").focus(); return; }
+    busy = true; say(""); paint(); const r = await API.raw(mode, { email, pw, uid: state.uid }); busy = false; paint();
+    if (!r.status) { say("Can't reach the server. Check your connection and try again."); return; }
+    if (r.status === 409) { mode = "login"; paint(); say("That email already has an account. Log in with its password."); return; }
+    if (r.status === 401) { say("Wrong email or password."); return; }
+    if (r.status === 429) { say("Too many tries. Wait a few minutes."); return; }
+    if (r.status !== 200 || !r.data || !r.data.token) { say("That didn't work. Try again."); return; }
+    const acct = { email: r.data.email, token: r.data.token, tester: !!r.data.tester };
+    if (mode === "login" && r.data.save) {                                                // your saved game replaces whatever this device had (in memory too, so nothing writes the old one back on the way out)
+      try { const s = JSON.parse(r.data.save); if (s && typeof s.coins === "number") { s.acct = acct; s.ageOK = true; s.uid = r.data.uid || s.uid; onPersist = null; state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); lastPush = body(); persist(); location.reload(); return; } } catch (e) {}
+    }
+    state.acct = acct; state.ageOK = true; if (r.data.uid) state.uid = r.data.uid; save(); done(); push(); toast(mode === "login" ? "Welcome back" : "Account made. You're signed in on this device.");
+  }
+  // the game goes to the server a few seconds after it changes, and when the page is put away
+  function body() { const c = Object.assign({}, state); delete c.acct; return JSON.stringify(c); }
+  async function push(leaving) {
+    const a = me(); if (!a || !API.on) return; const b = body(); if (b === lastPush) return; lastPush = b;
+    const r = await API.raw("save", { token: a.token, state: b }, leaving); if (r.status === 401) signedOut(); else if (r.status !== 200) lastPush = "";
+  }
+  const dirty = () => { if (!me()) return; clearTimeout(pushT); pushT = setTimeout(push, 4000); };
+  function signedOut() { state.acct = null; persist(); mode = "login"; paint(); $("gate").hidden = false; say("You were signed out. Log in to carry on."); }
+  async function logout() {
+    const a = me(); if (!a) return; clearTimeout(pushT); await push(); await API.raw("logout", { token: a.token });
+    onPersist = null; state = fresh(); persist(); location.hash = "#/"; location.reload();          // the game is on the server; this device forgets it
+  }
+  function testMoney(d) { if (!me() || !me().tester) return; state.coins += d * UNIT; state.s.added = (state.s.added || 0) + d * UNIT; save(); renderBal(); if (view === "profile") renderProfile(); if (view === "home") renderHome(); toast(`+${money(d * UNIT)} test money`); buzz(20); }
+  // the Me page: who is signed in, and for a tester the money buttons
+  function html() {
+    const a = me(); if (!a) return "";
+    return `<div class="acctbox"><div class="ac-who"><span class="label">Signed in</span><b>${esc(a.email)}</b><small>Your cards are saved to your account.</small></div><button class="btn small ghost" id="acLogout">log out</button></div>` +
+      (a.tester ? `<div class="acctbox test"><div class="ac-who"><span class="label">Test account</span><b>Add play money</b><small>Only this account sees these.</small></div><div class="ac-money">${[10, 100, 1000].map(d => `<button class="btn small" data-testmoney="${d}">+$${fmt(d)}</button>`).join("")}</div></div>` : "");
+  }
+  async function start() {
+    paint(); onPersist = dirty; if (!state.ageOK || (API.on && me() === null && !state.ageOK)) $("gate").hidden = false;
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") push(true); });
+    const f = $("gateForm"); if (f) f.addEventListener("submit", e => { e.preventDefault(); go(); });
+    if (!API.on) return;
+    const h = await API.raw("health"); if (h.status && !(h.data && h.data.accounts)) { accounts = false; paint(); return; }   // a server without accounts: the plain first screen
+    if (!h.status && state.ageOK && !me()) return;                                           // can't tell yet (the server is waking up): don't lock out someone already playing
+    if (need()) { paint(); $("gate").hidden = false; return; }
+    const a = me(); if (a) { const r = await API.raw("me", { token: a.token }); if (r.status === 401) signedOut(); else if (r.status === 200 && r.data && !!r.data.tester !== !!a.tester) { a.tester = !!r.data.tester; persist(); if (view === "profile") renderProfile(); } }
+  }
+  return { start, go, flip, logout, testMoney, html, me, on: () => accounts };
+})();
+
+/* ============================================================================
    9. EVENTS
    ========================================================================== */
 document.addEventListener("click", e => {
@@ -4050,6 +4147,7 @@ document.addEventListener("click", e => {
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
+  if (t.dataset.testmoney) { Acct.testMoney(+t.dataset.testmoney); return; }
   if (t.id === "sumClaim" || t.id === "homeClaim") {                                       // finished goals pay out right where you are, and the next button already says "open a free pack"
     const r = t.getBoundingClientRect(), n = Goals.claimAll(); if (!n) return;
     if (typeof FX !== "undefined" && FX.burst) FX.burst(r.left + r.width / 2, r.top + r.height / 2, 18, ["#3be477", "#fff"], 320);
@@ -4115,10 +4213,12 @@ document.addEventListener("click", e => {
     case "tipX": state.tg = state.tg || {}; state.tg.a2hs = 1; persist(); renderProfile(); break;
     case "hMore": History.toggle(); break;
     case "aboutBtn": aboutModal(); break;
-    case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; Ref.sync(); break;
+    case "gateGo": Acct.go(); break;
+    case "acSwitch": Acct.flip(); break;
+    case "acLogout": if (t.dataset.armed) Acct.logout(); else { t.dataset.armed = 1; t.textContent = "tap again to log out"; setTimeout(() => { if (t.isConnected) { delete t.dataset.armed; t.textContent = "log out"; } }, 3000); } break;
   }
 });
-document.addEventListener("change", e => { if (e.target.id === "rqAge") { const b = $("rqPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "rqQty") Sale.qty(); if (e.target.id === "shopAge") { const b = $("shopPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "shopQty" || e.target.id === "shopPack") Shop.qty(); if (e.target.id === "mSort") { MKF.sort = e.target.value; renderMarket(); } if (e.target.id === "cSort") { CF.sort = e.target.value; renderCollection(); } if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
+document.addEventListener("change", e => { if (e.target.id === "rqAge") { const b = $("rqPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "rqQty") Sale.qty(); if (e.target.id === "shopAge") { const b = $("shopPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "shopQty" || e.target.id === "shopPack") Shop.qty(); if (e.target.id === "mSort") { MKF.sort = e.target.value; renderMarket(); } if (e.target.id === "cSort") { CF.sort = e.target.value; renderCollection(); } if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked || !!$("gateGo").dataset.busy; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
 document.addEventListener("submit", e => { if (e.target.id === "vanityForm") { e.preventDefault(); Ref.vanity($("vanityIn").value); } if (e.target.id === "codeForm") { e.preventDefault(); Ref.enter($("codeIn").value); } if (e.target.id === "csForm") { e.preventDefault(); Fair.setClientSeed($("csIn").value); fairModal(true); toast("Client seed set"); } if (e.target.id === "vfForm") { e.preventDefault(); verifyHand(); } });
 document.addEventListener("keydown", e => {
   const k = e.key;
@@ -4200,7 +4300,7 @@ function coinBurst(from, n) {
    ========================================================================== */
 // (when you were last here is kept for the market catch-up only; nothing welcomes you back with a summary)
 awaySince = state.lastSeen || 0; MK.advance(); logWorth(); state.lastSeen = Date.now(); persist(); renderBal(); renderChips(); if (Sale.ret() && location.hash !== "#/limited") location.hash = "#/limited"; route(); renderTape(); Goals.badge(); Sale.load(); Shop.load(); Shop.back();
-if (!state.ageOK) $("gate").hidden = false;                 // no intro film: the first thing you see is your free pack
+Acct.start();                 // no intro film: the first thing you see is your free pack
 // the market moves every 20 seconds; redraw whatever is on screen when it does
 let lastTick = MK.tick();
 // the market is live: every number on screen is redrawn once a second, in place, and the once-a-round jobs run when a new round of trading lands

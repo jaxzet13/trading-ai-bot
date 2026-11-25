@@ -14,6 +14,7 @@ document.addEventListener("click", e => {
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
+  if (t.dataset.testmoney) { Acct.testMoney(+t.dataset.testmoney); return; }
   if (t.id === "sumClaim" || t.id === "homeClaim") {                                       // finished goals pay out right where you are, and the next button already says "open a free pack"
     const r = t.getBoundingClientRect(), n = Goals.claimAll(); if (!n) return;
     if (typeof FX !== "undefined" && FX.burst) FX.burst(r.left + r.width / 2, r.top + r.height / 2, 18, ["#3be477", "#fff"], 320);
@@ -79,10 +80,12 @@ document.addEventListener("click", e => {
     case "tipX": state.tg = state.tg || {}; state.tg.a2hs = 1; persist(); renderProfile(); break;
     case "hMore": History.toggle(); break;
     case "aboutBtn": aboutModal(); break;
-    case "gateGo": state.ageOK = true; save(); $("gate").hidden = true; Ref.sync(); break;
+    case "gateGo": Acct.go(); break;
+    case "acSwitch": Acct.flip(); break;
+    case "acLogout": if (t.dataset.armed) Acct.logout(); else { t.dataset.armed = 1; t.textContent = "tap again to log out"; setTimeout(() => { if (t.isConnected) { delete t.dataset.armed; t.textContent = "log out"; } }, 3000); } break;
   }
 });
-document.addEventListener("change", e => { if (e.target.id === "rqAge") { const b = $("rqPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "rqQty") Sale.qty(); if (e.target.id === "shopAge") { const b = $("shopPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "shopQty" || e.target.id === "shopPack") Shop.qty(); if (e.target.id === "mSort") { MKF.sort = e.target.value; renderMarket(); } if (e.target.id === "cSort") { CF.sort = e.target.value; renderCollection(); } if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
+document.addEventListener("change", e => { if (e.target.id === "rqAge") { const b = $("rqPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "rqQty") Sale.qty(); if (e.target.id === "shopAge") { const b = $("shopPay"); if (b && !b.dataset.busy) b.disabled = !e.target.checked; } if (e.target.id === "shopQty" || e.target.id === "shopPack") Shop.qty(); if (e.target.id === "mSort") { MKF.sort = e.target.value; renderMarket(); } if (e.target.id === "cSort") { CF.sort = e.target.value; renderCollection(); } if (e.target.id === "ageOK") $("gateGo").disabled = !e.target.checked || !!$("gateGo").dataset.busy; if (e.target.id === "limPacks") { state.lim.packs = +e.target.value; persist(); toast(state.lim.packs ? `Limit set: ${state.lim.packs} packs a day` : "Daily pack limit removed"); } });
 document.addEventListener("submit", e => { if (e.target.id === "vanityForm") { e.preventDefault(); Ref.vanity($("vanityIn").value); } if (e.target.id === "codeForm") { e.preventDefault(); Ref.enter($("codeIn").value); } if (e.target.id === "csForm") { e.preventDefault(); Fair.setClientSeed($("csIn").value); fairModal(true); toast("Client seed set"); } if (e.target.id === "vfForm") { e.preventDefault(); verifyHand(); } });
 document.addEventListener("keydown", e => {
   const k = e.key;

@@ -59,6 +59,7 @@ const moneyR = u => money(Math.abs(u));
 const signR = (u, label) => `<span class="${u > 0 ? "up" : u < 0 ? "dn" : "fl"}">${u > 0 ? "+" : u < 0 ? "−" : ""}${moneyR(u)}</span>${label ? ` <span class="dim">${label}</span>` : ""}`;
 const pctR = p => `<small class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}">${p > .0005 ? "▲" : p < -.0005 ? "▼" : "–"} ${Math.abs(p) >= 10 ? "×" + (1 + p).toFixed(0) : Math.round(Math.abs(p) * 100) + "%"}</small>`;
 function renderProfile() {
+  { const pa = $("pAcct"), h = Acct.html(); if (pa.dataset.sig !== h) { pa.dataset.sig = h; pa.innerHTML = h; } }
   $("pLimits").live = limitsHTML(); $("pSettings").live = settingsHTML(); $("pHist").live = History.html();
   const net = netWorth(), hold = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0), all = profitAll(), d24 = profitSince(864e5), found = new Set(state.vault.map(c => c.no)).size;
   $("pWorth").live = `<div class="worth"><div class="bignum" role="img" aria-label="${money(net)}" data-tick="net" data-v="${Math.round(net)}">${moneyR(net)}</div><div class="wmeta"><span>${signR(all, "since you started")}</span>${Math.abs(d24) >= 5 ? `<span>${signR(d24, "today")}</span>` : ""}${awayLine()}</div></div>

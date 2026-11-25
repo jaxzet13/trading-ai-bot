@@ -123,7 +123,7 @@ function renderInvite() {
 /* ---- settings on the Me page ---- */
 function settingsHTML() {
   return `<h3 class="sec">More</h3><div class="row" style="margin-bottom:14px"><button class="btn small" data-cut="intro">watch the intro</button><button class="btn small" id="fairBtn2">check your packs</button><button class="btn small" id="aboutBtn">fine print</button></div>
-    <p class="small" style="margin-bottom:10px">Everything is saved in this browser. Clearing your browser data clears your cards.</p><p><button class="linkbtn" id="resetBtn">start over</button></p>`;
+    <p class="small" style="margin-bottom:10px">${Acct.me() ? "Your cards are saved to your account, so they come with you when you log in on another device." : "Everything is saved in this browser. Clearing your browser data clears your cards."}</p><p><button class="linkbtn" id="resetBtn">start over</button></p>`;
 }
 
 /* ---- fair play: the window where a pull can be checked ---- */

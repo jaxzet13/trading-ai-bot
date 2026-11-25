@@ -984,3 +984,18 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .homenext .hn-claim { flex: none; min-height: 38px; padding: 0 14px; font-size: 13.5px; border-radius: 12px; }
 .goalline.claim { display: grid; gap: 10px; justify-items: center; max-width: none; } .goalline.claim .btn { min-height: 44px; padding: 0 18px; font-size: 14.5px; border-radius: 14px; } .goalline.claim .btn b { color: inherit; font-weight: 800; }
 .goalline .claimed { color: var(--acc); font-weight: 700; font-size: 15px; animation: claimpop .45s cubic-bezier(.2,1.4,.4,1); } @keyframes claimpop { from { transform: scale(.7); opacity: 0; } }
+
+/* ---- accounts: the two fields on the first screen, and who is signed in on Me ---- */
+.gform { display: grid; gap: 10px; width: 100%; } .gform[hidden] { display: none; }
+.gform input { width: 100%; min-height: 54px; padding: 0 16px; border-radius: 16px; border: 1px solid var(--ln2); background: var(--s1); color: var(--ink); font: inherit; font-size: 16px; outline: none; transition: border-color .15s, box-shadow .15s; -webkit-appearance: none; appearance: none; }
+.gform input::placeholder { color: var(--faint, #6b7078); } .gform input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px rgba(59,228,119,.18); }
+.gerr { margin: 0; font-size: 13.5px; color: #ff8a80; text-align: left; } .gerr[hidden] { display: none; }
+.gswitch { font-size: 14.5px; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; min-height: 40px; } .gswitch[hidden] { display: none; }
+.gate[data-mode="signup"] .gpoints, .gate[data-mode="login"] .gpoints { display: none; }      /* the fields take the list's place, so the button stays on screen */
+.gate[data-mode="login"] .gfan { height: 118px; margin-bottom: 14px; } .gate[data-mode="login"] .gfan img { width: 76px; } .gate[data-mode="login"] .gfan img:nth-child(3) { width: 88px; }
+.gatebox .gcheck[hidden] { display: none; }
+.acctbox { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; margin: 12px 0 0; border-radius: 18px; border: 1px solid var(--ln2); background: var(--s1); }
+.acctbox .ac-who { display: grid; gap: 2px; min-width: 0; } .acctbox .ac-who b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .acctbox .ac-who small { font-size: 12.5px; color: var(--dim); }
+.acctbox.test { border-color: rgba(255,200,90,.45); background: linear-gradient(100deg, rgba(255,200,90,.12), rgba(255,200,90,.03)); flex-wrap: wrap; } .acctbox.test .label { color: #ffc85a; }
+.ac-money { display: flex; gap: 8px; } .ac-money .btn { min-height: 40px; padding: 0 14px; font-variant-numeric: tabular-nums; }
+#pAcct:not(:empty) { margin-bottom: 14px; }

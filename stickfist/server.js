@@ -31,6 +31,7 @@ const OFFENSIVE = ["FUCK", "SHIT", "CUNT", "NAZI", "RAPE", "NIGGER", "NIGGA", "F
 /* ---- the store: one JSON file, written a moment after every change, swapped in atomically ---- */
 let db = { users: {}, codes: {}, salt: crypto.randomBytes(16).toString("hex"), day: {} };
 try { db = Object.assign(db, JSON.parse(fs.readFileSync(DATA_FILE, "utf8"))); } catch (e) { /* first run */ }
+db.accts = db.accts || {}; db.sess = db.sess || {};                                       // accounts (by a hash of the email) and the devices signed in to them
 let dirty = false, writing = false;
 function flush() {
   if (writing || !dirty) return; dirty = false; writing = true;
@@ -84,8 +85,46 @@ function attachRef(u, uid, ref) {
 }
 
 /* ---- the API ---- */
+/* ---- accounts: an email and a password, a session that lasts, and the player's saved game ----
+   A password is kept only as a salted scrypt hash, a session only as a hash of its token. A saved game is one file per account.
+   A tester is an account that may hand itself play money (the page shows the button): listed by a hash of the email, so no
+   address sits in the code, plus any in TESTER_EMAILS. Emails are not verified, so a tester should sign up before telling anyone. */
+const TESTERS = new Set(["9852081f1f1dbdde0505fcd932398a4f1569d5cb091567f4decfc4a14740970b"].concat((process.env.TESTER_EMAILS || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean).map(s => crypto.createHash("sha256").update(s).digest("hex"))));
+const SAVES = path.join(path.dirname(DATA_FILE), "saves"), MAX_SAVE = 600000;
+const normEmail = e => String(e || "").trim().toLowerCase().slice(0, 254), validEmail = e => /^[^\s@]{1,64}@[^\s@.]+(\.[^\s@.]+)+$/.test(e);
+const pwHash = (pw, salt) => crypto.scryptSync(String(pw), salt, 32).toString("hex");
+const sessOf = token => { if (typeof token !== "string" || token.length < 32 || token.length > 128) return null; const s = db.sess[sha(token)], a = s && db.accts[s.a]; return a ? { a, id: s.a } : null; };
+const newSession = id => { const token = crypto.randomBytes(32).toString("hex"); db.sess[sha(token)] = { a: id, t: Date.now() }; return token; };
+const acctInfo = (a, id) => ({ email: a.email, uid: a.uid, tester: TESTERS.has(id), savedAt: a.savedAt || 0 });
+const readSave = id => { try { return fs.readFileSync(path.join(SAVES, id + ".json"), "utf8"); } catch (e) { return null; } };
 const routes = {
-  "GET /api/health": () => ({ ok: true, v: 1 }),
+  "GET /api/health": () => ({ ok: true, v: 1, accounts: true }),
+  "POST /api/signup": (b, ip) => {
+    const email = normEmail(b.email), id = sha(email);
+    if (!validEmail(email)) return [400, { error: "email" }];
+    if (typeof b.pw !== "string" || b.pw.length < 6 || b.pw.length > 200) return [400, { error: "password" }];
+    if (limited("signup:" + ip, 12, 3.6e6)) return [429, { error: "slow down" }];
+    if (db.accts[id]) return [409, { error: "exists" }];
+    let uid = validUid(b.uid) ? b.uid : crypto.randomBytes(8).toString("hex"); if (Object.values(db.accts).some(a => a.uid === uid)) uid = crypto.randomBytes(8).toString("hex");   // one player id per account
+    const salt = crypto.randomBytes(16).toString("hex"); db.accts[id] = { email, salt, hash: pwHash(b.pw, salt), uid, created: Date.now() }; const token = newSession(id); touch();
+    return Object.assign({ ok: true, token }, acctInfo(db.accts[id], id));
+  },
+  "POST /api/login": (b, ip) => {
+    const email = normEmail(b.email), id = sha(email), a = db.accts[id];
+    if (limited("login:" + ip, 30, 9e5) || limited("login:" + id, 10, 9e5)) return [429, { error: "slow down" }];
+    const h = pwHash(String(b.pw || "").slice(0, 200), a ? a.salt : "00");                  // hashed either way, so a wrong email takes as long as a wrong password
+    if (!a || !crypto.timingSafeEqual(Buffer.from(h), Buffer.from(a.hash))) return [401, { error: "wrong" }];
+    const token = newSession(id); touch(); return Object.assign({ ok: true, token, save: readSave(id) }, acctInfo(a, id));
+  },
+  "POST /api/me": b => { const s = sessOf(b.token); return s ? Object.assign({ ok: true }, acctInfo(s.a, s.id)) : [401, { error: "signed out" }]; },
+  "POST /api/save": (b, ip) => {
+    const s = sessOf(b.token); if (!s) return [401, { error: "signed out" }];
+    if (typeof b.state !== "string" || b.state.length > MAX_SAVE) return [400, { error: "too big" }]; if (limited("save:" + s.id, 40, 60000)) return [429, { error: "slow down" }];
+    try { const o = JSON.parse(b.state); if (!o || typeof o.coins !== "number") throw 0; } catch (e) { return [400, { error: "bad save" }]; }
+    fs.mkdirSync(SAVES, { recursive: true }); const f = path.join(SAVES, s.id + ".json"), tmp = f + "." + process.pid + ".tmp"; fs.writeFileSync(tmp, b.state); fs.renameSync(tmp, f);
+    s.a.savedAt = Date.now(); touch(); return { ok: true, savedAt: s.a.savedAt };
+  },
+  "POST /api/logout": b => { if (typeof b.token === "string") { delete db.sess[sha(b.token)]; touch(); } return { ok: true }; },
   // who am I: creates the player on first contact, and applies the invite code they arrived with
   "POST /api/hello": (b, ip) => {
     if (!validUid(b.uid)) return [400, { error: "bad id" }];
@@ -193,7 +232,7 @@ const server = http.createServer((req, res) => {
   if (req.method === "OPTIONS") { res.writeHead(204, { "access-control-allow-origin": CORS, "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type", "access-control-max-age": "86400" }); return res.end(); }
   const fn = routes[key]; if (!fn) return json(res, 404, { error: "not found" });
   const ip = ipOf(req); if (limited("all:" + ip, CALLS_PER_MIN, 60000)) return json(res, 429, { error: "slow down" });
-  let raw = ""; req.on("data", c => { raw += c; if (raw.length > 4096) { req.destroy(); } });
+  const cap = key === "POST /api/save" ? MAX_SAVE + 4096 : 4096; let raw = ""; req.on("data", c => { raw += c; if (raw.length > cap) { req.destroy(); } });
   req.on("end", () => {
     let body = {}; if (req.method === "POST") { try { body = JSON.parse(raw || "{}"); } catch (e) { return json(res, 400, { error: "bad json" }); } if (!body || typeof body !== "object") return json(res, 400, { error: "bad json" }); }
     Promise.resolve().then(() => fn(body, ip, url.searchParams)).then(out => { if (Array.isArray(out)) json(res, out[0], out[1]); else { json(res, 200, out); if (/hello/.test(key)) touch(); } }).catch(e => { console.error(e); json(res, 500, { error: "server error" }); });

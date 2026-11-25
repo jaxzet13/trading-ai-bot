@@ -53,6 +53,7 @@
     <div class="page-head"><h1 class="ttl">Me</h1><p class="live"></p></div>
     <div class="hero-card"><div id="pWorth"></div><div id="pChart" class="pchart"></div></div>
     <div id="pRank"></div>
+    <div id="pAcct"></div>
     <div id="pInvite"></div>
     <button class="btn pshare" id="pShare" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span id="pShareTxt">Share my stats</span></button>
     <h3 class="sec">Goals</h3>
@@ -137,10 +138,12 @@
     <div class="glogo" aria-label="STIXX"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect x=".5" y=".5" width="27" height="27" rx="7.5" fill="#000" stroke="rgba(255,255,255,.18)"/><circle cx="14" cy="5.900" r="1.550" fill="#fff"/><path d="M8.200 9.800 19.800 21.400M19.800 9.800 8.200 21.400" fill="none" stroke="#fff" stroke-width="1.700" stroke-linecap="round"/></svg><span>STIXX</span></div>
     <div class="gfan" aria-hidden="true"><img src="cards/s/bubble.jpg" alt="" width="360" height="437"><img src="cards/s/kraken.jpg" alt="" width="360" height="437"><img src="cards/s/umbra.jpg" alt="" width="360" height="437"></div>
     <h1 class="gttl">Collectible cards, drawn in text</h1>
-    <p class="dim gsub">Open packs, collect all 28 cards, and trade them with the AI buyers.</p>
-    <ul class="gpoints"><li>A free pack right now, and another every day</li><li>Odds published, every pack provably fair</li><li>No sign-up, no card, nothing to download</li></ul>
+    <p class="dim gsub" id="gateSub">Open packs, collect all 28 cards, and trade them with the AI buyers.</p>
+    <ul class="gpoints"><li>A free pack right now, and another every day</li><li>Odds published, every pack provably fair</li><li id="gNoCard">No sign-up, no card, nothing to download</li></ul>
+    <form class="gform" id="gateForm" novalidate hidden><input id="acEmail" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Email" aria-label="Email"><input id="acPw" name="password" type="password" autocomplete="new-password" placeholder="Password (6 or more characters)" aria-label="Password" minlength="6"><p class="gerr" id="acErr" role="alert" hidden></p><button type="submit" hidden tabindex="-1" aria-hidden="true"></button></form>
     <label class="gcheck" for="ageOK"><input type="checkbox" id="ageOK"><span>I'm 18 or older</span></label>
     <button class="btn solid big" id="gateGo" disabled>get my free pack</button>
+    <button class="linkbtn gswitch" id="acSwitch" type="button" hidden>I already have an account</button>
     <p class="small faint gfine" id="gateMoney">Everything here is play money: nothing is ever charged, and nothing can be cashed out.</p>
   </div>
 </div>

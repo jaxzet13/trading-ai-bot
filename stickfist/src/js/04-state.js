@@ -5,12 +5,13 @@ const KEY = "stixx-first-print-v1";
 const fresh = () => ({ coins: START, vault: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, pack: "fp", openN: 1, freePacks: 1, paid: {}, paidSeen: {}, uid: rid(16), ref: { code: "", by: "", n: 0, act: 0 }, fair: null, rescueAt: 0, streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], opens: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0, free: 0, bought: 0 } });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); } catch (e) {}
-const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+let onPersist = null;                                                                      // set by the account code: called after every save, so the game can follow to the server
+const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} if (onPersist) onPersist(); };
 const save = () => { logWorth(true); persist(); };
 // a fresh start keeps who you are (age check, sound, your invite code) and nothing else
 // packs you paid for survive a fresh start, along with who you are
 const boughtOf = id => (state.paid && state.paid[id]) || 0, boughtAll = () => Object.values(state.paid || {}).reduce((a, n) => a + n, 0);       // packs you paid for, per pack and in all
-function startOver() { const keep = { ageOK: state.ageOK, seenIntro: state.seenIntro, uid: state.uid, ref: state.ref, mute: state.mute, fair: state.fair, paid: state.paid, paidSeen: state.paidSeen }; state = Object.assign(fresh(), keep); save(); }
+function startOver() { const keep = { acct: state.acct, ageOK: state.ageOK, seenIntro: state.seenIntro, uid: state.uid, ref: state.ref, mute: state.mute, fair: state.fair, paid: state.paid, paidSeen: state.paidSeen }; state = Object.assign(fresh(), keep); save(); }
 
 // what a copy is worth right now: its own value, set by the simulated buyers trading that one copy (see Val)
 const valueOf = c => Val.now(c);                                                           // in units, live, not rounded
