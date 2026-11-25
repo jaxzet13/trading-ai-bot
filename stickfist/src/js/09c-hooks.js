@@ -52,9 +52,8 @@ function renderHero(rows, rn) {
   const sub = hero.kind === "now" ? `${money(hero.was)} → ${money(hero.nowP)} in 24 hours` : `${up ? "a run of" : "a fall of"} ${pctShort(hero.pct)} in a day · now ${money(hero.nowP)}${up ? ` (${pctShort(hero.nowP / hero.peak - 1)} from the peak)` : ""}`;
   el.innerHTML = `<button class="hero ${up ? "up" : "dn"}" data-card="${hero.c.no}"><pre class="sprite" id="heroArt" aria-hidden="true">${up ? ROCKET(0) : FALL(0)}</pre><div class="info"><h2>${title}</h2><div class="big">${pctShort(hero.pct)}</div><div class="dim">${sub}</div><pre class="plot${fresh ? " wipe" : ""}" aria-hidden="true">${pg}</pre></div></button>`;
 }
-// the countdown to the next price: a line that fills up over 20 seconds
+// the line under a page title: prices are live
 function tickLive() {
-  const s = 20 - Math.floor((Date.now() % 20000) / 1000), n = 12, k = Math.round((20 - s) / 20 * n);
-  document.querySelectorAll(".live").forEach(e => { e.innerHTML = `<i></i>live · next price in ${s}s <span>${"━".repeat(k)}${"─".repeat(n - k)}</span>`; });
+  document.querySelectorAll(".live").forEach(e => { if (!e.firstChild) e.innerHTML = `<i></i>live · prices move every second`; });
   const a = $("heroArt"); if (a && !reduced) { heroFrame++; a.textContent = a.closest(".hero").classList.contains("up") ? ROCKET(heroFrame) : FALL(heroFrame); }
 }
