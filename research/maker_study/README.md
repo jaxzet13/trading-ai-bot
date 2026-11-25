@@ -7,7 +7,7 @@ Nov 25 2026. Question: a resting bid pays no Kalshi fee (about 1.7c at mid price
 
 * `build.py`: the walk-forward model's out-of-sample P(YES) for every market x minute (same code as the scorecard).
 * `tape.py`: Kalshi's public trade tape for every market where the model saw a possible resting-bid bet
-  (DOGE, NEAR, SOL, XRP, ZEC; 1,000+ markets, Nov 22-25, about 2,000 trades a market).
+  (DOGE, NEAR, SOL, XRP, ZEC; 1,000 markets, Nov 22-25, about 2,000 trades a market).
 * `sim.py`: replay. A 1-contract bid rests from 1.2 s after the minute boundary; it is filled if the tape shows
   a sale below its price (certain fill) or at its price (best case: first in the queue). No fee on fills.
   The taker rule in the same replay reproduces the scorecard's bets and P&L for those days exactly.
