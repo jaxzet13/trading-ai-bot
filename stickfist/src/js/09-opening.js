@@ -116,12 +116,12 @@ function focusTop() {
    Two pills under a card once it is face up. Red sells it now for what it shows. Blue holds it: it goes to your collection, where
    its value keeps moving. For a rare card, a styled copy, or one worth at least the pack, the blue pill is the lit one. */
 let pillT = 0;
-function hidePills() { const p = $("stPills"); if (p) p.hidden = true; clearInterval(pillT); pillT = 0; }
+function hidePills() { const p = $("stPills"), w = $("stWorth"); if (p) p.hidden = true; if (w) w.hidden = true; clearInterval(pillT); pillT = 0; }
 function showPills(c, card) {
   const p = $("stPills"), keep = RAR[card.rar].tier >= 2 || !!c.fx || sellOf(c) >= SS.ref, w = Val.watching(c); p.className = "pills" + (keep ? " keep" : ""); p.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col);
   $("pillSell").innerHTML = `<small>sell</small><b>+${money(sellOf(c))}</b>`; $("pillHold").innerHTML = `<small>hold</small><b>${w} buyer${w === 1 ? "" : "s"} watching</b>`;
   p.hidden = false; p.classList.remove("in"); void p.offsetWidth; p.classList.add("in");
-  clearInterval(pillT); pillT = setInterval(() => { const b = $("pillSell").querySelector("b"); if (!SS || !b || $("stPills").hidden) { clearInterval(pillT); pillT = 0; return; } const txt = "+" + money(sellOf(c)); if (b.textContent !== txt) b.textContent = txt; }, 250);   // the price is moving while you decide: the pill always says what selling pays this instant
+  clearInterval(pillT); pillT = setInterval(() => { const b = $("pillSell").querySelector("b"); if (!SS || !b || $("stPills").hidden) { clearInterval(pillT); pillT = 0; return; } const txt = "+" + money(sellOf(c)); if (b.textContent !== txt) b.textContent = txt; const v = $("swV"); if (v && !v.dataset.run) { const t2 = money(valueOf(c)); if (v.textContent !== t2) v.textContent = t2; } }, 250);   // the price is moving while you decide: the pill always says what selling pays this instant
 }
 async function decide(kind, vec) {
   if (!SS || SS.busy || SS.phase !== "stack") return; const el = scEl(SS.idx); if (!el || !el.dataset.rev || !el.classList.contains("lit")) return; SS.busy = true;
@@ -182,16 +182,25 @@ async function reveal(el, c, card, R, v) {
   } else await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
   Snd.reveal(T); if (T >= 2) buzz(T >= 5 ? [40, 30, 60, 30, 90] : T >= 3 ? [30, 25, 50] : [25]);
   FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][T], T >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + T * 130);
-  if (T >= 4) FX.rain(mid[0], rect.width * 1.6, 40 + T * 14, [R.col, "#fff"]);
+  if (T >= 4) FX.rain(mid[0], rect.width * 1.6, 18 + T * 6, [R.col, "#fff"]);
   if (T >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
   if (T >= 4 && !reduced) {                                                              // a hit: the stage jolts, light turns behind the card, and a second wave goes out as its worth lands
     stage.classList.remove("quake"); void stage.offsetWidth; stage.classList.add("quake"); setTimeout(() => stage.classList.remove("quake"), 520);
     const ry = document.createElement("i"); ry.className = "rays"; ry.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col); el.insertBefore(ry, el.firstChild); el.classList.add("hit");
-    const mine = SS; setTimeout(() => { if (SS === mine && SS.phase === "stack") { FX.burst(mid[0], mid[1], 120 + T * 40, [R.col, "#fff", "#ffe9a8"], 620); Snd.paid(); buzz([20, 30, 40]); } }, 420);
+    const mine = SS; setTimeout(() => { if (SS === mine && SS.phase === "stack") { FX.burst(mid[0], mid[1], 50 + T * 16, [R.col, "#fff", "#ffe9a8"], 620); Snd.paid(); buzz([20, 30, 40]); } }, 420);
   }
   const t = $("stTitle"); t.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col);
   t.innerHTML = `<div class="rw">${SS.fresh && SS.fresh.has(c.uid) ? `<span class="newtag">new</span> ` : ""}${T >= 3 ? `<b class="rn">${esc(R.name)}</b>` : ""}${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b> ${T >= 3 && x >= 2 ? `<span class="xm">${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack</span>` : `<span class="dim">· ${Val.watching(c)} AI buyers watching</span>`}</div>${x >= 2 && T < 3 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
-  { const nm = t.querySelector(".nm"); nm.style.removeProperty("--px"); blockReveal(nm, card.name, 480); fitName(nm); } t.className = "st-title" + (T >= 4 ? " hit" : T >= 3 ? " good" : ""); void t.offsetWidth; t.classList.add("in");
+  { const nm = t.querySelector(".nm"); nm.style.removeProperty("--px");
+    if (T >= 3) { const col = c.fx ? STYLE_TINT[c.fx] : R.col, rw = t.querySelector(".rw"), nw = SS.fresh && SS.fresh.has(c.uid);
+      rw.innerHTML = `<span class="rchip"><i></i>${esc(R.name)}${c.fx ? " · " + esc(STYLES[c.fx].name) : ""}</span>${nw ? `<span class="newtag">new</span>` : ""}`;
+      nm.className = "nm clean"; nm.style.setProperty("--n", Math.max(4, card.name.length)); nm.innerHTML = [...card.name.toUpperCase()].map((ch, i) => `<span style="--i:${i}">${ch === " " ? "&nbsp;" : esc(ch)}</span>`).join("");
+      nm.insertAdjacentHTML("afterend", `<div class="ro">${rarLabel(card)}${c.fx ? " · ×" + STYLES[c.fx].x + " style" : ""}</div>`);
+      const w = $("stWorth"), worth = valueOf(c); w.style.setProperty("--rc", col); w.innerHTML = `<small>worth</small><b id="swV" data-run="1">${money(0)}</b>${x >= 2 ? `<span class="xm">${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack</span>` : ""}`; w.hidden = false; w.classList.remove("in"); void w.offsetWidth; w.classList.add("in");
+      const v = $("swV"), t0 = performance.now(), dur = reduced ? 0 : 650 + T * 90, mine = SS; let lastTick = 0;                                  // the number runs up to what the card is worth
+      const run = now => { if (SS !== mine || !v.isConnected) return; const k = dur ? Math.min(1, (now - t0) / dur) : 1, e = 1 - Math.pow(1 - k, 3); v.textContent = money(worth * e); if (k < 1) { if (now - lastTick > 90) { lastTick = now; Snd.rise(Math.round(e * 8)); } requestAnimationFrame(run); } else { delete v.dataset.run; v.classList.add("done"); Snd.chip(); } }; requestAnimationFrame(run);
+    } else { blockReveal(nm, card.name, 480); fitName(nm); } }
+  t.className = "st-title" + (T >= 4 ? " hit" : T >= 3 ? " good" : ""); void t.offsetWidth; t.classList.add("in");
 }
 // once a card is face up, drag it and let go: it leaves the way you threw it (a tap still sends it off)
 function armFling(el) {
