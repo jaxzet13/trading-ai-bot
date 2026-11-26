@@ -67,3 +67,28 @@ In this run the Challenger 90-96c singles, 60 minutes before the start, earned +
 30 minutes before lost 2.1%. That is weaker than the "+2c a bet, t 1.7" from the earlier lab run (different minutes
 and a different sample of strategies). The auto-better's record so far (23 bets, 21 won, +$1.25) is consistent with
 either. Still unproven; no change made.
+
+## Wider search (Nov 26, `search.py`, output in `search_results.txt`)
+
+Asked for more strategies, every rule of the lab's grid became parlay legs: 13,308 rules with at least 30 bets (price
+bands at every 10 minutes from 3 h before to 3 h into play, in-play swing rules, pre-match drift rules, five tour
+scopes), each as singles, combos of 2 / 3 / 4 and rolled parlays of 2 / 3: about 80,000 candidates.
+
+* **Same-day correlation of leg results: none** (Challenger 90-96c favourites -0.05 over 443 pairs; favourites
+  80-90c +0.02 over 3,021; 60-70c +0.005 over 4,615). Legs on the same day are independent, so a parlay is worth
+  exactly the product of its legs. Positive correlation was the one way a rolled parlay could beat its legs.
+* **Best in-sample: t 3.7** (Challenger favourites 90-95c two hours before, 3-leg combos, +11.6% on 60 parlays).
+  With 80,000 candidates the best t from luck alone is about 4, so this list is what a search over noise finds.
+* **Walk-forward (50 test days, each day's choice made on earlier days only): all negative.**
+
+| choice made on earlier days | bets | return per $1 | t | halves |
+|---|---|---|---|---|
+| A the best rule and parlay type | 67 | -13.1% | -1.62 | -17.0 / -3.9 |
+| B the best single rule, as singles | 59 | -11.0% | -1.29 | -12.5 / -6.9 |
+| B the same rule, rolled 2 | 18 | -15.8% | -1.05 | |
+| B the same rule, combo 2 / 3 | 23 / 11 | -24.9% / -30.5% | -1.34 / -1.22 | |
+| C legs of the day from the 5 best rules, singles | 400 | -2.5% | -0.81 | -9.1 / +2.5 |
+| C the same legs, rolled 2 | 103 | -6.1% | -0.77 | -5.0 / -6.8 |
+| C the same legs, rolled 3 | 60 | -12.7% | -1.79 | -25.4 / -5.9 |
+
+Every parlay version loses more than the singles of the same legs, as the arithmetic says it must. Nothing to trade.
