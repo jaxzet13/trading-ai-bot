@@ -11,5 +11,5 @@ const styleOfCode = code => rollStyle(fnv("fx:" + code) / 4294967296);
 const cuts = rar => "/".repeat(RAR[rar].cuts);
 const idHTML = (code, rar) => `<span class="cid"><b>${esc(code)}</b>${cuts(rar) ? `<i>${cuts(rar)}</i>` : ""}</span>`;
 const styleName = fx => fx ? STYLES[fx].name : "Plain";
-const ART = 9;                                                                              // bump when card pictures are redrawn: the address changes, so no phone keeps showing an old picture from its cache
+const ART = 11;                                                                              // bump when card pictures are redrawn: the address changes, so no phone keeps showing an old picture from its cache
 const imgOf = (card, fx, small) => `cards/${small ? "s/" : ""}${card.id}${fx ? "-" + fx : card.id === "stitch" ? "-bone" : ""}.jpg?v=${ART}`;   // the plain look is cards/<id>.jpg; a styled copy is cards/<id>-<style>.jpg

@@ -84,6 +84,13 @@ def build():
         for c in fill + rare:
             if not c.get('existing'): fix_name(c)
         cards.append(dict(pack=pk, fill=fill, rare=rare))
+    # cards that have a painting take its name, caption and subject
+    sys.path.insert(0, os.path.join(HERE, '..', 'paint')); import cards_data as CD
+    for p in cards:
+        for c in p['fill'] + p['rare']:
+            if c.get('existing') or c['id'] not in CD.C or not os.path.exists(os.path.join(HERE, '..', 'paint', 'sources', c['id'] + '.png')): continue
+            nm, cap, subj, look = CD.C[c['id']]; c.update(name=nm, cap=cap, sub=look + ' painting', painted=True); c.pop('spec', None)
+            from PIL import Image as _I; px = _I.open(os.path.join(HERE, '..', 'paint', 'sources', c['id'] + '.png')).convert('RGB').resize((24, 30)); r_, g_, b_ = [sum(p[i] for p in px.getdata()) / 720 for i in range(3)]; m_ = max(r_, g_, b_, 1); c['tint'] = '#%02x%02x%02x' % tuple(min(255, int(v * 255 / m_ * .6 + 100)) for v in (r_, g_, b_))
     return cards
 
 if __name__ == '__main__':
@@ -94,7 +101,7 @@ if __name__ == '__main__':
         sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(HERE, '..')); from aura import card; import ascii_cards; from PIL import Image
         os.makedirs(os.path.join(HERE, 'sources'), exist_ok=True); k = 0
         for c in allc:
-            if c.get('existing'): continue
+            if c.get('existing') or c.get('painted'): continue
             src = os.path.join(HERE, 'sources', c['id'] + '.png'); card(c['spec']).save(src); ascii_cards.convert(src, os.path.join(ROOT, 'cards', c['id'] + '.jpg'), 80)
             Image.open(src).resize((360, 437), Image.LANCZOS).save('/tmp/_t.png'); ascii_cards.convert('/tmp/_t.png', os.path.join(ROOT, 'cards', 's', c['id'] + '.jpg'), 30); k += 1
         print('drew', k)
