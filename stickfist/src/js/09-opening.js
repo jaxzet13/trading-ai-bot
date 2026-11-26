@@ -108,8 +108,30 @@ function focusTop() {
   const el = scEl(SS.idx); if (!el) return; el.classList.add("top"); SS.veils[SS.idx].idle(); SS.veils[SS.idx].frame(); el.onclick = e => { if (el._drag) { el._drag = false; e.stopPropagation(); return; } advance(); }; armFling(el);
   $("stCount").textContent = `${cmeter(SS.idx + 1, SS.items.length)} card ${SS.idx + 1} of ${SS.items.length}`; hint(""); hidePills();
   const at = SS.idx, mine = SS, rare = at === RARE_SLOT;
-  if (rare && !reduced) { hint("the rare slot"); el.classList.add("beat"); Snd.beat(); buzz([14, 120, 14]); }         // the fifth card: a breath before it turns, the card you open a pack for
-  setTimeout(() => { if (SS === mine && SS.idx === at && !SS.busy && SS.phase === "stack" && !el.dataset.rev) { el.classList.remove("beat"); advance(); } }, rare && !reduced ? 1250 : at ? 200 : 420);   // each card turns itself over
+  if (rare && !reduced) { hint("hold the card to open it"); el.classList.add("beat"); Snd.beat(); buzz([14, 120, 14]); holdOpen(el, mine, at); return; }   // the fifth card: you press and hold, the light builds, then it turns
+  setTimeout(() => { if (SS === mine && SS.idx === at && !SS.busy && SS.phase === "stack" && !el.dataset.rev) advance(); }, rare ? 300 : at ? 200 : 420);   // each card turns itself over
+}
+// press and hold: the glow climbs with your finger, the phone ticks faster, and at the top the card turns. Let go and it eases back. Enter or Space turns it at once.
+function holdOpen(el, mine, at) {
+  let p = 0, down = false, last = 0, tick = 0, done = false;
+  const set = v => el.style.setProperty("--hold", v.toFixed(3));
+  const go = () => { if (done) return; done = true; el.classList.remove("beat", "holding"); set(1); buzz([30, 40, 60]); advance(); };
+  el.onclick = e => { e.stopPropagation(); if (e.detail === 0) go(); };
+  el.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
+  el.tabIndex = 0;
+  const loop = t => {
+    if (done || SS !== mine || SS.idx !== at || SS.phase !== "stack") return;
+    const dt = Math.min(50, t - (last || t)); last = t;
+    p = down ? Math.min(1, p + dt / 1100) : Math.max(0, p - dt / 500); set(p);
+    if (down && t - tick > 220 - p * 150) { tick = t; buzz([6 + Math.round(p * 20)]); }
+    if (p >= 1) { go(); return; }
+    requestAnimationFrame(loop);
+  };
+  el.addEventListener("pointerdown", e => { if (done) return; down = true; el.classList.add("holding"); try { el.setPointerCapture(e.pointerId); } catch (_) {} });
+  const up = () => { down = false; el.classList.remove("holding"); };
+  el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
+  requestAnimationFrame(loop);
+  setTimeout(() => { if (!done && SS === mine && SS.idx === at) { hint("tap and hold"); } }, 4000);
 }
 /* ---- sell or hold: the one choice you make about every card ----
    Two pills under a card once it is face up. Red sells it now for what it shows. Blue holds it: it goes to your collection, where
