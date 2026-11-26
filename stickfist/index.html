@@ -1425,6 +1425,8 @@ h1, h2, h3, .bignum, .ttl { letter-spacing: -.04em; }
 
 .fvt.big .fvimg img { display: block; width: 100%; aspect-ratio: 900 / 1092; object-fit: cover; border: 2px solid var(--rc); border-radius: 3px; background: #000; }
 .pf2 .pf-chart { height: 130px; margin: 6px -4px 4px; } .pf2 .pf-chart svg { width: 100%; height: 100%; }
+
+.acctbox.admin { display: block; } .ac-admin { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; } .ac-admin .btn.warn { border-color: rgba(255,107,107,.5); color: #ff9a9a; }
 </style>
 </head>
 <body>
@@ -5179,11 +5181,31 @@ const Acct = (() => {
     onPersist = null; state = fresh(); persist(); location.hash = "#/"; location.reload();          // the game is on the server; this device forgets it
   }
   function testMoney(d) { if (!me() || !me().tester) return; state.coins += d * UNIT; state.s.added = (state.s.added || 0) + d * UNIT; save(); renderBal(); if (view === "profile") renderProfile(); if (view === "home") renderHome(); toast(`+${money(d * UNIT)} test money`); buzz(20); }
+  // more test-account tools (the server decides who is a tester; nobody else sees the buttons or can use them)
+  const ADM = [["restart", "Restart as a new player", 1], ["packs1", "+1 free pack"], ["packs10", "+10 free packs"], ["allcards", "Add every card"], ["rare", "Add a random rare card"], ["sellall", "Sell all my cards", 1], ["cash10", "Set money to $10", 1], ["clearfavs", "Clear favourites"], ["clearhist", "Clear profit history", 1], ["intro", "Replay the intro"], ["daily", "Reset the daily pack"], ["reload", "Reload the app"]];
+  function testAdmin(k) {
+    const a = me(); if (!a || !a.tester) return; const d = ADM.find(x => x[0] === k); if (!d) return;
+    if (d[2] && !confirm(d[1] + "?")) return; const done = m => { save(); renderBal(); if (view === "profile") renderProfile(); if (view === "home") renderHome(); if (view === "collection") renderCollection(); toast(m); buzz(20); };
+    if (k === "restart") { startOver(); state.seenIntro = false; state.pack = "fp"; persist(); location.hash = "#/"; location.reload(); return; }
+    if (k === "packs1" || k === "packs10") { state.freePacks += k === "packs1" ? 1 : 10; return done("Free packs: " + state.freePacks); }
+    if (k === "allcards" || k === "rare") {
+      const have = new Set(state.vault.map(c => c.no)), rares = LIVE.filter(c => RAR[c.rar].tier >= 3), list = k === "allcards" ? LIVE.filter(c => !have.has(c.no)) : [rares[Math.floor(rand() * rares.length)]].filter(Boolean); let v = 0;
+      for (const c of list) { const m = mint(c); state.vault.push(m); v += valueOf(m); } state.s.added = (state.s.added || 0) + v;
+      return done(list.length ? "Added " + list.length + " card" + (list.length > 1 ? "s" : "") : "You have them all");
+    }
+    if (k === "sellall") { const g = sell(state.vault.map(c => c.uid)); return done("Sold everything for " + money(g)); }
+    if (k === "cash10") { state.coins = START; return done("Money set to " + money(START)); }
+    if (k === "clearfavs") { state.favs = []; return done("Favourites cleared"); }
+    if (k === "clearhist") { state.hist = []; state.opens = []; return done("History cleared"); }
+    if (k === "intro") { state.seenIntro = false; persist(); location.reload(); return; }
+    if (k === "daily") { state.rescueAt = 0; state.freePacks = Math.max(state.freePacks, 1); return done("Daily pack reset"); }
+    if (k === "reload") location.reload();
+  }
   // the Me page: who is signed in, and for a tester the money buttons
   function html() {
     const a = me(); if (!a) return "";
     return `<div class="acctbox"><div class="ac-who"><span class="label">Signed in</span><b>${esc(a.email)}</b><small>Your cards are saved to your account.</small></div><button class="btn small ghost" id="acLogout">log out</button></div>` +
-      (a.tester ? `<div class="acctbox test"><div class="ac-who"><span class="label">Test account</span><b>Add play money</b><small>Only this account sees these.</small></div><div class="ac-money">${[10, 100, 1000].map(d => `<button class="btn small" data-testmoney="${d}">+$${fmt(d)}</button>`).join("")}</div></div>` : "");
+      (a.tester ? `<div class="acctbox test"><div class="ac-who"><span class="label">Test account</span><b>Add play money</b><small>Only this account sees these.</small></div><div class="ac-money">${[10, 100, 1000].map(d => `<button class="btn small" data-testmoney="${d}">+$${fmt(d)}</button>`).join("")}</div></div><div class="acctbox test admin"><div class="ac-who"><span class="label">Admin tools</span><small>Only test accounts see these.</small></div><div class="ac-admin">${ADM.map(x => `<button class="btn small${x[2] ? " warn" : ""}" data-testadm="${x[0]}">${x[1]}</button>`).join("")}</div></div>` : "");
   }
   async function start() {
     paint(); onPersist = dirty; if (!state.ageOK || (API.on && me() === null && !state.ageOK)) $("gate").hidden = false;
@@ -5195,7 +5217,7 @@ const Acct = (() => {
     if (need()) { paint(); $("gate").hidden = false; return; }
     const a = me(); if (a) { const r = await API.raw("me", { token: a.token }); if (r.status === 401) signedOut(); else if (r.status === 200 && r.data && !!r.data.tester !== !!a.tester) { a.tester = !!r.data.tester; persist(); if (view === "profile") renderProfile(); } }
   }
-  return { start, go, flip, paint, logout, testMoney, html, me, on: () => accounts };
+  return { start, go, flip, paint, logout, testMoney, testAdmin, html, me, on: () => accounts };
 })();
 
 /* ============================================================================
@@ -5226,6 +5248,7 @@ document.addEventListener("click", e => {
   if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
   if (t.dataset.testmoney) { Acct.testMoney(+t.dataset.testmoney); return; }
+  if (t.dataset.testadm) { Acct.testAdmin(t.dataset.testadm); return; }
   if (t.dataset.tf) { Chart.setTf(+t.dataset.tf); return; }
   if (t.dataset.prng != null) { pRng = +t.dataset.prng || 0; buzz(4); renderProfile(); return; }
   if (t.dataset.pgear) { const m = $("pMore"); m.open = true; m.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); return; }

@@ -26,6 +26,7 @@ document.addEventListener("click", e => {
   if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
   if (t.dataset.testmoney) { Acct.testMoney(+t.dataset.testmoney); return; }
+  if (t.dataset.testadm) { Acct.testAdmin(t.dataset.testadm); return; }
   if (t.dataset.tf) { Chart.setTf(+t.dataset.tf); return; }
   if (t.dataset.prng != null) { pRng = +t.dataset.prng || 0; buzz(4); renderProfile(); return; }
   if (t.dataset.pgear) { const m = $("pMore"); m.open = true; m.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); return; }
