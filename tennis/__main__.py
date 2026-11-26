@@ -30,6 +30,9 @@ def main(argv=None):
     elif cmd == "auto":
         from . import realtest
         realtest.run(auto=True)
+    elif cmd == "parlay":
+        from . import parlay
+        parlay.run()
     elif cmd == "learn":
         from . import learn
         learn.run(once="once" in a)
@@ -46,7 +49,7 @@ def main(argv=None):
         for (s, e), ms in list(ev.items())[:20]:
             print(f"  {s:22s} " + "  vs  ".join(f"{m['player']} {m['yes_bid']}/{m['yes_ask']}" for m in ms))
     else:
-        sys.exit("usage: python -m tennis collect [once] | arbs | report | history [days] | learn [once] | paper [once] | realtest | auto | markets")
+        sys.exit("usage: python -m tennis collect [once] | arbs | report | history [days] | learn [once] | paper [once] | realtest | auto | parlay | markets")
 
 
 if __name__ == "__main__":
