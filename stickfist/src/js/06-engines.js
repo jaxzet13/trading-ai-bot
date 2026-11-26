@@ -4,7 +4,7 @@
         First Print is a print run: over a slow sunburst the STIXX figure and name are printed under a glowing print head, catch a shine, then the sheet runs again.
         Moonshot is a launch: a shaded rocket on a flickering flame climbs through moving stars, the Moon glowing in the corner. ---- */
 const SPIN = "|/-\\";
-const PS_RAMP = " .,:;-=+*xo%#&@";                                                  // ink grows steadily from left to right, so solid shapes read as solid
+const PS_RAMP = " .,:;-=+*xo%#&@", PS_FINE = " .'`:;il1tfrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";                                                  // ink grows steadily from left to right, so solid shapes read as solid
 class PackScreen {
   constructor(pk, pack) {
     this.pk = pk; this.pack = pack || PACKS[0]; this.cv = pk.querySelector("canvas.scr"); this.ctx = this.cv.getContext("2d");
@@ -16,7 +16,7 @@ class PackScreen {
   fit() {
     const dpr = Math.min(devicePixelRatio || 1, 2), w = this.cv.clientWidth, h = this.cv.clientHeight; if (!w || !h) return;
     if (this.cv.width !== Math.round(w * dpr) || this.cv.height !== Math.round(h * dpr)) { this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr); }
-    this.dpr = dpr; this.w = w; this.h = h; this.cols = Math.max(48, Math.round(w / (this.pk.closest(".tp-s") ? 2.3 : 3.1))); const cw = w / this.cols; this.rows = Math.max(30, Math.round(h / (cw * 1.62)));
+    this.dpr = dpr; this.w = w; this.h = h; this.cols = Math.max(48, Math.round(w / (this.pk.closest(".tp-s") ? 1.7 : 3.1))); const cw = w / this.cols; this.rows = Math.max(30, Math.round(h / (cw * 1.62)));
     if (this.off.width !== this.cols || this.off.height !== this.rows) { this.off.width = this.cols; this.off.height = this.rows; }
     if (this.hi.width !== this.cv.width || this.hi.height !== this.cv.height) { this.hi.width = this.layer.width = this.cv.width; this.hi.height = this.layer.height = this.cv.height; }
   }
@@ -28,13 +28,13 @@ class PackScreen {
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);                                     // paint in the pack's own pixels, sharp
     this.foil(g, t, W, H);
     const c = this.ctx, sm = this.g; sm.setTransform(1, 0, 0, 1, 0, 0); sm.imageSmoothingEnabled = true; sm.drawImage(this.hi, 0, 0, cols, rows);                 // the scene, read back as a grid of cells
-    const d = sm.getImageData(0, 0, cols, rows).data, cw = W / cols, ch = H / rows, N = PS_RAMP.length - 1;
+    const RMP = this.pk.closest(".tp-s") ? PS_FINE : PS_RAMP, d = sm.getImageData(0, 0, cols, rows).data, cw = W / cols, ch = H / rows, N = RMP.length - 1;
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = "source-over"; c.fillStyle = "#030304"; c.fillRect(0, 0, W, H);
     c.font = `700 ${(cw / .6).toFixed(2)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; c.textAlign = "center"; c.textBaseline = "middle";
     for (let y = 0, k = 0; y < rows; y++) for (let x = 0; x < cols; x++, k += 4) {                                    // nothing is drawn but characters: each cell is the one whose ink matches its brightness, in its colour
       const r = d[k], gg = d[k + 1], b = d[k + 2], l = (r * .299 + gg * .587 + b * .114) / 255; if (l < .06) continue;
       const m = Math.max(r, gg, b) || 1, sc = Math.min(1, .5 + l * .9), boost = 255 / m * sc;
-      c.fillStyle = this.col(Math.min(255, r * boost), Math.min(255, gg * boost), Math.min(255, b * boost)); c.fillText(PS_RAMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);
+      c.fillStyle = this.col(Math.min(255, r * boost), Math.min(255, gg * boost), Math.min(255, b * boost)); c.fillText(RMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);
     }
   }
   /* a real pack, painted: foil with angular light traces, a logo plate, the pack's name, a round emblem and a label along the bottom. It is only a picture until it is read back as cells,
@@ -42,38 +42,39 @@ class PackScreen {
   foil(g, t, W, H) {
     const hex = (this.pack.col || "#3be477").replace("#", ""), R = parseInt(hex.slice(0, 2), 16), G = parseInt(hex.slice(2, 4), 16), B = parseInt(hex.slice(4, 6), 16), tone = (k, al) => `rgba(${Math.min(255, R * k) | 0},${Math.min(255, G * k) | 0},${Math.min(255, B * k) | 0},${al == null ? 1 : al})`;
     const hs = (a, b) => { const v = Math.imul(a * 73856093 ^ b * 19349663, 2654435761) >>> 0; return v / 4294967296; }, id = this.pack.id.charCodeAt(0) * 7 + this.pack.id.charCodeAt(1), cx = W / 2;
-    // the foil: dark at the edges, the pack's colour lit across the middle
-    const bg = g.createLinearGradient(0, 0, W * .35, H); bg.addColorStop(0, tone(1.0)); bg.addColorStop(.35, tone(.5)); bg.addColorStop(.7, tone(.28)); bg.addColorStop(1, tone(.6)); g.fillStyle = bg; g.fillRect(0, 0, W, H);
-    // angular traces: straight runs and 45 degree steps, like the etched foil of a modern pack
-    g.lineCap = "butt"; g.lineJoin = "miter";
-    for (let k = 0; k < 70; k++) {
-      let x = hs(k + id, 1) * W * 1.4 - W * .2, y = hs(k + id, 2) * H * 1.1 - H * .05; const w = .8 + 2.6 * hs(k + id, 3) * hs(k + id, 4), a = .14 + .55 * hs(k + id, 5) * hs(k + id, 6), n = 2 + (hs(k + id, 7) * 4 | 0);
-      g.strokeStyle = hs(k + id, 8) > .74 ? `rgba(255,236,220,${a})` : tone(2.1, a); g.lineWidth = w; g.beginPath(); g.moveTo(x, y);
-      for (let q = 0; q < n; q++) { const len = W * (.05 + .2 * hs(k + id, 10 + q)), m = hs(k + id, 30 + q); if (m < .4) x += len; else if (m < .7) { x += len * .7; y += len * .7 * (hs(k + id, 50 + q) > .5 ? 1 : -1); } else y += len * (hs(k + id, 50 + q) > .5 ? 1 : -1); g.lineTo(x, y); }
-      g.stroke();
+    const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+    // the foil is cut into facets, each lit a little differently, brighter toward the middle and to the upper left, like holo foil catching a light
+    g.fillStyle = tone(.3); g.fillRect(0, 0, W, H); const cell = W / 4.2, gx = Math.ceil(W / cell) + 2, gy = Math.ceil(H / cell) + 2, P = [];
+    for (let y = 0; y <= gy; y++) { P[y] = []; for (let x = 0; x <= gx; x++) P[y][x] = [(x - 1 + (hs(x + id, y) - .5) * .8) * cell, (y - 1 + (hs(y + id, x + 9) - .5) * .8) * cell]; }
+    const lit = (x, y) => { const dx = (x - W * .42) / W, dy = (y - H * .34) / H, d = Math.sqrt(dx * dx + dy * dy * .6); return Math.max(0, 1.25 - d * 1.9); };
+    for (let y = 0; y < gy; y++) for (let x = 0; x < gx; x++) for (let q = 0; q < 2; q++) {
+      const a = P[y][x], b = q ? P[y + 1][x] : P[y][x + 1], c = q ? P[y + 1][x + 1] : P[y + 1][x + 1], d2 = q ? P[y][x + 1] : P[y + 1][x]; const tri = q ? [a, P[y + 1][x], P[y + 1][x + 1]] : [a, P[y][x + 1], P[y + 1][x + 1]]; void b; void c; void d2;
+      const mx = (tri[0][0] + tri[1][0] + tri[2][0]) / 3, my = (tri[0][1] + tri[1][1] + tri[2][1]) / 3, k = .28 + lit(mx, my) * .75 * (.55 + .7 * hs(x * 2 + q + id, y * 3 + 5));
+      g.fillStyle = tone(k); g.beginPath(); g.moveTo(tri[0][0], tri[0][1]); g.lineTo(tri[1][0], tri[1][1]); g.lineTo(tri[2][0], tri[2][1]); g.closePath(); g.fill();
+      if (hs(x + id * 3, y * 7 + q) > .8) { g.strokeStyle = `rgba(255,255,255,${.12 + .22 * hs(y, x)})`; g.lineWidth = Math.max(1, W * .004); g.stroke(); }
     }
-    for (let k = 0; k < 3; k++) { g.save(); g.translate(W * (.15 + .35 * k), H * (.2 + .22 * k)); g.rotate(-.78); const bm = g.createLinearGradient(0, -W * .1, 0, W * .1); bm.addColorStop(0, "rgba(255,255,255,0)"); bm.addColorStop(.5, `rgba(255,255,255,${.07 + .04 * k})`); bm.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = bm; g.fillRect(-W * 1.3, -W * .1, W * 2.6, W * .2); g.restore(); }
-    // the lower third is darker, the way the label of a pack sits on a band
-    const lo = g.createLinearGradient(0, H * .64, 0, H); lo.addColorStop(0, "rgba(0,0,0,0)"); lo.addColorStop(.35, "rgba(0,0,0,.42)"); lo.addColorStop(1, "rgba(0,0,0,.6)"); g.fillStyle = lo; g.fillRect(0, H * .64, W, H * .36);
-    // the STIXX mark and a black tag under it
-    const lg = W * .082, ly = H * .12; g.fillStyle = "#000"; const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }; rr(cx - lg, ly - lg, lg * 2, lg * 2, lg * .34); g.fill(); g.strokeStyle = "rgba(255,255,255,.4)"; g.lineWidth = Math.max(1, W * .006); g.stroke();
-    g.strokeStyle = "#fff"; g.lineWidth = Math.max(2, W * .014); g.lineCap = "round"; g.beginPath(); g.moveTo(cx - lg * .46, ly - lg * .2); g.lineTo(cx + lg * .46, ly + lg * .68); g.moveTo(cx + lg * .46, ly - lg * .2); g.lineTo(cx - lg * .46, ly + lg * .68); g.stroke(); g.fillStyle = "#fff"; g.beginPath(); g.arc(cx, ly - lg * .56, lg * .12, 0, 7); g.fill();
-    const tw = W * .3, ty = H * .215, th = H * .032; g.fillStyle = "#000"; g.beginPath(); g.moveTo(cx - tw, ty); g.lineTo(cx + tw, ty); g.lineTo(cx + tw - th * .5, ty + th); g.lineTo(cx - tw - th * .5, ty + th); g.closePath(); g.fill();
-    g.font = `800 ${W * .046}px "JetBrains Mono","DejaVu Sans Mono",monospace`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#fff"; { const lab = "TEXT CARDS", sp = W * .012; let px = cx - (lab.length * W * .046 * .6 + (lab.length - 1) * sp) / 2 + W * .046 * .3; for (const ch of lab) { g.fillText(ch, px, ty + th * .52); px += W * .046 * .6 + sp; } }
-    // the name: wide, white, lit
-    const name = this.pack.name.toUpperCase(), n = name.length; let fs = W * .17; const sp = W * .022; while (n * fs * .62 + (n - 1) * sp > W * .88 && fs > 8) fs -= 1;
-    g.font = `800 ${fs}px "JetBrains Mono","DejaVu Sans Mono",monospace`; const total = n * fs * .62 + (n - 1) * sp; let px = cx - total / 2 + fs * .31; g.shadowColor = "rgba(255,255,255,.6)"; g.shadowBlur = W * .03; g.fillStyle = "#fff"; for (const ch of name) { g.fillText(ch, px, H * .39); px += fs * .62 + sp; } g.shadowBlur = 0;
-    // the emblem: an original one, a diamond plate with the STIXX figure standing in it
-    const ey = H * .6, er = W * .22; g.save(); g.translate(cx, ey); g.rotate(Math.PI / 4);
-    const pl = g.createLinearGradient(-er, -er, er, er); pl.addColorStop(0, tone(1.3)); pl.addColorStop(.5, tone(.55)); pl.addColorStop(1, tone(.14)); g.fillStyle = pl; rr(-er * .72, -er * .72, er * 1.44, er * 1.44, er * .1); g.fill();
-    g.strokeStyle = "rgba(255,255,255,.95)"; g.lineWidth = Math.max(2, W * .014); g.stroke(); g.strokeStyle = "rgba(255,255,255,.4)"; g.lineWidth = Math.max(1.5, W * .008); rr(-er * .58, -er * .58, er * 1.16, er * 1.16, er * .06); g.stroke(); g.restore();
-    g.strokeStyle = "#fff"; g.fillStyle = "#fff"; g.lineWidth = Math.max(3, W * .022); g.lineCap = "round"; g.beginPath(); g.moveTo(cx - er * .38, ey - er * .1); g.lineTo(cx + er * .38, ey + er * .54); g.moveTo(cx + er * .38, ey - er * .1); g.lineTo(cx - er * .38, ey + er * .54); g.stroke(); g.beginPath(); g.arc(cx, ey - er * .4, er * .105, 0, 7); g.fill();
-    // the label along the bottom
-    const LF = W * .052, lab1 = "STIXX ", lab2 = (this.pack.id === "fp" ? "FIRST" : this.pack.id === "ms" ? "MOON" : this.pack.id === "ec" ? "ECLIPSE" : this.pack.id === "td" ? "TIDAL" : "VOID") + " PACK"; g.font = `800 ${LF}px "JetBrains Mono","DejaVu Sans Mono",monospace`; const L = (lab1 + lab2).length, sp2 = W * .012, lw = L * LF * .6 + (L - 1) * sp2; let lx = cx - lw / 2 + LF * .3;
-    for (let k = 0; k < L; k++) { g.fillStyle = k < lab1.length ? "#fff" : tone(2); g.fillText((lab1 + lab2)[k], lx, H * .91); lx += LF * .6 + sp2; }
-    // the sheen
-    const cyc = (t * .16) % 1.8, sx = (cyc - .4) * W * 1.8; g.save(); g.globalCompositeOperation = "lighter"; g.translate(sx, 0); g.rotate(.34); const sh = g.createLinearGradient(-W * .2, 0, W * .2, 0); sh.addColorStop(0, "rgba(255,255,255,0)"); sh.addColorStop(.5, "rgba(255,255,255,.3)"); sh.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = sh; g.fillRect(-W * .2, -H, W * .4, H * 3); g.restore();
-    const el = g.createLinearGradient(0, 0, W * .07, 0); el.addColorStop(0, "rgba(255,255,255,.26)"); el.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = el; g.fillRect(0, 0, W * .07, H); const er2 = g.createLinearGradient(W, 0, W * .92, 0); er2.addColorStop(0, "rgba(0,0,0,.5)"); er2.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = er2; g.fillRect(W * .92, 0, W * .08, H);
+    // a bright sash of light across the foil
+    g.save(); g.translate(W * .5, H * .48); g.rotate(-.62); const sash = g.createLinearGradient(0, -W * .22, 0, W * .22); sash.addColorStop(0, "rgba(255,255,255,0)"); sash.addColorStop(.5, "rgba(255,255,255,.16)"); sash.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = sash; g.fillRect(-W * 1.4, -W * .22, W * 2.8, W * .44); g.restore();
+    // specks of light
+    for (let k = 0; k < 40; k++) { const x = hs(k + id, 70) * W, y = hs(k + id, 71) * H, r = W * (.004 + .008 * hs(k, 72)); g.fillStyle = `rgba(255,255,255,${.4 + .5 * hs(k, 73)})`; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+    // top: the mark on a plate, then a black tag
+    const lg = W * .095, ly = H * .115; g.shadowColor = "rgba(0,0,0,.6)"; g.shadowBlur = W * .03; g.fillStyle = "#050607"; rr(cx - lg, ly - lg, lg * 2, lg * 2, lg * .36); g.fill(); g.shadowBlur = 0; g.strokeStyle = "rgba(255,255,255,.7)"; g.lineWidth = Math.max(1.5, W * .008); g.stroke();
+    g.strokeStyle = "#fff"; g.lineWidth = Math.max(2.5, W * .018); g.lineCap = "round"; g.beginPath(); g.moveTo(cx - lg * .46, ly - lg * .18); g.lineTo(cx + lg * .46, ly + lg * .7); g.moveTo(cx + lg * .46, ly - lg * .18); g.lineTo(cx - lg * .46, ly + lg * .7); g.stroke(); g.fillStyle = "#fff"; g.beginPath(); g.arc(cx, ly - lg * .56, lg * .13, 0, 7); g.fill();
+    const tw = W * .3, ty = H * .222, th = H * .034; g.fillStyle = "#050607"; g.beginPath(); g.moveTo(cx - tw, ty); g.lineTo(cx + tw, ty); g.lineTo(cx + tw - th * .55, ty + th); g.lineTo(cx - tw - th * .55, ty + th); g.closePath(); g.fill();
+    g.textAlign = "center"; g.textBaseline = "middle"; g.font = `800 ${W * .05}px "JetBrains Mono","DejaVu Sans Mono",monospace`; g.fillStyle = "#fff"; { const lab = "TEXT CARDS", sp = W * .014; let px = cx - (lab.length * W * .05 * .6 + (lab.length - 1) * sp) / 2 + W * .05 * .3; for (const ch of lab) { g.fillText(ch, px, ty + th * .54); px += W * .05 * .6 + sp; } }
+    // the name: huge, white, with a dark edge so it stands out of the foil
+    const name = this.pack.name.toUpperCase(), n = name.length; let fs = W * .2; const sp = W * .02; while (n * fs * .62 + (n - 1) * sp > W * .9 && fs > 8) fs -= 1;
+    g.font = `900 ${fs}px "JetBrains Mono","DejaVu Sans Mono",monospace`; const total = n * fs * .62 + (n - 1) * sp; let px = cx - total / 2 + fs * .31; g.lineJoin = "round"; g.lineWidth = fs * .22; g.strokeStyle = "rgba(0,0,0,.78)";
+    for (const ch of name) { g.strokeText(ch, px, H * .385); px += fs * .62 + sp; } px = cx - total / 2 + fs * .31; g.shadowColor = "rgba(255,255,255,.7)"; g.shadowBlur = W * .035; g.fillStyle = "#fff"; for (const ch of name) { g.fillText(ch, px, H * .385); px += fs * .62 + sp; } g.shadowBlur = 0;
+    // the emblem: a diamond plate with the STIXX figure standing in it
+    const ey = H * .6, er = W * .26; g.save(); g.translate(cx, ey); g.rotate(Math.PI / 4); const pl = g.createLinearGradient(-er, -er, er, er); pl.addColorStop(0, tone(1.5)); pl.addColorStop(.5, tone(.7)); pl.addColorStop(1, tone(.2)); g.shadowColor = "rgba(0,0,0,.7)"; g.shadowBlur = W * .05; g.fillStyle = pl; rr(-er * .7, -er * .7, er * 1.4, er * 1.4, er * .12); g.fill(); g.shadowBlur = 0;
+    g.strokeStyle = "#fff"; g.lineWidth = Math.max(2.5, W * .016); g.stroke(); g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = Math.max(1.5, W * .008); rr(-er * .56, -er * .56, er * 1.12, er * 1.12, er * .08); g.stroke(); g.restore();
+    g.strokeStyle = "#fff"; g.fillStyle = "#fff"; g.lineWidth = Math.max(3.5, W * .026); g.lineCap = "round"; g.beginPath(); g.moveTo(cx - er * .36, ey - er * .1); g.lineTo(cx + er * .36, ey + er * .52); g.moveTo(cx + er * .36, ey - er * .1); g.lineTo(cx - er * .36, ey + er * .52); g.stroke(); g.beginPath(); g.arc(cx, ey - er * .4, er * .105, 0, 7); g.fill();
+    // the label band along the bottom
+    const bandY = H * .82, lo = g.createLinearGradient(0, bandY, 0, H); lo.addColorStop(0, "rgba(0,0,0,.55)"); lo.addColorStop(1, "rgba(0,0,0,.82)"); g.fillStyle = lo; g.fillRect(0, bandY, W, H - bandY); g.fillStyle = tone(1.6, .9); g.fillRect(0, bandY, W, Math.max(1.5, H * .004));
+    const LF = W * .062, lab1 = "STIXX ", lab2 = ({ fp: "FIRST", ms: "MOON", ec: "ECLIPSE", td: "TIDAL", sg: "VOID" }[this.pack.id] || "") + " PACK"; g.font = `900 ${LF}px "JetBrains Mono","DejaVu Sans Mono",monospace`; const L = (lab1 + lab2).length, sp2 = W * .013, lw = L * LF * .6 + (L - 1) * sp2; let lx = cx - lw / 2 + LF * .3;
+    for (let k = 0; k < L; k++) { g.fillStyle = k < lab1.length ? "#fff" : tone(2.1); g.fillText((lab1 + lab2)[k], lx, H * .905); lx += LF * .6 + sp2; }
+    const vg = g.createRadialGradient(cx, H * .5, W * .35, cx, H * .5, H * .75); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.55)"); g.fillStyle = vg; g.fillRect(0, 0, W, H);
   }
   eclipse(g, t, W, H) {                                                                  // Eclipse: a black disc, its corona turning, a small figure under it
     this.status(t * 1000, "rising"); const cx = W / 2, cy = H * .42; g.fillStyle = "#050302"; g.fillRect(0, 0, W, H); g.save(); g.translate(cx, cy);

@@ -1538,6 +1538,18 @@ header.top .logo, header.top .tabs, #cashBtn, #dailyBtn, #muteBtn { display: non
 #btabs.lensed a.on > * { opacity: 0; } #btabs a > * { transition: opacity .18s .06s; }
 .filters .seg { overflow: visible !important; } .filters .seg button { margin: 0 !important; }
 .tp-buy { background: radial-gradient(120% 170% at 50% 140%, color-mix(in srgb, var(--pc, #3be477) 85%, #fff 6%) 0%, color-mix(in srgb, var(--pc, #3be477) 38%, #000) 60%, color-mix(in srgb, var(--pc, #3be477) 20%, #000) 100%); }
+
+/* fit: the pack gets whatever height is left, so the button is always above the bar */
+.tp-car { --pw: max(120px, min(50vw, 240px, calc((100dvh - 575px) * .575))); padding: 20px calc((100vw - var(--pw)) / 2) 14px; } .tp-s { width: var(--pw); }
+.tp-name { margin: 8px 0 12px; } .tp-maxh { margin: 20px 0 4px; } .tp-buy { margin-top: 18px; height: 64px; } .tp-fine { margin: 10px 0 0; }
+main.wrap { padding-bottom: 110px; }
+/* the pack is still; its foil catches the light */
+.tp-s .pk .win canvas { image-rendering: auto; }
+.tp-s .pk::after { display: block !important; content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: linear-gradient(112deg, transparent 36%, rgba(255,255,255,.3) 48%, rgba(255,255,255,.08) 54%, transparent 64%); background-size: 320% 100%; background-position: 130% 0; mix-blend-mode: screen; animation: foilSheen 5.5s ease-in-out infinite; }
+@keyframes foilSheen { 0%, 22% { background-position: 130% 0; } 62%, 100% { background-position: -40% 0; } }
+@media (prefers-reduced-motion: reduce) { .tp-s .pk::after { animation: none; opacity: 0; } }
+.cempty { text-align: center; padding: 60px 20px; color: #8b9aa0; } .cempty pre { margin: 0 auto 18px; display: inline-block; text-align: left; font: 700 18px/1.1 var(--m); color: #3c5a55; } .cempty p { font: 600 17px/1.4 var(--ui); }
+.acc-fine { margin: 18px 4px 6px; color: #5f6f6c; font: 500 12px/1.5 var(--ui); text-align: center; }
 </style>
 </head>
 <body>
@@ -2549,7 +2561,7 @@ const meter = (i, n) => "[" + fill("█", i) + fill("░", n - i) + "]";
         First Print is a print run: over a slow sunburst the STIXX figure and name are printed under a glowing print head, catch a shine, then the sheet runs again.
         Moonshot is a launch: a shaded rocket on a flickering flame climbs through moving stars, the Moon glowing in the corner. ---- */
 const SPIN = "|/-\\";
-const PS_RAMP = " .,:;-=+*xo%#&@";                                                  // ink grows steadily from left to right, so solid shapes read as solid
+const PS_RAMP = " .,:;-=+*xo%#&@", PS_FINE = " .'`:;il1tfrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";                                                  // ink grows steadily from left to right, so solid shapes read as solid
 class PackScreen {
   constructor(pk, pack) {
     this.pk = pk; this.pack = pack || PACKS[0]; this.cv = pk.querySelector("canvas.scr"); this.ctx = this.cv.getContext("2d");
@@ -2561,7 +2573,7 @@ class PackScreen {
   fit() {
     const dpr = Math.min(devicePixelRatio || 1, 2), w = this.cv.clientWidth, h = this.cv.clientHeight; if (!w || !h) return;
     if (this.cv.width !== Math.round(w * dpr) || this.cv.height !== Math.round(h * dpr)) { this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr); }
-    this.dpr = dpr; this.w = w; this.h = h; this.cols = Math.max(48, Math.round(w / (this.pk.closest(".tp-s") ? 2.3 : 3.1))); const cw = w / this.cols; this.rows = Math.max(30, Math.round(h / (cw * 1.62)));
+    this.dpr = dpr; this.w = w; this.h = h; this.cols = Math.max(48, Math.round(w / (this.pk.closest(".tp-s") ? 1.7 : 3.1))); const cw = w / this.cols; this.rows = Math.max(30, Math.round(h / (cw * 1.62)));
     if (this.off.width !== this.cols || this.off.height !== this.rows) { this.off.width = this.cols; this.off.height = this.rows; }
     if (this.hi.width !== this.cv.width || this.hi.height !== this.cv.height) { this.hi.width = this.layer.width = this.cv.width; this.hi.height = this.layer.height = this.cv.height; }
   }
@@ -2573,13 +2585,13 @@ class PackScreen {
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);                                     // paint in the pack's own pixels, sharp
     this.foil(g, t, W, H);
     const c = this.ctx, sm = this.g; sm.setTransform(1, 0, 0, 1, 0, 0); sm.imageSmoothingEnabled = true; sm.drawImage(this.hi, 0, 0, cols, rows);                 // the scene, read back as a grid of cells
-    const d = sm.getImageData(0, 0, cols, rows).data, cw = W / cols, ch = H / rows, N = PS_RAMP.length - 1;
+    const RMP = this.pk.closest(".tp-s") ? PS_FINE : PS_RAMP, d = sm.getImageData(0, 0, cols, rows).data, cw = W / cols, ch = H / rows, N = RMP.length - 1;
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = "source-over"; c.fillStyle = "#030304"; c.fillRect(0, 0, W, H);
     c.font = `700 ${(cw / .6).toFixed(2)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; c.textAlign = "center"; c.textBaseline = "middle";
     for (let y = 0, k = 0; y < rows; y++) for (let x = 0; x < cols; x++, k += 4) {                                    // nothing is drawn but characters: each cell is the one whose ink matches its brightness, in its colour
       const r = d[k], gg = d[k + 1], b = d[k + 2], l = (r * .299 + gg * .587 + b * .114) / 255; if (l < .06) continue;
       const m = Math.max(r, gg, b) || 1, sc = Math.min(1, .5 + l * .9), boost = 255 / m * sc;
-      c.fillStyle = this.col(Math.min(255, r * boost), Math.min(255, gg * boost), Math.min(255, b * boost)); c.fillText(PS_RAMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);
+      c.fillStyle = this.col(Math.min(255, r * boost), Math.min(255, gg * boost), Math.min(255, b * boost)); c.fillText(RMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);
     }
   }
   /* a real pack, painted: foil with angular light traces, a logo plate, the pack's name, a round emblem and a label along the bottom. It is only a picture until it is read back as cells,
@@ -2587,38 +2599,39 @@ class PackScreen {
   foil(g, t, W, H) {
     const hex = (this.pack.col || "#3be477").replace("#", ""), R = parseInt(hex.slice(0, 2), 16), G = parseInt(hex.slice(2, 4), 16), B = parseInt(hex.slice(4, 6), 16), tone = (k, al) => `rgba(${Math.min(255, R * k) | 0},${Math.min(255, G * k) | 0},${Math.min(255, B * k) | 0},${al == null ? 1 : al})`;
     const hs = (a, b) => { const v = Math.imul(a * 73856093 ^ b * 19349663, 2654435761) >>> 0; return v / 4294967296; }, id = this.pack.id.charCodeAt(0) * 7 + this.pack.id.charCodeAt(1), cx = W / 2;
-    // the foil: dark at the edges, the pack's colour lit across the middle
-    const bg = g.createLinearGradient(0, 0, W * .35, H); bg.addColorStop(0, tone(1.0)); bg.addColorStop(.35, tone(.5)); bg.addColorStop(.7, tone(.28)); bg.addColorStop(1, tone(.6)); g.fillStyle = bg; g.fillRect(0, 0, W, H);
-    // angular traces: straight runs and 45 degree steps, like the etched foil of a modern pack
-    g.lineCap = "butt"; g.lineJoin = "miter";
-    for (let k = 0; k < 70; k++) {
-      let x = hs(k + id, 1) * W * 1.4 - W * .2, y = hs(k + id, 2) * H * 1.1 - H * .05; const w = .8 + 2.6 * hs(k + id, 3) * hs(k + id, 4), a = .14 + .55 * hs(k + id, 5) * hs(k + id, 6), n = 2 + (hs(k + id, 7) * 4 | 0);
-      g.strokeStyle = hs(k + id, 8) > .74 ? `rgba(255,236,220,${a})` : tone(2.1, a); g.lineWidth = w; g.beginPath(); g.moveTo(x, y);
-      for (let q = 0; q < n; q++) { const len = W * (.05 + .2 * hs(k + id, 10 + q)), m = hs(k + id, 30 + q); if (m < .4) x += len; else if (m < .7) { x += len * .7; y += len * .7 * (hs(k + id, 50 + q) > .5 ? 1 : -1); } else y += len * (hs(k + id, 50 + q) > .5 ? 1 : -1); g.lineTo(x, y); }
-      g.stroke();
+    const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+    // the foil is cut into facets, each lit a little differently, brighter toward the middle and to the upper left, like holo foil catching a light
+    g.fillStyle = tone(.3); g.fillRect(0, 0, W, H); const cell = W / 4.2, gx = Math.ceil(W / cell) + 2, gy = Math.ceil(H / cell) + 2, P = [];
+    for (let y = 0; y <= gy; y++) { P[y] = []; for (let x = 0; x <= gx; x++) P[y][x] = [(x - 1 + (hs(x + id, y) - .5) * .8) * cell, (y - 1 + (hs(y + id, x + 9) - .5) * .8) * cell]; }
+    const lit = (x, y) => { const dx = (x - W * .42) / W, dy = (y - H * .34) / H, d = Math.sqrt(dx * dx + dy * dy * .6); return Math.max(0, 1.25 - d * 1.9); };
+    for (let y = 0; y < gy; y++) for (let x = 0; x < gx; x++) for (let q = 0; q < 2; q++) {
+      const a = P[y][x], b = q ? P[y + 1][x] : P[y][x + 1], c = q ? P[y + 1][x + 1] : P[y + 1][x + 1], d2 = q ? P[y][x + 1] : P[y + 1][x]; const tri = q ? [a, P[y + 1][x], P[y + 1][x + 1]] : [a, P[y][x + 1], P[y + 1][x + 1]]; void b; void c; void d2;
+      const mx = (tri[0][0] + tri[1][0] + tri[2][0]) / 3, my = (tri[0][1] + tri[1][1] + tri[2][1]) / 3, k = .28 + lit(mx, my) * .75 * (.55 + .7 * hs(x * 2 + q + id, y * 3 + 5));
+      g.fillStyle = tone(k); g.beginPath(); g.moveTo(tri[0][0], tri[0][1]); g.lineTo(tri[1][0], tri[1][1]); g.lineTo(tri[2][0], tri[2][1]); g.closePath(); g.fill();
+      if (hs(x + id * 3, y * 7 + q) > .8) { g.strokeStyle = `rgba(255,255,255,${.12 + .22 * hs(y, x)})`; g.lineWidth = Math.max(1, W * .004); g.stroke(); }
     }
-    for (let k = 0; k < 3; k++) { g.save(); g.translate(W * (.15 + .35 * k), H * (.2 + .22 * k)); g.rotate(-.78); const bm = g.createLinearGradient(0, -W * .1, 0, W * .1); bm.addColorStop(0, "rgba(255,255,255,0)"); bm.addColorStop(.5, `rgba(255,255,255,${.07 + .04 * k})`); bm.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = bm; g.fillRect(-W * 1.3, -W * .1, W * 2.6, W * .2); g.restore(); }
-    // the lower third is darker, the way the label of a pack sits on a band
-    const lo = g.createLinearGradient(0, H * .64, 0, H); lo.addColorStop(0, "rgba(0,0,0,0)"); lo.addColorStop(.35, "rgba(0,0,0,.42)"); lo.addColorStop(1, "rgba(0,0,0,.6)"); g.fillStyle = lo; g.fillRect(0, H * .64, W, H * .36);
-    // the STIXX mark and a black tag under it
-    const lg = W * .082, ly = H * .12; g.fillStyle = "#000"; const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }; rr(cx - lg, ly - lg, lg * 2, lg * 2, lg * .34); g.fill(); g.strokeStyle = "rgba(255,255,255,.4)"; g.lineWidth = Math.max(1, W * .006); g.stroke();
-    g.strokeStyle = "#fff"; g.lineWidth = Math.max(2, W * .014); g.lineCap = "round"; g.beginPath(); g.moveTo(cx - lg * .46, ly - lg * .2); g.lineTo(cx + lg * .46, ly + lg * .68); g.moveTo(cx + lg * .46, ly - lg * .2); g.lineTo(cx - lg * .46, ly + lg * .68); g.stroke(); g.fillStyle = "#fff"; g.beginPath(); g.arc(cx, ly - lg * .56, lg * .12, 0, 7); g.fill();
-    const tw = W * .3, ty = H * .215, th = H * .032; g.fillStyle = "#000"; g.beginPath(); g.moveTo(cx - tw, ty); g.lineTo(cx + tw, ty); g.lineTo(cx + tw - th * .5, ty + th); g.lineTo(cx - tw - th * .5, ty + th); g.closePath(); g.fill();
-    g.font = `800 ${W * .046}px "JetBrains Mono","DejaVu Sans Mono",monospace`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#fff"; { const lab = "TEXT CARDS", sp = W * .012; let px = cx - (lab.length * W * .046 * .6 + (lab.length - 1) * sp) / 2 + W * .046 * .3; for (const ch of lab) { g.fillText(ch, px, ty + th * .52); px += W * .046 * .6 + sp; } }
-    // the name: wide, white, lit
-    const name = this.pack.name.toUpperCase(), n = name.length; let fs = W * .17; const sp = W * .022; while (n * fs * .62 + (n - 1) * sp > W * .88 && fs > 8) fs -= 1;
-    g.font = `800 ${fs}px "JetBrains Mono","DejaVu Sans Mono",monospace`; const total = n * fs * .62 + (n - 1) * sp; let px = cx - total / 2 + fs * .31; g.shadowColor = "rgba(255,255,255,.6)"; g.shadowBlur = W * .03; g.fillStyle = "#fff"; for (const ch of name) { g.fillText(ch, px, H * .39); px += fs * .62 + sp; } g.shadowBlur = 0;
-    // the emblem: an original one, a diamond plate with the STIXX figure standing in it
-    const ey = H * .6, er = W * .22; g.save(); g.translate(cx, ey); g.rotate(Math.PI / 4);
-    const pl = g.createLinearGradient(-er, -er, er, er); pl.addColorStop(0, tone(1.3)); pl.addColorStop(.5, tone(.55)); pl.addColorStop(1, tone(.14)); g.fillStyle = pl; rr(-er * .72, -er * .72, er * 1.44, er * 1.44, er * .1); g.fill();
-    g.strokeStyle = "rgba(255,255,255,.95)"; g.lineWidth = Math.max(2, W * .014); g.stroke(); g.strokeStyle = "rgba(255,255,255,.4)"; g.lineWidth = Math.max(1.5, W * .008); rr(-er * .58, -er * .58, er * 1.16, er * 1.16, er * .06); g.stroke(); g.restore();
-    g.strokeStyle = "#fff"; g.fillStyle = "#fff"; g.lineWidth = Math.max(3, W * .022); g.lineCap = "round"; g.beginPath(); g.moveTo(cx - er * .38, ey - er * .1); g.lineTo(cx + er * .38, ey + er * .54); g.moveTo(cx + er * .38, ey - er * .1); g.lineTo(cx - er * .38, ey + er * .54); g.stroke(); g.beginPath(); g.arc(cx, ey - er * .4, er * .105, 0, 7); g.fill();
-    // the label along the bottom
-    const LF = W * .052, lab1 = "STIXX ", lab2 = (this.pack.id === "fp" ? "FIRST" : this.pack.id === "ms" ? "MOON" : this.pack.id === "ec" ? "ECLIPSE" : this.pack.id === "td" ? "TIDAL" : "VOID") + " PACK"; g.font = `800 ${LF}px "JetBrains Mono","DejaVu Sans Mono",monospace`; const L = (lab1 + lab2).length, sp2 = W * .012, lw = L * LF * .6 + (L - 1) * sp2; let lx = cx - lw / 2 + LF * .3;
-    for (let k = 0; k < L; k++) { g.fillStyle = k < lab1.length ? "#fff" : tone(2); g.fillText((lab1 + lab2)[k], lx, H * .91); lx += LF * .6 + sp2; }
-    // the sheen
-    const cyc = (t * .16) % 1.8, sx = (cyc - .4) * W * 1.8; g.save(); g.globalCompositeOperation = "lighter"; g.translate(sx, 0); g.rotate(.34); const sh = g.createLinearGradient(-W * .2, 0, W * .2, 0); sh.addColorStop(0, "rgba(255,255,255,0)"); sh.addColorStop(.5, "rgba(255,255,255,.3)"); sh.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = sh; g.fillRect(-W * .2, -H, W * .4, H * 3); g.restore();
-    const el = g.createLinearGradient(0, 0, W * .07, 0); el.addColorStop(0, "rgba(255,255,255,.26)"); el.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = el; g.fillRect(0, 0, W * .07, H); const er2 = g.createLinearGradient(W, 0, W * .92, 0); er2.addColorStop(0, "rgba(0,0,0,.5)"); er2.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = er2; g.fillRect(W * .92, 0, W * .08, H);
+    // a bright sash of light across the foil
+    g.save(); g.translate(W * .5, H * .48); g.rotate(-.62); const sash = g.createLinearGradient(0, -W * .22, 0, W * .22); sash.addColorStop(0, "rgba(255,255,255,0)"); sash.addColorStop(.5, "rgba(255,255,255,.16)"); sash.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = sash; g.fillRect(-W * 1.4, -W * .22, W * 2.8, W * .44); g.restore();
+    // specks of light
+    for (let k = 0; k < 40; k++) { const x = hs(k + id, 70) * W, y = hs(k + id, 71) * H, r = W * (.004 + .008 * hs(k, 72)); g.fillStyle = `rgba(255,255,255,${.4 + .5 * hs(k, 73)})`; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+    // top: the mark on a plate, then a black tag
+    const lg = W * .095, ly = H * .115; g.shadowColor = "rgba(0,0,0,.6)"; g.shadowBlur = W * .03; g.fillStyle = "#050607"; rr(cx - lg, ly - lg, lg * 2, lg * 2, lg * .36); g.fill(); g.shadowBlur = 0; g.strokeStyle = "rgba(255,255,255,.7)"; g.lineWidth = Math.max(1.5, W * .008); g.stroke();
+    g.strokeStyle = "#fff"; g.lineWidth = Math.max(2.5, W * .018); g.lineCap = "round"; g.beginPath(); g.moveTo(cx - lg * .46, ly - lg * .18); g.lineTo(cx + lg * .46, ly + lg * .7); g.moveTo(cx + lg * .46, ly - lg * .18); g.lineTo(cx - lg * .46, ly + lg * .7); g.stroke(); g.fillStyle = "#fff"; g.beginPath(); g.arc(cx, ly - lg * .56, lg * .13, 0, 7); g.fill();
+    const tw = W * .3, ty = H * .222, th = H * .034; g.fillStyle = "#050607"; g.beginPath(); g.moveTo(cx - tw, ty); g.lineTo(cx + tw, ty); g.lineTo(cx + tw - th * .55, ty + th); g.lineTo(cx - tw - th * .55, ty + th); g.closePath(); g.fill();
+    g.textAlign = "center"; g.textBaseline = "middle"; g.font = `800 ${W * .05}px "JetBrains Mono","DejaVu Sans Mono",monospace`; g.fillStyle = "#fff"; { const lab = "TEXT CARDS", sp = W * .014; let px = cx - (lab.length * W * .05 * .6 + (lab.length - 1) * sp) / 2 + W * .05 * .3; for (const ch of lab) { g.fillText(ch, px, ty + th * .54); px += W * .05 * .6 + sp; } }
+    // the name: huge, white, with a dark edge so it stands out of the foil
+    const name = this.pack.name.toUpperCase(), n = name.length; let fs = W * .2; const sp = W * .02; while (n * fs * .62 + (n - 1) * sp > W * .9 && fs > 8) fs -= 1;
+    g.font = `900 ${fs}px "JetBrains Mono","DejaVu Sans Mono",monospace`; const total = n * fs * .62 + (n - 1) * sp; let px = cx - total / 2 + fs * .31; g.lineJoin = "round"; g.lineWidth = fs * .22; g.strokeStyle = "rgba(0,0,0,.78)";
+    for (const ch of name) { g.strokeText(ch, px, H * .385); px += fs * .62 + sp; } px = cx - total / 2 + fs * .31; g.shadowColor = "rgba(255,255,255,.7)"; g.shadowBlur = W * .035; g.fillStyle = "#fff"; for (const ch of name) { g.fillText(ch, px, H * .385); px += fs * .62 + sp; } g.shadowBlur = 0;
+    // the emblem: a diamond plate with the STIXX figure standing in it
+    const ey = H * .6, er = W * .26; g.save(); g.translate(cx, ey); g.rotate(Math.PI / 4); const pl = g.createLinearGradient(-er, -er, er, er); pl.addColorStop(0, tone(1.5)); pl.addColorStop(.5, tone(.7)); pl.addColorStop(1, tone(.2)); g.shadowColor = "rgba(0,0,0,.7)"; g.shadowBlur = W * .05; g.fillStyle = pl; rr(-er * .7, -er * .7, er * 1.4, er * 1.4, er * .12); g.fill(); g.shadowBlur = 0;
+    g.strokeStyle = "#fff"; g.lineWidth = Math.max(2.5, W * .016); g.stroke(); g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = Math.max(1.5, W * .008); rr(-er * .56, -er * .56, er * 1.12, er * 1.12, er * .08); g.stroke(); g.restore();
+    g.strokeStyle = "#fff"; g.fillStyle = "#fff"; g.lineWidth = Math.max(3.5, W * .026); g.lineCap = "round"; g.beginPath(); g.moveTo(cx - er * .36, ey - er * .1); g.lineTo(cx + er * .36, ey + er * .52); g.moveTo(cx + er * .36, ey - er * .1); g.lineTo(cx - er * .36, ey + er * .52); g.stroke(); g.beginPath(); g.arc(cx, ey - er * .4, er * .105, 0, 7); g.fill();
+    // the label band along the bottom
+    const bandY = H * .82, lo = g.createLinearGradient(0, bandY, 0, H); lo.addColorStop(0, "rgba(0,0,0,.55)"); lo.addColorStop(1, "rgba(0,0,0,.82)"); g.fillStyle = lo; g.fillRect(0, bandY, W, H - bandY); g.fillStyle = tone(1.6, .9); g.fillRect(0, bandY, W, Math.max(1.5, H * .004));
+    const LF = W * .062, lab1 = "STIXX ", lab2 = ({ fp: "FIRST", ms: "MOON", ec: "ECLIPSE", td: "TIDAL", sg: "VOID" }[this.pack.id] || "") + " PACK"; g.font = `900 ${LF}px "JetBrains Mono","DejaVu Sans Mono",monospace`; const L = (lab1 + lab2).length, sp2 = W * .013, lw = L * LF * .6 + (L - 1) * sp2; let lx = cx - lw / 2 + LF * .3;
+    for (let k = 0; k < L; k++) { g.fillStyle = k < lab1.length ? "#fff" : tone(2.1); g.fillText((lab1 + lab2)[k], lx, H * .905); lx += LF * .6 + sp2; }
+    const vg = g.createRadialGradient(cx, H * .5, W * .35, cx, H * .5, H * .75); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.55)"); g.fillStyle = vg; g.fillRect(0, 0, W, H);
   }
   eclipse(g, t, W, H) {                                                                  // Eclipse: a black disc, its corona turning, a small figure under it
     this.status(t * 1000, "rising"); const cx = W / 2, cy = H * .42; g.fillStyle = "#050302"; g.fillRect(0, 0, W, H); g.save(); g.translate(cx, cy);
@@ -3067,9 +3080,8 @@ function renderProfile() {
       <div class="acc-av" aria-hidden="true"><pre>  o
  /|\\
  / \\ </pre></div><h2 class="acc-name">${esc(who)}</h2><p class="acc-join">Joined ${esc(joined)}</p>
-      <div class="abox acc-money"><div><h3>Play money</h3><p>Nothing here can be cashed out</p></div><i aria-hidden="true">›</i></div>
       <div class="acc-tiles"><div class="abox"><i class="tic"><svg viewBox="0 0 24 24" fill="#f0a020"><path d="M7 3h10v4a5 5 0 0 1-4 4.900V15h3v2H8v-2h3v-3.100A5 5 0 0 1 7 7V3Zm-3 1h2v3a3 3 0 0 1-2-2.800V4Zm16 0h-2v3a3 3 0 0 0 2-2.800V4ZM8 18h8v3H8z"/></svg></i><b>${money(state.s.big || 0).replace(/\.00$/, "")}</b><span>Biggest Pull</span></div><div class="abox"><i class="tic"><svg viewBox="0 0 24 24" fill="#19e08e"><rect x="7" y="3" width="11" height="15" rx="2.500"/><path d="M4 7v12a2 2 0 0 0 2 2h9" fill="none" stroke="#19e08e" stroke-width="2" stroke-linecap="round"/></svg></i><b>${fmt(state.s.packs)}</b><span>Packs Opened</span></div></div>
-      <div class="abox acc-tier"><span class="atitle">Current tier</span><h3>${esc(cur[0])}</h3><div class="tierbar" role="img" aria-label="${xp} xp"><i style="width:${(Math.min(1, (ri + pc) / (n - 1)) * 100).toFixed(1)}%"></i>${RANKS.slice(1, 4).map((r, k) => `<em style="left:${mark(k).toFixed(1)}%" class="${ri > k ? "on" : ""}">${k + 2}</em>`).join("")}</div><div class="tier-xp"><span>XP: <b>${fmt(xp)}</b>${nx ? " / " + fmt(nx[1]) : ""}</span><span>${nx ? "Next Tier: <b>" + esc(nx[0]) + "</b>" : "Top tier"}</span></div></div></div>`; }
+<p class="acc-fine">Play money only. Nothing is charged, and nothing can be cashed out or paid out. 18+</p></div>`; }
   { // what you have, what you have made over the range you picked, and its shape
     const now = Date.now(), h = state.hist, from = pRng ? now - pRng : (h.length ? h[0][0] : now), gain = pRng ? profitSince(pRng) : all, up = gain >= 0, N = 56, pts = [];
     let j = 0; for (let i = 0; i < N; i++) { const ts = from + (now - from) * i / (N - 1); while (j + 1 < h.length && h[j + 1][0] <= ts) j++; const e = h[j]; pts.push(e && e[0] <= ts ? e[1] - (e[2] || 0) - START : h.length ? h[0][1] - (h[0][2] || 0) - START : 0); } pts[N - 1] = all;
@@ -3237,14 +3249,11 @@ function extras() { const out = []; for (const c of CARDS) copiesOf(c.no).slice(
 let sellAllAt = 0, sellAllT = 0;                                                                      // "sell all" asks first: when it was asked, so the question survives the page redrawing as prices move
 function renderCollection() {
   noteFound(); const found = new Set(state.vault.map(c => c.no)), worth = holdingsValue(), basis = state.vault.reduce((a, c) => a + costOf(c), 0), ex = extras(), exSum = ex.reduce((a, c) => a + sellOf(c), 0), fx = Object.keys(state.foundFx).length, pk = curPack(), ch = chaseChance(pk);
-  $("cSub").textContent = "Tap a card to see its price and to sell it.";
-  $("cSum").live = `<div class="stat"><span class="label">Cards found</span><div class="sbig"><b>${LIVE.filter(c => found.has(c.no)).length}</b><span>of ${LIVE.length}</span></div><div class="bar"><i style="width:${LIVE.filter(c => found.has(c.no)).length / LIVE.length * 100}%"></i></div></div>
-    <div class="stat"><span class="label">Worth now</span><div class="sbig"><b>${money(worth)}</b></div>${state.vault.length ? `<div class="srow">${pill(worth / Math.max(1, basis) - 1)} <span class="small">since you got them</span></div>` : `<span class="small">Open a pack to start.</span>`}</div>
-    <div class="stat"><span class="label">Styles found</span><div class="sbig"><b>${fx}</b><span>of ${FX_ALL}</span></div><div class="bar"><i style="width:${fx / FX_ALL * 100}%"></i></div></div>
-    <div class="stat go"><span class="label">Next ${esc(pk.name)} pack</span><div class="sbig"><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span>a new card</span></div><button class="btn small solid" data-open>${state.freePacks ? "open free pack" : "open pack"}</button></div>`;
+  $("cSub").textContent = "";
+  $("cSum").live = `<div class="stat"><span class="label">Cards</span><div class="sbig"><b>${found.size}</b><span>different</span></div></div><div class="stat"><span class="label">Worth now</span><div class="sbig"><b>${money(worth)}</b></div>${state.vault.length ? `<div class="srow">${pill(worth / Math.max(1, basis) - 1)} <span class="small">since you got them</span></div>` : ""}</div>`;
   const up = upCopies(), upSum = up.reduce((a, c) => a + sellOf(c), 0);
   $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + (up.length ? `<button class="btn" id="sellUp">sell the ${up.length} that ${up.length === 1 ? "is" : "are"} up · ${money(upSum)}</button>` : "") + (state.vault.length ? (() => { const sum = state.vault.reduce((a, c) => a + sellOf(c), 0), armed = sellAllAt && Date.now() - sellAllAt < 4000; return `<button class="btn ghost" id="sellAll">${armed ? "tap again to sell all" : "sell all"} ${state.vault.length} · ${money(sum)}</button>`; })() : "") + (ex.length || up.length || state.vault.length ? `<span class="small">${ex.length ? "Extras keep your best copy of every card. " : ""}Sales are final.</span>` : "");
-  $("cFilters").live = seg("c", "show", [["all", "All"], ["found", "Found"], ["missing", "Missing"], ["fav", "♥ Favourites"]], CF.show) + selectHTML("cSort", [["num", "Number"], ["rare", "Rarest first"], ["value", "Most valuable"], ["new", "Newest"]], CF.sort, "Sort") + seg("c", "set", [["all", "All packs"], ...Object.keys(SETS).map(k => [k, SETS[k].name])], CF.set);
+  $("cFilters").live = seg("c", "show", [["all", "All"], ["fav", "♥ Favourites"]], CF.show) + selectHTML("cSort", [["num", "Number"], ["rare", "Rarest first"], ["value", "Most valuable"], ["new", "Newest"]], CF.sort, "Sort");
   const val = c => { const b = copiesOf(c.no)[0]; return b ? valueOf(b) : c.val; }, cmp = { num: (a, b) => +a.no - +b.no, rare: (a, b) => RAR[b.rar].tier - RAR[a.rar].tier || +a.no - +b.no, value: (a, b) => val(b) - val(a), new: (a, b) => ((copiesOf(b.no)[0] || { t: 0 }).t) - ((copiesOf(a.no)[0] || { t: 0 }).t) || +a.no - +b.no }[CF.sort];
   const tile = c => {
     const cs = copiesOf(c.no), best = cs[0], pk2 = packOf(c);
@@ -3252,10 +3261,12 @@ function renderCollection() {
       <span class="cmeta">${best ? `<b>${moneyS(valueOf(best))}</b>${pill(gainOf(best))}` : `<b class="faint">Not found yet</b>`}</span>
       <span class="csub">${best ? `${rdot(c)}${rarLabel(c)}${cs.length > 1 ? ` · ${cs.length} copies` : ""}` : `${rdot(c)}${rarLabel(c)} · ${chanceS(packP(c.id))}`}</span></button>${best ? favBtn(c.no) : ""}${sellBtn(c.no)}</div>`;
   };
-  $("cGrid").live = Object.keys(SETS).filter(k => CF.set === "all" || CF.set === k).map(k => {
-    const all = CARDS.filter(c => c.set === k && (!c.retired || found.has(c.no))),      /* a retired card shows only if you have it */ got = all.filter(c => found.has(c.no)).length, list = all.filter(c => CF.show === "all" || (CF.show === "fav" ? isFav(c.no) && found.has(c.no) : CF.show === "found" ? found.has(c.no) : !found.has(c.no))).sort(cmp);
-    return `<div class="sethead"><h3>${esc(SETS[k].name)}</h3><span class="small">${got} of ${all.length} found</span><div class="bar slim"><i style="width:${got / all.length * 100}%"></i></div></div>` + (list.length ? `<div class="cgrid">${list.map(tile).join("")}</div>` : `<p class="small" style="padding:6px 2px 22px">${CF.show === "found" ? "You haven't found any of these yet." : "You have every card here."}</p>`);
-  }).join("");
+  const sets = Object.keys(SETS).map(k => ({ k, list: CARDS.filter(c => c.set === k && found.has(c.no) && (CF.show !== "fav" || isFav(c.no))).sort(cmp) })).filter(x => x.list.length);
+  $("cGrid").live = sets.length ? sets.map(x => `<div class="sethead"><h3>${esc(SETS[x.k].name)}</h3><span class="small">${x.list.length} card${x.list.length === 1 ? "" : "s"}</span></div><div class="cgrid">${x.list.map(tile).join("")}</div>`).join("") : `<div class="cempty"><pre aria-hidden="true">  .-----.
+ /  .--.  \\
+ | |    | |
+ \\  '--'  /
+  '-----'  </pre><p>${CF.show === "fav" ? "No favourites yet. Tap the heart on a card you like." : "No cards yet. Open a pack to start your collection."}</p></div>`;
 }
 
 /* ============================================================================
@@ -3652,6 +3663,7 @@ const Shell = (() => {
       <p class="tp-fine">Play money only. Nothing is charged or paid out.</p>`;
     car = $("tpCar"); curIdx = -1;
     [...car.children].forEach((s, i) => { const pkEl = s.firstChild, ps = new PackScreen(pkEl, PACKS[i]); s._ps = ps; });
+    const paint = () => [...car.children].forEach(s => { s._ps.fit(); s._ps.frame(0); }); requestAnimationFrame(() => requestAnimationFrame(paint)); addEventListener("resize", () => { clearTimeout(car._rt); car._rt = setTimeout(paint, 150); });
     car.addEventListener("scroll", () => { clearTimeout(scrollT); scrollT = setTimeout(settle, 90); mark(); }, { passive: true });
     car.addEventListener("click", e => { const s = e.target.closest(".tp-s"); if (!s) return; const i = +s.dataset.i; if (i === curIdx) { if (performance.now() - stageShut < 500) return; openPack(); } else go(i); });
   }
@@ -3660,7 +3672,7 @@ const Shell = (() => {
   function go(i, instant) { const s = car.children[i]; if (!s) return; const left = s.offsetLeft - (car.clientWidth - s.clientWidth) / 2; car.scrollTo({ left, behavior: instant || matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); }
   function settle() { const i = centred(); if (i === curIdx) return; pick(i, true); }
   function pick(i, fromScroll) {
-    curIdx = i; const pk = PACKS[i]; [...car.children].forEach((s, k) => { const on = k === i; s.classList.toggle("on", on); if (on) { s._ps.fit(); s._ps.start(); } else { s._ps.stop(); s._ps.fit(); s._ps.frame(performance.now()); } });
+    curIdx = i; const pk = PACKS[i]; [...car.children].forEach((s, k) => { const on = k === i; s.classList.toggle("on", on); void on; });
     if (state.pack !== pk.id) { state.pack = pk.id; persist(); if (fromScroll) { Snd.whoosh && Snd.whoosh(); buzz(8); } }
     document.body.dataset.pack = pk.id; document.body.style.setProperty("--halo", `color-mix(in srgb, ${pk.col} 24%, transparent)`); document.body.style.setProperty("--halo2", `color-mix(in srgb, ${pk.col} 60%, transparent)`); text(pk);
   }
@@ -3677,11 +3689,11 @@ const Shell = (() => {
 const Glass = (() => {
   let x = 0, v = 0, tx = 0, raf = 0, ready = false, idx = 0, last = 0;
   const bar = () => $("btabs"), lens = () => $("lens"), inn = () => $("lensIn");
-  function geom(i) { const b = bar(); if (!b) return null; const links = [...b.querySelectorAll("a")], a = links[i]; if (!a) return null; const br = b.getBoundingClientRect(), r = a.getBoundingClientRect(); return { left: r.left - br.left, w: r.width, W: br.width, H: br.height }; }
+  function geom(i) { const b = bar(); if (!b) return null; const links = [...b.querySelectorAll("a")], a = links[i]; if (!a) return null; const br = b.getBoundingClientRect(), r = a.getBoundingClientRect(); return { left: r.left - br.left - b.clientLeft, w: r.width, W: b.clientWidth, H: br.height }; }
   function apply() {
     const L = lens(), I = inn(), b = bar(); if (!L || !b) return; const g0 = geom(idx); if (!g0) return; const stretch = Math.min(.5, Math.abs(v) / 1100), w = g0.w * (1 + stretch) + 4, left = x - stretch * g0.w / 2 - 2;
     L.style.width = w.toFixed(1) + "px"; L.style.transform = `translateX(${left.toFixed(1)}px)`; L.style.setProperty("--rim", (.28 + Math.min(.72, Math.abs(v) / 650)).toFixed(2));
-    const bp = parseFloat(getComputedStyle(b).paddingLeft) || 0; I.style.width = g0.W + "px"; I.style.left = (-left - bp - 1) + "px"; const cx = left + w / 2; I.style.transformOrigin = `${(cx + bp).toFixed(1)}px 50%`; I.style.transform = `scale(${(1.12 + Math.min(.1, Math.abs(v) / 4000)).toFixed(3)})`;
+    I.style.width = g0.W + "px"; I.style.left = (-left) + "px"; I.style.transformOrigin = `${(left + w / 2).toFixed(1)}px 50%`; I.style.transform = `scale(${(1.12 + Math.min(.1, Math.abs(v) / 4000)).toFixed(3)})`;
   }
   function tick(now) {
     const dt = Math.min(.034, (now - (last || now)) / 1000); last = now; const k = 240, c = 21; v += ((tx - x) * k - v * c) * dt; x += v * dt; apply();

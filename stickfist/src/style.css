@@ -1517,3 +1517,15 @@ header.top .logo, header.top .tabs, #cashBtn, #dailyBtn, #muteBtn { display: non
 #btabs.lensed a.on > * { opacity: 0; } #btabs a > * { transition: opacity .18s .06s; }
 .filters .seg { overflow: visible !important; } .filters .seg button { margin: 0 !important; }
 .tp-buy { background: radial-gradient(120% 170% at 50% 140%, color-mix(in srgb, var(--pc, #3be477) 85%, #fff 6%) 0%, color-mix(in srgb, var(--pc, #3be477) 38%, #000) 60%, color-mix(in srgb, var(--pc, #3be477) 20%, #000) 100%); }
+
+/* fit: the pack gets whatever height is left, so the button is always above the bar */
+.tp-car { --pw: max(120px, min(50vw, 240px, calc((100dvh - 575px) * .575))); padding: 20px calc((100vw - var(--pw)) / 2) 14px; } .tp-s { width: var(--pw); }
+.tp-name { margin: 8px 0 12px; } .tp-maxh { margin: 20px 0 4px; } .tp-buy { margin-top: 18px; height: 64px; } .tp-fine { margin: 10px 0 0; }
+main.wrap { padding-bottom: 110px; }
+/* the pack is still; its foil catches the light */
+.tp-s .pk .win canvas { image-rendering: auto; }
+.tp-s .pk::after { display: block !important; content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: linear-gradient(112deg, transparent 36%, rgba(255,255,255,.3) 48%, rgba(255,255,255,.08) 54%, transparent 64%); background-size: 320% 100%; background-position: 130% 0; mix-blend-mode: screen; animation: foilSheen 5.5s ease-in-out infinite; }
+@keyframes foilSheen { 0%, 22% { background-position: 130% 0; } 62%, 100% { background-position: -40% 0; } }
+@media (prefers-reduced-motion: reduce) { .tp-s .pk::after { animation: none; opacity: 0; } }
+.cempty { text-align: center; padding: 60px 20px; color: #8b9aa0; } .cempty pre { margin: 0 auto 18px; display: inline-block; text-align: left; font: 700 18px/1.1 var(--m); color: #3c5a55; } .cempty p { font: 600 17px/1.4 var(--ui); }
+.acc-fine { margin: 18px 4px 6px; color: #5f6f6c; font: 500 12px/1.5 var(--ui); text-align: center; }

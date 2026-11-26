@@ -46,6 +46,7 @@ const Shell = (() => {
       <p class="tp-fine">Play money only. Nothing is charged or paid out.</p>`;
     car = $("tpCar"); curIdx = -1;
     [...car.children].forEach((s, i) => { const pkEl = s.firstChild, ps = new PackScreen(pkEl, PACKS[i]); s._ps = ps; });
+    const paint = () => [...car.children].forEach(s => { s._ps.fit(); s._ps.frame(0); }); requestAnimationFrame(() => requestAnimationFrame(paint)); addEventListener("resize", () => { clearTimeout(car._rt); car._rt = setTimeout(paint, 150); });
     car.addEventListener("scroll", () => { clearTimeout(scrollT); scrollT = setTimeout(settle, 90); mark(); }, { passive: true });
     car.addEventListener("click", e => { const s = e.target.closest(".tp-s"); if (!s) return; const i = +s.dataset.i; if (i === curIdx) { if (performance.now() - stageShut < 500) return; openPack(); } else go(i); });
   }
@@ -54,7 +55,7 @@ const Shell = (() => {
   function go(i, instant) { const s = car.children[i]; if (!s) return; const left = s.offsetLeft - (car.clientWidth - s.clientWidth) / 2; car.scrollTo({ left, behavior: instant || matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); }
   function settle() { const i = centred(); if (i === curIdx) return; pick(i, true); }
   function pick(i, fromScroll) {
-    curIdx = i; const pk = PACKS[i]; [...car.children].forEach((s, k) => { const on = k === i; s.classList.toggle("on", on); if (on) { s._ps.fit(); s._ps.start(); } else { s._ps.stop(); s._ps.fit(); s._ps.frame(performance.now()); } });
+    curIdx = i; const pk = PACKS[i]; [...car.children].forEach((s, k) => { const on = k === i; s.classList.toggle("on", on); void on; });
     if (state.pack !== pk.id) { state.pack = pk.id; persist(); if (fromScroll) { Snd.whoosh && Snd.whoosh(); buzz(8); } }
     document.body.dataset.pack = pk.id; document.body.style.setProperty("--halo", `color-mix(in srgb, ${pk.col} 24%, transparent)`); document.body.style.setProperty("--halo2", `color-mix(in srgb, ${pk.col} 60%, transparent)`); text(pk);
   }
@@ -71,11 +72,11 @@ const Shell = (() => {
 const Glass = (() => {
   let x = 0, v = 0, tx = 0, raf = 0, ready = false, idx = 0, last = 0;
   const bar = () => $("btabs"), lens = () => $("lens"), inn = () => $("lensIn");
-  function geom(i) { const b = bar(); if (!b) return null; const links = [...b.querySelectorAll("a")], a = links[i]; if (!a) return null; const br = b.getBoundingClientRect(), r = a.getBoundingClientRect(); return { left: r.left - br.left, w: r.width, W: br.width, H: br.height }; }
+  function geom(i) { const b = bar(); if (!b) return null; const links = [...b.querySelectorAll("a")], a = links[i]; if (!a) return null; const br = b.getBoundingClientRect(), r = a.getBoundingClientRect(); return { left: r.left - br.left - b.clientLeft, w: r.width, W: b.clientWidth, H: br.height }; }
   function apply() {
     const L = lens(), I = inn(), b = bar(); if (!L || !b) return; const g0 = geom(idx); if (!g0) return; const stretch = Math.min(.5, Math.abs(v) / 1100), w = g0.w * (1 + stretch) + 4, left = x - stretch * g0.w / 2 - 2;
     L.style.width = w.toFixed(1) + "px"; L.style.transform = `translateX(${left.toFixed(1)}px)`; L.style.setProperty("--rim", (.28 + Math.min(.72, Math.abs(v) / 650)).toFixed(2));
-    const bp = parseFloat(getComputedStyle(b).paddingLeft) || 0; I.style.width = g0.W + "px"; I.style.left = (-left - bp - 1) + "px"; const cx = left + w / 2; I.style.transformOrigin = `${(cx + bp).toFixed(1)}px 50%`; I.style.transform = `scale(${(1.12 + Math.min(.1, Math.abs(v) / 4000)).toFixed(3)})`;
+    I.style.width = g0.W + "px"; I.style.left = (-left) + "px"; I.style.transformOrigin = `${(left + w / 2).toFixed(1)}px 50%`; I.style.transform = `scale(${(1.12 + Math.min(.1, Math.abs(v) / 4000)).toFixed(3)})`;
   }
   function tick(now) {
     const dt = Math.min(.034, (now - (last || now)) / 1000); last = now; const k = 240, c = 21; v += ((tx - x) * k - v * c) * dt; x += v * dt; apply();
