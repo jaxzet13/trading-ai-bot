@@ -26,7 +26,7 @@ class PackScreen {
     this.fit(); if (!this.w) return; const { cols, rows, w: W, h: H } = this, g = this.hg, t = Math.max(0, (now - this.t0) / 1000);
     g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over"; g.shadowBlur = 0; g.fillStyle = "#030304"; g.fillRect(0, 0, this.hi.width, this.hi.height);
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);                                     // paint in the pack's own pixels, sharp
-    ({ launch: () => this.launch(g, t, W, H), eclipse: () => this.eclipse(g, t, W, H), tidal: () => this.tidal(g, t, W, H), void: () => this.void(g, t, W, H) }[this.pack.scene] || (() => this.print(g, t, W, H)))();
+    this.foil(g, t, W, H);
     const c = this.ctx, sm = this.g; sm.setTransform(1, 0, 0, 1, 0, 0); sm.imageSmoothingEnabled = true; sm.drawImage(this.hi, 0, 0, cols, rows);                 // the scene, read back as a grid of cells
     const d = sm.getImageData(0, 0, cols, rows).data, cw = W / cols, ch = H / rows, N = PS_RAMP.length - 1;
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = "source-over"; c.fillStyle = "#030304"; c.fillRect(0, 0, W, H);
@@ -36,6 +36,45 @@ class PackScreen {
       const m = Math.max(r, gg, b) || 1, sc = Math.min(1, .5 + l * .9), boost = 255 / m * sc;
       c.fillStyle = this.col(Math.min(255, r * boost), Math.min(255, gg * boost), Math.min(255, b * boost)); c.fillText(PS_RAMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);
     }
+  }
+  /* a real pack, painted: foil with angular light traces, a logo plate, the pack's name, a round emblem and a label along the bottom. It is only a picture until it is read back as cells,
+     so what you see on the screen is all characters. A sheen runs across it now and then, the way light moves on a foil pack. */
+  foil(g, t, W, H) {
+    const hex = (this.pack.col || "#3be477").replace("#", ""), R = parseInt(hex.slice(0, 2), 16), G = parseInt(hex.slice(2, 4), 16), B = parseInt(hex.slice(4, 6), 16), tone = k => `rgb(${Math.min(255, R * k) | 0},${Math.min(255, G * k) | 0},${Math.min(255, B * k) | 0})`;
+    const hs = (a, b) => { const v = Math.imul(a * 73856093 ^ b * 19349663, 2654435761) >>> 0; return v / 4294967296; }, id = this.pack.id.charCodeAt(0) * 7 + this.pack.id.charCodeAt(1);
+    const bg = g.createLinearGradient(0, 0, W * .5, H); bg.addColorStop(0, tone(.95)); bg.addColorStop(.3, tone(.5)); bg.addColorStop(.62, tone(.3)); bg.addColorStop(1, tone(.62)); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    // angular traces: runs of straight and 45-degree steps, as on the foil of a modern pack
+    g.lineCap = "square"; g.lineJoin = "miter";
+    for (let k = 0; k < 54; k++) {
+      let x = hs(k + id, 1) * W * 1.3 - W * .15, y = hs(k + id, 2) * H * 1.1 - H * .05; const w = .8 + 3.2 * hs(k + id, 3) * hs(k + id, 4), a = .16 + .6 * hs(k + id, 5) * hs(k + id, 6), n = 2 + (hs(k + id, 7) * 4 | 0);
+      g.strokeStyle = hs(k + id, 8) > .72 ? `rgba(255,245,235,${a})` : tone(2.2) .replace("rgb", "rgba").replace(")", `,${a})`); g.lineWidth = w; g.beginPath(); g.moveTo(x, y);
+      for (let s = 0; s < n; s++) { const len = W * (.06 + .2 * hs(k + id, 10 + s)), m = hs(k + id, 30 + s), dx = m < .34 ? len : m < .67 ? len * .7 : 0, dy = m < .34 ? 0 : len * .7; x += dx; y += hs(k + id, 50 + s) > .5 ? dy : -dy; g.lineTo(x, y); }
+      g.stroke();
+    }
+    // two broad soft beams
+    for (let k = 0; k < 3; k++) { g.save(); g.translate(W * (.2 + .3 * k), H * (.25 + .2 * k)); g.rotate(-.78); const bm = g.createLinearGradient(0, -W * .09, 0, W * .09); bm.addColorStop(0, "rgba(255,255,255,0)"); bm.addColorStop(.5, `rgba(255,255,255,${.05 + .04 * k})`); bm.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = bm; g.fillRect(-W * 1.2, -W * .09, W * 2.4, W * .18); g.restore(); }
+    // the logo plate at the top
+    const cx = W / 2, lg = W * .075, ly = H * .15; g.strokeStyle = "rgba(255,248,235,.95)"; g.lineWidth = Math.max(2, W * .012); g.lineCap = "round"; g.strokeRect(cx - lg, ly - lg, lg * 2, lg * 2);
+    g.beginPath(); g.moveTo(cx - lg * .5, ly - lg * .3); g.lineTo(cx + lg * .5, ly + lg * .7); g.moveTo(cx + lg * .5, ly - lg * .3); g.lineTo(cx - lg * .5, ly + lg * .7); g.stroke(); g.fillStyle = "rgba(255,248,235,.95)"; g.beginPath(); g.arc(cx, ly - lg * .62, lg * .13, 0, 7); g.fill();
+    g.fillStyle = "rgba(0,0,0,.72)"; g.beginPath(); g.moveTo(cx - W * .24, H * .235); g.lineTo(cx + W * .27, H * .235); g.lineTo(cx + W * .22, H * .275); g.lineTo(cx - W * .29, H * .275); g.closePath(); g.fill(); g.fillStyle = "rgba(255,248,235,.9)"; g.fillRect(cx - W * .19, H * .253, W * .36, Math.max(1.5, H * .004));
+    // the name, big and wide
+    const name = this.pack.name.toUpperCase(), n = name.length; let fs = W * .15; const sp = W * .02; while (n * fs * .62 + (n - 1) * sp > W * .86 && fs > 8) fs -= 1;
+    g.font = `800 ${fs}px "JetBrains Mono","DejaVu Sans Mono",monospace`; g.textAlign = "center"; g.textBaseline = "middle"; const total = n * fs * .62 + (n - 1) * sp; let px = cx - total / 2 + fs * .31;
+    g.shadowColor = "rgba(255,255,255,.55)"; g.shadowBlur = W * .03; g.fillStyle = "#fff"; for (const ch of name) { g.fillText(ch, px, H * .42); px += fs * .62 + sp; } g.shadowBlur = 0;
+    // the round emblem: its top half in the pack's colour, its bottom half dark, a band and a button across the middle
+    const ey = H * .62, er = W * .2; g.save(); g.beginPath(); g.arc(cx, ey, er, 0, 7); g.clip();
+    const top = g.createLinearGradient(0, ey - er, 0, ey); top.addColorStop(0, tone(1.15)); top.addColorStop(1, tone(.5)); g.fillStyle = top; g.fillRect(cx - er, ey - er, er * 2, er); g.fillStyle = tone(.08); g.fillRect(cx - er, ey, er * 2, er); g.restore();
+    g.strokeStyle = "#fff"; g.lineWidth = Math.max(2, W * .016); g.beginPath(); g.arc(cx, ey, er, 0, 7); g.stroke();
+    g.lineWidth = Math.max(3, W * .02); g.lineCap = "round"; g.beginPath(); g.moveTo(cx - er * .5, ey - er * .26); g.lineTo(cx + er * .5, ey + er * .6); g.moveTo(cx + er * .5, ey - er * .26); g.lineTo(cx - er * .5, ey + er * .6); g.stroke(); g.fillStyle = "#fff"; g.beginPath(); g.arc(cx, ey - er * .56, er * .13, 0, 7); g.fill();   // the STIXX mark: a figure that is also an X
+    g.fillStyle = "#050607"; g.beginPath(); g.arc(cx, ey, er * .34, 0, 7); g.fill(); g.strokeStyle = "#fff"; g.stroke(); g.fillStyle = "#fff"; g.beginPath(); g.arc(cx, ey, er * .17, 0, 7); g.fill();
+    // the label along the bottom
+    g.fillStyle = "rgba(0,0,0,.66)"; g.fillRect(0, H * .8, W, H * .12); const LF = W * .085; g.font = `800 ${LF}px "JetBrains Mono","DejaVu Sans Mono",monospace`; const lab = ["STIXX", "PACK"], lw = (lab[0].length + lab[1].length + 1) * LF * .62 + (lab[0].length + lab[1].length) * W * .012; let lx = cx - lw / 2 + W * .018;
+    for (const ch of "STIXX " + "PACK") { g.fillStyle = lx < cx - lw / 2 + (lab[0].length + 1) * (LF * .62 + W * .012) ? "#fff" : tone(1.9); g.fillText(ch, lx, H * .865); lx += LF * .62 + W * .012; }
+    
+    // the sheen: a band of light that crosses the foil, then waits
+    const cyc = (t * .16) % 1.7, sx = (cyc - .35) * W * 1.7; g.save(); g.globalCompositeOperation = "lighter"; g.translate(sx, 0); g.rotate(.34); const sh = g.createLinearGradient(-W * .2, 0, W * .2, 0); sh.addColorStop(0, "rgba(255,255,255,0)"); sh.addColorStop(.5, "rgba(255,255,255,.34)"); sh.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = sh; g.fillRect(-W * .2, -H, W * .4, H * 3); g.restore();
+    // the edges: a lit left side, a darker right side
+    const el = g.createLinearGradient(0, 0, W * .06, 0); el.addColorStop(0, "rgba(255,255,255,.3)"); el.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = el; g.fillRect(0, 0, W * .06, H); const er2 = g.createLinearGradient(W, 0, W * .92, 0); er2.addColorStop(0, "rgba(0,0,0,.45)"); er2.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = er2; g.fillRect(W * .92, 0, W * .08, H);
   }
   eclipse(g, t, W, H) {                                                                  // Eclipse: a black disc, its corona turning, a small figure under it
     this.status(t * 1000, "rising"); const cx = W / 2, cy = H * .42; g.fillStyle = "#050302"; g.fillRect(0, 0, W, H); g.save(); g.translate(cx, cy);

@@ -4,7 +4,7 @@
    ========================================================================== */
 const Shell = (() => {
   const TITLES = { home: "Packs", collection: "My Collection", rewards: "Rewards", profile: "Account", inside: "What's Inside", invite: "Invite", odds: "Odds", live: "Live", market: "Movers", limited: "Requiem" };
-  function title(v) { const el = $("hTitle"); if (el) el.textContent = TITLES[v] || "STIXX"; }
+  function title(v) { const el = $("hTitle"); if (el) el.textContent = TITLES[v] || "STIXX"; if (typeof Glass !== "undefined") Glass.sync(v); }
   const frame = (t, body, cls) => `<section class="abox${cls ? " " + cls : ""}"><span class="atitle">┤ ${t} ├</span>${body}</section>`;
   const bars = (f, n) => { const k = Math.max(f > 0 ? 1 : 0, Math.round(f * n)); return "█".repeat(k) + `<u>${"░".repeat(n - k)}</u>`; };
   const when = t => { const m = Math.max(0, Math.round((Date.now() - t) / 60000)); return m < 1 ? "just now" : m < 60 ? m + "m ago" : m < 1440 ? Math.round(m / 60) + "h ago" : Math.round(m / 1440) + "d ago"; };
@@ -36,6 +36,32 @@ const Shell = (() => {
 
   return { title, menu, home, frame, bars, when, TITLES };
 })();
+
+/* ---- the glass lens that slides between the tabs: it carries the active tab magnified inside it, stretches while it moves, and shows a rainbow rim as light bends at its edge ---- */
+const Glass = (() => {
+  let x = 0, v = 0, tx = 0, raf = 0, ready = false, idx = 0, last = 0;
+  const bar = () => $("btabs"), lens = () => $("lens"), inn = () => $("lensIn");
+  function geom(i) { const b = bar(); if (!b) return null; const links = [...b.querySelectorAll("a")], a = links[i]; if (!a) return null; const br = b.getBoundingClientRect(), r = a.getBoundingClientRect(); return { left: r.left - br.left, w: r.width, W: br.width, H: br.height }; }
+  function apply() {
+    const L = lens(), I = inn(), b = bar(); if (!L || !b) return; const g0 = geom(idx); if (!g0) return; const stretch = Math.min(.5, Math.abs(v) / 1100), w = g0.w * (1 + stretch) + 4, left = x - stretch * g0.w / 2 - 2;
+    L.style.width = w.toFixed(1) + "px"; L.style.transform = `translateX(${left.toFixed(1)}px)`; L.style.setProperty("--rim", (.28 + Math.min(.72, Math.abs(v) / 650)).toFixed(2));
+    const bp = parseFloat(getComputedStyle(b).paddingLeft) || 0; I.style.width = g0.W + "px"; I.style.left = (-left - bp - 1) + "px"; const cx = left + w / 2; I.style.transformOrigin = `${(cx + bp).toFixed(1)}px 50%`; I.style.transform = `scale(${(1.12 + Math.min(.1, Math.abs(v) / 4000)).toFixed(3)})`;
+  }
+  function tick(now) {
+    const dt = Math.min(.034, (now - (last || now)) / 1000); last = now; const k = 240, c = 21; v += ((tx - x) * k - v * c) * dt; x += v * dt; apply();
+    if (Math.abs(tx - x) > .15 || Math.abs(v) > .5) raf = requestAnimationFrame(tick); else { x = tx; v = 0; apply(); raf = 0; last = 0; }
+  }
+  function build() { const b = bar(); if (!b || !inn()) return; inn().innerHTML = [...b.querySelectorAll("a")].map(a => `<span class="li">${a.innerHTML}</span>`).join(""); ready = true; }
+  function to(i, jump) {
+    if (!ready) build(); const g0 = geom(i); if (!g0) return; idx = i; tx = g0.left;
+    if (jump || reducedMotion()) { x = tx; v = 0; apply(); return; } if (!raf) raf = requestAnimationFrame(tick);
+  }
+  const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function sync(view) { const links = [...document.querySelectorAll("#btabs a")], i = links.findIndex(a => a.dataset.v === (TAB_OF[view] || view)); if (i >= 0) to(i, !ready); }
+  addEventListener("resize", () => { if (ready) to(idx, true); });
+  return { sync, to };
+})();
+
 addEventListener("hashchange", () => Shell.menu(false));
 const _renderHome = renderHome; renderHome = function () { _renderHome(); Shell.home(); };
 

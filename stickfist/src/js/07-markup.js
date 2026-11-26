@@ -10,7 +10,7 @@ function cardHTML(copy, o) {
     <div class="strip"><div class="l1"><span class="nm">${esc(card.name)}</span><i class="hr"></i><span class="ct"><b>${fmt(card.chars)}</b><u>chars</u></span></div>
     <div class="l2">${code ? idHTML(code, card.rar) : `<span>No. ${card.no}</span>`}${card.cap ? `<span class="cap">${esc(card.cap)}</span>` : ""}</div></div><i class="sheen"></i></div>`;
 }
-const CRIMPS = { fp: fill("╱╲", 120), ms: fill("△▲", 120), ec: fill("*+", 120), td: fill("~≈", 120), sg: fill("·o", 120) };
+const CRIMPS = { fp: fill("┃│┃", 160), ms: fill("┃│┃", 160), ec: fill("┃│┃", 160), td: fill("┃│┃", 160), sg: fill("┃│┃", 160) };
 const packHTML = pack => `<div class="pk pk-${pack.id}"><div class="crimp t">${CRIMPS[pack.id]}</div><div class="win"><canvas class="scr"></canvas></div>
   <div class="readout"><div class="r-stat"></div><div class="r-name"></div><div class="r-sub"></div><div class="r-meter"></div></div><div class="crimp b">${CRIMPS[pack.id]}</div></div>`;
 // the animated picture in the pack

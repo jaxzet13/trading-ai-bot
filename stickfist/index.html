@@ -1519,6 +1519,24 @@ body:not(.on-home) #dailyBtn { display: none !important; }
 .pf2 { margin-top: 10px; }
 button, .btn, a.btn, .pt-gear, .psel, .sbtn, .linkbtn { border-radius: 0 !important; }
 .acc-tier h3 { margin-bottom: 42px; } .acc .pt-gear { border-radius: 0 !important; }
+
+/* ---------------------------------------------------------------- the foil pack */
+.pk, #homePack .pk { border-radius: 2.6cqw !important; background: #050607 !important; border: 1px solid rgba(255,255,255,.28) !important; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.3) inset, 0 40px 70px -34px #000, 0 0 70px -22px var(--halo2, rgba(59,228,119,.5)) !important; }
+.pk .crimp, #homePack .pk .crimp { height: 6.4cqw !important; line-height: 6.4cqw !important; font-size: 6.4cqw !important; letter-spacing: -.12em; color: rgba(255,255,255,.62) !important; border: 0 !important; background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.06) 55%, rgba(0,0,0,.35)) !important; text-shadow: 0 0 3px rgba(255,255,255,.35); }
+.pk .crimp.b, #homePack .pk .crimp.b { background: linear-gradient(0deg, rgba(255,255,255,.28), rgba(255,255,255,.06) 55%, rgba(0,0,0,.35)) !important; }
+.pk .win, #homePack .pk .win { flex: 1 1 auto !important; width: 100% !important; margin: 0 !important; aspect-ratio: auto !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+.pk .readout, #homePack .pk .readout { display: none !important; }
+.pk.pk-ms .crimp, .pk.pk-ec .crimp, .pk.pk-td .crimp, .pk.pk-sg .crimp { color: rgba(255,255,255,.62) !important; }
+/* ---------------------------------------------------------------- the glass tab bar */
+#btabs { position: fixed; border-radius: 999px !important; border: 1px solid rgba(255,255,255,.14) !important; background: rgba(12,20,22,.55) !important; backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5); box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 14px 40px rgba(0,0,0,.55) !important; padding: 4px !important; overflow: visible; }
+#btabs a { color: #9aa7a3 !important; background: none !important; z-index: 1; position: relative; } #btabs a.on { background: none !important; color: #9aa7a3 !important; }
+#btabs a i { font-size: 22px; } #btabs a span { font-size: 11px; font-weight: 700; }
+.lens { position: absolute; top: 3px; bottom: 3px; left: 0; z-index: 3; border-radius: 999px; overflow: hidden; pointer-events: none; will-change: transform, width;
+  background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.07) 55%, rgba(255,255,255,.13)); backdrop-filter: blur(2px) saturate(1.9) brightness(1.3); -webkit-backdrop-filter: blur(2px) saturate(1.9) brightness(1.3);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,.6), inset 0 -1px 2px rgba(255,255,255,.25), inset 0 0 14px rgba(255,255,255,.1), 0 6px 18px rgba(0,0,0,.45); }
+.lens-in { position: absolute; top: 0; bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr); padding: 4px; box-sizing: border-box; will-change: transform; }
+.lens-in .li { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #fff; font: 700 11px/1.1 var(--m); text-shadow: 0 0 10px rgba(255,255,255,.35); } .lens-in .li i { font-style: normal; font-size: 22px; line-height: 1; } .lens-in .li svg { display: none; }
+.lens-rim { position: absolute; inset: 0; border-radius: inherit; padding: 1.6px; opacity: var(--rim, .3); background: conic-gradient(from 200deg, #ff5d5d, #ffd23f, #59ff9e, #4aa8ff, #c26bff, #ff5d5d); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; filter: blur(.3px); }
 </style>
 </head>
 <body>
@@ -1632,6 +1650,7 @@ button, .btn, a.btn, .pt-gear, .psel, .sbtn, .linkbtn { border-radius: 0 !import
 </main>
 
 <nav class="btabs" id="btabs" aria-label="Sections">
+  <span class="lens" id="lens" aria-hidden="true"><span class="lens-in" id="lensIn"></span><i class="lens-rim"></i></span>
   <a href="#/" data-v="home"><i aria-hidden="true">▤</i><span>Packs</span></a>
   <a href="#/vault" data-v="collection"><i aria-hidden="true">▦</i><span>Collection</span></a>
   <a href="#/rewards" data-v="rewards"><i aria-hidden="true">✦</i><span>Rewards</span></a>
@@ -2556,7 +2575,7 @@ class PackScreen {
     this.fit(); if (!this.w) return; const { cols, rows, w: W, h: H } = this, g = this.hg, t = Math.max(0, (now - this.t0) / 1000);
     g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over"; g.shadowBlur = 0; g.fillStyle = "#030304"; g.fillRect(0, 0, this.hi.width, this.hi.height);
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);                                     // paint in the pack's own pixels, sharp
-    ({ launch: () => this.launch(g, t, W, H), eclipse: () => this.eclipse(g, t, W, H), tidal: () => this.tidal(g, t, W, H), void: () => this.void(g, t, W, H) }[this.pack.scene] || (() => this.print(g, t, W, H)))();
+    this.foil(g, t, W, H);
     const c = this.ctx, sm = this.g; sm.setTransform(1, 0, 0, 1, 0, 0); sm.imageSmoothingEnabled = true; sm.drawImage(this.hi, 0, 0, cols, rows);                 // the scene, read back as a grid of cells
     const d = sm.getImageData(0, 0, cols, rows).data, cw = W / cols, ch = H / rows, N = PS_RAMP.length - 1;
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = "source-over"; c.fillStyle = "#030304"; c.fillRect(0, 0, W, H);
@@ -2566,6 +2585,45 @@ class PackScreen {
       const m = Math.max(r, gg, b) || 1, sc = Math.min(1, .5 + l * .9), boost = 255 / m * sc;
       c.fillStyle = this.col(Math.min(255, r * boost), Math.min(255, gg * boost), Math.min(255, b * boost)); c.fillText(PS_RAMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);
     }
+  }
+  /* a real pack, painted: foil with angular light traces, a logo plate, the pack's name, a round emblem and a label along the bottom. It is only a picture until it is read back as cells,
+     so what you see on the screen is all characters. A sheen runs across it now and then, the way light moves on a foil pack. */
+  foil(g, t, W, H) {
+    const hex = (this.pack.col || "#3be477").replace("#", ""), R = parseInt(hex.slice(0, 2), 16), G = parseInt(hex.slice(2, 4), 16), B = parseInt(hex.slice(4, 6), 16), tone = k => `rgb(${Math.min(255, R * k) | 0},${Math.min(255, G * k) | 0},${Math.min(255, B * k) | 0})`;
+    const hs = (a, b) => { const v = Math.imul(a * 73856093 ^ b * 19349663, 2654435761) >>> 0; return v / 4294967296; }, id = this.pack.id.charCodeAt(0) * 7 + this.pack.id.charCodeAt(1);
+    const bg = g.createLinearGradient(0, 0, W * .5, H); bg.addColorStop(0, tone(.95)); bg.addColorStop(.3, tone(.5)); bg.addColorStop(.62, tone(.3)); bg.addColorStop(1, tone(.62)); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    // angular traces: runs of straight and 45-degree steps, as on the foil of a modern pack
+    g.lineCap = "square"; g.lineJoin = "miter";
+    for (let k = 0; k < 54; k++) {
+      let x = hs(k + id, 1) * W * 1.3 - W * .15, y = hs(k + id, 2) * H * 1.1 - H * .05; const w = .8 + 3.2 * hs(k + id, 3) * hs(k + id, 4), a = .16 + .6 * hs(k + id, 5) * hs(k + id, 6), n = 2 + (hs(k + id, 7) * 4 | 0);
+      g.strokeStyle = hs(k + id, 8) > .72 ? `rgba(255,245,235,${a})` : tone(2.2) .replace("rgb", "rgba").replace(")", `,${a})`); g.lineWidth = w; g.beginPath(); g.moveTo(x, y);
+      for (let s = 0; s < n; s++) { const len = W * (.06 + .2 * hs(k + id, 10 + s)), m = hs(k + id, 30 + s), dx = m < .34 ? len : m < .67 ? len * .7 : 0, dy = m < .34 ? 0 : len * .7; x += dx; y += hs(k + id, 50 + s) > .5 ? dy : -dy; g.lineTo(x, y); }
+      g.stroke();
+    }
+    // two broad soft beams
+    for (let k = 0; k < 3; k++) { g.save(); g.translate(W * (.2 + .3 * k), H * (.25 + .2 * k)); g.rotate(-.78); const bm = g.createLinearGradient(0, -W * .09, 0, W * .09); bm.addColorStop(0, "rgba(255,255,255,0)"); bm.addColorStop(.5, `rgba(255,255,255,${.05 + .04 * k})`); bm.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = bm; g.fillRect(-W * 1.2, -W * .09, W * 2.4, W * .18); g.restore(); }
+    // the logo plate at the top
+    const cx = W / 2, lg = W * .075, ly = H * .15; g.strokeStyle = "rgba(255,248,235,.95)"; g.lineWidth = Math.max(2, W * .012); g.lineCap = "round"; g.strokeRect(cx - lg, ly - lg, lg * 2, lg * 2);
+    g.beginPath(); g.moveTo(cx - lg * .5, ly - lg * .3); g.lineTo(cx + lg * .5, ly + lg * .7); g.moveTo(cx + lg * .5, ly - lg * .3); g.lineTo(cx - lg * .5, ly + lg * .7); g.stroke(); g.fillStyle = "rgba(255,248,235,.95)"; g.beginPath(); g.arc(cx, ly - lg * .62, lg * .13, 0, 7); g.fill();
+    g.fillStyle = "rgba(0,0,0,.72)"; g.beginPath(); g.moveTo(cx - W * .24, H * .235); g.lineTo(cx + W * .27, H * .235); g.lineTo(cx + W * .22, H * .275); g.lineTo(cx - W * .29, H * .275); g.closePath(); g.fill(); g.fillStyle = "rgba(255,248,235,.9)"; g.fillRect(cx - W * .19, H * .253, W * .36, Math.max(1.5, H * .004));
+    // the name, big and wide
+    const name = this.pack.name.toUpperCase(), n = name.length; let fs = W * .15; const sp = W * .02; while (n * fs * .62 + (n - 1) * sp > W * .86 && fs > 8) fs -= 1;
+    g.font = `800 ${fs}px "JetBrains Mono","DejaVu Sans Mono",monospace`; g.textAlign = "center"; g.textBaseline = "middle"; const total = n * fs * .62 + (n - 1) * sp; let px = cx - total / 2 + fs * .31;
+    g.shadowColor = "rgba(255,255,255,.55)"; g.shadowBlur = W * .03; g.fillStyle = "#fff"; for (const ch of name) { g.fillText(ch, px, H * .42); px += fs * .62 + sp; } g.shadowBlur = 0;
+    // the round emblem: its top half in the pack's colour, its bottom half dark, a band and a button across the middle
+    const ey = H * .62, er = W * .2; g.save(); g.beginPath(); g.arc(cx, ey, er, 0, 7); g.clip();
+    const top = g.createLinearGradient(0, ey - er, 0, ey); top.addColorStop(0, tone(1.15)); top.addColorStop(1, tone(.5)); g.fillStyle = top; g.fillRect(cx - er, ey - er, er * 2, er); g.fillStyle = tone(.08); g.fillRect(cx - er, ey, er * 2, er); g.restore();
+    g.strokeStyle = "#fff"; g.lineWidth = Math.max(2, W * .016); g.beginPath(); g.arc(cx, ey, er, 0, 7); g.stroke();
+    g.lineWidth = Math.max(3, W * .02); g.lineCap = "round"; g.beginPath(); g.moveTo(cx - er * .5, ey - er * .26); g.lineTo(cx + er * .5, ey + er * .6); g.moveTo(cx + er * .5, ey - er * .26); g.lineTo(cx - er * .5, ey + er * .6); g.stroke(); g.fillStyle = "#fff"; g.beginPath(); g.arc(cx, ey - er * .56, er * .13, 0, 7); g.fill();   // the STIXX mark: a figure that is also an X
+    g.fillStyle = "#050607"; g.beginPath(); g.arc(cx, ey, er * .34, 0, 7); g.fill(); g.strokeStyle = "#fff"; g.stroke(); g.fillStyle = "#fff"; g.beginPath(); g.arc(cx, ey, er * .17, 0, 7); g.fill();
+    // the label along the bottom
+    g.fillStyle = "rgba(0,0,0,.66)"; g.fillRect(0, H * .8, W, H * .12); const LF = W * .085; g.font = `800 ${LF}px "JetBrains Mono","DejaVu Sans Mono",monospace`; const lab = ["STIXX", "PACK"], lw = (lab[0].length + lab[1].length + 1) * LF * .62 + (lab[0].length + lab[1].length) * W * .012; let lx = cx - lw / 2 + W * .018;
+    for (const ch of "STIXX " + "PACK") { g.fillStyle = lx < cx - lw / 2 + (lab[0].length + 1) * (LF * .62 + W * .012) ? "#fff" : tone(1.9); g.fillText(ch, lx, H * .865); lx += LF * .62 + W * .012; }
+    
+    // the sheen: a band of light that crosses the foil, then waits
+    const cyc = (t * .16) % 1.7, sx = (cyc - .35) * W * 1.7; g.save(); g.globalCompositeOperation = "lighter"; g.translate(sx, 0); g.rotate(.34); const sh = g.createLinearGradient(-W * .2, 0, W * .2, 0); sh.addColorStop(0, "rgba(255,255,255,0)"); sh.addColorStop(.5, "rgba(255,255,255,.34)"); sh.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = sh; g.fillRect(-W * .2, -H, W * .4, H * 3); g.restore();
+    // the edges: a lit left side, a darker right side
+    const el = g.createLinearGradient(0, 0, W * .06, 0); el.addColorStop(0, "rgba(255,255,255,.3)"); el.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = el; g.fillRect(0, 0, W * .06, H); const er2 = g.createLinearGradient(W, 0, W * .92, 0); er2.addColorStop(0, "rgba(0,0,0,.45)"); er2.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = er2; g.fillRect(W * .92, 0, W * .08, H);
   }
   eclipse(g, t, W, H) {                                                                  // Eclipse: a black disc, its corona turning, a small figure under it
     this.status(t * 1000, "rising"); const cx = W / 2, cy = H * .42; g.fillStyle = "#050302"; g.fillRect(0, 0, W, H); g.save(); g.translate(cx, cy);
@@ -2910,7 +2968,7 @@ function cardHTML(copy, o) {
     <div class="strip"><div class="l1"><span class="nm">${esc(card.name)}</span><i class="hr"></i><span class="ct"><b>${fmt(card.chars)}</b><u>chars</u></span></div>
     <div class="l2">${code ? idHTML(code, card.rar) : `<span>No. ${card.no}</span>`}${card.cap ? `<span class="cap">${esc(card.cap)}</span>` : ""}</div></div><i class="sheen"></i></div>`;
 }
-const CRIMPS = { fp: fill("╱╲", 120), ms: fill("△▲", 120), ec: fill("*+", 120), td: fill("~≈", 120), sg: fill("·o", 120) };
+const CRIMPS = { fp: fill("┃│┃", 160), ms: fill("┃│┃", 160), ec: fill("┃│┃", 160), td: fill("┃│┃", 160), sg: fill("┃│┃", 160) };
 const packHTML = pack => `<div class="pk pk-${pack.id}"><div class="crimp t">${CRIMPS[pack.id]}</div><div class="win"><canvas class="scr"></canvas></div>
   <div class="readout"><div class="r-stat"></div><div class="r-name"></div><div class="r-sub"></div><div class="r-meter"></div></div><div class="crimp b">${CRIMPS[pack.id]}</div></div>`;
 // the animated picture in the pack
@@ -3557,7 +3615,7 @@ const Live = (() => {
    ========================================================================== */
 const Shell = (() => {
   const TITLES = { home: "Packs", collection: "My Collection", rewards: "Rewards", profile: "Account", inside: "What's Inside", invite: "Invite", odds: "Odds", live: "Live", market: "Movers", limited: "Requiem" };
-  function title(v) { const el = $("hTitle"); if (el) el.textContent = TITLES[v] || "STIXX"; }
+  function title(v) { const el = $("hTitle"); if (el) el.textContent = TITLES[v] || "STIXX"; if (typeof Glass !== "undefined") Glass.sync(v); }
   const frame = (t, body, cls) => `<section class="abox${cls ? " " + cls : ""}"><span class="atitle">┤ ${t} ├</span>${body}</section>`;
   const bars = (f, n) => { const k = Math.max(f > 0 ? 1 : 0, Math.round(f * n)); return "█".repeat(k) + `<u>${"░".repeat(n - k)}</u>`; };
   const when = t => { const m = Math.max(0, Math.round((Date.now() - t) / 60000)); return m < 1 ? "just now" : m < 60 ? m + "m ago" : m < 1440 ? Math.round(m / 60) + "h ago" : Math.round(m / 1440) + "d ago"; };
@@ -3589,6 +3647,32 @@ const Shell = (() => {
 
   return { title, menu, home, frame, bars, when, TITLES };
 })();
+
+/* ---- the glass lens that slides between the tabs: it carries the active tab magnified inside it, stretches while it moves, and shows a rainbow rim as light bends at its edge ---- */
+const Glass = (() => {
+  let x = 0, v = 0, tx = 0, raf = 0, ready = false, idx = 0, last = 0;
+  const bar = () => $("btabs"), lens = () => $("lens"), inn = () => $("lensIn");
+  function geom(i) { const b = bar(); if (!b) return null; const links = [...b.querySelectorAll("a")], a = links[i]; if (!a) return null; const br = b.getBoundingClientRect(), r = a.getBoundingClientRect(); return { left: r.left - br.left, w: r.width, W: br.width, H: br.height }; }
+  function apply() {
+    const L = lens(), I = inn(), b = bar(); if (!L || !b) return; const g0 = geom(idx); if (!g0) return; const stretch = Math.min(.5, Math.abs(v) / 1100), w = g0.w * (1 + stretch) + 4, left = x - stretch * g0.w / 2 - 2;
+    L.style.width = w.toFixed(1) + "px"; L.style.transform = `translateX(${left.toFixed(1)}px)`; L.style.setProperty("--rim", (.28 + Math.min(.72, Math.abs(v) / 650)).toFixed(2));
+    const bp = parseFloat(getComputedStyle(b).paddingLeft) || 0; I.style.width = g0.W + "px"; I.style.left = (-left - bp - 1) + "px"; const cx = left + w / 2; I.style.transformOrigin = `${(cx + bp).toFixed(1)}px 50%`; I.style.transform = `scale(${(1.12 + Math.min(.1, Math.abs(v) / 4000)).toFixed(3)})`;
+  }
+  function tick(now) {
+    const dt = Math.min(.034, (now - (last || now)) / 1000); last = now; const k = 240, c = 21; v += ((tx - x) * k - v * c) * dt; x += v * dt; apply();
+    if (Math.abs(tx - x) > .15 || Math.abs(v) > .5) raf = requestAnimationFrame(tick); else { x = tx; v = 0; apply(); raf = 0; last = 0; }
+  }
+  function build() { const b = bar(); if (!b || !inn()) return; inn().innerHTML = [...b.querySelectorAll("a")].map(a => `<span class="li">${a.innerHTML}</span>`).join(""); ready = true; }
+  function to(i, jump) {
+    if (!ready) build(); const g0 = geom(i); if (!g0) return; idx = i; tx = g0.left;
+    if (jump || reducedMotion()) { x = tx; v = 0; apply(); return; } if (!raf) raf = requestAnimationFrame(tick);
+  }
+  const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function sync(view) { const links = [...document.querySelectorAll("#btabs a")], i = links.findIndex(a => a.dataset.v === (TAB_OF[view] || view)); if (i >= 0) to(i, !ready); }
+  addEventListener("resize", () => { if (ready) to(idx, true); });
+  return { sync, to };
+})();
+
 addEventListener("hashchange", () => Shell.menu(false));
 const _renderHome = renderHome; renderHome = function () { _renderHome(); Shell.home(); };
 
