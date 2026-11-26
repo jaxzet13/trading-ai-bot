@@ -2700,7 +2700,7 @@ function renderHome() {
   const mv = movers(); $("hot").live = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
   const bf = null; if (bf) $("hot").insertAdjacentHTML("beforeend", `<span class="hotflip">best flip this week: <b>${esc(bf.name)}</b> sold ${esc(bf.card.name)} ${pctHTML(bf.pct)} <span class="faint">simulated</span></span>`);
   $("chase").live = chaseHTML(); $("rqBar").live = "";      // the Requiem pack is for later: not on the pack page for now
-  const hp = $("homePack"); if (hp.dataset.pack !== pk.id) { if (hp._ps) hp._ps.stop(); hp.innerHTML = packHTML(pk); hp.dataset.pack = pk.id; const el = hp.firstChild; tiltPack(el); el.style.cursor = "pointer"; el.onclick = () => { if (hp._swiped) { hp._swiped = false; return; } openPack(); }; hp._ps = liveWindow(el, pk); if (hp._dir) { el.animate([{ translate: `${hp._dir * 60}% 0`, opacity: 0, scale: ".9" }, { translate: "0 0", opacity: 1, scale: "1" }], { duration: 320, easing: "cubic-bezier(.2, .9, .3, 1.1)" }); hp._dir = 0; }
+  const hp = $("homePack"); if (hp.dataset.pack !== pk.id) { if (hp._ps) hp._ps.stop(); hp.innerHTML = packHTML(pk); hp.dataset.pack = pk.id; const el = hp.firstChild; tiltPack(el); el.style.cursor = "pointer"; el.onclick = () => { if (hp._swiped) { hp._swiped = false; return; } if (performance.now() - stageShut < 500) return; openPack(); }; hp._ps = liveWindow(el, pk); if (hp._dir) { el.animate([{ translate: `${hp._dir * 60}% 0`, opacity: 0, scale: ".9" }, { translate: "0 0", opacity: 1, scale: "1" }], { duration: 320, easing: "cubic-bezier(.2, .9, .3, 1.1)" }); hp._dir = 0; }
     if (!hp._sw) { hp._sw = 1; let x0 = null; hp.addEventListener("pointerdown", e => { x0 = e.clientX; }); hp.addEventListener("pointerup", e => { if (x0 == null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) < 46 || PACKS.length < 2) return; const i = PACKS.findIndex(q => q.id === state.pack), nx = PACKS[(i + (dx < 0 ? 1 : -1) + PACKS.length) % PACKS.length]; hp._swiped = true; hp._dir = dx < 0 ? 1 : -1; setTimeout(() => { hp._swiped = false; }, 80); state.pack = nx.id; persist(); Snd.whoosh(); buzz(8); renderHome(); }); } }
   document.body.dataset.pack = pk.id; { const ts = $("tStripe"); if (ts) ts.hidden = !Shop.open(); }
   { const hi = $("homeInvite"), html = homeInviteHTML(); hi.hidden = !html; hi.innerHTML = html; }
@@ -3401,9 +3401,9 @@ async function advance() {
   if (!SS || SS.busy) return; if (SS.phase === "pack") { tear(); return; } if (SS.phase === "pick") { pickRail(); return; } if (SS.phase !== "stack") return;
   const el = scEl(SS.idx); if (!el) return; SS.busy = true; const c = SS.items[SS.idx], card = BY_NO[c.no];
   if (!el.dataset.rev) {
-    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); el.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col); el.classList.add("lit"); if (!reduced) el.animate([{ scale: "1" }, { scale: "1.06" }, { scale: "1" }], { duration: 300, easing: "cubic-bezier(.2,.9,.3,1.3)" }); valueChip(el, c); SS.busy = false; hint(""); if (SS && SS.idx === at) showPills(c, card); Alive.on(el.querySelector(".card"), c);
+    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); el.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col); el.classList.add("lit"); if (!reduced) el.animate([{ scale: "1" }, { scale: "1.06" }, { scale: "1" }], { duration: 300, easing: "cubic-bezier(.2,.9,.3,1.3)" }); valueChip(el, c); SS.busy = false; SS.litAt = performance.now(); hint(""); if (SS && SS.idx === at) showPills(c, card); Alive.on(el.querySelector(".card"), c);
   }
-  else { SS.busy = false; await decide("hold"); }                                         // a tap on a card that is face up holds it
+  else { SS.busy = false; if (rushed() || performance.now() - (SS.litAt || 0) < 600) return; await decide("hold"); }                                         // a tap on a card that is face up holds it: one deliberate tap, not the tail of a rush, and not in the first moment it is up
 }
 // How big a card's moment is follows its rarity, or what this copy really sells for next to what the pack costs, whichever is bigger. A styled copy of a plain card can be worth more than a rare one.
 const momentOf = c => { const x = sellOf(c) / Math.max(1, SS.ref); return Math.max(RAR[BY_NO[c.no].rar].tier, x >= 10 ? 5 : x >= 4 ? 4 : x >= 2 ? 3 : 0); };
@@ -3523,7 +3523,7 @@ function summary() {
 }
 // one quiet line under a pack result: the free way to get another
 function invNudge() { return (typeof API !== "undefined" && API.on) ? `<button class="btn ghost invnudge" id="sumInvite">${GIFT} Invite a friend — you both get a free pack</button>` : ""; }
-function closeStage() { if (SS && SS.phase === "wait") return; Machine.stop(); $("stMeter").hidden = true; stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v && v.drop()); renderBal(); show(view, true); }
+function closeStage() { if (SS && SS.phase === "wait") return; stageShut = performance.now(); Machine.stop(); $("stMeter").hidden = true; stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v && v.drop()); renderBal(); show(view, true); }
 
 /* ---- several packs at once. Every pack is drawn, charged and counted exactly like a single pack (same odds, same daily limit); only the show is shorter: cards worth less than $0.50
    are not revealed one by one, they are totalled on the result, and nothing is sold or hidden: they are in your collection and in the sums. ---- */
@@ -5095,7 +5095,15 @@ const Acct = (() => {
 /* ============================================================================
    9. EVENTS
    ========================================================================== */
+/* ---- taps that come in a rush ----
+   Tapping fast through an opening is fine (it speeds the row up), but a rush of taps must never make a choice for you: buy another
+   batch of packs off the result screen, sell or hold a card you have not looked at, or carry on into the page underneath once the
+   opening closes. So the things that spend, sell or decide ignore a tap that comes less than 0.4 s after the one before it, and the
+   page ignores taps for a moment after an opening closes. One deliberate tap always works. */
+let tapNow = 0, tapWas = 0, stageShut = 0; addEventListener("pointerdown", () => { tapWas = tapNow; tapNow = performance.now(); }, true);
+const rushed = () => tapNow - tapWas < 400;
 document.addEventListener("click", e => {
+  if (!e.target.closest("#stage") && performance.now() - stageShut < 500) return;                              // the last taps of a rush land on the page under the opening as it closes: they do nothing
   const t = e.target.closest("button"); if (!t) { if (e.target === $("modal")) closeModal(); return; }
   if (t.hasAttribute("data-open")) { openPack(); return; }
   if (t.hasAttribute("data-close")) { closeModal(); return; }
@@ -5129,7 +5137,7 @@ document.addEventListener("click", e => {
     const g = sell([t.dataset.sell]); if (!g) return; soldToast(null, g);
     if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no) || Chart.lastSold(t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view, true); return;      // the window stays up on the copy you just sold, with the sale marked on its chart
   }
-  if (/^sum/.test(t.id) && SS && performance.now() - SS.sumAt < 500) return;
+  if (/^sum/.test(t.id) && SS && (performance.now() - SS.sumAt < 500 || rushed())) return;
   switch (t.id) {
     case "shSave": Share.save(); break;
     case "shShare": Share.share(); break;
@@ -5154,8 +5162,8 @@ document.addEventListener("click", e => {
     case "claimOpen": closeModal(); openPack(); break;
     case "muteBtn": state.mute = !state.mute; persist(); renderChips(); if (!state.mute) Snd.click(); break;
     case "stSkip": if (SS) { if (SS.phase === "pack" || SS.phase === "tearing") SS.phase = "stack"; skipAll(); } break;
-    case "pillSell": decide("sell"); break;
-    case "pillHold": decide("hold"); break;
+    case "pillSell": if (!rushed()) decide("sell"); break;
+    case "pillHold": if (!rushed()) decide("hold"); break;
     case "sumSell": { const g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
     case "sumSellAgain": { const pk = SS.pack, g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); setTimeout(() => openPack(pk), 300); break; }
     case "sumSellRest": { const g = sell((SS.all || []).filter(c => inVault(c) && !isHit(c)).map(c => c.uid)); closeStage(); soldToast(null, g); break; }

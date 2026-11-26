@@ -1,7 +1,15 @@
 /* ============================================================================
    9. EVENTS
    ========================================================================== */
+/* ---- taps that come in a rush ----
+   Tapping fast through an opening is fine (it speeds the row up), but a rush of taps must never make a choice for you: buy another
+   batch of packs off the result screen, sell or hold a card you have not looked at, or carry on into the page underneath once the
+   opening closes. So the things that spend, sell or decide ignore a tap that comes less than 0.4 s after the one before it, and the
+   page ignores taps for a moment after an opening closes. One deliberate tap always works. */
+let tapNow = 0, tapWas = 0, stageShut = 0; addEventListener("pointerdown", () => { tapWas = tapNow; tapNow = performance.now(); }, true);
+const rushed = () => tapNow - tapWas < 400;
 document.addEventListener("click", e => {
+  if (!e.target.closest("#stage") && performance.now() - stageShut < 500) return;                              // the last taps of a rush land on the page under the opening as it closes: they do nothing
   const t = e.target.closest("button"); if (!t) { if (e.target === $("modal")) closeModal(); return; }
   if (t.hasAttribute("data-open")) { openPack(); return; }
   if (t.hasAttribute("data-close")) { closeModal(); return; }
@@ -35,7 +43,7 @@ document.addEventListener("click", e => {
     const g = sell([t.dataset.sell]); if (!g) return; soldToast(null, g);
     if (!$("modal").hidden) { if (state.vault.some(c => c.no === t.dataset.no) || Chart.lastSold(t.dataset.no)) cardModal(t.dataset.no); else closeModal(); } show(view, true); return;      // the window stays up on the copy you just sold, with the sale marked on its chart
   }
-  if (/^sum/.test(t.id) && SS && performance.now() - SS.sumAt < 500) return;
+  if (/^sum/.test(t.id) && SS && (performance.now() - SS.sumAt < 500 || rushed())) return;
   switch (t.id) {
     case "shSave": Share.save(); break;
     case "shShare": Share.share(); break;
@@ -60,8 +68,8 @@ document.addEventListener("click", e => {
     case "claimOpen": closeModal(); openPack(); break;
     case "muteBtn": state.mute = !state.mute; persist(); renderChips(); if (!state.mute) Snd.click(); break;
     case "stSkip": if (SS) { if (SS.phase === "pack" || SS.phase === "tearing") SS.phase = "stack"; skipAll(); } break;
-    case "pillSell": decide("sell"); break;
-    case "pillHold": decide("hold"); break;
+    case "pillSell": if (!rushed()) decide("sell"); break;
+    case "pillHold": if (!rushed()) decide("hold"); break;
     case "sumSell": { const g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
     case "sumSellAgain": { const pk = SS.pack, g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); setTimeout(() => openPack(pk), 300); break; }
     case "sumSellRest": { const g = sell((SS.all || []).filter(c => inVault(c) && !isHit(c)).map(c => c.uid)); closeStage(); soldToast(null, g); break; }

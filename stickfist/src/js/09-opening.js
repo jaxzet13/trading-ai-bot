@@ -135,9 +135,9 @@ async function advance() {
   if (!SS || SS.busy) return; if (SS.phase === "pack") { tear(); return; } if (SS.phase === "pick") { pickRail(); return; } if (SS.phase !== "stack") return;
   const el = scEl(SS.idx); if (!el) return; SS.busy = true; const c = SS.items[SS.idx], card = BY_NO[c.no];
   if (!el.dataset.rev) {
-    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); el.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col); el.classList.add("lit"); if (!reduced) el.animate([{ scale: "1" }, { scale: "1.06" }, { scale: "1" }], { duration: 300, easing: "cubic-bezier(.2,.9,.3,1.3)" }); valueChip(el, c); SS.busy = false; hint(""); if (SS && SS.idx === at) showPills(c, card); Alive.on(el.querySelector(".card"), c);
+    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); el.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col); el.classList.add("lit"); if (!reduced) el.animate([{ scale: "1" }, { scale: "1.06" }, { scale: "1" }], { duration: 300, easing: "cubic-bezier(.2,.9,.3,1.3)" }); valueChip(el, c); SS.busy = false; SS.litAt = performance.now(); hint(""); if (SS && SS.idx === at) showPills(c, card); Alive.on(el.querySelector(".card"), c);
   }
-  else { SS.busy = false; await decide("hold"); }                                         // a tap on a card that is face up holds it
+  else { SS.busy = false; if (rushed() || performance.now() - (SS.litAt || 0) < 600) return; await decide("hold"); }                                         // a tap on a card that is face up holds it: one deliberate tap, not the tail of a rush, and not in the first moment it is up
 }
 // How big a card's moment is follows its rarity, or what this copy really sells for next to what the pack costs, whichever is bigger. A styled copy of a plain card can be worth more than a rare one.
 const momentOf = c => { const x = sellOf(c) / Math.max(1, SS.ref); return Math.max(RAR[BY_NO[c.no].rar].tier, x >= 10 ? 5 : x >= 4 ? 4 : x >= 2 ? 3 : 0); };
@@ -257,7 +257,7 @@ function summary() {
 }
 // one quiet line under a pack result: the free way to get another
 function invNudge() { return (typeof API !== "undefined" && API.on) ? `<button class="btn ghost invnudge" id="sumInvite">${GIFT} Invite a friend — you both get a free pack</button>` : ""; }
-function closeStage() { if (SS && SS.phase === "wait") return; Machine.stop(); $("stMeter").hidden = true; stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v && v.drop()); renderBal(); show(view, true); }
+function closeStage() { if (SS && SS.phase === "wait") return; stageShut = performance.now(); Machine.stop(); $("stMeter").hidden = true; stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v && v.drop()); renderBal(); show(view, true); }
 
 /* ---- several packs at once. Every pack is drawn, charged and counted exactly like a single pack (same odds, same daily limit); only the show is shorter: cards worth less than $0.50
    are not revealed one by one, they are totalled on the result, and nothing is sold or hidden: they are in your collection and in the sums. ---- */
