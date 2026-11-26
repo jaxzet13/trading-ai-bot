@@ -1,0 +1,145 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>STIXX: made of code</title>
+<link rel="stylesheet" href="../src/style.css">
+<style>
+html, body { margin: 0; background: #000; overflow: hidden; }
+#stage { position: relative; width: 540px; height: 960px; overflow: hidden; background: #050507; font-family: var(--m); }
+.scene { position: absolute; inset: 0; opacity: 0; }
+/* the picture scenes: one card, made of letters, on black */
+.pic .wrap { position: absolute; left: 50%; top: 47%; width: 400px; height: 485px; margin: -242px 0 0 -200px; transform-origin: 50% 50%; }
+.pic .wrap img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: auto; }
+.pic .edge { position: absolute; left: -6%; right: -6%; height: 3px; background: linear-gradient(90deg, transparent, #bfe9ff, transparent); box-shadow: 0 0 16px 4px rgba(150,220,255,.8); }
+.cap { position: absolute; left: 0; right: 0; bottom: 120px; text-align: center; color: #cfd3da; font-size: 15px; letter-spacing: .08em; text-transform: lowercase; }
+.cap i { display: inline-block; width: 9px; height: 17px; background: #cfd3da; vertical-align: -3px; margin-left: 3px; animation: none; }
+/* the code scenes: an editor with the real renderer in it */
+.code { background: #0e1016; }
+.bar { height: 30px; background: #151824; display: flex; align-items: center; gap: 7px; padding: 0 12px; color: #8a90a6; font-size: 11px; border-bottom: 1px solid #1f2336; }
+.bar .d { width: 11px; height: 11px; border-radius: 50%; } .bar .t { margin-left: 18px; }
+.vw { position: absolute; left: 0; right: 0; top: 30px; bottom: 0; overflow: hidden; }
+.lines { position: absolute; left: 0; right: 0; top: 0; padding-top: 10px; will-change: transform; }
+.cln { display: flex; height: 17.5px; line-height: 17.5px; font-size: 10.6px; white-space: pre; color: #c8cde0; }
+.cln .cn { width: 34px; flex: none; text-align: right; padding-right: 12px; color: #4a5070; }
+.ct { white-space: pre; } .cln.hl { background: rgba(120,150,255,.13); box-shadow: inset 2px 0 0 #7aa2ff; } .cln.hl .n { color: #aab6ff; }
+.tk { color: #bb9af7; } .ts { color: #e0af68; } .tc { color: #565f89; font-style: italic; } .tf { color: #7aa2f7; } .tn { color: #ff9e64; } .tb { color: #7dcfff; }
+/* the end */
+#end { background: #040405; display: grid; place-content: center; justify-items: center; gap: 16px; text-align: center; padding: 0 34px; }
+#end .logo { width: 84px; height: 84px; } #end .e1 { font-weight: 800; font-size: 44px; letter-spacing: .2em; color: #f5f3ee; padding-left: .2em; }
+#end .e2 { font-weight: 800; font-size: 40px; letter-spacing: -.03em; color: #ffe2a8; line-height: 1; text-shadow: 0 0 34px rgba(255,190,100,.4); } #end .e3 { font-size: 15px; color: #cfd3da; }
+#end .e4 { position: absolute; bottom: 38px; left: 34px; right: 34px; font-size: 11px; color: #7d8190; line-height: 1.55; }
+#fx { position: absolute; inset: 0; pointer-events: none; }
+#vig { position: absolute; inset: 0; background: radial-gradient(120% 100% at 50% 45%, transparent 58%, rgba(0,0,0,.55)); }
+#grain { position: absolute; inset: 0; mix-blend-mode: overlay; opacity: .08; } #flash { position: absolute; inset: 0; background: #e8f4ff; opacity: 0; }
+</style>
+<div id="stage">
+  <div class="scene pic" id="s1"><div class="wrap" id="w1"><img id="i1" src="../cards/luna.jpg" alt=""><div class="edge" id="e1"></div></div><div class="cap" id="c1"></div></div>
+  <div class="scene code" id="s2"><div class="bar"><span class="d" style="background:#ff5f57"></span><span class="d" style="background:#febc2e"></span><span class="d" style="background:#28c840"></span><span class="t">ronin_render.py  —  render() + draw()</span></div><div class="vw"><div class="lines" id="l2"></div></div></div>
+  <div class="scene pic" id="s3"><div class="wrap" id="w3"><img id="i3" src="../cards/ronin.jpg" alt=""><div class="edge" id="e3"></div></div><div class="cap" id="c3"></div></div>
+  <div class="scene code" id="s4"><div class="bar"><span class="d" style="background:#ff5f57"></span><span class="d" style="background:#febc2e"></span><span class="d" style="background:#28c840"></span><span class="t">convert.py  —  every card, one glyph per cell</span></div><div class="vw"><div class="lines" id="l4"></div></div></div>
+  <div class="scene pic" id="s5"><div class="wrap" id="w5"><img id="i5" src="../cards/apogee.jpg" alt=""><div class="edge" id="e5"></div></div><div class="cap" id="c5"></div></div>
+  <div class="scene" id="end"><svg class="logo" viewBox="0 0 28 28"><rect x=".5" y=".5" width="27" height="27" rx="7.5" fill="#000" stroke="rgba(255,255,255,.2)"/><circle cx="14" cy="5.9" r="1.55" fill="#fff"/><path d="M8.2 9.8 19.8 21.4M19.8 9.8 8.2 21.4" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg><div class="e1">STIXX</div><div class="e2">every card is<br>made of text.</div><div class="e3">your first pack is free. tap the link.</div><div class="e4">Play money only. Nothing is charged or paid out. 18+.</div></div>
+  <div id="fx"><div id="vig"></div><svg id="grain" width="540" height="960"><filter id="gf"><feTurbulence id="gt" type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="1"/><feColorMatrix type="saturate" values="0"/></filter><rect width="540" height="960" filter="url(#gf)"/></svg><div id="flash"></div></div>
+</div>
+<script>
+const FPS = 30, DUR = 22;
+const SC = [["s1", 0, 3.6], ["s2", 3.6, 7.6], ["s3", 7.6, 11.4], ["s4", 11.4, 15.4], ["s5", 15.4, 18.8], ["end", 18.8, 22]];
+const $ = id => document.getElementById(id), cl = (x, a = 0, b = 1) => x < a ? a : x > b ? b : x, sm = (a, b, x) => { x = cl((x - a) / (b - a)); return x * x * (3 - 2 * x); }, eo = x => 1 - Math.pow(1 - cl(x), 3);
+const hash = (a, b) => { let h = Math.imul(a | 0, 374761393) ^ Math.imul(b | 0, 668265263); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+
+/* ---- the code on screen is the real renderer that makes the cards ---- */
+const SRC1 = `import sys
+import numpy as np, cv2
+from PIL import Image, ImageDraw, ImageFont
+
+# a long ladder of ink densities, from empty to solid
+RAMP = " .'\`^\\",:;Il!i><~+_-?][}{1)(|\\\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf'
+
+def render(src, dst, cols=96, W=900, H=1092, gamma=.85):
+    im = Image.open(src).convert('L'); w, h = im.size
+    cw = W / cols; ch = cw * 1.95; rows = int(H / ch)
+    a = np.asarray(im.resize((cols * 4, rows * 4), Image.LANCZOS), 'float32') / 255
+    a = cv2.resize(a, (cols, rows), interpolation=cv2.INTER_AREA)
+    rgb = np.asarray(Image.open(src).convert('RGB').resize((cols, rows), Image.BOX), 'float32')
+    lo, hi = np.percentile(a, 3), np.percentile(a, 99.5)
+    a = np.clip((a - lo) / max(.05, hi - lo), 0, 1) ** gamma
+    out = Image.new('RGB', (W, H), (5, 5, 6)); d = ImageDraw.Draw(out)
+    f = ImageFont.truetype(FONT, cw / .602)
+    for y in range(rows):
+        for x in range(cols):
+            v = a[y, x]
+            if v < .035: continue
+            g = RAMP[min(len(RAMP) - 1, int(v * (len(RAMP) - 1) + .5))]
+            c = rgb[y, x]; m = max(c.max(), 1)
+            k = min(1.0, .72 + v * .6) * 255 / m
+            col = tuple(int(min(255, c[i] * k)) for i in range(3))
+            d.text(((x + .5) * cw, (y + .55) * ch), g, font=f, fill=col, anchor='mm')
+    out.save(dst, 'JPEG', quality=82, optimize=True)
+    return out`;
+const SRC2 = `"""Every card picture -> a card made of characters.
+    python3 convert.py            # all
+    python3 convert.py ronin ...  # some"""
+import glob, os, sys
+from PIL import Image
+from ronin_render import render
+
+def src(i):
+    for p in (os.path.join('sources', i + '.png'), os.path.join('orig', i + '.jpg')):
+        if os.path.exists(p): return p
+
+ids = sys.argv[1:] or sorted(os.path.basename(f)[:-4] for f in glob.glob('orig/*.jpg'))
+for i in ids:
+    p = src(i)
+    if not p: continue
+    # the card: 96 columns of letters, 900 x 1092
+    render(p, os.path.join('cards', i + '.jpg'), 96)
+    # the small one for lists: 44 columns
+    render(p, os.path.join('cards', 's', i + '.jpg'), 44, W=360, H=437)
+print(len(ids), 'cards')`;
+const KW = new Set("import from def for in if return continue break while not and or as with class else elif try except".split(" ")), BI = new Set("int min max len range sorted sum abs float tuple set print str list".split(" "));
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+function hl(line) {
+  let out = "", i = 0; const n = line.length;
+  while (i < n) {
+    const ch = line[i];
+    if (ch === "#") { out += `<span class="tc">${esc(line.slice(i))}</span>`; break; }
+    if (ch === "'" || ch === '"') { let j = i + 1; while (j < n && line[j] !== ch) { if (line[j] === "\\") j++; j++; } out += `<span class="ts">${esc(line.slice(i, j + 1))}</span>`; i = j + 1; continue; }
+    if (/[0-9.]/.test(ch) && /[0-9]/.test(line[i] === "." ? (line[i + 1] || "") : ch)) { let j = i; while (j < n && /[0-9.]/.test(line[j])) j++; out += `<span class="tn">${line.slice(i, j)}</span>`; i = j; continue; }
+    if (/[A-Za-z_]/.test(ch)) { let j = i; while (j < n && /[A-Za-z_0-9]/.test(line[j])) j++; const w = line.slice(i, j); let cls = ""; if (KW.has(w)) cls = "tk"; else if (BI.has(w)) cls = "tb"; else if (line[j] === "(") cls = "tf"; out += cls ? `<span class="${cls}">${w}</span>` : w; i = j; continue; }
+    out += esc(ch); i++;
+  }
+  return out;
+}
+function build(el, src, first) { el.innerHTML = src.split("\n").map((t, k) => `<div class="cln" data-k="${k}"><span class="cn">${first + k}</span><span class="ct">${hl(t)}</span></div>`).join(""); return el.children.length; }
+const N2 = build($("l2"), SRC1, 1), N4 = build($("l4"), SRC2, 1);
+
+/* ---- the picture scenes ---- */
+const CAPS = { c1: "every card is made of text", c3: "ronin. one glyph per cell", c5: "open a pack. the first one is free" };
+function pic(n, t0, t1, t, zoomTo, fx, fy) {
+  const u = (t - t0) / (t1 - t0), w = $("w" + n), img = $("i" + n), edge = $("e" + n), rev = eo(cl(u / .5));
+  img.style.clipPath = `inset(0 0 ${((1 - rev) * 100).toFixed(2)}% 0)`; edge.style.top = (rev * 100).toFixed(2) + "%"; edge.style.opacity = rev > 0 && rev < 1 ? 1 : 0;
+  img.style.filter = `brightness(${(1 + (1 - rev) * .6).toFixed(2)}) saturate(${(.5 + rev * .6).toFixed(2)})`;
+  const z = 1 + (zoomTo - 1) * eo(cl((u - .12) / .88)), ox = (.5 - fx) * 400 * (z - 1), oy = (.5 - fy) * 485 * (z - 1);
+  w.style.transform = `translate(${ox.toFixed(1)}px, ${oy.toFixed(1)}px) scale(${z.toFixed(3)})`;
+  const c = $("c" + n), txt = CAPS["c" + n], k = Math.floor(cl((t - t0 - .5) / 1.1) * txt.length); c.innerHTML = esc(txt.slice(0, k)) + "<i></i>";
+}
+function code(el, N, t0, t1, t, from, to) {
+  const u = (t - t0) / (t1 - t0), s = from + (to - from) * eo(u) * .8 + (to - from) * .2 * u, line = Math.floor(s * (N - 1)), box = $(el);
+  box.style.transform = `translateY(${(-Math.max(0, line - 20) * 17.5).toFixed(1)}px)`;
+  [...box.children].forEach((r, k) => r.classList.toggle("hl", k === line));
+}
+function render(t) {
+  t = cl(t, 0, DUR - 1 / FPS / 2);
+  let hit = 0; for (const s of SC) { const dt = t - s[1]; if (dt >= 0 && dt < .35 && s[1] > 0) hit = Math.max(hit, 1 - dt / .35); }
+  for (const [id, a, b] of SC) { const on = t >= a && t < b, el = $(id); el.style.opacity = on ? 1 : 0; el.style.transform = on && hit > 0 ? `translateX(${(Math.sin(t * 90) * hit * 14).toFixed(1)}px)` : ""; el.style.filter = on && hit > 0 ? `hue-rotate(${(hit * 40).toFixed(0)}deg) contrast(${(1 + hit * .4).toFixed(2)})` : ""; }
+  pic(1, 0, 3.6, t, 1.3, .5, .4); pic(3, 7.6, 11.4, t, 1.45, .55, .35); pic(5, 15.4, 18.8, t, 3.4, .5, .4);
+  code("l2", N2, 3.6, 7.6, t, .12, .86); code("l4", N4, 11.4, 15.4, t, .06, .9);
+  $("flash").style.opacity = (hit * .22).toFixed(3);
+  const ee = t - 18.8; $("end").style.opacity = t >= 18.8 ? 1 : 0; $("end").querySelectorAll("div").forEach((d, k) => { d.style.opacity = cl(ee / .5 - k * .25); });
+  $("stage").style.opacity = sm(0, .3, t);
+  $("gt").setAttribute("seed", String(Math.floor(t * 30) % 97));
+}
+window.TL = { dur: DUR, fps: FPS, EV: [], cuts: SC.map(s => s[1]).slice(1) };
+window.renderAt = t => { render(t); return true; };
+window.READY = (async () => { await document.fonts.ready; await Promise.all([...document.images].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }))); render(0); return true; })();
+</script>
