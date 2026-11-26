@@ -1379,3 +1379,14 @@ h1, h2, h3, .bignum, .ttl { letter-spacing: -.04em; }
 .pmin { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0 18px; padding: 12px 4px; border-top: 1px solid rgba(255,255,255,.08); border-bottom: 1px solid rgba(255,255,255,.08); }
 .pmin div { text-align: center; } .pmin small { display: block; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; opacity: .55; } .pmin b { font-size: 15px; font-weight: 600; } .pmin i { font-style: normal; opacity: .5; font-size: 11px; }
 .mhead h2 .favbtn { vertical-align: middle; }
+
+/* the rare slot says what to do: a big ring on the card that fills while you hold it */
+.holdcue { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; z-index: 6; pointer-events: none; text-align: center; }
+.holdcue b { font-size: 34px; letter-spacing: .24em; color: #fff; text-shadow: 0 0 18px rgba(255,230,160,.9); animation: holdpulse 1.1s ease-in-out infinite; }
+.holdcue small { font-size: 13px; letter-spacing: .12em; color: #ffe9b0; opacity: .9; text-transform: uppercase; }
+.holdcue .hc-ring { width: 120px; height: 120px; border-radius: 50%; margin-bottom: 4px; background: conic-gradient(#ffe9b0 calc(var(--hold, 0) * 360deg), rgba(255,255,255,.18) 0); -webkit-mask: radial-gradient(circle, transparent 52px, #000 53px); mask: radial-gradient(circle, transparent 52px, #000 53px); animation: holdring 1.1s ease-in-out infinite; }
+.sc.holding .holdcue .hc-ring { animation: none; }
+@keyframes holdpulse { 50% { opacity: .55; transform: scale(1.06); } } @keyframes holdring { 50% { box-shadow: 0 0 22px 6px rgba(255,230,160,.6); } }
+#stHint.holdhint { font-size: 22px; letter-spacing: .2em; color: #ffe9b0; text-shadow: 0 0 14px rgba(255,230,160,.8); animation: holdpulse 1.1s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .holdcue b, #stHint.holdhint, .holdcue .hc-ring { animation: none; } }
+.holdcue { background: radial-gradient(ellipse at 50% 55%, rgba(0,0,0,.72), rgba(0,0,0,.35) 70%, transparent); border-radius: 14px; padding-top: 60px; } .holdcue .hc-ring { margin-top: -40px; }

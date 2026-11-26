@@ -108,17 +108,17 @@ function focusTop() {
   const el = scEl(SS.idx); if (!el) return; el.classList.add("top"); SS.veils[SS.idx].idle(); SS.veils[SS.idx].frame(); el.onclick = e => { if (el._drag) { el._drag = false; e.stopPropagation(); return; } advance(); }; armFling(el);
   $("stCount").textContent = `${cmeter(SS.idx + 1, SS.items.length)} card ${SS.idx + 1} of ${SS.items.length}`; hint(""); hidePills();
   const at = SS.idx, mine = SS, rare = at === RARE_SLOT;
-  if (rare && !reduced) { hint("hold the card to open it"); el.classList.add("beat"); Snd.beat(); buzz([14, 120, 14]); holdOpen(el, mine, at); return; }   // the fifth card: you press and hold, the light builds, then it turns
+  if (rare && !reduced) { hint("HOLD THE CARD"); $("stHint").classList.add("holdhint"); el.classList.add("beat"); Snd.beat(); buzz([14, 120, 14]); holdOpen(el, mine, at); return; }   // the fifth card: you press and hold, the light builds, then it turns
   setTimeout(() => { if (SS === mine && SS.idx === at && !SS.busy && SS.phase === "stack" && !el.dataset.rev) advance(); }, rare ? 300 : at ? 200 : 420);   // each card turns itself over
 }
 // press and hold: the glow climbs with your finger, the phone ticks faster, and at the top the card turns. Let go and it eases back. Enter or Space turns it at once.
 function holdOpen(el, mine, at) {
   let p = 0, down = false, last = 0, tick = 0, done = false; const orig = el.onclick;
   const set = v => el.style.setProperty("--hold", v.toFixed(3));
-  const go = () => { if (done) return; done = true; el.classList.remove("beat", "holding"); set(1); el.onclick = orig; el.onkeydown = null; buzz([30, 40, 60]); advance(); };
+  const go = () => { if (done) return; done = true; el.classList.remove("beat", "holding"); cue.remove(); $("stHint").classList.remove("holdhint"); set(1); el.onclick = orig; el.onkeydown = null; buzz([30, 40, 60]); advance(); };
   el.onclick = e => { e.stopPropagation(); if (e.detail === 0) go(); };
   el.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
-  el.tabIndex = 0;
+  el.tabIndex = 0; const cue = document.createElement("div"); cue.className = "holdcue"; cue.innerHTML = `<span class="hc-ring"></span><b>HOLD</b><small>press and keep holding</small>`; el.appendChild(cue);
   const loop = t => {
     if (done || SS !== mine || SS.idx !== at || SS.phase !== "stack") return;
     const dt = Math.min(50, t - (last || t)); last = t;
