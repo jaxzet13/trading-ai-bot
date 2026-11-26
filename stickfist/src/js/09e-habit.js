@@ -31,7 +31,8 @@ const Snd = (() => {
     claim(big) { if (!ready()) return; [0, 2, 4, big ? 6 : 5].forEach((k, i) => tone(NOTE[k], .4, "triangle", .13, i * .08)); },
     level() { if (!ready()) return; [0, 2, 4, 6, 7].forEach((k, i) => tone(NOTE[k], .5, "triangle", .12, i * .09)); },
     click() { if (!ready()) return; tone(900, .05, "sine", .07); },
-    climb(i, last) { if (!ready()) return; const f = NOTE[i % 8] * (1 + Math.floor(i / 8)); tone(f, .26, "triangle", .15); tone(f * 2, .18, "sine", .06, .02); tone(70 + i * 9, .3, "sine", .3, 0, 42); if (last) { tone(f * 1.5, .5, "triangle", .12, .12); hiss(.3, .1, .1, 1800, 9000); } },   // one step of a good card's climb: a thump under a note that goes up each time
+    beat() { if (!ready()) return; tone(62, .22, "sine", .34, 0, 44); tone(62, .26, "sine", .38, .24, 40); },                                                                // two low beats: the breath before a card's last step
+    climb(i, last) { if (!ready()) return; const f = NOTE[i % 8] * (1 + Math.floor(i / 8)); tone(f, .26, "triangle", .15); tone(f * 2, .18, "sine", .06, .02); tone(70 + i * 9, .3, "sine", .3, 0, 42); if (last) { tone(f * 1.5, .5, "triangle", .12, .12); tone(f * 2, .7, "sine", .1, .16); tone(48, .7, "sine", .4, 0, 30); hiss(.45, .14, .05, 1400, 11000); } },   // one step of a good card's climb: a thump under a note that goes up each time
     rip(p) { if (!ready()) return; hiss(.07, .22, 0, 1500 + p * 3500, 7000 + p * 6000); },                                   // one notch of the pack tearing: brighter the further it has gone
     rise(i) { if (!ready()) return; tone(380 + i * 70, .07, "triangle", .09); hiss(.05, .06, 0, 2000, 8000); },               // a card coming up out of the pack
     whoosh() { if (!ready()) return; hiss(.2, .12, 0, 500, 3200); },                                                           // a card flicked away

@@ -151,17 +151,26 @@ async function climb(el, card, c) {
   if (reduced) return; const order = Object.keys(RAR), top = order.indexOf(card.rar), x = sellOf(c) / Math.max(1, SS.ref); let steps = [];
   for (let i = 2; i <= top; i++) steps.push([RAR[order[i]].name, RAR[order[i]].col]);
   if (steps.length < 2) { const col = c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col; steps = [2, 4, 10, 25, 50, 100].filter(m => x >= m).map(m => [m + "× the pack", col]); }
-  if (!steps.length) return; const tt = $("stTitle"), mine = SS; el.classList.add("climbing"); stage.classList.add("hush"); hint("");
-  for (let i = 0; i < steps.length; i++) {
-    if (SS !== mine || SS.phase === "summary") break; const [name, col] = steps[i], last = i === steps.length - 1;
-    el.style.setProperty("--cc", col); stage.style.setProperty("--rc", col); tt.className = "st-title climb"; tt.style.setProperty("--rc", col);
+  if (!steps.length) return; const tt = $("stTitle"), mine = SS, n = steps.length; el.classList.add("climbing"); stage.classList.add("hush"); hint("");
+  // The further it goes, the heavier it gets: the card swells and shakes harder, the screen closes in around it, each step lands
+  // slower than the one before. Before the last step everything stops for a breath (dark, still, two low beats), then it lands.
+  for (let i = 0; i < n; i++) {
+    if (SS !== mine || SS.phase === "summary") break; const [name, col] = steps[i], last = i === n - 1, deep = Math.min(1, i / 6);
+    if (last && n >= 3) { el.classList.add("held"); stage.classList.add("breath"); tt.innerHTML = `<div class="cl-d">${steps.slice(0, i).map(s => `<i style="--c:${s[1]}"></i>`).join("")}</div>`; Snd.beat(); buzz([14, 160, 14]); await sleep(520 + Math.min(500, n * 60)); el.classList.remove("held"); stage.classList.remove("breath"); if (SS !== mine || SS.phase === "summary") break; }
+    el.style.setProperty("--cc", col); el.style.setProperty("--cz", (1 + deep * .1).toFixed(3)); el.style.setProperty("--cs", (2 + deep * 5).toFixed(1) + "px"); stage.style.setProperty("--rc", col); stage.style.setProperty("--deep", deep.toFixed(2)); tt.className = "st-title climb" + (last ? " last" : ""); tt.style.setProperty("--rc", col);
     tt.innerHTML = `<div class="cl-n">${esc(name)}</div><div class="cl-d">${steps.slice(0, i + 1).map(s => `<i style="--c:${s[1]}"></i>`).join("")}</div>`;
-    el.classList.remove("thump"); void el.offsetWidth; el.classList.add("thump"); Snd.climb(i, last); buzz(last ? [30, 30, 60] : 10 + Math.min(30, i * 4));
-    const r = el.getBoundingClientRect(); FX.burst(r.left + r.width / 2, r.top + r.height / 2, 10 + i * 8, [col, "#fff"], 260 + i * 50);
-    await sleep(Math.max(150, 340 - i * 22) + (last ? 260 : 0));
+    el.classList.remove("thump"); void el.offsetWidth; el.classList.add("thump"); Snd.climb(i, last); buzz(last ? [40, 30, 80] : 12 + Math.min(40, i * 6));
+    const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2; FX.burst(cx, cy, 12 + i * 12, [col, "#fff"], 260 + i * 70); ring(cx, cy, col, last ? 1.5 : .7 + deep * .5);
+    if (last) flash(col, .5);
+    await sleep(Math.max(190, 330 - i * 14) + i * 34 + (last ? 420 : 0));                         // each step a little longer than the last: you start to wonder how far it goes
   }
-  el.classList.remove("climbing", "thump"); stage.classList.remove("hush");
+  el.classList.remove("climbing", "thump"); stage.classList.remove("hush"); stage.style.removeProperty("--deep");
 }
+// a ring of light going out from a point, and the whole screen lit for an instant
+function ring(x, y, col, k) { if (reduced) return; const e = document.createElement("i"); e.className = "st-ring"; e.style.cssText = `left:${x}px;top:${y}px;--rc:${col};--k:${k}`; stage.appendChild(e); setTimeout(() => e.remove(), 900); }
+function flash(col, a) { if (reduced) return; const e = document.createElement("i"); e.className = "st-flash"; e.style.cssText = `--rc:${col};--a:${a}`; stage.appendChild(e); setTimeout(() => e.remove(), 700); }
+// the rarity's name across the whole screen for a beat, when a card that rare lands
+function stamp(name, col) { if (reduced) return; const e = document.createElement("div"); e.className = "st-stamp"; e.style.setProperty("--rc", col); e.textContent = name; stage.appendChild(e); setTimeout(() => e.remove(), 1250); }
 async function reveal(el, c, card, R, v) {
   c.t = Date.now();                                                                        // its price starts moving when it is turned over, not while it sat face down: every card is first seen at its set value
   const x = sellOf(c) / Math.max(1, SS.ref), T = momentOf(c);
@@ -186,10 +195,14 @@ async function reveal(el, c, card, R, v) {
   FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][T], T >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + T * 130);
   if (T >= 4) FX.rain(mid[0], rect.width * 1.6, 18 + T * 6, [R.col, "#fff"]);
   if (T >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
-  if (T >= 4 && !reduced) {                                                              // a hit: the stage jolts, light turns behind the card, and a second wave goes out as its worth lands
-    stage.classList.remove("quake"); void stage.offsetWidth; stage.classList.add("quake"); setTimeout(() => stage.classList.remove("quake"), 520);
-    const ry = document.createElement("i"); ry.className = "rays"; ry.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col); el.insertBefore(ry, el.firstChild); el.classList.add("hit");
-    const mine = SS; setTimeout(() => { if (SS === mine && SS.phase === "stack") { FX.burst(mid[0], mid[1], 50 + T * 16, [R.col, "#fff", "#ffe9a8"], 620); Snd.paid(); buzz([20, 30, 40]); } }, 420);
+  if (T >= 4 && !reduced) {                                                              // a hit: how hard it lands follows how rare it is
+    const col = c.fx ? STYLE_TINT[c.fx] : R.col, lvl = Math.max(1, Object.keys(RAR).indexOf(card.rar) - 3), big = Math.min(1, lvl / 6), mine = SS, live = () => SS === mine && SS.phase === "stack";       // legendary is 1, secret is 9
+    stage.style.setProperty("--q", (1 + big * 1.4).toFixed(2)); stage.classList.remove("quake"); void stage.offsetWidth; stage.classList.add("quake"); setTimeout(() => stage.classList.remove("quake"), 620);
+    const ry = document.createElement("i"); ry.className = "rays"; ry.style.setProperty("--rc", col); el.insertBefore(ry, el.firstChild); el.classList.add("hit"); el.animate([{ scale: (1.22 + big * .2).toFixed(2), filter: "brightness(2.2)" }, { scale: ".97", filter: "brightness(1.1)", offset: .6 }, { scale: "1", filter: "none" }], { duration: 520, easing: "cubic-bezier(.2, .9, .3, 1)" });   // it slams down
+    flash(col, .55 + big * .4); ring(mid[0], mid[1], col, 1.6 + big); setTimeout(() => { if (live()) ring(mid[0], mid[1], "#ffffff", 1.2 + big); }, 140); if (lvl >= 2) stamp(R.name, col);
+    setTimeout(() => { if (live()) { FX.burst(mid[0], mid[1], 50 + T * 16, [col, "#fff", "#ffe9a8"], 620); Snd.paid(); buzz([20, 30, 40]); } }, 420);
+    // the rarest keep going: more waves of light, each one further out
+    for (let w = 1; w <= Math.min(4, lvl - 2); w++) setTimeout(() => { if (live()) { ring(mid[0], mid[1], col, 1.4 + w * .5); FX.burst(mid[0], mid[1], 60 + w * 30, [col, "#fff"], 500 + w * 120); if (w % 2) FX.rain(mid[0], rect.width * 2, 14 + w * 6, [col, "#fff"]); Snd.chip(); buzz(18); } }, 700 + w * 380);
   }
   const t = $("stTitle"); t.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col);
   t.innerHTML = `<div class="rw">${SS.fresh && SS.fresh.has(c.uid) ? `<span class="newtag">new</span> ` : ""}${T >= 3 ? `<b class="rn">${esc(R.name)}</b>` : ""}${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b> ${T >= 3 && x >= 2 ? `<span class="xm">${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack</span>` : `<span class="dim">· ${Val.watching(c)} AI buyers watching</span>`}</div>${x >= 2 && T < 3 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
