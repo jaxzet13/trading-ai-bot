@@ -1,21 +1,21 @@
 {
  "start": "2026-11-02",
  "live_from": "2026-11-25",
- "last_session": "2026-11-24",
- "sessions": 17,
- "live_sessions": 0,
- "looks": 68,
- "trades": 32,
- "expectancy_r": 0.49417833215884455,
- "sum_r": 15.813706629083025,
- "win_rate": 0.375,
- "pf": 1.9686789361126507,
+ "last_session": "2026-11-25",
+ "sessions": 18,
+ "live_sessions": 1,
+ "looks": 72,
+ "trades": 34,
+ "expectancy_r": 0.4055569592786598,
+ "sum_r": 13.788936615474434,
+ "win_rate": 0.35294117647058826,
+ "pf": 1.751449133442855,
  "strategies": {
   "tod-1": {
    "desc": "NAS100 ny \u00b7 tod (offset_min=60, anchor=prev_close, min_move_adr=0.6, mode=go, trend=ema200, stop_atr=1.5) \u00b7 stop x1, target 3R, hold to session end",
-   "looks": 17,
-   "trades": 10,
-   "sum_r": 4.959697140514265,
+   "looks": 18,
+   "trades": 11,
+   "sum_r": 3.9473121337099704,
    "backtest_r": {
     "train": 0.29060999931128495,
     "valid": 0.4526804277763301,
@@ -24,9 +24,9 @@
   },
   "tod-2": {
    "desc": "NAS100 ny \u00b7 tod (offset_min=60, anchor=prev_close, min_move_adr=0.6, mode=go, trend=none, stop_atr=1.5) \u00b7 stop x1, target 3R, hold to session end",
-   "looks": 17,
-   "trades": 11,
-   "sum_r": 3.9456634200696783,
+   "looks": 18,
+   "trades": 12,
+   "sum_r": 2.9332784132653833,
    "backtest_r": {
     "train": 0.2752071938852315,
     "valid": 0.46241689607301034,
@@ -35,7 +35,7 @@
   },
   "open_candle-1": {
    "desc": "NAS100 ny \u00b7 open_candle (candle_min=30, rule=body_gap, trend=ema300, min_body_atr=1.0, stop=atr) \u00b7 stop x1, no target, breakeven at 1R, hold to session end",
-   "looks": 17,
+   "looks": 18,
    "trades": 4,
    "sum_r": 3.9669531814185515,
    "backtest_r": {
@@ -46,7 +46,7 @@
   },
   "open_candle-2": {
    "desc": "NAS100 ny \u00b7 open_candle (candle_min=30, rule=ema12, trend=ema300, min_body_atr=1.0, stop=atr) \u00b7 stop x1, no target, breakeven at 1R, hold to session end",
-   "looks": 17,
+   "looks": 18,
    "trades": 7,
    "sum_r": 2.941392887080528,
    "backtest_r": {
@@ -73,7 +73,7 @@
     "funded_risk": 0.2
    },
    "status": "funded",
-   "balance": 91947.04,
+   "balance": 90474.78,
    "floor": 90000.0,
    "target": null,
    "attempts": 2,
@@ -236,6 +236,15 @@
      "attempt": 2,
      "phase": "funded",
      "live": false
+    },
+    {
+     "day": "2026-11-25",
+     "bal": 90474.78,
+     "floor": 90000.0,
+     "pnl": -1472.26,
+     "attempt": 2,
+     "phase": "funded",
+     "live": true
     }
    ],
    "events": [
@@ -745,6 +754,36 @@
      "attempt": 2,
      "phase": "funded",
      "live": false
+    },
+    {
+     "day": "2026-11-25",
+     "time": "10:30",
+     "exit": "10:36",
+     "strategy": "tod-1",
+     "side": "short",
+     "entry": 25084.4,
+     "size": "6.43 units",
+     "risk": 974,
+     "r": -1.01,
+     "pnl": -986,
+     "attempt": 2,
+     "phase": "funded",
+     "live": true
+    },
+    {
+     "day": "2026-11-25",
+     "time": "10:30",
+     "exit": "10:36",
+     "strategy": "tod-2",
+     "side": "short",
+     "entry": 25084.4,
+     "size": "3.18 units",
+     "risk": 481,
+     "r": -1.01,
+     "pnl": -487,
+     "attempt": 2,
+     "phase": "funded",
+     "live": true
     }
    ]
   },
@@ -926,6 +965,15 @@
      "attempt": 1,
      "phase": "eval 1",
      "live": false
+    },
+    {
+     "day": "2026-11-25",
+     "bal": 49643.59,
+     "floor": 48622.26,
+     "pnl": 0.0,
+     "attempt": 1,
+     "phase": "eval 1",
+     "live": true
     }
    ],
    "events": [
@@ -1250,6 +1298,13 @@
   {
    "day": "2026-11-24",
    "live": false,
+   "looks": 4,
+   "trades": 2,
+   "r": -2.02
+  },
+  {
+   "day": "2026-11-25",
+   "live": true,
    "looks": 4,
    "trades": 2,
    "r": -2.02
