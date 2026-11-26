@@ -7,7 +7,7 @@
    opening closes. So the things that spend, sell or decide ignore a tap that comes less than 0.4 s after the one before it, and the
    page ignores taps for a moment after an opening closes. One deliberate tap always works. */
 let tapNow = 0, tapWas = 0, stageShut = 0; addEventListener("pointerdown", () => { tapWas = tapNow; tapNow = performance.now(); }, true);
-const rushed = () => tapNow - tapWas < 400;
+const rushed = () => performance.now() - tapNow < 300 && tapNow - tapWas < 400;                              // this action comes from a tap made just now, hard on the heels of another (a key press, or a tap after a pause, is never a rush)
 document.addEventListener("click", e => {
   if (!e.target.closest("#stage") && performance.now() - stageShut < 500) return;                              // the last taps of a rush land on the page under the opening as it closes: they do nothing
   const t = e.target.closest("button"); if (!t) { if (e.target === $("modal")) closeModal(); return; }
