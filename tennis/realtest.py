@@ -40,6 +40,7 @@ MAX_LOSS = 4.0
 AUTO_MAX_LOSS = 5.0              # account holder, Nov 24: "start them with real money with the same 5 dollar stop loss"
 TOP_N = 3
 AUTO_N = 50                      # account holder, Nov 25: "use more tennis strategies at once": the whole frozen batch
+BAND_TOL = 0.03                                    # live ask may be this far outside a band strategy's prices
 SLACK_C = 2
 
 
@@ -181,6 +182,12 @@ def run(log=print, auto=False):
                 ask = top["yes_ask"] if side == "yes" else top["no_ask"]
                 if not ask or not 0.02 <= ask <= 0.96:
                     _log({"event": "skip", "ticker": m["ticker"], "strategy": s["id"], "why": f"no usable ask ({ask})"}); continue
+                # the decision is made on the last closed candle; the live book can be far from it when the match has
+                # already started (Kalshi's "scheduled start" is often late). A price well outside the band is a
+                # different bet from the one that was tested: leave it
+                if s.get("fam") == "band" and not s["lo"] - BAND_TOL <= ask <= s["hi"] + BAND_TOL:
+                    _log({"event": "skip", "ticker": m["ticker"], "strategy": s["id"],
+                          "why": f"live ask {ask:.2f} outside the band"}); continue
                 limit = round(min(0.98, ask + SLACK_C / 100), 2)
                 worst = limit + tapi.fee(limit, 1)
                 if realized - open_cost - worst <= -MAX_LOSS:
