@@ -113,9 +113,9 @@ function focusTop() {
 }
 // press and hold: the glow climbs with your finger, the phone ticks faster, and at the top the card turns. Let go and it eases back. Enter or Space turns it at once.
 function holdOpen(el, mine, at) {
-  let p = 0, down = false, last = 0, tick = 0, done = false;
+  let p = 0, down = false, last = 0, tick = 0, done = false; const orig = el.onclick;
   const set = v => el.style.setProperty("--hold", v.toFixed(3));
-  const go = () => { if (done) return; done = true; el.classList.remove("beat", "holding"); set(1); buzz([30, 40, 60]); advance(); };
+  const go = () => { if (done) return; done = true; el.classList.remove("beat", "holding"); set(1); el.onclick = orig; el.onkeydown = null; buzz([30, 40, 60]); advance(); };
   el.onclick = e => { e.stopPropagation(); if (e.detail === 0) go(); };
   el.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
   el.tabIndex = 0;
@@ -137,10 +137,10 @@ function holdOpen(el, mine, at) {
    Two pills under a card once it is face up. Red sells it now for what it shows. Blue holds it: it goes to your collection, where
    its value keeps moving. For a rare card, a styled copy, or one worth at least the pack, the blue pill is the lit one. */
 let pillT = 0;
-function hidePills() { const p = $("stPills"), w = $("stWorth"); if (p) p.hidden = true; if (w) w.hidden = true; clearInterval(pillT); pillT = 0; }
+function hidePills() { const p = $("stPills"), w = $("stWorth"), f = $("stFav"); if (f) f.hidden = true; if (p) p.hidden = true; if (w) w.hidden = true; clearInterval(pillT); pillT = 0; }
 function showPills(c, card) {
   const p = $("stPills"), keep = RAR[card.rar].tier >= 2 || !!c.fx || sellOf(c) >= SS.ref, w = Val.watching(c); p.className = "pills" + (keep ? " keep" : ""); p.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col);
-  $("pillSell").innerHTML = `<small>sell</small><b>+${money(sellOf(c))}</b>`; $("pillHold").innerHTML = `<small>hold</small><b>${w} buyer${w === 1 ? "" : "s"} watching</b>`;
+  $("pillSell").innerHTML = `<small>sell</small>`; $("pillHold").innerHTML = `<small>keep</small>`;
   p.hidden = false; p.classList.remove("in"); void p.offsetWidth; p.classList.add("in");
   clearInterval(pillT); pillT = setInterval(() => { const b = $("pillSell").querySelector("b"); if (!SS || !b || $("stPills").hidden) { clearInterval(pillT); pillT = 0; return; } const txt = "+" + money(sellOf(c)); if (b.textContent !== txt) b.textContent = txt; const v = $("swV"); if (v && !v.dataset.run) { const t2 = money(valueOf(c)); if (v.textContent !== t2) v.textContent = t2; } }, 250);   // the price is moving while you decide: the pill always says what selling pays this instant
 }
@@ -235,6 +235,7 @@ async function reveal(el, c, card, R, v) {
       const v = $("swV"), t0 = performance.now(), dur = reduced ? 0 : 650 + T * 90, mine = SS; let lastTick = 0;                                  // the number runs up to what the card is worth
       const run = now => { if (SS !== mine || !v.isConnected) return; const k = dur ? Math.min(1, (now - t0) / dur) : 1, e = 1 - Math.pow(1 - k, 3); v.textContent = money(worth * e); if (k < 1) { if (now - lastTick > 90) { lastTick = now; Snd.rise(Math.round(e * 8)); } requestAnimationFrame(run); } else { delete v.dataset.run; v.classList.add("done"); Snd.chip(); } }; requestAnimationFrame(run);
     } else { blockReveal(nm, card.name, 480); fitName(nm); } }
+  { const f = $("stFav"); if (f) { f.dataset.fav = card.no; f.hidden = false; f.className = "favbtn big" + (isFav(card.no) ? " on" : ""); f.textContent = isFav(card.no) ? "♥" : "♡"; f.setAttribute("aria-pressed", isFav(card.no)); } }
   t.className = "st-title" + (T >= 4 ? " hit" : T >= 3 ? " good" : ""); void t.offsetWidth; t.classList.add("in");
 }
 // once a card is face up, drag it and let go: it leaves the way you threw it (a tap still sends it off)
@@ -259,7 +260,7 @@ function skipAll() { if (!SS || SS.phase === "summary") return; if (SS.phase ===
   Machine.stop(); SS.veils && SS.veils.forEach(v => v && v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
 // one tap to turn the pack into money and open the next: only offered when the next pack is covered (a free pack, one you bought, or what these cards sell for plus your balance)
 const sellNext = back => { const pk = SS.pack, price = packPrice(pk), ok = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins + back >= price; return ok && back > 0 ? `<button class="btn solid" id="sumSellAgain">sell all · open another</button>` : ""; };
-const againLabel = pk => freeOk(pk) && state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
+const againLabel = pk => freeOk(pk) && state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another" : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
 // under a pack's result: how many of its cards were new, and how close the next goal is
 function goalLine() {
   const nw = SS && SS.fresh ? SS.fresh.size : 0, rd = Goals.ready().length, nx = Goals.next(), parts = [];
@@ -270,14 +271,13 @@ function goalLine() {
 }
 // The result, straight to the point: what you sold, what you are holding, and the next pack.
 function endHTML(o) {
-  const net = o.back - o.paid, pk = SS.pack;
+  const pk = SS.pack, nw = SS.fresh ? SS.fresh.size : 0, n = SS.all.length, sold = SS.soldN || 0;
   return `<div class="sum v2"><div class="end-top"><div class="label">${esc(o.title)}</div>
-      <div class="end-num ${o.paid ? (net >= 0 ? "up" : "dn") : "up"}"><div class="end-big" role="img" aria-label="${money(o.back)}">${money(o.back)}</div></div>
-      <div class="end-line ${o.paid ? (net >= 0 ? "up" : "dn") : ""}">${o.paid ? `for ${money(o.paid)} · <b>${net >= 0 ? "+" : "−"}${money(Math.abs(net))}</b>` : o.bought ? "a pack you bought · play money" : "free"}${o.x >= 2 && o.paid ? ` · ${o.x >= 10 ? Math.round(o.x) : o.x.toFixed(1)}×` : ""}</div></div>
-    <div class="end-split"><div class="es sold"><small>sold</small><b>${money(o.soldG)}</b></div><div class="es held"><small>holding${o.held.length ? " · " + o.held.length : ""}</small><b>${money(o.heldV)}</b></div></div>
+      <div class="end-num up"><div class="end-big" role="img" aria-label="${n} cards">${n} cards</div></div>
+      <div class="end-line">${nw ? "" : "nothing new this time"}${sold ? `${nw ? "" : " · "}${sold} sold` : ""}</div></div>
     <div class="end-cards">${o.fan}${goalLine()}</div>
     <div class="end-acts"><button class="btn solid big" id="sumAgain">${againLabel(pk)}</button>
-      <div class="row" style="justify-content:center">${o.rest ? `<button class="btn" id="sumSellRest">sell the commons · keep the rest · ${money(o.rest)}</button>` : ""}${o.held.length ? `<button class="btn" id="sumSell">${o.rest ? "sell all" : "sell what I held"} · ${money(o.heldSell)}</button>` : ""}<button class="btn ghost" id="sumKeep">done</button>${o.share ? `<button class="btn ghost" id="sumClip">share</button>` : ""}${typeof API !== "undefined" && API.on ? `<button class="btn ghost" id="sumInvite">invite · free pack</button>` : ""}</div></div></div>`;
+      <div class="row" style="justify-content:center">${o.rest ? `<button class="btn" id="sumSellRest">sell the commons · keep the rest</button>` : ""}${o.held.length ? `<button class="btn" id="sumSell">${o.rest ? "sell all" : "sell what I held"}</button>` : ""}<button class="btn ghost" id="sumKeep">done</button>${o.share ? `<button class="btn ghost" id="sumClip">share</button>` : ""}${typeof API !== "undefined" && API.on ? `<button class="btn ghost" id="sumInvite">invite · free pack</button>` : ""}</div></div></div>`;
 }
 const inVault = c => state.vault.some(v => v.uid === c.uid);
 function summary() {
@@ -290,10 +290,10 @@ function closeStage() { if (SS && SS.phase === "wait") return; stageShut = perfo
 function multiSummary() {
   SS.phase = "summary"; const all = SS.all, held = all.filter(inVault), soldG = SS.soldG || 0, heldSell = held.reduce((a, c) => a + sellOf(c), 0), heldV = held.reduce((a, c) => a + valueOf(c), 0), back = soldG + heldSell, x = back / Math.max(1, SS.refAll), won = back >= SS.refAll;
   const top = held.slice().sort((a, b) => valueOf(b) - valueOf(a)).slice(0, 7), topSet = new Set(top.map(c => c.uid)), groups = {}; held.filter(c => !topSet.has(c.uid)).forEach(c => { const k = c.no + "|" + (c.fx || ""); (groups[k] = groups[k] || []).push(c); });   // the best of what you hold as cards, the rest as one picture per card with how many
-  const smallFan = Object.values(groups).sort((a, b) => valueOf(b[0]) - valueOf(a[0]) || b.length - a.length).map(g => `<div class="gc">${cardHTML(g[0], { sm: true })}<b class="gn">×${g.length}</b></div>`).join("");
+  const smallFan = Object.values(groups).sort((a, b) => valueOf(b[0]) - valueOf(a[0]) || b.length - a.length).map(g => `<div class="gc">${cardHTML(g[0], { sm: true })}<b class="gn">×${g.length}</b>${favBtn(g[0].no)}</div>`).join("");
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   const keep = held.filter(c => RAR[BY_NO[c.no].rar].tier >= 2 || c.fx), rest = keep.length && keep.length < held.length ? held.filter(c => !keep.includes(c)).reduce((a, c) => a + sellOf(c), 0) : 0;
   $("stSummary").innerHTML = endHTML({ title: SS.pack.name, back, paid: SS.paid, x, soldG, held, heldV, heldSell, rest, share: false,
-    fan: (top.length ? `<div class="fan pack7">${top.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : "") + (smallFan ? `<div class="fan small">${smallFan}</div>` : "") });
+    fan: (top.length ? `<div class="fan pack7">${top.map(c => `<div class="fcw">${cardHTML(c, { sm: true })}${favBtn(c.no)}</div>`).join("")}</div>` : "") + (smallFan ? `<div class="fan small">${smallFan}</div>` : "") });
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 40 : 24) : 0, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }

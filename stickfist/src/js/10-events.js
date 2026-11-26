@@ -16,6 +16,7 @@ document.addEventListener("click", e => {
   if (t.dataset.rq) { rqModal(t.dataset.rq); Snd.click(); return; }
   if (t.dataset.selcard) { selCard(t.dataset.selcard); return; }
   if (t.dataset.selq) { selQuick(t.dataset.selq); return; }
+  if (t.dataset.fav) { e.stopPropagation(); toggleFav(t.dataset.fav); return; }
   if (t.dataset.card) { cardModal(t.dataset.card); return; }
   if (t.dataset.cut) { closeModal(); Cut.play(t.dataset.cut); return; }
   if (t.dataset.f) { const [sc, k, v] = t.dataset.f.split(":"); if (sc === "m") { MKF[k] = v; renderMarket(); } else { CF[k] = v; renderCollection(); } Snd.click(); return; }

@@ -1367,3 +1367,15 @@ h1, h2, h3, .bignum, .ttl { letter-spacing: -.04em; }
 .sc.beat.holding .card{animation:holdshake .09s linear infinite}
 @keyframes holdshake{0%{translate:0 0}25%{translate:calc(var(--hold,0)*2px) 0}75%{translate:calc(var(--hold,0)*-2px) calc(var(--hold,0)*1px)}}
 @media (prefers-reduced-motion:reduce){.sc.beat .card{animation:none!important}}
+
+/* collecting, not trading: no money on the stage while you open */
+#stMeter, .vchip, #stWorth, #stTitle .vl, #stTitle .xm, #stTitle .ro .xm { display: none !important; }
+.favbtn { background: none; border: 0; color: #cfd3da; font-size: 22px; line-height: 1; padding: 6px 8px; cursor: pointer; opacity: .8; transition: transform .15s, color .15s; }
+.favbtn.on { color: #ff6f91; opacity: 1; text-shadow: 0 0 12px rgba(255,111,145,.6); } .favbtn:active { transform: scale(1.3); }
+.favbtn.big { position: absolute; right: 14px; bottom: 150px; z-index: 5; font-size: 30px; width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,.45); }
+.ctw { position: relative; } .ctw .favbtn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.5); border-radius: 50%; font-size: 17px; padding: 4px 6px; }
+.fcw, .gc { position: relative; } .fcw .favbtn, .gc .favbtn { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,.5); border-radius: 50%; font-size: 15px; padding: 3px 5px; }
+.favshelf { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 6px 0 18px; } .fvt { background: none; border: 0; padding: 0; } .favhint { margin: 2px 2px 16px; opacity: .7; }
+.pmin { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0 18px; padding: 12px 4px; border-top: 1px solid rgba(255,255,255,.08); border-bottom: 1px solid rgba(255,255,255,.08); }
+.pmin div { text-align: center; } .pmin small { display: block; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; opacity: .55; } .pmin b { font-size: 15px; font-weight: 600; } .pmin i { font-style: normal; opacity: .5; font-size: 11px; }
+.mhead h2 .favbtn { vertical-align: middle; }

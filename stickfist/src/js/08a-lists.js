@@ -28,6 +28,18 @@ function renderMarket() {
 
 /* ---- the collection ---- */
 const CF = { show: "all", set: "all", sort: "num" };
+// favourites: any card you own can be starred, a common you think looks good as much as a rare. They live in a shelf on the Me tab and a filter in the collection.
+const isFav = no => (state.favs || []).includes(no);
+const favBtn = no => `<button class="favbtn${isFav(no) ? " on" : ""}" data-fav="${no}" type="button" aria-pressed="${isFav(no)}" aria-label="${isFav(no) ? "Remove from favourites" : "Add to favourites"}">${isFav(no) ? "♥" : "♡"}</button>`;
+function toggleFav(no) {
+  state.favs = state.favs || []; const i = state.favs.indexOf(no); if (i < 0) state.favs.push(no); else state.favs.splice(i, 1); persist(); buzz(i < 0 ? [8, 40, 14] : 6);
+  document.querySelectorAll(`.favbtn[data-fav="${no}"]`).forEach(b => { b.classList.toggle("on", i < 0); b.setAttribute("aria-pressed", i < 0); b.textContent = i < 0 ? "♥" : "♡"; });
+  if (view === "profile" && $("pFav")) $("pFav").live = favShelf(); if (view === "collection" && CF.show === "fav") renderCollection(); return i < 0;
+}
+function favShelf() {
+  const mine = (state.favs || []).filter(no => BY_NO[no] && copiesOf(no).length);
+  return `<div class="psec"><h3 class="sec">Favourites</h3><span class="small">${mine.length ? mine.length + " starred" : ""}</span></div>` + (mine.length ? `<div class="favshelf">${mine.map(no => `<button class="fvt" data-card="${no}" aria-label="${esc(BY_NO[no].name)}">${cardHTML(copiesOf(no)[0], { sm: true, thumb: true })}</button>`).join("")}</div>` : `<p class="small favhint">Tap ♡ on any card you like — it doesn't have to be a rare. Your favourites live here.</p>`);
+}
 // every copy beyond the best one of each card (copies you added by code are never sold in bulk)
 // the copies that are worth more now than they were when you got them (physical cards you added are left alone)
 function upCopies() { return state.vault.filter(c => !c.phys && gainOf(c) > 0); }
@@ -42,16 +54,16 @@ function renderCollection() {
     <div class="stat go"><span class="label">Next ${esc(pk.name)} pack</span><div class="sbig"><b>${ch ? Math.round(ch * 100) + "%" : "–"}</b><span>a new card</span></div><button class="btn small solid" data-open>${state.freePacks ? "open free pack" : "open pack"}</button></div>`;
   const up = upCopies(), upSum = up.reduce((a, c) => a + sellOf(c), 0);
   $("cActions").live = (ex.length ? `<button class="btn" id="sellExtras">sell ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} · ${money(exSum)}</button>` : "") + (up.length ? `<button class="btn" id="sellUp">sell the ${up.length} that ${up.length === 1 ? "is" : "are"} up · ${money(upSum)}</button>` : "") + (state.vault.length ? (() => { const sum = state.vault.reduce((a, c) => a + sellOf(c), 0), armed = sellAllAt && Date.now() - sellAllAt < 4000; return `<button class="btn ghost" id="sellAll">${armed ? "tap again to sell all" : "sell all"} ${state.vault.length} · ${money(sum)}</button>`; })() : "") + (ex.length || up.length || state.vault.length ? `<span class="small">${ex.length ? "Extras keep your best copy of every card. " : ""}Sales are final.</span>` : "");
-  $("cFilters").live = seg("c", "show", [["all", "All"], ["found", "Found"], ["missing", "Missing"]], CF.show) + selectHTML("cSort", [["num", "Number"], ["rare", "Rarest first"], ["value", "Most valuable"], ["new", "Newest"]], CF.sort, "Sort") + seg("c", "set", [["all", "All packs"], ...Object.keys(SETS).map(k => [k, SETS[k].name])], CF.set);
+  $("cFilters").live = seg("c", "show", [["all", "All"], ["found", "Found"], ["missing", "Missing"], ["fav", "♥ Favourites"]], CF.show) + selectHTML("cSort", [["num", "Number"], ["rare", "Rarest first"], ["value", "Most valuable"], ["new", "Newest"]], CF.sort, "Sort") + seg("c", "set", [["all", "All packs"], ...Object.keys(SETS).map(k => [k, SETS[k].name])], CF.set);
   const val = c => { const b = copiesOf(c.no)[0]; return b ? valueOf(b) : c.val; }, cmp = { num: (a, b) => +a.no - +b.no, rare: (a, b) => RAR[b.rar].tier - RAR[a.rar].tier || +a.no - +b.no, value: (a, b) => val(b) - val(a), new: (a, b) => ((copiesOf(b.no)[0] || { t: 0 }).t) - ((copiesOf(a.no)[0] || { t: 0 }).t) || +a.no - +b.no }[CF.sort];
   const tile = c => {
     const cs = copiesOf(c.no), best = cs[0], pk2 = packOf(c);
     return `<div class="ctw"><button class="ctile${best ? "" : " miss"}" data-card="${c.no}" aria-label="${esc(c.name)}"><span class="cimg">${cardHTML(best || { no: c.no }, { sm: true, locked: !best, thumb: true })}${best ? `<span class="cb n">×${cs.length}</span>` : ""}${best && best.fx ? `<span class="cb fx">${STYLES[best.fx].name}</span>` : ""}</span>
       <span class="cmeta">${best ? `<b>${moneyS(valueOf(best))}</b>${pill(gainOf(best))}` : `<b class="faint">Not found yet</b>`}</span>
-      <span class="csub">${best ? `${rdot(c)}${rarLabel(c)}${cs.length > 1 ? ` · ${cs.length} copies` : ""}` : `${rdot(c)}${rarLabel(c)} · ${chanceS(packP(c.id))}`}</span></button>${sellBtn(c.no)}</div>`;
+      <span class="csub">${best ? `${rdot(c)}${rarLabel(c)}${cs.length > 1 ? ` · ${cs.length} copies` : ""}` : `${rdot(c)}${rarLabel(c)} · ${chanceS(packP(c.id))}`}</span></button>${best ? favBtn(c.no) : ""}${sellBtn(c.no)}</div>`;
   };
   $("cGrid").live = Object.keys(SETS).filter(k => CF.set === "all" || CF.set === k).map(k => {
-    const all = CARDS.filter(c => c.set === k && (!c.retired || found.has(c.no))),      /* a retired card shows only if you have it */ got = all.filter(c => found.has(c.no)).length, list = all.filter(c => CF.show === "all" || (CF.show === "found" ? found.has(c.no) : !found.has(c.no))).sort(cmp);
+    const all = CARDS.filter(c => c.set === k && (!c.retired || found.has(c.no))),      /* a retired card shows only if you have it */ got = all.filter(c => found.has(c.no)).length, list = all.filter(c => CF.show === "all" || (CF.show === "fav" ? isFav(c.no) && found.has(c.no) : CF.show === "found" ? found.has(c.no) : !found.has(c.no))).sort(cmp);
     return `<div class="sethead"><h3>${esc(SETS[k].name)}</h3><span class="small">${got} of ${all.length} found</span><div class="bar slim"><i style="width:${got / all.length * 100}%"></i></div></div>` + (list.length ? `<div class="cgrid">${list.map(tile).join("")}</div>` : `<p class="small" style="padding:6px 2px 22px">${CF.show === "found" ? "You haven't found any of these yet." : "You have every card here."}</p>`);
   }).join("");
 }
