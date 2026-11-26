@@ -110,7 +110,8 @@ const Val = (() => {
     for (const [e, since] of [[slotOf(sd, k), (f - 0) * BK], k > 0 ? [slotOf(sd, k - 1), (1 + f) * BK] : null].filter(Boolean)) { const s = since - e.U * BK; if (e.ramp && s >= 0 && s < e.ramp) return { j: e.j, q: s / e.ramp }; }
     return null;
   }
-  function fast(seed, sec) { if (sec <= 0) return 0; const x = sec * 2, n = Math.floor(x), f = x - n, a = walk(seed, n); return (f ? a + (walk(seed, n + 1) - a) * f : a) - tau(sec) / 2 + events(seed, sec); }
+  const CALM = 6;                                                                         // a copy holds its starting value for its first six seconds, so a card is seen at what it is worth before it starts to move
+  function fast(seed, sec) { sec -= CALM; if (sec <= 0) return 0; const x = sec * 2, n = Math.floor(x), f = x - n, a = walk(seed, n); return (f ? a + (walk(seed, n + 1) - a) * f : a) - tau(sec) / 2 + events(seed, sec); }
   const startOf = c => BY_NO[c.no].val * (c.fx ? STYLES[c.fx].x : 1);                    // what it is worth the moment it comes out of the pack
   function logAt(c, t, rough) {
     const dt = Math.max(0, t - (c.t || t)), h = Math.floor(dt / HOUR), f = dt / HOUR - h, e = path(c, h);

@@ -160,7 +160,7 @@ async function climb(el, card, c) {
     el.style.setProperty("--cc", col); el.style.setProperty("--cz", (1 + deep * .1).toFixed(3)); el.style.setProperty("--cs", (2 + deep * 5).toFixed(1) + "px"); stage.style.setProperty("--rc", col); stage.style.setProperty("--deep", deep.toFixed(2)); tt.className = "st-title climb" + (last ? " last" : ""); tt.style.setProperty("--rc", col);
     tt.innerHTML = `<div class="cl-n">${esc(name)}</div><div class="cl-d">${steps.slice(0, i + 1).map(s => `<i style="--c:${s[1]}"></i>`).join("")}</div>`;
     el.classList.remove("thump"); void el.offsetWidth; el.classList.add("thump"); Snd.climb(i, last); buzz(last ? [40, 30, 80] : 12 + Math.min(40, i * 6));
-    const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2; FX.burst(cx, cy, 12 + i * 12, [col, "#fff"], 260 + i * 70); ring(cx, cy, col, last ? 1.5 : .7 + deep * .5);
+    const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2; ring(cx, cy, col, last ? 1.5 : .7 + deep * .5);
     if (last) flash(col, .5);
     await sleep(Math.max(190, 330 - i * 14) + i * 34 + (last ? 420 : 0));                         // each step a little longer than the last: you start to wonder how far it goes
   }
@@ -190,19 +190,18 @@ async function reveal(el, c, card, R, v) {
     SS.rs = rs; await rs.play([420, 520, 700, 950, 1250, 1550, 1900][T], p => { const e = Math.pow(p, 1.7); ldN.textContent = fmt(Math.round(card.chars * e)); ldV.textContent = money(worth * e); },
       (k, n) => { if (k % 2 === 0) { Snd.rise(k / 2); buzz(6); } });                 // a soft tick as it sharpens; no shaking and nothing thrown while it forms
     SS.rs = null; el.classList.remove("loading"); tt.className = "st-title";
-  } else await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); FX.burst(mid[0], mid[1], 6 + T * 4, [R.col, "#fff"], 260 + T * 60); } });
+  } else await v.play(ms, () => { if (T >= 2) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 120 + T * 40); } });
   Snd.reveal(T); if (T >= 2) buzz(T >= 5 ? [40, 30, 60, 30, 90] : T >= 3 ? [30, 25, 50] : [25]);
-  FX.burst(mid[0], mid[1], [14, 22, 50, 90, 150, 240, 380][T], T >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + T * 130);
-  if (T >= 4) FX.rain(mid[0], rect.width * 1.6, 18 + T * 6, [R.col, "#fff"]);
+  if (T < 3) FX.burst(mid[0], mid[1], [10, 14, 20][T], T >= 2 ? [R.col, "#fff", R.col] : ["#c9c5bb", "#8d897f"], 380 + T * 130);      // a small puff for an ordinary card; a good card is light and rings, with nothing thrown across the picture
   if (T >= 5) stage.animate([{ background: "#fff" }, { background: "#040405" }], { duration: 700 });
   if (T >= 4 && !reduced) {                                                              // a hit: how hard it lands follows how rare it is
     const col = c.fx ? STYLE_TINT[c.fx] : R.col, lvl = Math.max(1, Object.keys(RAR).indexOf(card.rar) - 3), big = Math.min(1, lvl / 6), mine = SS, live = () => SS === mine && SS.phase === "stack";       // legendary is 1, secret is 9
     stage.style.setProperty("--q", (1 + big * 1.4).toFixed(2)); stage.classList.remove("quake"); void stage.offsetWidth; stage.classList.add("quake"); setTimeout(() => stage.classList.remove("quake"), 620);
     const ry = document.createElement("i"); ry.className = "rays"; ry.style.setProperty("--rc", col); el.insertBefore(ry, el.firstChild); el.classList.add("hit"); el.animate([{ scale: (1.22 + big * .2).toFixed(2), filter: "brightness(2.2)" }, { scale: ".97", filter: "brightness(1.1)", offset: .6 }, { scale: "1", filter: "none" }], { duration: 520, easing: "cubic-bezier(.2, .9, .3, 1)" });   // it slams down
     flash(col, .55 + big * .4); ring(mid[0], mid[1], col, 1.6 + big); setTimeout(() => { if (live()) ring(mid[0], mid[1], "#ffffff", 1.2 + big); }, 140); if (lvl >= 2) stamp(R.name, col);
-    setTimeout(() => { if (live()) { FX.burst(mid[0], mid[1], 50 + T * 16, [col, "#fff", "#ffe9a8"], 620); Snd.paid(); buzz([20, 30, 40]); } }, 420);
-    // the rarest keep going: more waves of light, each one further out
-    for (let w = 1; w <= Math.min(4, lvl - 2); w++) setTimeout(() => { if (live()) { ring(mid[0], mid[1], col, 1.4 + w * .5); FX.burst(mid[0], mid[1], 60 + w * 30, [col, "#fff"], 500 + w * 120); if (w % 2) FX.rain(mid[0], rect.width * 2, 14 + w * 6, [col, "#fff"]); Snd.chip(); buzz(18); } }, 700 + w * 380);
+    setTimeout(() => { if (live()) { Snd.paid(); buzz([20, 30, 40]); } }, 420);
+    // the rarest get two more rings of light
+    for (let w = 1; w <= Math.min(2, lvl - 2); w++) setTimeout(() => { if (live()) { ring(mid[0], mid[1], col, 1.4 + w * .5); Snd.chip(); buzz(18); } }, 700 + w * 380);
   }
   const t = $("stTitle"); t.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col);
   t.innerHTML = `<div class="rw">${SS.fresh && SS.fresh.has(c.uid) ? `<span class="newtag">new</span> ` : ""}${T >= 3 ? `<b class="rn">${esc(R.name)}</b>` : ""}${rarLabel(card)}${c.fx ? " · " + STYLES[c.fx].name + " ×" + STYLES[c.fx].x : ""} ${cuts(card.rar) ? `<span style="color:var(--red)">${cuts(card.rar)}</span>` : ""}</div><div class="nm" role="img" aria-label="${esc(card.name)}"></div><div class="vl">worth <b>${money(valueOf(c))}</b> ${T >= 3 && x >= 2 ? `<span class="xm">${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack</span>` : `<span class="dim">· ${Val.watching(c)} AI buyers watching</span>`}</div>${x >= 2 && T < 3 ? `<div class="xm">sells for ${x >= 10 ? Math.round(x) : x.toFixed(1)}× the pack price</div>` : ""}`;
@@ -266,7 +265,7 @@ function summary() {
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
   $("stSummary").innerHTML = endHTML({ title: SS.pack.name, back, paid: SS.free || SS.bought ? 0 : SS_PRICE, bought: SS.bought, x, soldG, held, heldV, heldSell, share: true,
     fan: items.length ? `<div class="fan">${items.map(c => inVault(c) ? `<div class="${SS.fresh && SS.fresh.has(c.uid) ? "isnew" : ""}">${cardHTML(c, { sm: true })}</div>` : `<div class="wassold">${cardHTML(c, { sm: true })}<b class="soldtag">sold</b></div>`).join("")}</div>` : "" });
-  $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
+  $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 40 : 24) : 0, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
 // one quiet line under a pack result: the free way to get another
 function invNudge() { return (typeof API !== "undefined" && API.on) ? `<button class="btn ghost invnudge" id="sumInvite">${GIFT} Invite a friend — you both get a free pack</button>` : ""; }
@@ -331,7 +330,7 @@ function flipInPlace(el, c, T) {
   el.classList.add("up"); if (good) el.classList.add("good"); if (T >= 3) el.classList.add("big"); el.style.setProperty("--rc", col); el.setAttribute("aria-label", `${card.name}, ${money(sellOf(c))}`);
   el.innerHTML = `<i class="rcb"></i><span class="rcf">${cardHTML(c, { sm: true })}</span><b class="rcv">${money(sellOf(c))}</b>`;
   meterAdd(c); Snd.rise(Math.min(9, 1 + T * 2 + (good ? 1 : 0))); buzz(T >= 3 ? [14, 20, 22] : 5); if (good) Snd.chip();
-  if (T >= 3) { const a = el.getBoundingClientRect(); FX.burst(a.left + a.width / 2, a.top + a.height / 2, 46, [col, "#fff"], 420); Snd.reveal(2); }
+  if (T >= 3) Snd.reveal(2);
   $("stCount").textContent = SS.pool.length ? `${SS.pool.length} left` : "";
 }
 async function railRun() {
@@ -380,5 +379,5 @@ function multiSummary() {
   const hits = held.filter(isHit), rest = hits.length && hits.length < held.length ? held.filter(c => !isHit(c)).reduce((a, c) => a + sellOf(c), 0) : 0;
   $("stSummary").innerHTML = endHTML({ title: `${SS.n} × ${SS.pack.name}`, back, paid: SS.paid, x, soldG, held, heldV, heldSell, rest, share: false,
     fan: (top.length ? `<div class="fan">${top.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : "") + (smallFan ? `<div class="fan small">${smallFan}</div>` : "") });
-  $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 160 : 90) : 30, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
+  $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 40 : 24) : 0, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
