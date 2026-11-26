@@ -55,9 +55,9 @@ class PackScreen {
     this.status(t * 1000, "falling in"); g.fillStyle = "#030208"; g.fillRect(0, 0, W, H); const cx = W / 2, cy = H * .44, hs = (a, b) => { const v = Math.imul(a * 73856093 ^ b * 19349663, 2654435761) >>> 0; return v / 4294967296; };
     for (let k = 0; k < 60; k++) { g.fillStyle = `rgba(230,225,255,${.25 + .5 * hs(k, 3)})`; g.fillRect(hs(k, 1) * W, hs(k, 2) * H, 1.6, 1.6); }
     g.globalCompositeOperation = "lighter";
-    for (let i = 0; i < 900; i++) { const q = hs(i, 5), r = W * (.17 + .4 * q * q), a = t * (1.1 / (r / W + .08)) * .25 + i * 2.399, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * .3, hot = 1 - Math.min(1, (r / W - .17) / .4), s = 1.5 + hs(i, 9) * 3.2;
-      g.fillStyle = `rgba(${150 + hot * 105},${90 + hot * 150},${255 - hot * 40},${.18 + hot * .55})`; g.fillRect(x - s / 2, y - s / 2, s, s); }
-    g.globalCompositeOperation = "source-over"; g.fillStyle = "#000"; g.beginPath(); g.arc(cx, cy, W * .15, 0, 7); g.fill(); g.strokeStyle = "rgba(255,245,255,.95)"; g.lineWidth = Math.max(2, W * .01); g.beginPath(); g.arc(cx, cy, W * .152, 0, 7); g.stroke();
+    for (let i = 0; i < 1500; i++) { const q = hs(i, 5), r = W * (.17 + .4 * q * q), a = t * (1.1 / (r / W + .08)) * .25 + i * 2.399, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * .3, hot = 1 - Math.min(1, (r / W - .17) / .4), s = 2.2 + hs(i, 9) * 4;
+      g.fillStyle = `rgba(${150 + hot * 105},${90 + hot * 150},${255 - hot * 40},${.3 + hot * .7})`; g.fillRect(x - s / 2, y - s / 2, s, s); }
+    g.globalCompositeOperation = "source-over"; g.fillStyle = "#000"; g.beginPath(); g.arc(cx, cy, W * .15, 0, 7); g.fill(); g.strokeStyle = "rgba(255,245,255,.95)"; g.lineWidth = Math.max(3, W * .018); g.beginPath(); g.arc(cx, cy, W * .154, 0, 7); g.stroke();
     const gl = g.createRadialGradient(cx, cy, W * .14, cx, cy, W * .3); gl.addColorStop(0, "rgba(200,170,255,.55)"); gl.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gl; g.fillRect(0, 0, W, H);
   }
   print(g, t, W, H) {                                                                    // First Print: the logo prints under a glowing head, shines, then the sheet runs again

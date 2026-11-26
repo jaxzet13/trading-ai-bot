@@ -1349,10 +1349,10 @@ body.picking .btabs { display: none !important; } body.picking #v-profile { padd
 @media (prefers-reduced-motion: reduce) { .st-ring, .st-flash, .st-stamp { display: none; } }
 
 /* ---- five packs: a row of prices, and the pack's own name on the pack ---- */
-#packTabs, body.on-home #packTabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 4px; width: min(340px, 100%); flex-wrap: nowrap; }
-#packTabs .ptab, body.on-home #packTabs .ptab { display: grid; place-items: center; min-width: 0; padding: 9px 0 8px; border-radius: 11px; position: relative; } #packTabs .ptab b { font-size: 15px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
-#packTabs .ptab.on { background: var(--s3); } #packTabs .ptab.on::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 3px; height: 3px; border-radius: 3px; background: var(--pc, var(--acc)); box-shadow: 0 0 10px var(--pc, var(--acc)); }
-#packTabs .ptab:not(.on) b { color: var(--dim); }
+.packtabs, body.on-home .packtabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 4px; width: min(340px, 100%); flex-wrap: nowrap; }
+.packtabs .ptab, body.on-home .packtabs .ptab { display: grid; place-items: center; min-width: 0; padding: 9px 0 8px; border-radius: 11px; position: relative; } .packtabs .ptab b { font-size: 15px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.packtabs .ptab.on { background: var(--s3); } .packtabs .ptab.on::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 3px; height: 3px; border-radius: 3px; background: var(--pc, var(--acc)); box-shadow: 0 0 10px var(--pc, var(--acc)); }
+.packtabs .ptab:not(.on) b { color: var(--dim); }
 #homePack .pk { box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.22) inset, 0 40px 70px -34px #000, 0 0 90px -30px var(--halo2, rgba(59,228,119,.5)); }
 
 /* ---- everything is text again ---- */

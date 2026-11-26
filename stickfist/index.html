@@ -1370,10 +1370,10 @@ body.picking .btabs { display: none !important; } body.picking #v-profile { padd
 @media (prefers-reduced-motion: reduce) { .st-ring, .st-flash, .st-stamp { display: none; } }
 
 /* ---- five packs: a row of prices, and the pack's own name on the pack ---- */
-#packTabs, body.on-home #packTabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 4px; width: min(340px, 100%); flex-wrap: nowrap; }
-#packTabs .ptab, body.on-home #packTabs .ptab { display: grid; place-items: center; min-width: 0; padding: 9px 0 8px; border-radius: 11px; position: relative; } #packTabs .ptab b { font-size: 15px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
-#packTabs .ptab.on { background: var(--s3); } #packTabs .ptab.on::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 3px; height: 3px; border-radius: 3px; background: var(--pc, var(--acc)); box-shadow: 0 0 10px var(--pc, var(--acc)); }
-#packTabs .ptab:not(.on) b { color: var(--dim); }
+.packtabs, body.on-home .packtabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 4px; width: min(340px, 100%); flex-wrap: nowrap; }
+.packtabs .ptab, body.on-home .packtabs .ptab { display: grid; place-items: center; min-width: 0; padding: 9px 0 8px; border-radius: 11px; position: relative; } .packtabs .ptab b { font-size: 15px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.packtabs .ptab.on { background: var(--s3); } .packtabs .ptab.on::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 3px; height: 3px; border-radius: 3px; background: var(--pc, var(--acc)); box-shadow: 0 0 10px var(--pc, var(--acc)); }
+.packtabs .ptab:not(.on) b { color: var(--dim); }
 #homePack .pk { box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.22) inset, 0 40px 70px -34px #000, 0 0 90px -30px var(--halo2, rgba(59,228,119,.5)); }
 
 /* ---- everything is text again ---- */
@@ -2419,9 +2419,9 @@ class PackScreen {
     this.status(t * 1000, "falling in"); g.fillStyle = "#030208"; g.fillRect(0, 0, W, H); const cx = W / 2, cy = H * .44, hs = (a, b) => { const v = Math.imul(a * 73856093 ^ b * 19349663, 2654435761) >>> 0; return v / 4294967296; };
     for (let k = 0; k < 60; k++) { g.fillStyle = `rgba(230,225,255,${.25 + .5 * hs(k, 3)})`; g.fillRect(hs(k, 1) * W, hs(k, 2) * H, 1.6, 1.6); }
     g.globalCompositeOperation = "lighter";
-    for (let i = 0; i < 900; i++) { const q = hs(i, 5), r = W * (.17 + .4 * q * q), a = t * (1.1 / (r / W + .08)) * .25 + i * 2.399, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * .3, hot = 1 - Math.min(1, (r / W - .17) / .4), s = 1.5 + hs(i, 9) * 3.2;
-      g.fillStyle = `rgba(${150 + hot * 105},${90 + hot * 150},${255 - hot * 40},${.18 + hot * .55})`; g.fillRect(x - s / 2, y - s / 2, s, s); }
-    g.globalCompositeOperation = "source-over"; g.fillStyle = "#000"; g.beginPath(); g.arc(cx, cy, W * .15, 0, 7); g.fill(); g.strokeStyle = "rgba(255,245,255,.95)"; g.lineWidth = Math.max(2, W * .01); g.beginPath(); g.arc(cx, cy, W * .152, 0, 7); g.stroke();
+    for (let i = 0; i < 1500; i++) { const q = hs(i, 5), r = W * (.17 + .4 * q * q), a = t * (1.1 / (r / W + .08)) * .25 + i * 2.399, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * .3, hot = 1 - Math.min(1, (r / W - .17) / .4), s = 2.2 + hs(i, 9) * 4;
+      g.fillStyle = `rgba(${150 + hot * 105},${90 + hot * 150},${255 - hot * 40},${.3 + hot * .7})`; g.fillRect(x - s / 2, y - s / 2, s, s); }
+    g.globalCompositeOperation = "source-over"; g.fillStyle = "#000"; g.beginPath(); g.arc(cx, cy, W * .15, 0, 7); g.fill(); g.strokeStyle = "rgba(255,245,255,.95)"; g.lineWidth = Math.max(3, W * .018); g.beginPath(); g.arc(cx, cy, W * .154, 0, 7); g.stroke();
     const gl = g.createRadialGradient(cx, cy, W * .14, cx, cy, W * .3); gl.addColorStop(0, "rgba(200,170,255,.55)"); gl.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gl; g.fillRect(0, 0, W, H);
   }
   print(g, t, W, H) {                                                                    // First Print: the logo prints under a glowing head, shines, then the sheet runs again
@@ -2744,7 +2744,7 @@ function cardHTML(copy, o) {
     <div class="strip"><div class="l1"><span class="nm">${esc(card.name)}</span><i class="hr"></i><span class="ct"><b>${fmt(card.chars)}</b><u>chars</u></span></div>
     <div class="l2">${code ? idHTML(code, card.rar) : `<span>No. ${card.no}</span>`}${card.cap ? `<span class="cap">${esc(card.cap)}</span>` : ""}</div></div><i class="sheen"></i></div>`;
 }
-const CRIMPS = { fp: fill("╱╲", 120), ms: fill("△▲", 120) };
+const CRIMPS = { fp: fill("╱╲", 120), ms: fill("△▲", 120), ec: fill("*+", 120), td: fill("~≈", 120), sg: fill("·o", 120) };
 const packHTML = pack => `<div class="pk pk-${pack.id}"><div class="crimp t">${CRIMPS[pack.id]}</div><div class="win"><canvas class="scr"></canvas></div>
   <div class="readout"><div class="r-stat"></div><div class="r-name"></div><div class="r-sub"></div><div class="r-meter"></div></div><div class="crimp b">${CRIMPS[pack.id]}</div></div>`;
 // the animated picture in the pack
@@ -2883,7 +2883,7 @@ function renderOdds(force) {
   const rows = LIVE.filter(c => inPack(pk, c)).sort((a, b) => packHas(pk, b.id) - packHas(pk, a.id))        /* commonest first, so the list reads as the ladder */.map(c => { const p = packHas(pk, c.id); return cardRow(c, { nospark: true, price: p >= .1 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p), pill: `<span class="small">${p >= .1 ? "of packs" : "packs"}</span>`, sub: `<b style="color:${RAR[c.rar].col};font-weight:650">${RAR[c.rar].name}</b> · starts at ${moneyS(c.val)}` }); }).join("");
   const tot = Object.values(STYLES).reduce((a, s) => a + s.p, 0);
   $("oBody").innerHTML = `
-    <div class="packtabs" role="tablist" aria-label="Which pack">${PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-opack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("")}</div>
+    <div class="packtabs" role="tablist" aria-label="Which pack">${PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-opack="${p.id}" style="--pc:${p.col}" aria-selected="${p.id === pk.id}" aria-label="${esc(p.name)}, ${money(packPrice(p))}"><b>${money(packPrice(p)).replace(/\.00$/, "")}</b></button>`).join("")}</div>
     <p class="small" style="margin:-4px 0 22px;text-align:center">${esc(pk.blurb)}</p>
     <div class="facts"><div><div class="bignum sm" role="img" aria-label="${money(ps.price)}">${money(ps.price)}</div><span>per ${esc(pk.name)} pack right now · ${pk.n === 1 ? "one card" : pk.n + " cards"}</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.hit * 100).toFixed(0)}%">${(ps.hit * 100).toFixed(0) + "%"}</div><span>of packs are worth at least what you paid</span></div><div><div class="bignum sm" role="img" aria-label="${(ps.rtp * 100).toFixed(0)}%">${(ps.rtp * 100).toFixed(0) + "%"}</div><span>comes back on average when you sell</span></div></div>
     <h3 class="sec">What can be in a ${esc(pk.name)} pack</h3>
@@ -3326,7 +3326,7 @@ const Live = (() => {
     if (r && Array.isArray(r.feed)) { data = r; at = Date.now(); if (view === "live") render(); }
   }
   const ago = t => { const s = Math.max(0, Math.round((Date.now() - t) / 1000)); return s < 50 ? "just now" : s < 3600 ? Math.max(1, Math.round(s / 60)) + "m" : s < 86400 ? Math.round(s / 3600) + "h" : Math.round(s / 86400) + "d"; };
-  const odds = c => "1 in " + fmt(Math.round(1 / Math.max(1e-9, packP(c.id))));
+  const odds = c => "1 in " + fmt(Math.round(1 / Math.max(1e-9, packP(c.id)))) + " " + packOf(c).name + " packs";
   const found = id => data && data.found ? data.found[id] || 0 : null;
   const foundS = n => n == null ? "" : n === 0 ? "never found" : n === 1 ? "found once" : `found ${fmt(n)} times`;
   // the cards to want: the rarest few of each pack
@@ -3337,7 +3337,7 @@ const Live = (() => {
     // the hero: the biggest pull of the last day; with none, the card nobody has
     const hc = top ? BY_ID[top.id] : best, R = RAR[hc.rar], mine = copiesOf(hc.no).length, n = found(hc.id);
     const hero = `<button class="lv-hero" data-card="${hc.no}" style="--rc:${R.col}" aria-label="${esc(hc.name)}"><span class="lv-art"><img src="${imgOf(hc)}" alt="" draggable="false"></span>
-      <span class="lv-ht"><small class="lv-k">${top ? "biggest pull today" : n === 0 ? "nobody has found it yet" : "the one to find"}</small><b class="lv-n">${esc(hc.name)}</b><span class="lv-r"><i></i>${esc(R.name)} · ${odds(hc)} packs</span>
+      <span class="lv-ht"><small class="lv-k">${top ? "biggest pull today" : n === 0 ? "nobody has found it yet" : "the one to find"}</small><b class="lv-n">${esc(hc.name)}</b><span class="lv-r"><i></i>${esc(R.name)} · ${odds(hc)}</span>
       <span class="lv-v">${money(hc.val)}</span><small class="lv-w">${top ? `pulled by <b>${esc(top.who)}</b> · ${ago(top.t)}` : n ? foundS(n) + " so far" : API.on ? "it is in the pack right now" : ""}${mine ? " · you have it" : ""}</small></span></button>`;
     const stat = data ? `<div class="lv-stat"><div><b>${fmt(data.day || 0)}</b><small>hits today</small></div><div><b>${day.length ? money(BY_ID[top.id].val).replace(/\\.00$/, "") : "–"}</b><small>biggest today</small></div><div><b>${fmt(Object.values(data.found || {}).reduce((a, b) => a + b, 0))}</b><small>hits ever</small></div></div>` : "";
     const rows = feed.slice(0, 10).map(e => { const c = BY_ID[e.id], r = RAR[c.rar], fresh = e.t > seen && seen > 0; return `<button class="lv-row${fresh ? " new" : ""}" data-card="${c.no}" style="--rc:${r.col}"><span class="thumb"><img src="${imgOf(c, "", true)}" alt="" loading="lazy" draggable="false"></span><span class="lv-rt"><b><i>${esc(e.who)}</i> pulled ${esc(c.name)}</b><small><em>${esc(r.name)}</em> · ${odds(c)} · ${money(c.val)}</small></span><time>${ago(e.t)}</time></button>`; }).join("");

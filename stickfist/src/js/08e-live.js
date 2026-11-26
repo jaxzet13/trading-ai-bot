@@ -16,7 +16,7 @@ const Live = (() => {
     if (r && Array.isArray(r.feed)) { data = r; at = Date.now(); if (view === "live") render(); }
   }
   const ago = t => { const s = Math.max(0, Math.round((Date.now() - t) / 1000)); return s < 50 ? "just now" : s < 3600 ? Math.max(1, Math.round(s / 60)) + "m" : s < 86400 ? Math.round(s / 3600) + "h" : Math.round(s / 86400) + "d"; };
-  const odds = c => "1 in " + fmt(Math.round(1 / Math.max(1e-9, packP(c.id))));
+  const odds = c => "1 in " + fmt(Math.round(1 / Math.max(1e-9, packP(c.id)))) + " " + packOf(c).name + " packs";
   const found = id => data && data.found ? data.found[id] || 0 : null;
   const foundS = n => n == null ? "" : n === 0 ? "never found" : n === 1 ? "found once" : `found ${fmt(n)} times`;
   // the cards to want: the rarest few of each pack
@@ -27,7 +27,7 @@ const Live = (() => {
     // the hero: the biggest pull of the last day; with none, the card nobody has
     const hc = top ? BY_ID[top.id] : best, R = RAR[hc.rar], mine = copiesOf(hc.no).length, n = found(hc.id);
     const hero = `<button class="lv-hero" data-card="${hc.no}" style="--rc:${R.col}" aria-label="${esc(hc.name)}"><span class="lv-art"><img src="${imgOf(hc)}" alt="" draggable="false"></span>
-      <span class="lv-ht"><small class="lv-k">${top ? "biggest pull today" : n === 0 ? "nobody has found it yet" : "the one to find"}</small><b class="lv-n">${esc(hc.name)}</b><span class="lv-r"><i></i>${esc(R.name)} · ${odds(hc)} packs</span>
+      <span class="lv-ht"><small class="lv-k">${top ? "biggest pull today" : n === 0 ? "nobody has found it yet" : "the one to find"}</small><b class="lv-n">${esc(hc.name)}</b><span class="lv-r"><i></i>${esc(R.name)} · ${odds(hc)}</span>
       <span class="lv-v">${money(hc.val)}</span><small class="lv-w">${top ? `pulled by <b>${esc(top.who)}</b> · ${ago(top.t)}` : n ? foundS(n) + " so far" : API.on ? "it is in the pack right now" : ""}${mine ? " · you have it" : ""}</small></span></button>`;
     const stat = data ? `<div class="lv-stat"><div><b>${fmt(data.day || 0)}</b><small>hits today</small></div><div><b>${day.length ? money(BY_ID[top.id].val).replace(/\\.00$/, "") : "–"}</b><small>biggest today</small></div><div><b>${fmt(Object.values(data.found || {}).reduce((a, b) => a + b, 0))}</b><small>hits ever</small></div></div>` : "";
     const rows = feed.slice(0, 10).map(e => { const c = BY_ID[e.id], r = RAR[c.rar], fresh = e.t > seen && seen > 0; return `<button class="lv-row${fresh ? " new" : ""}" data-card="${c.no}" style="--rc:${r.col}"><span class="thumb"><img src="${imgOf(c, "", true)}" alt="" loading="lazy" draggable="false"></span><span class="lv-rt"><b><i>${esc(e.who)}</i> pulled ${esc(c.name)}</b><small><em>${esc(r.name)}</em> · ${odds(c)} · ${money(c.val)}</small></span><time>${ago(e.t)}</time></button>`; }).join("");
