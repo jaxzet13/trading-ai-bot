@@ -1,0 +1,137 @@
+<title>Tennis Parlay Backtest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* layout: one reading column; verdict first, then the evidence as a single scale of cents per bet around a zero line */
+:root{
+  --bg:#0c0d12; --panel:#14161f; --line:#262a38; --fg:#eceef5; --mute:#969cb0;
+  --loss:#ff5d8f; --flat:#8b7cf6; --gold:#f5c451; --zero:#eceef5;
+  --display:"Unbounded","Inter",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  --bg:#f6f6fa; --panel:#ffffff; --line:#dcdfea; --fg:#14161f; --mute:#5b6175;
+  --loss:#c81e5b; --flat:#5b47d6; --gold:#8a6400; --zero:#14161f; color-scheme:light } }
+:root[data-theme="light"]{
+  --bg:#f6f6fa; --panel:#ffffff; --line:#dcdfea; --fg:#14161f; --mute:#5b6175;
+  --loss:#c81e5b; --flat:#5b47d6; --gold:#8a6400; --zero:#14161f; color-scheme:light }
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+section{display:flex;flex-direction:column;gap:14px;min-width:0}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+h1{font:700 clamp(30px,7vw,52px)/1.08 var(--display);margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--loss)}
+h2{font:500 20px/1.25 var(--display);margin:0;text-wrap:balance}
+p{margin:0;max-width:65ch;text-wrap:pretty}
+.lead{font-size:18px;color:var(--fg)}
+.mute{color:var(--mute);font-size:14px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border-block:1px solid var(--line)}
+.facts div{padding:14px 12px 14px 0}
+.facts b{display:block;font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.facts span{font-size:13px;color:var(--mute)}
+.chart{display:flex;flex-direction:column;gap:6px}
+.grp{font:600 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:14px}
+.row{display:grid;grid-template-columns:minmax(0,13.5em) minmax(0,1fr) 5.2em;gap:10px;align-items:center;font-size:14px}
+.row .lab{min-width:0}
+.track{position:relative;height:18px;background:linear-gradient(var(--line),var(--line)) no-repeat;background-size:100% 1px;background-position:0 50%}
+.track i{position:absolute;top:3px;height:12px;border-radius:2px}
+.track u{position:absolute;top:0;bottom:0;width:1px;background:var(--zero);left:var(--z)}
+.val{font:600 13px/1 var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.val small{display:block;font-weight:400;color:var(--mute);margin-top:3px}
+.axis{display:grid;grid-template-columns:minmax(0,13.5em) minmax(0,1fr) 5.2em;gap:10px;font:400 12px/1 var(--mono);color:var(--mute)}
+.axis div:nth-child(2){position:relative;height:14px}
+.axis span{position:absolute;transform:translateX(-50%)}
+.key{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mute)}
+.key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:9px 12px 9px 0;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 12px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+td.n{font-family:var(--mono);white-space:nowrap}
+.note{border-left:2px solid var(--gold);padding-left:14px}
+@media (max-width:520px){ .row,.axis{grid-template-columns:minmax(0,1fr) 4.6em} .row .track,.axis div:nth-child(2){grid-column:1 / -1;grid-row:2} .axis div:first-child{display:none} .row{row-gap:4px;margin-top:6px} }
+</style>
+<main>
+  <section>
+    <div class="eyebrow">Tennis parlay test · Kalshi match-winner markets</div>
+    <h1>Backtested. <em>No edge.</em> Not betting parlays.</h1>
+    <p class="lead">A parlay only pays if every leg wins, and then multiplies the legs' payouts. I built parlays from the same tennis bets the lab tests and scored them on 64 days of settled matches. Parlays multiply whatever the legs earn, and the legs earn almost nothing, so parlays mostly lose faster.</p>
+    <div class="facts">
+      <div><b>64</b><span>days, Sep 23 to Nov 25</span></div>
+      <div><b>14,703</b><span>settled matches</span></div>
+      <div><b>9 &times; 9</b><span>leg pools &times; parlay types tested</span></div>
+      <div><b>0</b><span>that held up on unseen days</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Singles vs parlays, return per dollar</h2>
+    <p>Each bar is the average return on $1 staked, after Kalshi's fee on every leg. "Rolled" means leg 2 is only bet after leg 1 has settled, so the winnings really can be rolled over.</p>
+    <div class="chart" id="chart"></div>
+    <div class="key">
+      <span><i style="background:var(--loss)"></i>loses</span>
+      <span><i style="background:var(--flat)"></i>positive, but no better than chance</span>
+      <span>t = how many standard errors from zero; about 2 or more is needed to believe a result</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Why a parlay can't create an edge</h2>
+    <div class="note">
+      <p>A parlay is the same as betting leg 1 and putting every cent of the winnings on leg 2. If each leg earns 1%, two legs earn about 2% and three about 3%, with a much bigger chance of losing everything. If each leg loses 2% (the spread plus the fee), two legs lose about 4% and three about 6%. That is exactly what the backtest shows.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Picking the best parlay in advance</h2>
+    <p>The few positive parlay results rest on 7 to 28 parlays. To check them fairly, each test day picked the leg pool and parlay size with the best record on earlier days only, then bet it.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Choice made on earlier days</th><th>Bets</th><th>Return per $1</th><th>t</th></tr></thead>
+      <tbody>
+        <tr><td>Any pool, any number of legs</td><td class="n">71</td><td class="n">&minus;7.8%</td><td class="n">&minus;1.25</td></tr>
+        <tr><td>Rolled parlays only</td><td class="n">84</td><td class="n">&minus;4.3%</td><td class="n">&minus;0.61</td></tr>
+        <tr><td>Single bets only</td><td class="n">125</td><td class="n">&minus;4.4%</td><td class="n">&minus;2.05</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Kalshi's own parlays ("combos")</h2>
+    <p>Kalshi does sell parlays, and Challenger and ITF matches can be legs. But a combo market is only created when someone asks for a quote, and market makers price it on the spot. On Nov 26 there were 4 open combos with a tennis leg, none of them traded, and no price history at all, so they can't be backtested. Combo market makers usually charge more than the product of the leg prices, which would make them worse than building the parlay yourself.</p>
+  </section>
+
+  <section>
+    <h2>What happens next</h2>
+    <p>No parlays. The tennis auto-better keeps betting single Challenger favourites, 2 contracts each, with the &minus;$10 stop. In this run those singles earned +0.65% a bet (t 0.5): still a small, unproven edge.</p>
+    <p class="mute">Study run Nov 26, 2026. Full tables: research/tennis_parlay in the repository.</p>
+  </section>
+</main>
+<script>
+const LO=-45, HI=10, pct=v=>(Math.max(LO,Math.min(HI,v))-LO)/(HI-LO)*100;
+document.documentElement.style.setProperty("--z",pct(0)+"%");
+const G=[
+ ["Challenger favourites 90-96c (the band the auto-better uses)",[["Single bets",0.65,0.48],["2 legs, rolled",1.12,0.37],["3 legs, rolled",-5.68,-0.74],["3 legs, combo",3.13,0.73]]],
+ ["Challenger favourites 80-90c",[["Single bets",-1.99,-0.99],["2 legs, rolled",-3.73,-0.73],["3 legs, rolled",-12.83,-1.24]]],
+ ["Any favourite 80-96c, all tours",[["Single bets",-2.58,-2.11],["2 legs, combo",-4.99,-2.04],["3 legs, combo",-9.21,-2.18],["4 legs, combo",-11.08,-1.94]]],
+ ["Any favourite 60-80c, all tours",[["Single bets",-6.63,-3.32],["2 legs, combo",-10.53,-2.65],["3 legs, combo",-20.09,-3.05],["3 legs, rolled",-43.78,-3.73]]]
+];
+const c=document.getElementById("chart");
+const el=(t,cls,txt)=>{const e=document.createElement(t);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e};
+const ax=el("div","axis");ax.append(el("div"));const sc=el("div");
+[-40,-20,0,10].forEach(v=>{const s=el("span",null,(v>0?"+":"")+v+"%");s.style.left=pct(v)+"%";sc.append(s)});
+ax.append(sc,el("div"));c.append(ax);
+G.forEach(([name,rows])=>{
+  c.append(el("div","grp",name));
+  rows.forEach(([lab,v,t])=>{
+    const r=el("div","row");r.append(el("div","lab",lab));
+    const tr=el("div","track"),b=el("i");
+    const a=pct(Math.min(v,0)),w=pct(Math.max(v,0))-a;
+    b.style.left=a+"%";b.style.width=w+"%";b.style.background=v<0?"var(--loss)":"var(--flat)";
+    tr.append(b,el("u"));r.append(tr);
+    const val=el("div","val",(v>0?"+":"\u2212")+Math.abs(v).toFixed(1)+"%");
+    val.append(el("small",null,"t "+(t>0?"+":"\u2212")+Math.abs(t).toFixed(1)));
+    r.append(val);c.append(r);
+  });
+});
+</script>
