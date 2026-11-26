@@ -15,6 +15,7 @@ def render(src, dst, cols=96, W=900, H=1092, tint=(238, 238, 232), gamma=.85, qu
     im = im.crop((0, top, w, min(h, top + th))); cw = W / cols; ch = cw * 1.95; rows = int(H / ch)
     a = np.asarray(im.resize((cols * 4, rows * 4), Image.LANCZOS), 'float32') / 255
     a = cv2.resize(a, (cols, rows), interpolation=cv2.INTER_AREA)
+    rgb = np.asarray(Image.open(src).convert('RGB').crop((0, top, w, min(h, top + th))).resize((cols, rows), Image.BOX), 'float32')
     lo, hi = np.percentile(a, 3), np.percentile(a, 99.5); a = np.clip((a - lo) / max(.05, hi - lo), 0, 1) ** gamma
     out = Image.new('RGB', (W, H), (5, 5, 6)); d = ImageDraw.Draw(out); f = ImageFont.truetype(FONT, cw / .602)
     for y in range(rows):
@@ -22,7 +23,8 @@ def render(src, dst, cols=96, W=900, H=1092, tint=(238, 238, 232), gamma=.85, qu
             v = a[y, x]
             if v < .035: continue
             g = RAMP[min(len(RAMP) - 1, int(v * (len(RAMP) - 1) + .5))]
-            k = .55 + .45 * v; d.text(((x + .5) * cw, (y + .55) * ch), g, font=f, fill=(int(tint[0] * k), int(tint[1] * k), int(tint[2] * k)), anchor='mm')
+            c = rgb[y, x]; m = max(c.max(), 1); k = min(1.0, .72 + v * .6) * 255 / m; col = tuple(int(min(255, c[i] * k)) for i in range(3))   # the picture's own colour, brightened so every glyph reads
+            d.text(((x + .5) * cw, (y + .55) * ch), g, font=f, fill=col, anchor='mm')
     q = quality
     while True:
         out.save(dst, 'JPEG', quality=q, optimize=True)
