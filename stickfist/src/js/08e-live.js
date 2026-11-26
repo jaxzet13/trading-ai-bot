@@ -20,7 +20,7 @@ const Live = (() => {
   const found = id => data && data.found ? data.found[id] || 0 : null;
   const foundS = n => n == null ? "" : n === 0 ? "never found" : n === 1 ? "found once" : `found ${fmt(n)} times`;
   // the cards to want: the rarest few of each pack
-  const chase = () => PACKS.flatMap(pk => LIVE.filter(c => c.set === pk.set && RAR[c.rar].tier >= 4).sort((a, b) => packP(a.id) - packP(b.id)).slice(0, 4));
+  const chase = () => { const seen = new Set(); return PACKS.flatMap(pk => LIVE.filter(c => inPack(pk, c) && RAR[c.rar].tier >= 4 && !seen.has(c.id)).sort((a, b) => b.val - a.val).slice(0, 2).map(c => (seen.add(c.id), c))); };
   function render() {
     const el = $("lvBody"); if (!el) return; const feed = data ? data.feed.filter(e => BY_ID[e.id]) : [], day = feed.filter(e => Date.now() - e.t < 864e5);
     const top = day.slice().sort((a, b) => BY_ID[b.id].val - BY_ID[a.id].val)[0], best = chase().sort((a, b) => b.val - a.val)[0];

@@ -25,7 +25,7 @@
 :root {
   --bg: #050506; --ink: #ece7dc; --dim: #8d897f; --faint: #55534e; --ln: #1c1c20; --ln2: #2e2e34; --ln3: #4a4a52;
   --red: #e0202c; --ok: #9fd8a6; --bad: #e8786d;
-  --f: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f: var(--m);
   --m: "JetBrains Mono", "DejaVu Sans Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 * { box-sizing: border-box; }
@@ -592,7 +592,7 @@ header.top { background: rgba(5,5,6,.72); -webkit-backdrop-filter: saturate(160%
 .tk-up { animation: tkUp 1s ease-out; } .tk-dn { animation: tkDn 1s ease-out; }
 @keyframes tkUp { 0%, 25% { color: var(--ok); text-shadow: 0 0 14px rgba(159,216,166,.55); } } @keyframes tkDn { 0%, 25% { color: var(--bad); text-shadow: 0 0 14px rgba(232,120,109,.5); } }
 /* coins to the balance */
-.coin { position: fixed; left: 0; top: 0; z-index: 95; margin: -9px 0 0 -9px; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; background: var(--ok); color: #06140a; font: 800 11px/1 Inter, system-ui, sans-serif; pointer-events: none; will-change: transform; box-shadow: 0 0 12px rgba(159,216,166,.6); }
+.coin { position: fixed; left: 0; top: 0; z-index: 95; margin: -9px 0 0 -9px; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; background: var(--ok); color: #06140a; font: 800 11px/1 var(--m); pointer-events: none; will-change: transform; box-shadow: 0 0 12px rgba(159,216,166,.6); }
 #bal.bump { animation: balBump .5s cubic-bezier(.2, .9, .3, 1.4); } @keyframes balBump { 30% { transform: scale(1.16); color: var(--ok); } }
 #bal { display: inline-block; transform-origin: right center; }
 /* the stage glows in the colour of the card that just turned over */
@@ -835,7 +835,7 @@ footer { border-top: 1px solid var(--ln); background: rgba(255,255,255,.012); } 
 @keyframes ripBeam { from { transform: scaleY(0) scaleX(.6); opacity: 1; } 35% { transform: scaleY(1) scaleX(1); opacity: .9; } to { transform: scaleY(1.1) scaleX(1.25); opacity: 0; } }
 .ripguide { position: absolute; z-index: 7; left: 5%; right: 5%; top: 14.5%; height: 0; pointer-events: none; }
 .ripguide i { position: absolute; left: 0; right: 0; top: 0; border-top: 2px dashed rgba(255,255,255,.55); animation: guideDash 1.2s linear infinite; -webkit-mask-image: linear-gradient(90deg, #000, #000 60%, transparent); mask-image: linear-gradient(90deg, #000, #000 60%, transparent); }
-.ripguide span { position: absolute; left: 0; top: -13px; padding: 4px 9px; border-radius: 999px; background: #fff; color: #07080a; font: 700 11px/1.2 Inter, system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; animation: guideNudge 1.5s cubic-bezier(.5,0,.3,1) infinite; box-shadow: 0 6px 18px -4px rgba(0,0,0,.8); }
+.ripguide span { position: absolute; left: 0; top: -13px; padding: 4px 9px; border-radius: 999px; background: #fff; color: #07080a; font: 700 11px/1.2 var(--m); letter-spacing: .04em; text-transform: uppercase; animation: guideNudge 1.5s cubic-bezier(.5,0,.3,1) infinite; box-shadow: 0 6px 18px -4px rgba(0,0,0,.8); }
 .ripguide span::after { content: " →"; }
 @keyframes guideNudge { 0% { transform: translateX(0); opacity: 0; } 15% { opacity: 1; } 70% { transform: translateX(min(46vw, 180px)); opacity: 1; } 100% { transform: translateX(min(52vw, 200px)); opacity: 0; } }
 @keyframes guideDash { to { background-position: 16px 0; } }
@@ -845,7 +845,7 @@ footer { border-top: 1px solid var(--ln); background: rgba(255,255,255,.012); } 
 .sc.rise { transform: translateY(46%) scale(.8); opacity: 0; } .sc { transition: transform .46s cubic-bezier(.2, 1.25, .35, 1), opacity .3s; touch-action: none; }
 .sc.lit .card { box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc, #fff) 55%, transparent), 0 0 70px -10px var(--rc, #fff), 0 30px 60px -30px #000; }
 .sc.gone { transition: transform .42s cubic-bezier(.3, .6, .4, 1), opacity .38s; }
-.vchip { position: fixed; left: 0; top: 0; z-index: 12; padding: 6px 12px; border-radius: 999px; background: #07080a; color: var(--ink); border: 1px solid color-mix(in srgb, var(--rc, #fff) 70%, transparent); box-shadow: 0 0 22px -4px var(--rc, #fff); font: 800 15px/1 Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; pointer-events: none; white-space: nowrap; will-change: transform; }
+.vchip { position: fixed; left: 0; top: 0; z-index: 12; padding: 6px 12px; border-radius: 999px; background: #07080a; color: var(--ink); border: 1px solid color-mix(in srgb, var(--rc, #fff) 70%, transparent); box-shadow: 0 0 22px -4px var(--rc, #fff); font: 800 15px/1 var(--m); font-variant-numeric: tabular-nums; pointer-events: none; white-space: nowrap; will-change: transform; }
 .meter.hit .mbar { animation: meterHit .34s cubic-bezier(.2, .9, .3, 1.4); } @keyframes meterHit { 35% { transform: scaleY(2.1); filter: brightness(1.6); } }
 .meter .mbar i { transition: width .5s cubic-bezier(.2, .8, .2, 1); }
 
@@ -1100,7 +1100,7 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .tcb.on { background: var(--acc); color: #04130a; } .tcb:active { transform: scale(.94); }
 .tc-cv { display: block; width: 100%; height: auto; aspect-ratio: 720 / 430; }
 .tc-foot { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--dim); font-variant-numeric: tabular-nums; } .tc-foot span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.tc-foot i { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font: 800 11px Inter, system-ui, sans-serif; font-style: normal; color: #05060a; } .tc-b i { background: #3be477; } .tc-s i { background: #ff5d5d; }
+.tc-foot i { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font: 800 11px var(--m); font-style: normal; color: #05060a; } .tc-b i { background: #3be477; } .tc-s i { background: #ff5d5d; }
 .tc-n { font-weight: 700; } .tc-n.up { color: #3be477; } .tc-n.dn { color: #ff7a72; }
 
 /* ---- Me: the live hero. One copy, full size, its price rolling: the thing to point a camera at ---- */
@@ -1112,11 +1112,11 @@ svg.gift { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: ro
 .lh-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
 .lh-who { display: flex; align-items: center; gap: 11px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .lh-who .thumb { width: 46px; height: 58px; } .lh-who span { display: grid; gap: 1px; min-width: 0; } .lh-who b { font-size: 18px; font-weight: 800; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .lh-who small { font-size: 12.5px; color: color-mix(in srgb, var(--rc, #888) 70%, #fff); font-weight: 600; }
-.lh-badge { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font: 800 11px Inter, system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); background: rgba(255,255,255,.06); }
+.lh-badge { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font: 800 11px var(--m); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); background: rgba(255,255,255,.06); }
 .lh-badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #3be477; animation: lhDot 1s steps(2) infinite; } @keyframes lhDot { 50% { opacity: .25; } }
 .lhero.pump .lh-badge { color: #04130a; background: #3be477; } .lhero.pump .lh-badge::before { background: #04130a; } .lhero.dump .lh-badge { color: #fff; background: #d83a3a; } .lhero.dump .lh-badge::before { background: #fff; }
-.lh-px { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; } .lh-px b { font: 800 46px/1 Inter, system-ui, sans-serif; letter-spacing: -.045em; font-variant-numeric: tabular-nums; }
-.lh-pct { padding: 5px 10px; border-radius: 10px; font: 800 17px/1 Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; } .lh-pct.up { color: #04130a; background: #3be477; } .lh-pct.dn { color: #fff; background: #d83a3a; }
+.lh-px { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; } .lh-px b { font: 800 46px/1 var(--m); letter-spacing: -.045em; font-variant-numeric: tabular-nums; }
+.lh-pct { padding: 5px 10px; border-radius: 10px; font: 800 17px/1 var(--m); font-variant-numeric: tabular-nums; } .lh-pct.up { color: #04130a; background: #3be477; } .lh-pct.dn { color: #fff; background: #d83a3a; }
 .lhero.pump .lh-px b { color: #8dffb6; text-shadow: 0 0 26px rgba(59,228,119,.55); }
 .lhero .tchart { padding: 0; border: 0; background: none; border-radius: 0; }
 .lh-sell { width: 100%; min-height: 50px; margin: 0; border-radius: 15px; border: 0; background: #f5f2ea; color: #0a0a0c; font-size: 16px; font-weight: 800; } .lh-sell b { font-variant-numeric: tabular-nums; margin-left: 4px; }
@@ -1191,7 +1191,7 @@ details.ptile[open] > summary { border-bottom: 1px solid var(--ln); grid-templat
 .sc.climbing::after { content: ""; position: absolute; inset: -2px; z-index: 5; border-radius: 5% / 3.57%; pointer-events: none; box-shadow: 0 0 0 2px var(--cc, #fff), 0 0 70px 4px var(--cc, #fff), inset 0 0 46px -6px var(--cc, #fff); transition: box-shadow .18s; }
 .stage.hush .st-bar, .stage.hush #stTray { opacity: .2; transition: opacity .25s; } .stage .st-bar, .stage #stTray { transition: opacity .4s; }
 .stage.hush::before { opacity: 1 !important; }
-.st-title.climb { align-content: end; gap: 10px; } .cl-n { font: 900 30px/1 Inter, system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: var(--rc, #fff); text-shadow: 0 0 34px var(--rc, #fff); animation: clIn .3s cubic-bezier(.2, 1.7, .4, 1) both; }
+.st-title.climb { align-content: end; gap: 10px; } .cl-n { font: 900 30px/1 var(--m); letter-spacing: .16em; text-transform: uppercase; color: var(--rc, #fff); text-shadow: 0 0 34px var(--rc, #fff); animation: clIn .3s cubic-bezier(.2, 1.7, .4, 1) both; }
 @keyframes clIn { from { transform: scale(1.7); opacity: 0; } }
 .cl-d { display: flex; justify-content: center; gap: 5px; } .cl-d i { width: 16px; height: 5px; border-radius: 3px; background: var(--c); box-shadow: 0 0 10px var(--c); }
 .stage.quake .st-box { animation: quake .5s cubic-bezier(.36, .07, .19, .97); } @keyframes quake { 10%, 90% { translate: -2px 0; } 20%, 80% { translate: 5px -2px; } 30%, 50%, 70% { translate: -9px 3px; } 40%, 60% { translate: 9px -3px; } }
@@ -1218,8 +1218,8 @@ details.ptile[open] > summary { border-bottom: 1px solid var(--ln); grid-templat
 #homePack .pk .win { width: 91%; margin-top: 2.6cqw; border: 0; border-radius: 3cqw; box-shadow: 0 0 0 1px rgba(255,255,255,.1), 0 1px 0 rgba(255,255,255,.18) inset; }
 #homePack .pk .readout { flex: 1; align-content: center; justify-items: center; text-align: center; padding: 0 6%; gap: .8cqw; }
 #homePack .pk .r-stat, #homePack .pk .r-meter { display: none; }
-#homePack .pk .r-name { font: 800 6.4cqw/1 Inter, system-ui, sans-serif; letter-spacing: .3em; margin-right: -.3em; color: #f5f2ea; min-height: 0; } #homePack .pk.pk-ms .r-name { color: #ffd9a8; }
-#homePack .pk .r-sub { font: 500 3.3cqw/1.2 Inter, system-ui, sans-serif; letter-spacing: .04em; color: rgba(255,255,255,.5); }
+#homePack .pk .r-name { font: 800 6.4cqw/1 var(--m); letter-spacing: .3em; margin-right: -.3em; color: #f5f2ea; min-height: 0; } #homePack .pk.pk-ms .r-name { color: #ffd9a8; }
+#homePack .pk .r-sub { font: 500 3.3cqw/1.2 var(--m); letter-spacing: .04em; color: rgba(255,255,255,.5); }
 #homePack::after { border-radius: 18px; background: linear-gradient(112deg, transparent 40%, rgba(255,255,255,.2) 50%, transparent 60%) 130% 0 / 260% 100% no-repeat; }
 .packtabs .ptab { transition: background .2s, color .2s; }
 /* how many: one control, not five loose chips */
@@ -1247,7 +1247,7 @@ body.on-home #openBtn { height: 62px; margin: 0; }
 /* ---- Me, second pass: who you are, a real chart, and your cards as cards ---- */
 #v-profile .page-head { display: none; }
 .ptop { display: flex; align-items: center; gap: 12px; margin: 4px 0 18px; }
-.pt-av { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; font: 800 19px Inter, system-ui, sans-serif; color: #04130a; background: conic-gradient(from 210deg, #3be477, #8dffb6, #7ab8ff, #3be477); box-shadow: 0 0 0 2px #05060a, 0 0 0 3px rgba(59,228,119,.5), 0 10px 24px -10px rgba(59,228,119,.7); }
+.pt-av { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; font: 800 19px var(--m); color: #04130a; background: conic-gradient(from 210deg, #3be477, #8dffb6, #7ab8ff, #3be477); box-shadow: 0 0 0 2px #05060a, 0 0 0 3px rgba(59,228,119,.5), 0 10px 24px -10px rgba(59,228,119,.7); }
 .pt-who { flex: 1; min-width: 0; display: grid; gap: 3px; } .pt-who b { font-size: 17px; font-weight: 800; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .pt-who small { font-size: 12.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pt-who small i { font-style: normal; font-weight: 800; color: #04130a; background: var(--acc); border-radius: 6px; padding: 1px 6px; margin-right: 3px; font-size: 11px; }
 .pt-xp { display: block; height: 4px; margin-top: 3px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; } .pt-xp i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2bbf62, var(--acc)); }
@@ -1259,7 +1259,7 @@ body.on-home #openBtn { height: 62px; margin: 0; }
 .pf-chart .l { fill: none; stroke: var(--pc); stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 9px rgba(var(--pcr), .85)); } .pf-chart .b { stroke: rgba(255,255,255,.14); stroke-width: 1; stroke-dasharray: 2 5; vector-effect: non-scaling-stroke; fill: none; }
 .pf-chart .g0 { stop-color: var(--pc); stop-opacity: .3; } .pf-chart .g1 { stop-color: var(--pc); stop-opacity: 0; }
 .pf-dot { position: absolute; right: -1px; width: 10px; height: 10px; margin: -5px -5px 0 0; border-radius: 50%; background: var(--pc); box-shadow: 0 0 0 4px rgba(var(--pcr), .22), 0 0 16px 2px rgba(var(--pcr), .9); } @media (prefers-reduced-motion: no-preference) { .pf-dot { animation: pfDot 1.4s ease-out infinite; } } @keyframes pfDot { 70%, 100% { box-shadow: 0 0 0 12px rgba(var(--pcr), 0), 0 0 16px 2px rgba(var(--pcr), .9); } }
-.pf-rng { display: flex; justify-content: center; gap: 4px; margin-top: 4px; } .pf-rng button { min-width: 54px; min-height: 32px; border: 0; border-radius: 10px; background: none; color: var(--dim); font: 700 12.5px Inter, system-ui, sans-serif; letter-spacing: .04em; cursor: pointer; -webkit-tap-highlight-color: transparent; } .pf-rng button.on { background: rgba(var(--pcr), .16); color: var(--pc); }
+.pf-rng { display: flex; justify-content: center; gap: 4px; margin-top: 4px; } .pf-rng button { min-width: 54px; min-height: 32px; border: 0; border-radius: 10px; background: none; color: var(--dim); font: 700 12.5px var(--m); letter-spacing: .04em; cursor: pointer; -webkit-tap-highlight-color: transparent; } .pf-rng button.on { background: rgba(var(--pcr), .16); color: var(--pc); }
 .pf-stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 12px; border-radius: 18px; border: 1px solid var(--ln); background: var(--s1); } .pf-stats > div { display: grid; gap: 3px; padding: 12px 12px; min-width: 0; } .pf-stats > div + div { border-left: 1px solid var(--ln); }
 .pf-stats small { font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); white-space: nowrap; } .pf-stats b { font-size: 16px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #pTable { padding: 0; border: 0; background: none; } #pTable:empty { display: none; }
@@ -1267,12 +1267,12 @@ body.on-home #openBtn { height: 62px; margin: 0; }
 .hc { display: grid; gap: 6px; min-width: 0; } .hc-main { display: grid; gap: 5px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .hc-img { position: relative; display: block; aspect-ratio: 360 / 437; border-radius: 12px; overflow: hidden; background: #0a0b0e; box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc, #555) 55%, #1a1c22), 0 14px 24px -16px color-mix(in srgb, var(--rc, #000) 70%, #000); } .hc-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .hc.run .hc-img { box-shadow: 0 0 0 2px #3be477, 0 0 26px -2px rgba(59,228,119,.8); }
-.hc-n { position: absolute; left: 5px; top: 5px; padding: 2px 6px; border-radius: 7px; background: rgba(5,6,10,.82); color: #fff; font: 800 11px Inter, system-ui, sans-serif; backdrop-filter: blur(4px); }
-.hc-pct { position: absolute; right: 5px; bottom: 5px; padding: 2px 6px; border-radius: 7px; font: 800 11px Inter, system-ui, sans-serif; font-style: normal; font-variant-numeric: tabular-nums; background: rgba(5,6,10,.82); color: var(--dim); backdrop-filter: blur(4px); } .hc-pct.up { color: #04130a; background: #3be477; } .hc-pct.dn { color: #fff; background: #d83a3a; }
-.hc-run { position: absolute; left: 5px; bottom: 5px; padding: 2px 6px; border-radius: 7px; font: 800 9.5px Inter, system-ui, sans-serif; font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: #04130a; background: #3be477; }
+.hc-n { position: absolute; left: 5px; top: 5px; padding: 2px 6px; border-radius: 7px; background: rgba(5,6,10,.82); color: #fff; font: 800 11px var(--m); backdrop-filter: blur(4px); }
+.hc-pct { position: absolute; right: 5px; bottom: 5px; padding: 2px 6px; border-radius: 7px; font: 800 11px var(--m); font-style: normal; font-variant-numeric: tabular-nums; background: rgba(5,6,10,.82); color: var(--dim); backdrop-filter: blur(4px); } .hc-pct.up { color: #04130a; background: #3be477; } .hc-pct.dn { color: #fff; background: #d83a3a; }
+.hc-run { position: absolute; left: 5px; bottom: 5px; padding: 2px 6px; border-radius: 7px; font: 800 9.5px var(--m); font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: #04130a; background: #3be477; }
 .hc-nm { display: grid; min-width: 0; } .hc-nm b { font-size: 13.5px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .hc-nm small { font-size: 11.5px; color: color-mix(in srgb, var(--rc, #888) 65%, #c9cdd6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hc-px { font-size: 15px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-.hc-sell { min-height: 44px; padding: 0 4px; border-radius: 11px; border: 1px solid var(--ln2); background: var(--s2); color: var(--ink); font: 700 12px Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; } .hc-sell:active, .hc-main:active .hc-img { transform: scale(.97); }
+.hc-sell { min-height: 44px; padding: 0 4px; border-radius: 11px; border: 1px solid var(--ln2); background: var(--s2); color: var(--ink); font: 700 12px var(--m); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; } .hc-sell:active, .hc-main:active .hc-img { transform: scale(.97); }
 #pTable .pall { display: block; width: 100%; margin-top: 12px; min-height: 46px; border-radius: 14px; border: 1px solid var(--ln); background: var(--s1); text-align: center; }
 #v-profile { overflow-x: clip; margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; } .pf-dot { right: 4px; }
 
@@ -1285,17 +1285,17 @@ body.on-home #openBtn { height: 62px; margin: 0; }
 .stage:has(.st-title.hit)::before { background: radial-gradient(90% 46% at 50% 46%, color-mix(in srgb, var(--rc, #ece7dc) 34%, transparent), transparent 70%), radial-gradient(140% 90% at 50% 50%, transparent 55%, rgba(0,0,0,.6)); }
 .st-title.hit, .st-title.good { gap: 8px; align-content: end; padding-bottom: 6px; }
 .st-title .rw:has(.rchip) { display: flex; justify-content: center; align-items: center; gap: 8px; }
-.rchip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 11px; border-radius: 999px; font: 800 12.5px/1 Inter, system-ui, sans-serif; letter-spacing: .22em; text-transform: uppercase; color: var(--rc, #fff); background: linear-gradient(180deg, color-mix(in srgb, var(--rc, #fff) 20%, #0b0c10), color-mix(in srgb, var(--rc, #fff) 7%, #07080b)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc, #fff) 55%, transparent), 0 0 26px -6px var(--rc, #fff), 0 1px 0 rgba(255,255,255,.18) inset; }
+.rchip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 11px; border-radius: 999px; font: 800 12.5px/1 var(--m); letter-spacing: .22em; text-transform: uppercase; color: var(--rc, #fff); background: linear-gradient(180deg, color-mix(in srgb, var(--rc, #fff) 20%, #0b0c10), color-mix(in srgb, var(--rc, #fff) 7%, #07080b)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc, #fff) 55%, transparent), 0 0 26px -6px var(--rc, #fff), 0 1px 0 rgba(255,255,255,.18) inset; }
 .rchip i { width: 8px; height: 8px; rotate: 45deg; border-radius: 2px; background: var(--rc, #fff); box-shadow: 0 0 10px var(--rc, #fff); }
-.st-title .nm.clean { display: flex; justify-content: center; margin: 2px auto 0; font: 900 min(54px, calc((100vw - 56px) / (var(--n, 6) * .78)))/1 Inter, system-ui, sans-serif; letter-spacing: .08em; margin-right: -.08em; white-space: nowrap;
+.st-title .nm.clean { display: flex; justify-content: center; margin: 2px auto 0; font: 900 min(54px, calc((100vw - 56px) / (var(--n, 6) * .78)))/1 var(--m); letter-spacing: .08em; margin-right: -.08em; white-space: nowrap;
   color: transparent; background: linear-gradient(180deg, #ffffff 18%, color-mix(in srgb, var(--rc, #fff) 55%, #fff) 62%, color-mix(in srgb, var(--rc, #fff) 85%, #000) 100%); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 0 22px color-mix(in srgb, var(--rc, #fff) 55%, transparent)); }
 .st-title .nm.clean span { display: inline-block; animation: nmIn .5s calc(var(--i) * 45ms) cubic-bezier(.2, 1.5, .4, 1) both; color: transparent; background: inherit; -webkit-background-clip: text; background-clip: text; } @keyframes nmIn { from { transform: translateY(18px) scale(1.5); opacity: 0; filter: blur(6px); } }
 .st-title .ro { font-size: 13px; font-weight: 600; letter-spacing: .02em; color: color-mix(in srgb, var(--rc, #fff) 45%, #c8ccd4); }
 .st-title.hit .vl, .st-title.good .vl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }      /* still read out; shown under the card instead */
 .st-worth { display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; gap: 4px 10px; margin: 0 0 10px; } .st-worth[hidden] { display: none; }
 .st-worth small { font-size: 11.5px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); }
-.st-worth b { font: 800 44px/1 Inter, system-ui, sans-serif; letter-spacing: -.045em; font-variant-numeric: tabular-nums; color: #fff; text-shadow: 0 0 28px color-mix(in srgb, var(--rc, #fff) 60%, transparent); } .st-worth b.done { animation: swDone .45s cubic-bezier(.2, 1.7, .4, 1); } @keyframes swDone { 30% { transform: scale(1.14); } }
-.st-worth .xm { align-self: center; padding: 6px 12px; border-radius: 999px; background: var(--rc, #fff); color: #05060a; font: 800 13.5px/1 Inter, system-ui, sans-serif; box-shadow: 0 8px 20px -8px var(--rc, #fff); animation: xmPop .5s .7s cubic-bezier(.2, 1.7, .4, 1) both; }
+.st-worth b { font: 800 44px/1 var(--m); letter-spacing: -.045em; font-variant-numeric: tabular-nums; color: #fff; text-shadow: 0 0 28px color-mix(in srgb, var(--rc, #fff) 60%, transparent); } .st-worth b.done { animation: swDone .45s cubic-bezier(.2, 1.7, .4, 1); } @keyframes swDone { 30% { transform: scale(1.14); } }
+.st-worth .xm { align-self: center; padding: 6px 12px; border-radius: 999px; background: var(--rc, #fff); color: #05060a; font: 800 13.5px/1 var(--m); box-shadow: 0 8px 20px -8px var(--rc, #fff); animation: xmPop .5s .7s cubic-bezier(.2, 1.7, .4, 1) both; }
 .st-worth.in { animation: pillin .4s cubic-bezier(.2, 1.4, .4, 1) both; }
 .pills .pill.sell { background: linear-gradient(180deg, #ff6259, #d2222f 60%, #a9131f); } .pills .pill.hold { background: linear-gradient(180deg, #5aa5ff, #2460e0 60%, #1740b4); }
 .pills .pill { min-height: 66px; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 -3px 0 rgba(0,0,0,.25) inset, 0 14px 28px -14px #000; } .pills .pill small { opacity: .9; }
@@ -1303,17 +1303,17 @@ body.on-home #openBtn { height: 62px; margin: 0; }
 
 /* ---- selling many at once ---- */
 .psec { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 26px; } #v-profile .psec h3.sec { margin: 0; }
-.psel { min-height: 34px; padding: 0 14px; border-radius: 11px; border: 1px solid var(--ln2); background: var(--s2); color: var(--ink); font: 700 13px Inter, system-ui, sans-serif; cursor: pointer; -webkit-tap-highlight-color: transparent; } .psel.on { background: #f5f2ea; color: #08090b; border-color: #f5f2ea; } .psel[hidden] { display: none; }
+.psel { min-height: 34px; padding: 0 14px; border-radius: 11px; border: 1px solid var(--ln2); background: var(--s2); color: var(--ink); font: 700 13px var(--m); cursor: pointer; -webkit-tap-highlight-color: transparent; } .psel.on { background: #f5f2ea; color: #08090b; border-color: #f5f2ea; } .psel[hidden] { display: none; }
 #pSelChips:empty { display: none; } #pSelChips { margin-top: 10px; } .psec + #pSelChips + #pTable, .psec + #pTable { margin-top: 12px; }
 .selchips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px 2px; } .selchips::-webkit-scrollbar { display: none; }
-.selchips button { flex: none; min-height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--ln2); background: var(--s1); color: var(--ink); font: 600 13px Inter, system-ui, sans-serif; white-space: nowrap; cursor: pointer; } .selchips small { margin-left: 3px; color: var(--dim); font-weight: 700; font-variant-numeric: tabular-nums; } .selchips .clear { border-color: transparent; background: none; color: var(--dim); }
+.selchips button { flex: none; min-height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--ln2); background: var(--s1); color: var(--ink); font: 600 13px var(--m); white-space: nowrap; cursor: pointer; } .selchips small { margin-left: 3px; color: var(--dim); font-weight: 700; font-variant-numeric: tabular-nums; } .selchips .clear { border-color: transparent; background: none; color: var(--dim); }
 .hc.pick .hc-img { transition: transform .14s, box-shadow .14s, opacity .14s; } .hc.pick:not(.sel) .hc-img { opacity: .6; } .hc.pick.sel .hc-img { box-shadow: 0 0 0 3px #ff5d5d, 0 12px 24px -14px #ff5d5d; }
 .hc-ck { position: absolute; right: 6px; top: 6px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,.75); background: rgba(5,6,10,.5); } .hc.sel .hc-ck { border-color: #ff5d5d; background: #ff5d5d url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12.500 4 4 8-9'/%3E%3C/svg%3E") center / 15px no-repeat; }
 .hc.pick .hc-px { color: var(--dim); } .hc.pick.sel .hc-px { color: var(--ink); }
 .selbar { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 520px; margin: 0 auto; padding: 10px 10px 10px 16px; border-radius: 22px; border: 1px solid var(--ln2); background: rgba(14,15,19,.94); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 20px 44px -16px #000; animation: sbIn .28s cubic-bezier(.2, 1.3, .4, 1); } .selbar[hidden] { display: none; }
 @keyframes sbIn { from { transform: translateY(30px); opacity: 0; } }
 .sb-t { display: grid; gap: 1px; min-width: 0; } .sb-t b { font-size: 15.5px; font-weight: 800; } .sb-t small { font-size: 12.5px; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sb-go { flex: none; min-height: 50px; padding: 0 20px; border: 0; border-radius: 15px; background: linear-gradient(180deg, #ff6259, #d2222f); color: #fff; font: 800 15.5px Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 12px 24px -12px rgba(255,60,60,.8); } .sb-go:active { transform: scale(.97); } .sb-go:disabled { background: var(--s3); color: var(--dim); box-shadow: none; }
+.sb-go { flex: none; min-height: 50px; padding: 0 20px; border: 0; border-radius: 15px; background: linear-gradient(180deg, #ff6259, #d2222f); color: #fff; font: 800 15.5px var(--m); font-variant-numeric: tabular-nums; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 12px 24px -12px rgba(255,60,60,.8); } .sb-go:active { transform: scale(.97); } .sb-go:disabled { background: var(--s3); color: var(--dim); box-shadow: none; }
 .sb-go.ask { background: #fff; color: #b3121f; animation: sbAsk .5s cubic-bezier(.2, 1.6, .4, 1); } @keyframes sbAsk { from { transform: scale(.9); } }
 body.picking .btabs { display: none !important; } body.picking #v-profile { padding-bottom: 96px; }
 #pTable { overflow: visible; border-radius: 0; } .pgrid { padding: 3px; margin: -3px; }
@@ -1348,7 +1348,7 @@ body.picking .btabs { display: none !important; } body.picking #v-profile { padd
 .lv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } @media (min-width: 700px) { .lv-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .lv-tile { display: grid; gap: 3px; padding: 8px 8px 12px; border-radius: 18px; border: 1px solid var(--ln); background: var(--s1); color: inherit; font: inherit; text-align: left; cursor: pointer; min-width: 0; }
 .lv-ti { position: relative; display: block; aspect-ratio: 360 / 437; margin-bottom: 6px; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc) 55%, #1a1c22), 0 14px 26px -16px var(--rc); } .lv-ti img { display: block; width: 100%; height: 100%; object-fit: cover; } .lv-tile:not(.have) .lv-ti img { filter: saturate(.75) brightness(.72); }
-.lv-own { position: absolute; left: 6px; top: 6px; padding: 3px 7px; border-radius: 7px; font: 800 10px Inter, system-ui, sans-serif; font-style: normal; letter-spacing: .1em; text-transform: uppercase; color: #fff; background: rgba(5,6,10,.78); backdrop-filter: blur(4px); } .lv-tile.have .lv-own { color: #04130a; background: var(--acc); }
+.lv-own { position: absolute; left: 6px; top: 6px; padding: 3px 7px; border-radius: 7px; font: 800 10px var(--m); font-style: normal; letter-spacing: .1em; text-transform: uppercase; color: #fff; background: rgba(5,6,10,.78); backdrop-filter: blur(4px); } .lv-tile.have .lv-own { color: #04130a; background: var(--acc); }
 .lv-tile b { font-size: 15px; font-weight: 800; letter-spacing: -.01em; padding: 0 4px; } .lv-tile small { font-size: 12px; color: var(--dim); padding: 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .lv-tile em { font-style: normal; font-weight: 700; color: var(--rc); } .lv-tv { padding: 2px 4px 0; font-size: 18px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; } .lv-f:empty { display: none; }
 .lv-go { display: flex; width: 100%; min-height: 56px; margin: 22px 0 12px; border-radius: 18px; border: 0; font-size: 17px; font-weight: 800; color: #03170b; background: linear-gradient(180deg, #7dffab, #3be477 46%, #22c55e); box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 16px 34px -14px rgba(59,228,119,.7); }
 .lv-fine { margin: 0 2px 30px; line-height: 1.5; }
@@ -1364,10 +1364,22 @@ body.picking .btabs { display: none !important; } body.picking #v-profile { padd
 .st-ring { position: absolute; z-index: 6; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; pointer-events: none; border: 3px solid var(--rc, #fff); box-shadow: 0 0 30px var(--rc, #fff), inset 0 0 20px var(--rc, #fff); animation: stRing .8s cubic-bezier(.1, .7, .3, 1) both; }
 @keyframes stRing { from { transform: scale(.4); opacity: 1; } to { transform: scale(calc(14 * var(--k, 1))); opacity: 0; border-width: .5px; } }
 .st-flash { position: absolute; inset: 0; z-index: 9; pointer-events: none; background: radial-gradient(circle at 50% 46%, #fff, var(--rc, #fff) 45%, transparent 80%); animation: stFlash .6s ease-out both; } @keyframes stFlash { from { opacity: var(--a, .6); } to { opacity: 0; } }
-.st-stamp { position: absolute; left: 0; right: 0; top: 40%; z-index: 9; text-align: center; pointer-events: none; font: 900 min(86px, 19vw)/1 Inter, system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; color: #fff; -webkit-text-stroke: 1px var(--rc, #fff); text-shadow: 0 0 40px var(--rc, #fff), 0 0 90px var(--rc, #fff); mix-blend-mode: screen; animation: stStamp 1.2s cubic-bezier(.2, .9, .3, 1) both; }
+.st-stamp { position: absolute; left: 0; right: 0; top: 40%; z-index: 9; text-align: center; pointer-events: none; font: 900 min(86px, 19vw)/1 var(--m); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; color: #fff; -webkit-text-stroke: 1px var(--rc, #fff); text-shadow: 0 0 40px var(--rc, #fff), 0 0 90px var(--rc, #fff); mix-blend-mode: screen; animation: stStamp 1.2s cubic-bezier(.2, .9, .3, 1) both; }
 @keyframes stStamp { 0% { transform: scale(3.6); opacity: 0; filter: blur(14px); } 16% { transform: scale(1); opacity: 1; filter: none; } 62% { transform: scale(1.06); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; filter: blur(8px); } }
 @keyframes quake { 10%, 90% { translate: calc(-2px * var(--q, 1)) 0; } 20%, 80% { translate: calc(5px * var(--q, 1)) calc(-2px * var(--q, 1)); } 30%, 50%, 70% { translate: calc(-9px * var(--q, 1)) calc(3px * var(--q, 1)); } 40%, 60% { translate: calc(9px * var(--q, 1)) calc(-3px * var(--q, 1)); } }
 @media (prefers-reduced-motion: reduce) { .st-ring, .st-flash, .st-stamp { display: none; } }
+
+/* ---- five packs: a row of prices, and the pack's own name on the pack ---- */
+#packTabs, body.on-home #packTabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 4px; width: min(340px, 100%); flex-wrap: nowrap; }
+#packTabs .ptab, body.on-home #packTabs .ptab { display: grid; place-items: center; min-width: 0; padding: 9px 0 8px; border-radius: 11px; position: relative; } #packTabs .ptab b { font-size: 15px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+#packTabs .ptab.on { background: var(--s3); } #packTabs .ptab.on::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 3px; height: 3px; border-radius: 3px; background: var(--pc, var(--acc)); box-shadow: 0 0 10px var(--pc, var(--acc)); }
+#packTabs .ptab:not(.on) b { color: var(--dim); }
+#homePack .pk { box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.22) inset, 0 40px 70px -34px #000, 0 0 90px -30px var(--halo2, rgba(59,228,119,.5)); }
+
+/* ---- everything is text again ---- */
+:root { --f: var(--m); } body, button, input, select, textarea { font-family: var(--m); letter-spacing: -.01em; }
+h1, h2, h3, .bignum, .ttl { letter-spacing: -.04em; }
+.fan.pack7 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: min(100%, 420px); margin: 0 auto; } .fan.pack7 > div { width: auto; min-width: 0; } .fan.pack7 .card { width: 100%; }
 </style>
 </head>
 <body>
@@ -1391,7 +1403,6 @@ body.picking .btabs { display: none !important; } body.picking #v-profile { padd
       <div class="packcol" id="homePack"></div>
       <div class="packmeta"><h1 id="packName">First Print</h1><p class="dim" id="packLine"></p></div>
       <button class="btn solid big" id="openBtn" data-open>open pack</button>
-      <div class="multi" id="multiRow" role="group" aria-label="How many packs to open at once" hidden></div>
       <div class="homenext" id="homeNext" hidden></div>
       <a class="homeinvite" id="homeInvite" href="#/invite" hidden></a>
       <div class="hometrust" id="homeTrust"><span class="hfacts" id="homeFacts"></span><button class="tchip" id="fairBtn3" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.500 6v6c0 4.500 3.200 7.800 7.500 9 4.300-1.200 7.500-4.500 7.500-9V6z"/><path d="m9 12 2.200 2.200L15.500 10"/></svg>Provably fair</button><a class="tchip" href="#/odds"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Odds</a><span class="tchip" id="tStripe" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Stripe</span></div>
@@ -1555,46 +1566,46 @@ const RAR = {
 };
 // val is in units of play money, 500 to the dollar (see UNIT). chars is the exact number printed on the card.
 const CARDS = [
-  { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "uncommon",  chars: 6432,   val: 13,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
-  { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "uncommon",  chars: 6432,   val: 16,    tint: "#a8ffbe", cap: "it is a colander. it works.", styles: true },
-  { no: "004", id: "rook",    name: "Rook",    sub: "pool noodle", rar: "uncommon", chars: 6432,   val: 143,    tint: "#a8ffbe", cap: "reach: floppy.", styles: true },
-  { no: "012", id: "orbit",   name: "Orbit",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 19,    tint: "#a9c9ff", cap: "already read the ending.", styles: true },
-  { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "epic",  chars: 15750,  val: 390,    tint: "#ece7dc", cap: "gone before the cape lands.", styles: true },
-  { no: "018", id: "null",    name: "Null",    sub: "star",       rar: "exotic",      chars: 29260,  val: 1980,   tint: "#a9c9ff", cap: "not on any record.", styles: true },
-  { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "divine",      chars: 31970,  val: 3130,   tint: "#ffd27a", cap: "rents you the air.", styles: true },
-  { no: "006", id: "ronin",   name: "Ronin",   sub: "cliff",      rar: "celestial",      chars: 71680,  val: 4950,   tint: "#ff8ac9", cap: "", styles: true },
-  { no: "011", id: "grimm",   name: "Grimm",   sub: "cathedral",  rar: "eternal", chars: 219520, val: 12500,  tint: "#a8ffb0", cap: "", styles: true },
-  { no: "015", id: "reaper",  name: "Reaper",  sub: "ember",      rar: "ascended",    chars: 701000, val: 25000, tint: "#ffc87a", cap: "", styles: true },
-  { no: "020", id: "umbra",   name: "Umbra",   sub: "eclipse",    rar: "secret",    chars: 1578000, val: 50000, tint: "#ffb54a", cap: "the sun blinked first.", styles: true },
+  { no: "001", id: "stitch",  name: "Stitch",  sub: "frog hat",   rar: "uncommon",  chars: 6432,   val: 15,    tint: "#ece7dc", cap: "frog hat. zero regrets.",       styles: true },
+  { no: "003", id: "brick",   name: "Brick",   sub: "colander",   rar: "uncommon",  chars: 6432,   val: 15,    tint: "#a8ffbe", cap: "it is a colander. it works.", styles: true },
+  { no: "004", id: "rook",    name: "Rook",    sub: "pool noodle", rar: "common", chars: 6432,   val: 15,    tint: "#a8ffbe", cap: "reach: floppy.", styles: true },
+  { no: "012", id: "orbit",   name: "Orbit",   sub: "galaxy",     rar: "uncommon",  chars: 7260,   val: 20,    tint: "#a9c9ff", cap: "already read the ending.", styles: true },
+  { no: "019", id: "phantom", name: "Phantom", sub: "wings",      rar: "epic",  chars: 15750,  val: 350,    tint: "#ece7dc", cap: "gone before the cape lands.", styles: true },
+  { no: "018", id: "null",    name: "Null",    sub: "star",       rar: "exotic",      chars: 29260,  val: 3250,   tint: "#a9c9ff", cap: "not on any record.", styles: true },
+  { no: "017", id: "shogun",  name: "Shogun",  sub: "gold wings", rar: "divine",      chars: 31970,  val: 5500,   tint: "#ffd27a", cap: "rents you the air.", styles: true },
+  { no: "006", id: "ronin",   name: "Ronin",   sub: "cliff",      rar: "celestial",      chars: 71680,  val: 8500,   tint: "#ff8ac9", cap: "", styles: true },
+  { no: "011", id: "grimm",   name: "Grimm",   sub: "cathedral",  rar: "eternal", chars: 219520, val: 30000,  tint: "#a8ffb0", cap: "", styles: true },
+  { no: "015", id: "reaper",  name: "Reaper",  sub: "ember",      rar: "ascended",    chars: 701000, val: 55000, tint: "#ffc87a", cap: "", styles: true },
+  { no: "020", id: "umbra",   name: "Umbra",   sub: "eclipse",    rar: "secret",    chars: 1578000, val: 110000, tint: "#ffb54a", cap: "the sun blinked first.", styles: true },
   // ---- more First Print cards (same worth as the card each one shares a rarity with, so what a pack returns and how often it pays are unchanged; they only make the packs less repetitive)
-  { no: "026", id: "mop",     name: "Mop",     sub: "bucket helmet", rar: "uncommon", chars: 6432,  val: 151,  tint: "#a8ffbe", cap: "swab the deck.",              styles: true },
-  { no: "027", id: "pan",     name: "Pan",     sub: "frying pan",    rar: "uncommon", chars: 6432,  val: 159,  tint: "#ece7dc", cap: "it's a frying pan. it counts.", styles: true },
-  { no: "028", id: "cone",    name: "Cone",    sub: "traffic cone",  rar: "uncommon", chars: 6432,  val: 167,  tint: "#ffd27a", cap: "caution: confident.",         styles: true },
-  { no: "029", id: "tempest", name: "Tempest", sub: "storm",         rar: "rare", chars: 7260,  val: 310,  tint: "#a9c9ff", cap: "weather is a choice.",         styles: true },
-  { no: "030", id: "surge",   name: "Surge",   sub: "big wave",      rar: "rare", chars: 15750, val: 335,  tint: "#9fe8ff", cap: "ride it before it breaks.",    styles: true },
-  { no: "031", id: "kraken",  name: "Kraken",  sub: "tentacles",     rar: "epic",     chars: 28000, val: 470, tint: "#9fe8d8", cap: "it was always down there.",    styles: true },
+  { no: "026", id: "mop",     name: "Mop",     sub: "bucket helmet", rar: "common", chars: 6432,  val: 15,  tint: "#a8ffbe", cap: "swab the deck.",              styles: true },
+  { no: "027", id: "pan",     name: "Pan",     sub: "frying pan",    rar: "common", chars: 6432,  val: 20,  tint: "#ece7dc", cap: "it's a frying pan. it counts.", styles: true },
+  { no: "028", id: "cone",    name: "Cone",    sub: "traffic cone",  rar: "common", chars: 6432,  val: 20,  tint: "#ffd27a", cap: "caution: confident.",         styles: true },
+  { no: "029", id: "tempest", name: "Tempest", sub: "storm",         rar: "rare", chars: 7260,  val: 150,  tint: "#a9c9ff", cap: "weather is a choice.",         styles: true },
+  { no: "030", id: "surge",   name: "Surge",   sub: "big wave",      rar: "rare", chars: 15750, val: 175,  tint: "#9fe8ff", cap: "ride it before it breaks.",    styles: true },
+  { no: "031", id: "kraken",  name: "Kraken",  sub: "tentacles",     rar: "epic",     chars: 28000, val: 450, tint: "#9fe8d8", cap: "it was always down there.",    styles: true },
   // ---- Moonshot: one launch, five altitudes. The higher the card, the rarer it is.
-  { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "uncommon",  chars: 8736,   val: 36,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
-  { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "rare",  chars: 10080,  val: 870,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
-  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "mythic",      chars: 40320,  val:  4320,  tint: "#ffb070", cap: "gravity lost the argument.",    styles: true },
-  { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "divine",      chars: 123480, val: 11250, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
-  { no: "025", set: "ms", id: "luna",     name: "Luna",     sub: "first flag",    rar: "celestial", chars: 448800, val: 17500, tint: "#b8d4ff", cap: "to the moon was never a joke.", styles: true },
+  { no: "021", set: "ms", id: "fuse",     name: "Fuse",     sub: "match",         rar: "uncommon",  chars: 8736,   val: 20,   tint: "#ffd27a", cap: "light it and walk away.",       styles: true },
+  { no: "022", set: "ms", id: "ignition", name: "Ignition", sub: "launch pad",    rar: "rare",  chars: 10080,  val: 200,   tint: "#ffb070", cap: "no turning back from here.",     styles: true },
+  { no: "023", set: "ms", id: "liftoff",  name: "Liftoff",  sub: "plume",         rar: "mythic",      chars: 40320,  val:  2200,  tint: "#ffb070", cap: "gravity lost the argument.",    styles: true },
+  { no: "024", set: "ms", id: "apogee",   name: "Apogee",   sub: "edge of space", rar: "divine",      chars: 123480, val: 6500, tint: "#7ee8ff", cap: "the top is quiet.",            styles: true },
+  { no: "025", set: "ms", id: "luna",     name: "Luna",     sub: "first flag",    rar: "celestial", chars: 448800, val: 11000, tint: "#b8d4ff", cap: "to the moon was never a joke.", styles: true },
   // ---- more Moonshot cards, each at the altitude (and worth) of a card already there
-  { no: "032", set: "ms", id: "spark",     name: "Spark",     sub: "sparkler",     rar: "uncommon", chars: 8736,   val: 425,   tint: "#ffb070", cap: "small things start fires.", styles: true },
-  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 48,   tint: "#ff8a7a", cap: "three. two. one.",           styles: true },
-  { no: "034", set: "ms", id: "booster",   name: "Booster",   sub: "stage split",  rar: "exotic",     chars: 40320,  val:  7150, tint: "#ffc98a", cap: "dead weight, dropped.",      styles: true },
-  { no: "035", set: "ms", id: "flare",     name: "Flare",     sub: "signal flare", rar: "uncommon", chars: 8736,   val: 445,   tint: "#ff8a7a", cap: "the sky has been told.",     styles: true },
-  { no: "036", set: "ms", id: "bubble",    name: "Bubble",    sub: "fishbowl helmet", rar: "uncommon", chars: 8736,  val: 465,   tint: "#ece7dc", cap: "all systems: smiling.",      styles: true },
-  { no: "037", set: "ms", id: "gantry",    name: "Gantry",    sub: "tower arm",    rar: "legendary", chars: 10080,  val: 2440,   tint: "#9fe8ff", cap: "the arm lets go.",           styles: true }
+  { no: "032", set: "ms", id: "spark",     name: "Spark",     sub: "sparkler",     rar: "common", chars: 8736,   val: 25,   tint: "#ffb070", cap: "small things start fires.", styles: true },
+  { no: "033", set: "ms", id: "countdown", name: "Countdown", sub: "launch button", rar: "uncommon", chars: 10080,  val: 25,   tint: "#ff8a7a", cap: "three. two. one.",           styles: true },
+  { no: "034", set: "ms", id: "booster",   name: "Booster",   sub: "stage split",  rar: "exotic",     chars: 40320,  val:  4000, tint: "#ffc98a", cap: "dead weight, dropped.",      styles: true },
+  { no: "035", set: "ms", id: "flare",     name: "Flare",     sub: "signal flare", rar: "common", chars: 8736,   val: 25,   tint: "#ff8a7a", cap: "the sky has been told.",     styles: true },
+  { no: "036", set: "ms", id: "bubble",    name: "Bubble",    sub: "fishbowl helmet", rar: "common", chars: 8736,  val: 30,   tint: "#ece7dc", cap: "all systems: smiling.",      styles: true },
+  { no: "037", set: "ms", id: "gantry",    name: "Gantry",    sub: "tower arm",    rar: "legendary", chars: 10080,  val: 1100,   tint: "#9fe8ff", cap: "the arm lets go.",           styles: true }
   ,
   // ---- new designs (2026-11)
-  { no: "038", id: "colossus",  name: "Colossus",  sub: "buried head",  rar: "legendary", chars: 29400, val: 680, tint: "#ece7dc", cap: "it was here before the sand.", styles: true },
-  { no: "039", id: "leviathan", name: "Leviathan", sub: "sky whale",    rar: "mythic", chars: 30912, val: 1200, tint: "#8ad8ff", cap: "the sky has tides too.",       styles: true },
-  { no: "040", id: "titan",     name: "Titan",     sub: "storm giant",  rar: "cosmic", chars: 72600, val: 7300, tint: "#e6ecff", cap: "it knelt first.",              styles: true },
-  { no: "041", set: "ms", id: "console", name: "Console", sub: "mission control", rar: "rare", chars: 11008, val: 935, tint: "#9fc4ff", cap: "all stations: go.",     styles: true },
-  { no: "042", set: "ms", id: "suit",    name: "Suit",    sub: "suit up",         rar: "epic", chars: 10416, val: 1500, tint: "#ece7dc", cap: "one size fits nobody.", styles: true },
-  { no: "043", set: "ms", id: "mars",    name: "Mars",    sub: "second flag",   rar: "ascended", chars: 117600, val: 37500,  tint: "#ffb08a", cap: "second flag. first footprint.",     styles: true },
-  { no: "044", set: "ms", id: "horizon", name: "Horizon", sub: "event horizon", rar: "secret",   chars: 179920, val: 100000, tint: "#e8e6ff", cap: "nothing leaves. you looked anyway.", styles: true }
+  { no: "038", id: "colossus",  name: "Colossus",  sub: "buried head",  rar: "legendary", chars: 29400, val: 800, tint: "#ece7dc", cap: "it was here before the sand.", styles: true },
+  { no: "039", id: "leviathan", name: "Leviathan", sub: "sky whale",    rar: "mythic", chars: 30912, val: 1600, tint: "#8ad8ff", cap: "the sky has tides too.",       styles: true },
+  { no: "040", id: "titan",     name: "Titan",     sub: "storm giant",  rar: "cosmic", chars: 72600, val: 19000, tint: "#e6ecff", cap: "it knelt first.",              styles: true },
+  { no: "041", set: "ms", id: "console", name: "Console", sub: "mission control", rar: "rare", chars: 11008, val: 225, tint: "#9fc4ff", cap: "all stations: go.",     styles: true },
+  { no: "042", set: "ms", id: "suit",    name: "Suit",    sub: "suit up",         rar: "epic", chars: 10416, val: 600, tint: "#ece7dc", cap: "one size fits nobody.", styles: true },
+  { no: "043", set: "ms", id: "mars",    name: "Mars",    sub: "second flag",   rar: "ascended", chars: 117600, val: 75000,  tint: "#ffb08a", cap: "second flag. first footprint.",     styles: true },
+  { no: "044", set: "ms", id: "horizon", name: "Horizon", sub: "event horizon", rar: "secret",   chars: 179920, val: 225000, tint: "#e8e6ff", cap: "nothing leaves. you looked anyway.", styles: true }
 ];
 // the sets: the two letters a copy id starts with, and what the set is called
 const SETS = { fp: { code: "IS", name: "First Print" }, ms: { code: "MS", name: "Moonshot" } };
@@ -1613,31 +1624,73 @@ const STYLE_TINT = { "": "#ece7dc", steel: "#aaffbd", dots: "#ffd27a", vhs: "#c9
 /* Each pack holds the cards of one set. A slot is a list of [card id, weight]. The packs are tuned so that each one sells back for at least its cost about 40% of the time (a bit less when the market is hot)
    and returns 93 to 95% on average, never more than 95% (both move with the market, and are worked out live in 04-state.js). */
 const PACKS = [
-  // One card a pack, and a swingy one: about two packs in three hold an uncommon that is worth next to nothing, and the third
-  // holds a win. There is no dull middle: a rare already sells for more than the pack, an epic for half as much again or more, a
-  // legendary (1 pack in 20) for well over twice, and each rung of the ladder above it is half as likely and worth much more
-  // (about 4x, 7x, 11x, 17x, 25x the pack, then the three at the top). The average return is 95%, the ceiling.
-  { id: "fp", set: "fp", name: "First Print", blurb: "Stick figures made of text, from a frog in a hat to a total eclipse.", price: 259, min: 130, max: 2500, n: 1,
-    order: ["stitch", "brick", "orbit", "tempest", "surge", "phantom", "kraken", "colossus", "leviathan", "null", "shogun", "ronin", "titan", "grimm", "reaper", "umbra"],
-    slotNames: ["The card: a win (a rare or better) in about 1 pack in 3, otherwise an uncommon worth very little. From Mythic up, each rarity is half as likely as the one before"],
+  // Five packs, cheap to dear, of seven cards each, the way a real pack is: cards 1 to 4 are commons, card 5 is the rare slot (a rare or
+  // better, and the card you open a pack for), cards 6 and 7 are mostly commons with a chance of a rare. A dearer pack starts its rare slot
+  // higher up the ladder, so its worst rare is worth more and its best is worth a great deal. Every pack returns 94.7% on average.
+  { id: "fp", name: "First Print", blurb: "The first run: stick figures printed in text. Seven cards, one rare or better in the middle.", price: 500, min: 500, max: 500, n: 7, col: "#3be477", scene: "print",
+    slotNames: ["Cards 1 to 4: commons", "Card 5: the rare slot, a rare or better", "Cards 6 and 7: mostly commons, sometimes a rare"],
     slots: [
-      [["stitch", 25.2586], ["brick", 21.3727], ["orbit", 18.1344], ["tempest", 8], ["surge", 7], ["phantom", 6], ["kraken", 5.25], ["colossus", 5], ["leviathan", 2], ["null", 1], ["shogun", 0.5], ["ronin", 0.25], ["titan", 0.125], ["grimm", 0.0625], ["reaper", 0.0313], ["umbra", 0.0156]]
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["tempest", 32.1329], ["surge", 21.822], ["ignition", 14.8197], ["console", 10.0643], ["phantom", 6.8349], ["kraken", 4.6417], ["suit", 3.1523], ["colossus", 2.1408], ["gantry", 1.4538], ["leviathan", 0.9873], ["liftoff", 0.6705], ["null", 0.4554], ["booster", 0.3092], ["shogun", 0.21], ["apogee", 0.1426], ["ronin", 0.0969], ["luna", 0.0658]],
+      [["stitch", 9.8133], ["brick", 9.8133], ["orbit", 9.8133], ["rook", 9.8133], ["mop", 9.8133], ["pan", 6.1333], ["cone", 6.1333], ["fuse", 6.1333], ["countdown", 6.1333], ["spark", 6.1333], ["flare", 6.1333], ["bubble", 6.1333], ["tempest", 2], ["surge", 2], ["ignition", 2], ["console", 2]],
+      [["stitch", 9.8133], ["brick", 9.8133], ["orbit", 9.8133], ["rook", 9.8133], ["mop", 9.8133], ["pan", 6.1333], ["cone", 6.1333], ["fuse", 6.1333], ["countdown", 6.1333], ["spark", 6.1333], ["flare", 6.1333], ["bubble", 6.1333], ["tempest", 2], ["surge", 2], ["ignition", 2], ["console", 2]]
     ] },
-  { id: "ms", set: "ms", name: "Moonshot", blurb: "One launch and what happens on the way up: a lit fuse, the pad, a rocket on its plume, a flag on the Moon. The higher the card, the rarer it is.", price: 726, min: 375, max: 7500, n: 1,
-    order: ["fuse", "countdown", "ignition", "console", "suit", "gantry", "liftoff", "booster", "apogee", "luna", "mars", "horizon"],
-    slotNames: ["The card: a win (a rare or better) in about 1 pack in 3, otherwise an uncommon worth very little. From Mythic up, each rarity is half as likely as the one before"],
+  { id: "ms", name: "Moonshot", blurb: "A launch in seven cards: the rare slot climbs from storms to rockets and the Moon.", price: 1500, min: 1500, max: 1500, n: 7, col: "#ffa046", scene: "launch",
+    slotNames: ["Cards 1 to 4: commons", "Card 5: the rare slot, a rare or better", "Cards 6 and 7: mostly commons, sometimes a rare"],
     slots: [
-      [["fuse", 36.5566], ["countdown", 31.1408], ["ignition", 9], ["console", 8], ["suit", 6.5], ["gantry", 5], ["liftoff", 2], ["booster", 1], ["apogee", 0.5], ["luna", 0.25], ["mars", 0.04], ["horizon", 0.0125]]
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["surge", 17.6113], ["ignition", 14.6445], ["console", 12.1775], ["phantom", 10.1261], ["kraken", 8.4202], ["suit", 7.0017], ["colossus", 5.8222], ["gantry", 4.8414], ["leviathan", 4.0258], ["liftoff", 3.3476], ["null", 2.7837], ["booster", 2.3147], ["shogun", 1.9248], ["apogee", 1.6005], ["ronin", 1.3309], ["luna", 1.1067], ["titan", 0.9203]],
+      [["stitch", 9.1733], ["brick", 9.1733], ["orbit", 9.1733], ["rook", 9.1733], ["mop", 9.1733], ["pan", 5.7333], ["cone", 5.7333], ["fuse", 5.7333], ["countdown", 5.7333], ["spark", 5.7333], ["flare", 5.7333], ["bubble", 5.7333], ["tempest", 2.8], ["surge", 2.8], ["ignition", 2.8], ["console", 2.8], ["phantom", 2.8]],
+      [["stitch", 9.1733], ["brick", 9.1733], ["orbit", 9.1733], ["rook", 9.1733], ["mop", 9.1733], ["pan", 5.7333], ["cone", 5.7333], ["fuse", 5.7333], ["countdown", 5.7333], ["spark", 5.7333], ["flare", 5.7333], ["bubble", 5.7333], ["tempest", 2.8], ["surge", 2.8], ["ignition", 2.8], ["console", 2.8], ["phantom", 2.8]]
+    ] },
+  { id: "ec", name: "Eclipse", blurb: "The sun goes dark and the rare slot gets serious: legendaries are one pack in ten.", price: 4000, min: 4000, max: 4000, n: 7, col: "#ffc24a", scene: "eclipse",
+    slotNames: ["Cards 1 to 4: commons", "Card 5: the rare slot, a rare or better", "Cards 6 and 7: mostly commons, sometimes a rare"],
+    slots: [
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["phantom", 13.2987], ["kraken", 11.8396], ["suit", 10.5405], ["colossus", 9.3839], ["gantry", 8.3543], ["leviathan", 7.4376], ["liftoff", 6.6216], ["null", 5.895], ["booster", 5.2482], ["shogun", 4.6723], ["apogee", 4.1597], ["ronin", 3.7033], ["luna", 3.2969], ["titan", 2.9352], ["grimm", 2.6131]],
+      [["stitch", 8.5333], ["brick", 8.5333], ["orbit", 8.5333], ["rook", 8.5333], ["mop", 8.5333], ["pan", 5.3333], ["cone", 5.3333], ["fuse", 5.3333], ["countdown", 5.3333], ["spark", 5.3333], ["flare", 5.3333], ["bubble", 5.3333], ["ignition", 5], ["console", 5], ["phantom", 5], ["kraken", 5]],
+      [["stitch", 8.5333], ["brick", 8.5333], ["orbit", 8.5333], ["rook", 8.5333], ["mop", 8.5333], ["pan", 5.3333], ["cone", 5.3333], ["fuse", 5.3333], ["countdown", 5.3333], ["spark", 5.3333], ["flare", 5.3333], ["bubble", 5.3333], ["ignition", 5], ["console", 5], ["phantom", 5], ["kraken", 5]]
+    ] },
+  { id: "td", name: "Tidal", blurb: "Deep water. Every rare slot is a legendary or better, up to the secret cards.", price: 10000, min: 10000, max: 10000, n: 7, col: "#46d2ff", scene: "tidal",
+    slotNames: ["Cards 1 to 4: commons", "Card 5: the rare slot, a rare or better", "Cards 6 and 7: mostly commons, sometimes a rare"],
+    slots: [
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["suit", 14.1929], ["colossus", 12.4153], ["gantry", 10.8603], ["leviathan", 9.5001], ["liftoff", 8.3102], ["null", 7.2694], ["booster", 6.3589], ["shogun", 5.5625], ["apogee", 4.8658], ["ronin", 4.2564], ["luna", 3.7233], ["titan", 3.2569], ["grimm", 2.849], ["reaper", 2.4922], ["mars", 2.18], ["umbra", 1.907]],
+      [["stitch", 7.68], ["brick", 7.68], ["orbit", 7.68], ["rook", 7.68], ["mop", 7.68], ["pan", 4.8], ["cone", 4.8], ["fuse", 4.8], ["countdown", 4.8], ["spark", 4.8], ["flare", 4.8], ["bubble", 4.8], ["console", 7], ["phantom", 7], ["kraken", 7], ["suit", 7]],
+      [["stitch", 7.68], ["brick", 7.68], ["orbit", 7.68], ["rook", 7.68], ["mop", 7.68], ["pan", 4.8], ["cone", 4.8], ["fuse", 4.8], ["countdown", 4.8], ["spark", 4.8], ["flare", 4.8], ["bubble", 4.8], ["console", 7], ["phantom", 7], ["kraken", 7], ["suit", 7]]
+    ] },
+  { id: "sg", name: "Singularity", blurb: "The top shelf: nothing in the rare slot is worth less than a pack, and the biggest cards live here.", price: 25000, min: 25000, max: 25000, n: 7, col: "#b78cff", scene: "void",
+    slotNames: ["Cards 1 to 4: commons", "Card 5: the rare slot, a rare or better", "Cards 6 and 7: mostly commons, sometimes a rare"],
+    slots: [
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["stitch", 1.6], ["brick", 1.6], ["orbit", 1.6], ["rook", 1.6], ["mop", 1.6], ["pan", 1], ["cone", 1], ["fuse", 1], ["countdown", 1], ["spark", 1], ["flare", 1], ["bubble", 1]],
+      [["liftoff", 14.9737], ["null", 13.1432], ["booster", 11.5365], ["shogun", 10.1262], ["apogee", 8.8883], ["ronin", 7.8017], ["luna", 6.848], ["titan", 6.0108], ["grimm", 5.276], ["reaper", 4.631], ["mars", 4.0649], ["umbra", 3.568], ["horizon", 3.1318]],
+      [["stitch", 6.6133], ["brick", 6.6133], ["orbit", 6.6133], ["rook", 6.6133], ["mop", 6.6133], ["pan", 4.1333], ["cone", 4.1333], ["fuse", 4.1333], ["countdown", 4.1333], ["spark", 4.1333], ["flare", 4.1333], ["bubble", 4.1333], ["phantom", 9.5], ["kraken", 9.5], ["suit", 9.5], ["colossus", 9.5]],
+      [["stitch", 6.6133], ["brick", 6.6133], ["orbit", 6.6133], ["rook", 6.6133], ["mop", 6.6133], ["pan", 4.1333], ["cone", 4.1333], ["fuse", 4.1333], ["countdown", 4.1333], ["spark", 4.1333], ["flare", 4.1333], ["bubble", 4.1333], ["phantom", 9.5], ["kraken", 9.5], ["suit", 9.5], ["colossus", 9.5]]
     ] }
 ];
-// A card that no pack holds any more is retired: copies people already have keep their worth and can still be sold, but it is no longer counted, chased or shown as missing.
-// (Retired now: Rook, Mop, Pan, Cone, Spark, Flare and Bubble. A set keeps two uncommons and three rares, and its variety is higher up.)
-{ const live = new Set(); PACKS.forEach(pk => pk.slots.forEach(sl => sl.forEach(([id]) => live.add(id)))); CARDS.forEach(c => { c.retired = !live.has(c.id); }); }
+const RARE_SLOT = 4;                                                                         // the card you look forward to: the fifth of seven
+const inPack = (pk, c) => pk.slots.some(sl => sl.some(([id]) => id === c.id));
+// A card that no pack holds is retired; every card is in a pack now.
+CARDS.forEach(c => { c.retired = !PACKS.some(pk => inPack(pk, c)); });
 const LIVE = CARDS.filter(c => !c.retired);
-const PACK_BY = Object.fromEntries(PACKS.map(p => [p.id, p])), packOf = card => PACK_BY[card.set];
-// Play money is counted in units: 500 of them are one dollar, so a unit is a fifth of a cent. First Print costs $1.00 (500 units) and Moonshot $3.00 (1,500), and every card in a pack
-// is worth in proportion, so what a pack returns is unchanged by it. You start with $2.00.
-const SELLBACK = .9, START = 500, UNIT = 500;
+const PACK_BY = Object.fromEntries(PACKS.map(p => [p.id, p]));
+// Play money is counted in units: 500 of them are one dollar, so a unit is a fifth of a cent. The packs cost $1, $3, $8, $20 and $50. You start with $10.
+const SELLBACK = .9, START = 5000, UNIT = 500;
 
 /* ============================================================================
    1b. REQUIEM. The limited, physical pack: six cards, three to a pack, $65.
@@ -1723,7 +1776,7 @@ const styleOfCode = code => rollStyle(fnv("fx:" + code) / 4294967296);
 const cuts = rar => "/".repeat(RAR[rar].cuts);
 const idHTML = (code, rar) => `<span class="cid"><b>${esc(code)}</b>${cuts(rar) ? `<i>${cuts(rar)}</i>` : ""}</span>`;
 const styleName = fx => fx ? STYLES[fx].name : "Plain";
-const ART = 6;                                                                              // bump when card pictures are redrawn: the address changes, so no phone keeps showing an old picture from its cache
+const ART = 7;                                                                              // bump when card pictures are redrawn: the address changes, so no phone keeps showing an old picture from its cache
 const imgOf = (card, fx, small) => `cards/${small ? "s/" : ""}${card.id}${fx ? "-" + fx : card.id === "stitch" ? "-bone" : ""}.jpg?v=${ART}`;   // the plain look is cards/<id>.jpg; a styled copy is cards/<id>-<style>.jpg
 
 /* ============================================================================
@@ -1773,7 +1826,9 @@ function pullPack(pk, us) { return (pk || curPack()).slots.map((slot, i) => mint
 
 // the odds, worked out from the slot tables
 function slotP(slot, id) { let t = 0, w = 0; for (const [i, x] of slot) { t += x; if (i === id) w = x; } return w / t; }
-const packP = id => 1 - packOf(BY_ID[id]).slots.reduce((a, s) => a * (1 - slotP(s, id)), 1);        // the chance a pack of the card's own set holds it
+const packHas = (pk, id) => 1 - pk.slots.reduce((a, s) => a * (1 - slotP(s, id)), 1);                // the chance one pack holds the card
+const packOf = card => PACKS.reduce((best, pk) => packHas(pk, card.id) > packHas(best, card.id) ? pk : best, PACKS[0]);   // the pack where it is likeliest
+const packP = id => packHas(packOf(BY_ID[id]), id);                                                     // the chance of it in a pack of the pack it is likeliest in
 
 // The exact distribution of what a whole pack sells back for: every slot's outcomes (including each card's style roll) convolved together.
 // `val` says what a card is worth: the live market price, or its base worth.
@@ -2022,17 +2077,17 @@ const Fair = (() => {
   // same way, so every one of them has exactly the published odds. Nothing is made until you choose: take(i) gives you card i, and the log
   // keeps which one you took (k, of), so the draw can be checked against the seed like any other.
   // a legendary or better goes on the live feed: the server is told which draw it was, re-draws it itself, and lists it only if it checks out
-  const tell = (mode, pk, n, k, of, card) => { if (mode === "server" && RAR[BY_NO[card.no].rar].tier >= 4) API.post("fair/hit", { uid: state.uid, n, k, of, pack: pk.id }).then(() => { if (typeof Live !== "undefined") Live.pull(true); }); };
+  const tell = (mode, pk, n, items) => { if (mode === "server" && items.some(c => RAR[BY_NO[c.no].rar].tier >= 4)) API.post("fair/hit", { uid: state.uid, n, pack: pk.id }).then(() => { if (typeof Live !== "undefined") Live.pull(true); }); };
   const cardAt = (pk, hex, of, i) => BY_ID[pickU(pk.slots[0], digestU(hex, of)[i])];
   function ticket(pk, f, hex, nonce, epoch, mode, commit, of) {
     let done = false;
     // warm(): fetch the pictures the five could be, in no order that says which is where, so the one you pick is ready the moment you pick it
     return { of, get done() { return done; }, warm() { [...new Set(Array.from({ length: of }, (_, i) => cardAt(pk, hex, of, i).id))].sort().forEach(id => loadImg(imgOf(BY_ID[id]))); }, take(i) { if (done) return null; done = true; i = Math.max(0, Math.min(of - 1, i | 0)); const card = mint(cardAt(pk, hex, of, i));
-      f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: [BY_NO[card.no].id], k: i, of, t: Date.now() }); if (f.log.length > LOG) f.log.shift(); tell(mode, pk, nonce, i, of, card); return card; } };
+      f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: [BY_NO[card.no].id], k: i, of, t: Date.now() }); if (f.log.length > LOG) f.log.shift(); return card; } };
   }
   function settle(pk, f, hex, nonce, epoch, mode, commit) {
     const items = pullPack(pk, digestU(hex, pk.slots.length));
-    f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: items.map(c => BY_NO[c.no].id), t: Date.now() }); if (f.log.length > LOG) f.log.shift(); if (items[0]) tell(mode, pk, nonce, 0, 0, items[0]);
+    f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: items.map(c => BY_NO[c.no].id), t: Date.now() }); if (f.log.length > LOG) f.log.shift(); tell(mode, pk, nonce, items);
     return items;
   }
   // the cards for n packs with one request to the server (the same draws, in order, as n single requests would give)
@@ -2319,8 +2374,8 @@ class PackScreen {
     this.pk = pk; this.pack = pack || PACKS[0]; this.cv = pk.querySelector("canvas.scr"); this.ctx = this.cv.getContext("2d");
     this.el = { stat: pk.querySelector(".r-stat"), name: pk.querySelector(".r-name"), sub: pk.querySelector(".r-sub"), meter: pk.querySelector(".r-meter") };
     this.on = false; this.last = 0; this.t0 = performance.now(); this.off = document.createElement("canvas"); this.g = this.off.getContext("2d", { willReadFrequently: true }); this.cache = new Map(); this.hi = document.createElement("canvas"); this.hg = this.hi.getContext("2d"); this.layer = document.createElement("canvas"); this.lc = this.layer.getContext("2d");
-    const n = LIVE.filter(c => c.set === this.pack.set).length;
-    scramble(this.el.name, this.pack.name.toUpperCase(), 520); this.el.sub.textContent = `${n} cards · one in every pack`;
+    const n = LIVE.filter(c => inPack(this.pack, c)).length;
+    scramble(this.el.name, this.pack.name.toUpperCase(), 520); this.el.sub.textContent = `7 cards · the rare slot is card 5`;
   }
   fit() {
     const dpr = Math.min(devicePixelRatio || 1, 2), w = this.cv.clientWidth, h = this.cv.clientHeight; if (!w || !h) return;
@@ -2335,17 +2390,39 @@ class PackScreen {
     this.fit(); if (!this.w) return; const { cols, rows, w: W, h: H } = this, g = this.hg, t = Math.max(0, (now - this.t0) / 1000);
     g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over"; g.shadowBlur = 0; g.fillStyle = "#030304"; g.fillRect(0, 0, this.hi.width, this.hi.height);
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);                                     // paint in the pack's own pixels, sharp
-    if (this.pack.id === "ms") this.launch(g, t, W, H); else this.print(g, t, W, H);
-    const c = this.ctx, sm = this.g; c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.drawImage(this.hi, 0, 0);
-    sm.setTransform(1, 0, 0, 1, 0, 0); sm.imageSmoothingEnabled = true; sm.drawImage(this.hi, 0, 0, cols, rows);                 // the same picture, read back as a grid of cells
+    ({ launch: () => this.launch(g, t, W, H), eclipse: () => this.eclipse(g, t, W, H), tidal: () => this.tidal(g, t, W, H), void: () => this.void(g, t, W, H) }[this.pack.scene] || (() => this.print(g, t, W, H)))();
+    const c = this.ctx, sm = this.g; sm.setTransform(1, 0, 0, 1, 0, 0); sm.imageSmoothingEnabled = true; sm.drawImage(this.hi, 0, 0, cols, rows);                 // the scene, read back as a grid of cells
     const d = sm.getImageData(0, 0, cols, rows).data, cw = W / cols, ch = H / rows, N = PS_RAMP.length - 1;
-    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.globalAlpha = .34; c.globalCompositeOperation = "overlay";
+    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = "source-over"; c.fillStyle = "#030304"; c.fillRect(0, 0, W, H);
     c.font = `700 ${(cw / .6).toFixed(2)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; c.textAlign = "center"; c.textBaseline = "middle";
-    for (let y = 0, k = 0; y < rows; y++) for (let x = 0; x < cols; x++, k += 4) {
-      const r = d[k], gg = d[k + 1], b = d[k + 2], l = (r * .299 + gg * .587 + b * .114) / 255; if (l < .05) continue;
-      c.fillStyle = l > .55 ? "#000" : "#fff"; c.fillText(PS_RAMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);          // dark type on the light parts, light type on the dark: a grain, not a mask
+    for (let y = 0, k = 0; y < rows; y++) for (let x = 0; x < cols; x++, k += 4) {                                    // nothing is drawn but characters: each cell is the one whose ink matches its brightness, in its colour
+      const r = d[k], gg = d[k + 1], b = d[k + 2], l = (r * .299 + gg * .587 + b * .114) / 255; if (l < .06) continue;
+      const m = Math.max(r, gg, b) || 1, sc = Math.min(1, .5 + l * .9), boost = 255 / m * sc;
+      c.fillStyle = this.col(Math.min(255, r * boost), Math.min(255, gg * boost), Math.min(255, b * boost)); c.fillText(PS_RAMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);
     }
-    c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
+  }
+  eclipse(g, t, W, H) {                                                                  // Eclipse: a black disc, its corona turning, a small figure under it
+    this.status(t * 1000, "rising"); const cx = W / 2, cy = H * .42; g.fillStyle = "#050302"; g.fillRect(0, 0, W, H); g.save(); g.translate(cx, cy);
+    for (let k = 0; k < 28; k++) { const a = t * .18 + k * Math.PI / 14; g.fillStyle = k % 2 ? "rgba(255,170,60,.34)" : "rgba(220,100,30,.16)"; g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, H, a, a + Math.PI / 14); g.closePath(); g.fill(); }
+    const co = g.createRadialGradient(0, 0, W * .16, 0, 0, W * .55); co.addColorStop(0, "rgba(255,244,200,.98)"); co.addColorStop(.25, "rgba(255,176,60,.72)"); co.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = co; g.fillRect(-W, -H, W * 2, H * 2);
+    g.fillStyle = "#000"; g.beginPath(); g.arc(0, 0, W * .2, 0, 7); g.fill(); g.restore();
+    g.fillStyle = "#000"; g.fillRect(0, H * .84, W, H); g.strokeStyle = "#f5f2ea"; g.fillStyle = "#f5f2ea"; g.lineWidth = Math.max(2, W * .012); g.lineCap = "round"; const fy = H * .84, u = W * .05;
+    g.beginPath(); g.arc(cx, fy - u * 3.4, u * .45, 0, 7); g.fill(); g.beginPath(); g.moveTo(cx, fy - u * 2.8); g.lineTo(cx, fy - u * 1.2); g.moveTo(cx - u * .9, fy - u * 2.2); g.lineTo(cx + u * .9, fy - u * 2.2); g.moveTo(cx, fy - u * 1.2); g.lineTo(cx - u * .7, fy); g.moveTo(cx, fy - u * 1.2); g.lineTo(cx + u * .7, fy); g.stroke();
+  }
+  tidal(g, t, W, H) {                                                                    // Tidal: a moon over layers of water that never stop rolling
+    this.status(t * 1000, "rising tide"); const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#06202e"); bg.addColorStop(1, "#02060a"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const mx = W * .7, my = H * .17, mg = g.createRadialGradient(mx, my, 0, mx, my, W * .3); mg.addColorStop(0, "rgba(220,250,255,1)"); mg.addColorStop(.2, "rgba(150,230,255,.7)"); mg.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = mg; g.fillRect(0, 0, W, H);
+    for (let i = 0; i < 8; i++) { const y0 = H * (.34 + i * .085), amp = H * .018 * (1 + i * .25), f = .016 * (1 + i * .12); g.beginPath(); g.moveTo(0, H); for (let x = 0; x <= W; x += 4) g.lineTo(x, y0 + Math.sin(x * f + t * (.7 + i * .25) + i * 1.7) * amp + Math.sin(x * f * 2.3 - t * .9 + i) * amp * .4); g.lineTo(W, H); g.closePath();
+      const fg = g.createLinearGradient(0, y0 - amp, 0, y0 + H * .12); fg.addColorStop(0, `rgba(${70 + i * 8},${210 - i * 10},255,${.55 - i * .03})`); fg.addColorStop(1, "rgba(4,16,24,.92)"); g.fillStyle = fg; g.fill(); g.strokeStyle = `rgba(210,250,255,${.5 - i * .04})`; g.lineWidth = 1.5; g.stroke(); }
+  }
+  void(g, t, W, H) {                                                                     // Singularity: a black hole, its disc turning faster the closer it is
+    this.status(t * 1000, "falling in"); g.fillStyle = "#030208"; g.fillRect(0, 0, W, H); const cx = W / 2, cy = H * .44, hs = (a, b) => { const v = Math.imul(a * 73856093 ^ b * 19349663, 2654435761) >>> 0; return v / 4294967296; };
+    for (let k = 0; k < 60; k++) { g.fillStyle = `rgba(230,225,255,${.25 + .5 * hs(k, 3)})`; g.fillRect(hs(k, 1) * W, hs(k, 2) * H, 1.6, 1.6); }
+    g.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 900; i++) { const q = hs(i, 5), r = W * (.17 + .4 * q * q), a = t * (1.1 / (r / W + .08)) * .25 + i * 2.399, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * .3, hot = 1 - Math.min(1, (r / W - .17) / .4), s = 1.5 + hs(i, 9) * 3.2;
+      g.fillStyle = `rgba(${150 + hot * 105},${90 + hot * 150},${255 - hot * 40},${.18 + hot * .55})`; g.fillRect(x - s / 2, y - s / 2, s, s); }
+    g.globalCompositeOperation = "source-over"; g.fillStyle = "#000"; g.beginPath(); g.arc(cx, cy, W * .15, 0, 7); g.fill(); g.strokeStyle = "rgba(255,245,255,.95)"; g.lineWidth = Math.max(2, W * .01); g.beginPath(); g.arc(cx, cy, W * .152, 0, 7); g.stroke();
+    const gl = g.createRadialGradient(cx, cy, W * .14, cx, cy, W * .3); gl.addColorStop(0, "rgba(200,170,255,.55)"); gl.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gl; g.fillRect(0, 0, W, H);
   }
   print(g, t, W, H) {                                                                    // First Print: the logo prints under a glowing head, shines, then the sheet runs again
     const CYC = 6.4, u = t % CYC, head = u < 2.6 ? (u / 2.6) * (H + 20) - 10 : H + 40, fade = u > 5.8 ? 1 - (u - 5.8) / .6 : 1, run = Math.floor(t / CYC);
@@ -2697,7 +2774,7 @@ function fitHomePack() {
   const col = document.querySelector("#homePack"), bt = $("btabs"); if (!col || view !== "home") return; const pc = col.closest(".packcol") || col, was = pc.style.width; pc.style.width = "";
   if (bt && getComputedStyle(bt).display !== "none") {
     const shown = e => e && !e.hidden && getComputedStyle(e).display !== "none", gap = parseFloat(getComputedStyle(pc.parentNode).rowGap) || 10;
-    const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 8, after = ["openBtn", "multiRow", "homeTrust"].map(id => $(id)).filter(shown).reduce((a, e) => a + e.offsetHeight + gap, 0);
+    const top = pc.getBoundingClientRect().top, bottom = bt.getBoundingClientRect().top - 8, after = ["openBtn", "homeTrust"].map(id => $(id)).filter(shown).reduce((a, e) => a + e.offsetHeight + gap, 0);
     pc.style.width = Math.floor(Math.max(120, Math.min(innerWidth - 28, 460, (bottom - top - after) / 1.5))) + "px";
   }
   pc.parentNode.style.setProperty("--pt", pc.offsetTop + "px");                                              // where the pack starts: a goal to claim floats over its top edge instead of pushing it down
@@ -2706,12 +2783,11 @@ function fitHomePack() {
 addEventListener("resize", () => { if (view === "home") fitHomePack(); });
 function renderHome() {
   const pk = curPack(), ps = packStats(pk); $("banner").textContent = BANNER.join("\n");
-  $("packTabs").live = PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-pack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("");
+  $("packTabs").live = PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-pack="${p.id}" style="--pc:${p.col}" aria-selected="${p.id === pk.id}" aria-label="${esc(p.name)}, ${money(packPrice(p))}"><b>${money(packPrice(p)).replace(/\.00$/, "")}</b></button>`).join("");
   $("packName").textContent = pk.name; $("packBlurb").textContent = pk.blurb;
-  const fp = state.freePacks, pp = boughtOf(pk.id); { noteFound(); const inSet = LIVE.filter(c => c.set === pk.set); $("packLine").innerHTML = `${pk.n === 1 ? "1 card" : pk.n + " cards"} · ${money(ps.price)}${state.s.packs ? ` · ${inSet.filter(c => state.found[c.no]).length}/${inSet.length} found` : ""} · <a class="linkbtn" href="#/odds">odds</a>`; } const mk = Math.min(openN(), maxN(pk)), many = mk >= 2; const lab = many ? `open ${mk} packs${(() => { const c = Math.max(0, mk - fp - pp) * ps.price; return c ? " · " + money(c) : ""; })()}` : fp ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : pp ? `open a pack you bought${pp > 1 ? " · " + pp + " left" : ""}` : (Shop.cash() && state.coins < ps.price) ? "add money to open a pack" : (Shop.has(pk.id) && state.coins < ps.price) ? `buy a pack · ${rmoney(Shop.price(pk.id))}` : `open pack · ${money(ps.price)}`; { const i = lab.indexOf(" · "), ob = $("openBtn"), html = i < 0 ? `<span class="ob-t">${esc(lab)}</span>` : `<span class="ob-t">${esc(lab.slice(0, i))}</span><i class="ob-d"> · </i><b class="ob-p">${esc(lab.slice(i + 3))}</b>`; if (ob.dataset.sig !== html) { ob.dataset.sig = html; ob.innerHTML = html; } }   // the words, then what it costs in its own pill; read out, it is still one line ("open pack · $0.52")
-  $("openBtn").classList.toggle("free", fp > 0 || pp > 0); { const top = LIVE.filter(c => c.set === pk.set).reduce((a, c) => Math.max(a, c.val), 0); $("homeFacts").textContent = `Top card ${money(top).replace(/\.00$/, "")} · ${Math.round(ps.hit * 100)}% pay back`; }
-  { const r = $("multiRow"), top = maxN(pk), opts = MANY.filter(n => n === 1 || n <= top); r.hidden = opts.length < 2; r.innerHTML = `<span class="small dim ml">open at once</span>` + opts.map(n => `<button type="button" class="seg1${n === Math.min(openN(), top) ? " on" : ""}" data-many="${n}" aria-pressed="${n === Math.min(openN(), top)}" aria-label="${n === 1 ? "one pack" : n + " packs at once"}">×${n}</button>`).join(""); }
-  $("buyRow").hidden = !Shop.has(pk.id) || (!fp && !pp && state.coins < ps.price); $("buyBtn").textContent = Shop.cash() ? "Add money" : `Buy packs · ${rmoney(Shop.price(pk.id))} each`;
+  const fp = state.freePacks, pp = boughtOf(pk.id); { noteFound(); const inSet = LIVE.filter(c => inPack(pk, c)); $("packLine").innerHTML = `7 cards · ${money(ps.price)}${state.s.packs ? ` · ${inSet.filter(c => state.found[c.no]).length}/${inSet.length} found` : ""} · <a class="linkbtn" href="#/odds">odds</a>`; } const fpk = freeOk(pk) ? fp : 0; const lab = fpk ? `open your free pack${fp > 1 ? " · " + fp + " left" : ""}` : pp ? `open a pack you bought${pp > 1 ? " · " + pp + " left" : ""}` : (Shop.cash() && state.coins < ps.price) ? "add money to open a pack" : (Shop.has(pk.id) && state.coins < ps.price) ? `buy a pack · ${rmoney(Shop.price(pk.id))}` : `open pack · ${money(ps.price)}`; { const i = lab.indexOf(" · "), ob = $("openBtn"), html = i < 0 ? `<span class="ob-t">${esc(lab)}</span>` : `<span class="ob-t">${esc(lab.slice(0, i))}</span><i class="ob-d"> · </i><b class="ob-p">${esc(lab.slice(i + 3))}</b>`; if (ob.dataset.sig !== html) { ob.dataset.sig = html; ob.innerHTML = html; } }   // the words, then what it costs in its own pill; read out, it is still one line ("open pack · $0.52")
+  $("openBtn").classList.toggle("free", fpk > 0 || pp > 0); { const top = LIVE.filter(c => inPack(pk, c)).reduce((a, c) => Math.max(a, c.val), 0); $("homeFacts").textContent = `Top card ${money(top).replace(/\.00$/, "")} · ${Math.round(ps.hit * 100)}% pay back`; }
+  $("buyRow").hidden = !Shop.has(pk.id) || (!fpk && !pp && state.coins < ps.price); $("buyBtn").textContent = Shop.cash() ? "Add money" : `Buy packs · ${rmoney(Shop.price(pk.id))} each`;
   $("how").hidden = state.s.packs > 0; $("inviteBar").live = state.s.packs > 0 ? inviteBarHTML() : "";
   $("honest").live = `<span class="dsk">Every card is a picture made of text: the rarer the card, the more characters it holds. </span>About <b>${Math.round(ps.hit * 100)}%</b> of packs are worth at least what you pay. <a class="linkbtn" href="#/odds">See the odds</a>`;
   const mv = movers(); $("hot").live = `<span class="label">market right now</span>` + [mv.gain[0], mv.drop[0]].filter(Boolean).map(m => `<button class="mover mini" data-card="${m.c.no}"><span class="nm">${esc(m.c.name)}</span>${sparkSVG(m.s)}${pctHTML(m.p24)} <span class="dim">24h</span></button>`).join("") + `<a class="linkbtn" href="#/market">open the market</a>`;
@@ -2719,7 +2795,7 @@ function renderHome() {
   $("chase").live = chaseHTML(); $("rqBar").live = "";      // the Requiem pack is for later: not on the pack page for now
   const hp = $("homePack"); if (hp.dataset.pack !== pk.id) { if (hp._ps) hp._ps.stop(); hp.innerHTML = packHTML(pk); hp.dataset.pack = pk.id; const el = hp.firstChild; tiltPack(el); el.style.cursor = "pointer"; el.onclick = () => { if (hp._swiped) { hp._swiped = false; return; } if (performance.now() - stageShut < 500) return; openPack(); }; hp._ps = liveWindow(el, pk); if (hp._dir) { el.animate([{ translate: `${hp._dir * 60}% 0`, opacity: 0, scale: ".9" }, { translate: "0 0", opacity: 1, scale: "1" }], { duration: 320, easing: "cubic-bezier(.2, .9, .3, 1.1)" }); hp._dir = 0; }
     if (!hp._sw) { hp._sw = 1; let x0 = null; hp.addEventListener("pointerdown", e => { x0 = e.clientX; }); hp.addEventListener("pointerup", e => { if (x0 == null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) < 46 || PACKS.length < 2) return; const i = PACKS.findIndex(q => q.id === state.pack), nx = PACKS[(i + (dx < 0 ? 1 : -1) + PACKS.length) % PACKS.length]; hp._swiped = true; hp._dir = dx < 0 ? 1 : -1; setTimeout(() => { hp._swiped = false; }, 80); state.pack = nx.id; persist(); Snd.whoosh(); buzz(8); renderHome(); }); } }
-  document.body.dataset.pack = pk.id; { const ts = $("tStripe"); if (ts) ts.hidden = !Shop.open(); }
+  document.body.dataset.pack = pk.id; document.body.style.setProperty("--halo", `color-mix(in srgb, ${pk.col} 22%, transparent)`); document.body.style.setProperty("--halo2", `color-mix(in srgb, ${pk.col} 55%, transparent)`); { const ts = $("tStripe"); if (ts) ts.hidden = !Shop.open(); }
   { const hi = $("homeInvite"), html = homeInviteHTML(); hi.hidden = !html; hi.innerHTML = html; }
   { const hn = $("homeNext"), html = innerHeight >= 700 || Goals.ready().length ? Goals.homeHTML() : ""; hn.hidden = !html; if (hn.dataset.sig !== html) { hn.dataset.sig = html; hn.innerHTML = html; hn.className = "homenext" + (Goals.ready().length ? " rdy" : ""); } }   // what to aim for next (left out on a short screen unless there is something to claim)
   fitHomePack(); requestAnimationFrame(fitHomePack);
@@ -2804,7 +2880,7 @@ function renderProfile() {
 let oddsKey = "";
 function renderOdds(force) {
   if (!PACK_BY[oddsPack]) oddsPack = state.pack; const key = oddsPack; if (!force && key === oddsKey && $("oBody").firstChild) return; oddsKey = key; const opened = [...document.querySelectorAll("#oBody details")].map(d => d.open); const pk = PACK_BY[oddsPack], ps = packStats(pk), slotName = pk.slotNames;
-  const rows = LIVE.filter(c => c.set === pk.set).sort((a, b) => packP(b.id) - packP(a.id))        /* commonest first, so the list reads as the ladder */.map(c => { const p = packP(c.id); return cardRow(c, { nospark: true, price: p >= .1 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p), pill: `<span class="small">${p >= .1 ? "of packs" : "packs"}</span>`, sub: `<b style="color:${RAR[c.rar].col};font-weight:650">${RAR[c.rar].name}</b> · starts at ${moneyS(c.val)}` }); }).join("");
+  const rows = LIVE.filter(c => inPack(pk, c)).sort((a, b) => packHas(pk, b.id) - packHas(pk, a.id))        /* commonest first, so the list reads as the ladder */.map(c => { const p = packHas(pk, c.id); return cardRow(c, { nospark: true, price: p >= .1 ? Math.round(p * 100) + "%" : "1 in " + fmt(1 / p), pill: `<span class="small">${p >= .1 ? "of packs" : "packs"}</span>`, sub: `<b style="color:${RAR[c.rar].col};font-weight:650">${RAR[c.rar].name}</b> · starts at ${moneyS(c.val)}` }); }).join("");
   const tot = Object.values(STYLES).reduce((a, s) => a + s.p, 0);
   $("oBody").innerHTML = `
     <div class="packtabs" role="tablist" aria-label="Which pack">${PACKS.map(p => `<button role="tab" class="ptab${p.id === pk.id ? " on" : ""}" data-opack="${p.id}" aria-selected="${p.id === pk.id}"><b>${esc(p.name)}</b><span>${money(packPrice(p))}</span></button>`).join("")}</div>
@@ -3254,7 +3330,7 @@ const Live = (() => {
   const found = id => data && data.found ? data.found[id] || 0 : null;
   const foundS = n => n == null ? "" : n === 0 ? "never found" : n === 1 ? "found once" : `found ${fmt(n)} times`;
   // the cards to want: the rarest few of each pack
-  const chase = () => PACKS.flatMap(pk => LIVE.filter(c => c.set === pk.set && RAR[c.rar].tier >= 4).sort((a, b) => packP(a.id) - packP(b.id)).slice(0, 4));
+  const chase = () => { const seen = new Set(); return PACKS.flatMap(pk => LIVE.filter(c => inPack(pk, c) && RAR[c.rar].tier >= 4 && !seen.has(c.id)).sort((a, b) => b.val - a.val).slice(0, 2).map(c => (seen.add(c.id), c))); };
   function render() {
     const el = $("lvBody"); if (!el) return; const feed = data ? data.feed.filter(e => BY_ID[e.id]) : [], day = feed.filter(e => Date.now() - e.t < 864e5);
     const top = day.slice().sort((a, b) => BY_ID[b.id].val - BY_ID[a.id].val)[0], best = chase().sort((a, b) => b.val - a.val)[0];
@@ -3302,31 +3378,28 @@ function meterAdd(c) {
   const m = $("stMeter"), ref = SS.refAll || SS.ref; SS.got += sellOf(c); const f = Math.min(1, SS.got / Math.max(1, ref)); $("stMeterFill").style.width = (f * 100) + "%"; $("stMeterTxt").textContent = `${money(SS.got)} of ${money(ref)}`; m.setAttribute("aria-label", `Your cards so far sell for ${money(SS.got)}; the pack cost ${money(ref)}`);
   if (!SS.paidBack && SS.got >= ref) { SS.paidBack = true; m.classList.add("paid"); Snd.paid(); buzz([18, 24, 36]); }
 }
+// The one pack that can be free is the cheapest: a free pack is a way in, not a way to get a $50 pack for nothing.
+const freeOk = pk => pk.id === PACKS[0].id;
 async function openPack(pack) {
   if (SS || opening) return; const pk = pack || curPack(), gate = packGate(); if (gate) { toast(gate); return; }
-  { const k = Math.min(openN(), maxN(pk)); if (k >= 2) { openMany(pk, k); return; } }
   // out of play money with nothing left to sell: one free pack a day so nobody is ever stuck
-  if (!state.freePacks && !Shop.has(pk.id) && state.coins < packPrice(pk) && !state.vault.length && Date.now() - state.rescueAt > 864e5) { state.freePacks++; state.rescueAt = Date.now(); persist(); toast("You're out of play money, so here's a free pack."); }
-  const free = state.freePacks > 0, bought = !free && boughtOf(pk.id) > 0, price = free || bought ? 0 : packPrice(pk);      // a pack you bought costs no play money to open
-  if (state.coins < price && Shop.has(pk.id)) { Shop.modal(pk.id); return; }      // out of play money and buying is on: straight to the buy window, this pack already chosen (the 18+ and real-money confirmation stays: Stripe opens after it)
-  if (state.coins < price) { toast(state.vault.length ? `You need ${money(price - state.coins)} more. Sell a card to open another pack.` : "You're out of play money. Your free daily pack is back tomorrow, or invite a friend for one now.", Shop.has(pk.id) ? { key: "buy", label: Shop.cash() ? "Add money" : "Buy packs" } : null); return; }
+  if (!state.freePacks && state.coins < packPrice(PACKS[0]) && !state.vault.length && Date.now() - state.rescueAt > 864e5) { state.freePacks++; state.rescueAt = Date.now(); persist(); toast("You're out of play money, so here's a free pack."); }
+  const free = freeOk(pk) && state.freePacks > 0, bought = !free && boughtOf(pk.id) > 0, price = free || bought ? 0 : packPrice(pk);      // a pack you bought costs no play money to open
+  if (state.coins < price && Shop.has(pk.id)) { Shop.modal(pk.id); return; }
+  if (state.coins < price) { toast(state.vault.length ? `You need ${money(price - state.coins)} more. Sell a card to open this pack.` : "You're out of play money. Your free daily pack is back tomorrow, or invite a friend for one now.", Shop.has(pk.id) ? { key: "buy", label: Shop.cash() ? "Add money" : "Buy packs" } : null); return; }
   // the stage comes up at once, with the pack on it, while the draw is on its way (a round trip to the server): no waiting on a blank screen
-  opening = true; const mine = SS = { items: null, idx: 0, phase: "wait", busy: false, pack: pk, free, bought, ref: packPrice(pk), n: 1 };      // ref: what this pack costs at today's price, free or not, so a pull can be measured against it
+  opening = true; const mine = SS = { items: null, idx: 0, phase: "wait", busy: false, pack: pk, free, bought, ref: packPrice(pk), n: 1, price };      // ref: what this pack costs at today's price, free or not, so a pull can be measured against it
   $("stName").textContent = pk.name; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title";
   $("stBox").innerHTML = `<div class="st-pack enter" id="stPack">${packHTML(pk)}</div><div class="cstack" id="stStack"></div>`;
   hint(""); stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
   const pkEl = $("stPack").firstChild; mine.ps = liveWindow(pkEl, pk); tiltPack(pkEl);
-  let tk; try { tk = await Fair.offer(pk, PICK); } finally { opening = false; } if (SS !== mine) return;
-  Object.assign(mine, { ticket: tk, price, items: [], veils: [], phase: "pack" }); tk.warm(); hint("Swipe across the top to rip it open"); Rip.arm();
-}
-// One pack is a choice: it spills PICK face-down cards and you take one. Each is a real, different card drawn the same way (see Fair.ticket),
-// so whichever you take has the odds on the odds page; the others are never made and never shown. The pack is paid for when you choose.
-const PICK = 5;
-function takePick(i) {
-  const S = SS, tk = S && S.ticket; if (!tk || tk.done) return null; const pk = S.pack, free = S.free, bought = S.bought, price = S.price, items = [tk.take(i)];
+  let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS !== mine) return;
+  // the pack is paid for and the cards are yours the moment it is drawn
   if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else if (bought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
-  state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); History.log(pk, 1, free || bought ? 0 : price, price, items); SS_PRICE = price; { noteFound(); const seenNo = new Set(); S.fresh = new Set(items.filter(c => { const nw = !state.found[c.no] && !seenNo.has(c.no); seenNo.add(c.no); return nw; }).map(c => c.uid)); } state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
-  return items[0];                                                                       // the caller puts it on the stage (or straight into the result, if you skipped)
+  state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); History.log(pk, 1, free || bought ? 0 : price, price, items); SS_PRICE = price;
+  { noteFound(); const seenNo = new Set(); mine.fresh = new Set(items.filter(c => { const nw = !state.found[c.no] && !seenNo.has(c.no); seenNo.add(c.no); return nw; }).map(c => c.uid)); }
+  state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
+  Object.assign(mine, { items, veils: [], phase: "pack", all: items, refAll: packPrice(pk), paid: price }); hint("Swipe across the top to rip it open"); Rip.arm();
 }
 /* ---- ripping the pack. Drag across the top and the foil tears right under your finger: it lifts away from the tear, light spills out of the gap
         (in the colour of the best card inside), paper flies, and each notch can be felt and heard. Let go past halfway and it finishes itself; a plain tap
@@ -3365,7 +3438,7 @@ const Rip = (() => {
     const beam = document.createElement("div"); beam.className = "ripbeam"; wrap.appendChild(beam);
     stage.animate([{ transform: "translate(0,0)" }, { transform: "translate(-6px,4px)" }, { transform: "translate(5px,-4px)" }, { transform: "translate(-2px,2px)" }, { transform: "translate(0,0)" }], { duration: 260 });
     await sleep(220); if (!SS || SS.phase !== "tearing") return; buildStack(); SS.items.forEach((_, i) => setTimeout(() => { if (SS && SS.phase !== "summary") { Snd.rise(i); buzz(7); } }, 60 + i * 70));
-    await sleep(240); wrap.classList.add("drop"); await sleep(380); if (!SS || SS.phase !== "tearing") return; if (SS.ticket) { SS.items = []; SS.veils = []; SS.pool = Array.from({ length: SS.ticket.of }, (_, i) => ({ uid: "pick" + i, slot: i })); const sp = $("stPack"); if (sp) sp.remove(); meterInit(); dealRail(); return; } SS.phase = "stack"; meterInit(); focusTop();
+    await sleep(240); wrap.classList.add("drop"); await sleep(380); if (!SS || SS.phase !== "tearing") return; SS.phase = "stack"; meterInit(); focusTop();
   }
   function arm() {
     const wrap = $("stPack"); if (!wrap) return; R = { wrap, p: 0, dir: 1, tick: 0, built: false, done: false, live: false, x: 0, moved: 0 };
@@ -3386,14 +3459,16 @@ const Rip = (() => {
 function tear() { Rip.auto(); }
 function buildStack() {
   const st = $("stStack"); st.innerHTML = SS.items.map((c, i) => `<div class="sc rise" data-i="${i}" style="z-index:${50 - i};--rot:${i ? ((rand() - .5) * 5).toFixed(1) : 0}deg;--ox:${Math.min(i, 4) * 2 - 4}px;--oy:${Math.min(i, 4) * 3}px">${cardHTML(c)}</div>`).join("");
-  SS.veils = SS.items.map((c, i) => { const v = new Veil(st.children[i].querySelector(".card"), BY_NO[c.no].rar); v.frame(); return v; });
+  SS.veils = SS.items.map((c, i) => { const v = new Veil(st.children[i].querySelector(".card"), BY_NO[c.no].rar); v.col = "#cfd3da"; v.back = v.drawBack(v.w, v.h, v.dpr); v.frame(); return v; });      // every back is the same plain one
   requestAnimationFrame(() => requestAnimationFrame(() => [...st.children].forEach((el, i) => setTimeout(() => el.classList.remove("rise"), 60 + i * 70))));
 }
 const scEl = i => $("stStack") && $("stStack").querySelector(`.sc[data-i="${i}"]`);
 function focusTop() {
   const el = scEl(SS.idx); if (!el) return; el.classList.add("top"); SS.veils[SS.idx].idle(); SS.veils[SS.idx].frame(); el.onclick = e => { if (el._drag) { el._drag = false; e.stopPropagation(); return; } advance(); }; armFling(el);
-  if (!SS.pool) $("stCount").textContent = SS.items.length > 1 ? `${cmeter(SS.idx + 1, SS.items.length)} card ${SS.idx + 1} of ${SS.items.length}` : ""; hint(""); hidePills();   // one card needs no counter
-  const at = SS.idx, mine = SS; setTimeout(() => { if (SS === mine && SS.idx === at && !SS.busy && SS.phase === "stack" && !el.dataset.rev) advance(); }, at ? 160 : 420);   // each card turns itself over: what you do is choose
+  $("stCount").textContent = `${cmeter(SS.idx + 1, SS.items.length)} card ${SS.idx + 1} of ${SS.items.length}`; hint(""); hidePills();
+  const at = SS.idx, mine = SS, rare = at === RARE_SLOT;
+  if (rare && !reduced) { hint("the rare slot"); el.classList.add("beat"); Snd.beat(); buzz([14, 120, 14]); }         // the fifth card: a breath before it turns, the card you open a pack for
+  setTimeout(() => { if (SS === mine && SS.idx === at && !SS.busy && SS.phase === "stack" && !el.dataset.rev) { el.classList.remove("beat"); advance(); } }, rare && !reduced ? 1250 : at ? 200 : 420);   // each card turns itself over
 }
 /* ---- sell or hold: the one choice you make about every card ----
    Two pills under a card once it is face up. Red sells it now for what it shows. Blue holds it: it goes to your collection, where
@@ -3418,7 +3493,7 @@ async function advance() {
   if (!SS || SS.busy) return; if (SS.phase === "pack") { tear(); return; } if (SS.phase === "pick") { pickRail(); return; } if (SS.phase !== "stack") return;
   const el = scEl(SS.idx); if (!el) return; SS.busy = true; const c = SS.items[SS.idx], card = BY_NO[c.no];
   if (!el.dataset.rev) {
-    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); el.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col); el.classList.add("lit"); if (!reduced) el.animate([{ scale: "1" }, { scale: "1.06" }, { scale: "1" }], { duration: 300, easing: "cubic-bezier(.2,.9,.3,1.3)" }); valueChip(el, c); SS.busy = false; SS.litAt = performance.now(); hint(""); if (SS && SS.idx === at) showPills(c, card); Alive.on(el.querySelector(".card"), c);
+    el.dataset.rev = 1; const at = SS.idx; await reveal(el, c, card, RAR[card.rar], SS.veils[SS.idx]); el.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col); el.classList.add("lit"); if (!reduced) el.animate([{ scale: "1" }, { scale: "1.06" }, { scale: "1" }], { duration: 300, easing: "cubic-bezier(.2,.9,.3,1.3)" }); valueChip(el, c); SS.busy = false; SS.litAt = performance.now(); hint(""); Alive.on(el.querySelector(".card"), c); if (SS && SS.idx === at) { const T = momentOf(c); if (T >= 2 || at === RARE_SLOT) hint("tap for the next card"); else setTimeout(() => { if (SS && SS.idx === at && SS.phase === "stack" && !SS.busy) decide("hold"); }, T ? 900 : 650); }
   }
   else { SS.busy = false; if (rushed() || performance.now() - (SS.litAt || 0) < 350) return; await decide("hold"); }                                         // a tap on a card that is face up holds it: one deliberate tap, not the tail of a rush, and not in the first moment it is up
 }
@@ -3518,10 +3593,10 @@ async function dismiss(el, c, vec, sold) {
   SS.idx++; await sleep(260); if (SS.pool) { railReturn(); return; } if (SS.idx >= SS.items.length) summary(); else focusTop();
 }
 function skipAll() { if (!SS || SS.phase === "summary") return; if (SS.phase === "wait") { Machine.stop(); return; }
-  if (SS.ticket && !SS.ticket.done) { const m = SS.railMid, i = m ? [...m.parentNode.children].indexOf(m) : Math.floor(SS.ticket.of / 2); const c = takePick(i); if (c) SS.items = [c]; SS.pool = []; } Machine.stop(); SS.veils && SS.veils.forEach(v => v && v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
+  Machine.stop(); SS.veils && SS.veils.forEach(v => v && v.drop()); SS.phase = "stack"; SS.idx = SS.items.length; summary(); }
 // one tap to turn the pack into money and open the next: only offered when the next pack is covered (a free pack, one you bought, or what these cards sell for plus your balance)
 const sellNext = back => { const pk = SS.pack, price = packPrice(pk), ok = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins + back >= price; return ok && back > 0 ? `<button class="btn solid" id="sumSellAgain">sell all · open another</button>` : ""; };
-const againLabel = pk => (openN() > 1 && maxN(pk) >= 2) ? (() => { const k = Math.min(openN(), maxN(pk)), c = Math.max(0, k - state.freePacks - boughtOf(pk.id)) * packPrice(pk); return `open ${k} more${c ? " · " + money(c) : ""}`; })() : state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
+const againLabel = pk => freeOk(pk) && state.freePacks ? `open a free pack${state.freePacks > 1 ? " · " + state.freePacks + " left" : ""}` : boughtOf(pk.id) ? `open a pack you bought${boughtOf(pk.id) > 1 ? " · " + boughtOf(pk.id) + " left" : ""}` : state.coins >= packPrice(pk) ? "open another · " + money(packPrice(pk)) : Shop.cash() ? "add money to open another" : Shop.has(pk.id) ? "buy a pack · " + rmoney(Shop.price(pk.id)) : "invite a friend, get a free pack";
 // under a pack's result: how many of its cards were new, and how close the next goal is
 function goalLine() {
   const nw = SS && SS.fresh ? SS.fresh.size : 0, rd = Goals.ready().length, nx = Goals.next(), parts = [];
@@ -3539,129 +3614,24 @@ function endHTML(o) {
     <div class="end-split"><div class="es sold"><small>sold</small><b>${money(o.soldG)}</b></div><div class="es held"><small>holding${o.held.length ? " · " + o.held.length : ""}</small><b>${money(o.heldV)}</b></div></div>
     <div class="end-cards">${o.fan}${goalLine()}</div>
     <div class="end-acts"><button class="btn solid big" id="sumAgain">${againLabel(pk)}</button>
-      <div class="row" style="justify-content:center">${o.rest ? `<button class="btn" id="sumSellRest">keep the hits · sell the rest · ${money(o.rest)}</button>` : ""}${o.held.length ? `<button class="btn" id="sumSell">${o.rest ? "sell all" : "sell what I held"} · ${money(o.heldSell)}</button>` : ""}<button class="btn ghost" id="sumKeep">done</button>${o.share ? `<button class="btn ghost" id="sumClip">share</button>` : ""}${typeof API !== "undefined" && API.on ? `<button class="btn ghost" id="sumInvite">invite · free pack</button>` : ""}</div></div></div>`;
+      <div class="row" style="justify-content:center">${o.rest ? `<button class="btn" id="sumSellRest">sell the commons · keep the rest · ${money(o.rest)}</button>` : ""}${o.held.length ? `<button class="btn" id="sumSell">${o.rest ? "sell all" : "sell what I held"} · ${money(o.heldSell)}</button>` : ""}<button class="btn ghost" id="sumKeep">done</button>${o.share ? `<button class="btn ghost" id="sumClip">share</button>` : ""}${typeof API !== "undefined" && API.on ? `<button class="btn ghost" id="sumInvite">invite · free pack</button>` : ""}</div></div></div>`;
 }
 const inVault = c => state.vault.some(v => v.uid === c.uid);
 function summary() {
-  save(); $("stMeter").hidden = true; hidePills(); { const r = $("stRail"), dk = $("stDeck"); if (r) r.remove(); if (dk) dk.remove(); } if (SS.n > 1) { multiSummary(); return; }
-  SS.phase = "summary"; const items = SS.items, held = items.filter(inVault), soldG = SS.soldG || 0, heldSell = held.reduce((a, c) => a + sellOf(c), 0), heldV = held.reduce((a, c) => a + valueOf(c), 0), back = soldG + heldSell, ref = SS.ref, x = back / Math.max(1, ref), won = back >= ref;
-  $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
-  $("stSummary").innerHTML = endHTML({ title: SS.pack.name, back, paid: SS.free || SS.bought ? 0 : SS_PRICE, bought: SS.bought, x, soldG, held, heldV, heldSell, share: true,
-    fan: items.length ? `<div class="fan">${items.map(c => inVault(c) ? `<div class="${SS.fresh && SS.fresh.has(c.uid) ? "isnew" : ""}">${cardHTML(c, { sm: true })}</div>` : `<div class="wassold">${cardHTML(c, { sm: true })}<b class="soldtag">sold</b></div>`).join("")}</div>` : "" });
-  $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 40 : 24) : 0, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
+  $("stMeter").hidden = true; hidePills(); { const r = $("stRail"), dk = $("stDeck"); if (r) r.remove(); if (dk) dk.remove(); } multiSummary();
 }
 // one quiet line under a pack result: the free way to get another
 function invNudge() { return (typeof API !== "undefined" && API.on) ? `<button class="btn ghost invnudge" id="sumInvite">${GIFT} Invite a friend — you both get a free pack</button>` : ""; }
 function closeStage() { if (SS && SS.phase === "wait") return; stageShut = performance.now(); Machine.stop(); $("stMeter").hidden = true; stage.hidden = true; const keep = SS; SS = null; FX.clear(); $("stBox").innerHTML = ""; if (keep && keep.veils) keep.veils.forEach(v => v && v.drop()); renderBal(); show(view, true); }
 
-/* ---- several packs at once. Every pack is drawn, charged and counted exactly like a single pack (same odds, same daily limit); only the show is shorter: cards worth less than $0.50
-   are not revealed one by one, they are totalled on the result, and nothing is sold or hidden: they are in your collection and in the sums. ---- */
-const SMALL = UNIT / 4, MANY = [1, 3, 5, 10, 25];                                                          // "small" is under $0.50 (UNIT units are a dollar)
-const openN = () => MANY.includes(state.openN) ? state.openN : 1;
-function maxN(pk) {                                                                                     // how many of this pack could be opened right now: free ones, ones you bought, then what the balance covers, never past the daily limit
-  const price = Math.max(1, packPrice(pk)), have = state.freePacks + boughtOf(pk.id) + Math.floor(state.coins / price), l = state.lim, room = l && l.packs ? Math.max(0, l.packs - packsToday()) : 25;
-  return Math.max(0, Math.min(25, have, room));
-}
-async function openMany(pk, n) {
-  if (SS || opening) return; const price = packPrice(pk); opening = true;
-  const mine = SS = { items: [], all: [], idx: 0, phase: "wait", busy: false, pack: pk, free: false, bought: false, ref: price, n };            // the machine starts at once; the draws are fetched in one request while it plays
-  $("stName").textContent = `${pk.name} × ${n}`; $("stCount").textContent = ""; $("stSummary").hidden = true; $("stTray").innerHTML = ""; $("stTitle").innerHTML = ""; $("stTitle").className = "st-title"; $("stHint").textContent = "";
-  $("stBox").style.setProperty("--back", `url(${railBackURL()})`); $("stBox").innerHTML = `<div class="cstack" id="stStack"></div><div class="deck" id="stDeck" aria-hidden="true"><i></i><i></i><i></i><i></i></div>`; stage.hidden = false; stage.focus({ preventScroll: true }); FX.clear();
-  $("stCount").textContent = `${n} cards`; buzz([18, 20, 18]); if (!reduced) for (let i = 0; i < 7; i++) setTimeout(() => { if (SS === mine && $("stDeck")) { Snd.click(); buzz(3); } }, i * 90);   // the riffle
-  const anim = sleep(reduced ? 0 : 700); let sets; try { sets = await Fair.nextMany(pk, n); } finally { opening = false; } if (SS !== mine) return;
-  let items = [], paid = 0, freeN = 0, boughtN = 0, packs = 0;
-  for (const got of sets) {
-    const isFree = state.freePacks > 0, isBought = !isFree && boughtOf(pk.id) > 0, cost = isFree || isBought ? 0 : price;
-    if (isFree) { state.freePacks--; state.s.free++; state.s.added += Math.round(got.reduce((a, c) => a + c.cost, 0)); freeN++; } else if (isBought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(got.reduce((a, c) => a + c.cost, 0)); boughtN++; } else { state.coins -= cost; paid += cost; }       // every pack is charged exactly like a single one
-    state.s.packs++; state.s.spent += cost; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); state.vault.push(...got); items.push(...got); packs++;
-  }
-  History.log(pk, packs, paid, price * packs, items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
-  SS_PRICE = paid; const pool = items.slice(); for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }   // laid out in no order: where a card sits says nothing about what it is
-  Object.assign(mine, { items: [], veils: [], pool, all: items, phase: "machine", free: freeN === packs, refAll: price * packs, paid, freeN, boughtN, n: packs });
-  await anim; if (SS !== mine || mine.phase === "summary") return;
-  if (!pool.length) { summary(); return; } meterInit(0); dealRail();
-}
-
-/* ---- the deal ----
-   One pack: five face-down cards in a row you scroll with your thumb; the one in the middle is the one in your hand, and the
-   one you tap is the card you get.
-   Several packs: the cards are dealt into the same row and the row turns itself over, left to right, a card every fifth of a
-   second, each one's sale price dropping into the meter. Nothing to tap. It stops only for a hit (legendary or better, or a
-   copy that sells for four packs): that card comes up, builds, forms in full, and you sell or hold it; then the row runs on.
-   Everything else is held, and the result has one button to keep the hits and sell the rest. A tap speeds the row up, and
-   "skip" goes straight to the result. Every back is the same and the row is in no order, so nothing gives a card away. */
-let railBackImg = "";
-function railBackURL() { if (!railBackImg) { try { railBackImg = Veil.prototype.drawBack.call({ col: "#cfd3da", tier: 0 }, 300, 420, 2).toDataURL("image/jpeg", .86); } catch (e) {} } return railBackImg; }
-function dealRail() {
-  const box = $("stBox"), deck = $("stDeck"), r = document.createElement("div"); box.style.setProperty("--back", `url(${railBackURL()})`); r.className = "rail"; r.id = "stRail"; r.setAttribute("role", "listbox"); r.setAttribute("aria-label", "Your cards, face down");
-  r.innerHTML = SS.pool.map(c => `<button class="rc" type="button" role="option" data-u="${c.uid}" aria-label="A face-down card"><i class="rcb"></i></button>`).join(""); box.appendChild(r);
-  const auto = !SS.ticket, els = [...r.children], n = els.length, m0 = auto ? 0 : Math.floor((n - 1) / 2), mid = els[m0]; SS.auto = auto; SS.fast = false; if (auto) r.classList.add('auto'); r.scrollLeft = mid.offsetLeft + mid.offsetWidth / 2 - r.clientWidth / 2; railPaint(true);
-  if (!reduced) { const cx = r.scrollLeft + r.clientWidth / 2, gap = Math.min(70, 900 / n);                       // out of the deck: every card starts in the middle and slides to its place, the near ones first
-    els.map((el, i) => [el, Math.abs(i - m0)]).forEach(([el, d]) => { const dx = cx - (el.offsetLeft + el.offsetWidth / 2);
-      el.animate([{ transform: `translate(${dx.toFixed(0)}px, -26px) rotate(${((rand() - .5) * 14).toFixed(1)}deg) scale(.92)` }, { transform: "none" }], { duration: 520, delay: d * gap, easing: "cubic-bezier(.2, .9, .25, 1.12)", fill: "backwards" });
-      if (d < 7) setTimeout(() => { if (SS && $("stRail") === r) { Snd.rise(d); buzz(5); } }, d * gap); }); }
-  if (deck) deck.remove();
-  if (!SS.ticket) [...new Set(SS.pool.map(c => imgOf(BY_NO[c.no], c.fx)))].forEach(loadImg);                      // fetched while you choose, so a card never waits on its picture
-  let raf = 0; r.addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; railPaint(); }); }, { passive: true });
-  r.addEventListener("click", e => { const el = e.target.closest(".rc"); if (el) { e.stopPropagation(); if (SS.auto) { SS.fast = true; hint(""); } else pickRail(el); } });
-  SS.phase = "pick"; railCount(); if (auto) railRun();
-}
-// a row scrolled by the run, not by a thumb: a short glide to the next card
-function railGo(r, el, ms) { const to = el.offsetLeft + el.offsetWidth / 2 - r.clientWidth / 2, from = r.scrollLeft, t0 = performance.now(); if (reduced || ms < 20) { r.scrollLeft = to; return; } const step = now => { const k = Math.min(1, (now - t0) / ms); r.scrollLeft = from + (to - from) * (1 - Math.pow(1 - k, 3)); if (k < 1 && r.isConnected) requestAnimationFrame(step); }; requestAnimationFrame(step); }
-function flipInPlace(el, c, T) {
-  c.t = Date.now(); const card = BY_NO[c.no], col = c.fx ? STYLE_TINT[c.fx] : RAR[card.rar].col, good = sellOf(c) >= SS.ref; SS.pool = SS.pool.filter(x => x !== c);
-  el.classList.add("up"); if (good) el.classList.add("good"); if (T >= 3) el.classList.add("big"); el.style.setProperty("--rc", col); el.setAttribute("aria-label", `${card.name}, ${money(sellOf(c))}`);
-  el.innerHTML = `<i class="rcb"></i><span class="rcf">${cardHTML(c, { sm: true })}</span><b class="rcv">${money(sellOf(c))}</b>`;
-  meterAdd(c); Snd.rise(Math.min(9, 1 + T * 2 + (good ? 1 : 0))); buzz(T >= 3 ? [14, 20, 22] : 5); if (good) Snd.chip();
-  if (T >= 3) Snd.reveal(2);
-  $("stCount").textContent = SS.pool.length ? `${SS.pool.length} left` : "";
-}
-async function railRun() {
-  const mine = SS, r = $("stRail"), alive = () => SS === mine && SS.phase !== "summary" && $("stRail") === r; if (!r) return; hint("tap to go faster");
-  await sleep(reduced ? 200 : 620); const els = [...r.children];                        // with reduced motion the cards still turn one at a time: only the movement is left out, not the pace
-  for (const el of els) {
-    if (!alive()) return; const c = SS.pool.find(x => x.uid === el.dataset.u); if (!c) continue; const T = momentOf(c);
-    railGo(r, el, SS.fast ? 60 : 150);
-    if (T >= 4) {                                                                        // a hit stops the row: it comes up, builds, forms in full, and you choose
-      await sleep(SS.fast ? 140 : 300); if (!alive()) return; railPaint(true); hint("");
-      await new Promise(res => { mine.resume = res; pickRail(el, true); }); if (!alive()) return; if (SS.pool.length) hint(SS.fast ? "" : "tap to go faster");
-    } else { await sleep(SS.fast ? 30 : 70); if (!alive()) return; flipInPlace(el, c, T); await sleep(SS.fast ? (T >= 3 ? 260 : 60) : T >= 3 ? 520 : 150); }
-  }
-  if (!alive()) return; hint(""); await sleep(520); if (alive()) summary();
-}
-// the row as you scroll it: the card in the middle is full size and lit, the others fall back; a tick as each one passes
-function railPaint(quiet) {
-  const r = $("stRail"); if (!r || !SS) return; const mid = r.scrollLeft + r.clientWidth / 2; let best = null, bd = 1e9;
-  for (const el of r.children) { const c = el.offsetLeft + el.offsetWidth / 2, d = Math.abs(c - mid), k = d / el.offsetWidth; el.style.setProperty("--s", Math.max(.7, 1.06 - k * .26).toFixed(3)); el.style.setProperty("--o", Math.max(.38, 1 - k * .38).toFixed(2)); if (d < bd) { bd = d; best = el; } }
-  if (best && best !== SS.railMid) { if (SS.railMid) SS.railMid.classList.remove("mid"); best.classList.add("mid"); if (!quiet && SS.phase === "pick" && !SS.auto) { Snd.click(); buzz(4); } SS.railMid = best; }
-}
-function railCount() { const n = SS.pool.length; if (SS.ticket) { $("stCount").textContent = ""; hint("pick your card"); return; } $("stCount").textContent = `${n} left`; }
-function railStep(dir) { const r = $("stRail"); if (!r || !SS || SS.phase !== "pick" || !SS.railMid) return; const el = dir > 0 ? SS.railMid.nextElementSibling : SS.railMid.previousElementSibling; if (el) r.scrollTo({ left: el.offsetLeft + el.offsetWidth / 2 - r.clientWidth / 2, behavior: "smooth" }); }
-async function pickRail(el, run) {
-  if (!SS || SS.phase !== "pick" || SS.busy || (SS.auto && !run)) return; const r = $("stRail"); el = el || SS.railMid; if (!r || !el) return;
-  if (el !== SS.railMid && !run) { r.scrollTo({ left: el.offsetLeft + el.offsetWidth / 2 - r.clientWidth / 2, behavior: "smooth" }); return; }      // a card off to the side comes to the middle first
-  let c = SS.pool.find(x => x.uid === el.dataset.u); if (!c) return; if (SS.ticket) { c = takePick(c.slot); SS.pool = []; if (!c) return; } else SS.pool = SS.pool.filter(x => x !== c);
-  SS.phase = "stack"; SS.busy = true; hint(""); $("stCount").textContent = SS.pool.length ? `${SS.pool.length} left` : "";
-  el.classList.add("picked"); Snd.whoosh(); buzz(12); await sleep(reduced ? 0 : 170); if (!SS || $("stRail") !== r) return; r.classList.add("away"); el.remove(); SS.railMid = null;
-  SS.items.push(c); const i = SS.items.length - 1, d = document.createElement("div"); d.className = "sc rise"; d.dataset.i = i; d.style.cssText = "z-index:50;--rot:0deg;--ox:0px;--oy:0px"; d.innerHTML = cardHTML(c); $("stStack").appendChild(d);
-  const v = new Veil(d.querySelector(".card"), BY_NO[c.no].rar); v.col = "#cfd3da"; v.back = v.drawBack(v.w, v.h, v.dpr); v.frame(); SS.veils[i] = v; SS.idx = i;                                   // it comes up with the same plain back it had in the row
-  requestAnimationFrame(() => requestAnimationFrame(() => d.classList.remove("rise"))); await sleep(140); if (!SS) return; SS.busy = false; focusTop();
-}
-function railReturn() {
-  const r = $("stRail"); setTimeout(() => { const st = $("stStack"); if (st) st.querySelectorAll(".sc.gone").forEach(e => e.remove()); }, 500);
-  if (SS.auto) { SS.phase = "pick"; if (r) { r.classList.remove("away"); railPaint(true); } const go = SS.resume; SS.resume = null; if (go) go(); return; }      // the row runs on from where it stopped
-  if (!r || !SS.pool.length) { summary(); return; } SS.phase = "pick"; r.classList.remove("away"); railPaint(true); railCount();
-  if (SS.pool.length === 1 && !SS.ticket) { const mine = SS; setTimeout(() => { if (SS === mine && SS.phase === "pick") pickRail(); }, 380); }                     // the last one needs no choosing
-}
-
 function multiSummary() {
   SS.phase = "summary"; const all = SS.all, held = all.filter(inVault), soldG = SS.soldG || 0, heldSell = held.reduce((a, c) => a + sellOf(c), 0), heldV = held.reduce((a, c) => a + valueOf(c), 0), back = soldG + heldSell, x = back / Math.max(1, SS.refAll), won = back >= SS.refAll;
-  const top = held.slice().sort((a, b) => valueOf(b) - valueOf(a)).slice(0, 4), topSet = new Set(top.map(c => c.uid)), groups = {}; held.filter(c => !topSet.has(c.uid)).forEach(c => { const k = c.no + "|" + (c.fx || ""); (groups[k] = groups[k] || []).push(c); });   // the best of what you hold as cards, the rest as one picture per card with how many
+  const top = held.slice().sort((a, b) => valueOf(b) - valueOf(a)).slice(0, 7), topSet = new Set(top.map(c => c.uid)), groups = {}; held.filter(c => !topSet.has(c.uid)).forEach(c => { const k = c.no + "|" + (c.fx || ""); (groups[k] = groups[k] || []).push(c); });   // the best of what you hold as cards, the rest as one picture per card with how many
   const smallFan = Object.values(groups).sort((a, b) => valueOf(b[0]) - valueOf(a[0]) || b.length - a.length).map(g => `<div class="gc">${cardHTML(g[0], { sm: true })}<b class="gn">×${g.length}</b></div>`).join("");
   $("stCount").textContent = ""; $("stTitle").className = "st-title"; $("stTitle").innerHTML = "";
-  const hits = held.filter(isHit), rest = hits.length && hits.length < held.length ? held.filter(c => !isHit(c)).reduce((a, c) => a + sellOf(c), 0) : 0;
-  $("stSummary").innerHTML = endHTML({ title: `${SS.n} × ${SS.pack.name}`, back, paid: SS.paid, x, soldG, held, heldV, heldSell, rest, share: false,
-    fan: (top.length ? `<div class="fan">${top.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : "") + (smallFan ? `<div class="fan small">${smallFan}</div>` : "") });
+  const keep = held.filter(c => RAR[BY_NO[c.no].rar].tier >= 2 || c.fx), rest = keep.length && keep.length < held.length ? held.filter(c => !keep.includes(c)).reduce((a, c) => a + sellOf(c), 0) : 0;
+  $("stSummary").innerHTML = endHTML({ title: SS.pack.name, back, paid: SS.paid, x, soldG, held, heldV, heldSell, rest, share: false,
+    fan: (top.length ? `<div class="fan pack7">${top.map(c => `<div>${cardHTML(c, { sm: true })}</div>`).join("")}</div>` : "") + (smallFan ? `<div class="fan small">${smallFan}</div>` : "") });
   $("stSummary").hidden = false; hint(""); FX.burst(innerWidth / 2, innerHeight * .3, won ? (x >= 2 ? 40 : 24) : 0, won ? ["#9fd8a6", "#fff", "#ece7dc"] : ["#c9c5bb", "#8d897f"], 700); SS.sumAt = performance.now();
 }
 
@@ -4352,13 +4322,13 @@ function rankHTML() {
 }
 
 /* ---- the collection has holes in it, and you can see them ---- */
-const missingCards = set => { const have = new Set(state.vault.map(c => c.no)); return LIVE.filter(c => !have.has(c.no) && (!set || c.set === set)); };
-const chaseChance = pk => { pk = pk || curPack(); const m = missingCards(pk.set); return m.length ? 1 - m.reduce((a, c) => a * (1 - packP(c.id)), 1) : 0; };      // a pack only holds cards of its own set
+const missingCards = pk => { const have = new Set(state.vault.map(c => c.no)); return LIVE.filter(c => !have.has(c.no) && (!pk || inPack(pk, c))); };
+const chaseChance = pk => { pk = pk || curPack(); const m = missingCards(pk); return m.length ? 1 - m.reduce((a, c) => a * (1 - packHas(pk, c.id)), 1) : 0; };
 function chaseHTML() {
   if (!state.s.packs && !state.vault.length) return "";
-  const pk = curPack(), size = LIVE.filter(c => c.set === pk.set).length, miss = missingCards(pk.set); if (!miss.length) return `<span class="label">${esc(pk.name)}</span><span>You have every ${esc(pk.name)} card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
+  const pk = curPack(), size = LIVE.filter(c => inPack(pk, c)).length, miss = missingCards(pk); if (!miss.length) return `<span class="label">${esc(pk.name)}</span><span>You have every ${esc(pk.name)} card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
   const rows = miss.slice().sort((a, b) => b.val - a.val).slice(0, 3), hot = null;
-  return `<span class="label">still out there in ${esc(pk.name)} · ${size - miss.length} of ${size} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${rarLabel(c)}</span>${money(c.val)} <span class="dim">${chance(packP(c.id))}</span></button>`).join("")
+  return `<span class="label">still out there in ${esc(pk.name)} · ${size - miss.length} of ${size} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${rarLabel(c)}</span>${money(c.val)} <span class="dim">${chance(packHas(pk, c.id), pk)}</span></button>`).join("")
     + (hot && hot.p >= .3 ? `<span class="hotflip"><b>${esc(hot.c.name)}</b> is up ${pctShort(hot.p).slice(1)} in a day and you don't have one. It turns up in ${chance(packP(hot.c.id), packOf(hot.c))}, and a pack costs ${money(packPrice(packOf(hot.c)))}.</span>` : "");
 }
 
@@ -5159,7 +5129,6 @@ document.addEventListener("click", e => {
     else { toast(`+${n} free pack${n > 1 ? "s" : ""}`); renderHome(); }
     return; }
   if (t.dataset.addamt) { Shop.setAmt(+t.dataset.addamt); return; }
-  if (t.dataset.many) { state.openN = +t.dataset.many || 1; persist(); Snd.click(); if (view === "home") renderHome(); return; }
   if (t.dataset.qsell) { quickSell(t.dataset.qsell); return; }
   if (t.dataset.share) { const c = state.vault.find(x => x.uid === t.dataset.share); if (c && replayable(c)) Share.open(receiptOf(c, false)); else toast("A replay is only offered for a card that is up more than 50%."); return; }
   if (t.dataset.sell) {
@@ -5196,8 +5165,7 @@ document.addEventListener("click", e => {
     case "pillHold": if (!rushed()) decide("hold"); break;
     case "sumSell": { const g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
     case "sumSellAgain": { const pk = SS.pack, g = sell((SS.all || SS.items).map(c => c.uid)); closeStage(); soldToast(null, g); setTimeout(() => openPack(pk), 300); break; }
-    case "sumSellRest": { const g = sell((SS.all || []).filter(c => inVault(c) && !isHit(c)).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
-    case "sumSellSmall": { const g = sell((SS.all || []).filter(c => valueOf(c) < SMALL).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
+    case "sumSellRest": { const g = sell((SS.all || []).filter(c => inVault(c) && !(RAR[BY_NO[c.no].rar].tier >= 2 || c.fx)).map(c => c.uid)); closeStage(); soldToast(null, g); break; }
     case "sumKeep": closeStage(); toast("Kept in your collection"); break;
     case "sumAgain": { const pk = SS.pack, can = state.freePacks > 0 || boughtOf(pk.id) > 0 || state.coins >= packPrice(pk); closeStage(); if (can) setTimeout(() => openPack(pk), 200); else if (Shop.has(pk.id)) setTimeout(() => Shop.modal(pk.id), 200); else location.hash = "#/invite"; break; }
     case "sellExtras": { const ex = extras(), g = sell(ex.map(c => c.uid)); if (g) { soldToast(`Sold ${ex.length} extra cop${ex.length === 1 ? "y" : "ies"} for ${money(g)}`, g); renderCollection(); } break; }

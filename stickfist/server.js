@@ -203,9 +203,11 @@ const routes = {
     const u = getUser(b.uid, ip, false); if (!u || !GAME) return [404, { error: "unknown" }]; if (limited("hit:" + ip, 120, 3.6e6)) return [429, { error: "slow down" }];
     const d = (u.dr || []).find(x => x[0] === +b.n && x[2] === u.epoch); if (!d || d[3]) return { ok: false }; d[3] = 1;
     const pk = GAME.PACKS.find(p => p.id === b.pack); if (!pk) return { ok: false };
-    const five = +b.of === 5, i = five ? Math.max(0, Math.min(4, Math.floor(+b.k) || 0)) : 0, uval = parseInt(d[1].slice(i * 8, i * 8 + 8), 16) / 4294967296, id = pickU(pk.slots[0], uval), card = GAME.CARDS.find(c => c.id === id); touch();
-    if (!card || GAME.RAR[card.rar].tier < 4) return { ok: true, hit: false };
-    db.feed = db.feed || []; db.found = db.found || {}; db.feed.push({ t: Date.now(), who: nameOf(b.uid), id, pack: pk.id }); if (db.feed.length > 300) db.feed.splice(0, db.feed.length - 300); db.found[id] = (db.found[id] || 0) + 1;
+    // the whole pack is drawn again here, from the draw the server itself handed out, and the best card in it is the one that is listed
+    const cards = pk.slots.map((sl, i) => GAME.CARDS.find(c => c.id === pickU(sl, parseInt(d[1].slice(i * 8, i * 8 + 8), 16) / 4294967296))).filter(Boolean); touch();
+    const best = cards.reduce((a, c) => !a || GAME.RAR[c.rar].tier > GAME.RAR[a.rar].tier || (GAME.RAR[c.rar].tier === GAME.RAR[a.rar].tier && c.val > a.val) ? c : a, null);
+    if (!best || GAME.RAR[best.rar].tier < 4) return { ok: true, hit: false };
+    db.feed = db.feed || []; db.found = db.found || {}; db.feed.push({ t: Date.now(), who: nameOf(b.uid), id: best.id, pack: pk.id }); if (db.feed.length > 300) db.feed.splice(0, db.feed.length - 300); db.found[best.id] = (db.found[best.id] || 0) + 1;
     return { ok: true, hit: true };
   },
   /* ---- flips: a card sold for much more than it came out of the pack at ----

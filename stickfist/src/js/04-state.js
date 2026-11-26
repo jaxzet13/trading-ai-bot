@@ -45,7 +45,9 @@ function pullPack(pk, us) { return (pk || curPack()).slots.map((slot, i) => mint
 
 // the odds, worked out from the slot tables
 function slotP(slot, id) { let t = 0, w = 0; for (const [i, x] of slot) { t += x; if (i === id) w = x; } return w / t; }
-const packP = id => 1 - packOf(BY_ID[id]).slots.reduce((a, s) => a * (1 - slotP(s, id)), 1);        // the chance a pack of the card's own set holds it
+const packHas = (pk, id) => 1 - pk.slots.reduce((a, s) => a * (1 - slotP(s, id)), 1);                // the chance one pack holds the card
+const packOf = card => PACKS.reduce((best, pk) => packHas(pk, card.id) > packHas(best, card.id) ? pk : best, PACKS[0]);   // the pack where it is likeliest
+const packP = id => packHas(packOf(BY_ID[id]), id);                                                     // the chance of it in a pack of the pack it is likeliest in
 
 // The exact distribution of what a whole pack sells back for: every slot's outcomes (including each card's style roll) convolved together.
 // `val` says what a card is worth: the live market price, or its base worth.

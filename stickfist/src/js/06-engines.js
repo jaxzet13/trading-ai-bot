@@ -10,8 +10,8 @@ class PackScreen {
     this.pk = pk; this.pack = pack || PACKS[0]; this.cv = pk.querySelector("canvas.scr"); this.ctx = this.cv.getContext("2d");
     this.el = { stat: pk.querySelector(".r-stat"), name: pk.querySelector(".r-name"), sub: pk.querySelector(".r-sub"), meter: pk.querySelector(".r-meter") };
     this.on = false; this.last = 0; this.t0 = performance.now(); this.off = document.createElement("canvas"); this.g = this.off.getContext("2d", { willReadFrequently: true }); this.cache = new Map(); this.hi = document.createElement("canvas"); this.hg = this.hi.getContext("2d"); this.layer = document.createElement("canvas"); this.lc = this.layer.getContext("2d");
-    const n = LIVE.filter(c => c.set === this.pack.set).length;
-    scramble(this.el.name, this.pack.name.toUpperCase(), 520); this.el.sub.textContent = `${n} cards · one in every pack`;
+    const n = LIVE.filter(c => inPack(this.pack, c)).length;
+    scramble(this.el.name, this.pack.name.toUpperCase(), 520); this.el.sub.textContent = `7 cards · the rare slot is card 5`;
   }
   fit() {
     const dpr = Math.min(devicePixelRatio || 1, 2), w = this.cv.clientWidth, h = this.cv.clientHeight; if (!w || !h) return;
@@ -26,17 +26,39 @@ class PackScreen {
     this.fit(); if (!this.w) return; const { cols, rows, w: W, h: H } = this, g = this.hg, t = Math.max(0, (now - this.t0) / 1000);
     g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over"; g.shadowBlur = 0; g.fillStyle = "#030304"; g.fillRect(0, 0, this.hi.width, this.hi.height);
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);                                     // paint in the pack's own pixels, sharp
-    if (this.pack.id === "ms") this.launch(g, t, W, H); else this.print(g, t, W, H);
-    const c = this.ctx, sm = this.g; c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.drawImage(this.hi, 0, 0);
-    sm.setTransform(1, 0, 0, 1, 0, 0); sm.imageSmoothingEnabled = true; sm.drawImage(this.hi, 0, 0, cols, rows);                 // the same picture, read back as a grid of cells
+    ({ launch: () => this.launch(g, t, W, H), eclipse: () => this.eclipse(g, t, W, H), tidal: () => this.tidal(g, t, W, H), void: () => this.void(g, t, W, H) }[this.pack.scene] || (() => this.print(g, t, W, H)))();
+    const c = this.ctx, sm = this.g; sm.setTransform(1, 0, 0, 1, 0, 0); sm.imageSmoothingEnabled = true; sm.drawImage(this.hi, 0, 0, cols, rows);                 // the scene, read back as a grid of cells
     const d = sm.getImageData(0, 0, cols, rows).data, cw = W / cols, ch = H / rows, N = PS_RAMP.length - 1;
-    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.globalAlpha = .34; c.globalCompositeOperation = "overlay";
+    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = "source-over"; c.fillStyle = "#030304"; c.fillRect(0, 0, W, H);
     c.font = `700 ${(cw / .6).toFixed(2)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; c.textAlign = "center"; c.textBaseline = "middle";
-    for (let y = 0, k = 0; y < rows; y++) for (let x = 0; x < cols; x++, k += 4) {
-      const r = d[k], gg = d[k + 1], b = d[k + 2], l = (r * .299 + gg * .587 + b * .114) / 255; if (l < .05) continue;
-      c.fillStyle = l > .55 ? "#000" : "#fff"; c.fillText(PS_RAMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);          // dark type on the light parts, light type on the dark: a grain, not a mask
+    for (let y = 0, k = 0; y < rows; y++) for (let x = 0; x < cols; x++, k += 4) {                                    // nothing is drawn but characters: each cell is the one whose ink matches its brightness, in its colour
+      const r = d[k], gg = d[k + 1], b = d[k + 2], l = (r * .299 + gg * .587 + b * .114) / 255; if (l < .06) continue;
+      const m = Math.max(r, gg, b) || 1, sc = Math.min(1, .5 + l * .9), boost = 255 / m * sc;
+      c.fillStyle = this.col(Math.min(255, r * boost), Math.min(255, gg * boost), Math.min(255, b * boost)); c.fillText(PS_RAMP[Math.min(N, Math.round(Math.pow(l, .8) * N))], (x + .5) * cw, (y + .55) * ch);
     }
-    c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
+  }
+  eclipse(g, t, W, H) {                                                                  // Eclipse: a black disc, its corona turning, a small figure under it
+    this.status(t * 1000, "rising"); const cx = W / 2, cy = H * .42; g.fillStyle = "#050302"; g.fillRect(0, 0, W, H); g.save(); g.translate(cx, cy);
+    for (let k = 0; k < 28; k++) { const a = t * .18 + k * Math.PI / 14; g.fillStyle = k % 2 ? "rgba(255,170,60,.34)" : "rgba(220,100,30,.16)"; g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, H, a, a + Math.PI / 14); g.closePath(); g.fill(); }
+    const co = g.createRadialGradient(0, 0, W * .16, 0, 0, W * .55); co.addColorStop(0, "rgba(255,244,200,.98)"); co.addColorStop(.25, "rgba(255,176,60,.72)"); co.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = co; g.fillRect(-W, -H, W * 2, H * 2);
+    g.fillStyle = "#000"; g.beginPath(); g.arc(0, 0, W * .2, 0, 7); g.fill(); g.restore();
+    g.fillStyle = "#000"; g.fillRect(0, H * .84, W, H); g.strokeStyle = "#f5f2ea"; g.fillStyle = "#f5f2ea"; g.lineWidth = Math.max(2, W * .012); g.lineCap = "round"; const fy = H * .84, u = W * .05;
+    g.beginPath(); g.arc(cx, fy - u * 3.4, u * .45, 0, 7); g.fill(); g.beginPath(); g.moveTo(cx, fy - u * 2.8); g.lineTo(cx, fy - u * 1.2); g.moveTo(cx - u * .9, fy - u * 2.2); g.lineTo(cx + u * .9, fy - u * 2.2); g.moveTo(cx, fy - u * 1.2); g.lineTo(cx - u * .7, fy); g.moveTo(cx, fy - u * 1.2); g.lineTo(cx + u * .7, fy); g.stroke();
+  }
+  tidal(g, t, W, H) {                                                                    // Tidal: a moon over layers of water that never stop rolling
+    this.status(t * 1000, "rising tide"); const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#06202e"); bg.addColorStop(1, "#02060a"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const mx = W * .7, my = H * .17, mg = g.createRadialGradient(mx, my, 0, mx, my, W * .3); mg.addColorStop(0, "rgba(220,250,255,1)"); mg.addColorStop(.2, "rgba(150,230,255,.7)"); mg.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = mg; g.fillRect(0, 0, W, H);
+    for (let i = 0; i < 8; i++) { const y0 = H * (.34 + i * .085), amp = H * .018 * (1 + i * .25), f = .016 * (1 + i * .12); g.beginPath(); g.moveTo(0, H); for (let x = 0; x <= W; x += 4) g.lineTo(x, y0 + Math.sin(x * f + t * (.7 + i * .25) + i * 1.7) * amp + Math.sin(x * f * 2.3 - t * .9 + i) * amp * .4); g.lineTo(W, H); g.closePath();
+      const fg = g.createLinearGradient(0, y0 - amp, 0, y0 + H * .12); fg.addColorStop(0, `rgba(${70 + i * 8},${210 - i * 10},255,${.55 - i * .03})`); fg.addColorStop(1, "rgba(4,16,24,.92)"); g.fillStyle = fg; g.fill(); g.strokeStyle = `rgba(210,250,255,${.5 - i * .04})`; g.lineWidth = 1.5; g.stroke(); }
+  }
+  void(g, t, W, H) {                                                                     // Singularity: a black hole, its disc turning faster the closer it is
+    this.status(t * 1000, "falling in"); g.fillStyle = "#030208"; g.fillRect(0, 0, W, H); const cx = W / 2, cy = H * .44, hs = (a, b) => { const v = Math.imul(a * 73856093 ^ b * 19349663, 2654435761) >>> 0; return v / 4294967296; };
+    for (let k = 0; k < 60; k++) { g.fillStyle = `rgba(230,225,255,${.25 + .5 * hs(k, 3)})`; g.fillRect(hs(k, 1) * W, hs(k, 2) * H, 1.6, 1.6); }
+    g.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 900; i++) { const q = hs(i, 5), r = W * (.17 + .4 * q * q), a = t * (1.1 / (r / W + .08)) * .25 + i * 2.399, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * .3, hot = 1 - Math.min(1, (r / W - .17) / .4), s = 1.5 + hs(i, 9) * 3.2;
+      g.fillStyle = `rgba(${150 + hot * 105},${90 + hot * 150},${255 - hot * 40},${.18 + hot * .55})`; g.fillRect(x - s / 2, y - s / 2, s, s); }
+    g.globalCompositeOperation = "source-over"; g.fillStyle = "#000"; g.beginPath(); g.arc(cx, cy, W * .15, 0, 7); g.fill(); g.strokeStyle = "rgba(255,245,255,.95)"; g.lineWidth = Math.max(2, W * .01); g.beginPath(); g.arc(cx, cy, W * .152, 0, 7); g.stroke();
+    const gl = g.createRadialGradient(cx, cy, W * .14, cx, cy, W * .3); gl.addColorStop(0, "rgba(200,170,255,.55)"); gl.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gl; g.fillRect(0, 0, W, H);
   }
   print(g, t, W, H) {                                                                    // First Print: the logo prints under a glowing head, shines, then the sheet runs again
     const CYC = 6.4, u = t % CYC, head = u < 2.6 ? (u / 2.6) * (H + 20) - 10 : H + 40, fade = u > 5.8 ? 1 - (u - 5.8) / .6 : 1, run = Math.floor(t / CYC);

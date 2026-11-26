@@ -106,13 +106,13 @@ function rankHTML() {
 }
 
 /* ---- the collection has holes in it, and you can see them ---- */
-const missingCards = set => { const have = new Set(state.vault.map(c => c.no)); return LIVE.filter(c => !have.has(c.no) && (!set || c.set === set)); };
-const chaseChance = pk => { pk = pk || curPack(); const m = missingCards(pk.set); return m.length ? 1 - m.reduce((a, c) => a * (1 - packP(c.id)), 1) : 0; };      // a pack only holds cards of its own set
+const missingCards = pk => { const have = new Set(state.vault.map(c => c.no)); return LIVE.filter(c => !have.has(c.no) && (!pk || inPack(pk, c))); };
+const chaseChance = pk => { pk = pk || curPack(); const m = missingCards(pk); return m.length ? 1 - m.reduce((a, c) => a * (1 - packHas(pk, c.id)), 1) : 0; };
 function chaseHTML() {
   if (!state.s.packs && !state.vault.length) return "";
-  const pk = curPack(), size = LIVE.filter(c => c.set === pk.set).length, miss = missingCards(pk.set); if (!miss.length) return `<span class="label">${esc(pk.name)}</span><span>You have every ${esc(pk.name)} card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
+  const pk = curPack(), size = LIVE.filter(c => inPack(pk, c)).length, miss = missingCards(pk); if (!miss.length) return `<span class="label">${esc(pk.name)}</span><span>You have every ${esc(pk.name)} card. The styles are next: ${Object.keys(state.foundFx).length} of ${FX_ALL} found.</span>`;
   const rows = miss.slice().sort((a, b) => b.val - a.val).slice(0, 3), hot = null;
-  return `<span class="label">still out there in ${esc(pk.name)} · ${size - miss.length} of ${size} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${rarLabel(c)}</span>${money(c.val)} <span class="dim">${chance(packP(c.id))}</span></button>`).join("")
+  return `<span class="label">still out there in ${esc(pk.name)} · ${size - miss.length} of ${size} found</span>` + rows.map(c => `<button class="mover mini" data-card="${c.no}"><span class="nm">${esc(c.name)}</span><span class="faint">${rarLabel(c)}</span>${money(c.val)} <span class="dim">${chance(packHas(pk, c.id), pk)}</span></button>`).join("")
     + (hot && hot.p >= .3 ? `<span class="hotflip"><b>${esc(hot.c.name)}</b> is up ${pctShort(hot.p).slice(1)} in a day and you don't have one. It turns up in ${chance(packP(hot.c.id), packOf(hot.c))}, and a pack costs ${money(packPrice(packOf(hot.c)))}.</span>` : "");
 }
 
