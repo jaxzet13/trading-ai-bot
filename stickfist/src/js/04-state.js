@@ -5,6 +5,17 @@ const KEY = "stixx-first-print-v1";
 const fresh = () => ({ coins: START, vault: [], favs: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, pack: "fp", openN: 1, freePacks: 1, paid: {}, paidSeen: {}, uid: rid(16), ref: { code: "", by: "", n: 0, act: 0 }, fair: null, rescueAt: 0, streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], opens: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0, free: 0, bought: 0 } });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); } catch (e) {}
+// cards that no pack holds any more (the roster was cleaned up) go back as the play money they cost, so an old save never meets a card that is not there
+function purgeGone(st) {
+  try {
+    const gone = (st.vault || []).filter(c => !BY_NO[c.no]); if (!gone.length) return st;
+    st.coins = (st.coins || 0) + gone.reduce((a, c) => a + (c.cost != null ? c.cost : 0), 0); st.vault = st.vault.filter(c => BY_NO[c.no]);
+    if (st.favs) st.favs = st.favs.filter(n => BY_NO[n]);
+    for (const k of ["seen", "alertAt", "found", "foundFx"]) if (st[k] && typeof st[k] === "object" && !Array.isArray(st[k])) for (const n of Object.keys(st[k])) if (/^\d{3}$/.test(n) && !BY_NO[n]) delete st[k][n];
+  } catch (e) {}
+  return st;
+}
+state = purgeGone(state);
 let onPersist = null;                                                                      // set by the account code: called after every save, so the game can follow to the server
 const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} if (onPersist) onPersist(); };
 const save = () => { logWorth(true); persist(); };

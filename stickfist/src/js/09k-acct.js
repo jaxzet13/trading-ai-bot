@@ -34,7 +34,7 @@ const Acct = (() => {
     if (r.status !== 200 || !r.data || !r.data.token) { say("That didn't work. Try again."); return; }
     const acct = { email: r.data.email, token: r.data.token, tester: !!r.data.tester };
     if (mode === "login" && r.data.save) {                                                // your saved game replaces whatever this device had (in memory too, so nothing writes the old one back on the way out)
-      try { const s = JSON.parse(r.data.save); if (s && typeof s.coins === "number") { s.acct = acct; s.ageOK = true; s.uid = r.data.uid || s.uid; onPersist = null; state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); lastPush = body(); persist(); location.reload(); return; } } catch (e) {}
+      try { const s = JSON.parse(r.data.save); if (s && typeof s.coins === "number") { s.acct = acct; s.ageOK = true; s.uid = r.data.uid || s.uid; onPersist = null; state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); state = purgeGone(state); lastPush = body(); persist(); location.reload(); return; } } catch (e) {}
     }
     state.acct = acct; state.ageOK = true; if (r.data.uid) state.uid = r.data.uid; save(); done(); push(); toast(mode === "login" ? "Welcome back" : "Account made. You're signed in on this device.");
   }
