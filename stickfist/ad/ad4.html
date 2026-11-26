@@ -34,6 +34,11 @@ header.top { position: absolute; left: 0; right: 0; top: 0; }
 #screen .pf2 { padding-top: 22px; } #screen .pf2 .bignum { font-size: 72px; } #screen .pf-chart { height: 190px; margin: 10px -6px 8px; }
 #screen .pf-chart svg { width: 100%; height: 100%; } #screen .favh { margin-top: 18px; } #screen .pf-stats { margin-top: 22px; }
 #screen .fvt.big { position: relative; } #screen .fvt.big small { font-variant-numeric: tabular-nums; }
+#screen .prow { display: flex; align-items: center; gap: 12px; height: 66px; border-bottom: 1px solid rgba(255,255,255,.08); }
+#screen .prow .th { width: 46px; height: 56px; border: 2px solid var(--rc); border-radius: 3px; overflow: hidden; box-shadow: 0 0 16px color-mix(in srgb, var(--rc) 40%, transparent); } #screen .prow .th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#screen .prow .nm { flex: 1; } #screen .prow .nm b { display: block; font-size: 17px; } #screen .prow .nm small { color: var(--dim); font-size: 12px; }
+#screen .prow .rt { text-align: right; font-variant-numeric: tabular-nums; } #screen .prow .rt b { display: block; font-size: 17px; color: var(--ok); } #screen .prow .rt small { color: var(--ink); font-size: 12.5px; opacity: .85; }
+#screen .plist { margin-top: 4px; }
 #foot { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 10px; color: var(--dim); z-index: 5; letter-spacing: .02em; }
 .btabs { position: absolute; z-index: 4; }
 </style>
@@ -45,9 +50,8 @@ header.top { position: absolute; left: 0; right: 0; top: 0; }
         <div class="pf-row"><span class="pf-pill" id="hpill">▲ 3.6%</span><span class="dim" id="hcap">since you started</span></div>
         <div class="pf-chart"><svg viewBox="0 0 400 112" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pfG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="g0"/><stop offset="1" class="g1"/></linearGradient></defs><path class="b" id="hbase"/><path class="a" id="hfill" fill="url(#pfG)"/><path class="l" id="hline"/></svg><i class="pf-dot" id="hdot"></i></div>
         <div class="pf-rng"><button>1H</button><button>1D</button><button>1W</button><button class="on">All</button></div></div>
-      <h3 class="favh">my best cards</h3>
-      <div class="favshelf top3" id="fav"></div>
-      <div class="pf-stats"><div><b>5</b><small>packs opened</small></div><div><b>10/41</b><small>cards found</small></div><div><b>10</b><small>cards owned</small></div></div>
+      <h3 class="favh">most profitable cards</h3>
+      <div class="plist" id="fav"></div>
     </div>
     <nav class="btabs"><a><svg viewBox="0 0 24 24"><path d="M7 3h10v18H7z"/><path d="M7 7l1.7-1.6L10.3 7l1.7-1.6L13.7 7l1.7-1.6L17 7"/><path d="M10 12h4M10 15h3"/></svg><span>pack</span></a><a><svg viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 4 12 2.5-6h5"/></svg><span>live</span></a><a class="on" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c.7-4 3.8-6 7.5-6s6.8 2 7.5 6"/></svg><span>me</span></a></nav>
     <div id="foot">an illustration of one lucky collection in the simulated market · play money · 18+</div>
@@ -110,8 +114,8 @@ const slotAt = (i, t) => { let s = 0, n = 0; for (let j = 0; j < 10; j++) { cons
 const seriesAt = (c, t, n) => { const out = []; for (let j = 0; j < n; j++) out.push(val(c, Math.max(0, t * (j / (n - 1))))); return out; };
 
 /* ---------------------------------------------------------------- the screen */
-const TOP = ["reaper", "grimm", "ronin"].map(id => C.find(c => c.id === id));
-$("fav").innerHTML = TOP.map(c => `<button class="fvt big" style="--rc:${c.col}"><span class="fvimg"><img src="../cards/s/${c.id}.jpg" alt=""></span><b>${c.name}</b><small data-v="${c.id}"></small></button>`).join("");
+const TOP = ["reaper", "grimm", "ronin", "liftoff"].map(id => C.find(c => c.id === id));
+$("fav").innerHTML = TOP.map(c => `<div class="prow" style="--rc:${c.col}"><span class="th"><img src="../cards/s/${c.id}.jpg" alt=""></span><span class="nm"><b>${c.name}</b><small>bought for ${money(c.cost)}</small></span><span class="rt"><b data-p="${c.id}"></b><small data-v="${c.id}"></small></span></div>`).join("");
 const spark = (v, W, H) => { const mn = Math.min(...v), sp = Math.max(...v) - mn || 1; return "M" + v.map((x, i) => (i / (v.length - 1) * W).toFixed(1) + " " + (H - 3 - (x - mn) / sp * (H - 6)).toFixed(1)).join(" L"); };
 const CAPS = [[0, 2.4, "since you started"], [2.4, 9.4, "your cards are climbing"], [9.4, 19.1, "watch it go"], [19.1, 23, null]];
 const PTS = Array.from({ length: 70 }, (_, i) => { const d = document.createElement("span"); d.className = "pt"; $("pts").appendChild(d); return d; });
@@ -138,7 +142,7 @@ function render(t) {
   const n = 60, pts = []; let mx = 0; for (let j = 0; j <= n; j++) { const tt = t * j / n, v = profitAt(tt); pts.push(v); mx = Math.max(mx, v); } const top = Math.max(mx * 1.1, 2500), X = j => (j / n * 400).toFixed(1), Y = v => (104 - v / top * 88).toFixed(1), d = pts.map((v, j) => X(j) + " " + Y(v)).join(" L");
   $("hline").setAttribute("d", "M" + d); $("hfill").setAttribute("d", "M" + d + " L400 112 L0 112 Z"); $("hbase").setAttribute("d", "M0 " + Y(pts[0]) + " L400 " + Y(pts[0])); $("hdot").style.top = (Y(pts[n]) / 112 * 100).toFixed(1) + "%";
   // the three best cards, and what each is worth now
-  TOP.forEach(c => { const v = val(c, t), m = v / c.cost, el = document.querySelector(`[data-v="${c.id}"]`), mv = mult(c, k) - (k > 0 ? mult(c, k - 1) : mult(c, k)), f = flashK * cl(Math.abs(mv / mult(c, Math.max(0, k - 1))) * 14); el.textContent = `${moneyS(v)}  ▲ ${m >= 10 ? Math.round(m) : m.toFixed(1)}×`; el.style.color = f > .02 ? "#fff" : ""; el.parentElement.querySelector(".fvimg").style.boxShadow = `0 0 ${14 + f * 40}px color-mix(in srgb, ${c.col} ${Math.round(40 + f * 50)}%, transparent)`; });
+  TOP.forEach(c => { const v = val(c, t), pr = v / c.cost - 1, pe = document.querySelector(`[data-p="${c.id}"]`), ve = document.querySelector(`[data-v="${c.id}"]`); pe.textContent = "▲ " + (pr * 100 >= 1000 ? Math.round(pr * 100).toLocaleString("en-US") : (pr * 100).toFixed(pr * 100 >= 100 ? 0 : 1)) + "%"; ve.textContent = "sold for " + money(v); });
   // particles: dollar signs and plus signs rising off the profit when it jumps
   const jumpT = EV.filter(e => e.k === "tick" && e.a > .4 && e.t <= t && t - e.t < 1.2); PTS.forEach(e => { e.style.opacity = 0; });
   let pi = 0; for (const e of jumpT) for (let j = 0; j < 3 && pi < PTS.length; j++, pi++) { const u = (t - e.t) / 1.2, h = hash(Math.round(e.t * 100), j, 5), el = PTS[pi]; el.textContent = h > .5 ? "$" : "+"; el.style.left = (60 + h * 380 + Math.sin(u * 5 + j) * 14).toFixed(1) + "px"; el.style.top = (230 - u * 150).toFixed(1) + "px"; el.style.fontSize = (14 + h * 14).toFixed(0) + "px"; el.style.opacity = (Math.sin(Math.PI * u) * .9).toFixed(3); }
