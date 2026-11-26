@@ -2951,7 +2951,8 @@ function show(v, keep) {
   if (view === "odds") oddsKey = ""; VIEWS.forEach(x => $("v-" + x).classList.toggle("on", x === view)); document.querySelectorAll("#tabs a, #btabs a").forEach(a => a.classList.toggle("on", a.dataset.v === (TAB_OF[view] || view)));
   ({ home: renderHome, live: Live.render, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds, invite: renderInvite, limited: renderLimited })[view](); if (!keep) scrollTo(0, 0);
 }
-function route() { const h = location.hash.replace(/^#\/?/, ""); show(h === "vault" || h === "index" ? "collection" : h || "home"); }
+function route() { const h = location.hash.replace(/^#\/?/, ""); if (h === "fresh") { startOver(); state.seenIntro = false; state.ageOK = false; state.pack = "fp"; persist(); location.replace(location.pathname + "#/"); location.reload(); return; }   // /#/fresh: start again as a brand-new player (the age check and the intro come back too)
+ show(h === "vault" || h === "index" ? "collection" : h || "home"); }
 // the market moved: redraw whatever is on screen without jumping the page
 function refreshLive() {
   if (SS || !$("share").hidden || !$("cut").hidden || view === "invite" || view === "limited") return; ({ home: renderHome, live: Live.render, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds })[view]();
