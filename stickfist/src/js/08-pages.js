@@ -81,7 +81,7 @@ const pctR = p => `<small class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}"
 function renderProfile() {
   { const pa = $("pAcct"), h = Acct.html(); if (pa.dataset.sig !== h) { pa.dataset.sig = h; pa.innerHTML = h; } }
   $("pLimits").live = limitsHTML(); $("pSettings").live = settingsHTML(); $("pHist").live = History.html();
-  $("pLive").live = Chart.heroHTML(); $("pFav").live = favShelf(); $("pLive").live = "";
+  $("pLive").live = Chart.heroHTML(); $("pFav").live = ""; $("pLive").live = "";
   const net = netWorth(), all = profitAll();
   { // who you are: a rank earned by finding cards and turning up, and the way to the settings
     const xp = xpOf(), ri = rankIdx(xp), cur = RANKS[ri], nx = RANKS[ri + 1], pc = nx ? (xp - cur[1]) / (nx[1] - cur[1]) : 1, a = Acct.me && Acct.me(), who = a && a.email ? a.email.split("@")[0] : "Player";
@@ -91,11 +91,11 @@ function renderProfile() {
     let j = 0; for (let i = 0; i < N; i++) { const ts = from + (now - from) * i / (N - 1); while (j + 1 < h.length && h[j + 1][0] <= ts) j++; const e = h[j]; pts.push(e && e[0] <= ts ? e[1] - (e[2] || 0) - START : h.length ? h[0][1] - (h[0][2] || 0) - START : 0); } pts[N - 1] = all;
     const mn = Math.min(...pts), mx = Math.max(...pts), sp = Math.max(mx - mn, Math.max(4, Math.abs(net) * .004)), lo = (mn + mx) / 2 - sp / 2,     /* a quiet stretch is a line through the middle, not one stuck to the floor */ X = i => (i * 400 / (N - 1)).toFixed(1), Y = v => (104 - (v - lo) / sp * 88).toFixed(1), d = pts.map((v, i) => X(i) + " " + Y(v)).join(" L"), base = Y(pts[0]);
     const RNG = [[36e5, "1H"], [864e5, "1D"], [6048e5, "1W"], [0, "All"]], lbl = pRng === 36e5 ? "past hour" : pRng === 864e5 ? "today" : pRng ? "past week" : "all time";
-    $("pWorth").live = `<div class="pf2 ${up ? "pos" : "neg"}"><span class="label">Profit</span><div class="bignum" role="img" aria-label="${money(all)}">${all >= 0 ? "+" : "−"}${moneyR(Math.abs(all))}</div>
-      <div class="pf-row"><span class="pf-pill">${up ? "▲" : "▼"} ${moneyR(Math.abs(gain))}</span><span class="dim">${lbl}</span>${awayLine()}</div>
+    $("pWorth").live = `<div class="pf2 ${up ? "pos" : "neg"}"><span class="label">my collection</span><div class="bignum" role="img" aria-label="${money(all)}">${all >= 0 ? "+" : "−"}${moneyR(Math.abs(all))}</div>
+      <div class="pf-row"><span class="pf-pill">${up ? "▲" : "▼"} ${moneyR(Math.abs(gain))}</span><span class="dim">${lbl}</span></div>
       <div class="pf-chart"><svg viewBox="0 0 400 112" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pfG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="g0"/><stop offset="1" class="g1"/></linearGradient></defs><path class="b" d="M0 ${base} L400 ${base}"/><path class="a" d="M${d} L400 112 L0 112 Z" fill="url(#pfG)"/><path class="l" d="M${d}"/></svg><i class="pf-dot" style="top:${(Y(pts[N - 1]) / 112 * 100).toFixed(1)}%"></i></div>
       <div class="pf-rng" role="group" aria-label="Range">${RNG.map(([ms, t]) => `<button data-prng="${ms}" class="${ms === pRng ? "on" : ""}" aria-pressed="${ms === pRng}">${t}</button>`).join("")}</div>
-      <div class="pf-stats"><div><small>Cards found</small><b>${new Set(state.vault.map(c => c.no)).size}/${LIVE.length}</b></div><div><small>Collection</small><b>${moneyR(holdingsValue())}</b></div><div><small>Packs opened</small><b>${fmt(state.s.packs)}</b></div></div></div>`; }
+      </div>${favShelf()}<div class="pf-stats"><div><b>${fmt(state.s.packs)}</b><small>packs opened</small></div><div><b>${new Set(state.vault.map(c => c.no)).size}/${LIVE.length}</b><small>cards found</small></div><div><b>${state.vault.length}</b><small>cards owned</small></div></div>`; }
   $("pGoals").live = Goals.html(); Goals.badge(); $("pTip").live = tipHTML();
   { const inf = typeof Ref !== "undefined" ? Ref.info() : null, sig = inf ? [inf.code, inf.joined, inf.invited, inf.earned, inf.credits, API.on].join("|") : "off";   // only rebuild the invite hero (and replay its bar) when the numbers change, not on every live tick
     if (sig !== pInviteSig) { pInviteSig = sig; $("pInvite").live = inviteHeroHTML(); if (typeof playRewardBars === "function") playRewardBars(); } }

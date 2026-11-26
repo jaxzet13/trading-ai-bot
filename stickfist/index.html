@@ -1413,6 +1413,18 @@ h1, h2, h3, .bignum, .ttl { letter-spacing: -.04em; }
 .holdcue { background: radial-gradient(ellipse at 50% 55%, rgba(0,0,0,.72), rgba(0,0,0,.35) 70%, transparent); border-radius: 14px; padding-top: 60px; } .holdcue .hc-ring { margin-top: -40px; }
 
 .favshelf.top3 { grid-template-columns: repeat(3, 1fr); } .fvt.big { text-align: center; } .fvt.big b { display: block; margin-top: 6px; font-size: 12px; letter-spacing: .04em; }
+
+/* Me: the same picture as the share card, live */
+.pf2 { text-align: center; position: relative; padding-top: 6px; } .pf2 .label { display: block; opacity: .6; letter-spacing: .08em; text-transform: lowercase; font-size: 15px; }
+.pf2 .bignum { font-size: 64px; line-height: 1.05; font-weight: 800; letter-spacing: -.02em; margin: 6px 0 8px; } .pf2.pos .bignum { color: #3be477; } .pf2.neg .bignum { color: #ff6b6b; }
+.pf2 .pf-row { justify-content: center; } .pf2 .pf-rng { justify-content: center; }
+.favh { text-align: center; font-size: 13px; letter-spacing: .28em; text-transform: uppercase; opacity: .6; margin: 26px 0 12px; font-weight: 700; }
+.favshelf.top3 { gap: 12px; } .fvt.big { text-align: center; color: inherit; } .fvt.big .fvimg { display: block; border-radius: 4px; box-shadow: 0 0 26px color-mix(in srgb, var(--rc) 45%, transparent); } .fvt.big b { font-size: 16px; font-weight: 800; margin-top: 10px; } .fvt.big small { display: block; color: var(--rc); font-size: 12px; font-weight: 600; margin-top: 2px; }
+.pf-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center; margin: 26px 0 10px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.12); }
+.pf-stats div { padding: 0; border: 0; } .pf-stats b { display: block; font-size: 30px; font-weight: 800; } .pf-stats small { display: block; opacity: .6; font-size: 13px; margin-top: 2px; letter-spacing: 0; text-transform: none; }
+
+.fvt.big .fvimg img { display: block; width: 100%; aspect-ratio: 900 / 1092; object-fit: cover; border: 2px solid var(--rc); border-radius: 3px; background: #000; }
+.pf2 .pf-chart { height: 130px; margin: 6px -4px 4px; } .pf2 .pf-chart svg { width: 100%; height: 100%; }
 </style>
 </head>
 <body>
@@ -2890,7 +2902,7 @@ const pctR = p => `<small class="${p > .0005 ? "up" : p < -.0005 ? "dn" : "fl"}"
 function renderProfile() {
   { const pa = $("pAcct"), h = Acct.html(); if (pa.dataset.sig !== h) { pa.dataset.sig = h; pa.innerHTML = h; } }
   $("pLimits").live = limitsHTML(); $("pSettings").live = settingsHTML(); $("pHist").live = History.html();
-  $("pLive").live = Chart.heroHTML(); $("pFav").live = favShelf(); $("pLive").live = "";
+  $("pLive").live = Chart.heroHTML(); $("pFav").live = ""; $("pLive").live = "";
   const net = netWorth(), all = profitAll();
   { // who you are: a rank earned by finding cards and turning up, and the way to the settings
     const xp = xpOf(), ri = rankIdx(xp), cur = RANKS[ri], nx = RANKS[ri + 1], pc = nx ? (xp - cur[1]) / (nx[1] - cur[1]) : 1, a = Acct.me && Acct.me(), who = a && a.email ? a.email.split("@")[0] : "Player";
@@ -2900,11 +2912,11 @@ function renderProfile() {
     let j = 0; for (let i = 0; i < N; i++) { const ts = from + (now - from) * i / (N - 1); while (j + 1 < h.length && h[j + 1][0] <= ts) j++; const e = h[j]; pts.push(e && e[0] <= ts ? e[1] - (e[2] || 0) - START : h.length ? h[0][1] - (h[0][2] || 0) - START : 0); } pts[N - 1] = all;
     const mn = Math.min(...pts), mx = Math.max(...pts), sp = Math.max(mx - mn, Math.max(4, Math.abs(net) * .004)), lo = (mn + mx) / 2 - sp / 2,     /* a quiet stretch is a line through the middle, not one stuck to the floor */ X = i => (i * 400 / (N - 1)).toFixed(1), Y = v => (104 - (v - lo) / sp * 88).toFixed(1), d = pts.map((v, i) => X(i) + " " + Y(v)).join(" L"), base = Y(pts[0]);
     const RNG = [[36e5, "1H"], [864e5, "1D"], [6048e5, "1W"], [0, "All"]], lbl = pRng === 36e5 ? "past hour" : pRng === 864e5 ? "today" : pRng ? "past week" : "all time";
-    $("pWorth").live = `<div class="pf2 ${up ? "pos" : "neg"}"><span class="label">Profit</span><div class="bignum" role="img" aria-label="${money(all)}">${all >= 0 ? "+" : "−"}${moneyR(Math.abs(all))}</div>
-      <div class="pf-row"><span class="pf-pill">${up ? "▲" : "▼"} ${moneyR(Math.abs(gain))}</span><span class="dim">${lbl}</span>${awayLine()}</div>
+    $("pWorth").live = `<div class="pf2 ${up ? "pos" : "neg"}"><span class="label">my collection</span><div class="bignum" role="img" aria-label="${money(all)}">${all >= 0 ? "+" : "−"}${moneyR(Math.abs(all))}</div>
+      <div class="pf-row"><span class="pf-pill">${up ? "▲" : "▼"} ${moneyR(Math.abs(gain))}</span><span class="dim">${lbl}</span></div>
       <div class="pf-chart"><svg viewBox="0 0 400 112" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pfG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="g0"/><stop offset="1" class="g1"/></linearGradient></defs><path class="b" d="M0 ${base} L400 ${base}"/><path class="a" d="M${d} L400 112 L0 112 Z" fill="url(#pfG)"/><path class="l" d="M${d}"/></svg><i class="pf-dot" style="top:${(Y(pts[N - 1]) / 112 * 100).toFixed(1)}%"></i></div>
       <div class="pf-rng" role="group" aria-label="Range">${RNG.map(([ms, t]) => `<button data-prng="${ms}" class="${ms === pRng ? "on" : ""}" aria-pressed="${ms === pRng}">${t}</button>`).join("")}</div>
-      <div class="pf-stats"><div><small>Cards found</small><b>${new Set(state.vault.map(c => c.no)).size}/${LIVE.length}</b></div><div><small>Collection</small><b>${moneyR(holdingsValue())}</b></div><div><small>Packs opened</small><b>${fmt(state.s.packs)}</b></div></div></div>`; }
+      </div>${favShelf()}<div class="pf-stats"><div><b>${fmt(state.s.packs)}</b><small>packs opened</small></div><div><b>${new Set(state.vault.map(c => c.no)).size}/${LIVE.length}</b><small>cards found</small></div><div><b>${state.vault.length}</b><small>cards owned</small></div></div>`; }
   $("pGoals").live = Goals.html(); Goals.badge(); $("pTip").live = tipHTML();
   { const inf = typeof Ref !== "undefined" ? Ref.info() : null, sig = inf ? [inf.code, inf.joined, inf.invited, inf.earned, inf.credits, API.on].join("|") : "off";   // only rebuild the invite hero (and replay its bar) when the numbers change, not on every live tick
     if (sig !== pInviteSig) { pInviteSig = sig; $("pInvite").live = inviteHeroHTML(); if (typeof playRewardBars === "function") playRewardBars(); } }
@@ -3049,9 +3061,11 @@ function toggleFav(no) {
   if (view === "profile" && $("pFav")) $("pFav").live = favShelf(); if (view === "collection" && CF.show === "fav") renderCollection(); return i < 0;
 }
 function favShelf() {
-  const mine = (state.favs || []).filter(no => BY_NO[no] && copiesOf(no).length), top = mine.slice(0, 3), rest = mine.slice(3);
-  const big = no => `<button class="fvt big" data-card="${no}" aria-label="${esc(BY_NO[no].name)}">${cardHTML(copiesOf(no)[0], { sm: true, thumb: true })}<b>${esc(BY_NO[no].name)}</b></button>`;
-  return `<div class="psec"><h3 class="sec">Favourites</h3><span class="small">${mine.length ? "your first " + top.length + " are on your share card" : ""}</span></div>` + (mine.length ? `<div class="favshelf top3">${top.map(big).join("")}</div>` + (rest.length ? `<div class="favshelf">${rest.map(no => `<button class="fvt" data-card="${no}" aria-label="${esc(BY_NO[no].name)}">${cardHTML(copiesOf(no)[0], { sm: true, thumb: true })}</button>`).join("")}</div>` : "") : `<p class="small favhint">Tap ♡ on any card you like — it doesn't have to be a rare. Your first three show here and on your share card.</p>`);
+  const stars = (state.favs || []).filter(no => BY_NO[no] && copiesOf(no).length), pick = stars.slice(0, 3);
+  for (const c of state.vault.slice().sort((x, y) => valueOf(y) - valueOf(x))) if (pick.length < 3 && !pick.includes(c.no)) pick.push(c.no);
+  const big = no => { const cd = BY_NO[no], cp = copiesOf(no)[0], rc = cp.fx ? STYLE_TINT[cp.fx] : RAR[cd.rar].col; return `<button class="fvt big" data-card="${no}" style="--rc:${rc}" aria-label="${esc(cd.name)}"><span class="fvimg"><img src="${imgOf(cd, cp.fx, true)}" alt="" draggable="false"></span><b>${esc(cd.name)}</b><small>${rarLabel(cd)}</small></button>`; };
+  const rest = stars.slice(3);
+  return `<h3 class="favh">${stars.length ? "my favourites" : "my best cards"}</h3>` + (pick.length ? `<div class="favshelf top3">${pick.map(big).join("")}</div>` : `<p class="small favhint">Open a pack, then tap ♡ on the cards you like.</p>`) + (stars.length ? "" : (pick.length ? `<p class="small favhint">Tap ♡ on any card to choose your favourites. They show here and on your share card.</p>` : "")) + (rest.length ? `<div class="favshelf">${rest.map(no => `<button class="fvt" data-card="${no}" aria-label="${esc(BY_NO[no].name)}">${cardHTML(copiesOf(no)[0], { sm: true, thumb: true })}</button>`).join("")}</div>` : "");
 }
 // every copy beyond the best one of each card (copies you added by code are never sold in bulk)
 // the copies that are worth more now than they were when you got them (physical cards you added are left alone)

@@ -37,9 +37,11 @@ function toggleFav(no) {
   if (view === "profile" && $("pFav")) $("pFav").live = favShelf(); if (view === "collection" && CF.show === "fav") renderCollection(); return i < 0;
 }
 function favShelf() {
-  const mine = (state.favs || []).filter(no => BY_NO[no] && copiesOf(no).length), top = mine.slice(0, 3), rest = mine.slice(3);
-  const big = no => `<button class="fvt big" data-card="${no}" aria-label="${esc(BY_NO[no].name)}">${cardHTML(copiesOf(no)[0], { sm: true, thumb: true })}<b>${esc(BY_NO[no].name)}</b></button>`;
-  return `<div class="psec"><h3 class="sec">Favourites</h3><span class="small">${mine.length ? "your first " + top.length + " are on your share card" : ""}</span></div>` + (mine.length ? `<div class="favshelf top3">${top.map(big).join("")}</div>` + (rest.length ? `<div class="favshelf">${rest.map(no => `<button class="fvt" data-card="${no}" aria-label="${esc(BY_NO[no].name)}">${cardHTML(copiesOf(no)[0], { sm: true, thumb: true })}</button>`).join("")}</div>` : "") : `<p class="small favhint">Tap ♡ on any card you like — it doesn't have to be a rare. Your first three show here and on your share card.</p>`);
+  const stars = (state.favs || []).filter(no => BY_NO[no] && copiesOf(no).length), pick = stars.slice(0, 3);
+  for (const c of state.vault.slice().sort((x, y) => valueOf(y) - valueOf(x))) if (pick.length < 3 && !pick.includes(c.no)) pick.push(c.no);
+  const big = no => { const cd = BY_NO[no], cp = copiesOf(no)[0], rc = cp.fx ? STYLE_TINT[cp.fx] : RAR[cd.rar].col; return `<button class="fvt big" data-card="${no}" style="--rc:${rc}" aria-label="${esc(cd.name)}"><span class="fvimg"><img src="${imgOf(cd, cp.fx, true)}" alt="" draggable="false"></span><b>${esc(cd.name)}</b><small>${rarLabel(cd)}</small></button>`; };
+  const rest = stars.slice(3);
+  return `<h3 class="favh">${stars.length ? "my favourites" : "my best cards"}</h3>` + (pick.length ? `<div class="favshelf top3">${pick.map(big).join("")}</div>` : `<p class="small favhint">Open a pack, then tap ♡ on the cards you like.</p>`) + (stars.length ? "" : (pick.length ? `<p class="small favhint">Tap ♡ on any card to choose your favourites. They show here and on your share card.</p>` : "")) + (rest.length ? `<div class="favshelf">${rest.map(no => `<button class="fvt" data-card="${no}" aria-label="${esc(BY_NO[no].name)}">${cardHTML(copiesOf(no)[0], { sm: true, thumb: true })}</button>`).join("")}</div>` : "");
 }
 // every copy beyond the best one of each card (copies you added by code are never sold in bulk)
 // the copies that are worth more now than they were when you got them (physical cards you added are left alone)

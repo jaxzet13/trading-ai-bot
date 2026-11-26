@@ -1392,3 +1392,15 @@ h1, h2, h3, .bignum, .ttl { letter-spacing: -.04em; }
 .holdcue { background: radial-gradient(ellipse at 50% 55%, rgba(0,0,0,.72), rgba(0,0,0,.35) 70%, transparent); border-radius: 14px; padding-top: 60px; } .holdcue .hc-ring { margin-top: -40px; }
 
 .favshelf.top3 { grid-template-columns: repeat(3, 1fr); } .fvt.big { text-align: center; } .fvt.big b { display: block; margin-top: 6px; font-size: 12px; letter-spacing: .04em; }
+
+/* Me: the same picture as the share card, live */
+.pf2 { text-align: center; position: relative; padding-top: 6px; } .pf2 .label { display: block; opacity: .6; letter-spacing: .08em; text-transform: lowercase; font-size: 15px; }
+.pf2 .bignum { font-size: 64px; line-height: 1.05; font-weight: 800; letter-spacing: -.02em; margin: 6px 0 8px; } .pf2.pos .bignum { color: #3be477; } .pf2.neg .bignum { color: #ff6b6b; }
+.pf2 .pf-row { justify-content: center; } .pf2 .pf-rng { justify-content: center; }
+.favh { text-align: center; font-size: 13px; letter-spacing: .28em; text-transform: uppercase; opacity: .6; margin: 26px 0 12px; font-weight: 700; }
+.favshelf.top3 { gap: 12px; } .fvt.big { text-align: center; color: inherit; } .fvt.big .fvimg { display: block; border-radius: 4px; box-shadow: 0 0 26px color-mix(in srgb, var(--rc) 45%, transparent); } .fvt.big b { font-size: 16px; font-weight: 800; margin-top: 10px; } .fvt.big small { display: block; color: var(--rc); font-size: 12px; font-weight: 600; margin-top: 2px; }
+.pf-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center; margin: 26px 0 10px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.12); }
+.pf-stats div { padding: 0; border: 0; } .pf-stats b { display: block; font-size: 30px; font-weight: 800; } .pf-stats small { display: block; opacity: .6; font-size: 13px; margin-top: 2px; letter-spacing: 0; text-transform: none; }
+
+.fvt.big .fvimg img { display: block; width: 100%; aspect-ratio: 900 / 1092; object-fit: cover; border: 2px solid var(--rc); border-radius: 3px; background: #000; }
+.pf2 .pf-chart { height: 130px; margin: 6px -4px 4px; } .pf2 .pf-chart svg { width: 100%; height: 100%; }
