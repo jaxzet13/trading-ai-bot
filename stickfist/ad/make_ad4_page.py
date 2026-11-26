@@ -37,7 +37,7 @@ s = s[:a] + dom + '  </div>' + s[b:]
 
 # ---- script: drop the rows, rewrite render
 i = s.index('const rowEls = '); j = s.index('\n', i); s = s[:i] + '''const TOP = ["reaper", "grimm", "ronin", "liftoff"].map(id => C.find(c => c.id === id));
-$("fav").innerHTML = TOP.map(c => `<div class="prow" style="--rc:${c.col}"><span class="th"><img src="../cards/s/${c.id}.jpg" alt=""></span><span class="nm"><b>${c.name}</b><small>bought for ${money(c.cost)}</small></span><span class="rt"><b data-p="${c.id}"></b><small data-v="${c.id}"></small></span></div>`).join("");''' + s[j:]
+$("fav").innerHTML = TOP.map(c => `<div class="prow" style="--rc:${c.col}"><span class="th"><img src="../cards/s/${c.id}.jpg" alt=""></span><span class="nm"><b>${c.name}</b><small>pulled at ${money(c.cost)}</small></span><span class="rt"><b data-p="${c.id}"></b><small data-v="${c.id}"></small></span></div>`).join("");''' + s[j:]
 s = s.replace('const CAPS = [[0, 2.4, "since you started"], [2.4, 6, "most of your cards are up"], [6, 9.4, "two are down. that happens"], [9.4, 14, "the rest start to fly"], [14, 19.1, "watch it go"], [19.1, 23, null]];',
               'const CAPS = [[0, 2.4, "since you started"], [2.4, 9.4, "your cards are climbing"], [9.4, 19.1, "watch it go"], [19.1, 23, null]];')
 r0 = s.index('function render(t) {'); r1 = s.index('window.renderAt')

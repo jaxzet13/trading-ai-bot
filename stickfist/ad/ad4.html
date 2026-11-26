@@ -115,7 +115,7 @@ const seriesAt = (c, t, n) => { const out = []; for (let j = 0; j < n; j++) out.
 
 /* ---------------------------------------------------------------- the screen */
 const TOP = ["reaper", "grimm", "ronin", "liftoff"].map(id => C.find(c => c.id === id));
-$("fav").innerHTML = TOP.map(c => `<div class="prow" style="--rc:${c.col}"><span class="th"><img src="../cards/s/${c.id}.jpg" alt=""></span><span class="nm"><b>${c.name}</b><small>bought for ${money(c.cost)}</small></span><span class="rt"><b data-p="${c.id}"></b><small data-v="${c.id}"></small></span></div>`).join("");
+$("fav").innerHTML = TOP.map(c => `<div class="prow" style="--rc:${c.col}"><span class="th"><img src="../cards/s/${c.id}.jpg" alt=""></span><span class="nm"><b>${c.name}</b><small>pulled at ${money(c.cost)}</small></span><span class="rt"><b data-p="${c.id}"></b><small data-v="${c.id}"></small></span></div>`).join("");
 const spark = (v, W, H) => { const mn = Math.min(...v), sp = Math.max(...v) - mn || 1; return "M" + v.map((x, i) => (i / (v.length - 1) * W).toFixed(1) + " " + (H - 3 - (x - mn) / sp * (H - 6)).toFixed(1)).join(" L"); };
 const CAPS = [[0, 2.4, "since you started"], [2.4, 9.4, "your cards are climbing"], [9.4, 19.1, "watch it go"], [19.1, 23, null]];
 const PTS = Array.from({ length: 70 }, (_, i) => { const d = document.createElement("span"); d.className = "pt"; $("pts").appendChild(d); return d; });
