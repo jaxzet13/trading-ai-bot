@@ -10,15 +10,17 @@ for (const P of roster) {
   const slotSells = slot => { const t = slot.reduce((a, [, w]) => a + w, 0), sd = new Map(); for (const [id, w] of slot) for (const [v, p] of cardSells(id)) sd.set(v, (sd.get(v) || 0) + w / t * p); return sd; };
   const ev = slots => slots.reduce((a, s) => { let e = 0; for (const [v, p] of slotSells(s)) e += v * p; return a + e; }, 0);
   function dist(slots, cap) { let dd = new Float64Array(cap + 1); dd[0] = 1; for (const slot of slots) { const nx = new Float64Array(cap + 1); let all = 0; for (let k = 0; k <= cap; k++) all += dd[k]; for (const [v, p] of slotSells(slot)) { if (v >= cap) { nx[cap] += p * all; continue; } let over = 0; for (let k = 0; k <= cap; k++) { const q = dd[k]; if (!q) continue; if (k + v >= cap) over += q; else nx[k + v] += p * q; } nx[cap] += p * over; } dd = nx; } return dd; }
+  for (const [sname, uw, qk] of [['normal', .5, 1], ['high', .12, .5], ['max', 0, 0]]) {
   const commons = P.fill.filter(c => c.kind === 'common'), uncs = P.fill.filter(c => c.kind === 'uncommon');
-  const fillRaw = commons.map(c => [c.id, 1]).concat(uncs.map(c => [c.id, .5])), ft = fillRaw.reduce((a, b) => a + b[1], 0), fill = fillRaw.map(([id, w]) => [id, w / ft * 100]);
-  const rarePool = P.rare.slice().sort((a, b) => a.val - b.val).map(c => c.id), low = rarePool.slice(0, 4), q = Q[P.pack];
+  const fillRaw = commons.map(c => [c.id, 1]).concat(uncs.map(c => [c.id, uw])), ft = fillRaw.reduce((a, b) => a + b[1], 0), fill = fillRaw.map(([id, w]) => [id, w / ft * 100]);
+  const rarePool = P.rare.slice().sort((a, b) => a.val - b.val).map(c => c.id), low = rarePool.slice(0, 4), q = Q[P.pack] * qk;
   const bonus = fill.map(([id, w]) => [id, w * (1 - q)]).concat(low.map(id => [id, q * 100 / low.length]));
   const build = r => { const w = rarePool.map((id, k) => [id, Math.pow(r, k)]), t = w.reduce((a, b) => a + b[1], 0), rare = w.map(([id, x]) => [id, x / t * 100]); return { rare, slots: [fill, fill, fill, fill, rare, bonus, bonus] }; };
-  const e1 = ev(build(1).slots) / price, e0 = ev(build(.02).slots) / price; if (e1 < .947 || e0 > .947) { console.log(P.pack, 'no fit', e0.toFixed(2), e1.toFixed(2)); continue; }
+  const e1 = ev(build(1).slots) / price, e0 = ev(build(.02).slots) / price; if (e1 < .947 || e0 > .947) { console.log(P.pack, 'no fit', e0.toFixed(2), e1.toFixed(2)); return; }
   let lo = .02, hi = 1; for (let k = 0; k < 40; k++) { const mid = (lo + hi) / 2; if (ev(build(mid).slots) / price < .947) lo = mid; else hi = mid; }
   const { rare, slots } = build((lo + hi) / 2), dd = dist(slots, price * 4); let hit = 0, x2 = 0, acc = 0, med = 0; for (let k = price; k <= price * 4; k++) hit += dd[k]; for (let k = price * 2; k <= price * 4; k++) x2 += dd[k]; for (let k = 0; k <= price * 4; k++) { acc += dd[k]; if (acc >= .5) { med = k; break; } }
-  console.log(P.pack.padEnd(3), '$' + PRICE[P.pack], '| return', (ev(slots) / price * 100).toFixed(1) + '% | sells back the price or more', (hit * 100).toFixed(1) + '% | 2x+', (x2 * 100).toFixed(1) + '% | median $' + (med / U).toFixed(2), '| top card', (Math.max(...P.rare.map(c => c.val)) / U), 'at 1 in', Math.round(100 / rare[rare.length - 1][1]));
-  out[P.pack] = slots.map(s => s.map(([id, w]) => [id, +w.toFixed(4)]));
+  console.log(P.pack.padEnd(3), sname.padEnd(6), '$' + PRICE[P.pack], '| return', (ev(slots) / price * 100).toFixed(1) + '% | sells back the price or more', (hit * 100).toFixed(1) + '% | 2x+', (x2 * 100).toFixed(1) + '% | median $' + (med / U).toFixed(2), '| top card', (Math.max(...P.rare.map(c => c.val)) / U), 'at 1 in', Math.round(100 / rare[rare.length - 1][1]));
+  (out[P.pack] = out[P.pack] || {})[sname] = slots.map(s => s.map(([id, w]) => [id, +w.toFixed(4)]));
+  }
 }
 fs.writeFileSync(path.join(__dirname, 'slots.json'), JSON.stringify(out));

@@ -1550,6 +1550,21 @@ main.wrap { padding-bottom: 110px; }
 @media (prefers-reduced-motion: reduce) { .tp-s .pk::after { animation: none; opacity: 0; } }
 .cempty { text-align: center; padding: 60px 20px; color: #8b9aa0; } .cempty pre { margin: 0 auto 18px; display: inline-block; text-align: left; font: 700 18px/1.1 var(--m); color: #3c5a55; } .cempty p { font: 600 17px/1.4 var(--ui); }
 .acc-fine { margin: 18px 4px 6px; color: #5f6f6c; font: 500 12px/1.5 var(--ui); text-align: center; }
+
+/* the pack style sheet */
+#psScrim { z-index: 70; } .psheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 71; max-height: 92dvh; overflow: auto; border-radius: 34px 34px 0 0; background: linear-gradient(180deg, #2a2a2b, #151516 24%, #0b0b0c); padding: 26px 22px calc(26px + env(safe-area-inset-bottom)); animation: sheetUp .3s cubic-bezier(.2,.9,.3,1); box-shadow: 0 -20px 60px rgba(0,0,0,.6); } .psheet[hidden] { display: none; }
+@keyframes sheetUp { from { transform: translateY(40%); opacity: 0; } }
+.ps-head { display: flex; gap: 18px; align-items: flex-start; } .ps-ic { flex: none; width: 66px; height: 84px; border-radius: 8px; transform: rotate(-9deg); background: linear-gradient(150deg, color-mix(in srgb, var(--pc) 80%, #fff 0%), color-mix(in srgb, var(--pc) 28%, #000)); border: 2px solid rgba(255,255,255,.4); box-shadow: 0 8px 20px rgba(0,0,0,.5); }
+.ps-head h2 { margin: 0 0 6px; font: 800 36px/1.05 var(--ui); color: #fff; letter-spacing: -.02em; } .ps-head p { margin: 0; color: #b4b9c0; font: 500 19px/1.4 var(--ui); } .ps-x { margin-left: auto; flex: none; width: 46px; height: 46px; border-radius: 50%; border: 0; background: rgba(255,255,255,.1); color: #fff; font: 600 30px/1 var(--ui); cursor: pointer; }
+.ps-ch { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 14px; margin: 30px 0 16px; } .ps-ch i { height: 1px; background: rgba(255,255,255,.18); } .ps-ch span { font: 700 21px/1 var(--ui); color: #fff; }
+.ps-pills { display: flex; gap: 10px; } .ps-pills button { flex: 1; height: 54px; border-radius: 27px; border: 1.5px solid rgba(255,255,255,.18); background: rgba(255,255,255,.03); color: #cfd3d8; font: 700 19px/1 var(--ui); cursor: pointer; } .ps-pills button.on { border-color: #ff7a1a; color: #fff; box-shadow: 0 0 16px rgba(255,122,26,.3); }
+.ps-h { margin: 28px 0 14px; font: 700 20px/1 var(--ui); color: #fff; } .ps-row { display: grid; grid-template-columns: 112px 1fr 62px; gap: 14px; align-items: center; margin: 12px 0; } .ps-l { text-align: right; color: #c8ccd2; font: 800 16.5px/1.2 var(--ui); } .ps-b { display: block; height: 54px; background: #242527; border-radius: 4px; overflow: hidden; } .ps-b i { display: block; height: 100%; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 35%, #111), var(--c)); border: 1px solid var(--c); border-radius: 4px; transition: width .35s cubic-bezier(.2,.9,.3,1); } .ps-p { font: 800 20px/1 var(--ui); color: #fff; }
+.ps-mm { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 26px 0 16px; } .ps-mm small { display: inline; color: #a3a8af; font: 700 19px/1 var(--ui); } .ps-mm b { font: 800 36px/1 var(--ui); color: #fff; margin: 0 10px; } .ps-dots { width: 88px; height: 14px; background: radial-gradient(circle, #7d838b 2.5px, transparent 3px) 0 50% / 14px 14px repeat-x; position: relative; } .ps-dots::after { content: ""; position: absolute; right: -6px; top: 1px; width: 12px; height: 12px; border-radius: 50%; background: #e8b84a; box-shadow: 0 0 10px #e8b84a; }
+.ps-fine { margin: 0 0 22px; color: #8a8f96; font: 500 14.5px/1.5 var(--ui); } .ps-apply { width: 100%; height: 66px; border-radius: 33px; border: 0; cursor: pointer; color: #fff; font: 800 22px/1 var(--ui); background: linear-gradient(180deg, #ff5a12, #ff3d00); box-shadow: 0 10px 30px rgba(255,80,0,.35); }
+.tp-style { background: none; border: 0; color: inherit; cursor: pointer; padding: 0; }
+body.sheet-open { overflow: hidden; }
+
+.ps-mm { display: grid !important; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; } .ps-mm > div { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; } .ps-mm small { font-size: 16px !important; } .ps-mm b { font-size: 30px !important; margin: 0 !important; } .ps-dots { width: 100% !important; }
 </style>
 </head>
 <body>
@@ -1665,6 +1680,7 @@ main.wrap { padding-bottom: 110px; }
   <a href="#/profile" data-v="profile"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path fill-rule="evenodd" d="M12 2.500a9.500 9.500 0 1 0 0 19 9.500 9.500 0 0 0 0-19Zm0 4a3.200 3.200 0 1 1 0 6.400 3.200 3.200 0 0 1 0-6.400ZM6.600 17.700c.9-2.200 2.900-3.400 5.400-3.400s4.500 1.200 5.400 3.400A7.500 7.500 0 0 1 12 19.500a7.500 7.500 0 0 1-5.400-1.800Z"/></svg><span>Account</span></a>
 </nav>
 <button class="scrim" id="scrim" type="button" aria-label="Close menu" hidden></button>
+<button class="scrim" id="psScrim" type="button" aria-label="Close" hidden data-psclose></button><section class="psheet" id="psheet" hidden aria-label="Pack style"><div id="psBody"></div></section>
 <aside class="drawer" id="drawer" hidden aria-label="Menu"><div id="drawerBody"></div></aside>
 <footer><div class="wrap">
   <div class="fmain"><span class="flogo"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect x=".5" y=".5" width="27" height="27" rx="7.5" fill="#000" stroke="rgba(255,255,255,.18)"/><circle cx="14" cy="5.900" r="1.550" fill="#fff"/><path d="M8.200 9.800 19.800 21.400M19.800 9.800 8.200 21.400" fill="none" stroke="#fff" stroke-width="1.700" stroke-linecap="round"/></svg><span>STIXX</span></span><nav class="flinks" aria-label="About STIXX"><a href="/terms">Terms &amp; privacy</a><a href="#/odds">Odds</a><button class="linkbtn" id="fairBtn">Fair play</button><button class="linkbtn" id="aboutBtn">How money works</button></nav></div>
@@ -1816,62 +1832,140 @@ const PACKS = [
   // that starts higher up in the dearer packs. A dearer pack's rare slot starts higher up the ladder. Every pack returns 94.7% on average.
   { id: "fp", name: "First Print", blurb: "Stick figures made of text, from a frog in a hat to a gantry. Seven cards a pack, and the fifth is the one you open it for.", price: 500, min: 500, max: 500, n: 7, col: "#3be477", scene: "print",
     slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of 10 cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],
-    slots: [
-      [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["tempest", 24.4803], ["surge", 18.9505], ["ignition", 14.6699], ["console", 11.3562], ["phantom", 8.791], ["kraken", 6.8053], ["suit", 5.2681], ["colossus", 4.0781], ["gantry", 3.1569], ["leviathan", 2.4438]],
-      [["stitch", 7.6667], ["brick", 7.6667], ["orbit", 7.6667], ["rook", 7.6667], ["mop", 7.6667], ["pan", 7.6667], ["cone", 7.6667], ["fuse", 7.6667], ["countdown", 7.6667], ["spark", 7.6667], ["flare", 7.6667], ["bubble", 7.6667], ["tempest", 2], ["surge", 2], ["ignition", 2], ["console", 2]],
-      [["stitch", 7.6667], ["brick", 7.6667], ["orbit", 7.6667], ["rook", 7.6667], ["mop", 7.6667], ["pan", 7.6667], ["cone", 7.6667], ["fuse", 7.6667], ["countdown", 7.6667], ["spark", 7.6667], ["flare", 7.6667], ["bubble", 7.6667], ["tempest", 2], ["surge", 2], ["ignition", 2], ["console", 2]]
-    ] },
+    slotsBy: {
+      normal: [[["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["tempest", 24.4803], ["surge", 18.9505], ["ignition", 14.6699], ["console", 11.3562], ["phantom", 8.791], ["kraken", 6.8053], ["suit", 5.2681], ["colossus", 4.0781], ["gantry", 3.1569], ["leviathan", 2.4438]],
+        [["stitch", 7.6667], ["brick", 7.6667], ["orbit", 7.6667], ["rook", 7.6667], ["mop", 7.6667], ["pan", 7.6667], ["cone", 7.6667], ["fuse", 7.6667], ["countdown", 7.6667], ["spark", 7.6667], ["flare", 7.6667], ["bubble", 7.6667], ["tempest", 2], ["surge", 2], ["ignition", 2], ["console", 2]],
+        [["stitch", 7.6667], ["brick", 7.6667], ["orbit", 7.6667], ["rook", 7.6667], ["mop", 7.6667], ["pan", 7.6667], ["cone", 7.6667], ["fuse", 7.6667], ["countdown", 7.6667], ["spark", 7.6667], ["flare", 7.6667], ["bubble", 7.6667], ["tempest", 2], ["surge", 2], ["ignition", 2], ["console", 2]]],
+      high: [[["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["tempest", 23.2286], ["surge", 18.3412], ["ignition", 14.4821], ["console", 11.435], ["phantom", 9.029], ["kraken", 7.1293], ["suit", 5.6292], ["colossus", 4.4448], ["gantry", 3.5096], ["leviathan", 2.7712]],
+        [["stitch", 8], ["brick", 8], ["orbit", 8], ["rook", 8], ["mop", 8], ["pan", 8], ["cone", 8], ["fuse", 8], ["countdown", 8], ["spark", 8], ["flare", 8], ["bubble", 8], ["tempest", 1], ["surge", 1], ["ignition", 1], ["console", 1]],
+        [["stitch", 8], ["brick", 8], ["orbit", 8], ["rook", 8], ["mop", 8], ["pan", 8], ["cone", 8], ["fuse", 8], ["countdown", 8], ["spark", 8], ["flare", 8], ["bubble", 8], ["tempest", 1], ["surge", 1], ["ignition", 1], ["console", 1]]],
+      max: [[["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["tempest", 22.0618], ["surge", 17.7467], ["ignition", 14.2756], ["console", 11.4834], ["phantom", 9.2374], ["kraken", 7.4306], ["suit", 5.9773], ["colossus", 4.8082], ["gantry", 3.8677], ["leviathan", 3.1113]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333], ["tempest", 0], ["surge", 0], ["ignition", 0], ["console", 0]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333], ["tempest", 0], ["surge", 0], ["ignition", 0], ["console", 0]]]
+    },
+    get slots() { return this.slotsBy[packStyleOf(this.id)]; } },
   { id: "ms", name: "Moonshot", blurb: "A launch: lit fuses, rockets, mission control and the Moon. The fifth card is the rare slot.", price: 1500, min: 1500, max: 1500, n: 7, col: "#ffa046", scene: "launch",
     slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of 10 cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],
-    slots: [
-      [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ms062", 7.1429], ["ms068", 3.5714], ["ms069", 3.5714]],
-      [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ms062", 7.1429], ["ms068", 3.5714], ["ms069", 3.5714]],
-      [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ms062", 7.1429], ["ms068", 3.5714], ["ms069", 3.5714]],
-      [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ms062", 7.1429], ["ms068", 3.5714], ["ms069", 3.5714]],
-      [["ms074", 32.7201], ["suit", 22.2393], ["colossus", 15.1157], ["gantry", 10.2739], ["leviathan", 6.983], ["liftoff", 4.7462], ["null", 3.2259], ["booster", 2.1926], ["shogun", 1.4903], ["candle", 1.0129]],
-      [["stitch", 6.1429], ["brick", 6.1429], ["orbit", 6.1429], ["rook", 6.1429], ["mop", 6.1429], ["pan", 6.1429], ["cone", 6.1429], ["fuse", 6.1429], ["countdown", 6.1429], ["spark", 6.1429], ["flare", 6.1429], ["bubble", 6.1429], ["ms062", 6.1429], ["ms068", 3.0714], ["ms069", 3.0714], ["ms074", 3.5], ["suit", 3.5], ["colossus", 3.5], ["gantry", 3.5]],
-      [["stitch", 6.1429], ["brick", 6.1429], ["orbit", 6.1429], ["rook", 6.1429], ["mop", 6.1429], ["pan", 6.1429], ["cone", 6.1429], ["fuse", 6.1429], ["countdown", 6.1429], ["spark", 6.1429], ["flare", 6.1429], ["bubble", 6.1429], ["ms062", 6.1429], ["ms068", 3.0714], ["ms069", 3.0714], ["ms074", 3.5], ["suit", 3.5], ["colossus", 3.5], ["gantry", 3.5]]
-    ] },
+    slotsBy: {
+      normal: [[["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ms062", 7.1429], ["ms068", 3.5714], ["ms069", 3.5714]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ms062", 7.1429], ["ms068", 3.5714], ["ms069", 3.5714]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ms062", 7.1429], ["ms068", 3.5714], ["ms069", 3.5714]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ms062", 7.1429], ["ms068", 3.5714], ["ms069", 3.5714]],
+        [["ms074", 32.7201], ["suit", 22.2393], ["colossus", 15.1157], ["gantry", 10.2739], ["leviathan", 6.983], ["liftoff", 4.7462], ["null", 3.2259], ["booster", 2.1926], ["shogun", 1.4903], ["candle", 1.0129]],
+        [["stitch", 6.1429], ["brick", 6.1429], ["orbit", 6.1429], ["rook", 6.1429], ["mop", 6.1429], ["pan", 6.1429], ["cone", 6.1429], ["fuse", 6.1429], ["countdown", 6.1429], ["spark", 6.1429], ["flare", 6.1429], ["bubble", 6.1429], ["ms062", 6.1429], ["ms068", 3.0714], ["ms069", 3.0714], ["ms074", 3.5], ["suit", 3.5], ["colossus", 3.5], ["gantry", 3.5]],
+        [["stitch", 6.1429], ["brick", 6.1429], ["orbit", 6.1429], ["rook", 6.1429], ["mop", 6.1429], ["pan", 6.1429], ["cone", 6.1429], ["fuse", 6.1429], ["countdown", 6.1429], ["spark", 6.1429], ["flare", 6.1429], ["bubble", 6.1429], ["ms062", 6.1429], ["ms068", 3.0714], ["ms069", 3.0714], ["ms074", 3.5], ["suit", 3.5], ["colossus", 3.5], ["gantry", 3.5]]],
+      high: [[["stitch", 7.5529], ["brick", 7.5529], ["orbit", 7.5529], ["rook", 7.5529], ["mop", 7.5529], ["pan", 7.5529], ["cone", 7.5529], ["fuse", 7.5529], ["countdown", 7.5529], ["spark", 7.5529], ["flare", 7.5529], ["bubble", 7.5529], ["ms062", 7.5529], ["ms068", 0.9063], ["ms069", 0.9063]],
+        [["stitch", 7.5529], ["brick", 7.5529], ["orbit", 7.5529], ["rook", 7.5529], ["mop", 7.5529], ["pan", 7.5529], ["cone", 7.5529], ["fuse", 7.5529], ["countdown", 7.5529], ["spark", 7.5529], ["flare", 7.5529], ["bubble", 7.5529], ["ms062", 7.5529], ["ms068", 0.9063], ["ms069", 0.9063]],
+        [["stitch", 7.5529], ["brick", 7.5529], ["orbit", 7.5529], ["rook", 7.5529], ["mop", 7.5529], ["pan", 7.5529], ["cone", 7.5529], ["fuse", 7.5529], ["countdown", 7.5529], ["spark", 7.5529], ["flare", 7.5529], ["bubble", 7.5529], ["ms062", 7.5529], ["ms068", 0.9063], ["ms069", 0.9063]],
+        [["stitch", 7.5529], ["brick", 7.5529], ["orbit", 7.5529], ["rook", 7.5529], ["mop", 7.5529], ["pan", 7.5529], ["cone", 7.5529], ["fuse", 7.5529], ["countdown", 7.5529], ["spark", 7.5529], ["flare", 7.5529], ["bubble", 7.5529], ["ms062", 7.5529], ["ms068", 0.9063], ["ms069", 0.9063]],
+        [["ms074", 29.5062], ["suit", 21.1053], ["colossus", 15.0962], ["gantry", 10.798], ["leviathan", 7.7236], ["liftoff", 5.5246], ["null", 3.9516], ["booster", 2.8265], ["shogun", 2.0218], ["candle", 1.4461]],
+        [["stitch", 7.0242], ["brick", 7.0242], ["orbit", 7.0242], ["rook", 7.0242], ["mop", 7.0242], ["pan", 7.0242], ["cone", 7.0242], ["fuse", 7.0242], ["countdown", 7.0242], ["spark", 7.0242], ["flare", 7.0242], ["bubble", 7.0242], ["ms062", 7.0242], ["ms068", 0.8429], ["ms069", 0.8429], ["ms074", 1.75], ["suit", 1.75], ["colossus", 1.75], ["gantry", 1.75]],
+        [["stitch", 7.0242], ["brick", 7.0242], ["orbit", 7.0242], ["rook", 7.0242], ["mop", 7.0242], ["pan", 7.0242], ["cone", 7.0242], ["fuse", 7.0242], ["countdown", 7.0242], ["spark", 7.0242], ["flare", 7.0242], ["bubble", 7.0242], ["ms062", 7.0242], ["ms068", 0.8429], ["ms069", 0.8429], ["ms074", 1.75], ["suit", 1.75], ["colossus", 1.75], ["gantry", 1.75]]],
+      max: [[["stitch", 7.6923], ["brick", 7.6923], ["orbit", 7.6923], ["rook", 7.6923], ["mop", 7.6923], ["pan", 7.6923], ["cone", 7.6923], ["fuse", 7.6923], ["countdown", 7.6923], ["spark", 7.6923], ["flare", 7.6923], ["bubble", 7.6923], ["ms062", 7.6923], ["ms068", 0], ["ms069", 0]],
+        [["stitch", 7.6923], ["brick", 7.6923], ["orbit", 7.6923], ["rook", 7.6923], ["mop", 7.6923], ["pan", 7.6923], ["cone", 7.6923], ["fuse", 7.6923], ["countdown", 7.6923], ["spark", 7.6923], ["flare", 7.6923], ["bubble", 7.6923], ["ms062", 7.6923], ["ms068", 0], ["ms069", 0]],
+        [["stitch", 7.6923], ["brick", 7.6923], ["orbit", 7.6923], ["rook", 7.6923], ["mop", 7.6923], ["pan", 7.6923], ["cone", 7.6923], ["fuse", 7.6923], ["countdown", 7.6923], ["spark", 7.6923], ["flare", 7.6923], ["bubble", 7.6923], ["ms062", 7.6923], ["ms068", 0], ["ms069", 0]],
+        [["stitch", 7.6923], ["brick", 7.6923], ["orbit", 7.6923], ["rook", 7.6923], ["mop", 7.6923], ["pan", 7.6923], ["cone", 7.6923], ["fuse", 7.6923], ["countdown", 7.6923], ["spark", 7.6923], ["flare", 7.6923], ["bubble", 7.6923], ["ms062", 7.6923], ["ms068", 0], ["ms069", 0]],
+        [["ms074", 26.9165], ["suit", 20.0532], ["colossus", 14.9399], ["gantry", 11.1305], ["leviathan", 8.2924], ["liftoff", 6.1779], ["null", 4.6026], ["booster", 3.429], ["shogun", 2.5547], ["candle", 1.9033]],
+        [["stitch", 7.6923], ["brick", 7.6923], ["orbit", 7.6923], ["rook", 7.6923], ["mop", 7.6923], ["pan", 7.6923], ["cone", 7.6923], ["fuse", 7.6923], ["countdown", 7.6923], ["spark", 7.6923], ["flare", 7.6923], ["bubble", 7.6923], ["ms062", 7.6923], ["ms068", 0], ["ms069", 0], ["ms074", 0], ["suit", 0], ["colossus", 0], ["gantry", 0]],
+        [["stitch", 7.6923], ["brick", 7.6923], ["orbit", 7.6923], ["rook", 7.6923], ["mop", 7.6923], ["pan", 7.6923], ["cone", 7.6923], ["fuse", 7.6923], ["countdown", 7.6923], ["spark", 7.6923], ["flare", 7.6923], ["bubble", 7.6923], ["ms062", 7.6923], ["ms068", 0], ["ms069", 0], ["ms074", 0], ["suit", 0], ["colossus", 0], ["gantry", 0]]]
+    },
+    get slots() { return this.slotsBy[packStyleOf(this.id)]; } },
   { id: "ec", name: "Eclipse", blurb: "Cards from under a black sun. The rare slot starts at a mythic-class card.", price: 4000, min: 4000, max: 4000, n: 7, col: "#ffc24a", scene: "eclipse",
     slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of 10 cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],
-    slots: [
-      [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
-      [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
-      [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
-      [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
-      [["leviathan", 45.3765], ["liftoff", 24.8359], ["null", 13.5934], ["booster", 7.4401], ["shogun", 4.0722], ["candle", 2.2288], ["apogee", 1.2199], ["ronin", 0.6677], ["luna", 0.3654], ["bouquet", 0.2]],
-      [["stitch", 5.7143], ["brick", 5.7143], ["orbit", 5.7143], ["rook", 5.7143], ["mop", 5.7143], ["pan", 5.7143], ["cone", 5.7143], ["fuse", 5.7143], ["countdown", 5.7143], ["spark", 5.7143], ["flare", 5.7143], ["bubble", 5.7143], ["ec081", 5.7143], ["ec085", 5.7143], ["leviathan", 5], ["liftoff", 5], ["null", 5], ["booster", 5]],
-      [["stitch", 5.7143], ["brick", 5.7143], ["orbit", 5.7143], ["rook", 5.7143], ["mop", 5.7143], ["pan", 5.7143], ["cone", 5.7143], ["fuse", 5.7143], ["countdown", 5.7143], ["spark", 5.7143], ["flare", 5.7143], ["bubble", 5.7143], ["ec081", 5.7143], ["ec085", 5.7143], ["leviathan", 5], ["liftoff", 5], ["null", 5], ["booster", 5]]
-    ] },
+    slotsBy: {
+      normal: [[["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
+        [["leviathan", 45.3765], ["liftoff", 24.8359], ["null", 13.5934], ["booster", 7.4401], ["shogun", 4.0722], ["candle", 2.2288], ["apogee", 1.2199], ["ronin", 0.6677], ["luna", 0.3654], ["bouquet", 0.2]],
+        [["stitch", 5.7143], ["brick", 5.7143], ["orbit", 5.7143], ["rook", 5.7143], ["mop", 5.7143], ["pan", 5.7143], ["cone", 5.7143], ["fuse", 5.7143], ["countdown", 5.7143], ["spark", 5.7143], ["flare", 5.7143], ["bubble", 5.7143], ["ec081", 5.7143], ["ec085", 5.7143], ["leviathan", 5], ["liftoff", 5], ["null", 5], ["booster", 5]],
+        [["stitch", 5.7143], ["brick", 5.7143], ["orbit", 5.7143], ["rook", 5.7143], ["mop", 5.7143], ["pan", 5.7143], ["cone", 5.7143], ["fuse", 5.7143], ["countdown", 5.7143], ["spark", 5.7143], ["flare", 5.7143], ["bubble", 5.7143], ["ec081", 5.7143], ["ec085", 5.7143], ["leviathan", 5], ["liftoff", 5], ["null", 5], ["booster", 5]]],
+      high: [[["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
+        [["leviathan", 34.8353], ["liftoff", 22.8818], ["null", 15.03], ["booster", 9.8726], ["shogun", 6.4848], ["candle", 4.2596], ["apogee", 2.7979], ["ronin", 1.8378], ["luna", 1.2072], ["bouquet", 0.793]],
+        [["stitch", 6.4286], ["brick", 6.4286], ["orbit", 6.4286], ["rook", 6.4286], ["mop", 6.4286], ["pan", 6.4286], ["cone", 6.4286], ["fuse", 6.4286], ["countdown", 6.4286], ["spark", 6.4286], ["flare", 6.4286], ["bubble", 6.4286], ["ec081", 6.4286], ["ec085", 6.4286], ["leviathan", 2.5], ["liftoff", 2.5], ["null", 2.5], ["booster", 2.5]],
+        [["stitch", 6.4286], ["brick", 6.4286], ["orbit", 6.4286], ["rook", 6.4286], ["mop", 6.4286], ["pan", 6.4286], ["cone", 6.4286], ["fuse", 6.4286], ["countdown", 6.4286], ["spark", 6.4286], ["flare", 6.4286], ["bubble", 6.4286], ["ec081", 6.4286], ["ec085", 6.4286], ["leviathan", 2.5], ["liftoff", 2.5], ["null", 2.5], ["booster", 2.5]]],
+      max: [[["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
+        [["leviathan", 27.6107], ["liftoff", 20.3473], ["null", 14.9947], ["booster", 11.0501], ["shogun", 8.1432], ["candle", 6.001], ["apogee", 4.4224], ["ronin", 3.259], ["luna", 2.4017], ["bouquet", 1.7699]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429], ["leviathan", 0], ["liftoff", 0], ["null", 0], ["booster", 0]],
+        [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429], ["leviathan", 0], ["liftoff", 0], ["null", 0], ["booster", 0]]]
+    },
+    get slots() { return this.slotsBy[packStyleOf(this.id)]; } },
   { id: "td", name: "Tidal", blurb: "The big names. The rare slot starts at a card worth as much as the pack.", price: 10000, min: 10000, max: 10000, n: 7, col: "#46d2ff", scene: "tidal",
     slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of 10 cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],
-    slots: [
-      [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["booster", 47.4314], ["shogun", 24.9708], ["apogee", 13.1462], ["ronin", 6.921], ["luna", 3.6436], ["bouquet", 1.9182], ["titan", 1.0099], ["grimm", 0.5317], ["heartword", 0.2799], ["reaper", 0.1474]],
-      [["stitch", 6], ["brick", 6], ["orbit", 6], ["rook", 6], ["mop", 6], ["pan", 6], ["cone", 6], ["fuse", 6], ["countdown", 6], ["spark", 6], ["flare", 6], ["bubble", 6], ["booster", 7], ["shogun", 7], ["apogee", 7], ["ronin", 7]],
-      [["stitch", 6], ["brick", 6], ["orbit", 6], ["rook", 6], ["mop", 6], ["pan", 6], ["cone", 6], ["fuse", 6], ["countdown", 6], ["spark", 6], ["flare", 6], ["bubble", 6], ["booster", 7], ["shogun", 7], ["apogee", 7], ["ronin", 7]]
-    ] },
+    slotsBy: {
+      normal: [[["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["booster", 47.4314], ["shogun", 24.9708], ["apogee", 13.1462], ["ronin", 6.921], ["luna", 3.6436], ["bouquet", 1.9182], ["titan", 1.0099], ["grimm", 0.5317], ["heartword", 0.2799], ["reaper", 0.1474]],
+        [["stitch", 6], ["brick", 6], ["orbit", 6], ["rook", 6], ["mop", 6], ["pan", 6], ["cone", 6], ["fuse", 6], ["countdown", 6], ["spark", 6], ["flare", 6], ["bubble", 6], ["booster", 7], ["shogun", 7], ["apogee", 7], ["ronin", 7]],
+        [["stitch", 6], ["brick", 6], ["orbit", 6], ["rook", 6], ["mop", 6], ["pan", 6], ["cone", 6], ["fuse", 6], ["countdown", 6], ["spark", 6], ["flare", 6], ["bubble", 6], ["booster", 7], ["shogun", 7], ["apogee", 7], ["ronin", 7]]],
+      high: [[["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["booster", 35.0946], ["shogun", 22.9548], ["apogee", 15.0144], ["ronin", 9.8207], ["luna", 6.4236], ["bouquet", 4.2015], ["titan", 2.7482], ["grimm", 1.7975], ["heartword", 1.1757], ["reaper", 0.769]],
+        [["stitch", 7.1667], ["brick", 7.1667], ["orbit", 7.1667], ["rook", 7.1667], ["mop", 7.1667], ["pan", 7.1667], ["cone", 7.1667], ["fuse", 7.1667], ["countdown", 7.1667], ["spark", 7.1667], ["flare", 7.1667], ["bubble", 7.1667], ["booster", 3.5], ["shogun", 3.5], ["apogee", 3.5], ["ronin", 3.5]],
+        [["stitch", 7.1667], ["brick", 7.1667], ["orbit", 7.1667], ["rook", 7.1667], ["mop", 7.1667], ["pan", 7.1667], ["cone", 7.1667], ["fuse", 7.1667], ["countdown", 7.1667], ["spark", 7.1667], ["flare", 7.1667], ["bubble", 7.1667], ["booster", 3.5], ["shogun", 3.5], ["apogee", 3.5], ["ronin", 3.5]]],
+      max: [[["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["booster", 27.866], ["shogun", 20.4533], ["apogee", 15.0124], ["ronin", 11.0189], ["luna", 8.0877], ["bouquet", 5.9363], ["titan", 4.3571], ["grimm", 3.1981], ["heartword", 2.3473], ["reaper", 1.7229]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333], ["booster", 0], ["shogun", 0], ["apogee", 0], ["ronin", 0]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333], ["booster", 0], ["shogun", 0], ["apogee", 0], ["ronin", 0]]]
+    },
+    get slots() { return this.slotsBy[packStyleOf(this.id)]; } },
   { id: "sg", name: "Singularity", blurb: "The edge of the dark. The biggest cards in the game live here.", price: 25000, min: 25000, max: 25000, n: 7, col: "#b78cff", scene: "void",
     slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of 11 cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],
-    slots: [
-      [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["ronin", 69.0613], ["luna", 21.3668], ["titan", 6.6106], ["grimm", 2.0453], ["heartword", 0.6328], ["reaper", 0.1958], ["morpho", 0.0606], ["mars", 0.0187], ["umbra", 0.0058], ["phoenix", 0.0018], ["horizon", 0.0006]],
-      [["stitch", 5.1667], ["brick", 5.1667], ["orbit", 5.1667], ["rook", 5.1667], ["mop", 5.1667], ["pan", 5.1667], ["cone", 5.1667], ["fuse", 5.1667], ["countdown", 5.1667], ["spark", 5.1667], ["flare", 5.1667], ["bubble", 5.1667], ["ronin", 9.5], ["luna", 9.5], ["titan", 9.5], ["grimm", 9.5]],
-      [["stitch", 5.1667], ["brick", 5.1667], ["orbit", 5.1667], ["rook", 5.1667], ["mop", 5.1667], ["pan", 5.1667], ["cone", 5.1667], ["fuse", 5.1667], ["countdown", 5.1667], ["spark", 5.1667], ["flare", 5.1667], ["bubble", 5.1667], ["ronin", 9.5], ["luna", 9.5], ["titan", 9.5], ["grimm", 9.5]]
-    ] }
+    slotsBy: {
+      normal: [[["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["ronin", 69.0613], ["luna", 21.3668], ["titan", 6.6106], ["grimm", 2.0453], ["heartword", 0.6328], ["reaper", 0.1958], ["morpho", 0.0606], ["mars", 0.0187], ["umbra", 0.0058], ["phoenix", 0.0018], ["horizon", 0.0006]],
+        [["stitch", 5.1667], ["brick", 5.1667], ["orbit", 5.1667], ["rook", 5.1667], ["mop", 5.1667], ["pan", 5.1667], ["cone", 5.1667], ["fuse", 5.1667], ["countdown", 5.1667], ["spark", 5.1667], ["flare", 5.1667], ["bubble", 5.1667], ["ronin", 9.5], ["luna", 9.5], ["titan", 9.5], ["grimm", 9.5]],
+        [["stitch", 5.1667], ["brick", 5.1667], ["orbit", 5.1667], ["rook", 5.1667], ["mop", 5.1667], ["pan", 5.1667], ["cone", 5.1667], ["fuse", 5.1667], ["countdown", 5.1667], ["spark", 5.1667], ["flare", 5.1667], ["bubble", 5.1667], ["ronin", 9.5], ["luna", 9.5], ["titan", 9.5], ["grimm", 9.5]]],
+      high: [[["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["ronin", 43.5827], ["luna", 24.6237], ["titan", 13.9122], ["grimm", 7.8602], ["heartword", 4.4409], ["reaper", 2.5091], ["morpho", 1.4176], ["mars", 0.8009], ["umbra", 0.4525], ["phoenix", 0.2557], ["horizon", 0.1444]],
+        [["stitch", 6.75], ["brick", 6.75], ["orbit", 6.75], ["rook", 6.75], ["mop", 6.75], ["pan", 6.75], ["cone", 6.75], ["fuse", 6.75], ["countdown", 6.75], ["spark", 6.75], ["flare", 6.75], ["bubble", 6.75], ["ronin", 4.75], ["luna", 4.75], ["titan", 4.75], ["grimm", 4.75]],
+        [["stitch", 6.75], ["brick", 6.75], ["orbit", 6.75], ["rook", 6.75], ["mop", 6.75], ["pan", 6.75], ["cone", 6.75], ["fuse", 6.75], ["countdown", 6.75], ["spark", 6.75], ["flare", 6.75], ["bubble", 6.75], ["ronin", 4.75], ["luna", 4.75], ["titan", 4.75], ["grimm", 4.75]]],
+      max: [[["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
+        [["ronin", 33.6446], ["luna", 22.4577], ["titan", 14.9904], ["grimm", 10.0061], ["heartword", 6.679], ["reaper", 4.4582], ["morpho", 2.9759], ["mars", 1.9864], ["umbra", 1.3259], ["phoenix", 0.885], ["horizon", 0.5908]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333], ["ronin", 0], ["luna", 0], ["titan", 0], ["grimm", 0]],
+        [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333], ["ronin", 0], ["luna", 0], ["titan", 0], ["grimm", 0]]]
+    },
+    get slots() { return this.slotsBy[packStyleOf(this.id)]; } }
 ];
 const RARE_SLOT = 4;                                                                         // the card you look forward to: the fifth of seven
-const inPack = (pk, c) => pk.slots.some(sl => sl.some(([id]) => id === c.id));
+// a pack has three styles, each with its own exactly solved odds: Normal, High (bigger swings, more weight on the top cards) and Max (the top cards at their likeliest, no small fillers).
+// Every style returns 94.7% on average. The style you picked for a pack is kept in your save; `slots` is always the one in use.
+const packStyleOf = id => { try { return (state.styles && state.styles[id]) || "normal"; } catch (e) { return "normal"; } };
+const inPack = (pk, c) => pk.slotsBy.normal.some(sl => sl.some(([id]) => id === c.id));
 // A card that no pack holds is retired; every card is in a pack now.
 CARDS.forEach(c => { c.retired = !PACKS.some(pk => inPack(pk, c)); });
 const LIVE = CARDS.filter(c => !c.retired);
@@ -1970,7 +2064,7 @@ const imgOf = (card, fx, small) => `cards/${small ? "s/" : ""}${card.id}${fx ? "
    4. STATE AND ECONOMY. Everything lives in this browser.
    ========================================================================== */
 const KEY = "stixx-first-print-v1";
-const fresh = () => ({ coins: START, vault: [], favs: [], serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, pack: "fp", openN: 1, freePacks: 1, paid: {}, paidSeen: {}, uid: rid(16), ref: { code: "", by: "", n: 0, act: 0 }, fair: null, rescueAt: 0, streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], opens: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0, free: 0, bought: 0 } });
+const fresh = () => ({ coins: START, vault: [], favs: [], styles: {}, serials: {}, hist: [], alertAt: {}, seen: {}, seenIntro: false, ageOK: false, pack: "fp", openN: 1, freePacks: 1, paid: {}, paidSeen: {}, uid: rid(16), ref: { code: "", by: "", n: 0, act: 0 }, fair: null, rescueAt: 0, streak: { n: 0, last: "", freezes: 0, best: 0 }, lastSeen: 0, tg: {}, mute: false, lim: { packs: 0, breakUntil: 0 }, packLog: [], opens: [], found: {}, foundFx: {}, rank: 0, s: { packs: 0, spent: 0, sold: 0, best: 0, realized: 0, added: 0, free: 0, bought: 0 } });
 let state = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s.coins === "number") state = Object.assign(fresh(), s, { s: Object.assign(fresh().s, s.s || {}) }); } catch (e) {}
 // cards that no pack holds any more (the roster was cleaned up) go back as the play money they cost, so an old save never meets a card that is not there
@@ -2260,7 +2354,7 @@ const Fair = (() => {
   const LOG = 60;
   const mk = () => { const seed = rid(16); return { seed, commit: sha256hex(seed), nonce: 0, epoch: 1 }; };
   const F = () => state.fair || (state.fair = { cs: rid(5).toUpperCase(), local: mk(), srv: null, log: [], past: [] });
-  const cardsOf = (pk, hex) => digestU(hex, pk.slots.length).map((u, i) => BY_ID[pickU(pk.slots[i], u)]);
+  const cardsOf = (pk, hex, st) => { const sl = pk.slotsBy[st] || pk.slotsBy.normal; return digestU(hex, sl.length).map((u, i) => BY_ID[pickU(sl[i], u)]); };
   // draw the cards for one pack
   async function next(pk, pick) {
     const f = F(); let hex = "", nonce = 0, epoch = "", mode = "local", commit = "";
@@ -2275,7 +2369,7 @@ const Fair = (() => {
   // same way, so every one of them has exactly the published odds. Nothing is made until you choose: take(i) gives you card i, and the log
   // keeps which one you took (k, of), so the draw can be checked against the seed like any other.
   // a legendary or better goes on the live feed: the server is told which draw it was, re-draws it itself, and lists it only if it checks out
-  const tell = (mode, pk, n, items) => { if (mode === "server" && items.some(c => RAR[BY_NO[c.no].rar].tier >= 4)) API.post("fair/hit", { uid: state.uid, n, pack: pk.id }).then(() => { if (typeof Live !== "undefined") Live.pull(true); }); };
+  const tell = (mode, pk, n, items) => { if (mode === "server" && items.some(c => RAR[BY_NO[c.no].rar].tier >= 4)) API.post("fair/hit", { uid: state.uid, n, pack: pk.id, style: (state.styles && state.styles[pk.id]) || "normal" }).then(() => { if (typeof Live !== "undefined") Live.pull(true); }); };
   const cardAt = (pk, hex, of, i) => BY_ID[pickU(pk.slots[0], digestU(hex, of)[i])];
   function ticket(pk, f, hex, nonce, epoch, mode, commit, of) {
     let done = false;
@@ -2285,7 +2379,7 @@ const Fair = (() => {
   }
   function settle(pk, f, hex, nonce, epoch, mode, commit) {
     const items = pullPack(pk, digestU(hex, pk.slots.length));
-    f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: items.map(c => BY_NO[c.no].id), t: Date.now() }); if (f.log.length > LOG) f.log.shift(); tell(mode, pk, nonce, items);
+    f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, st: (state.styles && state.styles[pk.id]) || "normal", d: hex, picks: items.map(c => BY_NO[c.no].id), t: Date.now() }); if (f.log.length > LOG) f.log.shift(); tell(mode, pk, nonce, items);
     return items;
   }
   // the cards for n packs with one request to the server (the same draws, in order, as n single requests would give)
@@ -2303,7 +2397,7 @@ const Fair = (() => {
   // check one logged draw against a revealed seed
   function check(entry, seed) {
     if (!seed) return null; const pk = PACK_BY[entry.pack]; if (!pk) return false;
-    const hex = hmacHex(seed, `${entry.cs}:${entry.n}`), cs = entry.of ? [cardAt(pk, hex, entry.of, entry.k).id] : cardsOf(pk, hex).map(c => c.id);
+    const hex = hmacHex(seed, `${entry.cs}:${entry.n}`), cs = entry.of ? [cardAt(pk, hex, entry.of, entry.k).id] : cardsOf(pk, hex, entry.st).map(c => c.id);
     return sha256hex(seed) === entry.c && hex === entry.d && cs.length === entry.picks.length && cs.every((id, i) => id === entry.picks[i]);
   }
   const seedFor = (f, entry) => { if (entry.mode === "local") { const p = f.past.find(x => x.e === entry.e); return p ? p.seed : entry.e === "L" + f.local.epoch ? f.local.seed : ""; } const p = f.past.find(x => x.e === entry.e); return p ? p.seed : ""; };
@@ -3787,6 +3881,7 @@ const Live = (() => {
    8g. THE SHELL: a menu, a title for every page, and two pages that hang off the tab bar: What's inside (a pack's best cards, its odds, the hits) and Rewards.
    Everything is drawn with text: box lines, brackets, block bars, glyphs for icons.
    ========================================================================== */
+const STYLE_NAME = { normal: "Normal", high: "High", max: "Max" };
 const Shell = (() => {
   const TITLES = { home: "Packs", collection: "Collection", rewards: "Rewards", profile: "Account", inside: "Inside", invite: "Invite", odds: "Odds", live: "Live", market: "Movers", limited: "Requiem" };
   function title(v) { const el = $("hTitle"); if (el) el.textContent = TITLES[v] || "STIXX"; if (typeof Glass !== "undefined") Glass.sync(v); }
@@ -3819,14 +3914,14 @@ const Shell = (() => {
   function text(pk) {
     const [lo, hi] = packRange(pk), q = s => $("tp").querySelector(s);
     q(".tp-name").textContent = pk.name + " Pack"; q(".tp-min b").textContent = lo / UNIT < 1 ? "$" + (lo / UNIT).toFixed(2) : money(lo).replace(/\.00$/, ""); q(".tp-big").textContent = money(hi).replace(/\.00$/, ""); q(".tp-buy span").textContent = buyLabel(pk); q(".tp-buy").style.setProperty("--pc", pk.col);
-    q(".tp-sub").textContent = `${LIVE.filter(c => inPack(pk, c)).length} cards`;
+    q("#tpStyle").textContent = STYLE_NAME[packStyleOf(pk.id)]; q(".tp-sub").textContent = `${LIVE.filter(c => inPack(pk, c)).length} cards`;
   }
   function build() {
     const tp = $("tp"); tp.innerHTML = `<div class="tp-car" id="tpCar">${PACKS.map((p, i) => `<div class="tp-s" data-i="${i}" style="--pc:${p.col}">${packHTML(p)}</div>`).join("")}</div>
       <h2 class="tp-name"></h2>
       <div class="tp-pills"><a class="tp-pill" href="#/inside"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.500 12S5.500 5 12 5s10.500 7 10.500 7-4 7-10.500 7S1.500 12 1.500 12Z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3.200" fill="currentColor"/></svg>What's inside</a><span class="tp-pill tp-sub">7 cards</span></div>
       <div class="tp-maxh"><i></i><span>Max Pull</span><i></i></div>
-      <div class="tp-row"><div class="tp-min"><small>Min Value</small><b>$0</b></div><div class="tp-big">$0</div><a class="tp-style" href="#/inside"><small>Pack style</small><b>Odds <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"/></svg></b></a></div>
+      <div class="tp-row"><div class="tp-min"><small>Min Value</small><b>$0</b></div><div class="tp-big">$0</div><button class="tp-style" data-pstyle type="button"><small>Pack style</small><b><span id="tpStyle">Normal</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"/></svg></b></button></div>
       <button class="tp-buy" data-open type="button"><span>Open</span></button>
       <p class="tp-fine">Play money only. Nothing is charged or paid out.</p>`;
     car = $("tpCar"); curIdx = -1;
@@ -3876,6 +3971,39 @@ const Glass = (() => {
   function sync(view) { const links = [...document.querySelectorAll("#btabs a")], i = links.findIndex(a => a.dataset.v === (TAB_OF[view] || view)); if (i >= 0) to(i, !ready); }
   addEventListener("resize", () => { if (ready) to(idx, true); });
   return { sync, to };
+})();
+
+
+/* ---- the pack style sheet: Normal, High or Max. Each one is a different, exactly solved table of odds for the same price, and every one returns the same 94.7% on average. ---- */
+const PackStyle = (() => {
+  const DESC = { normal: "Reliable packs, with results close to the average value of a pack.", high: "Bigger swings: fewer small cards, higher weight on the higher tiers.", max: "The biggest swings: no small fillers, the top cards at their likeliest." };
+  const COL = ["#8e939c", "#19c85a", "#3d83f0", "#a24bf0", "#e5484d", "#f5c518"], cache = {}; let sel = "normal", pkid = "";
+  const fmt$ = v => v >= 1000 ? "$" + Math.round(v).toLocaleString("en-US") : v >= 10 ? "$" + Math.round(v) : v >= 1 ? "$" + (Math.round(v * 100) / 100).toString().replace(/(\.\d)$/, "$10") : "$" + v.toFixed(2);
+  // what a whole pack is worth, in tiers of the price: worked out from the style's own tables with a fixed draw, so the numbers on screen never move
+  function odds(pk, st) {
+    const key = pk.id + st; if (cache[key]) return cache[key]; const price = packPrice(pk) / UNIT, top = Math.max(...pk.slotsBy[st].flat().map(([id]) => BY_ID[id].val)) / UNIT, M = Math.max(3.2, top / price * 1.25), g = Math.pow(M / 2, 1 / 3), edges = [0, .5, 1, 2, 2 * g, 2 * g * g, Infinity].map(m => m * price), n = 40000, cnt = new Array(6).fill(0); let s = 12345;
+    const rnd = () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }, sl = pk.slotsBy[st], tabs = sl.map(slot => { const t = slot.reduce((a, [, w]) => a + w, 0); return slot.map(([id, w]) => [BY_ID[id].val / UNIT, w / t]); });
+    for (let i = 0; i < n; i++) { let tot = 0; for (const tb of tabs) { let u = rnd(), k = 0; for (; k < tb.length - 1; k++) { u -= tb[k][1]; if (u < 0) break; } tot += tb[k][0]; } let b = 0; while (b < 5 && tot >= edges[b + 1]) b++; cnt[b]++; }
+    const lab = [`Under ${fmt$(edges[1])}`, `${fmt$(edges[1])} - ${fmt$(edges[2])}`, `${fmt$(edges[2])} - ${fmt$(edges[3])}`, `${fmt$(edges[3])} - ${fmt$(edges[4])}`, `${fmt$(edges[4])} - ${fmt$(edges[5])}`, `${fmt$(edges[5])} and up`];
+    const vals = [...new Set(sl.flat().map(([id]) => BY_ID[id].val))].map(v => v / UNIT);
+    return (cache[key] = { rows: cnt.map((c, i) => ({ l: lab[i], p: c / n, c: COL[i] })), lo: Math.min(...vals), hi: Math.max(...vals) });
+  }
+  function draw() {
+    const pk = PACK_BY[pkid], o = odds(pk, sel), mx = Math.max(...o.rows.map(r => r.p)), pct = p => { const v = p * 100; return (v >= 10 ? v.toFixed(1) : v >= 1 ? v.toFixed(1) : v.toFixed(1)).replace(/\.0$/, "") + "%"; };
+    $("psBody").innerHTML = `<div class="ps-head"><span class="ps-ic" style="--pc:${pk.col}"></span><div><h2>${STYLE_NAME[sel]}</h2><p>${DESC[sel]}</p></div><button class="ps-x" data-psclose aria-label="Close">×</button></div>
+      <div class="ps-ch"><i></i><span>Choose your pack style</span><i></i></div>
+      <div class="ps-pills">${["normal", "high", "max"].map(k => `<button class="${k === sel ? "on" : ""}" data-psel="${k}" type="button">${STYLE_NAME[k]}</button>`).join("")}</div>
+      <h4 class="ps-h">Estimated Payout Odds:</h4>
+      <div class="ps-odds">${o.rows.map(r => `<div class="ps-row"><span class="ps-l">${r.l}</span><span class="ps-b"><i style="width:${Math.max(3, r.p / mx * 100).toFixed(1)}%;--c:${r.c}"></i></span><span class="ps-p">${pct(r.p)}</span></div>`).join("")}</div>
+      <div class="ps-mm"><div><small>Min Value</small><b>${fmt$(o.lo)}</b></div><i class="ps-dots"></i><div><b>${fmt$(o.hi)}</b><small>Max Pull</small></div></div>
+      <p class="ps-fine">What a whole pack of seven cards is worth, in steps of the pack's price. Worked out exactly from this style's odds. Every style returns 94.7% on average, so no style is better value: High and Max swing more. Play money only.</p>
+      <button class="ps-apply" data-psapply type="button" style="--pc:${pk.col}">Apply</button>`;
+  }
+  function open() { pkid = state.pack; sel = packStyleOf(pkid); const pk = PACK_BY[pkid]; if (!pk) return; $("psheet").hidden = false; $("psScrim").hidden = false; draw(); document.body.classList.add("sheet-open"); }
+  function close() { $("psheet").hidden = true; $("psScrim").hidden = true; document.body.classList.remove("sheet-open"); }
+  function pick(k) { if (STYLE_NAME[k]) { sel = k; draw(); } }
+  function apply() { state.styles = state.styles || {}; state.styles[pkid] = sel; persist(); close(); Shell.home(); if (typeof renderHome === "function") renderHome(); toast(`${STYLE_NAME[sel]} style on`); buzz(10); }
+  return { open, close, pick, apply };
 })();
 
 addEventListener("hashchange", () => Shell.menu(false));
@@ -5724,6 +5852,10 @@ document.addEventListener("click", e => {
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
+  if (t.hasAttribute("data-pstyle") || (t.closest && t.closest("[data-pstyle]"))) { PackStyle.open(); return; }
+  if (t.hasAttribute("data-psclose")) { PackStyle.close(); return; }
+  if (t.dataset.psel) { PackStyle.pick(t.dataset.psel); return; }
+  if (t.hasAttribute("data-psapply")) { PackStyle.apply(); return; }
   if (t.id === "menuBtn" || (t.closest && t.closest("#menuBtn"))) { Shell.menu(); return; }
   if (t.id === "scrim") { Shell.menu(false); return; }
   if (t.dataset.dpack) { if (PACK_BY[t.dataset.dpack]) { state.pack = t.dataset.dpack; persist(); } Shell.menu(false); if (location.hash !== "#/" && location.hash !== "") location.hash = "#/"; else renderHome(); setTimeout(() => Shell.go(PACKS.findIndex(p => p.id === state.pack)), 60); return; }

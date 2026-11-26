@@ -25,8 +25,8 @@ META = {'fp': ('First Print', 'Stick figures made of text, from a frog in a hat 
 rows = []; RP = {p['pack']: p['rare'] for p in roster}
 for pid in ['fp', 'ms', 'ec', 'td', 'sg']:
     name, blurb, col, scene, price = META[pid]
-    sl = ',\n      '.join('[' + ', '.join('["%s", %s]' % (c, '%g' % w) for c, w in x) + ']' for x in slots[pid])
-    rows.append('  { id: "%s", name: "%s", blurb: "%s", price: %d, min: %d, max: %d, n: 7, col: "%s", scene: "%s",\n    slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of %d cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],\n    slots: [\n      %s\n    ] }' % (pid, name, blurb, price, price, price, col, scene, len(RP[pid]), sl))
+    sl = ',\n      '.join(name_ + ': [' + ',\n        '.join('[' + ', '.join('["%s", %s]' % (c, '%g' % w) for c, w in x) + ']' for x in slots[pid][name_]) + ']' for name_ in ('normal', 'high', 'max'))
+    rows.append('  { id: "%s", name: "%s", blurb: "%s", price: %d, min: %d, max: %d, n: 7, col: "%s", scene: "%s",\n    slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of %d cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],\n    slotsBy: {\n      %s\n    },\n    get slots() { return this.slotsBy[packStyleOf(this.id)]; } }' % (pid, name, blurb, price, price, price, col, scene, len(RP[pid]), sl))
 a = s.index('const PACKS = ['); b = s.index('const RARE_SLOT')
 s = s[:a] + 'const PACKS = [\n  // Five packs that share the twelve commons as fillers (cards 1 to 4, 6 and 7); card 5 is the rare slot, a window on the ladder of rare cards\n  // that starts higher up in the dearer packs. A dearer pack\'s rare slot starts higher up the ladder. Every pack returns 94.7% on average.\n' + ',\n'.join(rows) + '\n];\n' + s[b:]
 open(P, 'w').write(s); print(len(new), 'cards added')

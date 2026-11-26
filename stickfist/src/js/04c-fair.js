@@ -54,7 +54,7 @@ const Fair = (() => {
   const LOG = 60;
   const mk = () => { const seed = rid(16); return { seed, commit: sha256hex(seed), nonce: 0, epoch: 1 }; };
   const F = () => state.fair || (state.fair = { cs: rid(5).toUpperCase(), local: mk(), srv: null, log: [], past: [] });
-  const cardsOf = (pk, hex) => digestU(hex, pk.slots.length).map((u, i) => BY_ID[pickU(pk.slots[i], u)]);
+  const cardsOf = (pk, hex, st) => { const sl = pk.slotsBy[st] || pk.slotsBy.normal; return digestU(hex, sl.length).map((u, i) => BY_ID[pickU(sl[i], u)]); };
   // draw the cards for one pack
   async function next(pk, pick) {
     const f = F(); let hex = "", nonce = 0, epoch = "", mode = "local", commit = "";
@@ -69,7 +69,7 @@ const Fair = (() => {
   // same way, so every one of them has exactly the published odds. Nothing is made until you choose: take(i) gives you card i, and the log
   // keeps which one you took (k, of), so the draw can be checked against the seed like any other.
   // a legendary or better goes on the live feed: the server is told which draw it was, re-draws it itself, and lists it only if it checks out
-  const tell = (mode, pk, n, items) => { if (mode === "server" && items.some(c => RAR[BY_NO[c.no].rar].tier >= 4)) API.post("fair/hit", { uid: state.uid, n, pack: pk.id }).then(() => { if (typeof Live !== "undefined") Live.pull(true); }); };
+  const tell = (mode, pk, n, items) => { if (mode === "server" && items.some(c => RAR[BY_NO[c.no].rar].tier >= 4)) API.post("fair/hit", { uid: state.uid, n, pack: pk.id, style: (state.styles && state.styles[pk.id]) || "normal" }).then(() => { if (typeof Live !== "undefined") Live.pull(true); }); };
   const cardAt = (pk, hex, of, i) => BY_ID[pickU(pk.slots[0], digestU(hex, of)[i])];
   function ticket(pk, f, hex, nonce, epoch, mode, commit, of) {
     let done = false;
@@ -79,7 +79,7 @@ const Fair = (() => {
   }
   function settle(pk, f, hex, nonce, epoch, mode, commit) {
     const items = pullPack(pk, digestU(hex, pk.slots.length));
-    f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, d: hex, picks: items.map(c => BY_NO[c.no].id), t: Date.now() }); if (f.log.length > LOG) f.log.shift(); tell(mode, pk, nonce, items);
+    f.log.push({ mode, e: epoch, n: nonce, cs: f.cs, c: commit, pack: pk.id, st: (state.styles && state.styles[pk.id]) || "normal", d: hex, picks: items.map(c => BY_NO[c.no].id), t: Date.now() }); if (f.log.length > LOG) f.log.shift(); tell(mode, pk, nonce, items);
     return items;
   }
   // the cards for n packs with one request to the server (the same draws, in order, as n single requests would give)
@@ -97,7 +97,7 @@ const Fair = (() => {
   // check one logged draw against a revealed seed
   function check(entry, seed) {
     if (!seed) return null; const pk = PACK_BY[entry.pack]; if (!pk) return false;
-    const hex = hmacHex(seed, `${entry.cs}:${entry.n}`), cs = entry.of ? [cardAt(pk, hex, entry.of, entry.k).id] : cardsOf(pk, hex).map(c => c.id);
+    const hex = hmacHex(seed, `${entry.cs}:${entry.n}`), cs = entry.of ? [cardAt(pk, hex, entry.of, entry.k).id] : cardsOf(pk, hex, entry.st).map(c => c.id);
     return sha256hex(seed) === entry.c && hex === entry.d && cs.length === entry.picks.length && cs.every((id, i) => id === entry.picks[i]);
   }
   const seedFor = (f, entry) => { if (entry.mode === "local") { const p = f.past.find(x => x.e === entry.e); return p ? p.seed : entry.e === "L" + f.local.epoch ? f.local.seed : ""; } const p = f.past.find(x => x.e === entry.e); return p ? p.seed : ""; };

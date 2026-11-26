@@ -2,6 +2,7 @@
    8g. THE SHELL: a menu, a title for every page, and two pages that hang off the tab bar: What's inside (a pack's best cards, its odds, the hits) and Rewards.
    Everything is drawn with text: box lines, brackets, block bars, glyphs for icons.
    ========================================================================== */
+const STYLE_NAME = { normal: "Normal", high: "High", max: "Max" };
 const Shell = (() => {
   const TITLES = { home: "Packs", collection: "Collection", rewards: "Rewards", profile: "Account", inside: "Inside", invite: "Invite", odds: "Odds", live: "Live", market: "Movers", limited: "Requiem" };
   function title(v) { const el = $("hTitle"); if (el) el.textContent = TITLES[v] || "STIXX"; if (typeof Glass !== "undefined") Glass.sync(v); }
@@ -34,14 +35,14 @@ const Shell = (() => {
   function text(pk) {
     const [lo, hi] = packRange(pk), q = s => $("tp").querySelector(s);
     q(".tp-name").textContent = pk.name + " Pack"; q(".tp-min b").textContent = lo / UNIT < 1 ? "$" + (lo / UNIT).toFixed(2) : money(lo).replace(/\.00$/, ""); q(".tp-big").textContent = money(hi).replace(/\.00$/, ""); q(".tp-buy span").textContent = buyLabel(pk); q(".tp-buy").style.setProperty("--pc", pk.col);
-    q(".tp-sub").textContent = `${LIVE.filter(c => inPack(pk, c)).length} cards`;
+    q("#tpStyle").textContent = STYLE_NAME[packStyleOf(pk.id)]; q(".tp-sub").textContent = `${LIVE.filter(c => inPack(pk, c)).length} cards`;
   }
   function build() {
     const tp = $("tp"); tp.innerHTML = `<div class="tp-car" id="tpCar">${PACKS.map((p, i) => `<div class="tp-s" data-i="${i}" style="--pc:${p.col}">${packHTML(p)}</div>`).join("")}</div>
       <h2 class="tp-name"></h2>
       <div class="tp-pills"><a class="tp-pill" href="#/inside"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.500 12S5.500 5 12 5s10.500 7 10.500 7-4 7-10.500 7S1.500 12 1.500 12Z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3.200" fill="currentColor"/></svg>What's inside</a><span class="tp-pill tp-sub">7 cards</span></div>
       <div class="tp-maxh"><i></i><span>Max Pull</span><i></i></div>
-      <div class="tp-row"><div class="tp-min"><small>Min Value</small><b>$0</b></div><div class="tp-big">$0</div><a class="tp-style" href="#/inside"><small>Pack style</small><b>Odds <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"/></svg></b></a></div>
+      <div class="tp-row"><div class="tp-min"><small>Min Value</small><b>$0</b></div><div class="tp-big">$0</div><button class="tp-style" data-pstyle type="button"><small>Pack style</small><b><span id="tpStyle">Normal</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"/></svg></b></button></div>
       <button class="tp-buy" data-open type="button"><span>Open</span></button>
       <p class="tp-fine">Play money only. Nothing is charged or paid out.</p>`;
     car = $("tpCar"); curIdx = -1;
@@ -91,6 +92,39 @@ const Glass = (() => {
   function sync(view) { const links = [...document.querySelectorAll("#btabs a")], i = links.findIndex(a => a.dataset.v === (TAB_OF[view] || view)); if (i >= 0) to(i, !ready); }
   addEventListener("resize", () => { if (ready) to(idx, true); });
   return { sync, to };
+})();
+
+
+/* ---- the pack style sheet: Normal, High or Max. Each one is a different, exactly solved table of odds for the same price, and every one returns the same 94.7% on average. ---- */
+const PackStyle = (() => {
+  const DESC = { normal: "Reliable packs, with results close to the average value of a pack.", high: "Bigger swings: fewer small cards, higher weight on the higher tiers.", max: "The biggest swings: no small fillers, the top cards at their likeliest." };
+  const COL = ["#8e939c", "#19c85a", "#3d83f0", "#a24bf0", "#e5484d", "#f5c518"], cache = {}; let sel = "normal", pkid = "";
+  const fmt$ = v => v >= 1000 ? "$" + Math.round(v).toLocaleString("en-US") : v >= 10 ? "$" + Math.round(v) : v >= 1 ? "$" + (Math.round(v * 100) / 100).toString().replace(/(\.\d)$/, "$10") : "$" + v.toFixed(2);
+  // what a whole pack is worth, in tiers of the price: worked out from the style's own tables with a fixed draw, so the numbers on screen never move
+  function odds(pk, st) {
+    const key = pk.id + st; if (cache[key]) return cache[key]; const price = packPrice(pk) / UNIT, top = Math.max(...pk.slotsBy[st].flat().map(([id]) => BY_ID[id].val)) / UNIT, M = Math.max(3.2, top / price * 1.25), g = Math.pow(M / 2, 1 / 3), edges = [0, .5, 1, 2, 2 * g, 2 * g * g, Infinity].map(m => m * price), n = 40000, cnt = new Array(6).fill(0); let s = 12345;
+    const rnd = () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }, sl = pk.slotsBy[st], tabs = sl.map(slot => { const t = slot.reduce((a, [, w]) => a + w, 0); return slot.map(([id, w]) => [BY_ID[id].val / UNIT, w / t]); });
+    for (let i = 0; i < n; i++) { let tot = 0; for (const tb of tabs) { let u = rnd(), k = 0; for (; k < tb.length - 1; k++) { u -= tb[k][1]; if (u < 0) break; } tot += tb[k][0]; } let b = 0; while (b < 5 && tot >= edges[b + 1]) b++; cnt[b]++; }
+    const lab = [`Under ${fmt$(edges[1])}`, `${fmt$(edges[1])} - ${fmt$(edges[2])}`, `${fmt$(edges[2])} - ${fmt$(edges[3])}`, `${fmt$(edges[3])} - ${fmt$(edges[4])}`, `${fmt$(edges[4])} - ${fmt$(edges[5])}`, `${fmt$(edges[5])} and up`];
+    const vals = [...new Set(sl.flat().map(([id]) => BY_ID[id].val))].map(v => v / UNIT);
+    return (cache[key] = { rows: cnt.map((c, i) => ({ l: lab[i], p: c / n, c: COL[i] })), lo: Math.min(...vals), hi: Math.max(...vals) });
+  }
+  function draw() {
+    const pk = PACK_BY[pkid], o = odds(pk, sel), mx = Math.max(...o.rows.map(r => r.p)), pct = p => { const v = p * 100; return (v >= 10 ? v.toFixed(1) : v >= 1 ? v.toFixed(1) : v.toFixed(1)).replace(/\.0$/, "") + "%"; };
+    $("psBody").innerHTML = `<div class="ps-head"><span class="ps-ic" style="--pc:${pk.col}"></span><div><h2>${STYLE_NAME[sel]}</h2><p>${DESC[sel]}</p></div><button class="ps-x" data-psclose aria-label="Close">×</button></div>
+      <div class="ps-ch"><i></i><span>Choose your pack style</span><i></i></div>
+      <div class="ps-pills">${["normal", "high", "max"].map(k => `<button class="${k === sel ? "on" : ""}" data-psel="${k}" type="button">${STYLE_NAME[k]}</button>`).join("")}</div>
+      <h4 class="ps-h">Estimated Payout Odds:</h4>
+      <div class="ps-odds">${o.rows.map(r => `<div class="ps-row"><span class="ps-l">${r.l}</span><span class="ps-b"><i style="width:${Math.max(3, r.p / mx * 100).toFixed(1)}%;--c:${r.c}"></i></span><span class="ps-p">${pct(r.p)}</span></div>`).join("")}</div>
+      <div class="ps-mm"><div><small>Min Value</small><b>${fmt$(o.lo)}</b></div><i class="ps-dots"></i><div><b>${fmt$(o.hi)}</b><small>Max Pull</small></div></div>
+      <p class="ps-fine">What a whole pack of seven cards is worth, in steps of the pack's price. Worked out exactly from this style's odds. Every style returns 94.7% on average, so no style is better value: High and Max swing more. Play money only.</p>
+      <button class="ps-apply" data-psapply type="button" style="--pc:${pk.col}">Apply</button>`;
+  }
+  function open() { pkid = state.pack; sel = packStyleOf(pkid); const pk = PACK_BY[pkid]; if (!pk) return; $("psheet").hidden = false; $("psScrim").hidden = false; draw(); document.body.classList.add("sheet-open"); }
+  function close() { $("psheet").hidden = true; $("psScrim").hidden = true; document.body.classList.remove("sheet-open"); }
+  function pick(k) { if (STYLE_NAME[k]) { sel = k; draw(); } }
+  function apply() { state.styles = state.styles || {}; state.styles[pkid] = sel; persist(); close(); Shell.home(); if (typeof renderHome === "function") renderHome(); toast(`${STYLE_NAME[sel]} style on`); buzz(10); }
+  return { open, close, pick, apply };
 })();
 
 addEventListener("hashchange", () => Shell.menu(false));

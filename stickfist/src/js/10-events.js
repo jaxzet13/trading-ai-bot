@@ -25,6 +25,10 @@ document.addEventListener("click", e => {
   if (t.dataset.brk) { startBreak(+t.dataset.brk); return; }
   if (t.dataset.buy) { Shop.modal(); return; }
   if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
+  if (t.hasAttribute("data-pstyle") || (t.closest && t.closest("[data-pstyle]"))) { PackStyle.open(); return; }
+  if (t.hasAttribute("data-psclose")) { PackStyle.close(); return; }
+  if (t.dataset.psel) { PackStyle.pick(t.dataset.psel); return; }
+  if (t.hasAttribute("data-psapply")) { PackStyle.apply(); return; }
   if (t.id === "menuBtn" || (t.closest && t.closest("#menuBtn"))) { Shell.menu(); return; }
   if (t.id === "scrim") { Shell.menu(false); return; }
   if (t.dataset.dpack) { if (PACK_BY[t.dataset.dpack]) { state.pack = t.dataset.dpack; persist(); } Shell.menu(false); if (location.hash !== "#/" && location.hash !== "") location.hash = "#/"; else renderHome(); setTimeout(() => Shell.go(PACKS.findIndex(p => p.id === state.pack)), 60); return; }
