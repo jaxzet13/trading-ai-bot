@@ -16,3 +16,16 @@ the edge model its extra ZEC bets made about +9c each on unseen days, so the mod
 None of the gap features helps. Weaker shrinkage gives more bets at a slightly lower edge (more dollars a day, the
 same t, a bigger drawdown): it acts like a lower threshold and was tuned on the test days themselves, so it is not
 adopted. The ZEC rule stays as a separate rule next to the model.
+
+## Cross-coin consensus (Nov 26)
+
+`consensus_test.py`: the other coins' average 5-minute move and average distance from the strike, same minute.
+
+| variant | bets a day | per bet | a day | t | max drawdown |
+|---|---|---|---|---|---|
+| live model | 41.0 | +6.7c | $2.76 | 6.05 | $7.84 |
+| + others' 5-minute move | 43.8 | +6.4c | $2.81 | 6.07 | $9.78 |
+| + others' distance | 43.0 | +6.7c | $2.86 | 6.01 | $6.08 |
+| + both | 44.7 | +6.7c | $2.99 | 6.01 | $8.16 |
+
+A few percent more dollars a day with no change in t: inside the noise. Not adopted.
