@@ -1,0 +1,265 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>STIXX: idle animations</title>
+<style>
+@font-face { font-family: "JetBrains Mono"; src: local("JetBrains Mono"), local("DejaVu Sans Mono"); }
+html, body { margin: 0; background: #000; overflow: hidden; }
+#stage { position: relative; width: 540px; height: 960px; overflow: hidden; background: #07070c; font-family: "JetBrains Mono", "DejaVu Sans Mono", ui-monospace, monospace; }
+/* top: the picture, played as letters. bottom: the code that plays it */
+#top { position: absolute; left: 0; top: 0; width: 540px; height: 548px; background: #07070c; }
+#cv { position: absolute; left: 0; top: 0; width: 540px; height: 548px; }
+#code { position: absolute; left: 0; right: 0; top: 548px; bottom: 0; background: #0f1220; border-top: 1px solid #23273a; }
+.bar { height: 26px; background: #171a29; display: flex; align-items: center; gap: 7px; padding: 0 11px; color: #8d93ab; font-size: 10.5px; border-bottom: 1px solid #23273a; }
+.bar .d { width: 10px; height: 10px; border-radius: 50%; } .bar .t { margin-left: 16px; }
+#vw { position: absolute; left: 0; right: 0; top: 26px; bottom: 0; overflow: hidden; }
+#lines { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
+.cl { display: flex; height: 12.4px; line-height: 12.4px; font-size: 8.7px; color: #cdd2e6; }
+.cl .cn { width: 26px; flex: none; text-align: right; padding-right: 9px; color: #4b5170; } .cl .ct { white-space: pre; }
+.cl.hl { background: rgba(120,150,255,.14); box-shadow: inset 2px 0 0 #7aa2ff; } .cl.hl .cn { color: #b4bfff; }
+.tk { color: #bb9af7; } .ts { color: #e0af68; } .tc { color: #565f89; font-style: italic; } .tf { color: #7aa2f7; } .tn { color: #ff9e64; } .tb { color: #7dcfff; }
+/* the end: the logo and a search bar */
+#end { position: absolute; inset: 0; background: #0b0c14; display: grid; place-content: center; justify-items: center; gap: 22px; opacity: 0; }
+#end .lg { width: 92px; height: 92px; } #end .nm { font-weight: 800; font-size: 46px; letter-spacing: .2em; color: #f5f3ee; padding-left: .2em; margin-top: -6px; }
+#end .sb { display: flex; align-items: center; gap: 10px; width: 330px; height: 46px; background: #fff; border-radius: 12px; box-shadow: 0 0 0 3px #0b0c14, -3px 0 0 3px #25f4ee, 3px 0 0 3px #fe2c55; padding: 0 12px; box-sizing: border-box; color: #111; font-size: 16px; font-weight: 600; }
+#end .sb svg { width: 20px; height: 20px; flex: none; } #end .sb span { flex: 1; } #end .sb .k { width: 26px; height: 26px; background: #000; border-radius: 6px; flex: none; display: grid; place-content: center; }
+#end .fine { position: absolute; bottom: 34px; left: 30px; right: 30px; text-align: center; font-size: 10.5px; color: #7d8190; line-height: 1.5; }
+#fx { position: absolute; inset: 0; pointer-events: none; } #grain { position: absolute; inset: 0; mix-blend-mode: overlay; opacity: .06; }
+</style>
+<div id="stage">
+  <div id="top"><canvas id="cv" width="1080" height="1096"></canvas></div>
+  <div id="code"><div class="bar"><span class="d" style="background:#ff5f57"></span><span class="d" style="background:#febc2e"></span><span class="d" style="background:#28c840"></span><span class="t">alive.glsl  —  warp(): how each card moves</span></div><div id="vw"><div id="lines"></div></div></div>
+  <div id="end"><svg class="lg" viewBox="0 0 28 28"><rect x=".5" y=".5" width="27" height="27" rx="7.5" fill="#000" stroke="rgba(255,255,255,.2)"/><circle cx="14" cy="5.9" r="1.55" fill="#fff"/><path d="M8.2 9.8 19.8 21.4M19.8 9.8 8.2 21.4" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg><div class="nm">STIXX</div>
+    <div class="sb"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><span id="sbt"></span><i class="k"><svg viewBox="0 0 28 28" width="18" height="18"><circle cx="14" cy="5.9" r="1.55" fill="#fff"/><path d="M8.2 9.8 19.8 21.4M19.8 9.8 8.2 21.4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></i></div>
+    <div class="fine">your first pack is free. play money only, nothing is charged or paid out. 18+</div></div>
+  <div id="fx"><svg id="grain" width="540" height="960"><filter id="gf"><feTurbulence id="gt" type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="1"/><feColorMatrix type="saturate" values="0"/></filter><rect width="540" height="960" filter="url(#gf)"/></svg></div>
+</div>
+<script>
+const FPS = 30, DUR = 22, END0 = 19.2;
+const SCN = [["src/booster.jpg", 0.0, 3.2, "booster"], ["src/liftoff.jpg", 3.2, 6.4, "liftoff"], ["src/ronin.jpg", 6.4, 9.6, "ronin"], ["src/luna.jpg", 9.6, 12.8, "luna"], ["src/apogee.jpg", 12.8, 16.0, "apogee"], ["src/reaper.jpg", 16.0, 19.2, "reaper"]];
+const $ = id => document.getElementById(id), cl = (x, a = 0, b = 1) => x < a ? a : x > b ? b : x, eo = x => 1 - Math.pow(1 - cl(x), 3), eio = x => { x = cl(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const hash = (a, b) => { let h = Math.imul(a | 0, 374761393) ^ Math.imul(b | 0, 668265263); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+
+/* ---- the code (the real renderer, wrapped to fit) ---- */
+const SRC = `precision mediump float;
+varying vec2 v;
+uniform sampler2D tex;
+uniform float t,asp,chroma;
+uniform vec4 crop;
+uniform vec4 uc[6];
+uniform vec4 up[6];
+uniform float uk[6];
+float hash(vec2 q){
+    return fract(sin(dot(q,vec2(127.1,311.7)))*43758.5453);
+}
+float noise(vec2 q){
+    vec2 i=floor(q),f=fract(q);
+    f=f*f*(3.-2.*f);
+    return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),
+        f.x),f.y);
+}
+vec2 turn(vec2 o,vec2 c,float a){
+    vec2 d=o-c;
+    d.x*=asp;
+    float s=sin(a),k=cos(a);
+    d=vec2(d.x*k-d.y*s,d.x*s+d.y*k);
+    d.x/=asp;
+    return c+d;
+}
+vec2 warp(vec2 uv,float ph,out float gain){
+    vec2 o=uv;
+    gain=1.;
+    for(int i=0;
+    i<6;
+    i++){
+        float ty=uk[i];
+        if(ty<.5)continue;
+        vec2 c=uc[i].xy,r=uc[i].zw;
+        vec4 q=up[i];
+        float m=1.-smoothstep(.7,1.,length((uv-c)/r));
+        if(m<=0.)continue;
+        if(ty<1.5){
+            vec2 d=(o-c)/r;
+            float an=q.x*ph*m,s=sin(an),k=cos(an);
+            o=c+vec2(d.x*k-d.y*s,d.x*s+d.y*k)*r;
+        }
+        else if(ty<2.5){
+            o-=q.xy*ph*m;
+            o.x+=q.w*sin(uv.y*40.+t*6.)*m;
+        }
+        else if(ty<3.5){
+            o+=vec2(q.x*sin(uv.y*q.z+t*q.w),q.y*sin(uv.x*q.z+t*q.w))*m;
+        }
+        else if(ty<4.5){
+            o=c+(o-c)*(1.-q.x*sin(t*q.y)*m);
+            gain+=q.z*(.5+.5*sin(t*q.y+q.w))*m;
+        }
+        else if(ty<5.5){
+            vec2 d=uv-c;
+            d.x*=asp;
+            gain+=q.x*sin(atan(d.y,d.x)*q.y+t*q.z)*m;
+        }
+        else if(ty<6.5){
+            float b=floor(uv.y*q.y),tk=floor(t*q.z);
+            if(hash(vec2(b,tk))>.86)o.x+=(hash(vec2(tk,b))-.5)*2.*q.x*m;
+        }
+        else if(ty<7.5){
+            gain+=q.x*sin(t*q.y+hash(floor(uv/q.z))*6.2832)*m;
+        }
+        else if(ty<8.5){
+            float s=1.+q.x*sin(t*q.y)*m;
+            o.x=c.x+(o.x-c.x)/s;
+            o.y+=q.z*sin(t*q.y+1.2)*m*abs(uv.x-c.x)/r.x;
+        }
+        else if(ty<9.5){
+            o-=vec2(q.x*sin(t*q.z),q.y*sin(t*q.z+q.w))*m;
+        }
+        else if(ty<10.5){
+            o+=(vec2(noise(uv*q.y+t*q.z),noise(uv*q.y+7.3-t*q.z))-.5)*2.*q.x*m;
+        }
+        else if(ty<11.5){
+            float tk=floor(t*q.y);
+            gain+=q.x*step(q.z,hash(vec2(tk,3.7)))*(.6+.4*hash(vec2(tk,floor(t*30.))))*m;
+        }
+        else{
+            o=turn(o,c+q.zw,q.x*sin(t*q.y)*m);
+        }
+    }
+    return o;
+}
+void main(){
+    float T=3.2,a=fract(t/T),b=fract(t/T+.5),ga,gb;
+    vec2 ua=warp(v,(a-.5)*T,ga),ub=warp(v,(b-.5)*T,gb);
+    float w=1.-abs(2.*a-1.);
+    vec3 ca=texture2D(tex,crop.xy+ua*crop.zw).rgb,cb=texture2D(tex,crop.xy+ub*crop.zw).rgb,
+        col=mix(cb,ca,w);
+    if(chroma>0.){
+        float k=chroma*(.6+.4*sin(t*11.));
+        col.r=mix(texture2D(tex,crop.xy+(ub+vec2(k,0.))*crop.zw).r,texture2D(tex,
+            crop.xy+(ua+vec2(k,0.))*crop.zw).r,w);
+    }
+    float l=dot(col,vec3(.299,.587,.114));
+    col*=1.+(ga-1.)*smoothstep(.05,.32,l);
+    gl_FragColor=vec4(col,1.);
+}`;
+const KW = new Set("for if else return continue void uniform varying attribute precision const out in".split(" ")), BI = new Set("float vec2 vec3 vec4 int sampler2D mat2 sin cos abs floor fract mix smoothstep length atan step texture2D dot hash noise turn".split(" "));
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+function hl(line) {
+  let out = "", i = 0; const n = line.length;
+  while (i < n) {
+    const ch = line[i];
+    if (ch === "/" && line[i + 1] === "/") { out += `<span class="tc">${esc(line.slice(i))}</span>`; break; }
+    if (ch === "'" || ch === '"') { let j = i + 1; while (j < n && line[j] !== ch) { if (line[j] === "\\") j++; j++; } out += `<span class="ts">${esc(line.slice(i, j + 1))}</span>`; i = j + 1; continue; }
+    if (/[0-9]/.test(ch)) { let j = i; while (j < n && /[0-9.]/.test(line[j])) j++; out += `<span class="tn">${line.slice(i, j)}</span>`; i = j; continue; }
+    if (/[A-Za-z_]/.test(ch)) { let j = i; while (j < n && /[A-Za-z_0-9]/.test(line[j])) j++; const w = line.slice(i, j); let c = ""; if (KW.has(w)) c = "tk"; else if (BI.has(w)) c = "tb"; else if (line[j] === "(") c = "tf"; out += c ? `<span class="${c}">${w}</span>` : w; i = j; continue; }
+    out += esc(ch); i++;
+  }
+  return out;
+}
+const LN = SRC.split("\n"), FIRST = 54; $("lines").innerHTML = LN.map((t, k) => `<div class="cl"><span class="cn">${FIRST + k}</span><span class="ct">${hl(t)}</span></div>`).join("");
+const ROWS = [...$("lines").children];
+
+/* ---- the picture, played as letters: a frame is shrunk to one pixel per cell, and each cell becomes the glyph whose ink matches it ---- */
+const RAMP = " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
+const CW = 4.6, CH = 8.0, W = 540, H = 548, COLS = Math.floor(W / CW), RWS = Math.floor(H / CH), cv = $("cv"), g = cv.getContext("2d"), off = document.createElement("canvas"); off.width = COLS; off.height = RWS; const og = off.getContext("2d", { willReadFrequently: true });
+g.scale(2, 2); g.textAlign = "center"; g.textBaseline = "middle"; g.font = `bold ${CH * 1.02}px "DejaVu Sans Mono", monospace`;
+const IM = SCN.map(s => { const i = new Image(); i.src = s[0]; return i; });
+const GW = 500, GH = 606, glc = document.createElement("canvas"); glc.width = GW; glc.height = GH;
+const gl = glc.getContext("webgl", { antialias: false, alpha: false, preserveDrawingBuffer: true });
+const SW = 1, FL = 2, WV = 3, PU = 4, RY = 5, GL = 6, TW = 7, FP = 8, BO = 9, HZ = 10, FK = 11, RK = 12;
+const SCENES = {
+    // First Print
+    tempest:   [[SW, .5, .2, .48, .2, .28], [WV, .5, .62, .2, .42, .010, 0, 16, 3.2], [FK, .5, .5, .6, .6, .55, 7, .82], [HZ, .5, .2, .5, .22, .006, 6, .5], [TW, .5, .5, .6, .6, .18, 5, .02]],                      // the funnel's top turns, the column twists, lightning
+    surge:     [[FL, .68, .26, .3, .24, -.035, .03], [WV, .5, .86, .6, .16, .008, 0, 34, 2.6], [PU, .5, .6, .7, .6, .008, .8, .06], [HZ, .62, .3, .34, .26, .006, 9, .9], [TW, .7, .25, .3, .25, .15, 6, .015]],            // foam pours off the lip; the sea under it rolls
+    phantom:   [[FP, .5, .3, .52, .26, .11, 1.5, .022], [BO, .5, .62, .2, .2, 0, .004, 1.5], [TW, .5, .4, .6, .5, .22, 3, .02], [PU, .5, .33, .3, .3, 0, 1.5, .1]],                                                     // the wings beat
+    kraken:    [[WV, .5, .4, .6, .38, .011, 0, 8, 1.4], [WV, .5, .9, .6, .14, .006, 0, 60, 3], [PU, .5, .8, .09, .07, 0, 7, .35], [BO, .5, .84, .1, .06, 0, .004, 1.6], [TW, .4, .45, .5, .4, .2, 2.2, .03]],            // the arms sway, the water ripples, the boat's lamp gutters
+    colossus:  [[PU, .5, .48, .6, .55, .007, .6, .07], [RY, .5, -.05, .7, .7, .16, 7, .25], [TW, .5, .5, .7, .7, .22, 4, .008], [HZ, .5, .85, .6, .2, .003, 10, .6]],                                                   // the face breathes under moving light; the sand shimmers
+    leviathan: [[BO, .55, .38, .5, .34, .004, .012, .7], [WV, .55, .38, .5, .3, 0, .007, 7, 1.2], [HZ, .5, .5, .7, .7, .004, 5, .35], [TW, .5, .5, .7, .7, .12, 2.5, .03]],                                           // the whale swims through the cloud
+    null:      [[PU, .5, .42, .46, .4, .028, 1.1, .22], [RY, .5, .42, .5, .45, .2, 4, .5], [WV, .5, .8, .25, .22, .007, 0, 11, 1.3], [TW, .5, .42, .5, .45, .2, 5, .015]],                                              // the star pulses about its eye
+    shogun:    [[RY, .5, .45, .75, .6, .2, 9, .3], [PU, .5, .4, .7, .5, .006, .7, .1], [WV, .5, .93, .6, .08, .005, 0, 45, 2], [HZ, .5, .35, .6, .4, .003, 7, .4], [TW, .5, .4, .7, .5, .1, 3, .012]],                   // shafts of light turn over the kneeling figure; the grass stirs
+    ronin:     [[WV, .27, .36, .22, .07, 0, .013, 24, 4.5], [FK, .8, .3, .3, .4, .6, 6, .84], [TW, .5, .5, .75, .75, .22, 9, .012], [HZ, .8, .4, .25, .4, .005, 8, .8], [BO, .49, .5, .08, .2, .002, 0, 1.3]],            // the scarf streams, the storm flashes, the rain falls
+    titan:     [[PU, .5, .5, .6, .6, .008, .55, .08], [TW, .5, .5, .7, .7, .35, 3.5, .01], [BO, .45, .72, .26, .18, .004, .007, .8], [HZ, .5, .5, .6, .6, .0035, 9, .5], [RY, .5, .05, .6, .6, .14, 5, .2]],              // the statue's hand moves; dust hangs in the light
+    grimm:     [[GL, .5, .5, .8, .8, .035, 36, 8], [HZ, .5, .3, .16, .36, .006, 9, 1.2], [PU, .5, .6, .2, .12, 0, 2.2, .25], [WV, .5, .9, .6, .14, .007, 0, 50, 3], [TW, .5, .3, .2, .35, .2, 6, .02]],                   // the tape slips; the book glows
+    reaper:    [[FL, .5, .24, .62, .27, .014, 0], [WV, .5, .82, .62, .2, .008, 0, 70, 2.5], [PU, .5, .6, .62, .07, 0, 1.1, .22], [HZ, .5, .25, .6, .26, .004, 5, .4], [RK, .56, .66, .1, .14, .02, 1]],                   // the burning sky drifts; its reflection ripples
+    umbra:     [[RY, .5, .36, .75, .6, .24, 14, .35], [PU, .5, .36, .55, .45, .012, .9, .16], [TW, .5, .6, .75, .6, .3, 4, .012], [HZ, .5, .36, .55, .45, .004, 8, .6]],                                                // the corona's rays turn and flare
+    // Moonshot
+    ignition:  [[FL, .24, .86, .3, .16, -.03, -.012, 0, .004], [FL, .76, .86, .3, .16, .03, -.012, 0, .004], [HZ, .5, .86, .6, .16, .008, 9, 1.6], [FK, .5, .85, .6, .17, .2, 14, .5], [BO, .5, .38, .14, .4, .0018, .0012, 41, 1]],   // fire rolls out both ways; the rocket shudders
+    console:   [[TW, .5, .5, .8, .8, .45, 2.6, .035], [GL, .5, .5, .8, .8, .006, 60, 6], [WV, .13, .34, .1, .06, 0, .012, 70, 7], [PU, .5, .33, .3, .14, 0, 2, .14], [BO, .5, .6, .12, .1, 0, .003, 1.4]],                 // lights blink, a trace runs, the screens flicker
+    suit:      [[RK, .72, .55, .26, .45, .045, 1.1, 0, -.3], [BO, .3, .18, .22, .16, 0, .007, 1.3], [TW, .5, .5, .8, .8, .1, 3, .02]],                                                                                  // the suit swings on its hanger; the helmet is lifted
+    gantry:    [[TW, .72, .5, .14, .48, .5, 3, .022], [FL, .4, .82, .3, .12, 0, -.02, 0, .003], [HZ, .4, .82, .34, .14, .006, 8, 1], [PU, .4, .4, .1, .4, 0, 3, .06], [TW, .4, .85, .5, .12, .3, 5, .02]],                // the tower's lights blink; steam rises off the pad
+    liftoff:   [[FL, .5, .55, .17, .24, 0, .045, 0, .004], [HZ, .5, .85, .52, .17, .012, 5, .7], [PU, .5, .88, .55, .18, .012, .9, .05], [BO, .5, .2, .12, .2, .0022, .0015, 37, 1], [FK, .5, .4, .15, .12, .25, 16, .45]],  // the plume pours down, the cloud billows, the rocket shakes
+    booster:   [[FL, .5, .72, .1, .3, 0, .05, 0, .004], [FL, .18, .75, .11, .26, -.008, .045, 0, .004], [FL, .82, .75, .11, .26, .008, .045, 0, .004], [RK, .32, .4, .1, .14, .05, .8], [RK, .68, .4, .1, .14, -.05, .8], [BO, .5, .25, .08, .25, .002, .001, 39, 1]],   // three plumes; the boosters peel away
+    apogee:    [[RK, .45, .5, .28, .32, .09, .5], [BO, .45, .5, .28, .32, .006, .014, .7], [FL, .5, .92, .62, .13, .02, 0], [RY, .86, .07, .32, .26, .3, 10, .6], [TW, .3, .3, .5, .4, .5, 2, .02], [BO, .9, .55, .14, .12, .004, 0, .5, 1]],   // the figure tumbles, weightless; the Earth turns below; the sun flares
+    luna:      [[WV, .83, .32, .13, .1, 0, .012, 30, 3.5], [FL, .3, .38, .3, .24, .012, 0], [TW, .5, .75, .6, .25, .2, 3, .02], [BO, .5, .45, .1, .2, 0, .003, 1.2], [HZ, .3, .38, .3, .24, .003, 6, .3]],                // the flag waves; the Earth turns behind
+    mars:      [[FL, .5, .5, .22, .3, 0, .03, 0, .003], [HZ, .5, .5, .5, .5, .005, 7, .6], [TW, .5, .5, .75, .75, .35, 6, .01], [PU, .55, .1, .12, .1, 0, 1, .18]],                                                      // mist runs down the canyon; the dust never settles
+    horizon:   [[SW, .5, .38, .5, .31, .26], [GL, .5, .5, .8, .8, .014, 28, 5], [PU, .5, .37, .5, .3, .006, 1.3, .14], [WV, .5, .92, .3, .1, .008, 0, 60, 3], [HZ, .5, .6, .4, .12, .004, 8, 1]],                        // the disc turns; the tape slips
+  };
+const CHROMA = { grimm: .004, horizon: .0035, console: .002 };
+const VS = "attribute vec2 p;varying vec2 v;void main(){v=vec2(p.x*.5+.5,.5-p.y*.5);gl_Position=vec4(p,0.,1.);}";
+const FS = `precision mediump float;varying vec2 v;uniform sampler2D tex;uniform float t,asp,chroma;uniform vec4 crop;uniform vec4 uc[6];uniform vec4 up[6];uniform float uk[6];
+float hash(vec2 q){return fract(sin(dot(q,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 q){vec2 i=floor(q),f=fract(q);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}
+vec2 turn(vec2 o,vec2 c,float a){vec2 d=o-c;d.x*=asp;float s=sin(a),k=cos(a);d=vec2(d.x*k-d.y*s,d.x*s+d.y*k);d.x/=asp;return c+d;}
+vec2 warp(vec2 uv,float ph,out float gain){vec2 o=uv;gain=1.;
+ for(int i=0;i<6;i++){float ty=uk[i];if(ty<.5)continue;vec2 c=uc[i].xy,r=uc[i].zw;vec4 q=up[i];float m=1.-smoothstep(.7,1.,length((uv-c)/r));if(m<=0.)continue;
+  if(ty<1.5){vec2 d=(o-c)/r;float an=q.x*ph*m,s=sin(an),k=cos(an);o=c+vec2(d.x*k-d.y*s,d.x*s+d.y*k)*r;}
+  else if(ty<2.5){o-=q.xy*ph*m;o.x+=q.w*sin(uv.y*40.+t*6.)*m;}
+  else if(ty<3.5){o+=vec2(q.x*sin(uv.y*q.z+t*q.w),q.y*sin(uv.x*q.z+t*q.w))*m;}
+  else if(ty<4.5){o=c+(o-c)*(1.-q.x*sin(t*q.y)*m);gain+=q.z*(.5+.5*sin(t*q.y+q.w))*m;}
+  else if(ty<5.5){vec2 d=uv-c;d.x*=asp;gain+=q.x*sin(atan(d.y,d.x)*q.y+t*q.z)*m;}
+  else if(ty<6.5){float b=floor(uv.y*q.y),tk=floor(t*q.z);if(hash(vec2(b,tk))>.86)o.x+=(hash(vec2(tk,b))-.5)*2.*q.x*m;}
+  else if(ty<7.5){gain+=q.x*sin(t*q.y+hash(floor(uv/q.z))*6.2832)*m;}
+  else if(ty<8.5){float s=1.+q.x*sin(t*q.y)*m;o.x=c.x+(o.x-c.x)/s;o.y+=q.z*sin(t*q.y+1.2)*m*abs(uv.x-c.x)/r.x;}
+  else if(ty<9.5){o-=vec2(q.x*sin(t*q.z),q.y*sin(t*q.z+q.w))*m;}
+  else if(ty<10.5){o+=(vec2(noise(uv*q.y+t*q.z),noise(uv*q.y+7.3-t*q.z))-.5)*2.*q.x*m;}
+  else if(ty<11.5){float tk=floor(t*q.y);gain+=q.x*step(q.z,hash(vec2(tk,3.7)))*(.6+.4*hash(vec2(tk,floor(t*30.))))*m;}
+  else{o=turn(o,c+q.zw,q.x*sin(t*q.y)*m);}
+ }return o;}
+void main(){float T=3.2,a=fract(t/T),b=fract(t/T+.5),ga,gb;vec2 ua=warp(v,(a-.5)*T,ga),ub=warp(v,(b-.5)*T,gb);float w=1.-abs(2.*a-1.);
+ vec3 ca=texture2D(tex,crop.xy+ua*crop.zw).rgb,cb=texture2D(tex,crop.xy+ub*crop.zw).rgb,col=mix(cb,ca,w);
+ if(chroma>0.){float k=chroma*(.6+.4*sin(t*11.));col.r=mix(texture2D(tex,crop.xy+(ub+vec2(k,0.))*crop.zw).r,texture2D(tex,crop.xy+(ua+vec2(k,0.))*crop.zw).r,w);}
+ float l=dot(col,vec3(.299,.587,.114));col*=1.+(ga-1.)*smoothstep(.05,.32,l);gl_FragColor=vec4(col,1.);}`;
+const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
+const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW); const loc = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+const TEX = IM.map(() => null), U = n => gl.getUniformLocation(pr, n);
+function tex(k) { if (TEX[k]) return TEX[k]; const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, IM[k]); return (TEX[k] = t); }
+// the card's idle scene, at time t, drawn the way the app draws it
+function alive(k, t) {
+  const id = SCN[k][3], scene = SCENES[id], img = IM[k]; gl.bindTexture(gl.TEXTURE_2D, tex(k));
+  const uc = new Float32Array(24), up = new Float32Array(24), uk = new Float32Array(6); scene.slice(0, 6).forEach((e, i) => { uk[i] = e[0]; uc.set(e.slice(1, 5), i * 4); for (let q = 0; q < 4; q++) up[i * 4 + q] = e[5 + q] || 0; });
+  gl.uniform4fv(U("uc"), uc); gl.uniform4fv(U("up"), up); gl.uniform1fv(U("uk"), uk); gl.uniform1f(U("chroma"), CHROMA[id] || 0);
+  const ia = img.naturalWidth / img.naturalHeight, ca = GW / GH, crop = ia > ca ? [(1 - ca / ia) / 2, 0, ca / ia, 1] : [0, (1 - ia / ca) / 2, 1, ia / ca];
+  gl.viewport(0, 0, GW, GH); gl.uniform4fv(U("crop"), crop); gl.uniform1f(U("asp"), ca); gl.uniform1f(U("t"), t); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+function frame(t) {
+  og.fillStyle = "#000"; og.fillRect(0, 0, COLS, RWS); og.imageSmoothingQuality = "high";
+  let name = "";
+  SCN.forEach((s, k) => {
+    const [, a, b, id] = s, u = (t - a) / (b - a); if (u < 0 || u >= 1 || !IM[k].complete) return;
+    alive(k, 1.2 + (t - a));                                                                   // each card's own idle animation
+    const ih = RWS * .96, iw = ih * GW / GH * (CH / CW), cx = COLS / 2, top = RWS * .02; og.globalAlpha = Math.min(sm01(u / .07), 1 - sm01((u - .93) / .07)); og.drawImage(glc, cx - iw / 2, top, iw, ih); og.globalAlpha = 1; name = id;
+  });
+  const d = og.getImageData(0, 0, COLS, RWS).data;
+  g.fillStyle = "#07070c"; g.fillRect(0, 0, W, H);
+  for (let y = 0; y < RWS; y++) for (let x = 0; x < COLS; x++) {
+    const p = (y * COLS + x) * 4, r = d[p], gg = d[p + 1], bb = d[p + 2], l = (.299 * r + .587 * gg + .114 * bb) / 255; if (l < .05) continue;
+    const m = Math.max(r, gg, bb) || 1, kk = Math.min(1, .72 + l * .6) * 255 / m; g.fillStyle = `rgb(${Math.min(255, r * kk) | 0},${Math.min(255, gg * kk) | 0},${Math.min(255, bb * kk) | 0})`;
+    g.fillText(RAMP[Math.min(RAMP.length - 1, (Math.pow(l, .75) * (RAMP.length - 1) + .5) | 0)], (x + .5) * CW, (y + .55) * CH);
+  }
+  if (name) { g.fillStyle = "rgba(220,225,240,.75)"; g.font = `bold 10px "DejaVu Sans Mono", monospace`; g.textAlign = "left"; g.fillText(name + " · idle", 14, H - 14); g.textAlign = "center"; g.font = `bold ${CH * 1.02}px "DejaVu Sans Mono", monospace`; }
+}
+const sm01 = x => { x = cl(x); return x * x * (3 - 2 * x); };
+function render(t) {
+  t = cl(t, 0, DUR - 1 / FPS / 2);
+  $("stage").style.opacity = sm01(t / .25);
+  const showEnd = t >= END0; $("end").style.opacity = showEnd ? 1 : 0; $("top").style.visibility = $("code").style.visibility = showEnd ? "hidden" : "visible";
+  if (showEnd) { const e = t - END0, full = "stixx"; $("sbt").textContent = full.slice(0, Math.floor(cl(e / .9) * full.length)); $("end").style.transform = `scale(${(1 + .02 * eo(e / 1.5)).toFixed(4)})`; }
+  else frame(t);
+  // the code scrolls steadily, a few lines a second, and the highlighted line walks down it
+  const s = 2.6 * t, line = Math.floor(s) + 9; $("lines").style.transform = `translateY(${(-(s * 12.4) + 6).toFixed(1)}px)`; ROWS.forEach((r, k) => r.classList.toggle("hl", k === line));
+  $("gt").setAttribute("seed", String(Math.floor(t * 30) % 97));
+}
+window.TL = { dur: DUR, fps: FPS, EV: [] };
+window.renderAt = t => { render(t); return true; };
+window.READY = (async () => { await document.fonts.ready; await Promise.all(IM.map(i => i.decode ? i.decode().catch(() => 0) : 0)); render(0); return true; })();
+</script>
