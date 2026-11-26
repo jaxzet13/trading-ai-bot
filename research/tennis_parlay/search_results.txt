@@ -4,3 +4,38 @@
   6000 rules (27s)
   8000 rules (29s)
   10000 rules (31s)
+  12000 rules (120s)
+13308 rules with >= 30 bets (126s)
+same-day correlation of leg results: {'Challenger favourites 90-96c': {'rule': 'band:m-60:0.90-0.95:chal', 'same_day_correlation': np.float64(-0.052), 'pairs': 443}, 'any favourite 80-90c': {'rule': 'band:m-60:0.80-0.90', 'same_day_correlation': np.float64(0.02), 'pairs': 3021}, 'any favourite 60-80c': {'rule': 'band:m-60:0.60-0.70', 'same_day_correlation': np.float64(0.005), 'pairs': 4615}}
+
+best in-sample (all 64 days; NOT a result, just what a search over this many candidates finds):
+  t  3.71  band:m-120:0.90-0.95:chal                combo3      60 bets  +11.62% per $
+  t  3.63  band:m-70:0.85-0.90:chal                 combo3      40 bets  +21.60% per $
+  t  3.59  band:m-20:0.65-0.70:atp                  single1     37 bets  +25.31% per $
+  t  3.32  band:m140:0.85-0.95                      combo2      35 bets  +12.90% per $
+  t  3.31  band:m-80:0.85-0.90:chal                 combo2      76 bets  +12.59% per $
+  t  3.26  band:m-70:0.85-0.90:chal                 single1    170 bets   +5.32% per $
+  t  3.12  band:m-140:0.90-0.95:wta                 single1     30 bets   +4.27% per $
+  t  2.99  band:m-80:0.85-0.90:chal                 combo3      40 bets  +21.04% per $
+  t  2.95  band:m-140:0.65-0.70:itf                 rolled2     49 bets  +34.22% per $
+  t  2.92  band:m-80:0.85-0.95:chal                 single1    405 bets   +3.03% per $
+  t  2.91  band:m-80:0.85-0.95:chal                 combo3     114 bets   +9.75% per $
+  t  2.70  band:m-80:0.85-0.90:chal                 single1    180 bets   +4.89% per $
+  t  2.65  band:m-40:0.65-0.70:atp                  single1     39 bets  +18.99% per $
+  t  2.60  band:m-160:0.65-0.70:atp                 single1     49 bets  +18.99% per $
+  t  2.53  drift:m-120:up0.12/240m:mom:chal         rolled2     69 bets  +30.76% per $
+
+walk-forward, 50 test days (each day chosen on earlier days only):
+  A best rule and mode                   n    67   1.34/day  ROI  -13.12%  t -1.62  halves [-17.03, -3.92]  days up 16/50  $/day@$1 -0.176
+  B best single rule, combo 2            n    23   0.46/day  ROI  -24.89%  t -1.34  halves [-17.58, -45.59]  days up 8/50  $/day@$1 -0.114
+  B best single rule, combo 3            n    11   0.22/day  ROI  -30.45%  t -1.22  halves [-15.0, -100.0]  days up 6/50  $/day@$1 -0.067
+  B best single rule, combo 4            n     8   0.16/day  ROI  -15.99%  t -0.66  halves [12.01, -100.0]  days up 5/50  $/day@$1 -0.026
+  B best single rule, rolled 2           n    18   0.36/day  ROI  -15.79%  t -1.05  halves [-8.62, -34.44]  days up 8/50  $/day@$1 -0.057
+  B best single rule, rolled 3           n     5   0.10/day  ROI   +6.77%  t +0.27  halves [6.77, None]  days up 4/50  $/day@$1 +0.007
+  B best single rule, single 1           n    59   1.18/day  ROI  -11.00%  t -1.29  halves [-12.54, -6.87]  days up 12/50  $/day@$1 -0.130
+  C top-5 rules, rolled 2                n   103   2.06/day  ROI   -6.11%  t -0.77  halves [-5.01, -6.76]  days up 22/50  $/day@$1 -0.126
+  C top-5 rules, rolled 3                n    60   1.20/day  ROI  -12.72%  t -1.79  halves [-25.4, -5.89]  days up 16/50  $/day@$1 -0.153
+  C top-5 rules, singles                 n   400   8.00/day  ROI   -2.45%  t -0.81  halves [-9.11, 2.52]  days up 26/50  $/day@$1 -0.196
+  picks A best rule and mode: [('band:m70:0.90-0.95:chal single1', 8), ('band:m-70:0.85-0.90:chal combo3', 8), ('band:m-170:0.90-0.95:chal single1', 6), ('band:m-30:0.90-0.95:chal single1', 5), ('band:m80:0.75-0.95:chal single1', 5)]
+  picks B best single rule: [('band:m-20:0.65-0.70:atp', 9), ('band:m70:0.90-0.95:chal', 8), ('band:m-170:0.90-0.95:chal', 6), ('band:m0:0.55-0.65:itf', 6), ('band:m-70:0.85-0.90:chal', 5)]
+(126s)
