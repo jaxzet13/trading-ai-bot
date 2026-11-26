@@ -27,7 +27,7 @@ document.addEventListener("click", e => {
   if (t.dataset.goal) { Goals.claim(t.dataset.goal); return; }
   if (t.id === "menuBtn" || (t.closest && t.closest("#menuBtn"))) { Shell.menu(); return; }
   if (t.id === "scrim") { Shell.menu(false); return; }
-  if (t.dataset.dpack) { if (PACK_BY[t.dataset.dpack]) { state.pack = t.dataset.dpack; persist(); } Shell.menu(false); if (location.hash !== "#/" && location.hash !== "") location.hash = "#/"; else renderHome(); return; }
+  if (t.dataset.dpack) { if (PACK_BY[t.dataset.dpack]) { state.pack = t.dataset.dpack; persist(); } Shell.menu(false); if (location.hash !== "#/" && location.hash !== "") location.hash = "#/"; else renderHome(); setTimeout(() => Shell.go(PACKS.findIndex(p => p.id === state.pack)), 60); return; }
   if (t.hasAttribute("data-menuclose") || (t.closest && t.closest("[data-menuclose]"))) { Shell.menu(false); }
   if (t.hasAttribute("data-back") || (t.closest && t.closest("[data-back]"))) { if (history.length > 1) history.back(); else location.hash = "#/"; return; }
   if (t.dataset.testmoney) { Acct.testMoney(+t.dataset.testmoney); return; }
