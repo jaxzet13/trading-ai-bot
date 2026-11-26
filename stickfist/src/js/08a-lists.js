@@ -37,8 +37,9 @@ function toggleFav(no) {
   if (view === "profile" && $("pFav")) $("pFav").live = favShelf(); if (view === "collection" && CF.show === "fav") renderCollection(); return i < 0;
 }
 function favShelf() {
-  const mine = (state.favs || []).filter(no => BY_NO[no] && copiesOf(no).length);
-  return `<div class="psec"><h3 class="sec">Favourites</h3><span class="small">${mine.length ? mine.length + " starred" : ""}</span></div>` + (mine.length ? `<div class="favshelf">${mine.map(no => `<button class="fvt" data-card="${no}" aria-label="${esc(BY_NO[no].name)}">${cardHTML(copiesOf(no)[0], { sm: true, thumb: true })}</button>`).join("")}</div>` : `<p class="small favhint">Tap ♡ on any card you like — it doesn't have to be a rare. Your favourites live here.</p>`);
+  const mine = (state.favs || []).filter(no => BY_NO[no] && copiesOf(no).length), top = mine.slice(0, 3), rest = mine.slice(3);
+  const big = no => `<button class="fvt big" data-card="${no}" aria-label="${esc(BY_NO[no].name)}">${cardHTML(copiesOf(no)[0], { sm: true, thumb: true })}<b>${esc(BY_NO[no].name)}</b></button>`;
+  return `<div class="psec"><h3 class="sec">Favourites</h3><span class="small">${mine.length ? "your first " + top.length + " are on your share card" : ""}</span></div>` + (mine.length ? `<div class="favshelf top3">${top.map(big).join("")}</div>` + (rest.length ? `<div class="favshelf">${rest.map(no => `<button class="fvt" data-card="${no}" aria-label="${esc(BY_NO[no].name)}">${cardHTML(copiesOf(no)[0], { sm: true, thumb: true })}</button>`).join("")}</div>` : "") : `<p class="small favhint">Tap ♡ on any card you like — it doesn't have to be a rare. Your first three show here and on your share card.</p>`);
 }
 // every copy beyond the best one of each card (copies you added by code are never sold in bulk)
 // the copies that are worth more now than they were when you got them (physical cards you added are left alone)

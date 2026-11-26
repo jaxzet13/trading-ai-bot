@@ -49,22 +49,27 @@ const History = (() => {
       g.fillStyle = "#fff"; g.beginPath(); g.arc(mx + 14 * k, my + 5.9 * k, 1.6 * k, 0, 7); g.fill(); g.strokeStyle = "#fff"; g.lineWidth = 1.8 * k; g.lineCap = "round"; g.beginPath(); g.moveTo(mx + 8.2 * k, my + 9.8 * k); g.lineTo(mx + 19.8 * k, my + 21.4 * k); g.moveTo(mx + 19.8 * k, my + 9.8 * k); g.lineTo(mx + 8.2 * k, my + 21.4 * k); g.stroke();
       g.textAlign = "left"; g.fillStyle = "#f5f3ee"; g.font = F(800, 50); g.letterSpacing = "12px"; g.fillText("STIXX", mx + 82, 148); g.letterSpacing = "0px"; g.textAlign = "center"; }
     g.fillStyle = "#9a968b"; g.font = F(500, 34); g.fillText(o.title || "my collection", W / 2, 215);
-    // the big number
-    g.fillStyle = "#ffffff"; g.font = F(800, 150); g.fillText(moneyR(net), W / 2, 380);
-    g.fillStyle = pl >= 0 ? "#3be477" : "#ff6b6b"; g.font = F(700, 46); g.fillText(`${pl >= 0 ? "+" : "−"}${moneyR(pl)} since I started`, W / 2, 455);
-    // the best card
-    if (bc) {
-      const im = await load(imgOf(bc, best.fx, false)), cw = 600, chh = Math.round(cw * 1092 / 900), cx = (W - cw) / 2, cy = 530;
-      g.save(); g.shadowColor = col; g.shadowBlur = 90; g.fillStyle = "#000"; g.fillRect(cx, cy, cw, chh); g.restore();
-      if (im) g.drawImage(im, cx, cy, cw, chh); g.strokeStyle = col; g.lineWidth = 4; g.strokeRect(cx, cy, cw, chh);
-      g.fillStyle = col; g.font = F(700, 30); g.fillText("BEST PULL", W / 2, cy + chh + 70);
-      g.fillStyle = "#ffffff"; g.font = F(800, 72); g.fillText(bc.name + (best.fx ? " · " + STYLES[best.fx].name : ""), W / 2, cy + chh + 150);
-      g.fillStyle = "#c9c4b8"; g.font = F(500, 38); g.fillText(`${rarLabel(bc)} · worth ${moneyR(valueOf(best))}`, W / 2, cy + chh + 210);
-    }
+    // the big number: your profit, and the line it took to get there
+    g.fillStyle = pl >= 0 ? "#3be477" : "#ff6b6b"; g.font = F(800, 150); g.fillText(`${pl >= 0 ? "+" : "−"}${moneyR(Math.abs(pl))}`, W / 2, 380);
+    g.fillStyle = "#9a968b"; g.font = F(600, 40); g.fillText("profit since I started", W / 2, 445);
+    { const h = state.hist, N = 60, pts = []; let j = 0, t0 = h.length ? h[0][0] : Date.now(), t1 = Date.now();
+      for (let i = 0; i < N; i++) { const ts = t0 + (t1 - t0) * i / (N - 1); while (j + 1 < h.length && h[j + 1][0] <= ts) j++; const e = h[j]; pts.push(e ? e[1] - (e[2] || 0) - START : 0); } pts[N - 1] = pl;
+      const x0 = 90, x1 = W - 90, y0 = 500, y1 = 780, mn = Math.min(0, ...pts), mx = Math.max(0, ...pts), sp = Math.max(mx - mn, 1), X = i => x0 + (x1 - x0) * i / (N - 1), Y = v => y1 - (v - mn) / sp * (y1 - y0), col2 = pl >= 0 ? "#3be477" : "#ff6b6b";
+      g.strokeStyle = "rgba(236,231,220,.18)"; g.lineWidth = 2; g.setLineDash([10, 10]); g.beginPath(); g.moveTo(x0, Y(0)); g.lineTo(x1, Y(0)); g.stroke(); g.setLineDash([]);
+      const gr = g.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, col2 + "55"); gr.addColorStop(1, col2 + "00"); g.fillStyle = gr; g.beginPath(); g.moveTo(X(0), y1); pts.forEach((v, i) => g.lineTo(X(i), Y(v))); g.lineTo(X(N - 1), y1); g.closePath(); g.fill();
+      g.strokeStyle = col2; g.lineWidth = 7; g.lineJoin = "round"; g.beginPath(); pts.forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v))); g.stroke(); g.fillStyle = col2; g.beginPath(); g.arc(X(N - 1), Y(pts[N - 1]), 12, 0, 7); g.fill(); }
+    // your three favourite cards (stars first, then your best cards)
+    { const pick = []; for (const no of (state.favs || [])) if (BY_NO[no] && copiesOf(no).length && pick.length < 3) pick.push(no);
+      for (const c of state.vault.slice().sort((a, b) => valueOf(b) - valueOf(a))) if (pick.length < 3 && !pick.includes(c.no)) pick.push(c.no);
+      g.fillStyle = "#9a968b"; g.font = F(700, 30); g.letterSpacing = "6px"; g.fillText(state.favs && state.favs.length ? "MY FAVOURITES" : "MY BEST CARDS", W / 2, 880); g.letterSpacing = "0px";
+      const cw = 300, chh = Math.round(cw * 1092 / 900), gap = 30, sx = (W - (pick.length * cw + (pick.length - 1) * gap)) / 2, cy = 920;
+      for (let i = 0; i < pick.length; i++) { const cd = BY_NO[pick[i]], cp = copiesOf(pick[i])[0], rc = cp.fx ? STYLE_TINT[cp.fx] : RAR[cd.rar].col, im = await load(imgOf(cd, cp.fx, false)), cx = sx + i * (cw + gap);
+        g.save(); g.shadowColor = rc; g.shadowBlur = 50; g.fillStyle = "#000"; g.fillRect(cx, cy, cw, chh); g.restore(); if (im) g.drawImage(im, cx, cy, cw, chh); g.strokeStyle = rc; g.lineWidth = 4; g.strokeRect(cx, cy, cw, chh);
+        g.fillStyle = "#ffffff"; g.font = F(800, 38); g.fillText(cd.name, cx + cw / 2, cy + chh + 56); g.fillStyle = rc; g.font = F(600, 26); g.fillText(rarLabel(cd), cx + cw / 2, cy + chh + 94); } }
     // three numbers
     const cols = [[String(st.packs), "packs opened"], [`${Math.min(st.found, LIVE.length)}/${LIVE.length}`, "cards found"], (st.opens >= 3 ? [Math.round(st.hitRate * 100) + "%", "packs that paid off"] : [String(state.vault.length), "cards owned"])];
-    cols.forEach(([v, l], i) => { const x = W / 6 + i * W / 3; g.fillStyle = "#ffffff"; g.font = F(800, 64); g.fillText(v, x, 1660); g.fillStyle = "#9a968b"; g.font = F(500, 28); g.fillText(l, x, 1705); });
-    g.strokeStyle = "rgba(236,231,220,.14)"; g.lineWidth = 2; g.beginPath(); g.moveTo(90, 1580); g.lineTo(W - 90, 1580); g.stroke();
+    cols.forEach(([v, l], i) => { const x = W / 6 + i * W / 3; g.fillStyle = "#ffffff"; g.font = F(800, 64); g.fillText(v, x, 1700); g.fillStyle = "#9a968b"; g.font = F(500, 28); g.fillText(l, x, 1745); });
+    g.strokeStyle = "rgba(236,231,220,.14)"; g.lineWidth = 2; g.beginPath(); g.moveTo(90, 1620); g.lineTo(W - 90, 1620); g.stroke();
     g.fillStyle = "#ece7dc"; g.font = F(700, 34); g.fillText(o.host || location.host || "stixx", W / 2, 1810);
     g.fillStyle = "#6f6b62"; g.font = F(500, 24); g.fillText("play money · no cash value · 18+", W / 2, 1852);
     if (o.tag) { g.textAlign = "right"; g.fillStyle = "rgba(236,231,220,.45)"; g.font = F(600, 24); g.fillText(o.tag, W - 40, 60); }

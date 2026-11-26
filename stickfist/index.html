@@ -1411,6 +1411,8 @@ h1, h2, h3, .bignum, .ttl { letter-spacing: -.04em; }
 #stHint.holdhint { font-size: 22px; letter-spacing: .2em; color: #ffe9b0; text-shadow: 0 0 14px rgba(255,230,160,.8); animation: holdpulse 1.1s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .holdcue b, #stHint.holdhint, .holdcue .hc-ring { animation: none; } }
 .holdcue { background: radial-gradient(ellipse at 50% 55%, rgba(0,0,0,.72), rgba(0,0,0,.35) 70%, transparent); border-radius: 14px; padding-top: 60px; } .holdcue .hc-ring { margin-top: -40px; }
+
+.favshelf.top3 { grid-template-columns: repeat(3, 1fr); } .fvt.big { text-align: center; } .fvt.big b { display: block; margin-top: 6px; font-size: 12px; letter-spacing: .04em; }
 </style>
 </head>
 <body>
@@ -2893,9 +2895,16 @@ function renderProfile() {
   { // who you are: a rank earned by finding cards and turning up, and the way to the settings
     const xp = xpOf(), ri = rankIdx(xp), cur = RANKS[ri], nx = RANKS[ri + 1], pc = nx ? (xp - cur[1]) / (nx[1] - cur[1]) : 1, a = Acct.me && Acct.me(), who = a && a.email ? a.email.split("@")[0] : "Player";
     $("pTop").live = `<div class="ptop"><span class="pt-av" aria-hidden="true">${esc(who[0].toUpperCase())}</span><div class="pt-who"><b>${esc(who)}</b><small><i>Lv ${ri + 1}</i> ${esc(cur[0])}${nx ? ` · ${nx[1] - xp} xp to ${esc(nx[0])}` : ""}</small><span class="pt-xp" role="img" aria-label="${xp} xp"><i style="width:${(pc * 100).toFixed(1)}%"></i></span></div><button class="pt-gear" data-pgear="1" aria-label="Limits and settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button></div>`; }
-  { // what it is worth, said quietly: the collection is the point, the price is a footnote
-    const found = new Set(state.vault.map(c => c.no)).size;
-    $("pWorth").live = `<div class="pmin"><div><small>Cards found</small><b>${found}<i> / ${LIVE.length}</i></b></div><div><small>Collection value</small><b>${moneyR(holdingsValue())}</b></div><div><small>Play money</small><b>${moneyR(state.coins)}</b></div><div><small>Packs</small><b>${fmt(state.s.packs)}</b></div></div>`; }
+  { // what you have, what you have made over the range you picked, and its shape
+    const now = Date.now(), h = state.hist, from = pRng ? now - pRng : (h.length ? h[0][0] : now), gain = pRng ? profitSince(pRng) : all, up = gain >= 0, N = 56, pts = [];
+    let j = 0; for (let i = 0; i < N; i++) { const ts = from + (now - from) * i / (N - 1); while (j + 1 < h.length && h[j + 1][0] <= ts) j++; const e = h[j]; pts.push(e && e[0] <= ts ? e[1] - (e[2] || 0) - START : h.length ? h[0][1] - (h[0][2] || 0) - START : 0); } pts[N - 1] = all;
+    const mn = Math.min(...pts), mx = Math.max(...pts), sp = Math.max(mx - mn, Math.max(4, Math.abs(net) * .004)), lo = (mn + mx) / 2 - sp / 2,     /* a quiet stretch is a line through the middle, not one stuck to the floor */ X = i => (i * 400 / (N - 1)).toFixed(1), Y = v => (104 - (v - lo) / sp * 88).toFixed(1), d = pts.map((v, i) => X(i) + " " + Y(v)).join(" L"), base = Y(pts[0]);
+    const RNG = [[36e5, "1H"], [864e5, "1D"], [6048e5, "1W"], [0, "All"]], lbl = pRng === 36e5 ? "past hour" : pRng === 864e5 ? "today" : pRng ? "past week" : "all time";
+    $("pWorth").live = `<div class="pf2 ${up ? "pos" : "neg"}"><span class="label">Profit</span><div class="bignum" role="img" aria-label="${money(all)}">${all >= 0 ? "+" : "−"}${moneyR(Math.abs(all))}</div>
+      <div class="pf-row"><span class="pf-pill">${up ? "▲" : "▼"} ${moneyR(Math.abs(gain))}</span><span class="dim">${lbl}</span>${awayLine()}</div>
+      <div class="pf-chart"><svg viewBox="0 0 400 112" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pfG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="g0"/><stop offset="1" class="g1"/></linearGradient></defs><path class="b" d="M0 ${base} L400 ${base}"/><path class="a" d="M${d} L400 112 L0 112 Z" fill="url(#pfG)"/><path class="l" d="M${d}"/></svg><i class="pf-dot" style="top:${(Y(pts[N - 1]) / 112 * 100).toFixed(1)}%"></i></div>
+      <div class="pf-rng" role="group" aria-label="Range">${RNG.map(([ms, t]) => `<button data-prng="${ms}" class="${ms === pRng ? "on" : ""}" aria-pressed="${ms === pRng}">${t}</button>`).join("")}</div>
+      <div class="pf-stats"><div><small>Cards found</small><b>${new Set(state.vault.map(c => c.no)).size}/${LIVE.length}</b></div><div><small>Collection</small><b>${moneyR(holdingsValue())}</b></div><div><small>Packs opened</small><b>${fmt(state.s.packs)}</b></div></div></div>`; }
   $("pGoals").live = Goals.html(); Goals.badge(); $("pTip").live = tipHTML();
   { const inf = typeof Ref !== "undefined" ? Ref.info() : null, sig = inf ? [inf.code, inf.joined, inf.invited, inf.earned, inf.credits, API.on].join("|") : "off";   // only rebuild the invite hero (and replay its bar) when the numbers change, not on every live tick
     if (sig !== pInviteSig) { pInviteSig = sig; $("pInvite").live = inviteHeroHTML(); if (typeof playRewardBars === "function") playRewardBars(); } }
@@ -3040,8 +3049,9 @@ function toggleFav(no) {
   if (view === "profile" && $("pFav")) $("pFav").live = favShelf(); if (view === "collection" && CF.show === "fav") renderCollection(); return i < 0;
 }
 function favShelf() {
-  const mine = (state.favs || []).filter(no => BY_NO[no] && copiesOf(no).length);
-  return `<div class="psec"><h3 class="sec">Favourites</h3><span class="small">${mine.length ? mine.length + " starred" : ""}</span></div>` + (mine.length ? `<div class="favshelf">${mine.map(no => `<button class="fvt" data-card="${no}" aria-label="${esc(BY_NO[no].name)}">${cardHTML(copiesOf(no)[0], { sm: true, thumb: true })}</button>`).join("")}</div>` : `<p class="small favhint">Tap ♡ on any card you like — it doesn't have to be a rare. Your favourites live here.</p>`);
+  const mine = (state.favs || []).filter(no => BY_NO[no] && copiesOf(no).length), top = mine.slice(0, 3), rest = mine.slice(3);
+  const big = no => `<button class="fvt big" data-card="${no}" aria-label="${esc(BY_NO[no].name)}">${cardHTML(copiesOf(no)[0], { sm: true, thumb: true })}<b>${esc(BY_NO[no].name)}</b></button>`;
+  return `<div class="psec"><h3 class="sec">Favourites</h3><span class="small">${mine.length ? "your first " + top.length + " are on your share card" : ""}</span></div>` + (mine.length ? `<div class="favshelf top3">${top.map(big).join("")}</div>` + (rest.length ? `<div class="favshelf">${rest.map(no => `<button class="fvt" data-card="${no}" aria-label="${esc(BY_NO[no].name)}">${cardHTML(copiesOf(no)[0], { sm: true, thumb: true })}</button>`).join("")}</div>` : "") : `<p class="small favhint">Tap ♡ on any card you like — it doesn't have to be a rare. Your first three show here and on your share card.</p>`);
 }
 // every copy beyond the best one of each card (copies you added by code are never sold in bulk)
 // the copies that are worth more now than they were when you got them (physical cards you added are left alone)
@@ -3253,22 +3263,27 @@ const History = (() => {
       g.fillStyle = "#fff"; g.beginPath(); g.arc(mx + 14 * k, my + 5.9 * k, 1.6 * k, 0, 7); g.fill(); g.strokeStyle = "#fff"; g.lineWidth = 1.8 * k; g.lineCap = "round"; g.beginPath(); g.moveTo(mx + 8.2 * k, my + 9.8 * k); g.lineTo(mx + 19.8 * k, my + 21.4 * k); g.moveTo(mx + 19.8 * k, my + 9.8 * k); g.lineTo(mx + 8.2 * k, my + 21.4 * k); g.stroke();
       g.textAlign = "left"; g.fillStyle = "#f5f3ee"; g.font = F(800, 50); g.letterSpacing = "12px"; g.fillText("STIXX", mx + 82, 148); g.letterSpacing = "0px"; g.textAlign = "center"; }
     g.fillStyle = "#9a968b"; g.font = F(500, 34); g.fillText(o.title || "my collection", W / 2, 215);
-    // the big number
-    g.fillStyle = "#ffffff"; g.font = F(800, 150); g.fillText(moneyR(net), W / 2, 380);
-    g.fillStyle = pl >= 0 ? "#3be477" : "#ff6b6b"; g.font = F(700, 46); g.fillText(`${pl >= 0 ? "+" : "−"}${moneyR(pl)} since I started`, W / 2, 455);
-    // the best card
-    if (bc) {
-      const im = await load(imgOf(bc, best.fx, false)), cw = 600, chh = Math.round(cw * 1092 / 900), cx = (W - cw) / 2, cy = 530;
-      g.save(); g.shadowColor = col; g.shadowBlur = 90; g.fillStyle = "#000"; g.fillRect(cx, cy, cw, chh); g.restore();
-      if (im) g.drawImage(im, cx, cy, cw, chh); g.strokeStyle = col; g.lineWidth = 4; g.strokeRect(cx, cy, cw, chh);
-      g.fillStyle = col; g.font = F(700, 30); g.fillText("BEST PULL", W / 2, cy + chh + 70);
-      g.fillStyle = "#ffffff"; g.font = F(800, 72); g.fillText(bc.name + (best.fx ? " · " + STYLES[best.fx].name : ""), W / 2, cy + chh + 150);
-      g.fillStyle = "#c9c4b8"; g.font = F(500, 38); g.fillText(`${rarLabel(bc)} · worth ${moneyR(valueOf(best))}`, W / 2, cy + chh + 210);
-    }
+    // the big number: your profit, and the line it took to get there
+    g.fillStyle = pl >= 0 ? "#3be477" : "#ff6b6b"; g.font = F(800, 150); g.fillText(`${pl >= 0 ? "+" : "−"}${moneyR(Math.abs(pl))}`, W / 2, 380);
+    g.fillStyle = "#9a968b"; g.font = F(600, 40); g.fillText("profit since I started", W / 2, 445);
+    { const h = state.hist, N = 60, pts = []; let j = 0, t0 = h.length ? h[0][0] : Date.now(), t1 = Date.now();
+      for (let i = 0; i < N; i++) { const ts = t0 + (t1 - t0) * i / (N - 1); while (j + 1 < h.length && h[j + 1][0] <= ts) j++; const e = h[j]; pts.push(e ? e[1] - (e[2] || 0) - START : 0); } pts[N - 1] = pl;
+      const x0 = 90, x1 = W - 90, y0 = 500, y1 = 780, mn = Math.min(0, ...pts), mx = Math.max(0, ...pts), sp = Math.max(mx - mn, 1), X = i => x0 + (x1 - x0) * i / (N - 1), Y = v => y1 - (v - mn) / sp * (y1 - y0), col2 = pl >= 0 ? "#3be477" : "#ff6b6b";
+      g.strokeStyle = "rgba(236,231,220,.18)"; g.lineWidth = 2; g.setLineDash([10, 10]); g.beginPath(); g.moveTo(x0, Y(0)); g.lineTo(x1, Y(0)); g.stroke(); g.setLineDash([]);
+      const gr = g.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, col2 + "55"); gr.addColorStop(1, col2 + "00"); g.fillStyle = gr; g.beginPath(); g.moveTo(X(0), y1); pts.forEach((v, i) => g.lineTo(X(i), Y(v))); g.lineTo(X(N - 1), y1); g.closePath(); g.fill();
+      g.strokeStyle = col2; g.lineWidth = 7; g.lineJoin = "round"; g.beginPath(); pts.forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v))); g.stroke(); g.fillStyle = col2; g.beginPath(); g.arc(X(N - 1), Y(pts[N - 1]), 12, 0, 7); g.fill(); }
+    // your three favourite cards (stars first, then your best cards)
+    { const pick = []; for (const no of (state.favs || [])) if (BY_NO[no] && copiesOf(no).length && pick.length < 3) pick.push(no);
+      for (const c of state.vault.slice().sort((a, b) => valueOf(b) - valueOf(a))) if (pick.length < 3 && !pick.includes(c.no)) pick.push(c.no);
+      g.fillStyle = "#9a968b"; g.font = F(700, 30); g.letterSpacing = "6px"; g.fillText(state.favs && state.favs.length ? "MY FAVOURITES" : "MY BEST CARDS", W / 2, 880); g.letterSpacing = "0px";
+      const cw = 300, chh = Math.round(cw * 1092 / 900), gap = 30, sx = (W - (pick.length * cw + (pick.length - 1) * gap)) / 2, cy = 920;
+      for (let i = 0; i < pick.length; i++) { const cd = BY_NO[pick[i]], cp = copiesOf(pick[i])[0], rc = cp.fx ? STYLE_TINT[cp.fx] : RAR[cd.rar].col, im = await load(imgOf(cd, cp.fx, false)), cx = sx + i * (cw + gap);
+        g.save(); g.shadowColor = rc; g.shadowBlur = 50; g.fillStyle = "#000"; g.fillRect(cx, cy, cw, chh); g.restore(); if (im) g.drawImage(im, cx, cy, cw, chh); g.strokeStyle = rc; g.lineWidth = 4; g.strokeRect(cx, cy, cw, chh);
+        g.fillStyle = "#ffffff"; g.font = F(800, 38); g.fillText(cd.name, cx + cw / 2, cy + chh + 56); g.fillStyle = rc; g.font = F(600, 26); g.fillText(rarLabel(cd), cx + cw / 2, cy + chh + 94); } }
     // three numbers
     const cols = [[String(st.packs), "packs opened"], [`${Math.min(st.found, LIVE.length)}/${LIVE.length}`, "cards found"], (st.opens >= 3 ? [Math.round(st.hitRate * 100) + "%", "packs that paid off"] : [String(state.vault.length), "cards owned"])];
-    cols.forEach(([v, l], i) => { const x = W / 6 + i * W / 3; g.fillStyle = "#ffffff"; g.font = F(800, 64); g.fillText(v, x, 1660); g.fillStyle = "#9a968b"; g.font = F(500, 28); g.fillText(l, x, 1705); });
-    g.strokeStyle = "rgba(236,231,220,.14)"; g.lineWidth = 2; g.beginPath(); g.moveTo(90, 1580); g.lineTo(W - 90, 1580); g.stroke();
+    cols.forEach(([v, l], i) => { const x = W / 6 + i * W / 3; g.fillStyle = "#ffffff"; g.font = F(800, 64); g.fillText(v, x, 1700); g.fillStyle = "#9a968b"; g.font = F(500, 28); g.fillText(l, x, 1745); });
+    g.strokeStyle = "rgba(236,231,220,.14)"; g.lineWidth = 2; g.beginPath(); g.moveTo(90, 1620); g.lineTo(W - 90, 1620); g.stroke();
     g.fillStyle = "#ece7dc"; g.font = F(700, 34); g.fillText(o.host || location.host || "stixx", W / 2, 1810);
     g.fillStyle = "#6f6b62"; g.font = F(500, 24); g.fillText("play money · no cash value · 18+", W / 2, 1852);
     if (o.tag) { g.textAlign = "right"; g.fillStyle = "rgba(236,231,220,.45)"; g.font = F(600, 24); g.fillText(o.tag, W - 40, 60); }
