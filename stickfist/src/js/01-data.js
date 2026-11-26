@@ -67,8 +67,13 @@ const CARDS = [
   { no: "068", set: "ms", id: "ms068", name: "Ground Control", sub: "glitch painting", rar: "uncommon", chars: 7260, val: 60, tint: "#a8b1fd", cap: "the quiet ones keep everyone alive.", styles: false },
   { no: "069", set: "ms", id: "ms069", name: "Eagle", sub: "lino painting", rar: "uncommon", chars: 7260, val: 70, tint: "#fdfbf8", cap: "a landing so slow it felt like waiting.", styles: false },
   { no: "074", set: "ms", id: "ms074", name: "Eclipse Over Tranquility", sub: "fire painting", rar: "epic", chars: 15750, val: 550, tint: "#e4d6fc", cap: "even the Moon needs a night off.", styles: false },
+  { no: "160", set: "ms", id: "candle", name: "Last Candle", sub: "glyph scene", rar: "exotic", chars: 52000, val: 6000, tint: "#ffb866", cap: "it burns for whoever is looking.", styles: false },
   { no: "081", set: "ec", id: "ec081", name: "Corona", sub: "lino painting", rar: "common", chars: 6432, val: 15, tint: "#e0ecfd", cap: "a crown the Moon steals for a minute.", styles: false },
   { no: "085", set: "ec", id: "ec085", name: "Black Bell", sub: "rust painting", rar: "common", chars: 6432, val: 20, tint: "#fdc194", cap: "rings once per eclipse.", styles: false },
+  { no: "161", set: "ec", id: "bouquet", name: "Bouquet", sub: "glyph scene", rar: "celestial", chars: 100000, val: 15000, tint: "#ff7ad0", cap: "for no one in particular. for everyone.", styles: false },
+  { no: "162", set: "td", id: "heartword", name: "Heartword", sub: "glyph scene", rar: "cosmic", chars: 150000, val: 35000, tint: "#ff6b8f", cap: "every word in it is you.", styles: false },
+  { no: "163", set: "sg", id: "morpho", name: "Morpho", sub: "glyph scene", rar: "ascended", chars: 380000, val: 70000, tint: "#4fd0ff", cap: "it only shows its blue when it flies.", styles: false },
+  { no: "164", set: "sg", id: "phoenix", name: "Phoenix", sub: "glyph scene", rar: "secret", chars: 700000, val: 200000, tint: "#ff7a1f", cap: "burns out. comes back rarer.", styles: false },
 ];
 // the sets: the two letters a copy id starts with, and what the set is called
 const SETS = { fp: { code: "IS", name: "First Print" }, ms: { code: "MS", name: "Moonshot" }, ec: { code: "EC", name: "Eclipse" }, td: { code: "TD", name: "Tidal" }, sg: { code: "SG", name: "Singularity" } };
@@ -101,46 +106,46 @@ const PACKS = [
       [["stitch", 7.6667], ["brick", 7.6667], ["orbit", 7.6667], ["rook", 7.6667], ["mop", 7.6667], ["pan", 7.6667], ["cone", 7.6667], ["fuse", 7.6667], ["countdown", 7.6667], ["spark", 7.6667], ["flare", 7.6667], ["bubble", 7.6667], ["tempest", 2], ["surge", 2], ["ignition", 2], ["console", 2]]
     ] },
   { id: "ms", name: "Moonshot", blurb: "A launch: lit fuses, rockets, mission control and the Moon. The fifth card is the rare slot.", price: 1500, min: 1500, max: 1500, n: 7, col: "#ffa046", scene: "launch",
-    slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of 9 cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],
+    slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of 10 cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],
     slots: [
       [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ms062", 7.1429], ["ms068", 3.5714], ["ms069", 3.5714]],
       [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ms062", 7.1429], ["ms068", 3.5714], ["ms069", 3.5714]],
       [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ms062", 7.1429], ["ms068", 3.5714], ["ms069", 3.5714]],
       [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ms062", 7.1429], ["ms068", 3.5714], ["ms069", 3.5714]],
-      [["ms074", 31.566], ["suit", 21.9863], ["colossus", 15.3139], ["gantry", 10.6664], ["leviathan", 7.4294], ["liftoff", 5.1747], ["null", 3.6043], ["booster", 2.5104], ["shogun", 1.7486]],
+      [["ms074", 32.7201], ["suit", 22.2393], ["colossus", 15.1157], ["gantry", 10.2739], ["leviathan", 6.983], ["liftoff", 4.7462], ["null", 3.2259], ["booster", 2.1926], ["shogun", 1.4903], ["candle", 1.0129]],
       [["stitch", 6.1429], ["brick", 6.1429], ["orbit", 6.1429], ["rook", 6.1429], ["mop", 6.1429], ["pan", 6.1429], ["cone", 6.1429], ["fuse", 6.1429], ["countdown", 6.1429], ["spark", 6.1429], ["flare", 6.1429], ["bubble", 6.1429], ["ms062", 6.1429], ["ms068", 3.0714], ["ms069", 3.0714], ["ms074", 3.5], ["suit", 3.5], ["colossus", 3.5], ["gantry", 3.5]],
       [["stitch", 6.1429], ["brick", 6.1429], ["orbit", 6.1429], ["rook", 6.1429], ["mop", 6.1429], ["pan", 6.1429], ["cone", 6.1429], ["fuse", 6.1429], ["countdown", 6.1429], ["spark", 6.1429], ["flare", 6.1429], ["bubble", 6.1429], ["ms062", 6.1429], ["ms068", 3.0714], ["ms069", 3.0714], ["ms074", 3.5], ["suit", 3.5], ["colossus", 3.5], ["gantry", 3.5]]
     ] },
   { id: "ec", name: "Eclipse", blurb: "Cards from under a black sun. The rare slot starts at a mythic-class card.", price: 4000, min: 4000, max: 4000, n: 7, col: "#ffc24a", scene: "eclipse",
-    slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of 8 cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],
+    slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of 10 cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],
     slots: [
       [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
       [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
       [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
       [["stitch", 7.1429], ["brick", 7.1429], ["orbit", 7.1429], ["rook", 7.1429], ["mop", 7.1429], ["pan", 7.1429], ["cone", 7.1429], ["fuse", 7.1429], ["countdown", 7.1429], ["spark", 7.1429], ["flare", 7.1429], ["bubble", 7.1429], ["ec081", 7.1429], ["ec085", 7.1429]],
-      [["leviathan", 45.9632], ["liftoff", 24.9988], ["null", 13.5965], ["booster", 7.395], ["shogun", 4.022], ["apogee", 2.1875], ["ronin", 1.1898], ["luna", 0.6471]],
+      [["leviathan", 45.3765], ["liftoff", 24.8359], ["null", 13.5934], ["booster", 7.4401], ["shogun", 4.0722], ["candle", 2.2288], ["apogee", 1.2199], ["ronin", 0.6677], ["luna", 0.3654], ["bouquet", 0.2]],
       [["stitch", 5.7143], ["brick", 5.7143], ["orbit", 5.7143], ["rook", 5.7143], ["mop", 5.7143], ["pan", 5.7143], ["cone", 5.7143], ["fuse", 5.7143], ["countdown", 5.7143], ["spark", 5.7143], ["flare", 5.7143], ["bubble", 5.7143], ["ec081", 5.7143], ["ec085", 5.7143], ["leviathan", 5], ["liftoff", 5], ["null", 5], ["booster", 5]],
       [["stitch", 5.7143], ["brick", 5.7143], ["orbit", 5.7143], ["rook", 5.7143], ["mop", 5.7143], ["pan", 5.7143], ["cone", 5.7143], ["fuse", 5.7143], ["countdown", 5.7143], ["spark", 5.7143], ["flare", 5.7143], ["bubble", 5.7143], ["ec081", 5.7143], ["ec085", 5.7143], ["leviathan", 5], ["liftoff", 5], ["null", 5], ["booster", 5]]
     ] },
   { id: "td", name: "Tidal", blurb: "The big names. The rare slot starts at a card worth as much as the pack.", price: 10000, min: 10000, max: 10000, n: 7, col: "#46d2ff", scene: "tidal",
-    slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of 8 cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],
+    slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of 10 cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],
     slots: [
       [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
       [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
       [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
       [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["booster", 49.5826], ["shogun", 25.1044], ["apogee", 12.7108], ["ronin", 6.4357], ["luna", 3.2585], ["titan", 1.6498], ["grimm", 0.8353], ["reaper", 0.4229]],
+      [["booster", 47.4314], ["shogun", 24.9708], ["apogee", 13.1462], ["ronin", 6.921], ["luna", 3.6436], ["bouquet", 1.9182], ["titan", 1.0099], ["grimm", 0.5317], ["heartword", 0.2799], ["reaper", 0.1474]],
       [["stitch", 6], ["brick", 6], ["orbit", 6], ["rook", 6], ["mop", 6], ["pan", 6], ["cone", 6], ["fuse", 6], ["countdown", 6], ["spark", 6], ["flare", 6], ["bubble", 6], ["booster", 7], ["shogun", 7], ["apogee", 7], ["ronin", 7]],
       [["stitch", 6], ["brick", 6], ["orbit", 6], ["rook", 6], ["mop", 6], ["pan", 6], ["cone", 6], ["fuse", 6], ["countdown", 6], ["spark", 6], ["flare", 6], ["bubble", 6], ["booster", 7], ["shogun", 7], ["apogee", 7], ["ronin", 7]]
     ] },
   { id: "sg", name: "Singularity", blurb: "The edge of the dark. The biggest cards in the game live here.", price: 25000, min: 25000, max: 25000, n: 7, col: "#b78cff", scene: "void",
-    slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of 8 cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],
+    slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of 11 cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],
     slots: [
       [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
       [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
       [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
       [["stitch", 8.3333], ["brick", 8.3333], ["orbit", 8.3333], ["rook", 8.3333], ["mop", 8.3333], ["pan", 8.3333], ["cone", 8.3333], ["fuse", 8.3333], ["countdown", 8.3333], ["spark", 8.3333], ["flare", 8.3333], ["bubble", 8.3333]],
-      [["ronin", 70.675], ["luna", 20.7282], ["titan", 6.0793], ["grimm", 1.783], ["reaper", 0.5229], ["mars", 0.1534], ["umbra", 0.045], ["horizon", 0.0132]],
+      [["ronin", 69.0613], ["luna", 21.3668], ["titan", 6.6106], ["grimm", 2.0453], ["heartword", 0.6328], ["reaper", 0.1958], ["morpho", 0.0606], ["mars", 0.0187], ["umbra", 0.0058], ["phoenix", 0.0018], ["horizon", 0.0006]],
       [["stitch", 5.1667], ["brick", 5.1667], ["orbit", 5.1667], ["rook", 5.1667], ["mop", 5.1667], ["pan", 5.1667], ["cone", 5.1667], ["fuse", 5.1667], ["countdown", 5.1667], ["spark", 5.1667], ["flare", 5.1667], ["bubble", 5.1667], ["ronin", 9.5], ["luna", 9.5], ["titan", 9.5], ["grimm", 9.5]],
       [["stitch", 5.1667], ["brick", 5.1667], ["orbit", 5.1667], ["rook", 5.1667], ["mop", 5.1667], ["pan", 5.1667], ["cone", 5.1667], ["fuse", 5.1667], ["countdown", 5.1667], ["spark", 5.1667], ["flare", 5.1667], ["bubble", 5.1667], ["ronin", 9.5], ["luna", 9.5], ["titan", 9.5], ["grimm", 9.5]]
     ] }

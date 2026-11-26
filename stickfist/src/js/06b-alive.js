@@ -112,7 +112,7 @@ void main(){float T=3.2,a=fract(t/T),b=fract(t/T+.5),ga,gb;vec2 ua=warp(v,(a-.5)
   }
   // bring a card's picture to life (safe to call again and again for the same card: it only puts the canvas back if the page was redrawn)
   function on(card, copy) {
-    if (reduced || !card || !copy) return; const id = BY_NO[copy.no].id; if (!SCENES[id]) return;
+    if (reduced || !card || !copy) return; const id = BY_NO[copy.no].id; if (typeof Glyph !== "undefined" && Glyph.has(id)) { Glyph.on(card, copy); return; } if (!SCENES[id]) return;
     let o = by.get(card); if (o && o.id !== id) { all.delete(o); o.drop(); o = null; } if (!o) { o = new One(card, id); by.set(card, o); all.add(o); } else if (o.ok) o.mount();
     if (!raf) raf = requestAnimationFrame(loop);
   }

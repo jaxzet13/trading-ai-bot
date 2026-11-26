@@ -204,7 +204,12 @@ async function reveal(el, c, card, R, v) {
   if (T >= 3) await climb(el, card, c);
   if (SS.n < 2 && x >= 2 && Cut.has(card.id) && (R.tier >= 3 || !state.seen[card.id])) { state.seen[card.id] = 1; save(); $("stTitle").innerHTML = ""; await Cut.play(card.id); if (!SS) return; }   // some cards come with a short ASCII film: always for epic and above, and the first time for the rest, but only for a copy that sells for at least what the pack cost. A card that barely gives anything gets no film (it is still there to watch from its card window)
   c.t = Date.now();                                                                        // and its price starts from here, so the card is first seen at its set value even after a film
-  if (okPic) {
+  if (!reduced && Glyph.has(card.id)) {                                                      // a glyph card: its characters do not print in, they fly in from dust and land
+    if (rs) rs.drop(); el.classList.add("loading"); tt.style.setProperty("--rc", R.col); tt.className = "st-title loading"; tt.innerHTML = `<div class="rw">forming</div>`;
+    await v.scatter().play(130); Snd.beat(); buzz([20, 60, 20]);
+    await Glyph.assemble(cardEl, c, { dur: 2600 + T * 220, onTick: k => { if (k % 2 === 0) { Snd.rise(Math.round(k / 2)); buzz(5); } } });
+    el.classList.remove("loading"); tt.className = "st-title"; flash(R.col, .7); ring(mid[0], mid[1], R.col, 2);
+  } else if (okPic) {
     el.classList.add("loading"); tt.style.setProperty("--rc", c.fx ? STYLE_TINT[c.fx] : R.col); tt.className = "st-title loading";
     tt.innerHTML = `<div class="rw">forming · <b id="ldN">0</b> characters</div><div class="vl">worth <b id="ldV">${money(0)}</b></div>`; const ldN = $("ldN"), ldV = $("ldV");
     await v.scatter().play(130);
