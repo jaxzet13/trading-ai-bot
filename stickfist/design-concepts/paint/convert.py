@@ -1,11 +1,18 @@
-"""Turns every painting in sources/ into a text card: crops to the card's picture ratio, then ../ascii_cards.py makes the characters (80 columns for the card, 30 for lists)."""
+"""Every card picture -> a card made of characters, in the Ronin look (ronin_render.py). Sources: sources/<id>.png (painted), orig/<id>.jpg (the first illustrated cards),
+../stick-cards/sources/<id>.png (code-drawn stand-ins for cards that are not painted yet). A painted card wins over a stand-in.
+    python3 convert.py            # all
+    python3 convert.py ms078 ...  # some"""
 import glob, os, sys
 from PIL import Image
-HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.normpath(os.path.join(HERE, '..', '..')); sys.path.insert(0, os.path.join(HERE, '..')); import ascii_cards
-ids = sys.argv[1:] or [os.path.basename(f)[:-4] for f in sorted(glob.glob(os.path.join(HERE, 'sources', '*.png')))]
+HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.normpath(os.path.join(HERE, '..', '..')); sys.path.insert(0, HERE); from ronin_render import render
+def src(i):
+    for p in (os.path.join(HERE, 'sources', i + '.png'), os.path.join(HERE, 'orig', i + '.jpg'), os.path.join(HERE, '..', 'stick-cards', 'sources', i + '.png')):
+        if os.path.exists(p): return p
+ids = sys.argv[1:] or sorted({os.path.basename(f)[:-4] for d, e in (('sources', 'png'), ('orig', 'jpg')) for f in glob.glob(os.path.join(HERE, d, '*.' + e))} | {os.path.basename(f)[:-4] for f in glob.glob(os.path.join(HERE, '..', 'stick-cards', 'sources', '*.png'))})
 for i in ids:
-    im = Image.open(os.path.join(HERE, 'sources', i + '.png')).convert('RGB'); w, h = im.size; th = int(w * 1092 / 900); top = max(0, (h - th) // 2)
-    im = im.crop((0, top, w, min(h, top + th))).resize((900, 1092), Image.LANCZOS); im.save('/tmp/_p.png')
-    ascii_cards.convert('/tmp/_p.png', os.path.join(ROOT, 'cards', i + '.jpg'), 150)
-    im.resize((360, 437), Image.LANCZOS).save('/tmp/_t.png'); ascii_cards.convert('/tmp/_t.png', os.path.join(ROOT, 'cards', 's', i + '.jpg'), 54)
+    p = src(i)
+    if not p: continue
+    render(p, os.path.join(ROOT, 'cards', i + '.jpg'), 96)
+    im = Image.open(os.path.join(HERE, 'sources' if p.endswith('.png') and 'stick-cards' not in p else '.', '')) if False else None
+    render(p, os.path.join(ROOT, 'cards', 's', i + '.jpg'), 44, W=360, H=437, maxb=90 * 1024)
 print(len(ids), 'cards')
