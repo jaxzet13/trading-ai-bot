@@ -37,7 +37,7 @@ async function openPack(pack) {
   let items; try { items = await Fair.next(pk); } finally { opening = false; } if (SS !== mine) return;
   // the pack is paid for and the cards are yours the moment it is drawn
   if (free) { state.freePacks--; state.s.free++; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else if (bought) { state.paid[pk.id]--; state.s.bought = (state.s.bought || 0) + 1; state.s.added += Math.round(items.reduce((a, c) => a + c.cost, 0)); } else state.coins -= price;      // a free pack counts as money handed to you, so it never shows up as profit
-  state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); History.log(pk, 1, free || bought ? 0 : price, price, items); SS_PRICE = price;
+  state.s.big = Math.max(state.s.big || 0, ...items.map(c => costOf(c))); state.s.packs++; state.s.spent += price; state.packLog.push(Date.now()); if (state.packLog.length > 300) state.packLog.shift(); History.log(pk, 1, free || bought ? 0 : price, price, items); SS_PRICE = price;
   { noteFound(); const seenNo = new Set(); mine.fresh = new Set(items.filter(c => { const nw = !state.found[c.no] && !seenNo.has(c.no); seenNo.add(c.no); return nw; }).map(c => c.uid)); }
   state.vault.push(...items); save(); renderBal(true); renderChips(); if (typeof Ref !== "undefined") Ref.activated();
   Object.assign(mine, { items, veils: [], phase: "pack", all: items, refAll: packPrice(pk), paid: price }); hint("Swipe across the top to rip it open"); Rip.arm();

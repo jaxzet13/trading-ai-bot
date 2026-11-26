@@ -44,5 +44,5 @@ const Live = (() => {
     if (feed.length) seen = Math.max(seen, feed[0].t);
   }
   function start() { pull(true); if (!timer) timer = setInterval(() => { if (view === "live" && !document.hidden) pull(); }, 10000); }
-  return { render: () => { render(); start(); }, pull };
+  return { render: () => { render(); start(); }, pull, feed: () => (data && data.feed) || [] };
 })();

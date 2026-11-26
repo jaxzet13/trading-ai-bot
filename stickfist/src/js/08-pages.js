@@ -2,7 +2,7 @@
    7. PAGES: pack, market, collection, odds
    ========================================================================== */
 // two tabs: the pack, and you (your money, your cards, the market); the other pages hang off those two
-const VIEWS = ["home", "live", "market", "profile", "collection", "odds", "invite", "limited"], TAB_OF = { live: "live", home: "home", odds: "home", limited: "home", profile: "profile", market: "profile", collection: "profile", invite: "profile" }; let view = "home", modalNo = null, oddsPack = "";
+const VIEWS = ["home", "live", "market", "profile", "collection", "odds", "invite", "limited", "inside", "rewards"], TAB_OF = { live: "home", home: "home", odds: "home", limited: "home", inside: "home", profile: "profile", market: "profile", collection: "collection", invite: "rewards", rewards: "rewards" }; let view = "home", modalNo = null, oddsPack = "";
 const copiesOf = no => state.vault.filter(c => c.no === no).sort((a, b) => valueOf(b) - valueOf(a));
 function renderBal(anim) { const el = $("bal"), from = +(el.dataset.v || state.coins); el.dataset.v = state.coins; if (anim) countTo(el, from, state.coins, money); else el.textContent = money(state.coins); if (typeof renderBroke === "function") renderBroke(); }
 
@@ -85,7 +85,14 @@ function renderProfile() {
   const net = netWorth(), all = profitAll();
   { // who you are: a rank earned by finding cards and turning up, and the way to the settings
     const xp = xpOf(), ri = rankIdx(xp), cur = RANKS[ri], nx = RANKS[ri + 1], pc = nx ? (xp - cur[1]) / (nx[1] - cur[1]) : 1, a = Acct.me && Acct.me(), who = a && a.email ? a.email.split("@")[0] : "Player";
-    $("pTop").live = `<div class="ptop"><span class="pt-av" aria-hidden="true">${esc(who[0].toUpperCase())}</span><div class="pt-who"><b>${esc(who)}</b><small><i>Lv ${ri + 1}</i> ${esc(cur[0])}${nx ? ` · ${nx[1] - xp} xp to ${esc(nx[0])}` : ""}</small><span class="pt-xp" role="img" aria-label="${xp} xp"><i style="width:${(pc * 100).toFixed(1)}%"></i></span></div><button class="pt-gear" data-pgear="1" aria-label="Limits and settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button></div>`; }
+    const joined = new Date(state.hist.length ? state.hist[0][0] : Date.now()).toLocaleDateString("en-US", { month: "short", year: "numeric" }), n = RANKS.length, mark = k => (k + 1) / (n - 1) * 100;
+    $("pTop").live = `<div class="acc"><button class="pt-gear" data-pgear="1" aria-label="Limits and settings"><span aria-hidden="true">⚙</span> Settings</button>
+      <div class="acc-av" aria-hidden="true"><pre>  o
+ /|\\
+ / \\ </pre></div><h2 class="acc-name">${esc(who)}</h2><p class="acc-join">Joined ${esc(joined)}</p>
+      <div class="acc-tiles"><div class="abox"><span class="atitle">BIGGEST PULL</span><b>${money(state.s.big || 0).replace(/\.00$/, "")}</b></div><div class="abox"><span class="atitle">PACKS OPENED</span><b>${fmt(state.s.packs)}</b></div></div>
+      <div class="abox acc-tier"><span class="atitle">CURRENT TIER</span><h3>${esc(cur[0])}</h3><div class="tierbar" role="img" aria-label="${xp} xp"><i style="width:${(Math.min(1, (ri + pc) / (n - 1)) * 100).toFixed(1)}%"></i>${RANKS.slice(1, 4).map((r, k) => `<em style="left:${mark(k).toFixed(1)}%" class="${ri > k ? "on" : ""}">${k + 2}</em>`).join("")}</div><div class="tier-xp"><span>XP: <b>${fmt(xp)}</b>${nx ? " / " + fmt(nx[1]) : ""}</span><span>${nx ? "Next tier: <b>" + esc(nx[0]) + "</b>" : "top tier"}</span></div></div>
+      <div class="abox acc-fair"><span class="atitle">PLAY MONEY</span><p>Everything here is play money. Nothing is charged, and nothing can be cashed out or paid out. 18+</p></div></div>`; }
   { // what you have, what you have made over the range you picked, and its shape
     const now = Date.now(), h = state.hist, from = pRng ? now - pRng : (h.length ? h[0][0] : now), gain = pRng ? profitSince(pRng) : all, up = gain >= 0, N = 56, pts = [];
     let j = 0; for (let i = 0; i < N; i++) { const ts = from + (now - from) * i / (N - 1); while (j + 1 < h.length && h[j + 1][0] <= ts) j++; const e = h[j]; pts.push(e && e[0] <= ts ? e[1] - (e[2] || 0) - START : h.length ? h[0][1] - (h[0][2] || 0) - START : 0); } pts[N - 1] = all;
@@ -149,13 +156,13 @@ function show(v, keep) {
   if (v !== "profile" && pSel) { pSel = null; pSelAsk = 0; } if (v !== "profile") document.body.classList.remove("picking");                                                  // keep: draw the page again where you are (after selling, say) instead of jumping back to the top
   view = VIEWS.includes(v) ? v : "home"; document.body.classList.toggle("on-home", view === "home");
   if (view === "odds") oddsKey = ""; VIEWS.forEach(x => $("v-" + x).classList.toggle("on", x === view)); document.querySelectorAll("#tabs a, #btabs a").forEach(a => a.classList.toggle("on", a.dataset.v === (TAB_OF[view] || view)));
-  ({ home: renderHome, live: Live.render, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds, invite: renderInvite, limited: renderLimited })[view](); if (!keep) scrollTo(0, 0);
+  ({ home: renderHome, live: Live.render, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds, invite: renderInvite, limited: renderLimited, inside: renderInside, rewards: renderRewards })[view](); Shell.title(view); if (!keep) scrollTo(0, 0);
 }
 function route() { const h = location.hash.replace(/^#\/?/, ""); if (h === "fresh") { startOver(); state.seenIntro = false; state.ageOK = false; state.pack = "fp"; persist(); location.replace(location.pathname + "#/"); location.reload(); return; }   // /#/fresh: start again as a brand-new player (the age check and the intro come back too)
  show(h === "vault" || h === "index" ? "collection" : h || "home"); }
 // the market moved: redraw whatever is on screen without jumping the page
 function refreshLive() {
-  if (SS || !$("share").hidden || !$("cut").hidden || view === "invite" || view === "limited") return; ({ home: renderHome, live: Live.render, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds })[view]();
+  if (SS || !$("share").hidden || !$("cut").hidden || view === "invite" || view === "limited") return; ({ home: renderHome, live: Live.render, market: renderMarket, profile: renderProfile, collection: renderCollection, odds: renderOdds, inside: renderInside, rewards: renderRewards })[view]();
   if (modalNo && !$("modal").hidden) cardModal(modalNo, true);   // updated in place: the buttons you are pressing stay where they are
   if (typeof Tick !== "undefined") Tick.scan();
 }
