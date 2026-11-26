@@ -37,7 +37,9 @@ LOG = DATA / "real_test_log.jsonl"
 STOP = ROOT / "STOP_TENNIS_REAL"
 RUN_S = 2 * 3600
 MAX_LOSS = 4.0
-AUTO_MAX_LOSS = 5.0              # account holder, Nov 24: "start them with real money with the same 5 dollar stop loss"
+AUTO_MAX_LOSS = 10.0             # account holder, Nov 24: "start them with real money with the same 5 dollar stop loss"
+# account holder, Nov 26: "increase the bet size" -> 2x: 2 contracts a bet, stop moved from -$5 to -$10 in proportion
+AUTO_CONTRACTS = 2
 TOP_N = 3
 AUTO_N = 50                      # account holder, Nov 25: "use more tennis strategies at once": the whole frozen batch
 BAND_TOL = 0.03                                    # live ask may be this far outside a band strategy's prices
@@ -125,7 +127,7 @@ def run(log=print, auto=False):
     log(f"tennis {'auto-better' if auto else 'real test'}: {len(strats)} strategies, balance ${total:.2f} "
         f"(crypto shard ${crypto:.2f}), stop at -${MAX_LOSS:.2f}")
     if auto:
-        notify.post("🎾 Tennis auto-better started", [f"{len(strats)} strategies · 1 contract a bet · stops at −${MAX_LOSS:.0f}",
+        notify.post("🎾 Tennis auto-better started", [f"{len(strats)} strategies · {AUTO_CONTRACTS} contracts a bet · stops at −${MAX_LOSS:.0f}",
                                                       *[lab_desc(s) for s in strats]], notify.GREEN)
     else:
         notify.post("🎾 Real-money test started", [f"Top {len(strats)} strategies · 1 contract a bet · 2 hours · stops at −${MAX_LOSS:.0f}",
@@ -143,7 +145,7 @@ def run(log=print, auto=False):
                 _log({"event": "strategies", "strategies": [s["id"] for s in new]})
                 added = [s for s in new if s["id"] not in {x["id"] for x in strats}]
                 if added:
-                    notify.post("🎾 Auto-better: strategy added", [lab_desc(s) for s in added] + ["1 contract a bet"], notify.GOLD)
+                    notify.post("🎾 Auto-better: strategy added", [lab_desc(s) for s in added] + [f"{AUTO_CONTRACTS} contracts a bet"], notify.GOLD)
                 strats = new
             refreshed = now
         if auto and not strats:
@@ -189,14 +191,15 @@ def run(log=print, auto=False):
                     _log({"event": "skip", "ticker": m["ticker"], "strategy": s["id"],
                           "why": f"live ask {ask:.2f} outside the band"}); continue
                 limit = round(min(0.98, ask + SLACK_C / 100), 2)
-                worst = limit + tapi.fee(limit, 1)
+                nc = AUTO_CONTRACTS if auto else 1
+                worst = limit * nc + tapi.fee(limit, nc)
                 if realized - open_cost - worst <= -MAX_LOSS:
                     _log({"event": "skip_limit", "ticker": m["ticker"], "strategy": s["id"],
                           "why": f"loss limit: realized {realized:+.2f}, open {open_cost:.2f}, this bet up to {worst:.2f}"})
                     continue
                 cid = str(uuid.uuid4())
-                body = KR.order_body(m["ticker"], side, limit, 1, cid)
-                _log({"event": "order", "ticker": m["ticker"], "strategy": s["id"], "side": side, "limit": limit,
+                body = KR.order_body(m["ticker"], side, limit, nc, cid)
+                _log({"event": "order", "ticker": m["ticker"], "strategy": s["id"], "side": side, "limit": limit, "n": nc,
                       "book_ask": ask, "client_order_id": cid, "minute": round(float(m["rel"][-1]), 1)})
                 try:
                     resp = client.create_order(body)

@@ -936,6 +936,12 @@ class Runner:
             base["min_one_contract"] = True
         if why is None and n < 1:
             why = "stake too small for one contract"
+        # size_mult (account holder, Nov 26: "increase the bet size", chose 2x): every bet is this many times the
+        # contracts the sizing rules give
+        mult = self.L.get("size_mult", 1)
+        if mult != 1 and n >= 1:
+            n = min(int(n * mult), self.L["max_contracts_per_order"])
+            base["size_mult"] = mult
         max_cost = round(n * limit + kalshi_fee(limit, n), 4)
         if why is None and (self.L.get("max_total_open_risk_usd") is not None
                             or self.L.get("max_total_daily_loss_usd") is not None):
@@ -1495,6 +1501,9 @@ def load_config(path=CONFIG) -> dict:
                                                  or isinstance(lim["max_entries_per_window_side"], bool)
                                                  or lim["max_entries_per_window_side"] < 1):
         raise Stop(f"{path}: max_entries_per_window_side must be an integer >= 1", EXIT_CONFIG)
+    if "size_mult" in lim and (not isinstance(lim["size_mult"], int) or isinstance(lim["size_mult"], bool)
+                               or not 1 <= lim["size_mult"] <= 5):
+        raise Stop(f"{path}: size_mult must be an integer 1-5", EXIT_CONFIG)
     for k in ("edge_kelly", "edge_haircut"):
         if k in lim and (not num(lim[k]) or not 0 < lim[k] <= 1):
             raise Stop(f"{path}: {k} must be in (0, 1]", EXIT_CONFIG)
