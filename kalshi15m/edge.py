@@ -47,7 +47,7 @@ BASE = ["dl", "dl240", "r1z", "r3z", "r5z", "r10z", "refz", "refr1", "refr3", "p
 INTER = ["dl", "refz", "r1z", "r5z", "prevz"]
 FEATURES = BASE + [f + s for f in INTER for s in ("_late", "_early")]
 LATE, EARLY = 10, 5                 # minute >= LATE / minute <= EARLY interactions
-THR, START, END, PMIN, PMAX = 0.05, 4, 13, 0.05, 0.95
+THR, START, END, PMIN, PMAX = 0.04, 4, 13, 0.05, 0.95   # entry bar 5c -> 4c on Nov 27 (account holder: "just do anything you can to improve it"; research/edge_tune)
 ROLL_DAYS, WARM_DAYS, REFIT_DAYS = 35, 28, 3
 LAM_POOL, LAM_COIN = 20.0, 300.0
 LIVE_ON, LIVE_OFF = 1.5, 0.5        # a coin goes live at walk-forward t >= LIVE_ON and stays until t < LIVE_OFF
