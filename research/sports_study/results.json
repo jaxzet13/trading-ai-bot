@@ -274,5 +274,99 @@
    "holdout_pnl": -2.33
   },
   "verdict": "no edge"
+ },
+ "KXNCAAMBGAME": {
+  "series": "KXNCAAMBGAME",
+  "name": "Men's college basketball",
+  "markets": 2389,
+  "games": 1197,
+  "days": 28,
+  "median_volume": 128249.0,
+  "calibration_60min": [
+   {
+    "band": "5-20c",
+    "n": 141,
+    "cents_per_bet": -6.56,
+    "t": -2.89
+   },
+   {
+    "band": "20-40c",
+    "n": 115,
+    "cents_per_bet": -6.1,
+    "t": -1.41
+   },
+   {
+    "band": "40-60c",
+    "n": 123,
+    "cents_per_bet": -9.64,
+    "t": -2.27
+   },
+   {
+    "band": "60-80c",
+    "n": 114,
+    "cents_per_bet": -10.89,
+    "t": -2.43
+   },
+   {
+    "band": "80-90c",
+    "n": 70,
+    "cents_per_bet": -4.34,
+    "t": -1.06
+   },
+   {
+    "band": "90-97c",
+    "n": 87,
+    "cents_per_bet": -1.2,
+    "t": -0.53
+   }
+  ],
+  "walk_forward": {
+   "1": {
+    "bets": 49,
+    "pnl": -0.03,
+    "cents_per_bet": -0.06,
+    "t": -0.01,
+    "days": 14,
+    "days_up": 6,
+    "halves_pnl": [
+     2.4,
+     -2.43
+    ]
+   },
+   "5": {
+    "bets": 295,
+    "pnl": -11.71,
+    "cents_per_bet": -3.97,
+    "t": -1.63,
+    "days": 14,
+    "days_up": 4,
+    "halves_pnl": [
+     -6.29,
+     -5.42
+    ]
+   },
+   "20": {
+    "bets": 1716,
+    "pnl": -38.57,
+    "cents_per_bet": -2.25,
+    "t": -1.37,
+    "days": 14,
+    "days_up": 5,
+    "halves_pnl": [
+     -22.68,
+     -15.89
+    ]
+   }
+  },
+  "holdout": {
+   "rule": "band:m-180:0.15-0.25",
+   "history_t": 2.31,
+   "history_bets": 80,
+   "history_cents": 12.45,
+   "holdout_bets": 48,
+   "holdout_cents": 3.6,
+   "holdout_pnl": 1.73
+  },
+  "verdict": "no edge"
  }
 }
