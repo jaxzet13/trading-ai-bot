@@ -142,7 +142,7 @@ function renderInside() {
   const grails = [...slot].sort((a, b) => BY_ID[b[0]].val - BY_ID[a[0]].val).slice(0, 4).map(([id, w]) => BY_ID[id]);
   const feed = API.on && typeof Live.feed === "function" ? Live.feed().filter(e => BY_ID[e.id]).slice(0, 8) : [];
   const mine = (state.opens || []).slice().reverse().flatMap(o => o.c.map(([no]) => ({ no, t: o.t }))).filter(x => BY_NO[x.no]).slice(0, 8);
-  const hit = (c, tt, who) => `<button class="hit" data-card="${c.no}" style="--rc:${RAR[c.rar].col}"><span class="hit-art"><img src="${imgOf(c, "", true)}" alt="" draggable="false"></span><span class="hit-t"><b>${money(c.val).replace(/\.00$/, "")}</b><i>${esc(c.name)}</i><small>${esc(who)} · ${Shell.when(tt)}</small></span></button>`;
+  const hit = (c, tt, who) => `<button class="ihit" data-card="${c.no}" style="--rc:${RAR[c.rar].col}"><span class="hit-art"><img src="${imgOf(c, "", true)}" alt="" draggable="false"></span><span class="hit-t"><b>${money(c.val).replace(/\.00$/, "")}</b><i>${esc(c.name)}</i><small>${esc(who)} · ${Shell.when(tt)}</small></span></button>`;
   const hits = feed.length ? feed.map(e => hit(BY_ID[e.id], e.t, "a player")).join("") : mine.length ? mine.map(x => hit(BY_NO[x.no], x.t, "you")).join("") : `<p class="small in-none">${API.on ? "No hits yet." : "The live feed needs the game's server. Nothing is shown rather than something made up."}</p>`;
   const od = insideOdds(pk);
   $("inBody").innerHTML = `<div class="in-head"><button class="hback" data-back aria-label="Back">←</button></div>
