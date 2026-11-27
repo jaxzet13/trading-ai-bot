@@ -1,0 +1,96 @@
+{
+ "KXNBAGAME": {
+  "series": "KXNBAGAME",
+  "name": "NBA",
+  "markets": 674,
+  "games": 337,
+  "days": 51,
+  "median_volume": 2343817.0,
+  "calibration_60min": [
+   {
+    "band": "5-20c",
+    "n": 90,
+    "cents_per_bet": -7.52,
+    "t": -2.65
+   },
+   {
+    "band": "20-40c",
+    "n": 85,
+    "cents_per_bet": -6.13,
+    "t": -1.27
+   },
+   {
+    "band": "40-60c",
+    "n": 103,
+    "cents_per_bet": -7.15,
+    "t": -1.46
+   },
+   {
+    "band": "60-80c",
+    "n": 82,
+    "cents_per_bet": -4.98,
+    "t": -1.02
+   },
+   {
+    "band": "80-90c",
+    "n": 53,
+    "cents_per_bet": -0.19,
+    "t": -0.04
+   },
+   {
+    "band": "90-97c",
+    "n": 59,
+    "cents_per_bet": 1.9,
+    "t": 1.12
+   }
+  ],
+  "walk_forward": {
+   "1": {
+    "bets": 72,
+    "pnl": -0.22,
+    "cents_per_bet": -0.31,
+    "t": -0.07,
+    "days": 37,
+    "days_up": 22,
+    "halves_pnl": [
+     0.91,
+     -1.13
+    ]
+   },
+   "5": {
+    "bets": 363,
+    "pnl": -15.67,
+    "cents_per_bet": -4.32,
+    "t": -1.03,
+    "days": 37,
+    "days_up": 19,
+    "halves_pnl": [
+     -13.05,
+     -2.62
+    ]
+   },
+   "20": {
+    "bets": 1472,
+    "pnl": -96.56,
+    "cents_per_bet": -6.56,
+    "t": -2.28,
+    "days": 37,
+    "days_up": 19,
+    "halves_pnl": [
+     -77.27,
+     -19.29
+    ]
+   }
+  },
+  "holdout": {
+   "rule": "band:m-180:0.75-0.95",
+   "history_t": 3.64,
+   "history_bets": 45,
+   "history_cents": 11.27,
+   "holdout_bets": 41,
+   "holdout_cents": -6.56,
+   "holdout_pnl": -2.69
+  },
+  "verdict": "no edge"
+ }
+}
