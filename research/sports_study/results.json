@@ -180,5 +180,99 @@
    "holdout_pnl": -0.39
   },
   "verdict": "no edge"
+ },
+ "KXNCAAFGAME": {
+  "series": "KXNCAAFGAME",
+  "name": "College football",
+  "markets": 1898,
+  "games": 949,
+  "days": 38,
+  "median_volume": 308375.0,
+  "calibration_60min": [
+   {
+    "band": "5-20c",
+    "n": 249,
+    "cents_per_bet": -2.76,
+    "t": -1.32
+   },
+   {
+    "band": "20-40c",
+    "n": 278,
+    "cents_per_bet": -2.05,
+    "t": -0.72
+   },
+   {
+    "band": "40-60c",
+    "n": 261,
+    "cents_per_bet": -4.69,
+    "t": -1.52
+   },
+   {
+    "band": "60-80c",
+    "n": 277,
+    "cents_per_bet": -7.38,
+    "t": -2.64
+   },
+   {
+    "band": "80-90c",
+    "n": 163,
+    "cents_per_bet": -3.6,
+    "t": -1.27
+   },
+   {
+    "band": "90-97c",
+    "n": 112,
+    "cents_per_bet": -3.16,
+    "t": -1.32
+   }
+  ],
+  "walk_forward": {
+   "1": {
+    "bets": 28,
+    "pnl": -3.58,
+    "cents_per_bet": -12.79,
+    "t": -0.99,
+    "days": 24,
+    "days_up": 7,
+    "halves_pnl": [
+     -2.64,
+     -0.94
+    ]
+   },
+   "5": {
+    "bets": 209,
+    "pnl": -20.99,
+    "cents_per_bet": -10.04,
+    "t": -1.78,
+    "days": 24,
+    "days_up": 5,
+    "halves_pnl": [
+     -14.75,
+     -6.24
+    ]
+   },
+   "20": {
+    "bets": 1333,
+    "pnl": -71.26,
+    "cents_per_bet": -5.35,
+    "t": -2.0,
+    "days": 24,
+    "days_up": 7,
+    "halves_pnl": [
+     -31.11,
+     -40.15
+    ]
+   }
+  },
+  "holdout": {
+   "rule": "band:m0:0.85-0.90",
+   "history_t": 23.68,
+   "history_bets": 31,
+   "history_cents": 10.03,
+   "holdout_bets": 19,
+   "holdout_cents": -12.26,
+   "holdout_pnl": -2.33
+  },
+  "verdict": "no edge"
  }
 }
