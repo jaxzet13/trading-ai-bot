@@ -1,0 +1,105 @@
+<title>Sports Backtests</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* layout: one reading column; verdict first, then the evidence as a single scale of cents per bet around a zero line */
+:root{
+  --bg:#0c0d12; --panel:#14161f; --line:#262a38; --fg:#eceef5; --mute:#969cb0;
+  --loss:#ff5d8f; --flat:#8b7cf6; --gold:#f5c451; --zero:#eceef5;
+  --display:"Unbounded","Inter",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  --bg:#f6f6fa; --panel:#ffffff; --line:#dcdfea; --fg:#14161f; --mute:#5b6175;
+  --loss:#c81e5b; --flat:#5b47d6; --gold:#8a6400; --zero:#14161f; color-scheme:light } }
+:root[data-theme="light"]{
+  --bg:#f6f6fa; --panel:#ffffff; --line:#dcdfea; --fg:#14161f; --mute:#5b6175;
+  --loss:#c81e5b; --flat:#5b47d6; --gold:#8a6400; --zero:#14161f; color-scheme:light }
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+section{display:flex;flex-direction:column;gap:14px;min-width:0}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+h1{font:700 clamp(30px,7vw,52px)/1.08 var(--display);margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--loss)}
+h2{font:500 20px/1.25 var(--display);margin:0;text-wrap:balance}
+p{margin:0;max-width:65ch;text-wrap:pretty}
+.lead{font-size:18px;color:var(--fg)}
+.mute{color:var(--mute);font-size:14px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border-block:1px solid var(--line)}
+.facts div{padding:14px 12px 14px 0}
+.facts b{display:block;font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.facts span{font-size:13px;color:var(--mute)}
+.chart{display:flex;flex-direction:column;gap:6px}
+.grp{font:600 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:14px}
+.row{display:grid;grid-template-columns:minmax(0,13.5em) minmax(0,1fr) 5.2em;gap:10px;align-items:center;font-size:14px}
+.row .lab{min-width:0}
+.track{position:relative;height:18px;background:linear-gradient(var(--line),var(--line)) no-repeat;background-size:100% 1px;background-position:0 50%}
+.track i{position:absolute;top:3px;height:12px;border-radius:2px}
+.track u{position:absolute;top:0;bottom:0;width:1px;background:var(--zero);left:66.667%}
+.val{font:600 13px/1 var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.val small{display:block;font-weight:400;color:var(--mute);margin-top:3px}
+.axis{display:grid;grid-template-columns:minmax(0,13.5em) minmax(0,1fr) 5.2em;gap:10px;font:400 12px/1 var(--mono);color:var(--mute)}
+.axis div:nth-child(2){position:relative;height:14px}
+.axis span{position:absolute;transform:translateX(-50%)}
+.key{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mute)}
+.key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:9px 12px 9px 0;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 12px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+td.n{font-family:var(--mono);white-space:nowrap}
+.note{border-left:2px solid var(--gold);padding-left:14px}
+@media (max-width:520px){ .row,.axis{grid-template-columns:minmax(0,1fr) 4.6em} .row .track,.axis div:nth-child(2){grid-column:1 / -1;grid-row:2} .axis div:first-child{display:none} .row{row-gap:4px;margin-top:6px} }
+
+.pill{display:inline-block;font:600 12px/1 var(--mono);padding:5px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.pill.no{color:var(--loss);border-color:color-mix(in srgb,var(--loss) 45%,transparent)}
+.pill.maybe{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 45%,transparent)}
+.pill.edge{color:var(--flat);border-color:color-mix(in srgb,var(--flat) 55%,transparent)}
+.pill.wait{color:var(--mute)}
+td.num{font-family:var(--mono);white-space:nowrap;text-align:right}
+th.num{text-align:right}
+.big{font:700 clamp(22px,4.5vw,30px)/1.2 var(--display);margin:0;text-wrap:balance}
+</style>
+<main>
+  <section>
+    <div class="eyebrow">Per-sport backtests &middot; Kalshi game-winner markets &middot; updated Nov 27 21:52 UTC</div>
+    <h1>Downloading game history.</h1>
+    <p class="lead">Results appear here sport by sport as each download finishes.</p>
+    <div class="facts">
+      <div><b>0/16</b><span>sports tested</span></div>
+      <div><b>0</b><span>games scored</span></div>
+      <div><b>~3,000</b><span>strategies tried per sport</span></div>
+      <div><b>0</b><span>with an edge</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Each sport, tested on its own</h2>
+    <p>Each day, the bot picked the 5 strategies that had done best on <em>earlier</em> days only, and bet them on that day's games. The money column is the average result per $1 contract after Kalshi's fee. This is the same honest test the crypto bot passed.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Sport</th><th class="num">Games</th><th class="num">Per $1 bet</th><th class="num">Days up</th><th>Verdict</th></tr></thead>
+      <tbody><tr><td>NBA</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>NFL</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>College football</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>Men's college basketball</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>NHL</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>Premier League</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>Champions League</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>La Liga</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>Counter-Strike 2</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>UFC</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>Women's college basketball</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>Liga MX</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>MLS</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>Bundesliga</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>League of Legends</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr><tr><td>Dota 2</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td><span class='pill wait'>downloading</span></td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Should we use real money?</h2>
+    <div class="note"><p>Not yet. Nothing has passed. Real money only goes in after a sport shows an edge here <em>and</em> keeps it on new games in a no-money forward test.</p></div>
+  </section>
+
+  <section>
+    <h2>Best price band an hour before the game</h2>
+    <p>A simpler check: buy every team in one price band an hour before the start. This shows the best band per sport. It was picked after the fact, so treat it as a clue, not a result.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Sport</th><th class="num">Band</th><th class="num">Per $1</th><th class="num">t</th><th class="num">Bets</th></tr></thead>
+      <tbody><tr><td colspan='5' class='mute'>Waiting for the first sport.</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>How it works</h2>
+    <p>For every settled game in the last 60 days the bot replays Kalshi's minute-by-minute prices. It decides on one minute's price and buys the next minute at the worst ask, so there are no lucky fills, then pays Kalshi's fee. Next up after this: same-game parlays, where the winner, spread and total of one game are linked and might be mispriced as a combo.</p>
+    <p class="mute">Full numbers: research/sports_study in the repository.</p>
+  </section>
+</main>
