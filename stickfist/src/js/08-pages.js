@@ -182,7 +182,7 @@ function cardModal(no, keep) {
     ${best ? `<div class="mk"><div class="label">Your ${cs.length > 1 ? "best " : ""}copy · live</div>${Chart.html(best)}<div class="small">${Val.watching(best)} AI buyers watching${mv ? ` · ${mv.ago ? mv.ago + "h ago" : "this hour"} buyers ${mv.pct > 0 ? "rushed in" : "dumped it"} ${pctShort(mv.pct)}` : ""} · simulated</div></div>` : ""}
     <p class="dim facts">${fmt(card.chars)} characters · starts at ${money(card.val)} · ${card.retired ? "retired: no pack holds it any more" : "turns up in " + chance(p, packOf(card))}${card.cap ? `<br>“${esc(card.cap)}”` : ""}</p>
     ${Cut.has(card.id) ? `<div><button class="btn small" data-cut="${card.id}">▶ ${cs.length ? "Watch" : "Preview"} its cutscene</button></div>` : ""}
-    ${styles}</div>`, false, keep); Chart.start(); if (best) Alive.on($("mbox").querySelector(".mcard .card"), best);
+    ${styles}</div>`, false, keep); Chart.start(); if (best) { Alive.on($("mbox").querySelector(".mcard .card"), best); CardFX.on($("mbox").querySelector(".mcard .card"), best); }
 }
 /* ---- selling: one tap, and a few seconds to take it back ---- */
 let lastSale = null;

@@ -1,0 +1,65 @@
+/* ============================================================================
+   6d. CARD FX. Every card is a picture made of text, and when it is on show the text around it moves: characters that rain, burn, orbit, flicker and
+   strike, in the card's own colour, over the picture. Each card has its own mix (Ronin stands in a storm, Reaper in embers and shock rings,
+   Grimm in falling code, Luna in orbit), and the rarer the card, the harder it hits. Nothing here is a picture: every spark, drop, bolt and ring is a single character.
+   A transparent canvas lies over the card's picture; it works with the picture's own animation (6b) and with the glyph cards (6c).
+   ========================================================================== */
+const CardFX = (() => {
+  const TAU = Math.PI * 2, hh = (a, b, c) => { let h = Math.imul(a | 0, 374761393) ^ Math.imul(b | 0, 668265263) ^ Math.imul((c || 0) | 0, 2147483647); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+  const clamp = (x, a = 0, b = 1) => x < a ? a : x > b ? b : x, hex = c => { const n = parseInt(c.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }, mixc = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
+  // each card: its colour, and what happens around it. kick: the picture jolts now and then. Names of the effects are below.
+  const SET = {
+    // First Print
+    stitch: { c: "#8fe6a8", f: ["stars", "dust"] }, brick: { c: "#e0925a", f: ["dust", "sparks"] }, orbit: { c: "#9ec5ff", f: ["orbit", "stars"] }, rook: { c: "#b9a6ff", f: ["dust", "scan"] }, mop: { c: "#7fd6ff", f: ["bubbles"] }, pan: { c: "#ffb35c", f: ["sparks", "dust"] },
+    cone: { c: "#ff8a3d", f: ["scan", "stars"] }, fuse: { c: "#ffb347", f: ["sparks", "embers"] }, countdown: { c: "#ff5d5d", f: ["scan", "digits"] }, spark: { c: "#ffe066", f: ["sparks", "stars"] }, flare: { c: "#ff6a4a", f: ["embers", "sparks"] }, bubble: { c: "#8fe0ff", f: ["bubbles", "stars"] },
+    tempest: { c: "#7fb4ff", f: ["rain", "lightning"], kick: 1 }, surge: { c: "#5fd2ff", f: ["bubbles", "rain"] }, ignition: { c: "#ff7a2a", f: ["fire", "sparks"], kick: 1 }, console: { c: "#6fffb0", f: ["matrix", "scan"] }, phantom: { c: "#c9b8ff", f: ["wisp", "scan"] },
+    kraken: { c: "#4fe0c0", f: ["bubbles", "rain"], kick: 1 }, suit: { c: "#cfe6ff", f: ["stars", "scan"] }, colossus: { c: "#d8c9a8", f: ["dust", "rings"], kick: 1 }, gantry: { c: "#ffb347", f: ["sparks", "scan"] }, leviathan: { c: "#7fa8ff", f: ["bubbles", "stars", "rings"] },
+    liftoff: { c: "#ffb35c", f: ["fire", "speed", "sparks"], kick: 1 }, null: { c: "#e6e6ff", f: ["orbit", "stars", "rings"] }, booster: { c: "#ff8a3d", f: ["fire", "sparks", "rings"], kick: 1 }, shogun: { c: "#ffd23f", f: ["sparks", "rings", "embers"] },
+    apogee: { c: "#9fd0ff", f: ["speed", "stars", "sparks"] }, ronin: { c: "#ff6fd0", f: ["rain", "lightning", "sparks"], kick: 1 }, luna: { c: "#b9c8ff", f: ["orbit", "stars", "dust"] }, titan: { c: "#a5b4ff", f: ["rings", "lightning", "dust"], kick: 1 },
+    grimm: { c: "#6fff9a", f: ["matrix", "lightning", "scan"] }, reaper: { c: "#ff4a4a", f: ["embers", "rings", "fire"], kick: 1 }, mars: { c: "#ff6a3a", f: ["rings", "dust", "stars"], kick: 1 }, umbra: { c: "#ffb347", f: ["orbit", "rings", "stars"] }, horizon: { c: "#c26bff", f: ["rings", "orbit", "stars", "lightning"], kick: 1 },
+    // painted ones that stayed
+    ms062: { c: "#cfe6ff", f: ["stars", "bubbles"] }, ms068: { c: "#6fffb0", f: ["matrix", "scan"] }, ms069: { c: "#e6e6ff", f: ["dust", "stars"] }, ms074: { c: "#ffb35c", f: ["rings", "stars", "embers"] }, ec081: { c: "#ffe9b0", f: ["rings", "stars"] }, ec085: { c: "#e0925a", f: ["rings", "dust"], kick: 1 }
+  };
+  const has = id => !!SET[id];
+  const ch = (s, i) => s[i % s.length];
+  const FX = {
+    aura(g, W, H, t, c, k) { const r = W * (.62 + .05 * Math.sin(t * 1.6)), gr = g.createRadialGradient(W / 2, H * .5, 0, W / 2, H * .5, r); gr.addColorStop(0, `rgba(${c[0]},${c[1]},${c[2]},${.12 * k + .05 * Math.sin(t * 2)})`); gr.addColorStop(1, `rgba(${c[0]},${c[1]},${c[2]},0)`); g.fillStyle = gr; g.fillRect(0, 0, W, H); },
+    stars(g, W, H, t, c, k, put) { for (let i = 0; i < 20; i++) { const a = Math.max(0, Math.sin(t * (1 + hh(i, 1) * 2.4) + hh(i, 2) * 6)); if (a > .5) put(ch("+·*", i), W * (.06 + .88 * hh(i, 3)), H * (.05 + .9 * hh(i, 4)), [255, 255, 255], a * 1.1, W * (.05 + hh(i, 5) * .05)); } },
+    dust(g, W, H, t, c, k, put) { for (let i = 0; i < 26; i++) { const u = (t * (.03 + hh(i, 1) * .05) + hh(i, 2)) % 1; put(".", W * ((hh(i, 3) + u * .25) % 1), H * (1 - u), mixc(c, [255, 255, 255], .4), .5 * Math.sin(u * 3.14), W * .045); } },
+    embers(g, W, H, t, c, k, put) { for (let i = 0; i < 26 * k; i++) { const u = (t * (.16 + hh(i, 1) * .3) + hh(i, 2)) % 1; put(ch("*+x#", i), W * (.08 + .84 * hh(i, 3)) + Math.sin(u * 7 + i) * W * .04, H * (1.03 - u * 1.06), mixc(c, [255, 220, 130], u), (1 - u) * 1, W * (.06 + hh(i, 4) * .06)); } },
+    rain(g, W, H, t, c, k, put) { for (let i = 0; i < 34 * k; i++) { const u = (t * (.8 + hh(i, 2) * .7) + hh(i, 3)) % 1; put(hh(i, 5) > .5 ? "/" : "|", W * (hh(i, 1) * 1.25 - .1 + u * .18), H * (-.04 + u * 1.08), mixc(c, [210, 225, 255], .5), .5 * Math.sin(u * 3.14), W * .11); } },
+    sparks(g, W, H, t, c, k, put) { const P = 1.3, n = Math.floor(t / P), tau = t % P; if (tau > .85) return; for (let j = 0; j < 16 * k; j++) { const a = hh(n, j, 1) * TAU, sp = .12 + hh(n, j, 2) * .3, ox = W * (.25 + .5 * hh(n, 77, 3)), oy = H * (.3 + .4 * hh(n, 78, 4)); put(ch("*+x'", j), ox + Math.cos(a) * sp * tau * W * 1.6, oy + Math.sin(a) * sp * tau * W * 1.6 + tau * tau * W * .5, mixc(c, [255, 255, 255], .5 + .5 * hh(n, j, 5)), 1 - tau / .85, W * .08); } },
+    rings(g, W, H, t, c, k, put, o) { const P = 2.3, tau = t % P, r = tau / P * W * .95, N = Math.round(24 + r * .3), a = 1 - tau / P; for (let i = 0; i < N; i++) { const an = i / N * TAU + t * .5; put(ch("o·*O", i), W / 2 + Math.cos(an) * r, H * .5 + Math.sin(an) * r * 1.1, c, a * 1.1 * Math.min(1, k + .3), W * .075); } void o; },
+    lightning(g, W, H, t, c, k, put) { const P = 3.4, n = Math.floor(t / P), tau = t % P; if (tau > .24 || hh(n, 9, 9) < .35) return; const x0 = W * (.2 + .6 * hh(n, 1, 1)), segs = 11; let x = x0, y = 0; g.fillStyle = `rgba(255,255,255,${.35 * (1 - tau / .24)})`; g.fillRect(0, 0, W, H);
+      for (let s = 0; s < segs; s++) { const nx = x + (hh(n, s, 2) - .5) * W * .22, ny = y + H * .075; for (let m = 0; m < 4; m++) { const u = m / 4; put(nx > x ? "\\" : "/", x + (nx - x) * u, y + (ny - y) * u, mixc(c, [255, 255, 255], .8), 1 - tau / .24, W * .07); } x = nx; y = ny; } },
+    matrix(g, W, H, t, c, k, put) { for (let i = 0; i < 12; i++) { const hd = ((t * (.18 + hh(i, 1) * .3) + hh(i, 2)) % 1.4) * H * 1.1; for (let j = 0; j < 8; j++) put(ch("01#%@&$", Math.floor(t * 7) + i + j), W * (i + .5) / 12, hd - j * W * .06, mixc(c, [255, 255, 255], j === 0 ? .8 : 0), (1 - j / 8) * .95, W * .075); } },
+    orbit(g, W, H, t, c, k, put) { const rx = W * .4, ry = W * .13, rot = Math.sin(t * .3) * .25 + .35; for (let i = 0; i < 24; i++) { const an = i / 24 * TAU + t * .55, x = Math.cos(an) * rx, y = Math.sin(an) * ry, X = W / 2 + x * Math.cos(rot) - y * Math.sin(rot), Y = H * .52 + x * Math.sin(rot) + y * Math.cos(rot), front = (Math.sin(an) + 1) / 2; put(ch("·oO*", i), X, Y, mixc(c, [255, 255, 255], front * .7), .35 + .65 * front, W * (.05 + front * .05)); } },
+    scan(g, W, H, t, c, k, put) { const y = ((t * .28) % 1.2 - .1) * H; for (let i = 0; i < 26; i++) put(ch("=-≡", i), W * (i + .5) / 26, y, c, .55, W * .05); const gr = g.createLinearGradient(0, y - H * .05, 0, y + H * .02); gr.addColorStop(0, `rgba(${c[0]},${c[1]},${c[2]},0)`); gr.addColorStop(1, `rgba(${c[0]},${c[1]},${c[2]},.14)`); g.fillStyle = gr; g.fillRect(0, y - H * .05, W, H * .07); },
+    fire(g, W, H, t, c, k, put) { for (let i = 0; i < 24; i++) { const hgt = H * (.1 + .14 * (.5 + .5 * Math.sin(t * 5 + i * 1.7)) * k); for (let j = 0; j < 5; j++) { const u = j / 5, y = H - u * hgt - W * .02; if (u * hgt > hgt) break; put(j % 2 ? "^" : "A", W * (i + .5) / 24 + Math.sin(t * 6 + i + j) * W * .01, y, mixc([255, 90, 30], [255, 230, 120], u), (1 - u) * .85, W * .06); } } },
+    bubbles(g, W, H, t, c, k, put) { for (let i = 0; i < 14; i++) { const u = (t * (.08 + hh(i, 1) * .14) + hh(i, 2)) % 1; put(ch("oO°", i), W * (.08 + .84 * hh(i, 3)) + Math.sin(u * 9 + i) * W * .03, H * (1.05 - u * 1.1), mixc(c, [255, 255, 255], .5), (1 - u) * .8, W * (.04 + hh(i, 4) * .05)); } },
+    wisp(g, W, H, t, c, k, put) { for (let i = 0; i < 18; i++) { const u = (t * (.07 + hh(i, 1) * .1) + hh(i, 2)) % 1; put(ch("~≈s", i), W * (.1 + .8 * hh(i, 3)) + Math.sin(u * 6 + i) * W * .07, H * (1 - u), c, Math.sin(u * 3.14) * .6, W * .06); } },
+    speed(g, W, H, t, c, k, put) { for (let i = 0; i < 18; i++) { const u = (t * (1.1 + hh(i, 2)) + hh(i, 3)) % 1, side = hh(i, 4) > .5 ? 1 : 0; put("|", W * (side ? .86 + .12 * hh(i, 1) : .02 + .12 * hh(i, 1)), H * (u * 1.2 - .1), c, .6 * Math.sin(u * 3.14), W * .08); } },
+    digits(g, W, H, t, c, k, put) { const n = Math.floor(t * .9) % 4; put(String(3 - n), W * .84, H * .12, c, .75, W * .16); }
+  };
+  const loop = { raf: 0, all: new Set() }, by = new WeakMap();
+  class One {
+    constructor(card, id, opts) { this.card = card; this.id = id; this.s = SET[id]; this.c = hex(this.s.c); this.pic = card.querySelector(".pic"); this.cv = document.createElement("canvas"); this.cv.className = "fxo"; this.cv.setAttribute("aria-hidden", "true"); this.t0 = performance.now(); this.burst = opts && opts.burst ? performance.now() : 0; const R = RAR[BY_ID[id].rar], tier = R ? R.tier : 0; this.k = clamp(.55 + tier * .07, .55, 1.4); this.w = 0; this.prep(); }
+    prep(n) { const pic = this.pic; if (!pic) return; const w = pic.clientWidth, h = pic.clientHeight; if (!w || !h) { if ((n || 0) < 40) setTimeout(() => this.prep((n || 0) + 1), 60); return; } this.w = w; this.h = h; this.d = Math.min(devicePixelRatio || 1, 2); this.cv.width = Math.round(w * this.d); this.cv.height = Math.round(h * this.d); this.g = this.cv.getContext("2d"); this.pic.appendChild(this.cv); this.ok = true; this.frame(performance.now()); }
+    frame(now) {
+      if (!this.ok) return; { const pc = this.card.querySelector(".pic"); if (pc && pc !== this.pic) { this.pic = pc; } if (this.pic && this.cv.parentNode !== this.pic) this.pic.appendChild(this.cv); } if (this.pic.clientWidth !== this.w) { this.ok = false; this.cv.remove(); this.prep(); return; }
+      const g = this.g, W = this.w, H = this.h, t = (now - this.t0) / 1000 + hh(this.id.length, 3) * 10, c = this.c, k = this.k; g.setTransform(this.d, 0, 0, this.d, 0, 0); g.clearRect(0, 0, W, H); g.font = `700 20px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; g.textAlign = "center"; g.textBaseline = "middle";
+      const put = (s, x, y, col, a, size) => { if (a <= .01) return; g.globalAlpha = clamp(a); g.font = `700 ${Math.max(6, size).toFixed(1)}px "JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace`; g.fillStyle = `rgb(${col[0] | 0},${col[1] | 0},${col[2] | 0})`; g.fillText(s, x, y); g.globalAlpha = 1; };
+      g.globalCompositeOperation = "lighter"; FX.aura(g, W, H, t, c, k); g.globalCompositeOperation = "source-over";
+      for (const f of this.s.f) FX[f](g, W, H, t, c, k, put, this);
+      // a jolt now and then: the whole picture shoves and settles
+      if (this.s.kick) { const P = 2.9, tau = t % P; this.pic.style.translate = tau < .22 ? `${((hh(Math.floor(t / P), 1, 1) - .5) * 7 * (1 - tau / .22) * k).toFixed(1)}px ${((hh(Math.floor(t / P), 2, 2) - .5) * 5 * (1 - tau / .22) * k).toFixed(1)}px` : ""; }
+      // when the card has just been turned over: a ring of characters and a flash go out from the middle
+      if (this.burst) { const tb = (now - this.burst) / 1000; if (tb < 1.5) { const r = tb / 1.5 * W * 1.1, N = Math.round(30 + r * .5); for (let i = 0; i < N; i++) { const an = i / N * TAU; put(ch("*+o#", i), W / 2 + Math.cos(an) * r, H * .5 + Math.sin(an) * r * 1.15, mixc(c, [255, 255, 255], .6), (1 - tb / 1.5), W * .06); } g.fillStyle = `rgba(255,255,255,${.28 * Math.max(0, 1 - tb / .35)})`; g.fillRect(0, 0, W, H); } else this.burst = 0; }
+    }
+    drop() { this.ok = false; this.cv.remove(); this.pic && (this.pic.style.translate = ""); }
+  }
+  function tickAll(now) { loop.raf = 0; for (const o of [...loop.all]) { if (!o.card.isConnected) { loop.all.delete(o); by.delete(o.card); o.drop(); continue; } if (!document.hidden && o.card.offsetParent !== null) o.frame(now); } if (loop.all.size) loop.raf = requestAnimationFrame(tickAll); }
+  // put a card's effects around it (again and again for the same card: it only starts once). `burst` = it was just turned over.
+  function on(card, copy, opts) { if (reduced || !card || !copy) return; const id = BY_NO[copy.no].id; if (!has(id)) return; if (by.get(card)) return; const o = new One(card, id, opts); by.set(card, o); loop.all.add(o); if (!loop.raf) loop.raf = requestAnimationFrame(tickAll); }
+  return { on, has };
+})();
