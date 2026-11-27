@@ -1540,7 +1540,7 @@ header.top .logo, header.top .tabs, #cashBtn, #dailyBtn, #muteBtn { display: non
 .tp-buy { background: radial-gradient(120% 170% at 50% 140%, color-mix(in srgb, var(--pc, #3be477) 85%, #fff 6%) 0%, color-mix(in srgb, var(--pc, #3be477) 38%, #000) 60%, color-mix(in srgb, var(--pc, #3be477) 20%, #000) 100%); }
 
 /* fit: the pack gets whatever height is left, so the button is always above the bar */
-.tp-car { --pw: max(120px, min(50vw, 240px, calc((100dvh - 575px) * .575))); padding: 20px calc((100vw - var(--pw)) / 2) 14px; } .tp-s { width: var(--pw); }
+.tp-car { --pw: max(120px, min(50vw, 240px, calc((100dvh - 640px) * .575))); padding: 20px calc((100vw - var(--pw)) / 2) 14px; } .tp-s { width: var(--pw); }
 .tp-name { margin: 8px 0 12px; } .tp-maxh { margin: 20px 0 4px; } .tp-buy { margin-top: 18px; height: 64px; } .tp-fine { margin: 10px 0 0; }
 main.wrap { padding-bottom: 110px; }
 /* the pack is still; its foil catches the light */
@@ -1565,6 +1565,9 @@ main.wrap { padding-bottom: 110px; }
 body.sheet-open { overflow: hidden; }
 
 .ps-mm { display: grid !important; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; } .ps-mm > div { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; } .ps-mm small { font-size: 16px !important; } .ps-mm b { font-size: 30px !important; margin: 0 !important; } .ps-dots { width: 100% !important; }
+
+.tp { padding-bottom: calc(112px + env(safe-area-inset-bottom)); } .tp-fine { margin-bottom: 0; }
+@media (max-height: 720px) { .tp-car { --pw: max(100px, min(50vw, 240px, calc((100dvh - 500px) * .575))); } .tp-fine { display: none; } .tp-name { font-size: 20px; margin: 4px 0 8px; } .tp-pill { height: 40px; } .tp-maxh { margin-top: 10px; } .tp-big { font-size: 38px; } .tp-buy { height: 56px; margin-top: 12px; } }
 </style>
 </head>
 <body>
