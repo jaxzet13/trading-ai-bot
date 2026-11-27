@@ -99,15 +99,12 @@ const Glass = (() => {
 const PackStyle = (() => {
   const DESC = { normal: "Reliable packs, with results close to the average value of a pack.", high: "Bigger swings: fewer small cards, higher weight on the higher tiers.", max: "The biggest swings: no small fillers, the top cards at their likeliest." };
   const COL = ["#8e939c", "#19c85a", "#3d83f0", "#a24bf0", "#e5484d", "#f5c518"], cache = {}; let sel = "normal", pkid = "";
-  const fmt$ = v => v >= 1000 ? "$" + Math.round(v).toLocaleString("en-US") : v >= 10 ? "$" + Math.round(v) : v >= 1 ? "$" + (Math.round(v * 100) / 100).toString().replace(/(\.\d)$/, "$10") : "$" + v.toFixed(2);
+  const fmt$ = v => v >= 1000 ? "$" + Math.round(v).toLocaleString("en-US") : v >= 100 ? "$" + Math.round(v) : Math.abs(v - Math.round(v)) < .005 ? "$" + Math.round(v) : "$" + v.toFixed(2);
   // the best card in a pack, in six steps from the cheapest card to the top card: worked out from the style's own tables with a fixed draw, so the numbers on screen never move
-  const NICE = [1, 1.5, 2, 2.5, 3, 4, 5, 7.5];
-  const nice = v => { if (v <= 0) return 0; const m = Math.pow(10, Math.floor(Math.log10(v))); let best = m, bd = 1e9; for (const k of NICE.concat(10)) { const c = k * m, d = Math.abs(Math.log(c / v)); if (d < bd) { bd = d; best = c; } } return best; };
+  // Triumph's six bins for the pack: from its Min Value up in the same steps for every style, the last one running to the Max Pull. The percentages are exact: they are the weights of the rare slot's cards that fall in each bin.
   function odds(pk, st) {
-    const key = pk.id + st; if (cache[key]) return cache[key]; const slot = pk.slotsBy[st][RARE_SLOT], t = slot.reduce((a, [, w]) => a + w, 0), vals = slot.map(([id]) => BY_ID[id].val / UNIT), lo = Math.min(...vals), hi = Math.max(...vals);
-    const e = [lo]; for (let k = 1; k < 6; k++) { let v = nice(lo * Math.pow(hi / lo, k / 6)); if (v <= e[e.length - 1]) v = e[e.length - 1] * 1.25; e.push(Math.min(v, hi * .999)); } e.push(hi);
-    for (let k = 1; k < 6; k++) if (e[k] <= e[k - 1]) e[k] = e[k - 1] * 1.05;
-    const cnt = new Array(6).fill(0); slot.forEach(([id, w]) => { const v = BY_ID[id].val / UNIT; let b = 0; while (b < 5 && v >= e[b + 1]) b++; cnt[b] += w / t; });
+    const key = pk.id + st; if (cache[key]) return cache[key]; const slot = pk.slotsBy[st][RARE_SLOT], t = slot.reduce((a, [, w]) => a + w, 0), e = pk.edges, vals = slot.map(([id]) => BY_ID[id].val / UNIT), lo = Math.min(...vals), hi = Math.max(...vals);
+    const cnt = new Array(6).fill(0); slot.forEach(([id, w]) => { const v = BY_ID[id].val / UNIT; let b = 0; while (b < 5 && v >= e[b + 1] - 1e-9) b++; cnt[b] += w / t; });
     return (cache[key] = { rows: cnt.map((c, i) => ({ l: `${fmt$(e[i])} - ${fmt$(e[i + 1])}`, p: c, c: COL[i] })), lo, hi });
   }
   function draw() {
@@ -118,7 +115,7 @@ const PackStyle = (() => {
       <h4 class="ps-h">Estimated Payout Odds: <small>card 5</small></h4>
       <div class="ps-odds">${o.rows.map(r => `<div class="ps-row"><span class="ps-l">${r.l}</span><span class="ps-b"><i style="width:${Math.max(3, r.p / mx * 100).toFixed(1)}%;--c:${r.c}"></i></span><span class="ps-p">${pct(r.p)}</span></div>`).join("")}</div>
       <div class="ps-mm"><div><small>Min Value</small><b>${fmt$(o.lo)}</b></div><i class="ps-dots"></i><div><b>${fmt$(o.hi)}</b><small>Max Pull</small></div></div>
-      <p class="ps-fine">Card 5, the rare slot, is drawn from this table. Its cheapest card is the Min Value and its top card the Max Pull. Exactly this style's odds. Every style returns 94.7% on average, so no style is better value: High and Max swing more. Play money only.</p>
+      <p class="ps-fine">Card 5, the rare slot, is drawn from this table: its cheapest card is the Min Value and its dearest the Max Pull. These are the exact odds of this style. Every style returns 94.7% on average, so no style is better value: High and Max swing more. Play money only.</p>
       <button class="ps-apply" data-psapply type="button" style="--pc:${pk.col}">Apply</button>`;
   }
   function open() { pkid = state.pack; sel = packStyleOf(pkid); const pk = PACK_BY[pkid]; if (!pk) return; $("psheet").hidden = false; $("psScrim").hidden = false; draw(); document.body.classList.add("sheet-open"); }

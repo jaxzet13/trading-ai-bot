@@ -17,16 +17,16 @@ i = s.index('const CARDS = ['); j = s.index('\n];', i)
 k = s.rindex('\n', 0, j); s = s[:k] + (',' if not s[:k].rstrip().endswith(',') else '') + s[k:]; j = s.index('\n];', i)
 s = s[:j + 1] + '  // generated cards: drawn in code (design-concepts/stick-cards), the new paintings that read well as text\n' + lines + s[j + 1:]
 s = s.replace('const SETS = { fp: { code: "IS", name: "First Print" }, ms: { code: "MS", name: "Moonshot" } };', 'const SETS = { fp: { code: "IS", name: "First Print" }, ms: { code: "MS", name: "Moonshot" }, ec: { code: "EC", name: "Eclipse" }, td: { code: "TD", name: "Tidal" }, sg: { code: "SG", name: "Singularity" } };')
-META = {'fp': ('First Print', 'Stick figures made of text, from a frog in a hat to a gantry. Seven cards a pack, and the fifth is the one you open it for.', '#3be477', 'print', 500),
-        'ms': ('Moonshot', 'A launch: lit fuses, rockets, mission control and the Moon. The fifth card is the rare slot.', '#ffa046', 'launch', 1500),
-        'ec': ('Eclipse', 'Cards from under a black sun. The rare slot starts at a mythic-class card.', '#ffc24a', 'eclipse', 4000),
-        'td': ('Tidal', 'The big names. The rare slot starts at a card worth as much as the pack.', '#46d2ff', 'tidal', 10000),
-        'sg': ('Singularity', 'The edge of the dark. The biggest cards in the game live here.', '#b78cff', 'void', 25000)}
-rows = []; RP = {p['pack']: p['rare'] for p in roster}
+META = {'fp': ('First Print', 'Stick figures made of text. Seven cards a pack, and the fifth is the one you open it for. Cards from $0.10 to $20.', '#3be477', 'print', 500),
+        'ms': ('Moonshot', 'A launch: lit fuses, rockets, mission control and the Moon. Cards from $1 to $100.', '#ffa046', 'launch', 2500),
+        'ec': ('Eclipse', 'Cards from under a black sun. Cards from $3 to $200.', '#ffc24a', 'eclipse', 5000),
+        'td': ('Tidal', 'The big names. Cards from $8 to $500.', '#46d2ff', 'tidal', 12500),
+        'sg': ('Singularity', 'The edge of the dark. Cards from $15 to $1,000.', '#b78cff', 'void', 25000)}
+rows = []; RP = {p['pack']: p['rare'] for p in roster}; EG = {p['pack']: p['edges'] for p in roster}
 for pid in ['fp', 'ms', 'ec', 'td', 'sg']:
     name, blurb, col, scene, price = META[pid]
     sl = ',\n      '.join(name_ + ': [' + ',\n        '.join('[' + ', '.join('["%s", %s]' % (c, '%g' % w) for c, w in x) + ']' for x in slots[pid][name_]) + ']' for name_ in ('normal', 'high', 'max'))
-    rows.append('  { id: "%s", name: "%s", blurb: "%s", price: %d, min: %d, max: %d, n: 7, col: "%s", scene: "%s",\n    slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of %d cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],\n    slotsBy: {\n      %s\n    },\n    get slots() { return this.slotsBy[packStyleOf(this.id)]; } }' % (pid, name, blurb, price, price, price, col, scene, len(RP[pid]), sl))
+    rows.append('  { id: "%s", name: "%s", blurb: "%s", price: %d, min: %d, max: %d, edges: %s, n: 7, col: "%s", scene: "%s",\n    slotNames: ["Cards 1 to 4: commons and uncommons", "Card 5: the rare slot, one of %d cards worth having", "Cards 6 and 7: mostly commons, sometimes a rare"],\n    slotsBy: {\n      %s\n    },\n    get slots() { return this.slotsBy[packStyleOf(this.id)]; } }' % (pid, name, blurb, price, price, price, json.dumps(EG[pid]), col, scene, len(RP[pid]), sl))
 a = s.index('const PACKS = ['); b = s.index('const RARE_SLOT')
 s = s[:a] + 'const PACKS = [\n  // Five packs that share the twelve commons as fillers (cards 1 to 4, 6 and 7); card 5 is the rare slot, a window on the ladder of rare cards\n  // that starts higher up in the dearer packs. A dearer pack\'s rare slot starts higher up the ladder. Every pack returns 94.7% on average.\n' + ',\n'.join(rows) + '\n];\n' + s[b:]
 open(P, 'w').write(s); print(len(new), 'cards added')
