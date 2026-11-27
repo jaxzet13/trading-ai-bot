@@ -2,7 +2,7 @@
 # Run the per-sport study on each series as soon as its download finishes (download log line "SERIES: +N").
 cd /home/user/trading-ai-bot
 LOG=research/sports_study/download_log.txt
-done_list=""
+done_list="${DONE:-}"   # series already scored (pass DONE="KXNBAGAME ..." when restarting)
 while true; do
   for s in $(grep -oE '^KX[A-Z0-9]+: \+[0-9]+' $LOG | cut -d: -f1); do
     case " $done_list " in *" $s "*) continue;; esac
