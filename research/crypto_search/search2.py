@@ -36,7 +36,9 @@ def mask_of(name, c):
     fi, gi = E.FEATURES.index(f), E.FEATURES.index(g)
     sd = int(side[4:])
     a, b = divmod(int(grp), 10)
-    mk = c["min_mask"][int(m[1:])] & c["coin_mask"][coin] & (c["dec"][:, fi] == a) & (c["dec"][:, gi] == b)
+    price = c["priceY"] if sd == 1 else c["priceN"]
+    mk = (c["min_mask"][int(m[1:])] & c["coin_mask"][coin] & (c["dec"][:, fi] == a) & (c["dec"][:, gi] == b)
+          & (price >= 0.05) & (price <= 0.95))
     return mk, (c["payY"] if sd == 1 else c["payN"])
 
 
@@ -52,15 +54,16 @@ def main():
             base = c["min_mask"][j] & c["coin_mask"][coin] & test
             idx = np.nonzero(base)[0]
             d = dix[idx]
-            for side, pay in ((1, c["payY"]), (-1, c["payN"])):
-                pv = pay[idx]
+            for side, pay, price in ((1, c["payY"], c["priceY"]), (-1, c["payN"], c["priceN"])):
+                okp = (price[idx] >= 0.05) & (price[idx] <= 0.95)       # same price band as every other family
+                pv = np.where(okp, pay[idx], 0.0)
                 Pb, Nb, Qb, nb = [], [], [], []
                 for f in range(F):
                     for g in range(f + 1, F):
                         gen += 100
                         key = (c["dec"][idx, f].astype(np.int64) * 10 + c["dec"][idx, g]) * D + d
                         Pk = np.bincount(key, pv, 100 * D).reshape(100, D)
-                        Nk = np.bincount(key, None, 100 * D).reshape(100, D)
+                        Nk = np.bincount(key, okp.astype(float), 100 * D).reshape(100, D)
                         keep = np.nonzero(Nk.sum(1) >= 30)[0]
                         if not len(keep):
                             continue
