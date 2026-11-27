@@ -368,5 +368,99 @@
    "holdout_pnl": 1.73
   },
   "verdict": "no edge"
+ },
+ "KXNHLGAME": {
+  "series": "KXNHLGAME",
+  "name": "NHL",
+  "markets": 818,
+  "games": 409,
+  "days": 60,
+  "median_volume": 323241.0,
+  "calibration_60min": [
+   {
+    "band": "5-20c",
+    "n": 112,
+    "cents_per_bet": -3.71,
+    "t": -1.36
+   },
+   {
+    "band": "20-40c",
+    "n": 138,
+    "cents_per_bet": -5.93,
+    "t": -1.62
+   },
+   {
+    "band": "40-60c",
+    "n": 137,
+    "cents_per_bet": -3.74,
+    "t": -0.88
+   },
+   {
+    "band": "60-80c",
+    "n": 137,
+    "cents_per_bet": 0.39,
+    "t": 0.1
+   },
+   {
+    "band": "80-90c",
+    "n": 62,
+    "cents_per_bet": -3.08,
+    "t": -0.68
+   },
+   {
+    "band": "90-97c",
+    "n": 72,
+    "cents_per_bet": 1.96,
+    "t": 1.01
+   }
+  ],
+  "walk_forward": {
+   "1": {
+    "bets": 53,
+    "pnl": 1.5,
+    "cents_per_bet": 2.83,
+    "t": 0.62,
+    "days": 46,
+    "days_up": 21,
+    "halves_pnl": [
+     -0.55,
+     2.05
+    ]
+   },
+   "5": {
+    "bets": 348,
+    "pnl": -17.19,
+    "cents_per_bet": -4.94,
+    "t": -2.32,
+    "days": 46,
+    "days_up": 19,
+    "halves_pnl": [
+     -11.24,
+     -5.95
+    ]
+   },
+   "20": {
+    "bets": 1696,
+    "pnl": -76.32,
+    "cents_per_bet": -4.5,
+    "t": -2.21,
+    "days": 46,
+    "days_up": 18,
+    "halves_pnl": [
+     -47.8,
+     -28.52
+    ]
+   }
+  },
+  "holdout": {
+   "rule": "band:m-100:0.45-0.50",
+   "history_t": 3.28,
+   "history_bets": 40,
+   "history_cents": 22.05,
+   "holdout_bets": 20,
+   "holdout_cents": -10.15,
+   "holdout_pnl": -2.03
+  },
+  "verdict": "no edge"
  }
 }
