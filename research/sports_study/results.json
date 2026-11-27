@@ -92,5 +92,93 @@
    "holdout_pnl": -2.69
   },
   "verdict": "no edge"
+ },
+ "KXNFLGAME": {
+  "series": "KXNFLGAME",
+  "name": "NFL",
+  "markets": 240,
+  "games": 120,
+  "days": 35,
+  "median_volume": 9213875.0,
+  "calibration_60min": [
+   {
+    "band": "5-20c",
+    "n": 38,
+    "cents_per_bet": -2.82,
+    "t": -0.56
+   },
+   {
+    "band": "20-40c",
+    "n": 37,
+    "cents_per_bet": -9.97,
+    "t": -1.44
+   },
+   {
+    "band": "40-60c",
+    "n": 37,
+    "cents_per_bet": -3.38,
+    "t": -0.43
+   },
+   {
+    "band": "60-80c",
+    "n": 37,
+    "cents_per_bet": 1.08,
+    "t": 0.16
+   },
+   {
+    "band": "80-90c",
+    "n": 25,
+    "cents_per_bet": -6.88,
+    "t": -0.92
+   }
+  ],
+  "walk_forward": {
+   "1": {
+    "bets": 29,
+    "pnl": -4.24,
+    "cents_per_bet": -14.62,
+    "t": -1.79,
+    "days": 21,
+    "days_up": 4,
+    "halves_pnl": [
+     -3.76,
+     -0.48
+    ]
+   },
+   "5": {
+    "bets": 144,
+    "pnl": -7.5,
+    "cents_per_bet": -5.21,
+    "t": -1.2,
+    "days": 21,
+    "days_up": 7,
+    "halves_pnl": [
+     -7.13,
+     -0.37
+    ]
+   },
+   "20": {
+    "bets": 603,
+    "pnl": -22.05,
+    "cents_per_bet": -3.66,
+    "t": -0.98,
+    "days": 21,
+    "days_up": 8,
+    "halves_pnl": [
+     -17.3,
+     -4.75
+    ]
+   }
+  },
+  "holdout": {
+   "rule": "band:m-180:0.60-0.70",
+   "history_t": 1.68,
+   "history_bets": 31,
+   "history_cents": 11.97,
+   "holdout_bets": 14,
+   "holdout_cents": -2.79,
+   "holdout_pnl": -0.39
+  },
+  "verdict": "no edge"
  }
 }
