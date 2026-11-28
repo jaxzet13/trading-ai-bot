@@ -26,7 +26,8 @@ from pathlib import Path
 import numpy as np
 
 D = Path("data/sports_universe")
-OUT = Path("research/sports_universe/results.json")
+import os as _os
+OUT = Path(_os.environ.get("OUTFILE", "research/sports_universe/results.json"))
 HS = (3.5, 5.0, 8.0)
 WARM = 8
 T0 = time.time()
@@ -125,7 +126,10 @@ def main():
                 name = f"{tag}|{gnames[g]}|{'YES' if sd else 'NO'}|{bnd}-{bnd + 10}c|{HS[h]}h"
                 a = strat.setdefault(name, [np.zeros(D_), np.zeros(D_), np.zeros(D_), np.zeros(D_)])
                 a[0] += P[i]; a[1] += N[i]; a[2] += Q[i]; a[3] += W[i]
-    names = list(strat)
+    import os, re as _re
+    flt = os.environ.get("FILTER")
+    names = [n for n in strat if not flt or _re.search(flt, n)]
+    log(f"filter {flt!r}: {len(names)} strategies kept") if flt else None
     P = np.array([strat[n][0] for n in names]); N = np.array([strat[n][1] for n in names]); Q = np.array([strat[n][2] for n in names]); W = np.array([strat[n][3] for n in names])
     log(f"{len(names):,} strategies with >= 30 bets")
 

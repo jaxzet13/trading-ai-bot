@@ -33,7 +33,7 @@ from tennis import lab                                         # noqa: E402
 from tennis.history import STORE                               # noqa: E402
 
 T0 = time.time()
-OUT = Path("research/sports_study/search_results.json")
+OUT = Path(os.environ.get("SEARCH_OUT", "research/sports_study/search_results.json"))
 TENNIS = ["KXATPMATCH", "KXWTAMATCH", "KXATPCHALLENGERMATCH", "KXWTACHALLENGERMATCH", "KXITFMATCH", "KXITFWMATCH"]
 WARM = 14
 
@@ -127,7 +127,7 @@ def main():
     total = 0
     for s in series:
         ms = load_sport(s)
-        if len(ms) < 200:
+        if len(ms) < int(os.environ.get("MIN_MARKETS", 200)):
             log(f"{s}: {len(ms)} markets, skipped")
             continue
         days, P, N, Q = lab.score_matrix(ms, strats, log=lambda *a: None)
