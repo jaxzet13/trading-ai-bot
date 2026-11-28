@@ -1,0 +1,111 @@
+<title>15-Minute Markets Test</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* layout: one reading column; verdict first, then the evidence as a single scale of cents per bet around a zero line */
+:root{
+  --bg:#0c0d12; --panel:#14161f; --line:#262a38; --fg:#eceef5; --mute:#969cb0;
+  --loss:#ff5d8f; --flat:#8b7cf6; --gold:#f5c451; --zero:#eceef5;
+  --display:"Unbounded","Inter",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  --bg:#f6f6fa; --panel:#ffffff; --line:#dcdfea; --fg:#14161f; --mute:#5b6175;
+  --loss:#c81e5b; --flat:#5b47d6; --gold:#8a6400; --zero:#14161f; color-scheme:light } }
+:root[data-theme="light"]{
+  --bg:#f6f6fa; --panel:#ffffff; --line:#dcdfea; --fg:#14161f; --mute:#5b6175;
+  --loss:#c81e5b; --flat:#5b47d6; --gold:#8a6400; --zero:#14161f; color-scheme:light }
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+section{display:flex;flex-direction:column;gap:14px;min-width:0}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+h1{font:700 clamp(30px,7vw,52px)/1.08 var(--display);margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--loss)}
+h2{font:500 20px/1.25 var(--display);margin:0;text-wrap:balance}
+p{margin:0;max-width:65ch;text-wrap:pretty}
+.lead{font-size:18px;color:var(--fg)}
+.mute{color:var(--mute);font-size:14px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border-block:1px solid var(--line)}
+.facts div{padding:14px 12px 14px 0}
+.facts b{display:block;font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.facts span{font-size:13px;color:var(--mute)}
+.chart{display:flex;flex-direction:column;gap:6px}
+.grp{font:600 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:14px}
+.row{display:grid;grid-template-columns:minmax(0,13.5em) minmax(0,1fr) 5.2em;gap:10px;align-items:center;font-size:14px}
+.row .lab{min-width:0}
+.track{position:relative;height:18px;background:linear-gradient(var(--line),var(--line)) no-repeat;background-size:100% 1px;background-position:0 50%}
+.track i{position:absolute;top:3px;height:12px;border-radius:2px}
+.track u{position:absolute;top:0;bottom:0;width:1px;background:var(--zero);left:66.667%}
+.val{font:600 13px/1 var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.val small{display:block;font-weight:400;color:var(--mute);margin-top:3px}
+.axis{display:grid;grid-template-columns:minmax(0,13.5em) minmax(0,1fr) 5.2em;gap:10px;font:400 12px/1 var(--mono);color:var(--mute)}
+.axis div:nth-child(2){position:relative;height:14px}
+.axis span{position:absolute;transform:translateX(-50%)}
+.key{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mute)}
+.key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:9px 12px 9px 0;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 12px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+td.n{font-family:var(--mono);white-space:nowrap}
+.note{border-left:2px solid var(--gold);padding-left:14px}
+@media (max-width:520px){ .row,.axis{grid-template-columns:minmax(0,1fr) 4.6em} .row .track,.axis div:nth-child(2){grid-column:1 / -1;grid-row:2} .axis div:first-child{display:none} .row{row-gap:4px;margin-top:6px} }
+
+.pill{display:inline-block;font:600 12px/1 var(--mono);padding:5px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.pill.no{color:var(--loss);border-color:color-mix(in srgb,var(--loss) 45%,transparent)}
+.pill.maybe{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 45%,transparent)}
+.pill.edge{color:var(--flat);border-color:color-mix(in srgb,var(--flat) 55%,transparent)}
+.pill.wait{color:var(--mute)}
+td.num{font-family:var(--mono);white-space:nowrap;text-align:right}
+th.num{text-align:right}
+.big{font:700 clamp(22px,4.5vw,30px)/1.2 var(--display);margin:0;text-wrap:balance}
+</style>
+<main>
+  <section>
+    <div class="eyebrow">Kalshi 15-minute markets &middot; gold, oil, metals, currencies, S&amp;P, yields and crypto &middot; updated 2026-11-28 18:22 UTC</div>
+    <h1>No proven edge in the 15-minute markets (yet).</h1>
+    <p class="lead">I tested 3,098,160 strategies on 20 groups of Kalshi 15-minute markets. Strategies picked only from earlier days were bet on later days, and none held up after Kalshi's fee.</p>
+    <div class="facts">
+      <div><b>3.1M</b><span>strategies generated</span></div>
+      <div><b>1.6M</b><span>with 30+ bets, scored</span></div>
+      <div><b>20</b><span>market groups</span></div>
+      <div><b>0</b><span>pass the test</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The best of everything</h2>
+    <p>Each day, take the best strategies across <em>all</em> 1,621,887 on earlier days only, and bet them on that day. This is the fairest "pick the winner" test.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Bet the top</th><th class="num">Bets</th><th class="num">Per $1 bet</th><th class="num">t</th><th class="num">Days</th></tr></thead>
+      <tbody>
+        <tr><td>1 strategy</td><td class="num">111</td><td class="num">+1.6&cent;</td><td class="num">+0.73</td><td class="num">76</td></tr>
+        <tr><td>5 strategies</td><td class="num">411</td><td class="num">+0.3&cent;</td><td class="num">+0.20</td><td class="num">76</td></tr>
+        <tr><td>20 strategies</td><td class="num">1575</td><td class="num">&minus;0.9&cent;</td><td class="num">-1.15</td><td class="num">76</td></tr>
+      </tbody>
+    </table></div>
+    <p class="mute">A real edge needs a t of about 2.5 or more and gains in both halves of the period. By luck alone, the best of 1,621,887 strategies would look like t &asymp; 5.35 on the data it was picked from, which is why only days the strategy never saw count.</p>
+  </section>
+
+  <section>
+    <h2>Each market, tested on its own</h2>
+    <p>The money column is the average result per $1 bet after Kalshi's fee, for strategies picked from earlier days. The last column is the live crypto bot's own price-based model (it also watches the coin's real price, which gold, oil and the others don't have a free feed for).</p>
+    <div class="tw"><table>
+      <thead><tr><th>Market</th><th class="num">Strategies</th><th class="num">Per $1 bet</th><th class="num">t</th><th class="num">Bets</th><th class="num">Live model</th><th>Verdict</th></tr></thead>
+      <tbody><tr><td>Bitcoin</td><td class='num'>79,166</td><td class='num'>&minus;1.7&cent;</td><td class='num'>-0.90</td><td class='num'>386</td><td class='num'>&minus;0.4&cent;</td><td><span class='pill no'>No edge</span></td></tr><tr><td>Ethereum</td><td class='num'>79,999</td><td class='num'>&minus;0.7&cent;</td><td class='num'>-0.33</td><td class='num'>471</td><td class='num'>+0.8&cent;</td><td><span class='pill no'>No edge</span></td></tr><tr><td>Gold</td><td class='num'>63,234</td><td class='num'>&minus;0.0&cent;</td><td class='num'>-0.01</td><td class='num'>306</td><td class='num'></td><td><span class='pill no'>No edge</span></td></tr><tr><td>XRP</td><td class='num'>81,369</td><td class='num'>&minus;2.9&cent;</td><td class='num'>-1.14</td><td class='num'>345</td><td class='num'>+5.9&cent;</td><td><span class='pill no'>No edge</span></td></tr><tr><td>Solana</td><td class='num'>80,694</td><td class='num'>+0.8&cent;</td><td class='num'>+0.42</td><td class='num'>368</td><td class='num'>+4.7&cent;</td><td><span class='pill no'>No edge</span></td></tr><tr><td>WTI oil</td><td class='num'>70,388</td><td class='num'>&minus;2.4&cent;</td><td class='num'>-0.96</td><td class='num'>327</td><td class='num'></td><td><span class='pill no'>No edge</span></td></tr><tr><td>Dogecoin</td><td class='num'>83,517</td><td class='num'>+0.6&cent;</td><td class='num'>+0.29</td><td class='num'>365</td><td class='num'>+4.1&cent;</td><td><span class='pill no'>No edge</span></td></tr><tr><td>Silver</td><td class='num'>65,938</td><td class='num'>+3.5&cent;</td><td class='num'>+1.91</td><td class='num'>306</td><td class='num'></td><td><span class='pill maybe'>Maybe, unproven</span></td></tr><tr><td>NEAR</td><td class='num'>87,232</td><td class='num'>&minus;3.9&cent;</td><td class='num'>-2.06</td><td class='num'>355</td><td class='num'>+5.4&cent;</td><td><span class='pill no'>No edge</span></td></tr><tr><td>HYPE</td><td class='num'>80,104</td><td class='num'>+1.9&cent;</td><td class='num'>+1.01</td><td class='num'>327</td><td class='num'>&minus;3.4&cent;</td><td><span class='pill no'>No edge</span></td></tr><tr><td>Zcash</td><td class='num'>85,755</td><td class='num'>&minus;3.9&cent;</td><td class='num'>-1.62</td><td class='num'>410</td><td class='num'>+6.3&cent;</td><td><span class='pill no'>No edge</span></td></tr><tr><td>BNB</td><td class='num'>84,969</td><td class='num'>&minus;2.2&cent;</td><td class='num'>-0.92</td><td class='num'>329</td><td class='num'>+2.3&cent;</td><td><span class='pill no'>No edge</span></td></tr><tr><td>Natural gas</td><td class='num'>72,410</td><td class='num'>+2.4&cent;</td><td class='num'>+1.11</td><td class='num'>301</td><td class='num'></td><td><span class='pill no'>No edge</span></td></tr><tr><td>Copper</td><td class='num'>67,590</td><td class='num'>&minus;0.5&cent;</td><td class='num'>-0.16</td><td class='num'>219</td><td class='num'></td><td><span class='pill no'>No edge</span></td></tr><tr><td>USD/JPY</td><td class='num'>71,365</td><td class='num'>&minus;0.6&cent;</td><td class='num'>-0.26</td><td class='num'>248</td><td class='num'></td><td><span class='pill no'>No edge</span></td></tr><tr><td>All metals</td><td class='num'>91,084</td><td class='num'>+0.6&cent;</td><td class='num'>+0.35</td><td class='num'>314</td><td class='num'></td><td><span class='pill no'>No edge</span></td></tr><tr><td>All energy</td><td class='num'>87,679</td><td class='num'>&minus;1.2&cent;</td><td class='num'>-0.63</td><td class='num'>299</td><td class='num'></td><td><span class='pill no'>No edge</span></td></tr><tr><td>All currencies</td><td class='num'>79,253</td><td class='num'>&minus;1.7&cent;</td><td class='num'>-0.90</td><td class='num'>213</td><td class='num'></td><td><span class='pill no'>No edge</span></td></tr><tr><td>All crypto coins</td><td class='num'>104,693</td><td class='num'>&minus;1.6&cent;</td><td class='num'>-1.46</td><td class='num'>2482</td><td class='num'></td><td><span class='pill no'>No edge</span></td></tr><tr><td>Everything pooled</td><td class='num'>105,448</td><td class='num'>+0.4&cent;</td><td class='num'>+0.49</td><td class='num'>1977</td><td class='num'></td><td><span class='pill no'>No edge</span></td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Should we use real money?</h2>
+    <div class="note"><p>Not on these. Nothing here passes. The crypto coins the live bot trades only make money with its model, which also watches the coin's real price. Gold, oil, metals and currencies have no free price feed from here yet, so the next step is a proper price source.</p></div>
+    <p class="mute">A first run on only six of these markets looked exciting (t = 3.6). With all the data it was +1.6&cent; at t = 0.7: too few days, so it was luck. That is why nothing here is promoted without a forward test on new days.</p>
+  </section>
+
+  <section>
+    <h2>How it works</h2>
+    <p>For every settled 15-minute window the test replays Kalshi's minute-by-minute bid and ask. Each strategy looks at the market's own quotes (price, spread, recent moves, drift since the window opened, how stretched it is) in two or three buckets at once, decides at one minute, and buys the next minute at the ask, then pays the fee.</p>
+    <p class="mute">Full numbers: research/m15 in the repository.</p>
+  </section>
+</main>
