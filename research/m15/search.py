@@ -50,6 +50,8 @@ SECTORS = {
 T0 = time.time()
 DAYS = {}
 GEN = [0]
+EDG = {}      # (group, minute, feature) -> decile edges from the warm-up days (used by forward.py)
+STASH = {}    # group -> (days, P, N, Q)
 
 
 def log(*a):
@@ -172,6 +174,7 @@ def run_group(name, members, data, days_all):
             if (ok & warm).sum() < 50:
                 continue
             edges = np.unique(np.quantile(col[ok & warm], np.linspace(0.1, 0.9, 9)))
+            EDG[(name, j, k)] = edges.tolist()
             b = np.searchsorted(edges, col, side="right")
             dec[:, k] = np.where(ok, np.minimum(b, 9), -1)
         dec3 = np.where(dec < 0, -1, (dec >= 3).astype(np.int64) + (dec >= 7).astype(np.int64))
@@ -200,6 +203,7 @@ def run_group(name, members, data, days_all):
                 P[o:o + 27] = np.bincount(key, pv[m], 27 * Dn).reshape(27, Dn)
                 N[o:o + 27] = np.bincount(key, None, 27 * Dn).reshape(27, Dn)
                 Q[o:o + 27] = np.bincount(key, pv[m] ** 2, 27 * Dn).reshape(27, Dn)
+    STASH[name] = (days, P, N, Q)
     keep = N.sum(1) >= 30
     S = int(keep.sum())
     GEN[0] += len(JS) * 2 * NCELL
