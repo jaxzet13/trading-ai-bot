@@ -1000,5 +1000,87 @@
    "holdout_pnl": 0.86
   },
   "verdict": "no edge"
+ },
+ "KXMLSGAME": {
+  "series": "KXMLSGAME",
+  "name": "MLS",
+  "markets": 351,
+  "games": 117,
+  "days": 26,
+  "median_volume": 294374.0,
+  "calibration_60min": [
+   {
+    "band": "5-20c",
+    "n": 51,
+    "cents_per_bet": 0.67,
+    "t": 0.12
+   },
+   {
+    "band": "20-40c",
+    "n": 166,
+    "cents_per_bet": -4.01,
+    "t": -1.19
+   },
+   {
+    "band": "40-60c",
+    "n": 78,
+    "cents_per_bet": 1.21,
+    "t": 0.22
+   },
+   {
+    "band": "60-80c",
+    "n": 26,
+    "cents_per_bet": -10.81,
+    "t": -1.11
+   }
+  ],
+  "walk_forward": {
+   "1": {
+    "bets": 16,
+    "pnl": 0.2,
+    "cents_per_bet": 1.25,
+    "t": 0.14,
+    "days": 12,
+    "days_up": 3,
+    "halves_pnl": [
+     -0.05,
+     0.25
+    ]
+   },
+   "5": {
+    "bets": 90,
+    "pnl": -7.1,
+    "cents_per_bet": -7.89,
+    "t": -1.08,
+    "days": 12,
+    "days_up": 3,
+    "halves_pnl": [
+     -5.64,
+     -1.46
+    ]
+   },
+   "20": {
+    "bets": 393,
+    "pnl": -30.67,
+    "cents_per_bet": -7.8,
+    "t": -1.06,
+    "days": 12,
+    "days_up": 4,
+    "halves_pnl": [
+     -28.32,
+     -2.35
+    ]
+   }
+  },
+  "holdout": {
+   "rule": "swing:early:up0.25/20m:rev",
+   "history_t": 2.01,
+   "history_bets": 32,
+   "history_cents": 16.0,
+   "holdout_bets": 7,
+   "holdout_cents": -5.29,
+   "holdout_pnl": -0.37
+  },
+  "verdict": "no edge"
  }
 }
