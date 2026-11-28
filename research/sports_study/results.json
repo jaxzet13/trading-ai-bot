@@ -924,5 +924,81 @@
    "holdout_pnl": -2.55
   },
   "verdict": "no edge"
+ },
+ "KXLIGAMXGAME": {
+  "series": "KXLIGAMXGAME",
+  "name": "Liga MX",
+  "markets": 207,
+  "games": 69,
+  "days": 24,
+  "median_volume": 872996.0,
+  "calibration_60min": [
+   {
+    "band": "5-20c",
+    "n": 20,
+    "cents_per_bet": 2.5,
+    "t": 0.27
+   },
+   {
+    "band": "20-40c",
+    "n": 123,
+    "cents_per_bet": -1.03,
+    "t": -0.25
+   },
+   {
+    "band": "40-60c",
+    "n": 50,
+    "cents_per_bet": -3.94,
+    "t": -0.56
+   }
+  ],
+  "walk_forward": {
+   "1": {
+    "bets": 19,
+    "pnl": 0.07,
+    "cents_per_bet": 0.37,
+    "t": 0.04,
+    "days": 10,
+    "days_up": 6,
+    "halves_pnl": [
+     -1.02,
+     1.09
+    ]
+   },
+   "5": {
+    "bets": 96,
+    "pnl": -5.1,
+    "cents_per_bet": -5.31,
+    "t": -0.61,
+    "days": 10,
+    "days_up": 5,
+    "halves_pnl": [
+     -5.61,
+     0.51
+    ]
+   },
+   "20": {
+    "bets": 444,
+    "pnl": -18.39,
+    "cents_per_bet": -4.14,
+    "t": -0.7,
+    "days": 10,
+    "days_up": 4,
+    "halves_pnl": [
+     -21.06,
+     2.67
+    ]
+   }
+  },
+  "holdout": {
+   "rule": "band:m80:0.25-0.40",
+   "history_t": 1.57,
+   "history_bets": 40,
+   "history_cents": 12.47,
+   "holdout_bets": 20,
+   "holdout_cents": 4.3,
+   "holdout_pnl": 0.86
+  },
+  "verdict": "no edge"
  }
 }
