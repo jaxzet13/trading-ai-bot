@@ -42,3 +42,12 @@ Notes
 * A prompt cannot guarantee steady income. Every edge found so far is small and can fade; the point of the pass is to catch fading
   edges early and keep the testing honest.
 * Claude already runs hourly and 3-hourly checks inside an active session. This prompt is for a fresh session or a deeper pass.
+
+## Autonomy policy (Nov 28 2026, account holder: "go, use it every 3 hours")
+The 3-hourly scheduled check (trigger trig_01Duk1XNvxPYKXyvd3WvVWEN, 51 */3 * * * UTC) now runs with full autonomy over every live
+strategy: it may change entry bar, bet size (1x-3x, max 40% of a shard at risk), order pricing, which coins are live, retire/add
+strategies and move up to $10 a pass between the account holder's own shards, WITHOUT asking, reporting afterwards.
+Guardrails: changes must beat the current setting on unseen days in both halves (never loosen tests), one at a time, logged with
+a rollback, re-checked after >= 100 bets (roll back if clearly worse), size up only when live is within the backtest's normal
+range, $4 floor kept, no deposits/withdrawals, no credentials committed. Previously forbidden items (daily caps, drawdown brake,
+night/day multipliers, per-rule auto-pause, NEAR drift rule, resting orders, retired loops) stay forbidden.
