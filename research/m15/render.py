@@ -103,7 +103,7 @@ page = f"""<title>15-Minute Markets Test</title>
   <section>
     <h2>Should we use real money?</h2>
     <div class="note"><p>Not on these. Nothing here passes. The crypto coins the live bot trades only make money with its model, which also watches the coin's real price. Gold, oil, metals and currencies have no free price feed from here yet, so the next step is a proper price source.</p></div>
-    <p class="mute">A first run on only six of these markets looked exciting (t = 3.6). With all the data it was +1.6&cent; at t = 0.7: too few days, so it was luck. That is why nothing here is promoted without a forward test on new days.</p>
+    <p class="mute">A first run on only six of these markets looked exciting (t = 3.6). With all the data (76 days, 32 market groups) it was 0.0&cent; at t = 0.0: too few days, so it was luck. That is why nothing here is promoted without a forward test on new days.</p>
   </section>
 
   <section>
