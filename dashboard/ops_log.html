@@ -1,0 +1,158 @@
+<title>Live Operations Log</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* layout: one reading column; a status strip first, then a ledger of everything done, newest on top, grouped by day */
+:root{
+  --bg:#f4f5f8; --panel:#ffffff; --line:#dde0ea; --fg:#14161f; --mute:#5b6175;
+  --amber:#9a6200; --good:#16794c; --bad:#c81e5b; --info:#3a55c9; --rest:#5b6175;
+  --display:"Unbounded","Inter",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0c0d12; --panel:#14161f; --line:#262a38; --fg:#eceef5; --mute:#969cb0;
+  --amber:#f5c451; --good:#4fd18b; --bad:#ff5d8f; --info:#8fa2ff; --rest:#969cb0; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0c0d12; --panel:#14161f; --line:#262a38; --fg:#eceef5; --mute:#969cb0;
+  --amber:#f5c451; --good:#4fd18b; --bad:#ff5d8f; --info:#8fa2ff; --rest:#969cb0; color-scheme:dark }
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:36px 64px}
+main{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:32px}
+section{display:flex;flex-direction:column;gap:12px;min-width:0}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--amber);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--mute);display:inline-block}
+.dot.on{background:var(--good);box-shadow:0 0 0 0 var(--good);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion: reduce){.dot.on{animation:none}}
+h1{font:700 clamp(28px,6.5vw,46px)/1.08 var(--display);margin:0;text-wrap:balance}
+h2{font:500 18px/1.25 var(--display);margin:0;text-wrap:balance}
+p{margin:0;max-width:65ch;text-wrap:pretty}
+.mute{color:var(--mute);font-size:14px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));border-block:1px solid var(--line)}
+.facts div{padding:12px 12px 12px 0}
+.facts b{display:block;font:600 22px/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.facts span{font-size:13px;color:var(--mute)}
+.settings{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:14px}
+.settings span{color:var(--mute)} .settings b{font-family:var(--mono);font-weight:600;color:var(--fg)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 13px/1 var(--body);padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--mute);cursor:pointer}
+.chip[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+.chip:focus-visible,summary:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.day{font:600 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.ent{display:grid;grid-template-columns:64px minmax(0,1fr);gap:4px 14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.ent time{font:400 13px/1.5 var(--mono);color:var(--mute);font-variant-numeric:tabular-nums}
+.tags{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:4px}
+.tag{font:600 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:4px;border:1px solid currentColor}
+.k-change,.k-setup{color:var(--amber)} .k-fix{color:var(--good)} .k-test,.k-research{color:var(--info)} .k-alert{color:var(--bad)} .k-check,.k-restart{color:var(--rest)}
+.money{font:600 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--amber)}
+.ttl{font-weight:600;margin:0}
+.sum{color:var(--fg);margin:2px 0 0}
+details{margin-top:6px}
+summary{cursor:pointer;color:var(--mute);font-size:13px}
+.more p{margin-top:8px;font-size:14px;color:var(--mute)}
+.empty{padding:28px 0;color:var(--mute)}
+@media (max-width:520px){.ent{grid-template-columns:1fr}.ent time{order:-1}}
+</style>
+<main>
+  <section>
+    <div class="eyebrow"><span class="dot" id="dot"></span><span id="live">Connecting</span></div>
+    <h1>Live Operations Log</h1>
+    <p id="lead">Everything done on your Kalshi system, newest first: live setting changes, checks, fixes and tests. This page updates by itself.</p>
+    <div class="facts" id="facts" hidden></div>
+    <div class="settings" id="settings" hidden></div>
+    <p class="mute" id="lastchange" hidden></p>
+  </section>
+
+  <section>
+    <h2>What was done</h2>
+    <div class="chips" id="chips" role="group" aria-label="Filter the log"></div>
+    <div id="feed"><p class="empty" id="empty">Loading the log&hellip;</p></div>
+  </section>
+
+  <section>
+    <p class="mute"><b>Live change</b> means a real-money setting or strategy was changed, with what and why. A <b>check</b> is a routine look with the numbers. Research and tests never touch real money. Times are in your local time.</p>
+  </section>
+</main>
+<script>
+(function(){
+  var KINDS={change:"Live change",setup:"Setup",fix:"Fix",check:"Check",restart:"Restart",test:"Test",research:"Research",alert:"Alert"};
+  var GROUPS=[["all","All",null],["live","Changes",["change","setup","fix"]],["check","Checks",["check","restart"]],["research","Research",["test","research"]],["alert","Alerts",["alert"]]];
+  var state={entries:[],filter:"all",status:null,loaded:false};
+  try{var f=localStorage.getItem("ops_filter");if(f)state.filter=f;}catch(e){}
+  var $=function(id){return document.getElementById(id)};
+  function el(tag,cls,text){var n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n}
+
+  function renderChips(){
+    var box=$("chips");box.textContent="";
+    GROUPS.forEach(function(g){
+      var b=el("button","chip",g[1]);b.type="button";b.setAttribute("aria-pressed",String(state.filter===g[0]));
+      b.addEventListener("click",function(){state.filter=g[0];try{localStorage.setItem("ops_filter",g[0])}catch(e){}renderChips();renderFeed()});
+      box.appendChild(b);
+    });
+  }
+  function dayLabel(d){return d.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}
+  function renderFeed(){
+    var feed=$("feed");feed.textContent="";
+    var g=GROUPS.filter(function(x){return x[0]===state.filter})[0]||GROUPS[0];
+    var list=state.entries.filter(function(e){return !g[2]||g[2].indexOf(e.kind)>=0});
+    if(!list.length){
+      var p=el("p","empty",state.loaded?"Nothing in this view yet. New entries appear here as they happen.":"Loading the log…");feed.appendChild(p);return;
+    }
+    var lastDay="";
+    list.forEach(function(e){
+      var d=new Date(e.ts);var dl=dayLabel(d);
+      if(dl!==lastDay){feed.appendChild(el("div","day",dl));lastDay=dl}
+      var row=el("div","ent");
+      row.appendChild(el("time",null,d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"})));
+      var c=el("div");
+      var tags=el("div","tags");
+      tags.appendChild(el("span","tag k-"+(KINDS[e.kind]?e.kind:"check"),KINDS[e.kind]||String(e.kind||"")));
+      if(e.live===true)tags.appendChild(el("span","money","Real money"));
+      c.appendChild(tags);
+      c.appendChild(el("p","ttl",String(e.title||"")));
+      if(e.summary)c.appendChild(el("p","sum",String(e.summary)));
+      if(e.body){
+        var det=el("details");det.appendChild(el("summary",null,"Details"));
+        var more=el("div","more");
+        String(e.body).split("\n").forEach(function(l){if(l.trim())more.appendChild(el("p",null,l))});
+        det.appendChild(more);c.appendChild(det);
+      }
+      row.appendChild(c);feed.appendChild(row);
+    });
+  }
+  function ago(ms){
+    var s=Math.max(0,Math.round((Date.now()-ms)/1000));
+    if(s<90)return s+" seconds ago";var m=Math.round(s/60);if(m<90)return m+" minutes ago";
+    var h=Math.round(m/60);if(h<48)return h+" hours ago";return Math.round(h/24)+" days ago";
+  }
+  function renderStatus(){
+    var s=state.status;if(!s)return;
+    var latest=s.updated||0;
+    if(state.entries.length&&state.entries[0].ts>latest)latest=state.entries[0].ts;
+    $("dot").className="dot"+(s.running?" on":"");
+    $("live").textContent=(s.running?"Running":"Needs attention")+" · updated "+ago(latest);
+    if(s.headline)$("lead").textContent=s.headline;
+    var facts=$("facts");facts.textContent="";
+    (s.numbers||[]).forEach(function(n){var d=el("div");d.appendChild(el("b",null,String(n.value)));d.appendChild(el("span",null,String(n.label)+(n.sub?" · "+n.sub:"")));facts.appendChild(d)});
+    facts.hidden=!(s.numbers&&s.numbers.length);
+    var st=$("settings");st.textContent="";
+    (s.settings||[]).forEach(function(n){var d=el("div");d.appendChild(el("span",null,String(n.label)+" "));d.appendChild(el("b",null,String(n.value)));st.appendChild(d)});
+    st.hidden=!(s.settings&&s.settings.length);
+    var lc=$("lastchange");lc.textContent=s.last_live_change?("Last change to live settings: "+s.last_live_change):"";lc.hidden=!s.last_live_change;
+  }
+  renderChips();renderFeed();
+  var timer=setTimeout(function(){if(!state.loaded)$("live").textContent="Can't reach the log yet"},10000);
+  (async function(){
+    var c=window.claude;var db=null;
+    try{db=c&&c.use?await c.use("db"):null}catch(e){db=null}
+    if(!db){$("live").textContent="Live updates unavailable here";$("empty").textContent="Open this page signed in to see the log.";return}
+    db.collection("log").orderBy("ts","desc").limit(300).onSnapshot(function(snap){
+      state.entries=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x}).filter(function(x){return typeof x.ts==="number"});
+      state.loaded=true;clearTimeout(timer);renderFeed();renderStatus();
+    },function(){$("live").textContent="Lost connection to the log"});
+    db.doc("status/now").onSnapshot(function(snap){
+      if(snap.exists){state.status=snap.data();renderStatus()}
+    },function(){});
+  })();
+  setInterval(renderStatus,30000);
+})();
+</script>
