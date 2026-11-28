@@ -1246,5 +1246,93 @@
    "holdout_pnl": -0.33
   },
   "verdict": "no edge"
+ },
+ "KXDOTA2GAME": {
+  "series": "KXDOTA2GAME",
+  "name": "Dota 2",
+  "markets": 1427,
+  "games": 714,
+  "days": 60,
+  "median_volume": 6260.0,
+  "calibration_60min": [
+   {
+    "band": "5-20c",
+    "n": 72,
+    "cents_per_bet": -7.75,
+    "t": -2.31
+   },
+   {
+    "band": "20-40c",
+    "n": 183,
+    "cents_per_bet": -9.88,
+    "t": -3.18
+   },
+   {
+    "band": "40-60c",
+    "n": 170,
+    "cents_per_bet": -7.83,
+    "t": -2.1
+   },
+   {
+    "band": "60-80c",
+    "n": 168,
+    "cents_per_bet": 0.11,
+    "t": 0.04
+   },
+   {
+    "band": "80-90c",
+    "n": 64,
+    "cents_per_bet": -4.25,
+    "t": -0.93
+   }
+  ],
+  "walk_forward": {
+   "1": {
+    "bets": 64,
+    "pnl": -2.63,
+    "cents_per_bet": -4.11,
+    "t": -1.05,
+    "days": 46,
+    "days_up": 25,
+    "halves_pnl": [
+     -2.6,
+     -0.03
+    ]
+   },
+   "5": {
+    "bets": 400,
+    "pnl": -21.11,
+    "cents_per_bet": -5.28,
+    "t": -1.63,
+    "days": 46,
+    "days_up": 23,
+    "halves_pnl": [
+     -18.73,
+     -2.38
+    ]
+   },
+   "20": {
+    "bets": 1850,
+    "pnl": -99.89,
+    "cents_per_bet": -5.4,
+    "t": -2.12,
+    "days": 46,
+    "days_up": 19,
+    "halves_pnl": [
+     -89.19,
+     -10.7
+    ]
+   }
+  },
+  "holdout": {
+   "rule": "band:m20:0.90-0.95",
+   "history_t": 13.62,
+   "history_bets": 31,
+   "history_cents": 4.35,
+   "holdout_bets": 22,
+   "holdout_cents": -4.64,
+   "holdout_pnl": -1.02
+  },
+  "verdict": "no edge"
  }
 }
