@@ -830,5 +830,99 @@
    "holdout_pnl": 1.0
   },
   "verdict": "no edge"
+ },
+ "KXNCAAWBGAME": {
+  "series": "KXNCAAWBGAME",
+  "name": "Women's college basketball",
+  "markets": 2373,
+  "games": 1190,
+  "days": 28,
+  "median_volume": 16606.0,
+  "calibration_60min": [
+   {
+    "band": "5-20c",
+    "n": 151,
+    "cents_per_bet": -5.19,
+    "t": -2.31
+   },
+   {
+    "band": "20-40c",
+    "n": 113,
+    "cents_per_bet": -2.58,
+    "t": -0.6
+   },
+   {
+    "band": "40-60c",
+    "n": 132,
+    "cents_per_bet": -2.92,
+    "t": -0.67
+   },
+   {
+    "band": "60-80c",
+    "n": 123,
+    "cents_per_bet": -2.54,
+    "t": -0.63
+   },
+   {
+    "band": "80-90c",
+    "n": 90,
+    "cents_per_bet": 2.51,
+    "t": 0.79
+   },
+   {
+    "band": "90-97c",
+    "n": 84,
+    "cents_per_bet": -1.57,
+    "t": -0.61
+   }
+  ],
+  "walk_forward": {
+   "1": {
+    "bets": 20,
+    "pnl": -2.65,
+    "cents_per_bet": -13.25,
+    "t": -1.41,
+    "days": 14,
+    "days_up": 7,
+    "halves_pnl": [
+     -2.25,
+     -0.4
+    ]
+   },
+   "5": {
+    "bets": 158,
+    "pnl": -4.04,
+    "cents_per_bet": -2.56,
+    "t": -0.88,
+    "days": 14,
+    "days_up": 8,
+    "halves_pnl": [
+     -3.19,
+     -0.85
+    ]
+   },
+   "20": {
+    "bets": 919,
+    "pnl": -11.1,
+    "cents_per_bet": -1.21,
+    "t": -0.68,
+    "days": 14,
+    "days_up": 8,
+    "halves_pnl": [
+     -10.54,
+     -0.56
+    ]
+   }
+  },
+  "holdout": {
+   "rule": "band:m-50:0.90-0.95",
+   "history_t": 21.8,
+   "history_bets": 31,
+   "history_cents": 5.23,
+   "holdout_bets": 9,
+   "holdout_cents": -28.33,
+   "holdout_pnl": -2.55
+  },
+  "verdict": "no edge"
  }
 }
