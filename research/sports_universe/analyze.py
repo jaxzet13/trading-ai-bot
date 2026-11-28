@@ -103,11 +103,11 @@ def main():
         for off in (0.0, 0.05):                          # two overlapping 10c grids
             lo = np.floor((price - off) / 0.10) * 0.10 + off
             ok = (price >= 0.05) & (price <= 0.95)
-            ent.append((side, lo, pnl, ok))
+            ent.append((side, lo, pnl, ok, win))
     strat = {}                                            # key -> [P(D), N(D), Q(D)]
     groups = (("ser", R["ser"], sname, "S"), ("typ", R["typ"], tname, "T"), ("sport", R["sport"], spname, "P"))
     for gname, gid, gnames, tag in groups:
-        for side, lo, pnl, ok in ent:
+        for side, lo, pnl, ok, win in ent:
             band = np.round(lo * 100).astype(int)
             key = ((gid.astype(np.int64) * 2 + (side == 1)) * 100 + band) * 3 + R["h"]
             key = np.where(ok, key, -1)
@@ -117,15 +117,16 @@ def main():
             P = np.bincount(idx, pnl[sel], len(uk) * D_).reshape(len(uk), D_)
             N = np.bincount(idx, None, len(uk) * D_).reshape(len(uk), D_)
             Q = np.bincount(idx, pnl[sel] ** 2, len(uk) * D_).reshape(len(uk), D_)
+            W = np.bincount(idx, win[sel], len(uk) * D_).reshape(len(uk), D_)
             for i, k in enumerate(uk):
                 if N[i].sum() < 30:
                     continue
                 h = int(k % 3); r = k // 3; bnd = int(r % 100); r //= 100; sd = int(r % 2); g = int(r // 2)
                 name = f"{tag}|{gnames[g]}|{'YES' if sd else 'NO'}|{bnd}-{bnd + 10}c|{HS[h]}h"
-                a = strat.setdefault(name, [np.zeros(D_), np.zeros(D_), np.zeros(D_)])
-                a[0] += P[i]; a[1] += N[i]; a[2] += Q[i]
+                a = strat.setdefault(name, [np.zeros(D_), np.zeros(D_), np.zeros(D_), np.zeros(D_)])
+                a[0] += P[i]; a[1] += N[i]; a[2] += Q[i]; a[3] += W[i]
     names = list(strat)
-    P = np.array([strat[n][0] for n in names]); N = np.array([strat[n][1] for n in names]); Q = np.array([strat[n][2] for n in names])
+    P = np.array([strat[n][0] for n in names]); N = np.array([strat[n][1] for n in names]); Q = np.array([strat[n][2] for n in names]); W = np.array([strat[n][3] for n in names])
     log(f"{len(names):,} strategies with >= 30 bets")
 
     def tstat(p, n, q):
@@ -134,6 +135,17 @@ def main():
             v = np.maximum(q / n - m * m, 1e-9)
             t = m / np.sqrt(v) * np.sqrt(n)
         return np.where(n >= 30, t, -np.inf)
+
+    def lbscore(p, n, w):
+        """Conservative edge: Wilson 90% lower bound of the win rate minus the average cost (price + fee).
+        Unlike t, a record of 30 wins and no loss does not look infinitely good."""
+        with np.errstate(all="ignore"):
+            ph = w / n
+            z = 1.645
+            lo = (ph + z * z / (2 * n) - z * np.sqrt(ph * (1 - ph) / n + z * z / (4 * n * n))) / (1 + z * z / n)
+            cost = (w - p) / n
+            sc = lo - cost
+        return np.where(n >= 30, sc, -np.inf)
 
     res = {"markets": n_mk, "rows": int(len(R["y"])), "days": int(D_), "strategies": len(names),
            "luck_best_t": round(math.sqrt(2 * math.log(len(names))), 2)}
@@ -157,6 +169,26 @@ def main():
                                "days": int(len(dd)), "cents_per_bet": round(100 * float(dd.sum() * K / max(nb, 1)), 2),
                                "halves": [round(float(dd[:len(dd) // 2].mean()), 3), round(float(dd[len(dd) // 2:].mean()), 3)]}
         log(f"walk-forward top {K}:", res[f"walk_top{K}"])
+    for K in (1, 5, 20):
+        dd, nb = [], 0
+        cW = np.cumsum(W, 1)
+        for i in range(WARM, D_):
+            sc = lbscore(cP[:, i - 1], cN[:, i - 1], cW[:, i - 1])
+            top = [j for j in np.argpartition(-sc, K)[:K] if np.isfinite(sc[j])]
+            if not top:
+                dd.append(0.0); continue
+            dd.append(P[top, i].sum() / K); nb += int(N[top, i].sum())
+        dd = np.array(dd)
+        tt = float(dd.mean() / dd.std(ddof=1) * math.sqrt(len(dd))) if dd.std(ddof=1) > 0 else 0.0
+        res[f"walk_lb_top{K}"] = {"usd_per_day_per_strategy": round(float(dd.mean()), 3), "t": round(tt, 2), "bets": nb,
+                                  "cents_per_bet": round(100 * float(dd.sum() * K / max(nb, 1)), 2),
+                                  "halves": [round(float(dd[:len(dd) // 2].mean()), 3), round(float(dd[len(dd) // 2:].mean()), 3)]}
+        log(f"walk-forward by conservative edge, top {K}:", res[f"walk_lb_top{K}"])
+    sc_all = lbscore(P.sum(1), N.sum(1), W.sum(1))
+    res["in_sample_by_conservative_edge_top15"] = [(names[j], int(N[j].sum()), round(100 * float(P[j].sum() / N[j].sum()), 2), round(100 * float(sc_all[j]), 2)) for j in np.argsort(-sc_all)[:15]]
+    s_idx = [j for j in np.argsort(-sc_all) if names[j].startswith("S|") and N[j].sum() >= 40 and np.isfinite(sc_all[j])][:40]
+    res["candidates_S_top40"] = [(names[j], int(N[j].sum()), round(100 * float(P[j].sum() / N[j].sum()), 2), round(100 * float(sc_all[j]), 2)) for j in s_idx]
+    log("in-sample by conservative edge (not a result):", res["in_sample_by_conservative_edge_top15"][:8])
     cut = WARM + int((D_ - WARM) * 2 / 3)
     best = np.argsort(-tstat(P[:, :cut].sum(1), N[:, :cut].sum(1), Q[:, :cut].sum(1)))[:5]
     res["holdout_top5"] = [(names[j], int(N[j, cut:].sum()), round(100 * float(P[j, cut:].sum() / max(N[j, cut:].sum(), 1)), 2)) for j in best]
