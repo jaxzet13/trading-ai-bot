@@ -462,5 +462,62 @@
    "holdout_pnl": -2.03
   },
   "verdict": "no edge"
+ },
+ "KXEPLGAME": {
+  "series": "KXEPLGAME",
+  "name": "Premier League",
+  "markets": 183,
+  "games": 61,
+  "days": 19,
+  "median_volume": 849864.0,
+  "calibration_60min": [],
+  "walk_forward": {
+   "1": {
+    "bets": 3,
+    "pnl": -0.21,
+    "cents_per_bet": -7.0,
+    "t": -0.37,
+    "days": 5,
+    "days_up": 1,
+    "halves_pnl": [
+     -0.21,
+     0.0
+    ]
+   },
+   "5": {
+    "bets": 42,
+    "pnl": -2.55,
+    "cents_per_bet": -6.07,
+    "t": -0.92,
+    "days": 5,
+    "days_up": 2,
+    "halves_pnl": [
+     -2.42,
+     -0.13
+    ]
+   },
+   "20": {
+    "bets": 204,
+    "pnl": -10.24,
+    "cents_per_bet": -5.02,
+    "t": -1.57,
+    "days": 5,
+    "days_up": 2,
+    "halves_pnl": [
+     -6.66,
+     -3.58
+    ]
+   }
+  },
+  "holdout": {
+   "rule": "band:m-160:0.30-0.45",
+   "history_t": 1.45,
+   "history_bets": 32,
+   "history_cents": 13.0,
+   "holdout_bets": 6,
+   "holdout_cents": -6.33,
+   "holdout_pnl": -0.38
+  },
+  "verdict": "no edge"
  }
 }
