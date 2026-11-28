@@ -1082,5 +1082,81 @@
    "holdout_pnl": -0.37
   },
   "verdict": "no edge"
+ },
+ "KXBUNDESLIGAGAME": {
+  "series": "KXBUNDESLIGAGAME",
+  "name": "Bundesliga",
+  "markets": 165,
+  "games": 55,
+  "days": 19,
+  "median_volume": 276554.0,
+  "calibration_60min": [
+   {
+    "band": "5-20c",
+    "n": 38,
+    "cents_per_bet": -3.74,
+    "t": -0.64
+   },
+   {
+    "band": "20-40c",
+    "n": 66,
+    "cents_per_bet": -2.29,
+    "t": -0.42
+   },
+   {
+    "band": "40-60c",
+    "n": 27,
+    "cents_per_bet": -0.96,
+    "t": -0.1
+   }
+  ],
+  "walk_forward": {
+   "1": {
+    "bets": 12,
+    "pnl": -0.31,
+    "cents_per_bet": -2.58,
+    "t": -0.54,
+    "days": 5,
+    "days_up": 2,
+    "halves_pnl": [
+     -0.42,
+     0.11
+    ]
+   },
+   "5": {
+    "bets": 48,
+    "pnl": 0.18,
+    "cents_per_bet": 0.37,
+    "t": 0.09,
+    "days": 5,
+    "days_up": 3,
+    "halves_pnl": [
+     -0.34,
+     0.52
+    ]
+   },
+   "20": {
+    "bets": 190,
+    "pnl": -16.41,
+    "cents_per_bet": -8.64,
+    "t": -1.09,
+    "days": 5,
+    "days_up": 2,
+    "halves_pnl": [
+     -5.01,
+     -11.4
+    ]
+   }
+  },
+  "holdout": {
+   "rule": "band:m-170:0.10-0.30",
+   "history_t": 1.39,
+   "history_bets": 40,
+   "history_cents": 10.42,
+   "holdout_bets": 11,
+   "holdout_cents": -13.18,
+   "holdout_pnl": -1.45
+  },
+  "verdict": "no edge"
  }
 }
