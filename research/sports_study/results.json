@@ -576,5 +576,62 @@
    "holdout_pnl": 2.55
   },
   "verdict": "no edge"
+ },
+ "KXLALIGAGAME": {
+  "series": "KXLALIGAGAME",
+  "name": "La Liga",
+  "markets": 186,
+  "games": 62,
+  "days": 25,
+  "median_volume": 829911.0,
+  "calibration_60min": [],
+  "walk_forward": {
+   "1": {
+    "bets": 25,
+    "pnl": 1.78,
+    "cents_per_bet": 7.12,
+    "t": 1.13,
+    "days": 11,
+    "days_up": 6,
+    "halves_pnl": [
+     0.11,
+     1.67
+    ]
+   },
+   "5": {
+    "bets": 146,
+    "pnl": -5.91,
+    "cents_per_bet": -4.05,
+    "t": -0.91,
+    "days": 11,
+    "days_up": 4,
+    "halves_pnl": [
+     -2.41,
+     -3.5
+    ]
+   },
+   "20": {
+    "bets": 546,
+    "pnl": -18.29,
+    "cents_per_bet": -3.35,
+    "t": -1.08,
+    "days": 11,
+    "days_up": 4,
+    "halves_pnl": [
+     -7.95,
+     -10.34
+    ]
+   }
+  },
+  "holdout": {
+   "rule": "band:m-170:0.20-0.30",
+   "history_t": 0.95,
+   "history_bets": 33,
+   "history_cents": 7.88,
+   "holdout_bets": 25,
+   "holdout_cents": 0.04,
+   "holdout_pnl": 0.01
+  },
+  "verdict": "no edge"
  }
 }
