@@ -42,7 +42,12 @@ def cell_money(c):
 
 def main():
     res = json.loads(RES.read_text()) if RES.exists() else {}
-    done = [res[s] for s in PENDING if s in res and "walk_forward" in res[s]]
+    def tested(r):                                     # a walk-forward that placed no bets (too few days) is not a test
+        w = r.get("walk_forward") or {}
+        w = w.get("5") or w.get(5) or {}
+        return bool(w.get("bets"))
+
+    done = [res[s] for s in PENDING if s in res and "walk_forward" in res[s] and tested(res[s])]
     edge = [r for r in done if r["verdict"] == "edge"]
     maybe = [r for r in done if r["verdict"] == "maybe"]
     rows = []
@@ -53,9 +58,9 @@ def main():
             rows.append(f"<tr><td>{name}</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td>"
                         f"<td><span class='pill wait'>downloading</span></td></tr>")
             continue
-        if "walk_forward" not in r:
-            rows.append(f"<tr><td>{name}</td><td class='num'>{r.get('markets', 0)}</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td>"
-                        f"<td><span class='pill wait'>too few games</span></td></tr>")
+        if "walk_forward" not in r or not tested(r):
+            rows.append(f"<tr><td>{name}</td><td class='num'>{r.get('games', r.get('markets', 0))}</td><td class='num'>&ndash;</td><td class='num'>&ndash;</td>"
+                        f"<td><span class='pill wait'>too few days</span></td></tr>")
             continue
         w = r["walk_forward"]["5"] if "5" in r["walk_forward"] else r["walk_forward"][5]
         cls = {"edge": "edge", "maybe": "maybe"}.get(r["verdict"], "no")
