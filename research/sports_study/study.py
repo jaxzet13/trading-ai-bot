@@ -17,6 +17,7 @@ Result per sport: per $1 contract, Kalshi fee included.
     python3 research/sports_study/study.py [series ...]   -> research/sports_study/results.json
 """
 import json
+import os
 import math
 import sys
 from pathlib import Path
@@ -26,7 +27,7 @@ import numpy as np
 sys.path.insert(0, ".")
 from tennis import api, lab                                  # noqa: E402
 
-DATA = Path("data/sports")
+DATA = Path(os.environ.get("SPORTS_DATA", "data/sports_fixed"))
 OUT = Path("research/sports_study/results.json")
 WARM = 14
 NAMES = {"KXNBAGAME": "NBA", "KXNFLGAME": "NFL", "KXNCAAFGAME": "College football", "KXNCAAMBGAME": "Men's college basketball",

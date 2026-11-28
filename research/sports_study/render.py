@@ -130,6 +130,12 @@ def main():
   </section>
 
   <section>
+    <h2>Correction (Nov 28)</h2>
+    <div class="note"><p>My first run of these tests had the wrong clock. For team sports Kalshi's "start" field is about 3 hours after kickoff, so "an hour before the game" was really late in the game. Every number on this page was re-run with ESPN's real kickoff times. The verdicts did not change: nothing passes.</p></div>
+    <p>I also compared Kalshi to DraftKings' closing moneyline on about 2,100 finished games. Kalshi's price predicts the winner as well as the sportsbook does, or slightly better, so buying where the two disagree does not pay after Kalshi's fee. A live recorder of both prices is running to test it going forward.</p>
+  </section>
+
+  <section>
     <h2>How it works</h2>
     <p>For every settled game in the last 60 days the bot replays Kalshi's minute-by-minute prices. It decides on one minute's price and buys the next minute at the worst ask, so there are no lucky fills, then pays Kalshi's fee. Next up after this: same-game parlays, where the winner, spread and total of one game are linked and might be mispriced as a combo.</p>
     <p class="mute">Full numbers: research/sports_study in the repository.</p>

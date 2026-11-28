@@ -20,6 +20,7 @@ Honest scoring per sport:
     python3 research/sports_study/search.py [series ...]  -> research/sports_study/search_results.json
 """
 import json
+import os
 import math
 import sys
 import time
@@ -114,13 +115,13 @@ def evaluate(P, N, Q, names):
 def load_sport(series):
     if series in TENNIS:
         return [m for m in lab.load(STORE) if m["series"] == series]
-    return lab.load(Path("data/sports") / f"{series}.jsonl")
+    return lab.load(Path(os.environ.get("SPORTS_DATA", "data/sports_fixed")) / f"{series}.jsonl")
 
 
 def main():
     strats = grid()
     log(f"{len(strats)} strategies per sport")
-    series = sys.argv[1:] or (TENNIS + sorted(p.stem for p in Path("data/sports").glob("KX*.jsonl")))
+    series = sys.argv[1:] or (TENNIS + sorted(p.stem for p in Path(os.environ.get("SPORTS_DATA", "data/sports_fixed")).glob("KX*.jsonl")))
     res = json.loads(OUT.read_text()) if OUT.exists() else {}
     pooled = {}
     total = 0
