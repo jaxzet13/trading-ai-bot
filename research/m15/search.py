@@ -31,12 +31,14 @@ import numpy as np
 sys.path.insert(0, ".")
 
 D = Path("data/m15")
-OUT = Path("research/m15/results.json")
+import os as _os
+OUT = Path(_os.environ.get("M15_OUT", "research/m15/results.json"))
 WARM = 14
 FEATS = ["mid", "spr", "d1", "d3", "d5", "drift", "ext", "rng", "acc"]
 NF = len(FEATS)
 PAIRS = [(a, b) for a in range(NF) for b in range(a + 1, NF)]
-NCELL = NF * 10 + len(PAIRS) * 100
+TRIPLES = [(a, b, c) for a in range(NF) for b in range(a + 1, NF) for c in range(b + 1, NF)]
+NCELL = NF * 10 + len(PAIRS) * 100 + len(TRIPLES) * 27
 JS = list(range(1, 14))
 SECTORS = {
     "METALS": ["KXGOLD15M", "KXSILVER15M", "KXCOPPER15M", "KXPLATINUM15M", "KXPALLADIUM15M"],
@@ -46,6 +48,8 @@ SECTORS = {
     "CRYPTO": ["KXBTC15M", "KXETH15M", "KXSOL15M", "KXXRP15M", "KXDOGE15M", "KXNEAR15M", "KXHYPE15M", "KXZEC15M", "KXBNB15M"],
 }
 T0 = time.time()
+DAYS = {}
+GEN = [0]
 
 
 def log(*a):
@@ -60,8 +64,11 @@ def load_series():
     """series -> (bid[W,15], ask[W,15], y[W], day[W]) with minute index j = 0..14 holding the quote at open + 60 j (NaN if none)."""
     out = {}
     for p in sorted(D.glob("*.jsonl")):
-        recs = [json.loads(ln) for ln in open(p)]
-        recs = [r for r in recs if r["bars"]]
+        seen, recs = set(), []
+        for ln in open(p):
+            r = json.loads(ln)
+            if r["bars"] and r["t"] not in seen:          # two downloaders can overlap: keep each window once
+                seen.add(r["t"]); recs.append(r)
         W = len(recs)
         bid = np.full((W, 15), np.nan); ask = np.full((W, 15), np.nan)
         y = np.zeros(W); day = np.zeros(W, dtype=np.int64)
@@ -75,6 +82,9 @@ def load_series():
             day[i] = open_ts // 86400
         out[p.stem] = (bid, ask, y, day)
         log(f"{p.stem}: {W} windows")
+    import os
+    if os.environ.get("SKIP_CRYPTO"):
+        return out
     try:
         from kalshi15m import edge as E
         R = E.rows(E.load_panels(log=lambda *a: None))
@@ -144,6 +154,7 @@ def run_group(name, members, data, days_all):
     Dn = len(days)
     if Dn < WARM + 6:
         return {"name": name, "note": f"only {Dn} days"}
+    DAYS[name] = [int(d) for d in days[WARM:]]
     ncell_all = []
     P = np.zeros((len(JS) * 2 * NCELL, Dn)); N = np.zeros_like(P); Q = np.zeros_like(P)
     labels = []
@@ -163,6 +174,7 @@ def run_group(name, members, data, days_all):
             edges = np.unique(np.quantile(col[ok & warm], np.linspace(0.1, 0.9, 9)))
             b = np.searchsorted(edges, col, side="right")
             dec[:, k] = np.where(ok, np.minimum(b, 9), -1)
+        dec3 = np.where(dec < 0, -1, (dec >= 3).astype(np.int64) + (dec >= 7).astype(np.int64))
         for si, pay in enumerate((py, pn)):
             valid = np.isfinite(pay)
             base = (ji * 2 + si) * NCELL
@@ -181,8 +193,16 @@ def run_group(name, members, data, days_all):
                 P[sl] = np.bincount(key, pv[m], 100 * Dn).reshape(100, Dn)
                 N[sl] = np.bincount(key, None, 100 * Dn).reshape(100, Dn)
                 Q[sl] = np.bincount(key, pv[m] ** 2, 100 * Dn).reshape(100, Dn)
+            for ti, (a, b, c) in enumerate(TRIPLES):
+                m = valid & (dec3[:, a] >= 0) & (dec3[:, b] >= 0) & (dec3[:, c] >= 0)
+                key = (dec3[m, a] * 9 + dec3[m, b] * 3 + dec3[m, c]) * Dn + di[m]
+                o = base + NF * 10 + len(PAIRS) * 100 + ti * 27
+                P[o:o + 27] = np.bincount(key, pv[m], 27 * Dn).reshape(27, Dn)
+                N[o:o + 27] = np.bincount(key, None, 27 * Dn).reshape(27, Dn)
+                Q[o:o + 27] = np.bincount(key, pv[m] ** 2, 27 * Dn).reshape(27, Dn)
     keep = N.sum(1) >= 30
     S = int(keep.sum())
+    GEN[0] += len(JS) * 2 * NCELL
     cP, cN, cQ = np.cumsum(P, 1), np.cumsum(N, 1), np.cumsum(Q, 1)
     res = {"name": name, "members": len(members), "days": int(Dn), "strategies_scored": S,
            "luck_best_t": round(math.sqrt(2 * math.log(max(S, 2))), 2)}
@@ -228,10 +248,15 @@ def describe(c, group):
     if cell < NF * 10:
         f, d = divmod(cell, 10)
         rule = f"{FEATS[f]} in decile {d}"
-    else:
+    elif cell < NF * 10 + len(PAIRS) * 100:
         pi, ab = divmod(cell - NF * 10, 100)
         a, b = PAIRS[pi]
         rule = f"{FEATS[a]} decile {ab // 10} and {FEATS[b]} decile {ab % 10}"
+    else:
+        ti, abc = divmod(cell - NF * 10 - len(PAIRS) * 100, 27)
+        a, b, c = TRIPLES[ti]
+        nm = ["low", "middle", "high"]
+        rule = f"{FEATS[a]} {nm[abc // 9]}, {FEATS[b]} {nm[(abc // 3) % 3]}, {FEATS[c]} {nm[abc % 3]}"
     return f"{group}: minute {j}, buy {side} when {rule}"
 
 
@@ -257,6 +282,7 @@ def main():
         log(f"{name:16} {r['strategies_scored']:>9,} strategies | walk top5 ${w['usd_per_day_per_strategy']:+.3f}/d {w['cents_per_bet']:+.2f}c t {w['t']:+.2f} ({w['bets']} bets) | holdout best {r['holdout_best']['holdout_cents']}c on {r['holdout_best']['holdout_bets']} bets")
     # best of everything: each test day, the top K by t across all groups
     ndays = max(len(c) for c in allcand.values())
+    day_numbers = {g: [] for g in allcand}
     glob = {1: [], 5: [], 20: []}
     gb = {1: 0, 5: 0, 20: 0}
     for i in range(ndays):
@@ -269,10 +295,12 @@ def main():
             sel = pool[:K]
             glob[K].append(sum(p for _, p, _ in sel) / max(len(sel), 1) if sel else 0.0)
             gb[K] += int(sum(n for _, _, n in sel))
-    res_g = {"total_strategies_scored": total, "luck_best_t": round(math.sqrt(2 * math.log(max(total, 2))), 2)}
+    dates = DAYS.get("ALL") or max(DAYS.values(), key=len)
+    res_g = {"dates_utc_day_number": dates, "total_strategies_generated": GEN[0], "total_strategies_scored": total, "luck_best_t": round(math.sqrt(2 * math.log(max(total, 2))), 2)}
     for K in (1, 5, 20):
         d = np.array(glob[K])
         tt = float(d.mean() / d.std(ddof=1) * math.sqrt(len(d))) if len(d) > 2 and d.std(ddof=1) > 0 else 0.0
+        res_g[f"daily_top{K}"] = [round(float(x), 4) for x in d]
         res_g[f"walk_top{K}"] = {"usd_per_day_per_strategy": round(float(d.mean()), 3), "t": round(tt, 2), "bets": gb[K],
                                  "cents_per_bet": round(100 * float(d.sum() * K / max(gb[K], 1)), 2), "days": len(d),
                                  "halves": [round(float(d[:len(d) // 2].mean()), 3), round(float(d[len(d) // 2:].mean()), 3)]}
